@@ -1,0 +1,26 @@
+include $(top_srcdir)/src/Makefile.include
+
+AM_CPPFLAGS += -I$(top_srcdir)/src
+
+bin_PROGRAMS = soypay_ptest
+
+TESTS = test
+
+# test_bitcoin binary #
+soypay_ptest_CPPFLAGS = $(AM_CPPFLAGS) $(TESTDEFS)
+soypay_ptest_LDADD = $(LIBBITCOIN_SERVER) \
+			   $(LIBBITCOIN_CLI) \
+			   $(LIBBITCOIN_COMMON) \
+			   $(LIBLEVELDB) \
+			   $(LIBMEMENV) \
+               $(BOOST_LIBS) \
+			   $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
+if ENABLE_WALLET
+soypay_ptest_LDADD += $(LIBBITCOIN_WALLET)
+endif
+soypay_ptest_LDADD += $(BDB_LIBS)
+
+soypay_ptest_SOURCES = \
+  p_test.cpp \
+  main_tests.cpp \
+  miner_tests.cpp
