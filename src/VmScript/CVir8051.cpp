@@ -459,107 +459,120 @@ bool CVir8051::run() {
 
 		}
 		if (Sys.PC == 0x0008) {
+#if 0
+			{
 			INT8U data = GetExRam(0xFBFE);
 			unsigned char *pcheck = (unsigned char *) GetExRamAddr(0xF000);		//check data
 			INT8U len = pcheck[0];
 			if (data == 8) {
-				switch (flag) {
-				case 0: {
-					if (pcheck[1] == 2) {
-						return true;
-					} else {
-						return false;
-					}
+			switch (flag) {
+			case 0: {
+				if (pcheck[1] == 2) {
+					return true;
+				} else {
+					return false;
 				}
-					break;
-				case 1: {
-					int64_t rslt;
-					memcpy(&rslt, &pcheck[1], len);
-					if (rslt == 285916242777615) {
-						return true;
-					} else {
-						return false;
-					}
+			}
+				break;
+			case 1: {
+				int64_t rslt;
+				memcpy(&rslt, &pcheck[1], len);
+				if (rslt == 285916242777615) {
+					return true;
+				} else {
+					return false;
 				}
-					break;
-				case 2: {
-					int64_t rslt;
-					memcpy(&rslt, &pcheck[1], len);
-					if (rslt == 4328785416) {
-						return true;
-					} else {
-						return false;
-					}
+			}
+				break;
+			case 2: {
+				int64_t rslt;
+				memcpy(&rslt, &pcheck[1], len);
+				if (rslt == 4328785416) {
+					return true;
+				} else {
+					return false;
 				}
-
-					break;
-				case 3: {
-					int64_t rslt;
-					memcpy(&rslt, &pcheck[1], len);
-					if (rslt == 4328653314) {
-						return true;
-					} else {
-						return false;
-					}
-				}
-
-					break;
-				case 4: {
-					int64_t rslt;
-					memcpy(&rslt, &pcheck[1], len);
-					if (rslt == 65536) {
-						return true;
-					} else {
-						return false;
-					}
-				}
-
-					break;
-				case 5: {
-					char xx[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
-					uint256 expect = Hash(xx, xx + sizeof(xx));
-					uint256 rslt;
-					memcpy(rslt.begin(), &pcheck[1], len);
-					if (expect == rslt) {
-						return true;
-					} else {
-						return false;
-					}
-				}
-					break;
-				case 6: {
-					char xx[] = { 0x17, 0x26, 0xc7, 0x5f, 0x28, 0x16, 0x71, 0x5f, 0xde, 0x89, 0x62, 0x08, 0x43, 0x34,
-							0x39, 0xa7 };
-					if (!memcmp(xx, &pcheck[1], len)) {
-						return true;
-					} else {
-						return false;
-					}
-				}
-					break;
-				case 7: {
-					if (pcheck[1] == true) {
-						return true;
-					} else {
-						return false;
-					}
-				}
-					break;
-				case 8: {
-					assert(0);
-				}
-					break;
-				default: {
-					assert(0);
-				}
-					break;
-				}
-			} else if (data == 0x00) {
-				return 0;
-			} else {
-				return 1;
 			}
 
+				break;
+			case 3: {
+				int64_t rslt;
+				memcpy(&rslt, &pcheck[1], len);
+				if (rslt == 4328653314) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+
+				break;
+			case 4: {
+				int64_t rslt;
+				memcpy(&rslt, &pcheck[1], len);
+				if (rslt == 65536) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+
+				break;
+			case 5: {
+				char xx[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+				uint256 expect = Hash(xx, xx + sizeof(xx));
+				uint256 rslt;
+				memcpy(rslt.begin(), &pcheck[1], len);
+				if (expect == rslt) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+				break;
+			case 6: {
+				char xx[] = { 0x17, 0x26, 0xc7, 0x5f, 0x28, 0x16, 0x71, 0x5f, 0xde, 0x89, 0x62, 0x08, 0x43, 0x34,
+						0x39, 0xa7 };
+				if (!memcmp(xx, &pcheck[1], len)) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+				break;
+			case 7: {
+				if (pcheck[1] == true) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+				break;
+			case 8: {
+				assert(0);
+			}
+				break;
+			default: {
+				assert(0);
+			}
+				break;
+			}
+			} else if (data == 0x00) {
+			return 0;
+			} else {
+			return 1;
+			}
+
+			}
+#else
+			{
+				INT8U result = GetExRam(0xFBFF);
+				if (result == 0x00) {
+				 return 0;
+				} else {
+				    return 1;
+				}
+			}
+#endif
 		}
 	}
 	return 1;

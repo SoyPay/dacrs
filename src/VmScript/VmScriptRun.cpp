@@ -201,20 +201,20 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 				return false;
 			}
 		}
-		if (it.muls.accountid < vArbitratorAcc.size()) {
-			if (atoi64((char*)it.muls.money) > vmScript.rule.maxReSv)
-			{
-				LogPrint("vm", "VmScript OpeatorSecureAccount muls money not less rule maxReSv\n");
-				return false;
-			}
-		}
-		if (it.add.accountid < vArbitratorAcc.size()) {
-			if (atoi64((char*)it.muls.money) > vmScript.rule.maxPay)
-			{
-				LogPrint("vm", "VmScript OpeatorSecureAccount muls money not less rule maxPay\n");
-				return false;
-			}
-		}
+//		if (it.muls.accountid < (vArbitratorAcc.size() -1)) {
+//			if (atoi64((char*)it.muls.money) > vmScript.rule.maxReSv)
+//			{
+//				LogPrint("vm", "VmScript OpeatorSecureAccount muls money not less rule maxReSv\n");
+//				return false;
+//			}
+//		}
+//		if (it.add.accountid < (vArbitratorAcc.size() -1)) {
+//			if (atoi64((char*)it.muls.money) > vmScript.rule.maxPay)
+//			{
+//				LogPrint("vm", "VmScript OpeatorSecureAccount muls money not less rule maxPay\n");
+//				return false;
+//			}
+//		}
 	}
 	return true;
 }
@@ -393,6 +393,6 @@ CVmScriptRun::CVmScriptRun(CAccountViewCache& view, vector<shared_ptr<CBaseTrans
 	vector<unsigned char> strContract;
 	strContract.assign(VmData.begin(), VmData.end());
 
-	cout << "contct:"<<HexStr(strContract).c_str() << endl;
+//	cout << "contct:"<<HexStr(strContract).c_str() << endl;
 	pMcu = make_shared<CVir8051>(vmScript.Rom, strContract);
 }

@@ -778,16 +778,21 @@ public:
 			READWRITE(money[i]);
 	)
 };
-void Init(CAccountViewCache &view, CVmScript &vscript, vector<std::shared_ptr<CBaseTransaction> >& Tx, int64_t &iresult,
-		int64_t &bresult, int64_t &betmoey) {
+void Init(CAccountViewCache &view, CVmScript &vscript, vector<std::shared_ptr<CBaseTransaction> >& Tx,int64_t &iresult, int64_t &bresult,int64_t &betmoey) {
 
 	//std::vector<unsigned char> pScript = GetScriptBin("D:\\C51\\Debug\\Exe\\CPLUS.bin");
-	vscript.Rom.insert(vscript.Rom.begin(), TempArray, TempArray + sizeof(TempArray));
+	vscript.Rom.insert(vscript.Rom.begin(), TempArray, TempArray+sizeof(TempArray));
 	//vscript.Rom.insert(vscript.Rom.begin(), pScript.begin(), pScript.end());
 	vscript.rule.maxPay = 50;
 	vscript.rule.maxReSv = 50;
 	vscript.rule.vNextOutHeight = 90;
 	vscript.rule.vpreOutHeihgt = 100;
+
+	vector_unsigned_char vpscript;
+	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
+	scriptData << vscript;
+	vpscript.assign(scriptData.begin(),scriptData.end());
+
 	vector<vector_unsigned_char> account;
 	for (int i = 1; i < 3; i++) {
 		CSecureAccount sourceAccount;
@@ -808,39 +813,43 @@ void Init(CAccountViewCache &view, CVmScript &vscript, vector<std::shared_ptr<CB
 	int b2 = random(100);
 	int a3 = a1 + a2;
 	int b3 = b1 + b2;
-	int s1 = a2 ^ a1;
-	int s2 = b2 ^ b1;
-	iresult = (a1 ^ b1) % 6 + 1;
+	int s1 = a2^a1;
+	int s2 = b2^b1;
+	iresult = (a1^b1)%6 + 1;
 	bresult = random(1);
 	Ccontact pcontact;
-	memset(&pcontact, 0, sizeof(Ccontact));
+	memset(&pcontact,0,sizeof(Ccontact));
 
-	memcpy(&pcontact.s1, &s1, 1);
-	memcpy(&pcontact.s2, &s2, 1);
-	memcpy(&pcontact.a3, &a3, 1);
-	memcpy(&pcontact.b3, &b3, 1);
-	memcpy(&pcontact.r, &bresult, 1);
-	int height = 70;
-	memcpy(&pcontact.h, &height, 2);
+	memcpy(&pcontact.s1,&s1,1);
+	memcpy(&pcontact.s2,&s2,1);
+	memcpy(&pcontact.a3,&a3,1);
+	memcpy(&pcontact.b3,&b3,1);
+	memcpy(&pcontact.r,&bresult,1);
+	int height = 70 ;
+	memcpy(&pcontact.h,&height,2);
 	betmoey = 51;
 
 	sprintf((char*) pcontact.money, "%d0000000", betmoey);
 	CDataStream VmData(SER_DISK, CLIENT_VERSION);
 	VmData << pcontact;
 	std::vector<unsigned char> scriptid;
+
+	CRegID scriptId(9, 9);
+	CContractScript contractScript;
+	contractScript.scriptId = scriptId.vRegID;
+	contractScript.scriptContent = vpscript;
 	CSecureTransaction *nTemp = static_cast<CSecureTransaction*>(Tx[0].get());
-	nTemp->vContract.insert(nTemp->vContract.begin(), VmData.begin(), VmData.end());
-	nTemp->regScriptId = scriptid;
+	nTemp->vContract.insert(nTemp->vContract.begin(),VmData.begin(),VmData.end());
+	nTemp->regScriptId = scriptId.vRegID;
 
 	for (auto& item : account) {
 		nTemp->vRegAccountId.push_back(item);
-	}
-	unsigned char ch;
-	memcpy(&ch, &a2, 1);
+		}
+	unsigned char ch; memcpy(&ch,&a2,1);
 	CAppealTransaction *nA2 = static_cast<CAppealTransaction*>(Tx[1].get());
 	nA2->vPreAcountIndex.push_back(0x00);
 	nA2->vContract.push_back(ch);
-	memcpy(&ch, &b2, 1);
+	memcpy(&ch,&b2,1);
 	CAppealTransaction *nB2 = static_cast<CAppealTransaction*>(Tx[2].get());
 	nB2->vPreAcountIndex.push_back(0x01);
 	nB2->vContract.push_back(ch);
@@ -1040,7 +1049,7 @@ void SaveAccount(CTxBetRollScript * betroll) {
 }
 BOOST_FIXTURE_TEST_SUITE(betRoll,CTxBetRollScript)
 
-#if 0
+#if 1
 
 BOOST_FIXTURE_TEST_CASE(betRoll_test,CTxBetRollScript)
 {
