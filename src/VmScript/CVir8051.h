@@ -223,8 +223,10 @@ class CVir8051 {
 	static const int MAX_ROM = 0xFFFF;
 	static const int MAX_EX_RAM = 0xFFFF;
 	static const int MAX_IN_RAM = 0xff;
-public:
 
+
+public:
+	void InitalReg();
 	CVir8051(const vector<unsigned char> & vRom,const vector<unsigned char> &InputData);
 	shared_ptr<vector<unsigned char>> GetRetData(void) const;
 	void SetExRamData(INT16U addr, const vector<unsigned char> data);
@@ -234,6 +236,7 @@ public:
 	INT8U SetRamData(INT8U addr, INT8U data);
 	~CVir8051();
 	bool run();
+	int run(int maxstep);
 	void StepRun(INT8U code);
 
 	INT8U GetOpcode(void) const;
