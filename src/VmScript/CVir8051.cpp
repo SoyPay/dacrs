@@ -18,8 +18,7 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-CVir8051::CVir8051(const vector<unsigned char> & vRom, const vector<unsigned char> &InputData) :
-		Sys(this), Rges(this) {
+void CVir8051::InitalReg() {
 
 	memset(m_ChipRam, 0, sizeof(m_ChipRam));
 	memset(m_ChipSfr, 0, sizeof(m_ChipSfr));
@@ -45,10 +44,17 @@ CVir8051::CVir8051(const vector<unsigned char> & vRom, const vector<unsigned cha
 	SetRamData(0x90, 0xFF);
 	SetRamData(0xa0, 0xFF);
 	SetRamData(0xb0, 0xFF);
-	memcpy(m_ExeFile, &vRom[0], vRom.size());
-
 	Sys.sp = 0x07;
+
+}
+
+CVir8051::CVir8051(const vector<unsigned char> & vRom, const vector<unsigned char> &InputData) :
+		Sys(this), Rges(this) {
+
+	InitalReg();
 	INT16U addr = 0xFC00;
+
+	memcpy(m_ExeFile, &vRom[0], vRom.size());
 	SetExRamData(addr, InputData);
 }
 
@@ -423,29 +429,38 @@ bool CallExternalFunc(INT16U method, unsigned char *ipara) {
 	return FunMap[method].fun(ipara);
 }
 
+int CVir8051::run(int maxstep) {
+	INT8U code = 0;
+	int step = 0;
+
+	while (1) {
+		code = GetOpcode();
+		StepRun(code);
+		step++;
+		//call func out of 8051
+		if (Sys.PC == 0x0012) {
+			//get what func will be called
+			INT16U method = ((INT16U) GetExRam(0xFBFE) | ((INT16U) GetExRam(0xFBFF) << 8));
+			unsigned char *ipara = (unsigned char *) GetExRamAddr(0xF7FE);		//input para
+			CallExternalFunc(method, ipara);
+		} else if (Sys.PC == 0x0008) {
+			return step;		//return total step
+		}
+		if (maxstep != 0 && step > maxstep) {
+			return 0;		//force return
+		}
+	}
+
+	return 1;
+}
+
 bool CVir8051::run() {
 	INT8U code = 0;
 	INT16U flag;
 	while (1) {
 		code = GetOpcode();
 		StepRun(code);
-		char temp[1024];
-		//sprintf(temp, "pc--->%x\r\n", Sys.PC);
-		//cout << "after" << temp << endl;
 		UpDataDebugInfo();
-//		if (Sys.PC == 0x0008
-//			||Sys.PC == 0x0C8D
-//			||Sys.PC == 0x0C6F
-//			||Sys.PC == 0x0C63
-//			||Sys.PC == 0x0C90
-//			|| Sys.PC == 0x0C7F
-//			||Sys.PC == 0x0C78
-//			||Sys.PC == 0x0C73
-//			||Sys.PC == 0x0C66
-//			||Sys.PC == 0x179) {
-//			UpDataDebugInfo();
-//			//Sys.PC = 0x0c8d;
-//		}
 
 		//call func out of 8051
 		if (Sys.PC == 0x0012) {
@@ -459,120 +474,109 @@ bool CVir8051::run() {
 
 		}
 		if (Sys.PC == 0x0008) {
-#if 0
-			{
-			INT8U data = GetExRam(0xFBFE);
-			unsigned char *pcheck = (unsigned char *) GetExRamAddr(0xF000);		//check data
-			INT8U len = pcheck[0];
-			if (data == 8) {
-			switch (flag) {
-			case 0: {
-				if (pcheck[1] == 2) {
-					return true;
-				} else {
-					return false;
-				}
-			}
-				break;
-			case 1: {
-				int64_t rslt;
-				memcpy(&rslt, &pcheck[1], len);
-				if (rslt == 285916242777615) {
-					return true;
-				} else {
-					return false;
-				}
-			}
-				break;
-			case 2: {
-				int64_t rslt;
-				memcpy(&rslt, &pcheck[1], len);
-				if (rslt == 4328785416) {
-					return true;
-				} else {
-					return false;
-				}
-			}
-
-				break;
-			case 3: {
-				int64_t rslt;
-				memcpy(&rslt, &pcheck[1], len);
-				if (rslt == 4328653314) {
-					return true;
-				} else {
-					return false;
-				}
-			}
-
-				break;
-			case 4: {
-				int64_t rslt;
-				memcpy(&rslt, &pcheck[1], len);
-				if (rslt == 65536) {
-					return true;
-				} else {
-					return false;
-				}
-			}
-
-				break;
-			case 5: {
-				char xx[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
-				uint256 expect = Hash(xx, xx + sizeof(xx));
-				uint256 rslt;
-				memcpy(rslt.begin(), &pcheck[1], len);
-				if (expect == rslt) {
-					return true;
-				} else {
-					return false;
-				}
-			}
-				break;
-			case 6: {
-				char xx[] = { 0x17, 0x26, 0xc7, 0x5f, 0x28, 0x16, 0x71, 0x5f, 0xde, 0x89, 0x62, 0x08, 0x43, 0x34,
-						0x39, 0xa7 };
-				if (!memcmp(xx, &pcheck[1], len)) {
-					return true;
-				} else {
-					return false;
-				}
-			}
-				break;
-			case 7: {
-				if (pcheck[1] == true) {
-					return true;
-				} else {
-					return false;
-				}
-			}
-				break;
-			case 8: {
-				assert(0);
-			}
-				break;
-			default: {
-				assert(0);
-			}
-				break;
-			}
-			} else if (data == 0x00) {
-			return 0;
-			} else {
-			return 1;
-			}
-
-			}
-#else
 			{
 				INT8U result = GetExRam(0xFBFF);
 				if (result == 0x00) {
-				 return 0;
+					return 0;
+				} else if (result == 0x08) {
+					unsigned char *pcheck = (unsigned char *) GetExRamAddr(0xF000);		//check data
+					INT8U len = pcheck[0];
+					switch (flag) {
+					case 0: {
+						if (pcheck[1] == 2) {
+							return true;
+						} else {
+							return false;
+						}
+					}
+						break;
+					case 1: {
+						int64_t rslt;
+						memcpy(&rslt, &pcheck[1], len);
+						if (rslt == 285916242777615) {
+							return true;
+						} else {
+							return false;
+						}
+					}
+						break;
+					case 2: {
+						int64_t rslt;
+						memcpy(&rslt, &pcheck[1], len);
+						if (rslt == 4328785416) {
+							return true;
+						} else {
+							return false;
+						}
+					}
+
+						break;
+					case 3: {
+						int64_t rslt;
+						memcpy(&rslt, &pcheck[1], len);
+						if (rslt == 4328653314) {
+							return true;
+						} else {
+							return false;
+						}
+					}
+
+						break;
+					case 4: {
+						int64_t rslt;
+						memcpy(&rslt, &pcheck[1], len);
+						if (rslt == 65536) {
+							return true;
+						} else {
+							return false;
+						}
+					}
+
+						break;
+					case 5: {
+						char xx[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+						uint256 expect = Hash(xx, xx + sizeof(xx));
+						uint256 rslt;
+						memcpy(rslt.begin(), &pcheck[1], len);
+						if (expect == rslt) {
+							return true;
+						} else {
+							return false;
+						}
+					}
+						break;
+					case 6: {
+						char xx[] = { 0x17, 0x26, 0xc7, 0x5f, 0x28, 0x16, 0x71, 0x5f, 0xde, 0x89, 0x62, 0x08, 0x43,
+								0x34, 0x39, 0xa7 };
+						if (!memcmp(xx, &pcheck[1], len)) {
+							return true;
+						} else {
+							return false;
+						}
+					}
+						break;
+					case 7: {
+						if (pcheck[1] == true) {
+							return true;
+						} else {
+							return false;
+						}
+					}
+						break;
+					case 8: {
+						assert(0);
+					}
+						break;
+					default: {
+						assert(0);
+					}
+						break;
+					}
+
 				} else {
-				    return 1;
+					return 1;
 				}
 			}
-#endif
 		}
 	}
 	return 1;
