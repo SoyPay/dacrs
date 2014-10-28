@@ -8,7 +8,7 @@
 
 #include "base58.h"
 #include "checkpoints.h"
-#include "coincontrol.h"
+//#include "coincontrol.h"
 #include "net.h"
 
 #include <boost/algorithm/string/replace.hpp>
