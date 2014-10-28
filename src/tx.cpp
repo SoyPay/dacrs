@@ -1313,7 +1313,7 @@ void CSecureAccount::WriteOperLog(AccountOper emOperType, const CFund &fund) {
 bool CSecureAccount::MinusFreezed(vector<CFund>& vFund, const CFund& fund, uint64_t& nOperateValue) {
 	vector<CFund>::iterator it = vFund.begin();
 	for (; it != vFund.end(); it++) {
-		if (it->uTxHash == fund.uTxHash) {
+		if (it->uTxHash == fund.uTxHash && it->nHeight == fund.nHeight) {
 			break;
 		}
 	}
@@ -1322,7 +1322,7 @@ bool CSecureAccount::MinusFreezed(vector<CFund>& vFund, const CFund& fund, uint6
 		return false;
 	}
 
-	if (fund.value >= it->value) {
+	if (fund.value > it->value) {
 		return false;
 	} else {
 		nOperateValue = fund.value;
@@ -1332,7 +1332,9 @@ bool CSecureAccount::MinusFreezed(vector<CFund>& vFund, const CFund& fund, uint6
 		logfund.value = it->value - fund.value;
 		WriteOperLog(ADD_FUND, logfund);
 		vFund.erase(it);
-		vFund.push_back(logfund);
+
+		if (logfund.value)
+			vFund.push_back(logfund);
 		return true;
 	}
 }
