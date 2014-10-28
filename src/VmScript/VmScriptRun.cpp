@@ -173,14 +173,12 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 			LogPrint("vm", "VmScript OpeatorSecureAccount accountid not vaild\n");
 			return false;
 		}
-		if (!(it.add.Opeater == ADD_FREE || it.add.Opeater == ADD_SELF_FREEZD || it.add.Opeater == ADD_INPUT_FREEZD)) {
+		if (!(it.add.Opeater == ADD_FREE || it.add.Opeater == ADD_SELF_FREEZD || it.add.Opeater == ADD_FREEZD)) {
 			LogPrint("vm", "VmScript OpeatorSecureAccount operate not vaild\n");
 			return false;
 		}
-		if (!(it.muls.Opeater == MINUS_FREE || it.muls.Opeater == MINUS_FREE_TO_OUTPUT
-				|| it.muls.Opeater == MINUS_OUTPUT || it.muls.Opeater == MINUS_OUTPUT_OR_FREE
-				|| it.muls.Opeater == MINUS_OUTPUT_OR_FREE_OR_SELF || it.muls.Opeater == MINUS_INPUT
-				|| it.muls.Opeater == MINUS_INPUT_OR_FREE || it.muls.Opeater == MINUS_INPUT_OR_FREE_OR_SELF)) {
+		if (!(it.muls.Opeater == MINUS_FREE || it.muls.Opeater == MINUS_SELF_FREEZD
+				|| it.muls.Opeater == MINUS_FREEZD )) {
 			LogPrint("vm", "VmScript OpeatorSecureAccount muls operate not vaild\n");
 			return false;
 		}
@@ -236,16 +234,16 @@ bool CVmScriptRun::OpeatorSecureAccount(const vector<CVmOperate>& listoperate) {
 		mulsfund.value = atoi64((char*)it.muls.money);
 		mulsfund.nHeight = it.muls.outheight + chainActive.Height();
 		mulsfund.uTxHash = listTx[it.muls.txid].get()->GetHash();
-		if ((OperType) it.muls.Opeater == MINUS_INPUT_OR_FREE_OR_SELF || (OperType) it.muls.Opeater == MINUS_INPUT) {
-			mulsfund.nFundType = INPUT_FREEZD_FUND;
+		if ((OperType) it.muls.Opeater == MINUS_FREEZD) {
+			mulsfund.nFundType = FREEZD_FUND;
 
 		}
 		CFund addfund;
 		addfund.value = atoi64((char*)it.add.money);
 		addfund.nHeight = it.add.outheight + chainActive.Height();
 		addfund.uTxHash = listTx[it.add.txid].get()->GetHash();
-		if ((OperType) it.add.Opeater == ADD_INPUT_FREEZD) {
-			addfund.nFundType = INPUT_FREEZD_FUND;
+		if ((OperType) it.add.Opeater == ADD_FREEZD) {
+			addfund.nFundType = SELF_FREEZD_FUND;
 		}
 
 		if ((OperType) it.add.Opeater == ADD_FREE) {
@@ -257,9 +255,9 @@ bool CVmScriptRun::OpeatorSecureAccount(const vector<CVmOperate>& listoperate) {
 			mulsAccount = vnewAccount;
 		}
 
-		if(mulsfund.nFundType == INPUT_FREEZD_FUND)
+		if(mulsfund.nFundType == FREEZD_FUND)
 		{
-			CFund vFind = mulsAccount.get()->FindFund(mulsAccount.get()->vInputFreeze,mulsfund.uTxHash);
+			CFund vFind = mulsAccount.get()->FindFund(mulsAccount.get()->vFreeze,mulsfund.uTxHash);
 			mulsfund.nHeight = vFind.nHeight;
 		}
 
