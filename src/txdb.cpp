@@ -173,12 +173,16 @@ bool CAccountViewDB::SetBestBlock(const uint256 &hashBlock) {
 bool CAccountViewDB::BatchWrite(const map<CKeyID, CSecureAccount> &mapAccounts,
 		const map<string, CKeyID> &mapKeyIds, const uint256 &hashBlock) {
 	CLevelDBBatch batch;
+
 	map<CKeyID, CSecureAccount>::const_iterator iterAccount = mapAccounts.begin();
 	for (; iterAccount != mapAccounts.end(); ++iterAccount) {
+		CSecureAccount saTemp = iterAccount->second;
+		CAccountOperLog accountOperLog;
+		saTemp.accountOperLog = accountOperLog;
 		if (uint160(0) == iterAccount->second.keyID) {
 			batch.Erase(make_pair('k', iterAccount->first));
 		} else {
-			batch.Write(make_pair('k', iterAccount->first), iterAccount->second);
+			batch.Write(make_pair('k', iterAccount->first), saTemp);
 		}
 	}
 
