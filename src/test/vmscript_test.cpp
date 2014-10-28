@@ -685,8 +685,7 @@ struct CTxScript {
 	void CheckEqual(CSecureAccount accBeforOperate, CSecureAccount accOperate) {
 		BOOST_CHECK(accBeforOperate.vRewardFund == accOperate.vRewardFund);
 		BOOST_CHECK(accBeforOperate.vFreedomFund == accOperate.vFreedomFund);
-		BOOST_CHECK(accBeforOperate.vInputFreeze == accOperate.vInputFreeze);
-		BOOST_CHECK(accBeforOperate.vOutputFreeze == accOperate.vOutputFreeze);
+		BOOST_CHECK(accBeforOperate.vFreeze == accOperate.vFreeze);
 		BOOST_CHECK(accBeforOperate.vSelfFreeze == accOperate.vSelfFreeze);
 		BOOST_CHECK(accBeforOperate.llValues == accOperate.llValues);
 	}
@@ -737,7 +736,7 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_onepacke,CTxScript) {
 		} else {
 			BOOST_CHECK(flag);
 			BOOST_CHECK(buyer.llValues == (ntempbuyer.llValues - atoi64((char* )packet.money)));
-			CFund opfund = Seller.vInputFreeze[0];
+			CFund opfund = Seller.vFreeze[0];
 			BOOST_CHECK(opfund.value == atoi64((char* )packet.money));
 			BOOST_CHECK(opfund.uTxHash == tx.get()->GetHash());
 		}
@@ -802,7 +801,7 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_twoAppealpacke,CTxScript) {
 			BOOST_CHECK(Arbitrator.llValues == ntempArbitrator.llValues - atoi64((char* )packet.money));
 		}
 
-		CFund opfund = buyer.vInputFreeze[0];
+		CFund opfund = buyer.vFreeze[0];
 		if (atoi64((char*) packet.money) >= ntempArbitrator.llValues) {
 			BOOST_CHECK(opfund.value == ntempArbitrator.llValues);
 		} else {
@@ -915,7 +914,7 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_thirdArbitratorpacke,CTxScript) {
 			CheckretData(nrecive, ntempbuyer, buyer, ntempArbitrator, Arbitrator, arpacket2);
 		} else if (atoi64((char*) arpacket1.money) < 5) {
 			BOOST_CHECK(Seller.llValues == ntempSeller.llValues);
-			CFund opfund = Seller.vInputFreeze[0];
+			CFund opfund = Seller.vFreeze[0];
 			BOOST_CHECK(opfund.value == (5 - atoi64((char* )arpacket1.money)));
 			uint64_t nrecive = atoi64((char*) arpacket1.money);
 			CheckretData(nrecive, ntempbuyer, buyer, ntempArbitrator, Arbitrator, arpacket2);

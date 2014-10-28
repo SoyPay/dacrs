@@ -1058,13 +1058,10 @@ Value getaddrfrozendetail(const Array& params, bool fHelp) {
 	CSecureAccount secureAcc;
 	CAccountViewCache accView(*pAccountViewTip, true);
 	if (accView.GetAccount(keyid, secureAcc)) {
-
-		secureAcc.vInputFreeze.insert(secureAcc.vInputFreeze.end(), secureAcc.vOutputFreeze.begin(),
-				secureAcc.vOutputFreeze.end());
-		secureAcc.vInputFreeze.insert(secureAcc.vInputFreeze.end(), secureAcc.vSelfFreeze.begin(),
+		secureAcc.vFreeze.insert(secureAcc.vFreeze.end(), secureAcc.vSelfFreeze.begin(),
 				secureAcc.vSelfFreeze.end());
 
-		for (auto &item : secureAcc.vInputFreeze) {
+		for (auto &item : secureAcc.vFreeze) {
 			Object obj;
 			obj.clear();
 			obj.push_back(Pair("tx hash:", item.uTxHash.ToString()));
@@ -1305,12 +1302,8 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 		CFund fund = aAccount.vFreedomFund[i];
 		array.push_back(tinyformat::format("%-20.20s%-70.70s%-25.8lf%-6.6d",fundTypeArray[fund.nFundType], fund.uTxHash.GetHex(), fund.value, fund.nHeight));
 	}
-	for(int i=0; i< aAccount.vInputFreeze.size(); ++i) {
-		CFund fund = aAccount.vInputFreeze[i];
-		array.push_back(tinyformat::format("%-20.20s%-70.70s%-25.8lf%-6.6d",fundTypeArray[fund.nFundType], fund.uTxHash.GetHex(), fund.value, fund.nHeight));
-	}
-	for(int i=0; i< aAccount.vOutputFreeze.size(); ++i) {
-		CFund fund = aAccount.vOutputFreeze[i];
+	for(int i=0; i< aAccount.vFreeze.size(); ++i) {
+		CFund fund = aAccount.vFreeze[i];
 		array.push_back(tinyformat::format("%-20.20s%-70.70s%-25.8lf%-6.6d",fundTypeArray[fund.nFundType], fund.uTxHash.GetHex(), fund.value, fund.nHeight));
 	}
 	for(int i=0; i< aAccount.vSelfFreeze.size(); ++i) {

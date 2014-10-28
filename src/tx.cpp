@@ -862,8 +862,7 @@ bool CFund::IsMergeFund(const int & nCurHeight, int &nMergeType) const {
 		break;
 	case FREEDOM_FUND:
 		return false;
-	case INPUT_FREEZD_FUND:
-	case OUTPUT_FREEZD_FUND:
+	case FREEZD_FUND:
 	case SELF_FREEZD_FUND:
 		if (nCurHeight >= nHeight) {
 			nMergeType = FREEDOM_FUND;  // Merget to Freedom;
@@ -929,8 +928,7 @@ bool CTxUndo::GetAccountOperLog(const CKeyID &keyId, CAccountOperLog &accountOpe
 
 void CSecureAccount::CompactAccount(int nCurHeight) {
 	MergerFund(vRewardFund, nCurHeight);
-	MergerFund(vInputFreeze, nCurHeight);
-	MergerFund(vOutputFreeze, nCurHeight);
+	MergerFund(vFreeze, nCurHeight);
 	MergerFund(vSelfFreeze, nCurHeight);
 	MergerFund(vFreedomFund, nCurHeight);
 }
@@ -1019,64 +1017,28 @@ bool CSecureAccount::OperateAccount(OperType type, const CFund &fund, uint64_t* 
 	}
 
 	case ADD_SELF_FREEZD: {
-		bRet = MinusFree(fund, nOperateValue);
-		if (!bRet)
-			break;
-
 		vSelfFreeze.push_back(fund);
 		WriteOperLog(ADD_FUND, fund);
 		break;
 	}
 
-	case ADD_INPUT_FREEZD: {
-		vInputFreeze.push_back(fund);
-		WriteOperLog(ADD_FUND, fund);
+	case MINUS_SELF_FREEZD: {
+		bRet = MinusSelf(fund,nOperateValue);
 		break;
 	}
 
-	case MINUS_FREE_TO_OUTPUT: {
-		bRet = MinusFreeToOutput(fund);
+	case ADD_FREEZD: {
+		AddToFreeze(fund);
 		break;
 	}
 
-	case MINUS_FREE_OR_SELF:{
-		bRet = MinusFreeOrSelf(fund,nOperateValue);
-		break;
-	}
-
-	case MINUS_OUTPUT: {
-		bRet = MinusInputOutput(vOutputFreeze, fund, nOperateValue);
-		break;
-	}
-
-	case MINUS_OUTPUT_OR_FREE: {
-		bRet = MinusFund(vOutputFreeze, fund, nOperateValue);
-		break;
-	}
-
-	case MINUS_OUTPUT_OR_FREE_OR_SELF: {
-		bRet = MinusFundEx(vOutputFreeze, fund, nOperateValue);
-		break;
-	}
-
-	case MINUS_INPUT: {
-		bRet = MinusInputOutput(vInputFreeze, fund, nOperateValue);
-		break;
-	}
-
-	case MINUS_INPUT_OR_FREE: {
-		bRet = MinusFund(vInputFreeze, fund, nOperateValue);
-		break;
-	}
-
-	case MINUS_INPUT_OR_FREE_OR_SELF: {
-		bRet = MinusFundEx(vInputFreeze, fund, nOperateValue);
+	case MINUS_FREEZD: {
+		bRet = MinusFreezed(vFreeze, fund, nOperateValue);
 		break;
 	}
 
 	default:
-		bRet = false;
-		break;
+		assert(0);
 	}
 
 	if (pOperatedValue) {
@@ -1086,7 +1048,22 @@ bool CSecureAccount::OperateAccount(OperType type, const CFund &fund, uint64_t* 
 	return bRet;
 }
 
-bool CSecureAccount::MinusFree(const CFund &fund, uint64_t& nOperateValue, bool bLastMinus) {
+void CSecureAccount::AddToFreeze(const CFund &fund) {
+	bool bMerge = false;
+	for (auto& item:vFreeze) {
+		if (item.uTxHash == fund.uTxHash && item.nHeight == fund.nHeight) {
+			item.value += fund.value;
+			bMerge = true;
+		}
+	}
+
+	if (!bMerge)
+		vFreeze.push_back(fund);
+
+	WriteOperLog(ADD_FUND, fund);
+}
+
+bool CSecureAccount::MinusFree(const CFund &fund, uint64_t& nOperateValue) {
 	vector<CFund> vOperFund;
 	uint64_t nCandidateValue = 0;
 	vector<CFund>::iterator iterFound = vFreedomFund.begin();
@@ -1118,21 +1095,14 @@ bool CSecureAccount::MinusFree(const CFund &fund, uint64_t& nOperateValue, bool 
 		return true;
 
 	} else {
-		bool bRet = true;
+		if (llValues < fund.value - nCandidateValue)
+			return false;
+
 		CFund freedom;
 		freedom.nFundType = FREEDOM;
-		if (llValues < fund.value - nCandidateValue) {
-			nOperateValue = llValues + nCandidateValue;
-			freedom.value = llValues;
-			llValues = 0;
-
-			if (bLastMinus)
-				bRet = false;
-		} else {
-			nOperateValue = fund.value;
-			freedom.value = fund.value - nCandidateValue;
-			llValues -= fund.value - nCandidateValue;
-		}
+		nOperateValue = fund.value;
+		freedom.value = fund.value - nCandidateValue;
+		llValues -= fund.value - nCandidateValue;
 
 		vOperFund.clear();
 		vOperFund.insert(vOperFund.end(), vFreedomFund.begin(), vFreedomFund.end());
@@ -1141,7 +1111,7 @@ bool CSecureAccount::MinusFree(const CFund &fund, uint64_t& nOperateValue, bool 
 		COperFund operLog(MINUS_FUND, vOperFund);
 		WriteOperLog(operLog);
 
-		return bRet;
+		return true;
 	}
 
 }
@@ -1172,18 +1142,11 @@ bool CSecureAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) 
 				} else if (MINUS_FUND == iterOperFundLog->operType)
 					vFreedomFund.push_back(*iterFund);
 				break;
-			case INPUT_FREEZD_FUND:
+			case FREEZD_FUND:
 				if (ADD_FUND == iterOperFundLog->operType)
-					vInputFreeze.erase(remove(vInputFreeze.begin(), vInputFreeze.end(), *iterFund), vInputFreeze.end());
+					vFreeze.erase(remove(vFreeze.begin(), vFreeze.end(), *iterFund), vFreeze.end());
 				else if (MINUS_FUND == iterOperFundLog->operType)
-					vInputFreeze.push_back(*iterFund);
-				break;
-			case OUTPUT_FREEZD_FUND:
-				if (ADD_FUND == iterOperFundLog->operType)
-					vOutputFreeze.erase(remove(vOutputFreeze.begin(), vOutputFreeze.end(), *iterFund),
-							vOutputFreeze.end());
-				else if (MINUS_FUND == iterOperFundLog->operType)
-					vOutputFreeze.push_back(*iterFund);
+					vFreeze.push_back(*iterFund);
 				break;
 			case SELF_FREEZD_FUND:
 				if (ADD_FUND == iterOperFundLog->operType)
@@ -1276,12 +1239,10 @@ uint64_t CSecureAccount::GetForzenAmount(int nCurHeight) {
 	CompactAccount(nCurHeight);
 	uint64_t balance = 0;
 
-	for(auto &fund:vInputFreeze) {
+	for(auto &fund:vFreeze) {
 		balance += fund.value;
 	}
-	for(auto &fund:vOutputFreeze) {
-		balance += fund.value;
-	}
+
 	for(auto &fund:vSelfFreeze) {
 		balance += fund.value;
 	}
@@ -1333,39 +1294,13 @@ string CSecureAccount::ToString() const {
 	for (unsigned int i = 0; i < vFreedomFund.size(); ++i) {
 		str += "    " + vFreedomFund[i].ToString() + "\n";
 	}
-	for (unsigned int i = 0; i < vInputFreeze.size(); ++i) {
-		str += "    " + vInputFreeze[i].ToString() + "\n";
-	}
-	for (unsigned int i = 0; i < vOutputFreeze.size(); ++i) {
-		str += "    " + vOutputFreeze[i].ToString() + "\n";
+	for (unsigned int i = 0; i < vFreeze.size(); ++i) {
+		str += "    " + vFreeze[i].ToString() + "\n";
 	}
 	for (unsigned int i = 0; i < vSelfFreeze.size(); ++i) {
 		str += "    " + vSelfFreeze[i].ToString() + "\n";
 	}
 	return str;
-}
-
-bool CSecureAccount::MinusFreeToOutput(const CFund& fund) {
-	vector<CFund>::iterator it = vFreedomFund.begin();
-	for (; it != vFreedomFund.end(); it++) {
-		if (it->uTxHash == fund.uTxHash) {
-			break;
-		}
-	}
-
-	if (it == vFreedomFund.end()) {
-		return false;
-	}
-
-	CFund fundOutput(*it);
-	fundOutput.nFundType = OUTPUT_FREEZD_FUND;
-	vOutputFreeze.push_back(fundOutput);
-
-	WriteOperLog(MINUS_FUND, *it);
-	WriteOperLog(ADD_FUND, fundOutput);
-	vFreedomFund.erase(it);
-
-	return true;
 }
 
 void CSecureAccount::WriteOperLog(AccountOper emOperType, const CFund &fund) {
@@ -1375,8 +1310,7 @@ void CSecureAccount::WriteOperLog(AccountOper emOperType, const CFund &fund) {
 	WriteOperLog(operLog);
 }
 
-bool CSecureAccount::MinusInputOutput(vector<CFund>& vFund, const CFund& fund, uint64_t& nOperateValue,
-		bool bLastMinus) {
+bool CSecureAccount::MinusFreezed(vector<CFund>& vFund, const CFund& fund, uint64_t& nOperateValue) {
 	vector<CFund>::iterator it = vFund.begin();
 	for (; it != vFund.end(); it++) {
 		if (it->uTxHash == fund.uTxHash) {
@@ -1389,18 +1323,7 @@ bool CSecureAccount::MinusInputOutput(vector<CFund>& vFund, const CFund& fund, u
 	}
 
 	if (fund.value >= it->value) {
-		uint64_t nFundValue = it->value;
-		nOperateValue = nFundValue;
-		WriteOperLog(MINUS_FUND, *it);
-		vFund.erase(it);
-
-		if (fund.value > nFundValue) {
-			if (bLastMinus)
-				return false;
-			else
-				return true;
-		} else
-			return true;
+		return false;
 	} else {
 		nOperateValue = fund.value;
 		WriteOperLog(MINUS_FUND, *it);
@@ -1411,47 +1334,6 @@ bool CSecureAccount::MinusInputOutput(vector<CFund>& vFund, const CFund& fund, u
 		vFund.erase(it);
 		vFund.push_back(logfund);
 		return true;
-	}
-}
-
-bool CSecureAccount::MinusFund(vector<CFund>& vFund, const CFund& fund, uint64_t& nOperateValue, bool bLastMinus) {
-	uint64_t nValueSpecific = 0;
-	if (MinusInputOutput(vFund, fund, nValueSpecific, false)) {
-		if (fund.value > nValueSpecific) {
-			CFund fundRemain(fund);
-			fundRemain.value = fund.value - nValueSpecific;
-
-			uint64_t nValueFree = 0;
-			bool bRet = MinusFree(fundRemain, nValueFree, bLastMinus);
-			nOperateValue = nValueSpecific + nValueFree;
-			return bRet;
-		}
-
-		nOperateValue = nValueSpecific;
-		return true;
-
-	} else {
-		return false;
-	}
-}
-
-bool CSecureAccount::MinusFundEx(vector<CFund>& vFund, const CFund& fund, uint64_t& nOperateValue) {
-	uint64_t nValue = 0;
-	if (MinusFund(vFund, fund, nValue, false)) {
-		if (fund.value > nValue) {
-			CFund fundRemain(fund);
-			fundRemain.value = fund.value - nValue;
-
-			uint64_t nValueSelf = 0;
-			bool bRet = MinusSelf(fundRemain, nValueSelf);
-			nOperateValue = nValue + nValueSelf;
-			return bRet;
-		}
-
-		nOperateValue = nValue;
-		return true;
-	} else {
-		return false;
 	}
 }
 
@@ -1486,32 +1368,6 @@ bool CSecureAccount::MinusSelf(const CFund &fund, uint64_t& nOperateValue) {
 
 		return true;
 	} else {
-		nOperateValue = nCandidateValue;
-		vOperFund.clear();
-		vOperFund.insert(vOperFund.end(), vSelfFreeze.begin(), vSelfFreeze.end());
-		vSelfFreeze.clear();
-		COperFund operLog(MINUS_FUND, vOperFund);
-		WriteOperLog(operLog);
-		return false;
-	}
-}
-
-bool CSecureAccount::MinusFreeOrSelf(const CFund& fund, uint64_t& nOperateValue) {
-	uint64_t nValueFree = 0;
-	if (MinusFree(fund, nValueFree, false)) {
-		if (fund.value > nValueFree) {
-			CFund fundRemain(fund);
-			fundRemain.value = fund.value - nValueFree;
-
-			uint64_t nValueSelf = 0;
-			bool bRet = MinusSelf(fundRemain, nValueSelf);
-			nOperateValue = nValueFree + nValueSelf;
-			return bRet;
-		} else {
-			nOperateValue = nValueFree;
-			return true;
-		}
-	} else {
 		return false;
 	}
 }
@@ -1536,31 +1392,26 @@ bool CSecureAccount::IsFundValid(OperType type, const CFund& fund) {
 			return false;
 		break;
 
-	case ADD_INPUT_FREEZD:
+	case ADD_FREEZD:
 		if (!IsFundValid(fund))
 			return false;
-		if (INPUT_FREEZD_FUND != fund.nFundType)
+		if (FREEZD_FUND != fund.nFundType)
 			return false;
 		if (!IsMoneyOverflow(fund.value))
 			return false;
 		break;
 
-	case MINUS_OUTPUT:
-	case MINUS_OUTPUT_OR_FREE:
-	case MINUS_OUTPUT_OR_FREE_OR_SELF:
-		if (!IsHashValidInFund(vOutputFreeze, fund))
+	case MINUS_FREEZD:
+		if (!IsHashValidInFund(vFreeze, fund))
 			return false;
 		break;
 
-	case MINUS_INPUT:
-	case MINUS_INPUT_OR_FREE:
-	case MINUS_INPUT_OR_FREE_OR_SELF:
-		if (!IsHashValidInFund(vInputFreeze, fund))
-			return false;
+	case MINUS_FREE:
+	case MINUS_SELF_FREEZD:
 		break;
 
 	default:
-		break;
+		assert(0);
 	}
 
 	return true;
@@ -1591,8 +1442,8 @@ bool CSecureAccount::IsMoneyOverflow(uint64_t nAddMoney) {
 		return false;
 
 	uint64_t nTotalMoney = 0;
-	nTotalMoney = GetVecMoney(vFreedomFund)+GetVecMoney(vRewardFund)+GetVecMoney(vInputFreeze)\
-			+GetVecMoney(vOutputFreeze)+GetVecMoney(vSelfFreeze)+llValues+nAddMoney;
+	nTotalMoney = GetVecMoney(vFreedomFund)+GetVecMoney(vRewardFund)+GetVecMoney(vFreeze)\
+			+GetVecMoney(vSelfFreeze)+llValues+nAddMoney;
 	return MoneyRange(static_cast<int64_t>(nTotalMoney) );
 }
 
