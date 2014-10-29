@@ -43,7 +43,7 @@ void GenerateRandomHash(vector<uint256>& vHash, uint64_t nSize = VECTOR_SIZE) {
 	}
 }
 
-void Init(CBlockIndex* pBlockIndex, CAccountInfo& account) {
+void Init(CBlockIndex* pBlockIndex, CAccount& account) {
 	srand((unsigned) time(NULL));
 	account.llValues = 100;
 	pBlockIndex->nHeight = CHAIN_HEIGHT;
@@ -89,8 +89,8 @@ bool IsEqual(const vector<CFund>& vSrc, const vector<CFund>& vDest) {
 }
 struct CTxTest {
 	CBlockIndex block;
-	CAccountInfo accOperate;
-	CAccountInfo accBeforOperate;
+	CAccount accOperate;
+	CAccount accBeforOperate;
 
 	CTxTest() {
 		::Init(&block, accOperate);

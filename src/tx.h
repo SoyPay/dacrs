@@ -828,7 +828,7 @@ public:
 	string ToString() const;
 };
 
-class CAccountInfo {
+class CAccount {
 public:
 	CKeyID keyID;
 	CPubKey publicKey;
@@ -841,22 +841,22 @@ public:
 	CAccountOperLog accountOperLog;							//!< record operlog, write at undoinfo
 
 public:
-	CAccountInfo(CKeyID &keyId, CPubKey &pubKey) :
+	CAccount(CKeyID &keyId, CPubKey &pubKey) :
 			keyID(keyId), publicKey(pubKey) {
 		llValues = 0;
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
 		vSelfFreeze.clear();
 	}
-	CAccountInfo() :
+	CAccount() :
 			keyID(uint160(0)), llValues(0) {
 		publicKey = CPubKey();
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
 		vSelfFreeze.clear();
 	}
-	std::shared_ptr<CAccountInfo> GetNewInstance() {
-		return make_shared<CAccountInfo>(*this);
+	std::shared_ptr<CAccount> GetNewInstance() {
+		return make_shared<CAccount>(*this);
 	}
 	uint64_t GetInterest() const {
 		uint64_t rest = 0;
@@ -872,7 +872,7 @@ public:
 	uint256 BuildMerkleTree(int prevBlockHeight) const;
 	void ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos);
 	uint64_t GetSecureAccPos(int prevBlockHeight) const;
-	~CAccountInfo() {
+	~CAccount() {
 
 	}
 	string ToString() const;
