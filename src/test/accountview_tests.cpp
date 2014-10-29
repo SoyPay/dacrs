@@ -25,7 +25,7 @@ public:
 public:
 	vector<CKeyID> vRandomKeyID;
 	vector<CRegID> vRandomRegID;
-	vector<CSecureAccount> vAccount;
+	vector<CAccountInfo> vAccount;
 	CAccountViewDB* pAccountViewDB;
 	CAccountViewCache* pAccountViewTip;
 };
@@ -47,7 +47,7 @@ bool CAccountViewTest::EraseAccount() {
 }
 
 bool CAccountViewTest::TestGetAccount(bool bCheckExist) {
-	CSecureAccount account;
+	CAccountInfo account;
 
 	//get account by keyID
 	for (int i = 0; i < VECTOR_SIZE; i++) {
@@ -105,7 +105,7 @@ void CAccountViewTest::Init() {
 	}
 
 	for (int k = 0; k < VECTOR_SIZE; k++) {
-		CSecureAccount account;
+		CAccountInfo account;
 		account.llValues = k + 1;
 		account.keyID = vRandomKeyID.at(k);
 		vAccount.push_back(account);

@@ -10,10 +10,10 @@
 #include "util.h"
 #include <boost/foreach.hpp>
 
-vector<shared_ptr<CSecureAccount> > &CVmScriptRun::GetRawAccont() {
+vector<shared_ptr<CAccountInfo> > &CVmScriptRun::GetRawAccont() {
 	return RawAccont;
 }
-vector<shared_ptr<CSecureAccount> > &CVmScriptRun::GetNewAccont() {
+vector<shared_ptr<CAccountInfo> > &CVmScriptRun::GetNewAccont() {
 	return NewAccont;
 }
 
@@ -103,13 +103,13 @@ bool CVmScriptRun::intial(vector<shared_ptr<CBaseTransaction> >& Tx,CAccountView
 	VmData << Vmpacket;
 
 	for (auto& tx : secure->vArbitratorRegAccId) {
-		auto tem = make_shared<CSecureAccount>();
+		auto tem = make_shared<CAccountInfo>();
 		view.GetAccount(tx, *tem.get());
 		vArbitratorAcc.push_back(tem);
 	}
 	RawAccont.insert(RawAccont.end(), vArbitratorAcc.begin(), vArbitratorAcc.end());
 	for (auto& tx : secure->vRegAccountId) {
-		auto tem = make_shared<CSecureAccount>();
+		auto tem = make_shared<CAccountInfo>();
 		view.GetAccount(tx, *tem.get());
 		RawAccont.push_back(tem);
 	}
@@ -152,12 +152,12 @@ bool CVmScriptRun::run(vector<shared_ptr<CBaseTransaction> >& Tx, CAccountViewCa
 	}
 	return true;
 }
-shared_ptr<CSecureAccount> CVmScriptRun::GetNewAccount(shared_ptr<CSecureAccount>& vOldAccount) {
+shared_ptr<CAccountInfo> CVmScriptRun::GetNewAccount(shared_ptr<CAccountInfo>& vOldAccount) {
 	if (NewAccont.size() == 0)
 		return NULL;
-	vector<shared_ptr<CSecureAccount> >::iterator Iter;
+	vector<shared_ptr<CAccountInfo> >::iterator Iter;
 	for (Iter = NewAccont.begin(); Iter != NewAccont.end(); Iter++) {
-		shared_ptr<CSecureAccount> temp = *Iter;
+		shared_ptr<CAccountInfo> temp = *Iter;
 		if (temp.get()->keyID == vOldAccount.get()->keyID) {
 			NewAccont.erase(Iter);
 			return temp;
@@ -249,8 +249,8 @@ bool CVmScriptRun::OpeatorSecureAccount(const vector<CVmOperate>& listoperate) {
 		if ((OperType) it.add.Opeater == ADD_FREE) {
 			addfund.nFundType = FREEDOM_FUND;
 		}
-		shared_ptr<CSecureAccount> mulsAccount = RawAccont[it.muls.accountid];
-		shared_ptr<CSecureAccount> vnewAccount = GetNewAccount(mulsAccount);
+		shared_ptr<CAccountInfo> mulsAccount = RawAccont[it.muls.accountid];
+		shared_ptr<CAccountInfo> vnewAccount = GetNewAccount(mulsAccount);
 		if (vnewAccount.get() != NULL) {
 			mulsAccount = vnewAccount;
 		}
@@ -273,8 +273,8 @@ bool CVmScriptRun::OpeatorSecureAccount(const vector<CVmOperate>& listoperate) {
 		}
 		addfund.value = retValue;
 
-		shared_ptr<CSecureAccount> addAccount = RawAccont[it.add.accountid];
-		shared_ptr<CSecureAccount> vaddnewAccount = GetNewAccount(addAccount);
+		shared_ptr<CAccountInfo> addAccount = RawAccont[it.add.accountid];
+		shared_ptr<CAccountInfo> vaddnewAccount = GetNewAccount(addAccount);
 		if (vaddnewAccount.get() != NULL) {
 			addAccount = vaddnewAccount;
 		}
@@ -377,13 +377,13 @@ CVmScriptRun::CVmScriptRun(CAccountViewCache& view, vector<shared_ptr<CBaseTrans
 	VmData << Vmpacket;
 
 	for (auto& tx : secure->vArbitratorRegAccId) {
-		auto tem = make_shared<CSecureAccount>();
+		auto tem = make_shared<CAccountInfo>();
 		view.GetAccount(tx, *tem.get());
 		vArbitratorAcc.push_back(tem);
 	}
 	RawAccont.insert(RawAccont.end(), vArbitratorAcc.begin(), vArbitratorAcc.end());
 	for (auto& tx : secure->vRegAccountId) {
-		auto tem = make_shared<CSecureAccount>();
+		auto tem = make_shared<CAccountInfo>();
 		view.GetAccount(tx, *tem.get());
 		RawAccont.push_back(tem);
 	}
