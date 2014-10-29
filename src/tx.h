@@ -19,6 +19,7 @@ class CBlock;
 class CTransactionCacheDB;
 class CTransactionCache;
 class CContractScriptCache;
+class CAuthorizate;
 
 typedef vector<unsigned char> vector_unsigned_char;
 
@@ -836,10 +837,8 @@ public:
 	vector<CFund> vFreedomFund;
 	vector<CFund> vFreeze;
 	vector<CFund> vSelfFreeze;
-
-	//record operlog, write at undoinfo
-	map<vector_unsigned_char,CAuthorizate> mapAuthorizate;	// !< Key:scriptID,value :CAuthorizate
-	CAccountOperLog accountOperLog;
+	map<vector_unsigned_char,CAuthorizate> mapAuthorizate;	//!< Key:scriptID,value :CAuthorizate
+	CAccountOperLog accountOperLog;							//!< record operlog, write at undoinfo
 
 public:
 	CAccountInfo(CKeyID &keyId, CPubKey &pubKey) :
