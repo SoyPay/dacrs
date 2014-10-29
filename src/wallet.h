@@ -215,7 +215,7 @@ public:
 
 	bool AddToWallet(const CAccountTx& accTx);
 	//  void SyncTransaction(const CBaseTransaction *pTx, const CBlock* pblock, const bool bConnect = true);
-	void SyncTransaction(const uint256 &hash, const CBaseTransaction *pTx, const CBlock* pblock);
+	void SyncTransaction(const uint256 &hash, CBaseTransaction *pTx, const CBlock* pblock);
 	void EraseFromWallet(const uint256 &hash);
 	int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
 	void ReacceptWalletTransactions();
@@ -236,7 +236,7 @@ public:
 
 	set<CTxDestination> GetAccountAddresses(string strAccount) const;
 
-	bool IsMine(const CBaseTransaction*pTx) {
+	bool IsMine(CBaseTransaction*pTx) {
 
 		vector<CKeyID> vaddr;
 
@@ -485,7 +485,7 @@ private:
 
 public:
 	uint256 blockHash;
-	map<const uint256, std::shared_ptr<CBaseTransaction> > mapAccountTx;
+	map<uint256, std::shared_ptr<CBaseTransaction> > mapAccountTx;
 public:
 	CAccountTx(CWallet* pwallet = NULL, uint256 hash = uint256(0)) {
 		pWallet = pwallet;
@@ -512,11 +512,8 @@ public:
 		case REG_ACCT_TX:
 			mapAccountTx[hash] = make_shared<CRegisterAccountTx>(pTx);
 			break;
-		case APPEAL_TX:
-			mapAccountTx[hash] = make_shared<CAppealTransaction>(pTx);
-			break;
-		case SECURE_TX:
-			mapAccountTx[hash] = make_shared<CSecureTransaction>(pTx);
+		case CONTRACT_TX:
+			mapAccountTx[hash] = make_shared<CContractTransaction>(pTx);
 			break;
 		case FREEZE_TX:
 			mapAccountTx[hash] = make_shared<CFreezeTransaction>(pTx);
@@ -526,6 +523,7 @@ public:
 			break;
 		case REG_SCRIPT_TX:
 			mapAccountTx[hash] = make_shared<CRegistScriptTx>(pTx);
+			break;
 		default:
 			return false;
 			break;
@@ -582,129 +580,12 @@ public:
 		return CWalletDB(pWallet->strWalletFile).WriteAccountTx(blockHash, *this);
 	}
 
-	unsigned int GetSerializeSize(int nType, int nVersion) const {
-		return 0;
-	}
-
-	template<typename Stream>
-	void Serialize(Stream& s, int nType, int nVersion) const {
-		CSerActionSerialize ser_action;
-		unsigned int nSerSize = 0;
-
+	IMPLEMENT_SERIALIZE
+	(
 		READWRITE(blockHash);
+		READWRITE(mapAccountTx);
+	)
 
-		for (const auto& item : mapAccountTx) {
-			READWRITE(item.second->nTxType);
-			READWRITE(item.first);
-			switch (item.second->nTxType) {
-			case NORMAL_TX:
-				READWRITE(*((CTransaction* )item.second.get()));
-				break;
-			case REG_ACCT_TX:
-				READWRITE(*((CRegisterAccountTx* )item.second.get()));
-				break;
-			case APPEAL_TX:
-				READWRITE(*((CAppealTransaction* )item.second.get()));
-				break;
-			case SECURE_TX:
-				READWRITE(*((CSecureTransaction* )item.second.get()));
-				break;
-			case FREEZE_TX:
-				READWRITE(*((CFreezeTransaction* )item.second.get()));
-				break;
-			case REWARD_TX:
-				READWRITE(*((CRewardTransaction* )item.second.get()));
-				break;
-			case REG_SCRIPT_TX:
-				READWRITE(*((CRegistScriptTx* )item.second.get()));
-				break;
-			default:
-				break;
-			}
-		}
-		unsigned char txtype = NULL_TX;
-		READWRITE(txtype);
-
-	}
-
-	template<typename Stream>
-	void Unserialize(Stream& s, int nType, int nVersion) {
-
-		CSerActionUnserialize ser_action;
-		unsigned int nSerSize = 0;
-
-		READWRITE(blockHash);
-
-		unsigned char txtype = 0;
-		uint256 hash;
-		READWRITE(txtype);
-		while (txtype != NULL_TX) {
-			READWRITE(hash);
-
-			switch (txtype) {
-			case NORMAL_TX:
-
-			{
-				CTransaction tx;
-				READWRITE(tx);
-				AddTx(hash, (CBaseTransaction*) &tx);
-			}
-
-				break;
-			case REG_ACCT_TX:
-
-			{
-				CRegisterAccountTx tx;
-				READWRITE(tx);
-				AddTx(hash, (CBaseTransaction*) &tx);
-			}
-				break;
-			case APPEAL_TX: {
-				CAppealTransaction tx;
-				READWRITE(tx);
-				AddTx(hash, (CBaseTransaction*) &tx);
-			}
-				break;
-			case SECURE_TX:
-
-			{
-				CSecureTransaction tx;
-				READWRITE(tx);
-				AddTx(hash, (CBaseTransaction*) &tx);
-			}
-				break;
-			case FREEZE_TX:
-
-			{
-				CFreezeTransaction tx;
-				READWRITE(tx);
-				AddTx(hash, (CBaseTransaction*) &tx);
-			}
-				break;
-			case REWARD_TX:
-
-			{
-				CRewardTransaction tx;
-				READWRITE(tx);
-				AddTx(hash, (CBaseTransaction*) &tx);
-			}
-				break;
-
-			case REG_SCRIPT_TX:
-
-			{
-				CRegistScriptTx tx;
-				READWRITE(tx);
-				AddTx(hash, (CBaseTransaction*) &tx);
-			}
-				break;
-			default:
-				break;
-			}
-
-			READWRITE(txtype);
-		}
-	}
 
 };
 

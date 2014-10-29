@@ -26,7 +26,7 @@ class CVmScriptRun {
 	CVmScript vmScript;
 
 private:
-	bool intial(vector<shared_ptr<CBaseTransaction> >& Tx,CAccountViewCache& view);
+	bool intial(shared_ptr<CBaseTransaction> &Tx, CAccountViewCache& view);
 	bool IsFirstTx() const {
 		return listTx.size() == 1;
 	}
@@ -45,7 +45,7 @@ public:
 	bool OpeatorSecureAccount(const vector<CVmOperate>& listoperate);
 	shared_ptr<CAccount> GetNewAccount(shared_ptr<CAccount>& vOldAccount);
 
-	bool run(vector<shared_ptr<CBaseTransaction> >& Tx,CAccountViewCache& view);
+	bool run(shared_ptr<CBaseTransaction> &Tx,CAccountViewCache& view);
 	//just for debug
 	CVmScriptRun(CAccountViewCache& view, vector<shared_ptr<CBaseTransaction> >& Tx, CVmScript& script);
 	shared_ptr<vector<CVmOperate>> GetOperate() const;
