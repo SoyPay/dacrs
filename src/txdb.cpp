@@ -173,14 +173,9 @@ bool CAccountViewDB::SetBestBlock(const uint256 &hashBlock) {
 bool CAccountViewDB::BatchWrite(const map<CKeyID, CAccountInfo> &mapAccounts,
 		const map<string, CKeyID> &mapKeyIds, const uint256 &hashBlock) {
 	CLevelDBBatch batch;
-<<<<<<< HEAD
 	map<CKeyID, CAccountInfo>::const_iterator iterAccount = mapAccounts.begin();
-=======
-
-	map<CKeyID, CSecureAccount>::const_iterator iterAccount = mapAccounts.begin();
->>>>>>> remotes/origin/master
 	for (; iterAccount != mapAccounts.end(); ++iterAccount) {
-		CSecureAccount saTemp = iterAccount->second;
+		CAccountInfo saTemp = iterAccount->second;
 		CAccountOperLog accountOperLog;
 		saTemp.accountOperLog = accountOperLog;
 		if (uint160(0) == iterAccount->second.keyID) {
