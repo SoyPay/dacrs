@@ -54,7 +54,6 @@ soypay_test_SOURCES = \
   util_tests.cpp \
   sighash_tests.cpp \
   chainparams_tests.cpp \
-  walletdb_tests.cpp \
   tx_tests.cpp \
   vmscript_test.cpp \
   CVir8051_test.cpp \
