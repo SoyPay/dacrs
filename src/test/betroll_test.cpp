@@ -750,361 +750,361 @@ unsigned char TempArray[] = {
 0x17, 0x80, 0xFE,
 
 };
-extern std::vector<unsigned char>& GetScriptBin(char *filepath);
-const char *Array1[] =
-		{ "\x9c\x52\x4a\xdb\xcf\x56\x11\x12\x2b\x29\x12\x5e\x5d\x35\xd2\xd2",
-				"\x9c\x52\x4a\xdb\xcf\x56\x11\x12\x2b\x29\x12\x5e\x5d\x35\xd2\xd2\x22\x81\xaa\xb5\x33\xf0\x08\x32\xd5\x56\xb1\xf9\xea\xe5\x1d\x7d" };
-
-class Ccontact {
-public:
-	unsigned char s1;
-	unsigned char s2;
-	unsigned char a3;
-	unsigned char b3;
-	unsigned char r;
-	unsigned char h[2];
-	unsigned char money[20];
-public:
-	IMPLEMENT_SERIALIZE
-	(
-			READWRITE(s1);
-			READWRITE(s2);
-			READWRITE(a3);
-			READWRITE(b3);
-			READWRITE(r);
-			for(int i = 0;i < 2;i++)
-			READWRITE(h[i]);
-			for(int i = 0;i < 20;i++)
-			READWRITE(money[i]);
-	)
-};
-void Init(CAccountViewCache &view, CVmScript &vscript, vector<std::shared_ptr<CBaseTransaction> >& Tx,int64_t &iresult, int64_t &bresult,int64_t &betmoey) {
-
-	//std::vector<unsigned char> pScript = GetScriptBin("D:\\C51\\Debug\\Exe\\CPLUS.bin");
-	vscript.Rom.insert(vscript.Rom.begin(), TempArray, TempArray+sizeof(TempArray));
-	//vscript.Rom.insert(vscript.Rom.begin(), pScript.begin(), pScript.end());
-	vscript.rule.maxPay = 50;
-	vscript.rule.maxReSv = 50;
-	vscript.rule.vNextOutHeight = 90;
-	vscript.rule.vpreOutHeihgt = 100;
-
-	vector_unsigned_char vpscript;
-	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
-	scriptData << vscript;
-	vpscript.assign(scriptData.begin(),scriptData.end());
-
-	vector<vector_unsigned_char> account;
-	for (int i = 1; i < 3; i++) {
-		CAccountInfo sourceAccount;
-		CRegID accountId(i + 2, i);
-		std::vector<unsigned char> nvector;
-		nvector.assign(Array1[i - 1], Array1[i - 1] + 20);
-		uint160 hash(nvector);
-		CKeyID keyId1 = (CKeyID) hash;
-		sourceAccount.keyID = keyId1;
-		sourceAccount.llValues = 7800000000;
-		account.push_back(accountId.vRegID);
-		assert(view.SaveAccountInfo(accountId.vRegID, keyId1, sourceAccount));
-	}
-
-	int a1 = random(100);
-	int b1 = random(100);
-	int a2 = random(100);
-	int b2 = random(100);
-	int a3 = a1 + a2;
-	int b3 = b1 + b2;
-	int s1 = a2^a1;
-	int s2 = b2^b1;
-	iresult = (a1^b1)%6 + 1;
-	bresult = random(1);
-	Ccontact pcontact;
-	memset(&pcontact,0,sizeof(Ccontact));
-
-	memcpy(&pcontact.s1,&s1,1);
-	memcpy(&pcontact.s2,&s2,1);
-	memcpy(&pcontact.a3,&a3,1);
-	memcpy(&pcontact.b3,&b3,1);
-	memcpy(&pcontact.r,&bresult,1);
-	int height = 70 ;
-	memcpy(&pcontact.h,&height,2);
-	betmoey = 51;
-
-	sprintf((char*) pcontact.money, "%d0000000", betmoey);
-	CDataStream VmData(SER_DISK, CLIENT_VERSION);
-	VmData << pcontact;
-	std::vector<unsigned char> scriptid;
-
-	CRegID scriptId(9, 9);
-	CContractScript contractScript;
-	contractScript.scriptId = scriptId.vRegID;
-	contractScript.scriptContent = vpscript;
-	CSecureTransaction *nTemp = static_cast<CSecureTransaction*>(Tx[0].get());
-	nTemp->vContract.insert(nTemp->vContract.begin(),VmData.begin(),VmData.end());
-	nTemp->regScriptId = scriptId.vRegID;
-
-	for (auto& item : account) {
-		nTemp->vRegAccountId.push_back(item);
-		}
-	unsigned char ch; memcpy(&ch,&a2,1);
-	CAppealTransaction *nA2 = static_cast<CAppealTransaction*>(Tx[1].get());
-	nA2->vPreAcountIndex.push_back(0x00);
-	nA2->vContract.push_back(ch);
-	memcpy(&ch,&b2,1);
-	CAppealTransaction *nB2 = static_cast<CAppealTransaction*>(Tx[2].get());
-	nB2->vPreAcountIndex.push_back(0x01);
-	nB2->vContract.push_back(ch);
-}
-struct CTxBetRollScript {
-	CVmScript vscript;
-	std::shared_ptr<CSecureTransaction> tx;
-	std::shared_ptr<CAppealTransaction> A2;
-	std::shared_ptr<CAppealTransaction> B2;
-	CAccountViewCache view;
-	CAccountInfo A;
-	CAccountInfo B;
-	int64_t result;
-	int64_t bresult;
-	int64_t betm;
-	CTxBetRollScript() :
-			view(*pAccountViewTip, true) {
-		tx = std::make_shared < CSecureTransaction > (CSecureTransaction());
-		A2 = std::make_shared < CAppealTransaction > (CAppealTransaction());
-		B2 = std::make_shared < CAppealTransaction > (CAppealTransaction());
-		vector<std::shared_ptr<CBaseTransaction> > Tx;
-		Tx.push_back(tx);
-		Tx.push_back(A2);
-		Tx.push_back(B2);
-		result = 0;
-		bresult = 0;
-		betm = 0;
-		::Init(view, vscript, Tx, result, bresult, betm);
-		view.GetAccount(tx.get()->vRegAccountId[0], A);
-		view.GetAccount(tx.get()->vRegAccountId[1], B);
-	}
-};
-
-bool SendSecuTx(CTxBetRollScript * betroll) {
-	vector<std::shared_ptr<CBaseTransaction> > Tx;
-	Tx.push_back(betroll->tx);
-	CVmScriptRun mScript(betroll->view, Tx, betroll->vscript);
-	bool flag = mScript.run(Tx, betroll->view);
-	vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
-	for (auto& item : pac) {
-		betroll->view.SetAccount(item.get()->keyID, *item.get());
-	}
-
-	if (betroll->betm > betroll->A.llValues || betroll->betm > betroll->B.llValues) {
-		BOOST_CHECK(!flag);
-
-	} else {
-		BOOST_CHECK(flag);
-		std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
-		BOOST_CHECK(retData.get()->size() == 2);
-		for (auto& item : *retData.get()) {
-			BOOST_CHECK(atoi64((char* )item.muls.money) == atoi64((char* )item.add.money));
-		}
-	}
-}
-bool SendASendTx(CTxBetRollScript * betroll, bool bcheck) {
-
-	if (bcheck) {
-		while (true) {
-			int b2 = random(100);
-			unsigned char ch;
-			memcpy(&ch, &b2, 1);
-			if (ch != betroll->A2.get()->vContract[0]) {
-				betroll->A2.get()->vContract.clear();
-				betroll->A2.get()->vContract.push_back(ch);
-				break;
-			}
-		}
-
-	}
-	vector<std::shared_ptr<CBaseTransaction> > Tx;
-	Tx.push_back(betroll->tx);
-	Tx.push_back(betroll->A2);
-	CVmScriptRun mScript(betroll->view, Tx, betroll->vscript);
-	bool flag = mScript.run(Tx, betroll->view);
-	vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
-	for (auto& item : pac) {
-		betroll->view.SetAccount(item.get()->keyID, *item.get());
-	}
-	BOOST_CHECK(flag);
-	std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
-	for (auto& item : *retData.get()) {
-		BOOST_CHECK(atoi64((char* )item.muls.money) == atoi64((char* )item.add.money));
-	}
-	if (bcheck) {
-		BOOST_CHECK(retData.get()->size() == 2);
-	} else {
-		BOOST_CHECK(retData.get()->size() == 1);
-	}
-}
-
-bool SendBSendTx(CTxBetRollScript * betroll, bool bcheck) {
-	if (bcheck) {
-		while (true) {
-			int b2 = random(100);
-			unsigned char ch;
-			memcpy(&ch, &b2, 1);
-			if (ch != betroll->B2.get()->vContract[0]) {
-				betroll->B2.get()->vContract.clear();
-				betroll->B2.get()->vContract.push_back(ch);
-				break;
-			}
-		}
-
-	}
-	vector<std::shared_ptr<CBaseTransaction> > Tx;
-	Tx.push_back(betroll->tx);
-	Tx.push_back(betroll->B2);
-	CVmScriptRun mScript(betroll->view, Tx, betroll->vscript);
-	bool flag = mScript.run(Tx, betroll->view);
-	vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
-	for (auto& item : pac) {
-		betroll->view.SetAccount(item.get()->keyID, *item.get());
-	}
-	BOOST_CHECK(flag);
-	std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
-	for (auto& item : *retData.get()) {
-		BOOST_CHECK(atoi64((char* )item.muls.money) == atoi64((char* )item.add.money));
-	}
-	if (bcheck) {
-		BOOST_CHECK(retData.get()->size() == 2);
-	} else {
-		BOOST_CHECK(retData.get()->size() == 1);
-	}
-
-}
-
-bool SendBThirdTx(CTxBetRollScript * betroll, bool bcheck) {
-	vector<std::shared_ptr<CBaseTransaction> > Tx;
-	Tx.push_back(betroll->tx);
-	Tx.push_back(betroll->A2);
-	Tx.push_back(betroll->B2);
-	CVmScriptRun mScript(betroll->view, Tx, betroll->vscript);
-	bool flag = mScript.run(Tx, betroll->view);
-	if (bcheck) {
-		BOOST_CHECK(!flag);
-		std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
-		BOOST_CHECK(retData.get()->size() == 0);
-		return false;
-	}
-	/// b win
-	if (betroll->bresult == 0 && (1 <= betroll->result <= 3 || 4 <= betroll->result <= 6)) {
-		BOOST_CHECK(flag);
-		std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
-		BOOST_CHECK(retData.get()->size() == 2);
-		for (auto& item : *retData.get()) {
-			BOOST_CHECK(atoi64((char* )item.muls.money) == atoi64((char* )item.add.money));
-		}
-	}
-	if (betroll->bresult == 1 && (1 <= betroll->result <= 3 || 4 <= betroll->result <= 6)) {
-		BOOST_CHECK(flag);
-		std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
-		BOOST_CHECK(retData.get()->size() == 2);
-		for (auto& item : *retData.get()) {
-			BOOST_CHECK(atoi64((char* )item.muls.money) == atoi64((char* )item.add.money));
-		}
-	}
-	return true;
-}
-
-bool SendAThirdTx(CTxBetRollScript * betroll, bool bcheck) {
-	vector<std::shared_ptr<CBaseTransaction> > Tx;
-	Tx.push_back(betroll->tx);
-	Tx.push_back(betroll->B2);
-	Tx.push_back(betroll->A2);
-	CVmScriptRun mScript(betroll->view, Tx, betroll->vscript);
-	bool flag = mScript.run(Tx, betroll->view);
-	vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
-	if (bcheck) {
-		BOOST_CHECK(!flag);
-		std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
-		BOOST_CHECK(retData.get()->size() == 0);
-		return false;
-	}
-	/// b win
-	if (betroll->bresult == 0 && (1 <= betroll->result <= 3 || 4 <= betroll->result <= 6)) {
-		BOOST_CHECK(flag);
-		std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
-		BOOST_CHECK(retData.get()->size() == 2);
-		for (auto& item : *retData.get()) {
-			BOOST_CHECK(atoi64((char* )item.muls.money) == atoi64((char* )item.add.money));
-		}
-	}
-	if (betroll->bresult == 1 && (1 <= betroll->result <= 3 || 4 <= betroll->result <= 6)) {
-		BOOST_CHECK(flag);
-		std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
-		BOOST_CHECK(retData.get()->size() == 2);
-		for (auto& item : *retData.get()) {
-			BOOST_CHECK(atoi64((char* )item.muls.money) == atoi64((char* )item.add.money));
-		}
-	}
-
-}
-void SaveAccount(CTxBetRollScript * betroll) {
-	betroll->view.SetAccount(betroll->A.keyID, betroll->A);
-	betroll->view.SetAccount(betroll->B.keyID, betroll->B);
-}
-BOOST_FIXTURE_TEST_SUITE(betRoll,CTxBetRollScript)
-
-#if 1
-
-BOOST_FIXTURE_TEST_CASE(betRoll_test,CTxBetRollScript)
-{
-	///////// SendSecuTx B A notamal
-	SendSecuTx(this);
-	SendBSendTx(this,false);
-	SendAThirdTx(this,false);
-	SaveAccount(this);
-
-	///////// SendSecuTx A B notamal
-	SendSecuTx(this);
-	SendAThirdTx(this,false);
-	SendBSendTx(this,false);
-	SaveAccount(this);
-
-	///////// SendSecuTx B(Lie) A notamal
-	SendSecuTx(this);
-	SendBSendTx(this,true);
-	SendAThirdTx(this,true);
-	SaveAccount(this);
-
-	///////// SendSecuTx A(Lie) B notamal
-	SendSecuTx(this);
-	SendAThirdTx(this,true);
-	SendBSendTx(this,true);
-	SaveAccount(this);
-
-}
-BOOST_FIXTURE_TEST_CASE(betRoll_print,CTxBetRollScript)
-{
-	CDataStream VmData(SER_DISK, CLIENT_VERSION);
-	VmData << vscript;
-	string strOutpud = "script:" + HexStr(VmData.str())+"\r\n"
-	+"first:" +HexStr(tx.get()->vContract)+"\r\n"
-	+"A Second:" +HexStr(A2.get()->vContract)+"\r\n"
-	+"B Third:"+HexStr(B2.get()->vContract)+"\r\n"
-	+"or \r\n"
-	+"B Second:"+HexStr(B2.get()->vContract)+"\r\n"
-	+"A third:"+HexStr(A2.get()->vContract)+"\r\n";
-
-	BOOST_MESSAGE(strOutpud);
-//	cout << "script:" << HexStr(VmData.str()).c_str() << endl;
+//extern std::vector<unsigned char>& GetScriptBin(char *filepath);
+//const char *Array1[] =
+//		{ "\x9c\x52\x4a\xdb\xcf\x56\x11\x12\x2b\x29\x12\x5e\x5d\x35\xd2\xd2",
+//				"\x9c\x52\x4a\xdb\xcf\x56\x11\x12\x2b\x29\x12\x5e\x5d\x35\xd2\xd2\x22\x81\xaa\xb5\x33\xf0\x08\x32\xd5\x56\xb1\xf9\xea\xe5\x1d\x7d" };
 //
-//	cout<<"first:"<<HexStr(tx.get()->vContract).c_str()<<endl;
-//	cout<<"A Second:"<<HexStr(A2.get()->vContract).c_str()<<endl;
-//	cout<<"B Third:"<<HexStr(B2.get()->vContract).c_str()<<endl;
-//	cout<<"or "<<endl;
-//	cout<<"B Second:"<<HexStr(B2.get()->vContract).c_str()<<endl;
-//	cout<<"A third:"<<HexStr(A2.get()->vContract).c_str()<<endl;
-}
-
-#else
-BOOST_AUTO_TEST_CASE(xxxx) {
-	BOOST_ERROR("ERROR:THE SUITE NEED TO MODIFY!");
-}
-#endif
-
-BOOST_AUTO_TEST_SUITE_END()
+//class Ccontact {
+//public:
+//	unsigned char s1;
+//	unsigned char s2;
+//	unsigned char a3;
+//	unsigned char b3;
+//	unsigned char r;
+//	unsigned char h[2];
+//	unsigned char money[20];
+//public:
+//	IMPLEMENT_SERIALIZE
+//	(
+//			READWRITE(s1);
+//			READWRITE(s2);
+//			READWRITE(a3);
+//			READWRITE(b3);
+//			READWRITE(r);
+//			for(int i = 0;i < 2;i++)
+//			READWRITE(h[i]);
+//			for(int i = 0;i < 20;i++)
+//			READWRITE(money[i]);
+//	)
+//};
+//void Init(CAccountViewCache &view, CVmScript &vscript, vector<std::shared_ptr<CBaseTransaction> >& Tx,int64_t &iresult, int64_t &bresult,int64_t &betmoey) {
+//
+//	//std::vector<unsigned char> pScript = GetScriptBin("D:\\C51\\Debug\\Exe\\CPLUS.bin");
+//	vscript.Rom.insert(vscript.Rom.begin(), TempArray, TempArray+sizeof(TempArray));
+//	//vscript.Rom.insert(vscript.Rom.begin(), pScript.begin(), pScript.end());
+//	vscript.rule.maxPay = 50;
+//	vscript.rule.maxReSv = 50;
+//	vscript.rule.vNextOutHeight = 90;
+//	vscript.rule.vpreOutHeihgt = 100;
+//
+//	vector_unsigned_char vpscript;
+//	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
+//	scriptData << vscript;
+//	vpscript.assign(scriptData.begin(),scriptData.end());
+//
+//	vector<vector_unsigned_char> account;
+//	for (int i = 1; i < 3; i++) {
+//		CAccountInfo sourceAccount;
+//		CRegID accountId(i + 2, i);
+//		std::vector<unsigned char> nvector;
+//		nvector.assign(Array1[i - 1], Array1[i - 1] + 20);
+//		uint160 hash(nvector);
+//		CKeyID keyId1 = (CKeyID) hash;
+//		sourceAccount.keyID = keyId1;
+//		sourceAccount.llValues = 7800000000;
+//		account.push_back(accountId.vRegID);
+//		assert(view.SaveAccountInfo(accountId.vRegID, keyId1, sourceAccount));
+//	}
+//
+//	int a1 = random(100);
+//	int b1 = random(100);
+//	int a2 = random(100);
+//	int b2 = random(100);
+//	int a3 = a1 + a2;
+//	int b3 = b1 + b2;
+//	int s1 = a2^a1;
+//	int s2 = b2^b1;
+//	iresult = (a1^b1)%6 + 1;
+//	bresult = random(1);
+//	Ccontact pcontact;
+//	memset(&pcontact,0,sizeof(Ccontact));
+//
+//	memcpy(&pcontact.s1,&s1,1);
+//	memcpy(&pcontact.s2,&s2,1);
+//	memcpy(&pcontact.a3,&a3,1);
+//	memcpy(&pcontact.b3,&b3,1);
+//	memcpy(&pcontact.r,&bresult,1);
+//	int height = 70 ;
+//	memcpy(&pcontact.h,&height,2);
+//	betmoey = 51;
+//
+//	sprintf((char*) pcontact.money, "%d0000000", betmoey);
+//	CDataStream VmData(SER_DISK, CLIENT_VERSION);
+//	VmData << pcontact;
+//	std::vector<unsigned char> scriptid;
+//
+//	CRegID scriptId(9, 9);
+//	CContractScript contractScript;
+//	contractScript.scriptId = scriptId.vRegID;
+//	contractScript.scriptContent = vpscript;
+//	CSecureTransaction *nTemp = static_cast<CSecureTransaction*>(Tx[0].get());
+//	nTemp->vContract.insert(nTemp->vContract.begin(),VmData.begin(),VmData.end());
+//	nTemp->regScriptId = scriptId.vRegID;
+//
+//	for (auto& item : account) {
+//		nTemp->vRegAccountId.push_back(item);
+//		}
+//	unsigned char ch; memcpy(&ch,&a2,1);
+//	CAppealTransaction *nA2 = static_cast<CAppealTransaction*>(Tx[1].get());
+//	nA2->vPreAcountIndex.push_back(0x00);
+//	nA2->vContract.push_back(ch);
+//	memcpy(&ch,&b2,1);
+//	CAppealTransaction *nB2 = static_cast<CAppealTransaction*>(Tx[2].get());
+//	nB2->vPreAcountIndex.push_back(0x01);
+//	nB2->vContract.push_back(ch);
+//}
+//struct CTxBetRollScript {
+//	CVmScript vscript;
+//	std::shared_ptr<CSecureTransaction> tx;
+//	std::shared_ptr<CAppealTransaction> A2;
+//	std::shared_ptr<CAppealTransaction> B2;
+//	CAccountViewCache view;
+//	CAccountInfo A;
+//	CAccountInfo B;
+//	int64_t result;
+//	int64_t bresult;
+//	int64_t betm;
+//	CTxBetRollScript() :
+//			view(*pAccountViewTip, true) {
+//		tx = std::make_shared < CSecureTransaction > (CSecureTransaction());
+//		A2 = std::make_shared < CAppealTransaction > (CAppealTransaction());
+//		B2 = std::make_shared < CAppealTransaction > (CAppealTransaction());
+//		vector<std::shared_ptr<CBaseTransaction> > Tx;
+//		Tx.push_back(tx);
+//		Tx.push_back(A2);
+//		Tx.push_back(B2);
+//		result = 0;
+//		bresult = 0;
+//		betm = 0;
+//		::Init(view, vscript, Tx, result, bresult, betm);
+//		view.GetAccount(tx.get()->vRegAccountId[0], A);
+//		view.GetAccount(tx.get()->vRegAccountId[1], B);
+//	}
+//};
+//
+//bool SendSecuTx(CTxBetRollScript * betroll) {
+//	vector<std::shared_ptr<CBaseTransaction> > Tx;
+//	Tx.push_back(betroll->tx);
+//	CVmScriptRun mScript(betroll->view, Tx, betroll->vscript);
+//	bool flag = mScript.run(Tx, betroll->view);
+//	vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
+//	for (auto& item : pac) {
+//		betroll->view.SetAccount(item.get()->keyID, *item.get());
+//	}
+//
+//	if (betroll->betm > betroll->A.llValues || betroll->betm > betroll->B.llValues) {
+//		BOOST_CHECK(!flag);
+//
+//	} else {
+//		BOOST_CHECK(flag);
+//		std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
+//		BOOST_CHECK(retData.get()->size() == 2);
+//		for (auto& item : *retData.get()) {
+//			BOOST_CHECK(atoi64((char* )item.muls.money) == atoi64((char* )item.add.money));
+//		}
+//	}
+//}
+//bool SendASendTx(CTxBetRollScript * betroll, bool bcheck) {
+//
+//	if (bcheck) {
+//		while (true) {
+//			int b2 = random(100);
+//			unsigned char ch;
+//			memcpy(&ch, &b2, 1);
+//			if (ch != betroll->A2.get()->vContract[0]) {
+//				betroll->A2.get()->vContract.clear();
+//				betroll->A2.get()->vContract.push_back(ch);
+//				break;
+//			}
+//		}
+//
+//	}
+//	vector<std::shared_ptr<CBaseTransaction> > Tx;
+//	Tx.push_back(betroll->tx);
+//	Tx.push_back(betroll->A2);
+//	CVmScriptRun mScript(betroll->view, Tx, betroll->vscript);
+//	bool flag = mScript.run(Tx, betroll->view);
+//	vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
+//	for (auto& item : pac) {
+//		betroll->view.SetAccount(item.get()->keyID, *item.get());
+//	}
+//	BOOST_CHECK(flag);
+//	std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
+//	for (auto& item : *retData.get()) {
+//		BOOST_CHECK(atoi64((char* )item.muls.money) == atoi64((char* )item.add.money));
+//	}
+//	if (bcheck) {
+//		BOOST_CHECK(retData.get()->size() == 2);
+//	} else {
+//		BOOST_CHECK(retData.get()->size() == 1);
+//	}
+//}
+//
+//bool SendBSendTx(CTxBetRollScript * betroll, bool bcheck) {
+//	if (bcheck) {
+//		while (true) {
+//			int b2 = random(100);
+//			unsigned char ch;
+//			memcpy(&ch, &b2, 1);
+//			if (ch != betroll->B2.get()->vContract[0]) {
+//				betroll->B2.get()->vContract.clear();
+//				betroll->B2.get()->vContract.push_back(ch);
+//				break;
+//			}
+//		}
+//
+//	}
+//	vector<std::shared_ptr<CBaseTransaction> > Tx;
+//	Tx.push_back(betroll->tx);
+//	Tx.push_back(betroll->B2);
+//	CVmScriptRun mScript(betroll->view, Tx, betroll->vscript);
+//	bool flag = mScript.run(Tx, betroll->view);
+//	vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
+//	for (auto& item : pac) {
+//		betroll->view.SetAccount(item.get()->keyID, *item.get());
+//	}
+//	BOOST_CHECK(flag);
+//	std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
+//	for (auto& item : *retData.get()) {
+//		BOOST_CHECK(atoi64((char* )item.muls.money) == atoi64((char* )item.add.money));
+//	}
+//	if (bcheck) {
+//		BOOST_CHECK(retData.get()->size() == 2);
+//	} else {
+//		BOOST_CHECK(retData.get()->size() == 1);
+//	}
+//
+//}
+//
+//bool SendBThirdTx(CTxBetRollScript * betroll, bool bcheck) {
+//	vector<std::shared_ptr<CBaseTransaction> > Tx;
+//	Tx.push_back(betroll->tx);
+//	Tx.push_back(betroll->A2);
+//	Tx.push_back(betroll->B2);
+//	CVmScriptRun mScript(betroll->view, Tx, betroll->vscript);
+//	bool flag = mScript.run(Tx, betroll->view);
+//	if (bcheck) {
+//		BOOST_CHECK(!flag);
+//		std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
+//		BOOST_CHECK(retData.get()->size() == 0);
+//		return false;
+//	}
+//	/// b win
+//	if (betroll->bresult == 0 && (1 <= betroll->result <= 3 || 4 <= betroll->result <= 6)) {
+//		BOOST_CHECK(flag);
+//		std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
+//		BOOST_CHECK(retData.get()->size() == 2);
+//		for (auto& item : *retData.get()) {
+//			BOOST_CHECK(atoi64((char* )item.muls.money) == atoi64((char* )item.add.money));
+//		}
+//	}
+//	if (betroll->bresult == 1 && (1 <= betroll->result <= 3 || 4 <= betroll->result <= 6)) {
+//		BOOST_CHECK(flag);
+//		std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
+//		BOOST_CHECK(retData.get()->size() == 2);
+//		for (auto& item : *retData.get()) {
+//			BOOST_CHECK(atoi64((char* )item.muls.money) == atoi64((char* )item.add.money));
+//		}
+//	}
+//	return true;
+//}
+//
+//bool SendAThirdTx(CTxBetRollScript * betroll, bool bcheck) {
+//	vector<std::shared_ptr<CBaseTransaction> > Tx;
+//	Tx.push_back(betroll->tx);
+//	Tx.push_back(betroll->B2);
+//	Tx.push_back(betroll->A2);
+//	CVmScriptRun mScript(betroll->view, Tx, betroll->vscript);
+//	bool flag = mScript.run(Tx, betroll->view);
+//	vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
+//	if (bcheck) {
+//		BOOST_CHECK(!flag);
+//		std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
+//		BOOST_CHECK(retData.get()->size() == 0);
+//		return false;
+//	}
+//	/// b win
+//	if (betroll->bresult == 0 && (1 <= betroll->result <= 3 || 4 <= betroll->result <= 6)) {
+//		BOOST_CHECK(flag);
+//		std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
+//		BOOST_CHECK(retData.get()->size() == 2);
+//		for (auto& item : *retData.get()) {
+//			BOOST_CHECK(atoi64((char* )item.muls.money) == atoi64((char* )item.add.money));
+//		}
+//	}
+//	if (betroll->bresult == 1 && (1 <= betroll->result <= 3 || 4 <= betroll->result <= 6)) {
+//		BOOST_CHECK(flag);
+//		std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();
+//		BOOST_CHECK(retData.get()->size() == 2);
+//		for (auto& item : *retData.get()) {
+//			BOOST_CHECK(atoi64((char* )item.muls.money) == atoi64((char* )item.add.money));
+//		}
+//	}
+//
+//}
+//void SaveAccount(CTxBetRollScript * betroll) {
+//	betroll->view.SetAccount(betroll->A.keyID, betroll->A);
+//	betroll->view.SetAccount(betroll->B.keyID, betroll->B);
+//}
+//BOOST_FIXTURE_TEST_SUITE(betRoll,CTxBetRollScript)
+//
+//#if 0
+//
+//BOOST_FIXTURE_TEST_CASE(betRoll_test,CTxBetRollScript)
+//{
+//	///////// SendSecuTx B A notamal
+//	SendSecuTx(this);
+//	SendBSendTx(this,false);
+//	SendAThirdTx(this,false);
+//	SaveAccount(this);
+//
+//	///////// SendSecuTx A B notamal
+//	SendSecuTx(this);
+//	SendAThirdTx(this,false);
+//	SendBSendTx(this,false);
+//	SaveAccount(this);
+//
+//	///////// SendSecuTx B(Lie) A notamal
+//	SendSecuTx(this);
+//	SendBSendTx(this,true);
+//	SendAThirdTx(this,true);
+//	SaveAccount(this);
+//
+//	///////// SendSecuTx A(Lie) B notamal
+//	SendSecuTx(this);
+//	SendAThirdTx(this,true);
+//	SendBSendTx(this,true);
+//	SaveAccount(this);
+//
+//}
+//BOOST_FIXTURE_TEST_CASE(betRoll_print,CTxBetRollScript)
+//{
+//	CDataStream VmData(SER_DISK, CLIENT_VERSION);
+//	VmData << vscript;
+//	string strOutpud = "script:" + HexStr(VmData.str())+"\r\n"
+//	+"first:" +HexStr(tx.get()->vContract)+"\r\n"
+//	+"A Second:" +HexStr(A2.get()->vContract)+"\r\n"
+//	+"B Third:"+HexStr(B2.get()->vContract)+"\r\n"
+//	+"or \r\n"
+//	+"B Second:"+HexStr(B2.get()->vContract)+"\r\n"
+//	+"A third:"+HexStr(A2.get()->vContract)+"\r\n";
+//
+//	BOOST_MESSAGE(strOutpud);
+////	cout << "script:" << HexStr(VmData.str()).c_str() << endl;
+////
+////	cout<<"first:"<<HexStr(tx.get()->vContract).c_str()<<endl;
+////	cout<<"A Second:"<<HexStr(A2.get()->vContract).c_str()<<endl;
+////	cout<<"B Third:"<<HexStr(B2.get()->vContract).c_str()<<endl;
+////	cout<<"or "<<endl;
+////	cout<<"B Second:"<<HexStr(B2.get()->vContract).c_str()<<endl;
+////	cout<<"A third:"<<HexStr(A2.get()->vContract).c_str()<<endl;
+//}
+//
+//#else
+//BOOST_AUTO_TEST_CASE(xxxx) {
+//	BOOST_ERROR("ERROR:THE SUITE NEED TO MODIFY!");
+//}
+//#endif
+//
+//BOOST_AUTO_TEST_SUITE_END()
