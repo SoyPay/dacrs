@@ -553,7 +553,7 @@ void Init(CAccountViewCache &view, CVmScript &vscript, vector<std::shared_ptr<CB
 
 	vector<vector_unsigned_char> account;
 	for (int i = 1; i < 4; i++) {
-		CSecureAccount sourceAccount;
+		CAccountInfo sourceAccount;
 		CRegID accountId(i + 2, i);
 		std::vector<unsigned char> nvector;
 		nvector.assign(R1Array[i - 1], R1Array[i - 1] + 20);
@@ -629,8 +629,8 @@ void Init(CAccountViewCache &view, CVmScript &vscript, vector<std::shared_ptr<CB
 	VmData.clear();
 
 }
-void CheckretData(uint64_t nrecive, CSecureAccount ntempbuyer, CSecureAccount buyer, CSecureAccount ntempArbitrator,
-		CSecureAccount Arbitrator, CNextPacket arpacket2) {
+void CheckretData(uint64_t nrecive, CAccountInfo ntempbuyer, CAccountInfo buyer, CAccountInfo ntempArbitrator,
+		CAccountInfo Arbitrator, CNextPacket arpacket2) {
 	if (atoi64((char*) arpacket2.money) >= nrecive
 			&& atoi64((char*) arpacket2.money) <= ((ntempbuyer.llValues - 5) + nrecive)) {
 		CFund opfund = Arbitrator.vFreedomFund[0];
@@ -665,9 +665,9 @@ struct CTxScript {
 	std::shared_ptr<CAppealTransaction> ntx;
 	std::shared_ptr<CAppealTransaction> thirdtx;
 	CAccountViewCache view;
-	CSecureAccount ntempbuyer;
-	CSecureAccount ntempSeller;
-	CSecureAccount ntempArbitrator;
+	CAccountInfo ntempbuyer;
+	CAccountInfo ntempSeller;
+	CAccountInfo ntempArbitrator;
 	CTxScript() :
 			view(*pAccountViewTip, true) {
 		tx = std::make_shared < CSecureTransaction > (CSecureTransaction());
@@ -682,11 +682,10 @@ struct CTxScript {
 		view.GetAccount(tx.get()->vRegAccountId[0], ntempbuyer);
 		view.GetAccount(tx.get()->vRegAccountId[1], ntempSeller);
 	}
-	void CheckEqual(CSecureAccount accBeforOperate, CSecureAccount accOperate) {
+	void CheckEqual(CAccountInfo accBeforOperate, CAccountInfo accOperate) {
 		BOOST_CHECK(accBeforOperate.vRewardFund == accOperate.vRewardFund);
 		BOOST_CHECK(accBeforOperate.vFreedomFund == accOperate.vFreedomFund);
-		BOOST_CHECK(accBeforOperate.vInputFreeze == accOperate.vInputFreeze);
-		BOOST_CHECK(accBeforOperate.vOutputFreeze == accOperate.vOutputFreeze);
+		BOOST_CHECK(accBeforOperate.vFreeze == accOperate.vFreeze);
 		BOOST_CHECK(accBeforOperate.vSelfFreeze == accOperate.vSelfFreeze);
 		BOOST_CHECK(accBeforOperate.llValues == accOperate.llValues);
 	}
@@ -719,9 +718,9 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_onepacke,CTxScript) {
 		Tx.push_back(tx);
 		CVmScriptRun mScript(view, Tx, vscript);
 		bool flag = mScript.run(Tx, view);
-		vector<std::shared_ptr<CSecureAccount> > pac = mScript.GetNewAccont();
-		CSecureAccount buyer;
-		CSecureAccount Seller;
+		vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
+		CAccountInfo buyer;
+		CAccountInfo Seller;
 		for (auto& item : pac) {
 			if (item.get()->keyID == ntempbuyer.keyID) {
 				buyer = *item.get();
@@ -737,7 +736,7 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_onepacke,CTxScript) {
 		} else {
 			BOOST_CHECK(flag);
 			BOOST_CHECK(buyer.llValues == (ntempbuyer.llValues - atoi64((char* )packet.money)));
-			CFund opfund = Seller.vInputFreeze[0];
+			CFund opfund = Seller.vFreeze[0];
 			BOOST_CHECK(opfund.value == atoi64((char* )packet.money));
 			BOOST_CHECK(opfund.uTxHash == tx.get()->GetHash());
 		}
@@ -763,7 +762,7 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_twoAppealpacke,CTxScript) {
 		Tx.push_back(tx);
 		CVmScriptRun mScript(view, Tx, vscript);
 		bool flag = mScript.run(Tx, view);
-		CSecureAccount Temp;
+		CAccountInfo Temp;
 		for (auto& item : view.cacheAccounts) {
 			if (item.first == ntempbuyer.keyID) {
 				Temp = item.second;
@@ -776,7 +775,7 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_twoAppealpacke,CTxScript) {
 			BOOST_CHECK(flag);
 		}
 
-		vector<std::shared_ptr<CSecureAccount> > pac = mScript.GetNewAccont();
+		vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
 		Tx.clear();
 		Tx.push_back(tx);
 		Tx.push_back(ntx);
@@ -785,8 +784,8 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_twoAppealpacke,CTxScript) {
 		flag = mScript1.run(Tx, view);
 
 		pac = mScript1.GetNewAccont();
-		CSecureAccount buyer;
-		CSecureAccount Arbitrator;
+		CAccountInfo buyer;
+		CAccountInfo Arbitrator;
 		for (auto& item : pac) {
 			if (item.get()->keyID == ntempbuyer.keyID) {
 				buyer = *item.get();
@@ -802,7 +801,7 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_twoAppealpacke,CTxScript) {
 			BOOST_CHECK(Arbitrator.llValues == ntempArbitrator.llValues - atoi64((char* )packet.money));
 		}
 
-		CFund opfund = buyer.vInputFreeze[0];
+		CFund opfund = buyer.vFreeze[0];
 		if (atoi64((char*) packet.money) >= ntempArbitrator.llValues) {
 			BOOST_CHECK(opfund.value == ntempArbitrator.llValues);
 		} else {
@@ -847,7 +846,7 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_thirdArbitratorpacke,CTxScript) {
 		CVmScriptRun mScript(view, Tx, vscript);
 		bool flag = mScript.run(Tx, view);
 
-		CSecureAccount Temp;
+		CAccountInfo Temp;
 		for (auto& item : view.cacheAccounts) {
 			if (item.first == ntempbuyer.keyID) {
 				Temp = item.second;
@@ -859,7 +858,7 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_thirdArbitratorpacke,CTxScript) {
 		} else {
 			BOOST_CHECK(flag);
 		}
-		vector<std::shared_ptr<CSecureAccount> > pac = mScript.GetNewAccont();
+		vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
 		for (auto& item : pac) {
 			view.SetAccount(item.get()->keyID, *item.get());
 		}
@@ -893,9 +892,9 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_thirdArbitratorpacke,CTxScript) {
 		flag = mScript1.run(Tx, view);
 
 		pac = mScript1.GetNewAccont();
-		CSecureAccount Arbitrator;
-		CSecureAccount buyer;
-		CSecureAccount Seller;
+		CAccountInfo Arbitrator;
+		CAccountInfo buyer;
+		CAccountInfo Seller;
 		for (auto& item : pac) {
 			if (item.get()->keyID == ntempbuyer.keyID) {
 				buyer = *item.get();
@@ -915,7 +914,7 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_thirdArbitratorpacke,CTxScript) {
 			CheckretData(nrecive, ntempbuyer, buyer, ntempArbitrator, Arbitrator, arpacket2);
 		} else if (atoi64((char*) arpacket1.money) < 5) {
 			BOOST_CHECK(Seller.llValues == ntempSeller.llValues);
-			CFund opfund = Seller.vInputFreeze[0];
+			CFund opfund = Seller.vFreeze[0];
 			BOOST_CHECK(opfund.value == (5 - atoi64((char* )arpacket1.money)));
 			uint64_t nrecive = atoi64((char*) arpacket1.money);
 			CheckretData(nrecive, ntempbuyer, buyer, ntempArbitrator, Arbitrator, arpacket2);
