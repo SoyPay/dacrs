@@ -514,480 +514,480 @@ const char *R1Array[] =
 				"\x9c\x52\x4a\xdb\xcf\x56\x11\x12\x2b\x29\x12\x5e\x5d\x35\xd2\xd2\x22\x81\xaa\xb5\x33\xf0\x08\x32\xd5\x56\xb1\xf9\xea\xe5\x1d\x7d",
 				"\x70\x32\x1d\x7c\x47\xa5\x6b\x40\x26\x7e\x0a\xc3\xa6\x9c\xb6\xbf\x13\x30\x47\xa3\x19\x2d\xda\x71\x49\x13\x72\xf0\xb4\xca\x81\xd7" };
 
-std::vector<unsigned char>& GetScriptBin(char *filepath) {
-
-	std::vector<unsigned char> m_ROM;
-	assert(filepath);
-	FILE *m_file = fopen(filepath, "rb");
-	if (m_file != NULL) {
-		fseek(m_file, 0, SEEK_SET);
-		fseek(m_file, 0, SEEK_END);
-		int len = ftell(m_file);
-		fseek(m_file, 0, SEEK_SET);
-		char *buffer = (char*) malloc(len);
-		memset(buffer, 0, len);
-		fread(buffer, 1, len + 1, m_file);
-		m_ROM.insert(m_ROM.begin(), buffer, buffer + len);
-		if (buffer != NULL) {
-			free(buffer);
-			buffer = NULL;
-		}
-		if (m_file != NULL) {
-			fclose(m_file);
-			m_file = NULL;
-		}
-	}
-	return m_ROM;
-}
-
-void Init(CAccountViewCache &view, CVmScript &vscript, vector<std::shared_ptr<CBaseTransaction> >& Tx) {
-	vscript.Rom.insert(vscript.Rom.begin(), Array, Array + sizeof(Array));
-	vscript.rule.maxPay = 50;
-	vscript.rule.maxReSv = 50;
-	vscript.rule.vNextOutHeight = 50;
-	vscript.rule.vpreOutHeihgt = 100;
-	vector_unsigned_char vpscript;
-	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
-	scriptData << vscript;
-	vpscript.assign(scriptData.begin(),scriptData.end());
-
-	vector<vector_unsigned_char> account;
-	for (int i = 1; i < 4; i++) {
-		CAccountInfo sourceAccount;
-		CRegID accountId(i + 2, i);
-		std::vector<unsigned char> nvector;
-		nvector.assign(R1Array[i - 1], R1Array[i - 1] + 20);
-		uint160 hash(nvector);
-		CKeyID keyId1 = (CKeyID) hash;
-		sourceAccount.keyID = keyId1;
-		sourceAccount.llValues = random(100);
-		account.push_back(accountId.vRegID);
-		assert(view.SaveAccountInfo(accountId.vRegID, keyId1, sourceAccount));
-	}
-
-	for (auto& it : view.cacheAccounts) {
-		//	cout << "view.cacheAccounts:" << it.second.ToString().c_str() << endl;
-	}
-	vector<vector_unsigned_char> strContract;
-	std::vector<unsigned char> scriptid;
-
-	uint64_t ntemp = 5;
-	Cprepacke packet;
-	packet.iniOutHeight = 30;
-	packet.followOutHeight = 7;
-	sprintf((char*) packet.money, "%ld", ntemp);
-	//packet.money = 5;
-	CDataStream VmData(SER_DISK, CLIENT_VERSION);
-	VmData << packet;
-
-	CRegID scriptId(5, 9);
-	CContractScript contractScript;
-	contractScript.scriptId = scriptId.vRegID;
-	contractScript.scriptContent = vpscript;
-	CSecureTransaction *nTemp = static_cast<CSecureTransaction*>(Tx[0].get());
-	nTemp->regScriptId = scriptId.vRegID;
-	nTemp->vContract.insert(nTemp->vContract.begin(), VmData.begin(), VmData.end());
-	int i = 0;
-
-	for (auto& item : account) {
-		if (i == 0) {
-			nTemp->vArbitratorRegAccId.push_back(item);
-			contractScript.setArbitratorAccId.insert(HexStr(item.begin(), item.end()));
-		} else {
-			nTemp->vRegAccountId.push_back(item);
-		}
-		i++;
-	}
-	VmData.clear();
-	pContractScriptTip->AddContractScript(HexStr(scriptId.vRegID), contractScript);
-
-	CNextPacket npacket1;
-	//npacket1.money = 5;
-	sprintf((char*) npacket1.money, "%ld", ntemp);
-	VmData << npacket1;
-	CAppealTransaction *vTemp = static_cast<CAppealTransaction*>(Tx[1].get());
-	vTemp->vPreAcountIndex.push_back(0x01);
-	vTemp->vContract.insert(vTemp->vContract.begin(), VmData.begin(), VmData.end());
-
-	VmData.clear();
-
-	CNextPacket arpacket1;
-//	arpacket1.money = 5;
-	sprintf((char*) arpacket1.money, "%ld", ntemp);
-	VmData << arpacket1;
-
-	CNextPacket arpacket2;
-//	arpacket2.money = 1;
-	ntemp = 1;
-	sprintf((char*) arpacket2.money, "%ld", ntemp);
-	VmData << arpacket2;
-
-	vTemp = static_cast<CAppealTransaction*>(Tx[2].get());
-	vTemp->vPreAcountIndex.push_back(0x00);
-	vTemp->vContract.insert(vTemp->vContract.end(), VmData.begin(), VmData.end());
-//	cout << HexStr(vTemp->vContract).c_str() << endl;
-	VmData.clear();
-
-}
-void CheckretData(uint64_t nrecive, CAccountInfo ntempbuyer, CAccountInfo buyer, CAccountInfo ntempArbitrator,
-		CAccountInfo Arbitrator, CNextPacket arpacket2) {
-	if (atoi64((char*) arpacket2.money) >= nrecive
-			&& atoi64((char*) arpacket2.money) <= ((ntempbuyer.llValues - 5) + nrecive)) {
-		CFund opfund = Arbitrator.vFreedomFund[0];
-		BOOST_CHECK(Arbitrator.vFreedomFund.size() == 2);
-		BOOST_CHECK(opfund.value == 5);
-		opfund = Arbitrator.vFreedomFund[1];
-		BOOST_CHECK(opfund.value == atoi64((char* ) arpacket2.money));
-		BOOST_CHECK(buyer.llValues == (ntempbuyer.llValues - 5) + nrecive - atoi64((char* ) arpacket2.money));
-	} else if (atoi64((char*) arpacket2.money) < nrecive) {
-		CFund opfund = Arbitrator.vFreedomFund[0];
-		BOOST_CHECK(Arbitrator.vFreedomFund.size() == 2);
-		BOOST_CHECK(opfund.value == 5);
-		opfund = Arbitrator.vFreedomFund[1];
-		BOOST_CHECK(opfund.value == atoi64((char* )arpacket2.money));
-		BOOST_CHECK(buyer.llValues == (ntempbuyer.llValues - 5));
-		opfund = buyer.vFreedomFund[0];
-		int temp = (nrecive - atoi64((char*) arpacket2.money));
-		//cout<<"befor:"<<opfund.value<<"after:"<<temp<<endl;
-		BOOST_CHECK(opfund.value == (nrecive - atoi64((char* )arpacket2.money)));
-	} else {
-		CFund opfund = Arbitrator.vFreedomFund[0];
-		BOOST_CHECK(Arbitrator.vFreedomFund.size() == 2);
-		BOOST_CHECK(opfund.value == 5);
-		opfund = Arbitrator.vFreedomFund[1];
-		BOOST_CHECK(opfund.value == (ntempbuyer.llValues - 5) + nrecive);
-		BOOST_CHECK(buyer.llValues == 0);
-	}
-}
-struct CTxScript {
-	CVmScript vscript;
-	std::shared_ptr<CSecureTransaction> tx;
-	std::shared_ptr<CAppealTransaction> ntx;
-	std::shared_ptr<CAppealTransaction> thirdtx;
-	CAccountViewCache view;
-	CAccountInfo ntempbuyer;
-	CAccountInfo ntempSeller;
-	CAccountInfo ntempArbitrator;
-	CTxScript() :
-			view(*pAccountViewTip, true) {
-		tx = std::make_shared < CSecureTransaction > (CSecureTransaction());
-		ntx = std::make_shared < CAppealTransaction > (CAppealTransaction());
-		thirdtx = std::make_shared < CAppealTransaction > (CAppealTransaction());
-		vector<std::shared_ptr<CBaseTransaction> > Tx;
-		Tx.push_back(tx);
-		Tx.push_back(ntx);
-		Tx.push_back(thirdtx);
-		::Init(view, vscript, Tx);
-		view.GetAccount(tx.get()->vArbitratorRegAccId[0], ntempArbitrator);
-		view.GetAccount(tx.get()->vRegAccountId[0], ntempbuyer);
-		view.GetAccount(tx.get()->vRegAccountId[1], ntempSeller);
-	}
-	void CheckEqual(CAccountInfo accBeforOperate, CAccountInfo accOperate) {
-		BOOST_CHECK(accBeforOperate.vRewardFund == accOperate.vRewardFund);
-		BOOST_CHECK(accBeforOperate.vFreedomFund == accOperate.vFreedomFund);
-		BOOST_CHECK(accBeforOperate.vFreeze == accOperate.vFreeze);
-		BOOST_CHECK(accBeforOperate.vSelfFreeze == accOperate.vSelfFreeze);
-		BOOST_CHECK(accBeforOperate.llValues == accOperate.llValues);
-	}
-};
-
-BOOST_FIXTURE_TEST_SUITE(vmscrip_tests,CTxScript)
-
-#if 1
-
-BOOST_FIXTURE_TEST_CASE(vmscrip_onepacke,CTxScript) {
-
-	for (int i = 0; i < EX_TIMES; i++) {
-		//ntempbuyer.llValues = random(100);
-		uint64_t ntemp = random(100);
-		Cprepacke packet;
-		packet.iniOutHeight = 30;
-		packet.followOutHeight = 7;
-		sprintf((char*) packet.money, "%ld", ntemp);
-		//packet.money = random(100);
-		if (ntemp <= 0)
-		continue;
-		//cout << ntemp << endl;
-		CDataStream VmData(SER_DISK, CLIENT_VERSION);
-		VmData << packet;
-		tx.get()->vContract.clear();
-		tx.get()->vContract.insert(tx.get()->vContract.begin(), VmData.begin(), VmData.end());
-		//cout << HexStr(tx.get()->vContract).c_str() << endl;
-		vector<std::shared_ptr<CBaseTransaction> > Tx;
-		Tx.clear();
-		Tx.push_back(tx);
-		CVmScriptRun mScript(view, Tx, vscript);
-		bool flag = mScript.run(Tx, view);
-		vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
-		CAccountInfo buyer;
-		CAccountInfo Seller;
-		for (auto& item : pac) {
-			if (item.get()->keyID == ntempbuyer.keyID) {
-				buyer = *item.get();
-			}
-			if (item.get()->keyID == ntempSeller.keyID) {
-				Seller = *item.get();
-			}
-		}
-		if (atoi64((char*) packet.money) > ntempbuyer.llValues) {
-			BOOST_CHECK(!flag);
-			BOOST_CHECK(pac.size() == 0);
-
-		} else {
-			BOOST_CHECK(flag);
-			BOOST_CHECK(buyer.llValues == (ntempbuyer.llValues - atoi64((char* )packet.money)));
-			CFund opfund = Seller.vFreeze[0];
-			BOOST_CHECK(opfund.value == atoi64((char* )packet.money));
-			BOOST_CHECK(opfund.uTxHash == tx.get()->GetHash());
-		}
-	}
-}
-
-BOOST_FIXTURE_TEST_CASE(vmscrip_twoAppealpacke,CTxScript) {
-
-	for (int i = 0; i < EX_TIMES; i++) {
-		uint64_t ntemp = random(100);
-		CNextPacket packet;
-		sprintf((char*) packet.money, "%ld", ntemp);
-		//packet.money = random(100);
-		if (ntemp <= 0 || ntemp >= 50)
-		continue;
-		//cout << packet.money << endl;
-		CDataStream VmData(SER_DISK, CLIENT_VERSION);
-		VmData << packet;
-		ntx.get()->vContract.clear();
-		ntx.get()->vContract.insert(ntx.get()->vContract.begin(), VmData.begin(), VmData.end());
-		vector<std::shared_ptr<CBaseTransaction> > Tx;
-		Tx.clear();
-		Tx.push_back(tx);
-		CVmScriptRun mScript(view, Tx, vscript);
-		bool flag = mScript.run(Tx, view);
-		CAccountInfo Temp;
-		for (auto& item : view.cacheAccounts) {
-			if (item.first == ntempbuyer.keyID) {
-				Temp = item.second;
-			}
-		}
-		if (Temp.llValues < 5) {
-			BOOST_CHECK(!flag);
-			continue;
-		} else {
-			BOOST_CHECK(flag);
-		}
-
-		vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
-		Tx.clear();
-		Tx.push_back(tx);
-		Tx.push_back(ntx);
-
-		CVmScriptRun mScript1(view, Tx, vscript);
-		flag = mScript1.run(Tx, view);
-
-		pac = mScript1.GetNewAccont();
-		CAccountInfo buyer;
-		CAccountInfo Arbitrator;
-		for (auto& item : pac) {
-			if (item.get()->keyID == ntempbuyer.keyID) {
-				buyer = *item.get();
-			}
-			if (item.get()->keyID == ntempArbitrator.keyID) {
-				Arbitrator = *item.get();
-			}
-		}
-		BOOST_CHECK(flag);
-		if (atoi64((char*) packet.money) >= ntempArbitrator.llValues) {
-			BOOST_CHECK(Arbitrator.llValues == 0);
-		} else {
-			BOOST_CHECK(Arbitrator.llValues == ntempArbitrator.llValues - atoi64((char* )packet.money));
-		}
-
-		CFund opfund = buyer.vFreeze[0];
-		if (atoi64((char*) packet.money) >= ntempArbitrator.llValues) {
-			BOOST_CHECK(opfund.value == ntempArbitrator.llValues);
-		} else {
-			BOOST_CHECK(opfund.value == atoi64((char* )packet.money));
-		}
-
-		BOOST_CHECK(opfund.uTxHash == ntx.get()->GetHash());
-	}
-}
-
-BOOST_FIXTURE_TEST_CASE(vmscrip_thirdArbitratorpacke,CTxScript) {
-
-	for (int i = 0; i < EX_TIMES; i++) {
-
-		view.SetAccount(ntempbuyer.keyID, ntempbuyer);
-		view.SetAccount(ntempSeller.keyID, ntempSeller);
-		view.SetAccount(ntempArbitrator.keyID, ntempArbitrator);
-		uint64_t ntemp = random(100);
-		CDataStream VmData(SER_DISK, CLIENT_VERSION);
-		CNextPacket arpacket1;
-		//arpacket1.money = random(100);;
-		sprintf((char*) arpacket1.money, "%ld", ntemp);
-		VmData << arpacket1;
-
-		if (ntemp == 0)
-		continue;
-		ntemp = random(100);
-		CNextPacket arpacket2;
-		sprintf((char*) arpacket2.money, "%ld", ntemp);
-		//arpacket2.money = random(100);
-
-		if (ntemp == 0 || ntemp >= 50)
-		continue;
-		VmData << arpacket2;
-
-		thirdtx.get()->vContract.clear();
-		thirdtx.get()->vContract.insert(thirdtx.get()->vContract.end(), VmData.begin(), VmData.end());
-		////cout<<HexStr(thirdtx.get()->vContract).c_str()<<endl;
-		vector<std::shared_ptr<CBaseTransaction> > Tx;
-		Tx.clear();
-		Tx.push_back(tx);
-		CVmScriptRun mScript(view, Tx, vscript);
-		bool flag = mScript.run(Tx, view);
-
-		CAccountInfo Temp;
-		for (auto& item : view.cacheAccounts) {
-			if (item.first == ntempbuyer.keyID) {
-				Temp = item.second;
-			}
-		}
-		if (Temp.llValues < 5) {
-			BOOST_CHECK(!flag);
-			continue;
-		} else {
-			BOOST_CHECK(flag);
-		}
-		vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
-		for (auto& item : pac) {
-			view.SetAccount(item.get()->keyID, *item.get());
-		}
-
-		Tx.clear();
-		Tx.push_back(tx);
-		Tx.push_back(ntx);
-		CVmScriptRun mScriptv(view, Tx, vscript);
-		flag = mScriptv.run(Tx, view);
-		for (auto& item : view.cacheAccounts) {
-			if (item.first == ntempArbitrator.keyID) {
-				Temp = item.second;
-			}
-		}
-		if (Temp.llValues < 5) {
-			BOOST_CHECK(!flag);
-			continue;
-		} else {
-			BOOST_CHECK(flag);
-		}
-		pac = mScriptv.GetNewAccont();
-		for (auto& item : pac) {
-			view.SetAccount(item.get()->keyID, *item.get());
-		}
-
-		Tx.clear();
-		Tx.push_back(tx);
-		Tx.push_back(ntx);
-		Tx.push_back(thirdtx);
-		CVmScriptRun mScript1(view, Tx, vscript);
-		flag = mScript1.run(Tx, view);
-
-		pac = mScript1.GetNewAccont();
-		CAccountInfo Arbitrator;
-		CAccountInfo buyer;
-		CAccountInfo Seller;
-		for (auto& item : pac) {
-			if (item.get()->keyID == ntempbuyer.keyID) {
-				buyer = *item.get();
-			}
-			if (item.get()->keyID == ntempSeller.keyID) {
-				Seller = *item.get();
-			}
-			if (item.get()->keyID == ntempArbitrator.keyID) {
-				Arbitrator = *item.get();
-			}
-		}
-
-		BOOST_CHECK(flag);
-		if (atoi64((char*) arpacket1.money) >= (ntempSeller.llValues + 5)) {
-			BOOST_CHECK(Seller.llValues == 0);
-			uint64_t nrecive = ntempSeller.llValues + 5;
-			CheckretData(nrecive, ntempbuyer, buyer, ntempArbitrator, Arbitrator, arpacket2);
-		} else if (atoi64((char*) arpacket1.money) < 5) {
-			BOOST_CHECK(Seller.llValues == ntempSeller.llValues);
-			CFund opfund = Seller.vFreeze[0];
-			BOOST_CHECK(opfund.value == (5 - atoi64((char* )arpacket1.money)));
-			uint64_t nrecive = atoi64((char*) arpacket1.money);
-			CheckretData(nrecive, ntempbuyer, buyer, ntempArbitrator, Arbitrator, arpacket2);
-		} else {
-			BOOST_CHECK(Seller.llValues == (ntempSeller.llValues - atoi64((char* )arpacket1.money) + 5));
-			uint64_t nrecive = atoi64((char*) arpacket1.money);
-			CheckretData(nrecive, ntempbuyer, buyer, ntempArbitrator, Arbitrator, arpacket2);
-		}
-	}
-}
-
-#else
-BOOST_AUTO_TEST_CASE(xxxx) {
-	BOOST_ERROR("ERROR:THE SUITE NEED TO MODIFY!");
-}
-#endif
-
-BOOST_AUTO_TEST_SUITE_END()
-
-BOOST_AUTO_TEST_SUITE(script_print)
-
-#if 0
-
-BOOST_AUTO_TEST_CASE(vmscrip_printout) {
-	CVmScript vscript;
-	vscript.Rom.insert(vscript.Rom.begin(), Array, Array + sizeof(Array));
-	vscript.rule.maxPay = 50;
-	vscript.rule.maxReSv = 50;
-	vscript.rule.vNextOutHeight = 50;
-	vscript.rule.vpreOutHeihgt = 100;
-	CDataStream VmData(SER_DISK, CLIENT_VERSION);
-	VmData << vscript;
-	//cout << "script:" << HexStr(VmData.str()).c_str() << endl;
-
-	VmData.clear();
-
-	Cprepacke packet;
-	packet.iniOutHeight = 30;
-	packet.followOutHeight = 7;
-	uint64_t ntemp = 5 * COIN;
-	sprintf((char*) packet.money, "%ld", ntemp);
-	VmData << packet;
-
-	//cout << "The first package Contract:" << HexStr(VmData).c_str() << " money count:" << packet.money << endl;
-
-	VmData.clear();
-	CNextPacket npacket1;
-//	npacket1.money = 5*COIN;
-	sprintf((char*) npacket1.money, "%ld", ntemp);
-	VmData << npacket1;
-
-//cout << "second Appeal package Contract:" << HexStr(VmData).c_str() << " money count:" << npacket1.money << endl;
-
-//// third
-	VmData.clear();
-	CNextPacket arpacket1;
-//	arpacket1.money = 5*COIN;
-	sprintf((char*) arpacket1.money, "%ld", ntemp);
-	VmData << arpacket1;
-
-	CNextPacket arpacket2;
-//	arpacket2.money = 1*COIN;
-	ntemp = 1 * COIN;
-	sprintf((char*) arpacket2.money, "%ld", ntemp);
-	VmData << arpacket2;
-//cout << "third Arbitration package Contract:" << HexStr(VmData).c_str() << " money count:" << arpacket1.money
-//			<< " ArbitratorAcc:" << arpacket2.money << endl;
-}
-
-#else
-BOOST_AUTO_TEST_CASE(xxxx) {
-	BOOST_ERROR("ERROR:THE SUITE NEED TO MODIFY!");
-}
-#endif
+//std::vector<unsigned char>& GetScriptBin(char *filepath) {
+//
+//	std::vector<unsigned char> m_ROM;
+//	assert(filepath);
+//	FILE *m_file = fopen(filepath, "rb");
+//	if (m_file != NULL) {
+//		fseek(m_file, 0, SEEK_SET);
+//		fseek(m_file, 0, SEEK_END);
+//		int len = ftell(m_file);
+//		fseek(m_file, 0, SEEK_SET);
+//		char *buffer = (char*) malloc(len);
+//		memset(buffer, 0, len);
+//		fread(buffer, 1, len + 1, m_file);
+//		m_ROM.insert(m_ROM.begin(), buffer, buffer + len);
+//		if (buffer != NULL) {
+//			free(buffer);
+//			buffer = NULL;
+//		}
+//		if (m_file != NULL) {
+//			fclose(m_file);
+//			m_file = NULL;
+//		}
+//	}
+//	return m_ROM;
+//}
+//
+//void Init(CAccountViewCache &view, CVmScript &vscript, vector<std::shared_ptr<CBaseTransaction> >& Tx) {
+//	vscript.Rom.insert(vscript.Rom.begin(), Array, Array + sizeof(Array));
+//	vscript.rule.maxPay = 50;
+//	vscript.rule.maxReSv = 50;
+//	vscript.rule.vNextOutHeight = 50;
+//	vscript.rule.vpreOutHeihgt = 100;
+//	vector_unsigned_char vpscript;
+//	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
+//	scriptData << vscript;
+//	vpscript.assign(scriptData.begin(),scriptData.end());
+//
+//	vector<vector_unsigned_char> account;
+//	for (int i = 1; i < 4; i++) {
+//		CAccountInfo sourceAccount;
+//		CRegID accountId(i + 2, i);
+//		std::vector<unsigned char> nvector;
+//		nvector.assign(R1Array[i - 1], R1Array[i - 1] + 20);
+//		uint160 hash(nvector);
+//		CKeyID keyId1 = (CKeyID) hash;
+//		sourceAccount.keyID = keyId1;
+//		sourceAccount.llValues = random(100);
+//		account.push_back(accountId.vRegID);
+//		assert(view.SaveAccountInfo(accountId.vRegID, keyId1, sourceAccount));
+//	}
+//
+//	for (auto& it : view.cacheAccounts) {
+//		//	cout << "view.cacheAccounts:" << it.second.ToString().c_str() << endl;
+//	}
+//	vector<vector_unsigned_char> strContract;
+//	std::vector<unsigned char> scriptid;
+//
+//	uint64_t ntemp = 5;
+//	Cprepacke packet;
+//	packet.iniOutHeight = 30;
+//	packet.followOutHeight = 7;
+//	sprintf((char*) packet.money, "%ld", ntemp);
+//	//packet.money = 5;
+//	CDataStream VmData(SER_DISK, CLIENT_VERSION);
+//	VmData << packet;
+//
+//	CRegID scriptId(5, 9);
+//	CContractScript contractScript;
+//	contractScript.scriptId = scriptId.vRegID;
+//	contractScript.scriptContent = vpscript;
+//	CSecureTransaction *nTemp = static_cast<CSecureTransaction*>(Tx[0].get());
+//	nTemp->regScriptId = scriptId.vRegID;
+//	nTemp->vContract.insert(nTemp->vContract.begin(), VmData.begin(), VmData.end());
+//	int i = 0;
+//
+//	for (auto& item : account) {
+//		if (i == 0) {
+//			nTemp->vArbitratorRegAccId.push_back(item);
+//			contractScript.setArbitratorAccId.insert(HexStr(item.begin(), item.end()));
+//		} else {
+//			nTemp->vRegAccountId.push_back(item);
+//		}
+//		i++;
+//	}
+//	VmData.clear();
+//	pContractScriptTip->AddContractScript(HexStr(scriptId.vRegID), contractScript);
+//
+//	CNextPacket npacket1;
+//	//npacket1.money = 5;
+//	sprintf((char*) npacket1.money, "%ld", ntemp);
+//	VmData << npacket1;
+//	CAppealTransaction *vTemp = static_cast<CAppealTransaction*>(Tx[1].get());
+//	vTemp->vPreAcountIndex.push_back(0x01);
+//	vTemp->vContract.insert(vTemp->vContract.begin(), VmData.begin(), VmData.end());
+//
+//	VmData.clear();
+//
+//	CNextPacket arpacket1;
+////	arpacket1.money = 5;
+//	sprintf((char*) arpacket1.money, "%ld", ntemp);
+//	VmData << arpacket1;
+//
+//	CNextPacket arpacket2;
+////	arpacket2.money = 1;
+//	ntemp = 1;
+//	sprintf((char*) arpacket2.money, "%ld", ntemp);
+//	VmData << arpacket2;
+//
+//	vTemp = static_cast<CAppealTransaction*>(Tx[2].get());
+//	vTemp->vPreAcountIndex.push_back(0x00);
+//	vTemp->vContract.insert(vTemp->vContract.end(), VmData.begin(), VmData.end());
+////	cout << HexStr(vTemp->vContract).c_str() << endl;
+//	VmData.clear();
+//
+//}
+//void CheckretData(uint64_t nrecive, CAccountInfo ntempbuyer, CAccountInfo buyer, CAccountInfo ntempArbitrator,
+//		CAccountInfo Arbitrator, CNextPacket arpacket2) {
+//	if (atoi64((char*) arpacket2.money) >= nrecive
+//			&& atoi64((char*) arpacket2.money) <= ((ntempbuyer.llValues - 5) + nrecive)) {
+//		CFund opfund = Arbitrator.vFreedomFund[0];
+//		BOOST_CHECK(Arbitrator.vFreedomFund.size() == 2);
+//		BOOST_CHECK(opfund.value == 5);
+//		opfund = Arbitrator.vFreedomFund[1];
+//		BOOST_CHECK(opfund.value == atoi64((char* ) arpacket2.money));
+//		BOOST_CHECK(buyer.llValues == (ntempbuyer.llValues - 5) + nrecive - atoi64((char* ) arpacket2.money));
+//	} else if (atoi64((char*) arpacket2.money) < nrecive) {
+//		CFund opfund = Arbitrator.vFreedomFund[0];
+//		BOOST_CHECK(Arbitrator.vFreedomFund.size() == 2);
+//		BOOST_CHECK(opfund.value == 5);
+//		opfund = Arbitrator.vFreedomFund[1];
+//		BOOST_CHECK(opfund.value == atoi64((char* )arpacket2.money));
+//		BOOST_CHECK(buyer.llValues == (ntempbuyer.llValues - 5));
+//		opfund = buyer.vFreedomFund[0];
+//		int temp = (nrecive - atoi64((char*) arpacket2.money));
+//		//cout<<"befor:"<<opfund.value<<"after:"<<temp<<endl;
+//		BOOST_CHECK(opfund.value == (nrecive - atoi64((char* )arpacket2.money)));
+//	} else {
+//		CFund opfund = Arbitrator.vFreedomFund[0];
+//		BOOST_CHECK(Arbitrator.vFreedomFund.size() == 2);
+//		BOOST_CHECK(opfund.value == 5);
+//		opfund = Arbitrator.vFreedomFund[1];
+//		BOOST_CHECK(opfund.value == (ntempbuyer.llValues - 5) + nrecive);
+//		BOOST_CHECK(buyer.llValues == 0);
+//	}
+//}
+//struct CTxScript {
+//	CVmScript vscript;
+//	std::shared_ptr<CSecureTransaction> tx;
+//	std::shared_ptr<CAppealTransaction> ntx;
+//	std::shared_ptr<CAppealTransaction> thirdtx;
+//	CAccountViewCache view;
+//	CAccountInfo ntempbuyer;
+//	CAccountInfo ntempSeller;
+//	CAccountInfo ntempArbitrator;
+//	CTxScript() :
+//			view(*pAccountViewTip, true) {
+//		tx = std::make_shared < CSecureTransaction > (CSecureTransaction());
+//		ntx = std::make_shared < CAppealTransaction > (CAppealTransaction());
+//		thirdtx = std::make_shared < CAppealTransaction > (CAppealTransaction());
+//		vector<std::shared_ptr<CBaseTransaction> > Tx;
+//		Tx.push_back(tx);
+//		Tx.push_back(ntx);
+//		Tx.push_back(thirdtx);
+//		::Init(view, vscript, Tx);
+//		view.GetAccount(tx.get()->vArbitratorRegAccId[0], ntempArbitrator);
+//		view.GetAccount(tx.get()->vRegAccountId[0], ntempbuyer);
+//		view.GetAccount(tx.get()->vRegAccountId[1], ntempSeller);
+//	}
+//	void CheckEqual(CAccountInfo accBeforOperate, CAccountInfo accOperate) {
+//		BOOST_CHECK(accBeforOperate.vRewardFund == accOperate.vRewardFund);
+//		BOOST_CHECK(accBeforOperate.vFreedomFund == accOperate.vFreedomFund);
+//		BOOST_CHECK(accBeforOperate.vFreeze == accOperate.vFreeze);
+//		BOOST_CHECK(accBeforOperate.vSelfFreeze == accOperate.vSelfFreeze);
+//		BOOST_CHECK(accBeforOperate.llValues == accOperate.llValues);
+//	}
+//};
+//
+//BOOST_FIXTURE_TEST_SUITE(vmscrip_tests,CTxScript)
+//
+//#if 0
+//
+//BOOST_FIXTURE_TEST_CASE(vmscrip_onepacke,CTxScript) {
+//
+//	for (int i = 0; i < EX_TIMES; i++) {
+//		//ntempbuyer.llValues = random(100);
+//		uint64_t ntemp = random(100);
+//		Cprepacke packet;
+//		packet.iniOutHeight = 30;
+//		packet.followOutHeight = 7;
+//		sprintf((char*) packet.money, "%ld", ntemp);
+//		//packet.money = random(100);
+//		if (ntemp <= 0)
+//		continue;
+//		//cout << ntemp << endl;
+//		CDataStream VmData(SER_DISK, CLIENT_VERSION);
+//		VmData << packet;
+//		tx.get()->vContract.clear();
+//		tx.get()->vContract.insert(tx.get()->vContract.begin(), VmData.begin(), VmData.end());
+//		//cout << HexStr(tx.get()->vContract).c_str() << endl;
+//		vector<std::shared_ptr<CBaseTransaction> > Tx;
+//		Tx.clear();
+//		Tx.push_back(tx);
+//		CVmScriptRun mScript(view, Tx, vscript);
+//		bool flag = mScript.run(Tx, view);
+//		vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
+//		CAccountInfo buyer;
+//		CAccountInfo Seller;
+//		for (auto& item : pac) {
+//			if (item.get()->keyID == ntempbuyer.keyID) {
+//				buyer = *item.get();
+//			}
+//			if (item.get()->keyID == ntempSeller.keyID) {
+//				Seller = *item.get();
+//			}
+//		}
+//		if (atoi64((char*) packet.money) > ntempbuyer.llValues) {
+//			BOOST_CHECK(!flag);
+//			BOOST_CHECK(pac.size() == 0);
+//
+//		} else {
+//			BOOST_CHECK(flag);
+//			BOOST_CHECK(buyer.llValues == (ntempbuyer.llValues - atoi64((char* )packet.money)));
+//			CFund opfund = Seller.vFreeze[0];
+//			BOOST_CHECK(opfund.value == atoi64((char* )packet.money));
+//			BOOST_CHECK(opfund.uTxHash == tx.get()->GetHash());
+//		}
+//	}
+//}
+//
+//BOOST_FIXTURE_TEST_CASE(vmscrip_twoAppealpacke,CTxScript) {
+//
+//	for (int i = 0; i < EX_TIMES; i++) {
+//		uint64_t ntemp = random(100);
+//		CNextPacket packet;
+//		sprintf((char*) packet.money, "%ld", ntemp);
+//		//packet.money = random(100);
+//		if (ntemp <= 0 || ntemp >= 50)
+//		continue;
+//		//cout << packet.money << endl;
+//		CDataStream VmData(SER_DISK, CLIENT_VERSION);
+//		VmData << packet;
+//		ntx.get()->vContract.clear();
+//		ntx.get()->vContract.insert(ntx.get()->vContract.begin(), VmData.begin(), VmData.end());
+//		vector<std::shared_ptr<CBaseTransaction> > Tx;
+//		Tx.clear();
+//		Tx.push_back(tx);
+//		CVmScriptRun mScript(view, Tx, vscript);
+//		bool flag = mScript.run(Tx, view);
+//		CAccountInfo Temp;
+//		for (auto& item : view.cacheAccounts) {
+//			if (item.first == ntempbuyer.keyID) {
+//				Temp = item.second;
+//			}
+//		}
+//		if (Temp.llValues < 5) {
+//			BOOST_CHECK(!flag);
+//			continue;
+//		} else {
+//			BOOST_CHECK(flag);
+//		}
+//
+//		vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
+//		Tx.clear();
+//		Tx.push_back(tx);
+//		Tx.push_back(ntx);
+//
+//		CVmScriptRun mScript1(view, Tx, vscript);
+//		flag = mScript1.run(Tx, view);
+//
+//		pac = mScript1.GetNewAccont();
+//		CAccountInfo buyer;
+//		CAccountInfo Arbitrator;
+//		for (auto& item : pac) {
+//			if (item.get()->keyID == ntempbuyer.keyID) {
+//				buyer = *item.get();
+//			}
+//			if (item.get()->keyID == ntempArbitrator.keyID) {
+//				Arbitrator = *item.get();
+//			}
+//		}
+//		BOOST_CHECK(flag);
+//		if (atoi64((char*) packet.money) >= ntempArbitrator.llValues) {
+//			BOOST_CHECK(Arbitrator.llValues == 0);
+//		} else {
+//			BOOST_CHECK(Arbitrator.llValues == ntempArbitrator.llValues - atoi64((char* )packet.money));
+//		}
+//
+//		CFund opfund = buyer.vFreeze[0];
+//		if (atoi64((char*) packet.money) >= ntempArbitrator.llValues) {
+//			BOOST_CHECK(opfund.value == ntempArbitrator.llValues);
+//		} else {
+//			BOOST_CHECK(opfund.value == atoi64((char* )packet.money));
+//		}
+//
+//		BOOST_CHECK(opfund.uTxHash == ntx.get()->GetHash());
+//	}
+//}
+//
+//BOOST_FIXTURE_TEST_CASE(vmscrip_thirdArbitratorpacke,CTxScript) {
+//
+//	for (int i = 0; i < EX_TIMES; i++) {
+//
+//		view.SetAccount(ntempbuyer.keyID, ntempbuyer);
+//		view.SetAccount(ntempSeller.keyID, ntempSeller);
+//		view.SetAccount(ntempArbitrator.keyID, ntempArbitrator);
+//		uint64_t ntemp = random(100);
+//		CDataStream VmData(SER_DISK, CLIENT_VERSION);
+//		CNextPacket arpacket1;
+//		//arpacket1.money = random(100);;
+//		sprintf((char*) arpacket1.money, "%ld", ntemp);
+//		VmData << arpacket1;
+//
+//		if (ntemp == 0)
+//		continue;
+//		ntemp = random(100);
+//		CNextPacket arpacket2;
+//		sprintf((char*) arpacket2.money, "%ld", ntemp);
+//		//arpacket2.money = random(100);
+//
+//		if (ntemp == 0 || ntemp >= 50)
+//		continue;
+//		VmData << arpacket2;
+//
+//		thirdtx.get()->vContract.clear();
+//		thirdtx.get()->vContract.insert(thirdtx.get()->vContract.end(), VmData.begin(), VmData.end());
+//		////cout<<HexStr(thirdtx.get()->vContract).c_str()<<endl;
+//		vector<std::shared_ptr<CBaseTransaction> > Tx;
+//		Tx.clear();
+//		Tx.push_back(tx);
+//		CVmScriptRun mScript(view, Tx, vscript);
+//		bool flag = mScript.run(Tx, view);
+//
+//		CAccountInfo Temp;
+//		for (auto& item : view.cacheAccounts) {
+//			if (item.first == ntempbuyer.keyID) {
+//				Temp = item.second;
+//			}
+//		}
+//		if (Temp.llValues < 5) {
+//			BOOST_CHECK(!flag);
+//			continue;
+//		} else {
+//			BOOST_CHECK(flag);
+//		}
+//		vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
+//		for (auto& item : pac) {
+//			view.SetAccount(item.get()->keyID, *item.get());
+//		}
+//
+//		Tx.clear();
+//		Tx.push_back(tx);
+//		Tx.push_back(ntx);
+//		CVmScriptRun mScriptv(view, Tx, vscript);
+//		flag = mScriptv.run(Tx, view);
+//		for (auto& item : view.cacheAccounts) {
+//			if (item.first == ntempArbitrator.keyID) {
+//				Temp = item.second;
+//			}
+//		}
+//		if (Temp.llValues < 5) {
+//			BOOST_CHECK(!flag);
+//			continue;
+//		} else {
+//			BOOST_CHECK(flag);
+//		}
+//		pac = mScriptv.GetNewAccont();
+//		for (auto& item : pac) {
+//			view.SetAccount(item.get()->keyID, *item.get());
+//		}
+//
+//		Tx.clear();
+//		Tx.push_back(tx);
+//		Tx.push_back(ntx);
+//		Tx.push_back(thirdtx);
+//		CVmScriptRun mScript1(view, Tx, vscript);
+//		flag = mScript1.run(Tx, view);
+//
+//		pac = mScript1.GetNewAccont();
+//		CAccountInfo Arbitrator;
+//		CAccountInfo buyer;
+//		CAccountInfo Seller;
+//		for (auto& item : pac) {
+//			if (item.get()->keyID == ntempbuyer.keyID) {
+//				buyer = *item.get();
+//			}
+//			if (item.get()->keyID == ntempSeller.keyID) {
+//				Seller = *item.get();
+//			}
+//			if (item.get()->keyID == ntempArbitrator.keyID) {
+//				Arbitrator = *item.get();
+//			}
+//		}
+//
+//		BOOST_CHECK(flag);
+//		if (atoi64((char*) arpacket1.money) >= (ntempSeller.llValues + 5)) {
+//			BOOST_CHECK(Seller.llValues == 0);
+//			uint64_t nrecive = ntempSeller.llValues + 5;
+//			CheckretData(nrecive, ntempbuyer, buyer, ntempArbitrator, Arbitrator, arpacket2);
+//		} else if (atoi64((char*) arpacket1.money) < 5) {
+//			BOOST_CHECK(Seller.llValues == ntempSeller.llValues);
+//			CFund opfund = Seller.vFreeze[0];
+//			BOOST_CHECK(opfund.value == (5 - atoi64((char* )arpacket1.money)));
+//			uint64_t nrecive = atoi64((char*) arpacket1.money);
+//			CheckretData(nrecive, ntempbuyer, buyer, ntempArbitrator, Arbitrator, arpacket2);
+//		} else {
+//			BOOST_CHECK(Seller.llValues == (ntempSeller.llValues - atoi64((char* )arpacket1.money) + 5));
+//			uint64_t nrecive = atoi64((char*) arpacket1.money);
+//			CheckretData(nrecive, ntempbuyer, buyer, ntempArbitrator, Arbitrator, arpacket2);
+//		}
+//	}
+//}
+//
+//#else
+//BOOST_AUTO_TEST_CASE(xxxx) {
+//	BOOST_ERROR("ERROR:THE SUITE NEED TO MODIFY!");
+//}
+//#endif
+//
+//BOOST_AUTO_TEST_SUITE_END()
+//
+//BOOST_AUTO_TEST_SUITE(script_print)
+//
+//#if 1
+//
+//BOOST_AUTO_TEST_CASE(vmscrip_printout) {
+//	CVmScript vscript;
+//	vscript.Rom.insert(vscript.Rom.begin(), Array, Array + sizeof(Array));
+//	vscript.rule.maxPay = 50;
+//	vscript.rule.maxReSv = 50;
+//	vscript.rule.vNextOutHeight = 50;
+//	vscript.rule.vpreOutHeihgt = 100;
+//	CDataStream VmData(SER_DISK, CLIENT_VERSION);
+//	VmData << vscript;
+//	//cout << "script:" << HexStr(VmData.str()).c_str() << endl;
+//
+//	VmData.clear();
+//
+//	Cprepacke packet;
+//	packet.iniOutHeight = 30;
+//	packet.followOutHeight = 7;
+//	uint64_t ntemp = 5 * COIN;
+//	sprintf((char*) packet.money, "%ld", ntemp);
+//	VmData << packet;
+//
+//	//cout << "The first package Contract:" << HexStr(VmData).c_str() << " money count:" << packet.money << endl;
+//
+//	VmData.clear();
+//	CNextPacket npacket1;
+////	npacket1.money = 5*COIN;
+//	sprintf((char*) npacket1.money, "%ld", ntemp);
+//	VmData << npacket1;
+//
+////cout << "second Appeal package Contract:" << HexStr(VmData).c_str() << " money count:" << npacket1.money << endl;
+//
+////// third
+//	VmData.clear();
+//	CNextPacket arpacket1;
+////	arpacket1.money = 5*COIN;
+//	sprintf((char*) arpacket1.money, "%ld", ntemp);
+//	VmData << arpacket1;
+//
+//	CNextPacket arpacket2;
+////	arpacket2.money = 1*COIN;
+//	ntemp = 1 * COIN;
+//	sprintf((char*) arpacket2.money, "%ld", ntemp);
+//	VmData << arpacket2;
+////cout << "third Arbitration package Contract:" << HexStr(VmData).c_str() << " money count:" << arpacket1.money
+////			<< " ArbitratorAcc:" << arpacket2.money << endl;
+//}
+//
+//#else
+//BOOST_AUTO_TEST_CASE(xxxx) {
+//	BOOST_ERROR("ERROR:THE SUITE NEED TO MODIFY!");
+//}
+//#endif
 
 BOOST_AUTO_TEST_SUITE_END()
