@@ -553,7 +553,7 @@ void Init(CAccountViewCache &view, CVmScript &vscript, vector<std::shared_ptr<CB
 
 	vector<vector_unsigned_char> account;
 	for (int i = 1; i < 4; i++) {
-		CAccountInfo sourceAccount;
+		CAccount sourceAccount;
 		CRegID accountId(i + 2, i);
 		std::vector<unsigned char> nvector;
 		nvector.assign(R1Array[i - 1], R1Array[i - 1] + 20);
@@ -629,8 +629,8 @@ void Init(CAccountViewCache &view, CVmScript &vscript, vector<std::shared_ptr<CB
 	VmData.clear();
 
 }
-void CheckretData(uint64_t nrecive, CAccountInfo ntempbuyer, CAccountInfo buyer, CAccountInfo ntempArbitrator,
-		CAccountInfo Arbitrator, CNextPacket arpacket2) {
+void CheckretData(uint64_t nrecive, CAccount ntempbuyer, CAccount buyer, CAccount ntempArbitrator,
+		CAccount Arbitrator, CNextPacket arpacket2) {
 	if (atoi64((char*) arpacket2.money) >= nrecive
 			&& atoi64((char*) arpacket2.money) <= ((ntempbuyer.llValues - 5) + nrecive)) {
 		CFund opfund = Arbitrator.vFreedomFund[0];
@@ -665,9 +665,9 @@ struct CTxScript {
 	std::shared_ptr<CAppealTransaction> ntx;
 	std::shared_ptr<CAppealTransaction> thirdtx;
 	CAccountViewCache view;
-	CAccountInfo ntempbuyer;
-	CAccountInfo ntempSeller;
-	CAccountInfo ntempArbitrator;
+	CAccount ntempbuyer;
+	CAccount ntempSeller;
+	CAccount ntempArbitrator;
 	CTxScript() :
 			view(*pAccountViewTip, true) {
 		tx = std::make_shared < CSecureTransaction > (CSecureTransaction());
@@ -682,7 +682,7 @@ struct CTxScript {
 		view.GetAccount(tx.get()->vRegAccountId[0], ntempbuyer);
 		view.GetAccount(tx.get()->vRegAccountId[1], ntempSeller);
 	}
-	void CheckEqual(CAccountInfo accBeforOperate, CAccountInfo accOperate) {
+	void CheckEqual(CAccount accBeforOperate, CAccount accOperate) {
 		BOOST_CHECK(accBeforOperate.vRewardFund == accOperate.vRewardFund);
 		BOOST_CHECK(accBeforOperate.vFreedomFund == accOperate.vFreedomFund);
 		BOOST_CHECK(accBeforOperate.vFreeze == accOperate.vFreeze);
@@ -718,9 +718,9 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_onepacke,CTxScript) {
 		Tx.push_back(tx);
 		CVmScriptRun mScript(view, Tx, vscript);
 		bool flag = mScript.run(Tx, view);
-		vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
-		CAccountInfo buyer;
-		CAccountInfo Seller;
+		vector<std::shared_ptr<CAccount> > pac = mScript.GetNewAccont();
+		CAccount buyer;
+		CAccount Seller;
 		for (auto& item : pac) {
 			if (item.get()->keyID == ntempbuyer.keyID) {
 				buyer = *item.get();
@@ -762,7 +762,7 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_twoAppealpacke,CTxScript) {
 		Tx.push_back(tx);
 		CVmScriptRun mScript(view, Tx, vscript);
 		bool flag = mScript.run(Tx, view);
-		CAccountInfo Temp;
+		CAccount Temp;
 		for (auto& item : view.cacheAccounts) {
 			if (item.first == ntempbuyer.keyID) {
 				Temp = item.second;
@@ -775,7 +775,7 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_twoAppealpacke,CTxScript) {
 			BOOST_CHECK(flag);
 		}
 
-		vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
+		vector<std::shared_ptr<CAccount> > pac = mScript.GetNewAccont();
 		Tx.clear();
 		Tx.push_back(tx);
 		Tx.push_back(ntx);
@@ -784,8 +784,8 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_twoAppealpacke,CTxScript) {
 		flag = mScript1.run(Tx, view);
 
 		pac = mScript1.GetNewAccont();
-		CAccountInfo buyer;
-		CAccountInfo Arbitrator;
+		CAccount buyer;
+		CAccount Arbitrator;
 		for (auto& item : pac) {
 			if (item.get()->keyID == ntempbuyer.keyID) {
 				buyer = *item.get();
@@ -846,7 +846,7 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_thirdArbitratorpacke,CTxScript) {
 		CVmScriptRun mScript(view, Tx, vscript);
 		bool flag = mScript.run(Tx, view);
 
-		CAccountInfo Temp;
+		CAccount Temp;
 		for (auto& item : view.cacheAccounts) {
 			if (item.first == ntempbuyer.keyID) {
 				Temp = item.second;
@@ -858,7 +858,7 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_thirdArbitratorpacke,CTxScript) {
 		} else {
 			BOOST_CHECK(flag);
 		}
-		vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
+		vector<std::shared_ptr<CAccount> > pac = mScript.GetNewAccont();
 		for (auto& item : pac) {
 			view.SetAccount(item.get()->keyID, *item.get());
 		}
@@ -892,9 +892,9 @@ BOOST_FIXTURE_TEST_CASE(vmscrip_thirdArbitratorpacke,CTxScript) {
 		flag = mScript1.run(Tx, view);
 
 		pac = mScript1.GetNewAccont();
-		CAccountInfo Arbitrator;
-		CAccountInfo buyer;
-		CAccountInfo Seller;
+		CAccount Arbitrator;
+		CAccount buyer;
+		CAccount Seller;
 		for (auto& item : pac) {
 			if (item.get()->keyID == ntempbuyer.keyID) {
 				buyer = *item.get();

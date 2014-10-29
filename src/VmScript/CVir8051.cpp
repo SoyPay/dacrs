@@ -533,7 +533,7 @@ static bool ExGetAccountPublickeyFunc(unsigned char * ipara)
 	CAccountViewCache view(*pAccountViewTip, true);
 
 	string strParam(accountid,accountid+length);
-	CAccountInfo aAccount;
+	CAccount aAccount;
 	if(strParam.length() != 12) {
 		CBitcoinAddress address(strParam.c_str());
 		CKeyID keyid;
@@ -562,7 +562,7 @@ static bool ExQueryAccountBalanceFunc(unsigned char * ipara)
 		CAccountViewCache view(*pAccountViewTip, true);
 
 		string strParam(accountid,accountid+length);
-		CAccountInfo aAccount;
+		CAccount aAccount;
 		if(strParam.length() != 12) {
 			CBitcoinAddress address(strParam.c_str());
 			CKeyID keyid;

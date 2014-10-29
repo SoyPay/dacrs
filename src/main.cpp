@@ -526,7 +526,7 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
 
 bool CheckSignScript(const vector<unsigned char> &accountId,const uint256& sighash,
 		const vector_unsigned_char &signatrue, CValidationState &state, CAccountViewCache &view) {
-	CAccountInfo acctInfo;
+	CAccount acctInfo;
 	if (!view.GetAccount(accountId, acctInfo)) {
 		return state.DoS(100, ERROR("CheckSignScript() :tx GetAccount falied"), REJECT_INVALID, "bad-getaccount");
 	}
@@ -1235,7 +1235,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 		view.SetBestBlock(pindex->GetBlockHash());
 		for (unsigned int i = 0; i < block.vptx.size(); i++) {
 			std::shared_ptr<CRewardTransaction> pRewardTx = dynamic_pointer_cast<CRewardTransaction>(block.vptx[i]);
-			CAccountInfo sourceAccount;
+			CAccount sourceAccount;
 			CRegID accountId(pindex->nHeight, i);
 			CPubKey pubKey(pRewardTx->account);
 			CKeyID keyId = pubKey.GetID();

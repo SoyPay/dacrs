@@ -398,7 +398,7 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey) {
 }
 
 struct CSecureAccComparator {
-	bool operator()(const CAccountInfo &a, const CAccountInfo&b) {
+	bool operator()(const CAccount &a, const CAccount&b) {
 		// First sort by acc over 30days
 		if (a.GetSecureAccPos(chainActive.Tip()->nHeight) < b.GetSecureAccPos(chainActive.Tip()->nHeight)) {
 			return false;
@@ -452,8 +452,8 @@ uint256 GetAdjustHash(const uint256 TargetHash, const uint64_t nPos) {
 extern CWallet* pwalletMain;
 bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCreateKey) {
 	set<CKeyID> setKeyID;
-	CAccountInfo secureAcc;
-	set<CAccountInfo, CSecureAccComparator> setSecureAcc;
+	CAccount secureAcc;
+	set<CAccount, CSecureAccComparator> setSecureAcc;
 
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
@@ -483,7 +483,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 		}
 
 		for(const auto &keyid:setKeyID) {
-			//find CAccountInfo info by keyid
+			//find CAccount info by keyid
 			if(setCreateKey.size()) {
 				bool bfind = false;
 				for(auto &item: setCreateKey)
@@ -616,7 +616,7 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 		return false;
 	}
 	CAccountViewCache view(accView);
-	CAccountInfo secureAcc;
+	CAccount secureAcc;
 	{
 		CRewardTransaction *prtx = (CRewardTransaction *) pBlock->vptx[0].get();
 
