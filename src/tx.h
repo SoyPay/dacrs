@@ -912,6 +912,60 @@ private:
 	uint64_t GetVecMoney(const vector<CFund>& vFund);
 };
 
+class CAuthorizate{
+public:
+	uint32_t GetAuthorizeTime ()const {
+		return nAuthorizeTime.GetValue();
+	}
+	uint64_t GetMaxMoneyPerTime ()const {
+		return nMaxMoneyPerTime.GetValue();
+	}
+	uint64_t GetMaxMoneyTotal ()const {
+		return nMaxMoneyTotal.GetValue();
+	}
+	uint64_t GetMaxMoneyPerDay ()const {
+		return nMaxMoneyPerDay.GetValue();
+	}
+	uint64_t GetCurMaxMoneyPerDay() const {
+		return nCurMaxMoneyPerDay.GetValue();
+	}
+
+	void SetAuthorizeTime(uint32_t nTime) {
+		nAuthorizeTime.SetValue(nTime);
+	}
+	void SetMaxMoneyPerTime(uint64_t nMoney) {
+		nMaxMoneyPerTime.SetValue(nMoney);
+	}
+	void SetMaxMoneyTotal(uint64_t nMoney) {
+		nMaxMoneyTotal.SetValue(nMoney);
+	}
+	void SetMaxMoneyPerDay(uint64_t nMoney) {
+		nMaxMoneyPerDay.SetValue(nMoney);
+	}
+	void SetCurMaxMoneyPerDay(uint64_t nMoney) {
+		nCurMaxMoneyPerDay.SetValue(nMoney);
+	}
+
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(nLastOperHeight);
+		READWRITE(nAuthorizeTime);
+		READWRITE(nMaxMoneyPerTime);
+		READWRITE(nMaxMoneyTotal);
+		READWRITE(nMaxMoneyPerDay);
+		READWRITE(nCurMaxMoneyPerDay);
+	)
+
+private:
+	CVarData<uint32_t> nLastOperHeight;
+	CVarData<uint32_t> nAuthorizeTime;
+	CVarData<uint32_t> nUserDefine;
+	CVarData<uint64_t> nMaxMoneyPerTime;
+	CVarData<uint64_t> nMaxMoneyTotal;
+	CVarData<uint64_t> nMaxMoneyPerDay;
+	CVarData<uint64_t> nCurMaxMoneyPerDay;
+};
+
 class CContractScript {
 public:
 	vector_unsigned_char scriptId;
