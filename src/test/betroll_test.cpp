@@ -795,7 +795,7 @@ void Init(CAccountViewCache &view, CVmScript &vscript, vector<std::shared_ptr<CB
 
 	vector<vector_unsigned_char> account;
 	for (int i = 1; i < 3; i++) {
-		CSecureAccount sourceAccount;
+		CAccountInfo sourceAccount;
 		CRegID accountId(i + 2, i);
 		std::vector<unsigned char> nvector;
 		nvector.assign(Array1[i - 1], Array1[i - 1] + 20);
@@ -860,8 +860,8 @@ struct CTxBetRollScript {
 	std::shared_ptr<CAppealTransaction> A2;
 	std::shared_ptr<CAppealTransaction> B2;
 	CAccountViewCache view;
-	CSecureAccount A;
-	CSecureAccount B;
+	CAccountInfo A;
+	CAccountInfo B;
 	int64_t result;
 	int64_t bresult;
 	int64_t betm;
@@ -888,7 +888,7 @@ bool SendSecuTx(CTxBetRollScript * betroll) {
 	Tx.push_back(betroll->tx);
 	CVmScriptRun mScript(betroll->view, Tx, betroll->vscript);
 	bool flag = mScript.run(Tx, betroll->view);
-	vector<std::shared_ptr<CSecureAccount> > pac = mScript.GetNewAccont();
+	vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
 	for (auto& item : pac) {
 		betroll->view.SetAccount(item.get()->keyID, *item.get());
 	}
@@ -925,7 +925,7 @@ bool SendASendTx(CTxBetRollScript * betroll, bool bcheck) {
 	Tx.push_back(betroll->A2);
 	CVmScriptRun mScript(betroll->view, Tx, betroll->vscript);
 	bool flag = mScript.run(Tx, betroll->view);
-	vector<std::shared_ptr<CSecureAccount> > pac = mScript.GetNewAccont();
+	vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
 	for (auto& item : pac) {
 		betroll->view.SetAccount(item.get()->keyID, *item.get());
 	}
@@ -960,7 +960,7 @@ bool SendBSendTx(CTxBetRollScript * betroll, bool bcheck) {
 	Tx.push_back(betroll->B2);
 	CVmScriptRun mScript(betroll->view, Tx, betroll->vscript);
 	bool flag = mScript.run(Tx, betroll->view);
-	vector<std::shared_ptr<CSecureAccount> > pac = mScript.GetNewAccont();
+	vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
 	for (auto& item : pac) {
 		betroll->view.SetAccount(item.get()->keyID, *item.get());
 	}
@@ -1017,7 +1017,7 @@ bool SendAThirdTx(CTxBetRollScript * betroll, bool bcheck) {
 	Tx.push_back(betroll->A2);
 	CVmScriptRun mScript(betroll->view, Tx, betroll->vscript);
 	bool flag = mScript.run(Tx, betroll->view);
-	vector<std::shared_ptr<CSecureAccount> > pac = mScript.GetNewAccont();
+	vector<std::shared_ptr<CAccountInfo> > pac = mScript.GetNewAccont();
 	if (bcheck) {
 		BOOST_CHECK(!flag);
 		std::shared_ptr<vector<CVmOperate>> retData = mScript.GetOperate();

@@ -22,6 +22,10 @@
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.656749266" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
 							<builder id="cdt.managedbuild.builder.gnu.cross.418237013" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.builder.gnu.cross"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.186605227" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler">
+								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1448833983" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="HAVE_CONFIG_H=1"/>
+									<listOptionValue builtIn="false" value="&quot;C:\deps\boost_1_55_0&quot;"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.2008552988" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.1466703137" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
@@ -29,6 +33,9 @@
 									<listOptionValue builtIn="false" value="&quot;C:\deps\boost_1_55_0&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;C:\deps\db-4.8.30.NC\build_unix&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;C:\deps\openssl-1.0.1g\include&quot;"/>
+								</option>
+								<option id="gnu.cpp.compiler.option.preprocessor.def.903788383" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="HAVE_CONFIG_H=1"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.676849956" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
