@@ -10,7 +10,7 @@ using namespace std;
 #define CHAIN_HEIGHT (nMaxCoinDay/nTargetSpacing)+10
 #define VECTOR_SIZE 1000
 #define random(x) (rand()%x)
-vector<uint256> g_vHash[5];
+vector<uint256> g_vHash[4];
 class CFindIterByHash {
 public:
 	CFindIterByHash(uint256 hash) {
@@ -43,14 +43,14 @@ void GenerateRandomHash(vector<uint256>& vHash, uint64_t nSize = VECTOR_SIZE) {
 	}
 }
 
-void Init(CBlockIndex* pBlockIndex, CSecureAccount& account) {
+void Init(CBlockIndex* pBlockIndex, CAccountInfo& account) {
 	srand((unsigned) time(NULL));
 	account.llValues = 100;
 	pBlockIndex->nHeight = CHAIN_HEIGHT;
 	chainActive.SetTip(pBlockIndex);
 	BOOST_CHECK(NULL != chainActive.Tip());
 
-	for (int i = 0; i < 5; i++) {
+	for (int i = 0; i < 4; i++) {
 		GenerateRandomHash(g_vHash[i]);
 	}
 
@@ -63,19 +63,15 @@ void Init(CBlockIndex* pBlockIndex, CSecureAccount& account) {
 	}
 
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		account.vInputFreeze.push_back(
-				CFund(INPUT_FREEZD_FUND, g_vHash[2].at(i), random(10), CHAIN_HEIGHT - 10 + random(30)));
-	}
-
-	for (int i = 0; i < VECTOR_SIZE; i++) {
-		account.vOutputFreeze.push_back(
-				CFund(OUTPUT_FREEZD_FUND, g_vHash[3].at(i), random(10), CHAIN_HEIGHT - 10 + random(30)));
-	}
-
-	for (int i = 0; i < VECTOR_SIZE; i++) {
 		account.vSelfFreeze.push_back(
-				CFund(SELF_FREEZD_FUND, g_vHash[4].at(i), random(10), CHAIN_HEIGHT - 10 + random(30)));
+				CFund(SELF_FREEZD_FUND, g_vHash[3].at(i), random(10), CHAIN_HEIGHT - 10 + random(30)));
 	}
+
+	for (int i = 0; i < VECTOR_SIZE; i++) {
+		account.vFreeze.push_back(
+				CFund(FREEZD_FUND, g_vHash[2].at(i), random(10), CHAIN_HEIGHT - 1 + random(3)));
+	}
+
 }
 
 bool IsEqual(const vector<CFund>& vSrc, const vector<CFund>& vDest) {
@@ -93,8 +89,8 @@ bool IsEqual(const vector<CFund>& vSrc, const vector<CFund>& vDest) {
 }
 struct CTxTest {
 	CBlockIndex block;
-	CSecureAccount accOperate;
-	CSecureAccount accBeforOperate;
+	CAccountInfo accOperate;
+	CAccountInfo accBeforOperate;
 
 	CTxTest() {
 		::Init(&block, accOperate);
@@ -104,8 +100,7 @@ struct CTxTest {
 	void CheckAccountEqual() {
 		BOOST_CHECK(IsEqual(accBeforOperate.vRewardFund, accOperate.vRewardFund));
 		BOOST_CHECK(IsEqual(accBeforOperate.vFreedomFund, accOperate.vFreedomFund));
-		BOOST_CHECK(IsEqual(accBeforOperate.vInputFreeze, accOperate.vInputFreeze));
-		BOOST_CHECK(IsEqual(accBeforOperate.vOutputFreeze, accOperate.vOutputFreeze));
+		BOOST_CHECK(IsEqual(accBeforOperate.vFreeze, accOperate.vFreeze));
 		BOOST_CHECK(IsEqual(accBeforOperate.vSelfFreeze, accOperate.vSelfFreeze));
 		BOOST_CHECK(accBeforOperate.llValues == accOperate.llValues);
 	}
@@ -126,195 +121,14 @@ struct CTxTest {
 
 		//insert 100 data that not in the specific vector
 		vector<uint256> vRandomHash;
-		GenerateRandomHash(vRandomHash, VECTOR_SIZE / 10);
+		GenerateRandomHash(vRandomHash, VECTOR_SIZE/10);
 		vHashCopy.insert(vHashCopy.end(), vRandomHash.begin(), vRandomHash.end());
 		random_shuffle(vHashCopy.begin(), vHashCopy.end());
 	}
 
-	void CheckInOut(OperType emType) {
-		BOOST_CHECK(emType == MINUS_OUTPUT || emType == MINUS_INPUT);
-		accOperate.CompactAccount(CHAIN_HEIGHT);
-
-		vector<CFund>& vFund = emType == MINUS_OUTPUT ? accOperate.vOutputFreeze : accOperate.vInputFreeze;
-		vector<uint256> vHashCopy;
-		FillSpecificAndRandData(vHashCopy, vFund);
-
-		//start test random data
-		int nExecBranchCount[3] = { 0 };
-		uint64_t nOperaeValue = 0;
-		int nCount = 0;
-		for (vector<uint256>::iterator it = vHashCopy.begin(); it != vHashCopy.end(); it++) {
-			nOperaeValue = 0;
-			uint64_t nRandomValue = random(10);
-			CFund fund(OUTPUT_FREEZD_FUND, *it, nRandomValue, random(20));
-			vector<CFund>::iterator iter = find_if(vFund.begin(), vFund.end(), CFindIterByHash(*it));
-
-			if (vFund.end() == iter) {
-				//can't find the specific fund by *it,so operatreAccount should return false
-				BOOST_CHECK(!accOperate.OperateAccount(emType, fund, &nOperaeValue));
-				nExecBranchCount[0]++;
-				continue;
-			}
-
-			uint64_t nOldVectorValue = GetTotalValue(vFund);
-			uint64_t nOldIterValue = iter->value;
-			if (nRandomValue > iter->value) {
-				BOOST_CHECK(!accOperate.OperateAccount(emType, fund, &nOperaeValue));
-				BOOST_CHECK(GetTotalValue(vFund) + nOldIterValue == nOldVectorValue);
-				BOOST_CHECK(nOldIterValue == nOperaeValue);
-				nExecBranchCount[1]++;
-			} else {
-				BOOST_CHECK(accOperate.OperateAccount(emType, fund, &nOperaeValue));
-				BOOST_CHECK(GetTotalValue(vFund) + nRandomValue == nOldVectorValue);
-				BOOST_CHECK(nRandomValue == nOperaeValue);
-				nExecBranchCount[2]++;
-			}
-		}
-
-		for (int i = 0; i < sizeof(nExecBranchCount) / sizeof(nExecBranchCount[0]); i++) {
-			//cout << "execute branch " << i << " times is " << nExecBranchCount[i] << endl;
-		}
-		accOperate.UndoOperateAccount(accOperate.accountOperLog);
-		CheckAccountEqual();
-	}
-
-	void CheckInOutFree(OperType emType) {
-		BOOST_CHECK(emType == MINUS_OUTPUT_OR_FREE || emType == MINUS_INPUT_OR_FREE);
-		accOperate.CompactAccount(CHAIN_HEIGHT);
-
-		vector<CFund>& vFund = emType == MINUS_OUTPUT_OR_FREE ? accOperate.vOutputFreeze : accOperate.vInputFreeze;
-		vector<uint256> vHashCopy;
-		FillSpecificAndRandData(vHashCopy, vFund);
-
-		int nExecBranchCount[4] = { 0 };
-		uint64_t nOperaeValue = 0;
-		int nCount = 0;
-		for (vector<uint256>::iterator it = vHashCopy.begin(); it != vHashCopy.end(); it++) {
-			nOperaeValue = 0;
-			uint64_t nRandomValue = random(200);
-			CFund fund(OUTPUT_FREEZD_FUND, *it, nRandomValue, random(20));
-			vector<CFund>::iterator iter = find_if(vFund.begin(), vFund.end(), CFindIterByHash(*it));
-
-			if (vFund.end() == iter) {
-				//can't find the specific fund by *it,so operatreAccount should return false
-				BOOST_CHECK(!accOperate.OperateAccount(emType, fund, &nOperaeValue));
-				nExecBranchCount[0]++;
-				continue;
-			}
-
-			uint64_t nOldVectorValue = GetTotalValue(vFund);
-			uint64_t nOldIterValue = iter->value;
-			if (iter->value >= nRandomValue) {
-				BOOST_CHECK(accOperate.OperateAccount(emType, fund, &nOperaeValue));
-				BOOST_CHECK(GetTotalValue(vFund) + nRandomValue == nOldVectorValue);
-				BOOST_CHECK(nRandomValue == nOperaeValue);
-				nExecBranchCount[1]++;
-			} else {
-				uint64_t nOldFree = GetTotalValue(accOperate.vFreedomFund) + accOperate.llValues;
-				if (iter->value + nOldFree >= nRandomValue) {
-					BOOST_CHECK(accOperate.OperateAccount(emType, fund, &nOperaeValue));
-					BOOST_CHECK(
-							nOldVectorValue + nOldFree - nRandomValue
-									== GetTotalValue(accOperate.vFreedomFund) + accOperate.llValues
-											+ GetTotalValue(vFund));
-					BOOST_CHECK(nRandomValue == nOperaeValue);
-					nExecBranchCount[2]++;
-				} else {
-					BOOST_CHECK(!accOperate.OperateAccount(emType, fund, &nOperaeValue));
-					BOOST_CHECK(!GetTotalValue(accOperate.vFreedomFund) && !accOperate.llValues);
-					BOOST_CHECK(nOldVectorValue + nOldFree - nOperaeValue == GetTotalValue(vFund));
-					nExecBranchCount[3]++;
-				}
-			}
-		}
-
-		for (int i = 0; i < sizeof(nExecBranchCount) / sizeof(nExecBranchCount[0]); i++) {
-			//cout << "execute branch " << i << " times is " << nExecBranchCount[i] << endl;
-		}
-		accOperate.UndoOperateAccount(accOperate.accountOperLog);
-		CheckAccountEqual();
-	}
-
-	void CheckInOutFreeSelf(OperType emType) {
-		BOOST_CHECK(emType == MINUS_OUTPUT_OR_FREE_OR_SELF || emType == MINUS_INPUT_OR_FREE_OR_SELF);
-		accOperate.CompactAccount(CHAIN_HEIGHT);
-
-		vector<CFund>& vFund =
-				emType == MINUS_OUTPUT_OR_FREE_OR_SELF ? accOperate.vOutputFreeze : accOperate.vInputFreeze;
-		vector<uint256> vHashCopy;
-		FillSpecificAndRandData(vHashCopy, vFund);
-
-		int nExecBranchCount[5] = { 0 };
-		uint64_t nOperaeValue = 0;
-		int nCount = 0;
-		for (vector<uint256>::iterator it = vHashCopy.begin(); it != vHashCopy.end(); it++) {
-			nOperaeValue = 0;
-			uint64_t nRandomValue = random(70);
-			CFund fund(OUTPUT_FREEZD_FUND, *it, nRandomValue, random(20));
-			vector<CFund>::iterator iter = find_if(vFund.begin(), vFund.end(), CFindIterByHash(*it));
-
-			if (vFund.end() == iter) {
-				//can't find the specific fund by *it,so operatreAccount should return false
-				BOOST_CHECK(!accOperate.OperateAccount(emType, fund, &nOperaeValue));
-				nExecBranchCount[0]++;
-				continue;
-			}
-
-			uint64_t nOldVectorValue = GetTotalValue(vFund);
-			uint64_t nIterValue = iter->value;
-			if (nIterValue >= nRandomValue) {
-				BOOST_CHECK(accOperate.OperateAccount(emType, fund, &nOperaeValue));
-				BOOST_CHECK(GetTotalValue(vFund) + nRandomValue == nOldVectorValue);
-				BOOST_CHECK(nRandomValue == nOperaeValue);
-				nExecBranchCount[1]++;
-			} else {
-				uint64_t nOldTotalFree = GetTotalValue(accOperate.vFreedomFund) + accOperate.llValues;
-				if (nIterValue + nOldTotalFree >= nRandomValue) {
-					BOOST_CHECK(accOperate.OperateAccount(emType, fund, &nOperaeValue));
-					BOOST_CHECK(
-							nOldVectorValue + nOldTotalFree - nRandomValue
-									== GetTotalValue(accOperate.vFreedomFund) + accOperate.llValues
-											+ GetTotalValue(vFund));
-					BOOST_CHECK(nRandomValue == nOperaeValue);
-					nExecBranchCount[2]++;
-				} else {
-					uint64_t nOldSelfValue = GetTotalValue(accOperate.vSelfFreeze);
-					if (nIterValue + nOldTotalFree + nOldSelfValue >= nRandomValue) {
-						BOOST_CHECK(accOperate.OperateAccount(emType, fund, &nOperaeValue));
-						uint64_t nSum = GetTotalValue(vFund) + accOperate.llValues
-								+ GetTotalValue(accOperate.vFreedomFund) + GetTotalValue(accOperate.vSelfFreeze);
-						BOOST_CHECK(nOldVectorValue + nOldTotalFree + nOldSelfValue - nRandomValue == nSum);
-						BOOST_CHECK(nOperaeValue == nRandomValue);
-						nExecBranchCount[3]++;
-					} else {
-						BOOST_CHECK(!accOperate.OperateAccount(emType, fund, &nOperaeValue));
-						BOOST_CHECK(!GetTotalValue(accOperate.vFreedomFund) && !accOperate.llValues);
-						BOOST_CHECK(!GetTotalValue(accOperate.vSelfFreeze));
-
-						BOOST_CHECK(
-								nOldVectorValue + nOldTotalFree + nOldSelfValue - nOperaeValue == GetTotalValue(vFund));
-						nExecBranchCount[4]++;
-					}
-				}
-			}
-		}
-
-		for (int i = 0; i < sizeof(nExecBranchCount) / sizeof(nExecBranchCount[0]); i++) {
-			//cout<<"execute branch "<<i<<" times is "<<nExecBranchCount[i]<<endl;
-		}
-
-		accOperate.UndoOperateAccount(accOperate.accountOperLog);
-		CheckAccountEqual();
-	}
-
-	void CheckFreeSelf() {
-
-	}
 };
 
 BOOST_FIXTURE_TEST_SUITE(tx_tests,CTxTest)
-
-#if 0
 
 BOOST_FIXTURE_TEST_CASE(tx_add_free,CTxTest) {
 	//invalid data
@@ -348,6 +162,8 @@ BOOST_FIXTURE_TEST_CASE(tx_add_free,CTxTest) {
 
 BOOST_FIXTURE_TEST_CASE(tx_minus_free,CTxTest) {
 	accOperate.CompactAccount(CHAIN_HEIGHT);
+
+	int nBranch[3] = {0};
 	for (int i = 0; i < VECTOR_SIZE; i++) {
 		uint64_t nOldVectorSum = GetTotalValue(accOperate.vFreedomFund);
 		uint64_t nOldValue = accOperate.llValues;
@@ -360,252 +176,183 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_free,CTxTest) {
 			BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE, fund, &nOperateValue));
 			BOOST_CHECK(GetTotalValue(accOperate.vFreedomFund) == nOldVectorSum - randValue);
 			BOOST_CHECK(nOperateValue == randValue);
+			nBranch[0]++;
 		} else {
 			if (accOperate.llValues + nOldVectorSum >= randValue) {
 				nOperateValue = 0;
 				BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE, fund, &nOperateValue));
 				BOOST_CHECK(
 						GetTotalValue(accOperate.vFreedomFund) + accOperate.llValues
-						== nOldValue + nOldVectorSum - randValue);
+								== nOldValue + nOldVectorSum - randValue);
 				BOOST_CHECK(nOperateValue == randValue);
+				nBranch[1]++;
 			} else {
 				nOperateValue = 0;
-				accOperate.OperateAccount(MINUS_FREE, fund, &nOperateValue);
-				BOOST_CHECK(!GetTotalValue(accOperate.vFreedomFund) && !accOperate.llValues);
-				BOOST_CHECK(nOperateValue == nOldValue + nOldVectorSum);
+				BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREE, fund, &nOperateValue) );
+				BOOST_CHECK(GetTotalValue(accOperate.vFreedomFund) == nOldVectorSum);
+				BOOST_CHECK(nOldValue == accOperate.llValues);
+				BOOST_CHECK(nOperateValue == 0);
+				nBranch[2]++;
 			}
 		}
 	}
 
+	cout<<"branch 1 is "<<nBranch[0]<<endl<<" branch 2 is "<<nBranch[1]<<endl<<" branch 3 is "<<nBranch[2]<<endl;
 	accOperate.UndoOperateAccount(accOperate.accountOperLog);
 	CheckAccountEqual();
 }
 
 BOOST_FIXTURE_TEST_CASE(tx_add_self,CTxTest) {
-	//invalid data
-	CFund fundInvalid(NULL_FUNDTYPE, g_vHash[0].at(0), 1, CHAIN_HEIGHT + 1);
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_SELF_FREEZD, fundInvalid));
-	fundInvalid.nFundType = 0;
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_SELF_FREEZD, fundInvalid));
-	fundInvalid.nFundType = FREEDOM_FUND;
-	fundInvalid.value = MAX_MONEY;
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_SELF_FREEZD, fundInvalid));
-
-	//random test
-	vector<uint256> vSelf;
-	GenerateRandomHash(vSelf);
-
-	accOperate.CompactAccount(CHAIN_HEIGHT);
-	for (int i = 0; i < VECTOR_SIZE; i++) {
-		uint64_t nOldVectorSum = GetTotalValue(accOperate.vFreedomFund);
-		uint64_t nOldValue = accOperate.llValues;
-		uint64_t randValue = random(30);
-		uint64_t nOperateValue = 0;
-		uint64_t nOldSelfValue = GetTotalValue(accOperate.vSelfFreeze);
-		CFund fund(SELF_FREEZD_FUND, vSelf.at(i), randValue, CHAIN_HEIGHT + 1);
-
-		if (nOldVectorSum && nOldVectorSum >= randValue) {
-			nOperateValue = 0;
-			BOOST_CHECK(accOperate.OperateAccount(ADD_SELF_FREEZD, fund, &nOperateValue));
-			BOOST_CHECK(GetTotalValue(accOperate.vFreedomFund) == nOldVectorSum - randValue);
-			BOOST_CHECK(nOperateValue == randValue);
-
-			BOOST_CHECK(nOldSelfValue + randValue == GetTotalValue(accOperate.vSelfFreeze));
-		} else {
-			if (accOperate.llValues + nOldVectorSum >= randValue) {
-				nOperateValue = 0;
-				BOOST_CHECK(accOperate.OperateAccount(ADD_SELF_FREEZD, fund, &nOperateValue));
-				BOOST_CHECK(
-						GetTotalValue(accOperate.vFreedomFund) + accOperate.llValues
-						== nOldValue + nOldVectorSum - randValue);
-				BOOST_CHECK(nOperateValue == randValue);
-
-				BOOST_CHECK(nOldSelfValue + randValue == GetTotalValue(accOperate.vSelfFreeze));
-			} else {
-				nOperateValue = 0;
-				accOperate.OperateAccount(ADD_SELF_FREEZD, fund, &nOperateValue);
-				BOOST_CHECK(!GetTotalValue(accOperate.vFreedomFund) && !accOperate.llValues);
-				BOOST_CHECK(nOperateValue == nOldValue + nOldVectorSum);
-			}
-		}
-	}
-
-	accOperate.UndoOperateAccount(accOperate.accountOperLog);
-	CheckAccountEqual();
-}
-
-BOOST_FIXTURE_TEST_CASE(tx_add_input,CTxTest) {
 	vector<uint256> vSelf;
 	GenerateRandomHash(vSelf);
 	accOperate.CompactAccount(CHAIN_HEIGHT);
 
 	//invalid param check
-	CFund fundvalid(INPUT_FREEZD_FUND, vSelf.at(0), 1, CHAIN_HEIGHT + 1);
+	CFund fundvalid(SELF_FREEZD_FUND, vSelf.at(0), 1, CHAIN_HEIGHT + 1);
 	CFund fundInvalid1(fundvalid);
 	fundInvalid1.nFundType = 0;
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_INPUT_FREEZD, fundInvalid1));
+	BOOST_CHECK(!accOperate.OperateAccount(ADD_SELF_FREEZD, fundInvalid1));
 	fundInvalid1.nFundType = NULL_OPERTYPE;
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_INPUT_FREEZD, fundInvalid1));
+	BOOST_CHECK(!accOperate.OperateAccount(ADD_SELF_FREEZD, fundInvalid1));
 
 	CFund fundInvalid2(fundvalid);
 	fundInvalid2.uTxHash = uint256(0);
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_INPUT_FREEZD, fundInvalid2));
+	BOOST_CHECK(!accOperate.OperateAccount(ADD_SELF_FREEZD, fundInvalid2));
 
-//	CFund fundInvalid3(fundvalid);
-//	fundInvalid3.nHeight = 0;
-//	BOOST_CHECK(!accOperate.OperateAccount(ADD_INPUT_FREEZD, fundInvalid3));
-
-//random check
+	//random check
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		uint64_t nOldInput = GetTotalValue(accOperate.vInputFreeze);
+		uint64_t nOldInput = GetTotalValue(accOperate.vSelfFreeze);
 		uint64_t randValue = random(10);
-		CFund fund(INPUT_FREEZD_FUND, vSelf.at(i), randValue, CHAIN_HEIGHT + 1);
-		BOOST_CHECK(accOperate.OperateAccount(ADD_INPUT_FREEZD, fund));
-		BOOST_CHECK(GetTotalValue(accOperate.vInputFreeze) == nOldInput + randValue);
+		CFund fund(SELF_FREEZD_FUND, vSelf.at(i), randValue, CHAIN_HEIGHT + 1);
+		BOOST_CHECK(accOperate.OperateAccount(ADD_SELF_FREEZD, fund));
+		BOOST_CHECK(GetTotalValue(accOperate.vSelfFreeze) == nOldInput + randValue);
 	}
 
 	accOperate.UndoOperateAccount(accOperate.accountOperLog);
 	CheckAccountEqual();
 }
 
-BOOST_FIXTURE_TEST_CASE(tx_minus_free_to_output,CTxTest) {
+BOOST_FIXTURE_TEST_CASE(tx_minus_self,CTxTest) {
 	accOperate.CompactAccount(CHAIN_HEIGHT);
-	vector<CFund> vFreeCopy(accOperate.vFreedomFund);
-
-	for (vector<CFund>::iterator it = vFreeCopy.begin(); it != vFreeCopy.end(); it++) {
-		size_t nOldFreeSize = accOperate.vFreedomFund.size();
-		uint64_t nOldFreeValue = GetTotalValue(accOperate.vFreedomFund);
-		size_t nOldOutputSize = accOperate.vOutputFreeze.size();
-		uint64_t nOldOutputValue = GetTotalValue(accOperate.vOutputFreeze);
-		uint64_t nChangeValue = it->value;
-
-		BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE_TO_OUTPUT, *it));
-
-		BOOST_CHECK(nOldFreeValue - nChangeValue == GetTotalValue(accOperate.vFreedomFund));
-		BOOST_CHECK(nOldOutputValue + nChangeValue == GetTotalValue(accOperate.vOutputFreeze));
-
-		BOOST_CHECK(
-				((nOldFreeSize == accOperate.vFreedomFund.size() + 1)
-						&& nOldOutputSize + 1 == accOperate.vOutputFreeze.size())
-				|| (nOldFreeSize == accOperate.vFreedomFund.size()
-						&& nOldOutputSize == accOperate.vOutputFreeze.size()));
-	}
-
-	accOperate.UndoOperateAccount(accOperate.accountOperLog);
-	CheckAccountEqual();
-}
-
-BOOST_FIXTURE_TEST_CASE(tx_minus_free_or_self,CTxTest) {
-	accOperate.CompactAccount(CHAIN_HEIGHT);
+	int nBranch[2] = {0};
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		uint64_t nOldTotalFree = GetTotalValue(accOperate.vFreedomFund)+accOperate.llValues;
-		uint64_t nOldSelf = GetTotalValue(accOperate.vSelfFreeze);
+		uint64_t nOldVectorSum = GetTotalValue(accOperate.vSelfFreeze);
 		uint64_t randValue = random(30);
 		uint64_t nOperateValue = 0;
 		CFund fund(REWARD_FUND, 0, randValue, random(20));
 
-		if (nOldTotalFree >= randValue) {
+		if (nOldVectorSum >= randValue) {
 			nOperateValue = 0;
-			BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE_OR_SELF, fund, &nOperateValue));
-			BOOST_CHECK(GetTotalValue(accOperate.vFreedomFund)+accOperate.llValues == nOldTotalFree - randValue);
+			BOOST_CHECK(accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, &nOperateValue));
+			BOOST_CHECK(GetTotalValue(accOperate.vSelfFreeze) == nOldVectorSum - randValue);
 			BOOST_CHECK(nOperateValue == randValue);
+			nBranch[0]++;
 		} else {
-			if (nOldTotalFree + nOldSelf >= randValue) {
-				nOperateValue = 0;
-				BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE_OR_SELF, fund, &nOperateValue));
-				BOOST_CHECK(GetTotalValue(accOperate.vFreedomFund) + accOperate.llValues+
-						GetTotalValue(accOperate.vSelfFreeze)== nOldTotalFree + nOldSelf - randValue);
-				BOOST_CHECK(nOperateValue == randValue);
-			} else {
-				nOperateValue = 0;
-				accOperate.OperateAccount(MINUS_FREE_OR_SELF, fund, &nOperateValue);
-				BOOST_CHECK(!GetTotalValue(accOperate.vFreedomFund) && !accOperate.llValues);
-				BOOST_CHECK(nOperateValue == nOldSelf + nOldTotalFree);
-			}
+			nOperateValue = 0;
+			BOOST_CHECK(!accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, &nOperateValue));
+			BOOST_CHECK(GetTotalValue(accOperate.vSelfFreeze) == nOldVectorSum);
+			BOOST_CHECK(nOperateValue == 0);
+			nBranch[1]++;
 		}
+	}
+
+	cout<<"branch 1 is "<<nBranch[0]<<endl<<" branch 2 is "<<nBranch[1]<<endl;
+	accOperate.UndoOperateAccount(accOperate.accountOperLog);
+	CheckAccountEqual();
+}
+
+BOOST_FIXTURE_TEST_CASE(tx_add_freezed,CTxTest) {
+	vector<uint256> vSelf;
+	GenerateRandomHash(vSelf);
+	accOperate.CompactAccount(CHAIN_HEIGHT);
+
+	//invalid param check
+	CFund fundvalid(FREEDOM_FUND, vSelf.at(0), 1, CHAIN_HEIGHT + 1);
+	CFund fundInvalid1(fundvalid);
+	fundInvalid1.nFundType = 0;
+	BOOST_CHECK(!accOperate.OperateAccount(ADD_FREEZD, fundInvalid1));
+	fundInvalid1.nFundType = NULL_FUNDTYPE;
+	BOOST_CHECK(!accOperate.OperateAccount(ADD_FREEZD, fundInvalid1));
+
+	CFund fundInvalid2(fundvalid);
+	fundInvalid2.uTxHash = uint256(0);
+	BOOST_CHECK(!accOperate.OperateAccount(ADD_FREEZD, fundInvalid2));
+
+	//random check
+	for (int i = 0; i < VECTOR_SIZE; i++) {
+		uint64_t nOldInput = GetTotalValue(accOperate.vFreeze);
+		uint64_t randValue = random(10);
+		CFund fund(FREEZD_FUND, vSelf.at(i), randValue, CHAIN_HEIGHT + 1);
+		BOOST_CHECK(accOperate.OperateAccount(ADD_FREEZD, fund));
+		BOOST_CHECK(GetTotalValue(accOperate.vFreeze) == nOldInput + randValue);
 	}
 
 	accOperate.UndoOperateAccount(accOperate.accountOperLog);
 	CheckAccountEqual();
 }
 
-BOOST_FIXTURE_TEST_CASE(tx_minus_output,CTxTest) {
-//	accOperate.CompactAccount(CHAIN_HEIGHT);
-//	vector<uint256> vOutputHashCopy;
-//	for(vector<CFund>::iterator it = accOperate.vOutputFreeze.begin();it !=accOperate.vOutputFreeze.end();it++)
-//	{
-//		vOutputHashCopy.push_back(it->uTxHash);
-//	}
-//
-//	//insert 100 data that not in the specific vector
-//	vector<uint256> vRandomHash;
-//	GenerateRandomHash(vRandomHash,100);
-//	vOutputHashCopy.insert(vOutputHashCopy.end(),vRandomHash.begin(),vRandomHash.end() );
-//	random_shuffle(vOutputHashCopy.begin(),vOutputHashCopy.end() );
-//
-//	//start test random data
-//	uint64_t nOperaeValue = 0;
-//	int nCount = 0;
-//	for (vector<uint256>::iterator it = vOutputHashCopy.begin();it !=vOutputHashCopy.end();it++)
-//	{
-//		nOperaeValue = 0;
-//		uint64_t nRandomValue = random(10);
-//		CFund fund(OUTPUT_FREEZD_FUND, *it, nRandomValue, random(20));
-//		vector<CFund>::iterator iter = find_if(accOperate.vOutputFreeze.begin(),accOperate.vOutputFreeze.end(),
-//				CFindIterByHash(*it) );
-//
-//		if(accOperate.vOutputFreeze.end() == iter){
-//			//can't find the specific fund by *it,so operatreAccount should return false
-//			BOOST_CHECK(!accOperate.OperateAccount(MINUS_OUTPUT, fund,&nOperaeValue) );
-//			continue;
-//		}
-//
-//		uint64_t nOldOutputValue = GetTotalValue(accOperate.vOutputFreeze);
-//		uint64_t nOldIterValue = iter->value;
-//		if(nRandomValue>iter->value)
-//		{
-//			BOOST_CHECK(!accOperate.OperateAccount(MINUS_OUTPUT, fund,&nOperaeValue) );
-//			BOOST_CHECK(GetTotalValue(accOperate.vOutputFreeze) + nOldIterValue == nOldOutputValue);
-//			BOOST_CHECK(nOldIterValue == nOperaeValue);
-//		}
-//		else
-//		{
-//			BOOST_CHECK(accOperate.OperateAccount(MINUS_OUTPUT, fund,&nOperaeValue) );
-//			BOOST_CHECK(GetTotalValue(accOperate.vOutputFreeze) + nRandomValue == nOldOutputValue);
-//			BOOST_CHECK(nRandomValue == nOperaeValue);
-//		}
-//	}
-//
-//	accOperate.UndoOperateAccount(accOperate.accountOperLog);
-//	CheckAccountEqual();
+BOOST_FIXTURE_TEST_CASE(tx_minus_freezed,CTxTest) {
+	accOperate.CompactAccount(CHAIN_HEIGHT);
+	vector<uint256> vFreezedHashCopy;
+	for(vector<CFund>::iterator it = accOperate.vFreeze.begin();it !=accOperate.vFreeze.end();it++)
+	{
+		vFreezedHashCopy.push_back(it->uTxHash);
+	}
 
-	CheckInOut(MINUS_OUTPUT);
-}
+	//insert 100 data that not in the specific vector
+	vector<uint256> vRandomHash;
+	GenerateRandomHash(vRandomHash,100);
+	vFreezedHashCopy.insert(vFreezedHashCopy.end(),vRandomHash.begin(),vRandomHash.end() );
+	random_shuffle(vFreezedHashCopy.begin(),vFreezedHashCopy.end() );
 
-BOOST_FIXTURE_TEST_CASE(tx_minus_input,CTxTest) {
-	CheckInOut(MINUS_INPUT);
-}
+	//start test random data
+	uint64_t nOperaeValue = 0;
+	int nBranch[4] = {0};
+	for (vector<uint256>::iterator it = vFreezedHashCopy.begin();it !=vFreezedHashCopy.end();it++)
+	{
+		nOperaeValue = 0;
+		uint64_t nRandomValue = random(10)+1;
+		int nHeight = CHAIN_HEIGHT - 1 + random(3);
+		CFund fund(FREEZD_FUND, *it, nRandomValue, nHeight);
+		vector<CFund>::iterator iter = find_if(accOperate.vFreeze.begin(),accOperate.vFreeze.end(),
+				CFindIterByHash(*it) );
 
-BOOST_FIXTURE_TEST_CASE(tx_minus_output_free,CTxTest) {
-	CheckInOutFree(MINUS_OUTPUT_OR_FREE);
-}
+		if(accOperate.vFreeze.end() == iter){
+			//can't find the specific fund by *it,so operatreAccount should return false
+			BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREEZD, fund,&nOperaeValue) );
+			nBranch[0]++;
+			continue;
+		}
 
-BOOST_FIXTURE_TEST_CASE(tx_minus_input_free,CTxTest) {
-	CheckInOutFree(MINUS_INPUT_OR_FREE);
-}
+		if (iter->nHeight != nHeight) {
+			BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREEZD, fund,&nOperaeValue) );
+			nBranch[1]++;
+			continue;
+		}
 
-BOOST_FIXTURE_TEST_CASE(tx_minus_input_free_self,CTxTest) {
-	CheckInOutFreeSelf(MINUS_INPUT_OR_FREE_OR_SELF);
-}
+		uint64_t nOldFreezeValue = GetTotalValue(accOperate.vFreeze);
+		uint64_t nOldIterValue = iter->value;
+		if(nRandomValue>iter->value)
+		{
+			BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREEZD, fund,&nOperaeValue) );
+			BOOST_CHECK(GetTotalValue(accOperate.vFreeze) == nOldFreezeValue);
+			BOOST_CHECK(0 == nOperaeValue);
+			nBranch[2]++;
+		}
+		else
+		{
+			BOOST_CHECK(accOperate.OperateAccount(MINUS_FREEZD, fund,&nOperaeValue) );
+			BOOST_CHECK(GetTotalValue(accOperate.vFreeze) + nRandomValue == nOldFreezeValue);
+			BOOST_CHECK(nRandomValue == nOperaeValue);
+			nBranch[3]++;
+		}
+	}
 
-BOOST_FIXTURE_TEST_CASE(tx_minus_output_free_self,CTxTest) {
-	CheckInOutFreeSelf(MINUS_OUTPUT_OR_FREE_OR_SELF);
-}
+	cout<<"branch 1 is "<<nBranch[0]<<endl<<" branch 2 is "<<nBranch[1]<<endl
+			<<" branch 3 is "<<nBranch[2]<<endl<<" branch 4 is "<<nBranch[3]<<endl;
+	accOperate.UndoOperateAccount(accOperate.accountOperLog);
+	CheckAccountEqual();
 
-#else
-BOOST_AUTO_TEST_CASE(xxxx) {
-	BOOST_ERROR("ERROR:THE SUITE NEED TO MODIFY!");
 }
-#endif
 
 BOOST_AUTO_TEST_SUITE_END()

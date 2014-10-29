@@ -379,6 +379,40 @@ public:
 template<typename I>
 CVarInt<I> WrapVarInt(I& n) { return CVarInt<I>(n); }
 
+template<typename I>
+class CVarData
+{
+protected:
+    I n;
+public:
+    CVarData(I& nIn) : n(nIn) { }
+
+    unsigned int GetSerializeSize(int, int) const {
+        return GetSizeOfVarInt<I>(n);
+    }
+
+    template<typename Stream>
+    void Serialize(Stream &s, int, int) const {
+        WriteVarInt<Stream,I>(s, n);
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s, int, int) {
+        n = ReadVarInt<Stream,I>(s);
+    }
+
+    I GetValue() const {
+    	return n;
+    }
+
+    void SetValue(I t) {
+    	n = t;
+    }
+};
+
+template<typename I>
+CVarInt<I> WrapVarIntData(I& n) { return CVarData<I>(n); }
+
 //
 // Forward declarations
 //

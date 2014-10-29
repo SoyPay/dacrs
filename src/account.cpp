@@ -2,32 +2,32 @@
 #include "util.h"
 #include "serialize.h"
 
-bool CAccountView::GetAccount(const CKeyID &keyId, CSecureAccount &secureAccount) {return false;}
-bool CAccountView::SetAccount(const CKeyID &keyId, const CSecureAccount &secureAccount) {return false;}
-bool CAccountView::SetAccount(const vector<unsigned char> &accountId, const CSecureAccount &secureAccount) {return false;}
+bool CAccountView::GetAccount(const CKeyID &keyId, CAccountInfo &secureAccount) {return false;}
+bool CAccountView::SetAccount(const CKeyID &keyId, const CAccountInfo &secureAccount) {return false;}
+bool CAccountView::SetAccount(const vector<unsigned char> &accountId, const CAccountInfo &secureAccount) {return false;}
 bool CAccountView::HaveAccount(const CKeyID &keyId) {return false;}
 uint256 CAccountView::GetBestBlock() {return false;}
 bool CAccountView::SetBestBlock(const uint256 &hashBlock) {return false;}
-bool CAccountView::BatchWrite(const map<CKeyID, CSecureAccount> &mapAccounts, const map<string, CKeyID> &mapKeyIds, const uint256 &hashBlock) {return false;}
-bool CAccountView::BatchWrite(const vector<CSecureAccount> &vAccounts) {return false;}
+bool CAccountView::BatchWrite(const map<CKeyID, CAccountInfo> &mapAccounts, const map<string, CKeyID> &mapKeyIds, const uint256 &hashBlock) {return false;}
+bool CAccountView::BatchWrite(const vector<CAccountInfo> &vAccounts) {return false;}
 bool CAccountView::EraseAccount(const CKeyID &keyId) {return false;}
 bool CAccountView::SetKeyId(const vector<unsigned char> &accountId, const CKeyID &keyId) {return false;}
 bool CAccountView::GetKeyId(const vector<unsigned char> &accountId, CKeyID &keyId) {return false;}
-bool CAccountView::GetAccount(const vector<unsigned char> &accountId, CSecureAccount &secureAccount) {return false;}
+bool CAccountView::GetAccount(const vector<unsigned char> &accountId, CAccountInfo &secureAccount) {return false;}
 bool CAccountView::EraseKeyId(const vector<unsigned char> &accountId){
 	return false;
 }
-bool CAccountView::SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CSecureAccount &secureAccount) {return false;}
+bool CAccountView::SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccountInfo &secureAccount) {return false;}
 
 
 CAccountViewBacked::CAccountViewBacked(CAccountView &accountView):pBase(&accountView) {}
-bool CAccountViewBacked::GetAccount(const CKeyID &keyId, CSecureAccount &secureAccount) {
+bool CAccountViewBacked::GetAccount(const CKeyID &keyId, CAccountInfo &secureAccount) {
 	return pBase->GetAccount(keyId, secureAccount);
 }
-bool CAccountViewBacked::SetAccount(const CKeyID &keyId, const CSecureAccount &secureAccount) {
+bool CAccountViewBacked::SetAccount(const CKeyID &keyId, const CAccountInfo &secureAccount) {
 	return pBase->SetAccount(keyId, secureAccount);
 }
-bool CAccountViewBacked::SetAccount(const vector<unsigned char> &accountId, const CSecureAccount &secureAccount) {
+bool CAccountViewBacked::SetAccount(const vector<unsigned char> &accountId, const CAccountInfo &secureAccount) {
 	return pBase->SetAccount(accountId, secureAccount);
 }
 bool CAccountViewBacked::HaveAccount(const CKeyID &keyId) {
@@ -39,10 +39,10 @@ uint256 CAccountViewBacked::GetBestBlock() {
 bool CAccountViewBacked::SetBestBlock(const uint256 &hashBlock) {
 	return pBase->SetBestBlock(hashBlock);
 }
-bool CAccountViewBacked::BatchWrite(const map<CKeyID , CSecureAccount> &mapAccounts, const map<std::string, CKeyID> &mapKeyIds, const uint256 &hashBlock) {
+bool CAccountViewBacked::BatchWrite(const map<CKeyID , CAccountInfo> &mapAccounts, const map<std::string, CKeyID> &mapKeyIds, const uint256 &hashBlock) {
 	return pBase->BatchWrite(mapAccounts, mapKeyIds, hashBlock);
 }
-bool CAccountViewBacked::BatchWrite(const vector<CSecureAccount> &vAccounts) {
+bool CAccountViewBacked::BatchWrite(const vector<CAccountInfo> &vAccounts) {
 	return pBase->BatchWrite(vAccounts);
 }
 bool CAccountViewBacked::EraseAccount(const CKeyID &keyId) {
@@ -57,17 +57,17 @@ bool CAccountViewBacked::GetKeyId(const vector<unsigned char> &accountId, CKeyID
 bool CAccountViewBacked::EraseKeyId(const vector<unsigned char> &accountId){
 	return pBase->EraseKeyId(accountId);
 }
-bool CAccountViewBacked::GetAccount(const vector<unsigned char> &accountId, CSecureAccount &secureAccount) {
+bool CAccountViewBacked::GetAccount(const vector<unsigned char> &accountId, CAccountInfo &secureAccount) {
 	return pBase->GetAccount(accountId, secureAccount);
 }
 bool CAccountViewBacked::SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId,
-		const CSecureAccount &secureAccount) {
+		const CAccountInfo &secureAccount) {
 	return pBase->SaveAccountInfo(accountId, keyId, secureAccount);
 }
 
 
 CAccountViewCache::CAccountViewCache(CAccountView &accountView, bool fDummy):CAccountViewBacked(accountView), hashBlock(0) {}
-bool CAccountViewCache::GetAccount(const CKeyID &keyId, CSecureAccount &secureAccount) {
+bool CAccountViewCache::GetAccount(const CKeyID &keyId, CAccountInfo &secureAccount) {
 	if (cacheAccounts.count(keyId)) {
 		secureAccount = cacheAccounts[keyId];
 		return true;
@@ -78,11 +78,11 @@ bool CAccountViewCache::GetAccount(const CKeyID &keyId, CSecureAccount &secureAc
 	}
 	return false;
 }
-bool CAccountViewCache::SetAccount(const CKeyID &keyId, const CSecureAccount &secureAccount) {
+bool CAccountViewCache::SetAccount(const CKeyID &keyId, const CAccountInfo &secureAccount) {
 	cacheAccounts[keyId] = secureAccount;
 	return true;
 }
-bool CAccountViewCache::SetAccount(const vector<unsigned char> &accountId, const CSecureAccount &secureAccount) {
+bool CAccountViewCache::SetAccount(const vector<unsigned char> &accountId, const CAccountInfo &secureAccount) {
 	if(cacheKeyIds.count(HexStr(accountId))) {
 		cacheAccounts[cacheKeyIds[HexStr(accountId)]] = secureAccount;
 		return true;
@@ -104,8 +104,8 @@ bool CAccountViewCache::SetBestBlock(const uint256 &hashBlockIn) {
 	hashBlock = hashBlockIn;
 	return true;
 }
-bool CAccountViewCache::BatchWrite(const map<CKeyID, CSecureAccount> &mapAccounts, const map<std::string, CKeyID> &mapKeyIds, const uint256 &hashBlockIn) {
-	for (map<CKeyID, CSecureAccount>::const_iterator it = mapAccounts.begin(); it != mapAccounts.end(); ++it) {
+bool CAccountViewCache::BatchWrite(const map<CKeyID, CAccountInfo> &mapAccounts, const map<std::string, CKeyID> &mapKeyIds, const uint256 &hashBlockIn) {
+	for (map<CKeyID, CAccountInfo>::const_iterator it = mapAccounts.begin(); it != mapAccounts.end(); ++it) {
 		if (uint160(0) == it->second.keyID) {
 			pBase->EraseAccount(it->first);
 			cacheAccounts.erase(it->first);
@@ -119,10 +119,10 @@ bool CAccountViewCache::BatchWrite(const map<CKeyID, CSecureAccount> &mapAccount
     hashBlock = hashBlockIn;
 	return true;
 }
-bool CAccountViewCache::BatchWrite(const vector<CSecureAccount> &vAccounts) {
-	for (vector<CSecureAccount>::const_iterator it = vAccounts.begin(); it != vAccounts.end(); ++it)
+bool CAccountViewCache::BatchWrite(const vector<CAccountInfo> &vAccounts) {
+	for (vector<CAccountInfo>::const_iterator it = vAccounts.begin(); it != vAccounts.end(); ++it)
 		if(it->IsEmptyValue() && !it->IsRegister()) {
-			CSecureAccount secureAccount = *it;
+			CAccountInfo secureAccount = *it;
 			secureAccount.keyID = uint160(0);
 			cacheAccounts[it->keyID] = secureAccount;
 		} else {
@@ -159,7 +159,7 @@ bool CAccountViewCache::EraseKeyId(const vector<unsigned char> &accountId) {
 		cacheKeyIds[HexStr(accountId)] = uint160(0);
 	return true;
 }
-bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CSecureAccount &secureAccount) {
+bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAccountInfo &secureAccount) {
 	if(cacheKeyIds.count(HexStr(accountId))) {
 		if(cacheAccounts.count(cacheKeyIds[HexStr(accountId)])){
 			secureAccount = cacheAccounts[cacheKeyIds[HexStr(accountId)]];
@@ -180,7 +180,7 @@ bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CSecu
 	}
 	return false;
 }
-bool CAccountViewCache::SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CSecureAccount &secureAccount) {
+bool CAccountViewCache::SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccountInfo &secureAccount) {
 	cacheKeyIds[HexStr(accountId)] = keyId;
 	cacheAccounts[keyId] = secureAccount;
 	return true;

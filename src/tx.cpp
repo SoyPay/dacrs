@@ -28,7 +28,7 @@ string CRegID::ToString() const {
 
 bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
-	CSecureAccount sourceAccount;
+	CAccountInfo sourceAccount;
 	CRegID accountId(nHeight, nIndex);
 	CKeyID keyId = pubKey.GetID();
 	if (!view.GetAccount(keyId, sourceAccount))
@@ -51,7 +51,7 @@ bool CRegisterAccountTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, 
 		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
 	//drop account
 	CRegID accountId(nHeight, nIndex);
-	CSecureAccount oldAccount;
+	CAccountInfo oldAccount;
 	if (!view.GetAccount(accountId.vRegID, oldAccount))
 		return state.DoS(100,
 				ERROR("UpdateAccounts() : read secure account=%s info error", HexStr(accountId.vRegID).c_str()),
@@ -116,8 +116,8 @@ bool CRegisterAccountTx::CheckTransction(CValidationState &state, CAccountViewCa
 
 bool CTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
-	CSecureAccount sourceAccount;
-	CSecureAccount desAccount;
+	CAccountInfo sourceAccount;
+	CAccountInfo desAccount;
 	if (!view.GetAccount(srcRegAccountId, sourceAccount))
 		return state.DoS(100,
 				ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(srcRegAccountId)),
@@ -143,7 +143,7 @@ bool CTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidatio
 	CFund addFund(FREEDOM_FUND, GetHash(), addValue, nHeight);
 	desAccount.CompactAccount(nHeight - 1);
 	desAccount.OperateAccount(ADD_FREE, addFund);
-	vector<CSecureAccount> vSecureAccounts;
+	vector<CAccountInfo> vSecureAccounts;
 	vSecureAccounts.push_back(sourceAccount);
 	vSecureAccounts.push_back(desAccount);
 	if (!view.BatchWrite(vSecureAccounts))
@@ -155,8 +155,8 @@ bool CTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidatio
 }
 bool CTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
-	CSecureAccount sourceAccount;
-	CSecureAccount desAccount;
+	CAccountInfo sourceAccount;
+	CAccountInfo desAccount;
 	if (!view.GetAccount(srcRegAccountId, sourceAccount))
 		return state.DoS(100,
 				ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(srcRegAccountId)),
@@ -185,7 +185,7 @@ bool CTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValid
 				ERROR("UpdateAccounts() : read destination keyid=%s tx undo info error", desAccount.keyID.GetHex()),
 				UPDATE_ACCOUNT_FAIL, "bad-read-txundoinfo");
 	desAccount.UndoOperateAccount(accountOperLog);
-	vector<CSecureAccount> vSecureAccounts;
+	vector<CAccountInfo> vSecureAccounts;
 	vSecureAccounts.push_back(sourceAccount);
 	vSecureAccounts.push_back(desAccount);
 
@@ -260,7 +260,7 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 	}
 
 	if (desRegAccountId.size() == 20) {
-		CSecureAccount acctDesInfo;
+		CAccountInfo acctDesInfo;
 		if (view.GetAccount(desRegAccountId, acctDesInfo)) {
 			return state.DoS(100,
 					ERROR(
@@ -295,7 +295,7 @@ bool CAppealTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 		return state.DoS(100,
 				ERROR("UpdateAccounts() : AppealTransaction UpdateAccount txhash=%s run script error",
 						GetHash().GetHex()), UPDATE_ACCOUNT_FAIL, "run-script-error");
-	vector<std::shared_ptr<CSecureAccount> > &vAccount = vmRun.GetNewAccont();
+	vector<std::shared_ptr<CAccountInfo> > &vAccount = vmRun.GetNewAccont();
 	for (auto & itemAccount : vAccount) {
 		if (!view.SetAccount(itemAccount->keyID, *itemAccount))
 			return state.DoS(100,
@@ -312,7 +312,7 @@ bool CAppealTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, 
 		return state.DoS(100, ERROR("UpdateAccounts() : AppealTransaction undo updateaccount get key id error"),
 				UPDATE_ACCOUNT_FAIL, "get-keyid-error");
 	for (auto & keyId : vKeyId) {
-		CSecureAccount secureAccount;
+		CAccountInfo secureAccount;
 		if (!view.GetAccount(keyId, secureAccount)) {
 			return state.DoS(100,
 					ERROR("UpdateAccounts() : AppealTransaction undo updateaccount read keyid= %s info error",
@@ -428,7 +428,7 @@ bool CSecureTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 		return state.DoS(100,
 				ERROR("UpdateAccounts() : SecureTransaction udateaccount txhash=%s run script error",
 						GetHash().GetHex()), UPDATE_ACCOUNT_FAIL, "run-script-error");
-	vector<std::shared_ptr<CSecureAccount> > &vAccount = vmRun.GetNewAccont();
+	vector<std::shared_ptr<CAccountInfo> > &vAccount = vmRun.GetNewAccont();
 	for (auto & itemAccount : vAccount) {
 		LogPrint("INFO", "after run script securetx:%s\n", itemAccount->ToString());
 		if (!view.SetAccount(itemAccount->keyID, *itemAccount))
@@ -445,7 +445,7 @@ bool CSecureTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, 
 		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
 	vector<vector_unsigned_char>::iterator iterAccount = vRegAccountId.begin();
 	for (; iterAccount != vRegAccountId.end(); ++iterAccount) {
-		CSecureAccount secureAccount;
+		CAccountInfo secureAccount;
 		if (!view.GetAccount(*iterAccount, secureAccount)) {
 			return state.DoS(100,
 					ERROR("UpdateAccounts() : SecureTransaction undo updateaccount read accountId= %s info error",
@@ -521,7 +521,7 @@ bool CSecureTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 		return state.DoS(100, ERROR("CheckTransaction() :GetArbitrator falied"), REJECT_INVALID, "bad-sec_regScriptId");
 	}
 
-	CSecureAccount secureAcc;
+	CAccountInfo secureAcc;
 	for (auto& vregid : vArbitratorRegAccId) {
 		if (!view.GetAccount(vregid, secureAcc)) {
 			return state.DoS(100, ERROR("CheckTransaction() :unregister ID in vArbitratorAccId"), REJECT_INVALID,
@@ -563,7 +563,7 @@ bool CFreezeTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
 	uint64_t minusValue = llFees;
 	uint64_t freezeValue = llFreezeFunds;
-	CSecureAccount secureAccount;
+	CAccountInfo secureAccount;
 	if (!view.GetAccount(regAccountId, secureAccount)) {
 		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(regAccountId)),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
@@ -585,7 +585,7 @@ bool CFreezeTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 }
 bool CFreezeTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
 		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
-	CSecureAccount secureAccount;
+	CAccountInfo secureAccount;
 	if (!view.GetAccount(regAccountId, secureAccount))
 		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(regAccountId)),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
@@ -641,7 +641,7 @@ bool CFreezeTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 
 bool CRewardTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
-	CSecureAccount secureAccount;
+	CAccountInfo secureAccount;
 	if (!view.GetAccount(account, secureAccount)) {
 		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(account)),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
@@ -664,7 +664,7 @@ bool CRewardTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, 
 				ERROR("UpdateAccounts() : account  %s error, either accountId 6 bytes, or pubkey 65 bytes",
 						HexStr(account)), UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	}
-	CSecureAccount secureAccount;
+	CAccountInfo secureAccount;
 	if (!view.GetAccount(account, secureAccount)) {
 		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(account)),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
@@ -707,7 +707,7 @@ bool CRewardTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
 	LogPrint("INFO" ,"registscript UpdateAccount\n");
-	CSecureAccount secureAccount;
+	CAccountInfo secureAccount;
 	if (!view.GetAccount(regAccountId, secureAccount)) {
 		return state.DoS(100, ERROR("UpdateAccounts() : read regist addr %s account info error", HexStr(regAccountId)),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
@@ -763,7 +763,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 }
 bool CRegistScriptTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
-	CSecureAccount secureAccount;
+	CAccountInfo secureAccount;
 	if (!view.GetAccount(regAccountId, secureAccount)) {
 		return state.DoS(100, ERROR("UpdateAccounts() : read regist addr %s account info error", HexStr(regAccountId)),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
@@ -819,7 +819,7 @@ string CRegistScriptTx::ToString(CAccountViewCache &view) const {
 	return str;
 }
 bool CRegistScriptTx::CheckTransction(CValidationState &state, CAccountViewCache &view) {
-	CSecureAccount  account;
+	CAccountInfo  account;
 	if(!view.GetAccount(regAccountId, account)) {
 		return state.DoS(100, ERROR("CheckTransaction() : register script tx get registe account info error"), REJECT_INVALID,
 				"bad-read-account-info");
@@ -862,8 +862,7 @@ bool CFund::IsMergeFund(const int & nCurHeight, int &nMergeType) const {
 		break;
 	case FREEDOM_FUND:
 		return false;
-	case INPUT_FREEZD_FUND:
-	case OUTPUT_FREEZD_FUND:
+	case FREEZD_FUND:
 	case SELF_FREEZD_FUND:
 		if (nCurHeight >= nHeight) {
 			nMergeType = FREEDOM_FUND;  // Merget to Freedom;
@@ -927,15 +926,14 @@ bool CTxUndo::GetAccountOperLog(const CKeyID &keyId, CAccountOperLog &accountOpe
 	return false;
 }
 
-void CSecureAccount::CompactAccount(int nCurHeight) {
+void CAccountInfo::CompactAccount(int nCurHeight) {
 	MergerFund(vRewardFund, nCurHeight);
-	MergerFund(vInputFreeze, nCurHeight);
-	MergerFund(vOutputFreeze, nCurHeight);
+	MergerFund(vFreeze, nCurHeight);
 	MergerFund(vSelfFreeze, nCurHeight);
 	MergerFund(vFreedomFund, nCurHeight);
 }
 
-void CSecureAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
+void CAccountInfo::MergerFund(vector<CFund> &vFund, int nCurHeight) {
 	stable_sort(vFund.begin(), vFund.end(), greater<CFund>());
 	uint64_t value = 0;
 	vector<CFund> vMinusFunds;
@@ -983,11 +981,11 @@ void CSecureAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
 	}
 }
 
-void CSecureAccount::WriteOperLog(const COperFund &operLog) {
+void CAccountInfo::WriteOperLog(const COperFund &operLog) {
 	accountOperLog.InsertOperateLog(operLog);
 }
 
-bool CSecureAccount::OperateAccount(OperType type, const CFund &fund, uint64_t* pOperatedValue) {
+bool CAccountInfo::OperateAccount(OperType type, const CFund &fund, uint64_t* pOperatedValue) {
 	if (keyID != accountOperLog.keyID)
 		accountOperLog.keyID = keyID;
 
@@ -1019,64 +1017,28 @@ bool CSecureAccount::OperateAccount(OperType type, const CFund &fund, uint64_t* 
 	}
 
 	case ADD_SELF_FREEZD: {
-		bRet = MinusFree(fund, nOperateValue);
-		if (!bRet)
-			break;
-
 		vSelfFreeze.push_back(fund);
 		WriteOperLog(ADD_FUND, fund);
 		break;
 	}
 
-	case ADD_INPUT_FREEZD: {
-		vInputFreeze.push_back(fund);
-		WriteOperLog(ADD_FUND, fund);
+	case MINUS_SELF_FREEZD: {
+		bRet = MinusSelf(fund,nOperateValue);
 		break;
 	}
 
-	case MINUS_FREE_TO_OUTPUT: {
-		bRet = MinusFreeToOutput(fund);
+	case ADD_FREEZD: {
+		AddToFreeze(fund);
 		break;
 	}
 
-	case MINUS_FREE_OR_SELF:{
-		bRet = MinusFreeOrSelf(fund,nOperateValue);
-		break;
-	}
-
-	case MINUS_OUTPUT: {
-		bRet = MinusInputOutput(vOutputFreeze, fund, nOperateValue);
-		break;
-	}
-
-	case MINUS_OUTPUT_OR_FREE: {
-		bRet = MinusFund(vOutputFreeze, fund, nOperateValue);
-		break;
-	}
-
-	case MINUS_OUTPUT_OR_FREE_OR_SELF: {
-		bRet = MinusFundEx(vOutputFreeze, fund, nOperateValue);
-		break;
-	}
-
-	case MINUS_INPUT: {
-		bRet = MinusInputOutput(vInputFreeze, fund, nOperateValue);
-		break;
-	}
-
-	case MINUS_INPUT_OR_FREE: {
-		bRet = MinusFund(vInputFreeze, fund, nOperateValue);
-		break;
-	}
-
-	case MINUS_INPUT_OR_FREE_OR_SELF: {
-		bRet = MinusFundEx(vInputFreeze, fund, nOperateValue);
+	case MINUS_FREEZD: {
+		bRet = MinusFreezed(vFreeze, fund, nOperateValue);
 		break;
 	}
 
 	default:
-		bRet = false;
-		break;
+		assert(0);
 	}
 
 	if (pOperatedValue) {
@@ -1086,7 +1048,22 @@ bool CSecureAccount::OperateAccount(OperType type, const CFund &fund, uint64_t* 
 	return bRet;
 }
 
-bool CSecureAccount::MinusFree(const CFund &fund, uint64_t& nOperateValue, bool bLastMinus) {
+void CAccountInfo::AddToFreeze(const CFund &fund) {
+	bool bMerge = false;
+	for (auto& item:vFreeze) {
+		if (item.uTxHash == fund.uTxHash && item.nHeight == fund.nHeight) {
+			item.value += fund.value;
+			bMerge = true;
+		}
+	}
+
+	if (!bMerge)
+		vFreeze.push_back(fund);
+
+	WriteOperLog(ADD_FUND, fund);
+}
+
+bool CAccountInfo::MinusFree(const CFund &fund, uint64_t& nOperateValue) {
 	vector<CFund> vOperFund;
 	uint64_t nCandidateValue = 0;
 	vector<CFund>::iterator iterFound = vFreedomFund.begin();
@@ -1118,21 +1095,14 @@ bool CSecureAccount::MinusFree(const CFund &fund, uint64_t& nOperateValue, bool 
 		return true;
 
 	} else {
-		bool bRet = true;
+		if (llValues < fund.value - nCandidateValue)
+			return false;
+
 		CFund freedom;
 		freedom.nFundType = FREEDOM;
-		if (llValues < fund.value - nCandidateValue) {
-			nOperateValue = llValues + nCandidateValue;
-			freedom.value = llValues;
-			llValues = 0;
-
-			if (bLastMinus)
-				bRet = false;
-		} else {
-			nOperateValue = fund.value;
-			freedom.value = fund.value - nCandidateValue;
-			llValues -= fund.value - nCandidateValue;
-		}
+		nOperateValue = fund.value;
+		freedom.value = fund.value - nCandidateValue;
+		llValues -= fund.value - nCandidateValue;
 
 		vOperFund.clear();
 		vOperFund.insert(vOperFund.end(), vFreedomFund.begin(), vFreedomFund.end());
@@ -1141,12 +1111,12 @@ bool CSecureAccount::MinusFree(const CFund &fund, uint64_t& nOperateValue, bool 
 		COperFund operLog(MINUS_FUND, vOperFund);
 		WriteOperLog(operLog);
 
-		return bRet;
+		return true;
 	}
 
 }
 
-bool CSecureAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
+bool CAccountInfo::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 	vector<COperFund>::const_reverse_iterator iterOperFundLog = accountOperLog.vOperFund.rbegin();
 	for (; iterOperFundLog != accountOperLog.vOperFund.rend(); ++iterOperFundLog) {
 		vector<CFund>::const_iterator iterFund = iterOperFundLog->vFund.begin();
@@ -1172,18 +1142,11 @@ bool CSecureAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) 
 				} else if (MINUS_FUND == iterOperFundLog->operType)
 					vFreedomFund.push_back(*iterFund);
 				break;
-			case INPUT_FREEZD_FUND:
+			case FREEZD_FUND:
 				if (ADD_FUND == iterOperFundLog->operType)
-					vInputFreeze.erase(remove(vInputFreeze.begin(), vInputFreeze.end(), *iterFund), vInputFreeze.end());
+					vFreeze.erase(remove(vFreeze.begin(), vFreeze.end(), *iterFund), vFreeze.end());
 				else if (MINUS_FUND == iterOperFundLog->operType)
-					vInputFreeze.push_back(*iterFund);
-				break;
-			case OUTPUT_FREEZD_FUND:
-				if (ADD_FUND == iterOperFundLog->operType)
-					vOutputFreeze.erase(remove(vOutputFreeze.begin(), vOutputFreeze.end(), *iterFund),
-							vOutputFreeze.end());
-				else if (MINUS_FUND == iterOperFundLog->operType)
-					vOutputFreeze.push_back(*iterFund);
+					vFreeze.push_back(*iterFund);
 				break;
 			case SELF_FREEZD_FUND:
 				if (ADD_FUND == iterOperFundLog->operType)
@@ -1201,7 +1164,7 @@ bool CSecureAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) 
 }
 
 //caculate pos
-void CSecureAccount::ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos) {
+void CAccountInfo::ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos) {
 	int days = 0;
 	uint64_t money = 0;
 	money = llValues;
@@ -1242,7 +1205,7 @@ void CSecureAccount::ClearAccPos(uint256 hash, int prevBlockHeight, int nInterva
 }
 
 //caculate pos
-uint64_t CSecureAccount::GetSecureAccPos(int prevBlockHeight) const {
+uint64_t CAccountInfo::GetSecureAccPos(int prevBlockHeight) const {
 	uint64_t accpos = 0;
 	int days = 0;
 
@@ -1262,7 +1225,7 @@ uint64_t CSecureAccount::GetSecureAccPos(int prevBlockHeight) const {
 }
 
 
-uint64_t CSecureAccount::GetMatureAmount(int nCurHeight) {
+uint64_t CAccountInfo::GetMatureAmount(int nCurHeight) {
 	CompactAccount(nCurHeight);
 	uint64_t balance = 0;
 
@@ -1272,23 +1235,21 @@ uint64_t CSecureAccount::GetMatureAmount(int nCurHeight) {
 	return balance;
 }
 
-uint64_t CSecureAccount::GetForzenAmount(int nCurHeight) {
+uint64_t CAccountInfo::GetForzenAmount(int nCurHeight) {
 	CompactAccount(nCurHeight);
 	uint64_t balance = 0;
 
-	for(auto &fund:vInputFreeze) {
+	for(auto &fund:vFreeze) {
 		balance += fund.value;
 	}
-	for(auto &fund:vOutputFreeze) {
-		balance += fund.value;
-	}
+
 	for(auto &fund:vSelfFreeze) {
 		balance += fund.value;
 	}
 	return balance;
 }
 
-uint64_t CSecureAccount::GetBalance(int nCurHeight) {
+uint64_t CAccountInfo::GetBalance(int nCurHeight) {
 	CompactAccount(nCurHeight);
 	uint64_t balance = llValues;
 
@@ -1298,7 +1259,7 @@ uint64_t CSecureAccount::GetBalance(int nCurHeight) {
 	return balance;
 }
 
-uint256 CSecureAccount::BuildMerkleTree(int prevBlockHeight) const {
+uint256 CAccountInfo::BuildMerkleTree(int prevBlockHeight) const {
 	vector<uint256> vMerkleTree;
 	vMerkleTree.clear();
 
@@ -1323,7 +1284,7 @@ uint256 CSecureAccount::BuildMerkleTree(int prevBlockHeight) const {
 	return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
 }
 
-string CSecureAccount::ToString() const {
+string CAccountInfo::ToString() const {
 	string str;
 	str += strprintf("keyID=%s, publicKey=%d, values=%ld\n",
 	HexStr(keyID).c_str(), HexStr(publicKey).c_str(), llValues);
@@ -1333,11 +1294,8 @@ string CSecureAccount::ToString() const {
 	for (unsigned int i = 0; i < vFreedomFund.size(); ++i) {
 		str += "    " + vFreedomFund[i].ToString() + "\n";
 	}
-	for (unsigned int i = 0; i < vInputFreeze.size(); ++i) {
-		str += "    " + vInputFreeze[i].ToString() + "\n";
-	}
-	for (unsigned int i = 0; i < vOutputFreeze.size(); ++i) {
-		str += "    " + vOutputFreeze[i].ToString() + "\n";
+	for (unsigned int i = 0; i < vFreeze.size(); ++i) {
+		str += "    " + vFreeze[i].ToString() + "\n";
 	}
 	for (unsigned int i = 0; i < vSelfFreeze.size(); ++i) {
 		str += "    " + vSelfFreeze[i].ToString() + "\n";
@@ -1345,41 +1303,17 @@ string CSecureAccount::ToString() const {
 	return str;
 }
 
-bool CSecureAccount::MinusFreeToOutput(const CFund& fund) {
-	vector<CFund>::iterator it = vFreedomFund.begin();
-	for (; it != vFreedomFund.end(); it++) {
-		if (it->uTxHash == fund.uTxHash) {
-			break;
-		}
-	}
-
-	if (it == vFreedomFund.end()) {
-		return false;
-	}
-
-	CFund fundOutput(*it);
-	fundOutput.nFundType = OUTPUT_FREEZD_FUND;
-	vOutputFreeze.push_back(fundOutput);
-
-	WriteOperLog(MINUS_FUND, *it);
-	WriteOperLog(ADD_FUND, fundOutput);
-	vFreedomFund.erase(it);
-
-	return true;
-}
-
-void CSecureAccount::WriteOperLog(AccountOper emOperType, const CFund &fund) {
+void CAccountInfo::WriteOperLog(AccountOper emOperType, const CFund &fund) {
 	vector<CFund> vFund;
 	vFund.push_back(fund);
 	COperFund operLog(emOperType, vFund);
 	WriteOperLog(operLog);
 }
 
-bool CSecureAccount::MinusInputOutput(vector<CFund>& vFund, const CFund& fund, uint64_t& nOperateValue,
-		bool bLastMinus) {
+bool CAccountInfo::MinusFreezed(vector<CFund>& vFund, const CFund& fund, uint64_t& nOperateValue) {
 	vector<CFund>::iterator it = vFund.begin();
 	for (; it != vFund.end(); it++) {
-		if (it->uTxHash == fund.uTxHash) {
+		if (it->uTxHash == fund.uTxHash && it->nHeight == fund.nHeight) {
 			break;
 		}
 	}
@@ -1388,19 +1322,8 @@ bool CSecureAccount::MinusInputOutput(vector<CFund>& vFund, const CFund& fund, u
 		return false;
 	}
 
-	if (fund.value >= it->value) {
-		uint64_t nFundValue = it->value;
-		nOperateValue = nFundValue;
-		WriteOperLog(MINUS_FUND, *it);
-		vFund.erase(it);
-
-		if (fund.value > nFundValue) {
-			if (bLastMinus)
-				return false;
-			else
-				return true;
-		} else
-			return true;
+	if (fund.value > it->value) {
+		return false;
 	} else {
 		nOperateValue = fund.value;
 		WriteOperLog(MINUS_FUND, *it);
@@ -1409,53 +1332,14 @@ bool CSecureAccount::MinusInputOutput(vector<CFund>& vFund, const CFund& fund, u
 		logfund.value = it->value - fund.value;
 		WriteOperLog(ADD_FUND, logfund);
 		vFund.erase(it);
-		vFund.push_back(logfund);
+
+		if (logfund.value)
+			vFund.push_back(logfund);
 		return true;
 	}
 }
 
-bool CSecureAccount::MinusFund(vector<CFund>& vFund, const CFund& fund, uint64_t& nOperateValue, bool bLastMinus) {
-	uint64_t nValueSpecific = 0;
-	if (MinusInputOutput(vFund, fund, nValueSpecific, false)) {
-		if (fund.value > nValueSpecific) {
-			CFund fundRemain(fund);
-			fundRemain.value = fund.value - nValueSpecific;
-
-			uint64_t nValueFree = 0;
-			bool bRet = MinusFree(fundRemain, nValueFree, bLastMinus);
-			nOperateValue = nValueSpecific + nValueFree;
-			return bRet;
-		}
-
-		nOperateValue = nValueSpecific;
-		return true;
-
-	} else {
-		return false;
-	}
-}
-
-bool CSecureAccount::MinusFundEx(vector<CFund>& vFund, const CFund& fund, uint64_t& nOperateValue) {
-	uint64_t nValue = 0;
-	if (MinusFund(vFund, fund, nValue, false)) {
-		if (fund.value > nValue) {
-			CFund fundRemain(fund);
-			fundRemain.value = fund.value - nValue;
-
-			uint64_t nValueSelf = 0;
-			bool bRet = MinusSelf(fundRemain, nValueSelf);
-			nOperateValue = nValue + nValueSelf;
-			return bRet;
-		}
-
-		nOperateValue = nValue;
-		return true;
-	} else {
-		return false;
-	}
-}
-
-bool CSecureAccount::MinusSelf(const CFund &fund, uint64_t& nOperateValue) {
+bool CAccountInfo::MinusSelf(const CFund &fund, uint64_t& nOperateValue) {
 	vector<CFund> vOperFund;
 	uint64_t nCandidateValue = 0;
 	vector<CFund>::iterator iterFound = vSelfFreeze.begin();
@@ -1486,37 +1370,11 @@ bool CSecureAccount::MinusSelf(const CFund &fund, uint64_t& nOperateValue) {
 
 		return true;
 	} else {
-		nOperateValue = nCandidateValue;
-		vOperFund.clear();
-		vOperFund.insert(vOperFund.end(), vSelfFreeze.begin(), vSelfFreeze.end());
-		vSelfFreeze.clear();
-		COperFund operLog(MINUS_FUND, vOperFund);
-		WriteOperLog(operLog);
 		return false;
 	}
 }
 
-bool CSecureAccount::MinusFreeOrSelf(const CFund& fund, uint64_t& nOperateValue) {
-	uint64_t nValueFree = 0;
-	if (MinusFree(fund, nValueFree, false)) {
-		if (fund.value > nValueFree) {
-			CFund fundRemain(fund);
-			fundRemain.value = fund.value - nValueFree;
-
-			uint64_t nValueSelf = 0;
-			bool bRet = MinusSelf(fundRemain, nValueSelf);
-			nOperateValue = nValueFree + nValueSelf;
-			return bRet;
-		} else {
-			nOperateValue = nValueFree;
-			return true;
-		}
-	} else {
-		return false;
-	}
-}
-
-bool CSecureAccount::IsFundValid(OperType type, const CFund& fund) {
+bool CAccountInfo::IsFundValid(OperType type, const CFund& fund) {
 	switch (type) {
 	case ADD_FREE:
 		if (!IsFundValid(fund))
@@ -1536,37 +1394,32 @@ bool CSecureAccount::IsFundValid(OperType type, const CFund& fund) {
 			return false;
 		break;
 
-	case ADD_INPUT_FREEZD:
+	case ADD_FREEZD:
 		if (!IsFundValid(fund))
 			return false;
-		if (INPUT_FREEZD_FUND != fund.nFundType)
+		if (FREEZD_FUND != fund.nFundType)
 			return false;
 		if (!IsMoneyOverflow(fund.value))
 			return false;
 		break;
 
-	case MINUS_OUTPUT:
-	case MINUS_OUTPUT_OR_FREE:
-	case MINUS_OUTPUT_OR_FREE_OR_SELF:
-		if (!IsHashValidInFund(vOutputFreeze, fund))
+	case MINUS_FREEZD:
+		if (!IsHashValidInFund(vFreeze, fund))
 			return false;
 		break;
 
-	case MINUS_INPUT:
-	case MINUS_INPUT_OR_FREE:
-	case MINUS_INPUT_OR_FREE_OR_SELF:
-		if (!IsHashValidInFund(vInputFreeze, fund))
-			return false;
+	case MINUS_FREE:
+	case MINUS_SELF_FREEZD:
 		break;
 
 	default:
-		break;
+		assert(0);
 	}
 
 	return true;
 }
 
-bool CSecureAccount::IsHashValidInFund(const vector<CFund>& vFund, const CFund& fund) {
+bool CAccountInfo::IsHashValidInFund(const vector<CFund>& vFund, const CFund& fund) {
 	vector<CFund>::const_iterator it = vFund.begin();
 	for (; it != vFund.end(); it++) {
 		if (it->uTxHash == fund.uTxHash)
@@ -1576,7 +1429,7 @@ bool CSecureAccount::IsHashValidInFund(const vector<CFund>& vFund, const CFund& 
 	return false;
 }
 
-bool CSecureAccount::IsFundValid(const CFund& fund) {
+bool CAccountInfo::IsFundValid(const CFund& fund) {
 	if (fund.nFundType < FREEDOM || fund.nFundType >= NULL_FUNDTYPE)
 		return false;
 
@@ -1586,17 +1439,17 @@ bool CSecureAccount::IsFundValid(const CFund& fund) {
 	return true;
 }
 
-bool CSecureAccount::IsMoneyOverflow(uint64_t nAddMoney) {
+bool CAccountInfo::IsMoneyOverflow(uint64_t nAddMoney) {
 	if (!MoneyRange(nAddMoney))
 		return false;
 
 	uint64_t nTotalMoney = 0;
-	nTotalMoney = GetVecMoney(vFreedomFund)+GetVecMoney(vRewardFund)+GetVecMoney(vInputFreeze)\
-			+GetVecMoney(vOutputFreeze)+GetVecMoney(vSelfFreeze)+llValues+nAddMoney;
+	nTotalMoney = GetVecMoney(vFreedomFund)+GetVecMoney(vRewardFund)+GetVecMoney(vFreeze)\
+			+GetVecMoney(vSelfFreeze)+llValues+nAddMoney;
 	return MoneyRange(static_cast<int64_t>(nTotalMoney) );
 }
 
-uint64_t CSecureAccount::GetVecMoney(const vector<CFund>& vFund){
+uint64_t CAccountInfo::GetVecMoney(const vector<CFund>& vFund){
 	uint64_t nTotal = 0;
 	for(vector<CFund>::const_iterator it = vFund.begin();it != vFund.end();it++){
 		nTotal += it->value;
@@ -1605,7 +1458,7 @@ uint64_t CSecureAccount::GetVecMoney(const vector<CFund>& vFund){
 	return nTotal;
 }
 
-CFund& CSecureAccount::FindFund(const vector<CFund>& vFund, const uint256 &hash)
+CFund& CAccountInfo::FindFund(const vector<CFund>& vFund, const uint256 &hash)
 {
 	CFund vret;
 	for(vector<CFund>::const_iterator it = vFund.begin();it != vFund.end();it++){

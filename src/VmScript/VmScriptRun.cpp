@@ -10,10 +10,10 @@
 #include "util.h"
 #include <boost/foreach.hpp>
 
-vector<shared_ptr<CSecureAccount> > &CVmScriptRun::GetRawAccont() {
+vector<shared_ptr<CAccountInfo> > &CVmScriptRun::GetRawAccont() {
 	return RawAccont;
 }
-vector<shared_ptr<CSecureAccount> > &CVmScriptRun::GetNewAccont() {
+vector<shared_ptr<CAccountInfo> > &CVmScriptRun::GetNewAccont() {
 	return NewAccont;
 }
 
@@ -103,13 +103,13 @@ bool CVmScriptRun::intial(vector<shared_ptr<CBaseTransaction> >& Tx,CAccountView
 	VmData << Vmpacket;
 
 	for (auto& tx : secure->vArbitratorRegAccId) {
-		auto tem = make_shared<CSecureAccount>();
+		auto tem = make_shared<CAccountInfo>();
 		view.GetAccount(tx, *tem.get());
 		vArbitratorAcc.push_back(tem);
 	}
 	RawAccont.insert(RawAccont.end(), vArbitratorAcc.begin(), vArbitratorAcc.end());
 	for (auto& tx : secure->vRegAccountId) {
-		auto tem = make_shared<CSecureAccount>();
+		auto tem = make_shared<CAccountInfo>();
 		view.GetAccount(tx, *tem.get());
 		RawAccont.push_back(tem);
 	}
@@ -152,12 +152,12 @@ bool CVmScriptRun::run(vector<shared_ptr<CBaseTransaction> >& Tx, CAccountViewCa
 	}
 	return true;
 }
-shared_ptr<CSecureAccount> CVmScriptRun::GetNewAccount(shared_ptr<CSecureAccount>& vOldAccount) {
+shared_ptr<CAccountInfo> CVmScriptRun::GetNewAccount(shared_ptr<CAccountInfo>& vOldAccount) {
 	if (NewAccont.size() == 0)
 		return NULL;
-	vector<shared_ptr<CSecureAccount> >::iterator Iter;
+	vector<shared_ptr<CAccountInfo> >::iterator Iter;
 	for (Iter = NewAccont.begin(); Iter != NewAccont.end(); Iter++) {
-		shared_ptr<CSecureAccount> temp = *Iter;
+		shared_ptr<CAccountInfo> temp = *Iter;
 		if (temp.get()->keyID == vOldAccount.get()->keyID) {
 			NewAccont.erase(Iter);
 			return temp;
@@ -173,14 +173,12 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 			LogPrint("vm", "VmScript OpeatorSecureAccount accountid not vaild\n");
 			return false;
 		}
-		if (!(it.add.Opeater == ADD_FREE || it.add.Opeater == ADD_SELF_FREEZD || it.add.Opeater == ADD_INPUT_FREEZD)) {
+		if (!(it.add.Opeater == ADD_FREE || it.add.Opeater == ADD_SELF_FREEZD || it.add.Opeater == ADD_FREEZD)) {
 			LogPrint("vm", "VmScript OpeatorSecureAccount operate not vaild\n");
 			return false;
 		}
-		if (!(it.muls.Opeater == MINUS_FREE || it.muls.Opeater == MINUS_FREE_TO_OUTPUT
-				|| it.muls.Opeater == MINUS_OUTPUT || it.muls.Opeater == MINUS_OUTPUT_OR_FREE
-				|| it.muls.Opeater == MINUS_OUTPUT_OR_FREE_OR_SELF || it.muls.Opeater == MINUS_INPUT
-				|| it.muls.Opeater == MINUS_INPUT_OR_FREE || it.muls.Opeater == MINUS_INPUT_OR_FREE_OR_SELF)) {
+		if (!(it.muls.Opeater == MINUS_FREE || it.muls.Opeater == MINUS_SELF_FREEZD
+				|| it.muls.Opeater == MINUS_FREEZD )) {
 			LogPrint("vm", "VmScript OpeatorSecureAccount muls operate not vaild\n");
 			return false;
 		}
@@ -236,30 +234,30 @@ bool CVmScriptRun::OpeatorSecureAccount(const vector<CVmOperate>& listoperate) {
 		mulsfund.value = atoi64((char*)it.muls.money);
 		mulsfund.nHeight = it.muls.outheight + chainActive.Height();
 		mulsfund.uTxHash = listTx[it.muls.txid].get()->GetHash();
-		if ((OperType) it.muls.Opeater == MINUS_INPUT_OR_FREE_OR_SELF || (OperType) it.muls.Opeater == MINUS_INPUT) {
-			mulsfund.nFundType = INPUT_FREEZD_FUND;
+		if ((OperType) it.muls.Opeater == MINUS_FREEZD) {
+			mulsfund.nFundType = FREEZD_FUND;
 
 		}
 		CFund addfund;
 		addfund.value = atoi64((char*)it.add.money);
 		addfund.nHeight = it.add.outheight + chainActive.Height();
 		addfund.uTxHash = listTx[it.add.txid].get()->GetHash();
-		if ((OperType) it.add.Opeater == ADD_INPUT_FREEZD) {
-			addfund.nFundType = INPUT_FREEZD_FUND;
+		if ((OperType) it.add.Opeater == ADD_FREEZD) {
+			addfund.nFundType = SELF_FREEZD_FUND;
 		}
 
 		if ((OperType) it.add.Opeater == ADD_FREE) {
 			addfund.nFundType = FREEDOM_FUND;
 		}
-		shared_ptr<CSecureAccount> mulsAccount = RawAccont[it.muls.accountid];
-		shared_ptr<CSecureAccount> vnewAccount = GetNewAccount(mulsAccount);
+		shared_ptr<CAccountInfo> mulsAccount = RawAccont[it.muls.accountid];
+		shared_ptr<CAccountInfo> vnewAccount = GetNewAccount(mulsAccount);
 		if (vnewAccount.get() != NULL) {
 			mulsAccount = vnewAccount;
 		}
 
-		if(mulsfund.nFundType == INPUT_FREEZD_FUND)
+		if(mulsfund.nFundType == FREEZD_FUND)
 		{
-			CFund vFind = mulsAccount.get()->FindFund(mulsAccount.get()->vInputFreeze,mulsfund.uTxHash);
+			CFund vFind = mulsAccount.get()->FindFund(mulsAccount.get()->vFreeze,mulsfund.uTxHash);
 			mulsfund.nHeight = vFind.nHeight;
 		}
 
@@ -275,8 +273,8 @@ bool CVmScriptRun::OpeatorSecureAccount(const vector<CVmOperate>& listoperate) {
 		}
 		addfund.value = retValue;
 
-		shared_ptr<CSecureAccount> addAccount = RawAccont[it.add.accountid];
-		shared_ptr<CSecureAccount> vaddnewAccount = GetNewAccount(addAccount);
+		shared_ptr<CAccountInfo> addAccount = RawAccont[it.add.accountid];
+		shared_ptr<CAccountInfo> vaddnewAccount = GetNewAccount(addAccount);
 		if (vaddnewAccount.get() != NULL) {
 			addAccount = vaddnewAccount;
 		}
@@ -379,13 +377,13 @@ CVmScriptRun::CVmScriptRun(CAccountViewCache& view, vector<shared_ptr<CBaseTrans
 	VmData << Vmpacket;
 
 	for (auto& tx : secure->vArbitratorRegAccId) {
-		auto tem = make_shared<CSecureAccount>();
+		auto tem = make_shared<CAccountInfo>();
 		view.GetAccount(tx, *tem.get());
 		vArbitratorAcc.push_back(tem);
 	}
 	RawAccont.insert(RawAccont.end(), vArbitratorAcc.begin(), vArbitratorAcc.end());
 	for (auto& tx : secure->vRegAccountId) {
-		auto tem = make_shared<CSecureAccount>();
+		auto tem = make_shared<CAccountInfo>();
 		view.GetAccount(tx, *tem.get());
 		RawAccont.push_back(tem);
 	}

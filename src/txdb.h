@@ -61,20 +61,20 @@ private:
 	CAccountViewDB(const CAccountViewDB&);
 	void operator=(const CAccountViewDB&);
 public:
-	bool GetAccount(const CKeyID &keyId, CSecureAccount &secureAccount);
-	bool SetAccount(const CKeyID &keyId, const CSecureAccount &secureAccount);
-	bool SetAccount(const vector<unsigned char> &accountId, const CSecureAccount &secureAccount);
+	bool GetAccount(const CKeyID &keyId, CAccountInfo &secureAccount);
+	bool SetAccount(const CKeyID &keyId, const CAccountInfo &secureAccount);
+	bool SetAccount(const vector<unsigned char> &accountId, const CAccountInfo &secureAccount);
 	bool HaveAccount(const CKeyID &keyId);
 	uint256 GetBestBlock();
 	bool SetBestBlock(const uint256 &hashBlock);
-	bool BatchWrite(const map<CKeyID, CSecureAccount> &mapAccounts, const map<string, CKeyID> &mapKeyIds, const uint256 &hashBlock);
-	bool BatchWrite(const vector<CSecureAccount> &vAccounts);
+	bool BatchWrite(const map<CKeyID, CAccountInfo> &mapAccounts, const map<string, CKeyID> &mapKeyIds, const uint256 &hashBlock);
+	bool BatchWrite(const vector<CAccountInfo> &vAccounts);
 	bool EraseAccount(const CKeyID &keyId);
 	bool SetKeyId(const vector<unsigned char> &accountId, const CKeyID &keyId);
 	bool GetKeyId(const vector<unsigned char> &accountId, CKeyID &keyId);
 	bool EraseKeyId(const vector<unsigned char> &accountId);
-	bool GetAccount(const vector<unsigned char> &accountId, CSecureAccount &secureAccount);
-	bool SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CSecureAccount &secureAccount);
+	bool GetAccount(const vector<unsigned char> &accountId, CAccountInfo &secureAccount);
+	bool SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccountInfo &secureAccount);
 };
 
 class CTransactionCacheDB: public CLevelDBWrapper {

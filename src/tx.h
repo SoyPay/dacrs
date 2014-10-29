@@ -658,27 +658,20 @@ public:
 
 enum FundType {
 	FREEDOM = 1,
-	REWARD_FUND = 2,
-	FREEDOM_FUND = 3,
-	INPUT_FREEZD_FUND = 4,
-	OUTPUT_FREEZD_FUND = 5,
-	SELF_FREEZD_FUND = 6,
+	REWARD_FUND,
+	FREEDOM_FUND,
+	FREEZD_FUND,
+	SELF_FREEZD_FUND,
 	NULL_FUNDTYPE,
 };
 
 enum OperType {
-	ADD_FREE = 1,  //add to freedom_fund 3
-	MINUS_FREE = 2, // minus freedom_fund
-	ADD_SELF_FREEZD = 3,  // add self_freezd_fund 6
-	ADD_INPUT_FREEZD = 4,
-	MINUS_FREE_TO_OUTPUT = 5,
-	MINUS_FREE_OR_SELF = 6,
-	MINUS_OUTPUT = 7,
-	MINUS_OUTPUT_OR_FREE = 8,
-	MINUS_OUTPUT_OR_FREE_OR_SELF = 9,
-	MINUS_INPUT = 10,
-	MINUS_INPUT_OR_FREE = 11,
-	MINUS_INPUT_OR_FREE_OR_SELF = 12,
+	ADD_FREE = 1,  		//add to freedom
+	MINUS_FREE, 		//minus freedom
+	ADD_SELF_FREEZD,  	//add self_freezd
+	MINUS_SELF_FREEZD,	//minus self_freeze
+	ADD_FREEZD,			//add to freezed
+	MINUS_FREEZD,		//minus freezed
 	NULL_OPERTYPE,
 };
 
@@ -834,41 +827,36 @@ public:
 	string ToString() const;
 };
 
-class CSecureAccount {
+class CAccountInfo {
 public:
 	CKeyID keyID;
 	CPubKey publicKey;
 	uint64_t llValues;
 	vector<CFund> vRewardFund;
 	vector<CFund> vFreedomFund;
-	vector<CFund> vInputFreeze;
-	vector<CFund> vOutputFreeze;
+	vector<CFund> vFreeze;
 	vector<CFund> vSelfFreeze;
 
 	//record operlog, write at undoinfo
 	CAccountOperLog accountOperLog;
 
 public:
-	CSecureAccount(CKeyID &keyId, CPubKey &pubKey) :
+	CAccountInfo(CKeyID &keyId, CPubKey &pubKey) :
 			keyID(keyId), publicKey(pubKey) {
 		llValues = 0;
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
-		vInputFreeze.clear();
-		vOutputFreeze.clear();
 		vSelfFreeze.clear();
 	}
-	CSecureAccount() :
+	CAccountInfo() :
 			keyID(uint160(0)), llValues(0) {
 		publicKey = CPubKey();
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
-		vInputFreeze.clear();
-		vOutputFreeze.clear();
 		vSelfFreeze.clear();
 	}
-	std::shared_ptr<CSecureAccount> GetNewInstance() {
-		return make_shared<CSecureAccount>(*this);
+	std::shared_ptr<CAccountInfo> GetNewInstance() {
+		return make_shared<CAccountInfo>(*this);
 	}
 	uint64_t GetInterest() const {
 		uint64_t rest = 0;
@@ -884,13 +872,12 @@ public:
 	uint256 BuildMerkleTree(int prevBlockHeight) const;
 	void ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos);
 	uint64_t GetSecureAccPos(int prevBlockHeight) const;
-	~CSecureAccount() {
+	~CAccountInfo() {
 
 	}
 	string ToString() const;
 	bool IsEmptyValue() const {
-		return !(llValues > 0 || !vFreedomFund.empty() || !vInputFreeze.empty() || !vOutputFreeze.empty()
-				|| !vSelfFreeze.empty());
+		return !(llValues > 0 || !vFreedomFund.empty() || !vFreeze.empty() || !vSelfFreeze.empty());
 	}
 	void CompactAccount(int nCurHeight);
 	bool OperateAccount(OperType type, const CFund &fund, uint64_t* pOperatedValue = NULL);
@@ -904,8 +891,7 @@ public:
 			READWRITE(llValues);
 			READWRITE(vRewardFund);
 			READWRITE(vFreedomFund);
-			READWRITE(vInputFreeze);
-			READWRITE(vOutputFreeze);
+			READWRITE(vFreeze);
 			READWRITE(vSelfFreeze);
 	)
 
@@ -917,14 +903,67 @@ private:
 	void WriteOperLog(AccountOper emOperType, const CFund &fund);
 	void WriteOperLog(const COperFund &operLog);
 	bool MinusFreeToOutput(const CFund& fund);
-	bool MinusInputOutput(vector<CFund>& vFund, const CFund& fund, uint64_t& nOperateValue, bool bLastMinus = true);
-	bool MinusFund(vector<CFund>& vFund, const CFund& fund, uint64_t& nOperateValue, bool bLastMinus = true);
-	bool MinusFundEx(vector<CFund>& vFund, const CFund& fund, uint64_t& nOperateValue);
-	bool MinusFree(const CFund &fund, uint64_t& nOperateValue, bool bLastMinus = true);
+	bool MinusFreezed(vector<CFund>& vFund, const CFund& fund, uint64_t& nOperateValue);
+	bool MinusFree(const CFund &fund, uint64_t& nOperateValue);
 	bool MinusSelf(const CFund &fund, uint64_t& nOperateValue);
 	bool IsMoneyOverflow(uint64_t nAddMoney);
 	bool MinusFreeOrSelf(const CFund& fund,uint64_t& nOperateValue);
+	void AddToFreeze(const CFund &fund);
 	uint64_t GetVecMoney(const vector<CFund>& vFund);
+};
+
+class CAuthorizate{
+public:
+	uint32_t GetAuthorizeTime ()const {
+		return nAuthorizeTime.GetValue();
+	}
+	uint64_t GetMaxMoneyPerTime ()const {
+		return nMaxMoneyPerTime.GetValue();
+	}
+	uint64_t GetMaxMoneyTotal ()const {
+		return nMaxMoneyTotal.GetValue();
+	}
+	uint64_t GetMaxMoneyPerDay ()const {
+		return nMaxMoneyPerDay.GetValue();
+	}
+	uint64_t GetCurMaxMoneyPerDay() const {
+		return nCurMaxMoneyPerDay.GetValue();
+	}
+
+	void SetAuthorizeTime(uint32_t nTime) {
+		nAuthorizeTime.SetValue(nTime);
+	}
+	void SetMaxMoneyPerTime(uint64_t nMoney) {
+		nMaxMoneyPerTime.SetValue(nMoney);
+	}
+	void SetMaxMoneyTotal(uint64_t nMoney) {
+		nMaxMoneyTotal.SetValue(nMoney);
+	}
+	void SetMaxMoneyPerDay(uint64_t nMoney) {
+		nMaxMoneyPerDay.SetValue(nMoney);
+	}
+	void SetCurMaxMoneyPerDay(uint64_t nMoney) {
+		nCurMaxMoneyPerDay.SetValue(nMoney);
+	}
+
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(nLastOperHeight);
+		READWRITE(nAuthorizeTime);
+		READWRITE(nMaxMoneyPerTime);
+		READWRITE(nMaxMoneyTotal);
+		READWRITE(nMaxMoneyPerDay);
+		READWRITE(nCurMaxMoneyPerDay);
+	)
+
+private:
+	CVarData<uint32_t> nLastOperHeight;
+	CVarData<uint32_t> nAuthorizeTime;
+	CVarData<uint32_t> nUserDefine;
+	CVarData<uint64_t> nMaxMoneyPerTime;
+	CVarData<uint64_t> nMaxMoneyTotal;
+	CVarData<uint64_t> nMaxMoneyPerDay;
+	CVarData<uint64_t> nCurMaxMoneyPerDay;
 };
 
 class CContractScript {
