@@ -75,40 +75,40 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		break;
 	}
 		break;
-	case APPEAL_TX: {
-		CAppealTransaction *prtx = (CAppealTransaction *) pTx;
-		result.push_back(Pair("txtype", "AppealTx"));
-		result.push_back(Pair("ver", prtx->nVersion));
-//		result.push_back(Pair("addr", RegIDToAddress(prtx->accountId)));
-		result.push_back(Pair("securetxhash", prtx->preTxHash.GetHex()));
-		result.push_back(Pair("fees", prtx->llFees));
-		result.push_back(Pair("contract", HexStr(prtx->vContract)));
-		break;
-	}
-	case SECURE_TX: {
-		CSecureTransaction *prtx = (CSecureTransaction *) pTx;
-		result.push_back(Pair("txtype", "SecureTx"));
-		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("script id", HexStr(prtx->regScriptId)));
-		{
-			Array array;
-			for (auto &vid : prtx->vArbitratorRegAccId ) {
-				array.push_back(RegIDToAddress(vid));
-			}
-			result.push_back(Pair("obid", array));
-		}
-		{
-			Array array;
-			for (auto &vid : prtx->vRegAccountId ) {
-				array.push_back(RegIDToAddress(vid));
-			}
-			result.push_back(Pair("accountid", array));
-		}
-		result.push_back(Pair("fees", prtx->llFees));
-		result.push_back(Pair("contract", HexStr(prtx->vContract)));
-		result.push_back(Pair("height", prtx->nValidHeight));
-		break;
-	}
+//	case APPEAL_TX: {
+//		CAppealTransaction *prtx = (CAppealTransaction *) pTx;
+//		result.push_back(Pair("txtype", "AppealTx"));
+//		result.push_back(Pair("ver", prtx->nVersion));
+////		result.push_back(Pair("addr", RegIDToAddress(prtx->accountId)));
+//		result.push_back(Pair("securetxhash", prtx->preTxHash.GetHex()));
+//		result.push_back(Pair("fees", prtx->llFees));
+//		result.push_back(Pair("contract", HexStr(prtx->vContract)));
+//		break;
+//	}
+//	case SECURE_TX: {
+//		CSecureTransaction *prtx = (CSecureTransaction *) pTx;
+//		result.push_back(Pair("txtype", "SecureTx"));
+//		result.push_back(Pair("ver", prtx->nVersion));
+//		result.push_back(Pair("script id", HexStr(prtx->regScriptId)));
+//		{
+//			Array array;
+//			for (auto &vid : prtx->vArbitratorRegAccId ) {
+//				array.push_back(RegIDToAddress(vid));
+//			}
+//			result.push_back(Pair("obid", array));
+//		}
+//		{
+//			Array array;
+//			for (auto &vid : prtx->vRegAccountId ) {
+//				array.push_back(RegIDToAddress(vid));
+//			}
+//			result.push_back(Pair("accountid", array));
+//		}
+//		result.push_back(Pair("fees", prtx->llFees));
+//		result.push_back(Pair("contract", HexStr(prtx->vContract)));
+//		result.push_back(Pair("height", prtx->nValidHeight));
+//		break;
+//	}
 	case FREEZE_TX: {
 		CFreezeTransaction *prtx = (CFreezeTransaction *) pTx;
 		result.push_back(Pair("txtype", "FreezeTx"));
@@ -348,25 +348,25 @@ Value createappealtx(const Array& params, bool fHelp) {
 	}
 
 	assert(pwalletMain != NULL);
-	CAppealTransaction tx;
-	{
-		LOCK2(cs_main, pwalletMain->cs_wallet);
-		EnsureWalletIsUnlocked();
-
-		//balance
-		CAccountViewCache view(*pAccountViewTip, true);
-		CAccount secureAcc;
-
-		tx.vPreAcountIndex = vaccindex;
-		tx.preTxHash = txhash;
-		tx.vContract = vcontract;
-		tx.llFees = fee;
-		tx.signature.clear();
-	}
+//	CAppealTransaction tx;
+//	{
+//		LOCK2(cs_main, pwalletMain->cs_wallet);
+//		EnsureWalletIsUnlocked();
+//
+//		//balance
+//		CAccountViewCache view(*pAccountViewTip, true);
+//		CAccount secureAcc;
+//
+//		tx.vPreAcountIndex = vaccindex;
+//		tx.preTxHash = txhash;
+//		tx.vContract = vcontract;
+//		tx.llFees = fee;
+//		tx.signature.clear();
+//	}
 
 	{
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
-		ds << tx;
+//		ds << tx;
 		return HexStr(ds.begin(), ds.end());
 	}
 }
@@ -389,100 +389,100 @@ Value signappealtx(const Array& params, bool fHelp) {
 	vector<unsigned char> vch(ParseHex(params[0].get_str()));
 	CDataStream stream(vch, SER_DISK, CLIENT_VERSION);
 
-	CAppealTransaction tx;
-	stream >> tx;
-
-	assert(pwalletMain != NULL);
-	{
-		LOCK2(cs_main, pwalletMain->cs_wallet);
-		EnsureWalletIsUnlocked();
-
-		if (tx.vPreAcountIndex.size() <= tx.signature.size() ) {
-			throw runtime_error("in signsecuretx :tx data err\n");
-		}
-
-		std::shared_ptr<CBaseTransaction> securetx;
-		if(pwalletMain->GetTx(tx.preTxHash,securetx))
-		{
-			if(securetx->nTxType != SECURE_TX)
-			{
-				throw runtime_error("in signappealtx :pre tx type err tx hash:"+tx.preTxHash.GetHex()+"\n");
-			}
-		}
-		else
-		{
-			throw runtime_error("in signappealtx :can not find pre tx hash:"+tx.preTxHash.GetHex()+"\n");
-		}
-
-		CSecureTransaction *ptx = (CSecureTransaction *)securetx.get();
-		for(auto &index:tx.vPreAcountIndex)
-		{
-			if(index >= (ptx->vArbitratorRegAccId.size()+ptx->vRegAccountId.size()))
-			{
-				throw runtime_error("in signappealtx :index err\n");
-			}
-		}
-
-		CAccountViewCache view(*pAccountViewTip, true);
-		CAccount secureAcc;
-
-		uint256 signhash = tx.SignatureHash();
-		int i = 0;
-		for(auto &index:tx.vPreAcountIndex) {
-			vector<unsigned char> vregid;
-			if(index < ptx->vArbitratorRegAccId.size())
-			{
-				vregid = ptx->vArbitratorRegAccId[index];
-			}
-			else
-			{
-				vregid = ptx->vRegAccountId[index-ptx->vArbitratorRegAccId.size()];
-			}
-
-			if (!view.GetAccount(vregid, secureAcc)) {
-				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("unregister RegID: ") + HexStr(vregid));
-			}
-			if (i < tx.signature.size()) {
-				if (!secureAcc.publicKey.Verify(signhash, tx.signature[i])) {
-					throw runtime_error("in signappealtx :tx data sign err\n");
-				}
-			}
-			i++;
-		}
-
-		i = tx.vPreAcountIndex[tx.signature.size()];
-		vector<unsigned char> vregid;
-		if (i < ptx->vArbitratorRegAccId.size()) {
-			vregid = ptx->vArbitratorRegAccId[i];
-		} else {
-			vregid = ptx->vRegAccountId[i - ptx->vArbitratorRegAccId.size()];
-		}
-		view.GetAccount(vregid, secureAcc);
-		CKey key;
-		LogPrint("INFO","appeal signature key:%s\n", secureAcc.keyID.GetHex());
-		if (!pwalletMain->GetKey(secureAcc.keyID, key)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "signappealtx Error: it's not your turn to Sign.");
-		}
-
-		vector<unsigned char> vsign;
-		if (!key.Sign(signhash, vsign)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "signappealtx Error: Sign failed.");
-		}
-		LogPrint("INFO","appeal signature :%s\n", HexStr(vsign.begin(), vsign.end()));
-		tx.signature.push_back(vsign);
-
-		if (tx.vPreAcountIndex.size() == tx.signature.size()) {
-			if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
-				throw JSONRPCError(RPC_WALLET_ERROR, "signappealtx Error: CommitTransaction failed.");
-			}
-			return tx.GetHash().ToString();
-		}
-
-	}
+//	CAppealTransaction tx;
+//	stream >> tx;
+//
+//	assert(pwalletMain != NULL);
+//	{
+//		LOCK2(cs_main, pwalletMain->cs_wallet);
+//		EnsureWalletIsUnlocked();
+//
+//		if (tx.vPreAcountIndex.size() <= tx.signature.size() ) {
+//			throw runtime_error("in signsecuretx :tx data err\n");
+//		}
+//
+//		std::shared_ptr<CBaseTransaction> securetx;
+//		if(pwalletMain->GetTx(tx.preTxHash,securetx))
+//		{
+//			if(securetx->nTxType != SECURE_TX)
+//			{
+//				throw runtime_error("in signappealtx :pre tx type err tx hash:"+tx.preTxHash.GetHex()+"\n");
+//			}
+//		}
+//		else
+//		{
+//			throw runtime_error("in signappealtx :can not find pre tx hash:"+tx.preTxHash.GetHex()+"\n");
+//		}
+//
+//		CSecureTransaction *ptx = (CSecureTransaction *)securetx.get();
+//		for(auto &index:tx.vPreAcountIndex)
+//		{
+//			if(index >= (ptx->vArbitratorRegAccId.size()+ptx->vRegAccountId.size()))
+//			{
+//				throw runtime_error("in signappealtx :index err\n");
+//			}
+//		}
+//
+//		CAccountViewCache view(*pAccountViewTip, true);
+//		CAccount secureAcc;
+//
+//		uint256 signhash = tx.SignatureHash();
+//		int i = 0;
+//		for(auto &index:tx.vPreAcountIndex) {
+//			vector<unsigned char> vregid;
+//			if(index < ptx->vArbitratorRegAccId.size())
+//			{
+//				vregid = ptx->vArbitratorRegAccId[index];
+//			}
+//			else
+//			{
+//				vregid = ptx->vRegAccountId[index-ptx->vArbitratorRegAccId.size()];
+//			}
+//
+//			if (!view.GetAccount(vregid, secureAcc)) {
+//				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("unregister RegID: ") + HexStr(vregid));
+//			}
+//			if (i < tx.signature.size()) {
+//				if (!secureAcc.publicKey.Verify(signhash, tx.signature[i])) {
+//					throw runtime_error("in signappealtx :tx data sign err\n");
+//				}
+//			}
+//			i++;
+//		}
+//
+//		i = tx.vPreAcountIndex[tx.signature.size()];
+//		vector<unsigned char> vregid;
+//		if (i < ptx->vArbitratorRegAccId.size()) {
+//			vregid = ptx->vArbitratorRegAccId[i];
+//		} else {
+//			vregid = ptx->vRegAccountId[i - ptx->vArbitratorRegAccId.size()];
+//		}
+//		view.GetAccount(vregid, secureAcc);
+//		CKey key;
+//		LogPrint("INFO","appeal signature key:%s\n", secureAcc.keyID.GetHex());
+//		if (!pwalletMain->GetKey(secureAcc.keyID, key)) {
+//			throw JSONRPCError(RPC_WALLET_ERROR, "signappealtx Error: it's not your turn to Sign.");
+//		}
+//
+//		vector<unsigned char> vsign;
+//		if (!key.Sign(signhash, vsign)) {
+//			throw JSONRPCError(RPC_WALLET_ERROR, "signappealtx Error: Sign failed.");
+//		}
+//		LogPrint("INFO","appeal signature :%s\n", HexStr(vsign.begin(), vsign.end()));
+//		tx.signature.push_back(vsign);
+//
+//		if (tx.vPreAcountIndex.size() == tx.signature.size()) {
+//			if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
+//				throw JSONRPCError(RPC_WALLET_ERROR, "signappealtx Error: CommitTransaction failed.");
+//			}
+//			return tx.GetHash().ToString();
+//		}
+//
+//	}
 
 	{
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
-		ds << tx;
+//		ds << tx;
 		return HexStr(ds.begin(), ds.end());
 	}
 }
@@ -699,72 +699,72 @@ Value createsecuretx(const Array& params, bool fHelp) {
 	//get keyid
 
 	assert(pwalletMain != NULL);
-	CSecureTransaction tx;
-	{
-		LOCK2(cs_main, pwalletMain->cs_wallet);
-		EnsureWalletIsUnlocked();
-
-		//balance
-		CAccountViewCache view(*pAccountViewTip, true);
-		CAccount secureAcc;
-
-		vector<unsigned char> vscript;
-		set<string> sob;
-		if (!pContractScriptTip->GetScript(HexStr(vscriptid), vscript)) {
-			throw runtime_error(tinyformat::format("in createsecuretx :script id %s is not exist\n", HexStr(tx.regScriptId)));
-		}
-
-		if (!pContractScriptTip->GetArbitrator(HexStr(vscriptid), sob)) {
-			throw runtime_error(tinyformat::format("in createsecuretx :script id %s ob is not exist\n", HexStr(tx.regScriptId)));
-		}
-
-		vector<vector_unsigned_char> vvobregid;
-		for (auto& obaddr : obaddrs) {
-			CBitcoinAddress address(obaddr.get_str());
-			vector<unsigned char> vregid;
-			if (!address.GetRegID(vregid))
-				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid address: ") + obaddr.get_str());
-			LogPrint("INFO","regid = %s \r\n",HexStr(vregid).c_str());
-			if (!view.GetAccount(vregid, secureAcc)) {
-				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("unregister address: ") + obaddr.get_str());
-			}
-
-			if (sob.end() != sob.find(HexStr(vregid))) {
-				vvobregid.push_back(vregid);
-			} else {
-				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-						string("unregister script ob address: ") + obaddr.get_str());
-			}
-		}
-
-		vector<vector_unsigned_char> vvregid;
-		for (auto& addr : addrs) {
-			CBitcoinAddress address(addr.get_str());
-			vector<unsigned char> vregid;
-			if (!address.GetRegID(vregid))
-				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid address: ") + addr.get_str());
-			LogPrint("INFO","regid = %s \r\n",HexStr(vregid).c_str());
-			CKeyID tempkeyid;
-			address.GetKeyID(tempkeyid);
-			LogPrint("INFO","addr = %s \r\n",tempkeyid.GetHex().c_str());
-			LogPrint("INFO","CBitcoinAddress = %s \r\n",CBitcoinAddress(CAccountID(tempkeyid,vregid)).ToString().c_str());
-			if (!view.GetAccount(vregid, secureAcc)) {
-				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("unregister address: ") + addr.get_str());
-			}
-			vvregid.push_back(vregid);
-		}
-
-		tx.regScriptId = vscriptid;
-		tx.vArbitratorRegAccId = vvobregid;
-		tx.vRegAccountId = vvregid;
-		tx.vContract = vcontract;
-		tx.llFees = fee;
-		tx.nValidHeight = height;
-		tx.vScripts.clear();
-	}
+//	CSecureTransaction tx;
+//	{
+//		LOCK2(cs_main, pwalletMain->cs_wallet);
+//		EnsureWalletIsUnlocked();
+//
+//		//balance
+//		CAccountViewCache view(*pAccountViewTip, true);
+//		CAccount secureAcc;
+//
+//		vector<unsigned char> vscript;
+//		set<string> sob;
+//		if (!pContractScriptTip->GetScript(HexStr(vscriptid), vscript)) {
+//			throw runtime_error(tinyformat::format("in createsecuretx :script id %s is not exist\n", HexStr(tx.regScriptId)));
+//		}
+//
+//		if (!pContractScriptTip->GetArbitrator(HexStr(vscriptid), sob)) {
+//			throw runtime_error(tinyformat::format("in createsecuretx :script id %s ob is not exist\n", HexStr(tx.regScriptId)));
+//		}
+//
+//		vector<vector_unsigned_char> vvobregid;
+//		for (auto& obaddr : obaddrs) {
+//			CBitcoinAddress address(obaddr.get_str());
+//			vector<unsigned char> vregid;
+//			if (!address.GetRegID(vregid))
+//				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid address: ") + obaddr.get_str());
+//			LogPrint("INFO","regid = %s \r\n",HexStr(vregid).c_str());
+//			if (!view.GetAccount(vregid, secureAcc)) {
+//				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("unregister address: ") + obaddr.get_str());
+//			}
+//
+//			if (sob.end() != sob.find(HexStr(vregid))) {
+//				vvobregid.push_back(vregid);
+//			} else {
+//				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
+//						string("unregister script ob address: ") + obaddr.get_str());
+//			}
+//		}
+//
+//		vector<vector_unsigned_char> vvregid;
+//		for (auto& addr : addrs) {
+//			CBitcoinAddress address(addr.get_str());
+//			vector<unsigned char> vregid;
+//			if (!address.GetRegID(vregid))
+//				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid address: ") + addr.get_str());
+//			LogPrint("INFO","regid = %s \r\n",HexStr(vregid).c_str());
+//			CKeyID tempkeyid;
+//			address.GetKeyID(tempkeyid);
+//			LogPrint("INFO","addr = %s \r\n",tempkeyid.GetHex().c_str());
+//			LogPrint("INFO","CBitcoinAddress = %s \r\n",CBitcoinAddress(CAccountID(tempkeyid,vregid)).ToString().c_str());
+//			if (!view.GetAccount(vregid, secureAcc)) {
+//				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("unregister address: ") + addr.get_str());
+//			}
+//			vvregid.push_back(vregid);
+//		}
+//
+//		tx.regScriptId = vscriptid;
+//		tx.vArbitratorRegAccId = vvobregid;
+//		tx.vRegAccountId = vvregid;
+//		tx.vContract = vcontract;
+//		tx.llFees = fee;
+//		tx.nValidHeight = height;
+//		tx.vScripts.clear();
+//	}
 	{
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
-		ds<<tx;
+//		ds<<tx;
 		return HexStr(ds.begin(),ds.end());
 	}
 }
@@ -787,81 +787,81 @@ Value signsecuretx(const Array& params, bool fHelp) {
 	vector<unsigned char> vch(ParseHex(params[0].get_str()));
 	CDataStream stream(vch, SER_DISK, CLIENT_VERSION);
 
-	CSecureTransaction tx;
-	stream >> tx;
-
-	assert(pwalletMain != NULL);
-	{
-		LOCK2(cs_main, pwalletMain->cs_wallet);
-		EnsureWalletIsUnlocked();
-
-		//balance
-		CAccountViewCache view(*pAccountViewTip, true);
-		CAccount secureAcc;
-
-		if (tx.vRegAccountId.size() <= tx.vScripts.size() || tx.vRegAccountId.size() < 2) {
-			throw runtime_error("in signsecuretx :tx data err\n");
-		}
-
-		vector<unsigned char> vscript;
-		set<string> sob;
-		if (!pContractScriptTip->GetScript(HexStr(tx.regScriptId), vscript)) {
-			throw runtime_error(tinyformat::format("in signsecuretx :script id %s is not exist\n", HexStr(tx.regScriptId)));
-		}
-
-		if (!pContractScriptTip->GetArbitrator(HexStr(tx.regScriptId), sob)) {
-			throw runtime_error(tinyformat::format("in signsecuretx :script id %s ob is not exist\n", HexStr(tx.regScriptId)));
-		}
-
-		for (auto& vregid : tx.vArbitratorRegAccId) {
-			if (!view.GetAccount(vregid, secureAcc)) {
-				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("unregister RegID: ") + HexStr(vregid));
-			}
-
-			if (sob.end() == sob.find(HexStr(vregid))) {
-				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("unregister script ob RegID: ") + HexStr(vregid));
-			}
-		}
-
-		uint256 signhash = tx.SignatureHash();
-		int i = 0;
-		for (auto& vregid1 : tx.vRegAccountId) {
-			if (!view.GetAccount(vregid1, secureAcc)) {
-				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("unregister RegID: ") + HexStr(vregid1));
-			}
-			if (i < tx.vScripts.size()) {
-				if (!secureAcc.publicKey.Verify(signhash, tx.vScripts[i])) {
-					throw runtime_error("in signsecuretx :tx data sign err\n");
-				}
-			}
-			i++;
-		}
-
-		i = tx.vScripts.size();
-		view.GetAccount(tx.vRegAccountId[i], secureAcc);
-		CKey key;
-		if (!pwalletMain->GetKey(secureAcc.keyID, key)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "signsecuretx Error: it's not your turn to Sign.");
-		}
-
-		vector<unsigned char> vsign;
-		if (!key.Sign(signhash, vsign)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "signsecuretx Error: Sign failed.");
-		}
-		tx.vScripts.push_back(vsign);
-
-		if (tx.vRegAccountId.size() == tx.vScripts.size()) {
-			if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
-				throw JSONRPCError(RPC_WALLET_ERROR, "signsecuretx Error: CommitTransaction failed.");
-			}
-			LogPrint("INFO","signsecuretx end\r\n");
-			return tx.GetHash().ToString();
-		}
-	}
+//	CSecureTransaction tx;
+//	stream >> tx;
+//
+//	assert(pwalletMain != NULL);
+//	{
+//		LOCK2(cs_main, pwalletMain->cs_wallet);
+//		EnsureWalletIsUnlocked();
+//
+//		//balance
+//		CAccountViewCache view(*pAccountViewTip, true);
+//		CAccount secureAcc;
+//
+//		if (tx.vRegAccountId.size() <= tx.vScripts.size() || tx.vRegAccountId.size() < 2) {
+//			throw runtime_error("in signsecuretx :tx data err\n");
+//		}
+//
+//		vector<unsigned char> vscript;
+//		set<string> sob;
+//		if (!pContractScriptTip->GetScript(HexStr(tx.regScriptId), vscript)) {
+//			throw runtime_error(tinyformat::format("in signsecuretx :script id %s is not exist\n", HexStr(tx.regScriptId)));
+//		}
+//
+//		if (!pContractScriptTip->GetArbitrator(HexStr(tx.regScriptId), sob)) {
+//			throw runtime_error(tinyformat::format("in signsecuretx :script id %s ob is not exist\n", HexStr(tx.regScriptId)));
+//		}
+//
+//		for (auto& vregid : tx.vArbitratorRegAccId) {
+//			if (!view.GetAccount(vregid, secureAcc)) {
+//				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("unregister RegID: ") + HexStr(vregid));
+//			}
+//
+//			if (sob.end() == sob.find(HexStr(vregid))) {
+//				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("unregister script ob RegID: ") + HexStr(vregid));
+//			}
+//		}
+//
+//		uint256 signhash = tx.SignatureHash();
+//		int i = 0;
+//		for (auto& vregid1 : tx.vRegAccountId) {
+//			if (!view.GetAccount(vregid1, secureAcc)) {
+//				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("unregister RegID: ") + HexStr(vregid1));
+//			}
+//			if (i < tx.vScripts.size()) {
+//				if (!secureAcc.publicKey.Verify(signhash, tx.vScripts[i])) {
+//					throw runtime_error("in signsecuretx :tx data sign err\n");
+//				}
+//			}
+//			i++;
+//		}
+//
+//		i = tx.vScripts.size();
+//		view.GetAccount(tx.vRegAccountId[i], secureAcc);
+//		CKey key;
+//		if (!pwalletMain->GetKey(secureAcc.keyID, key)) {
+//			throw JSONRPCError(RPC_WALLET_ERROR, "signsecuretx Error: it's not your turn to Sign.");
+//		}
+//
+//		vector<unsigned char> vsign;
+//		if (!key.Sign(signhash, vsign)) {
+//			throw JSONRPCError(RPC_WALLET_ERROR, "signsecuretx Error: Sign failed.");
+//		}
+//		tx.vScripts.push_back(vsign);
+//
+//		if (tx.vRegAccountId.size() == tx.vScripts.size()) {
+//			if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
+//				throw JSONRPCError(RPC_WALLET_ERROR, "signsecuretx Error: CommitTransaction failed.");
+//			}
+//			LogPrint("INFO","signsecuretx end\r\n");
+//			return tx.GetHash().ToString();
+//		}
+//	}
 
 	{
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
-		ds << tx;
+//		ds << tx;
 		LogPrint("INFO","signsecuretx end\r\n");
 		return HexStr(ds.begin(), ds.end());
 	}
