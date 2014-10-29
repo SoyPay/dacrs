@@ -838,6 +838,7 @@ public:
 	vector<CFund> vSelfFreeze;
 
 	//record operlog, write at undoinfo
+	map<vector_unsigned_char,CAuthorizate> mapAuthorizate;	// !< Key:scriptID,value :CAuthorizate
 	CAccountOperLog accountOperLog;
 
 public:
