@@ -10,6 +10,7 @@
 
 #include "hash.h"
 #include "key.h"
+#include "main.h"
 #include <openssl/des.h>
 #include <vector>
 //#include "Typedef.h"
@@ -66,16 +67,18 @@ struct __MapExterFun {
 static unsigned short GetParaLen(unsigned char * &pbuf) {
 	unsigned char tem[5];
 	unsigned short ret = 0;
-	memcpy(tem, pbuf, 5);
-	if (tem[0] < 0xFD) {
-		ret = tem[0];
-		pbuf += 1;
-	} else if (tem[0] == 0xFD) {
-		memcpy(&ret, &tem[1], 2);
-		pbuf += 3;
-	} else {
-		/// never come here
-	}
+	memcpy(&ret, pbuf, 2);
+	pbuf += 2;
+//	memcpy(tem, pbuf, 5);
+//	if (tem[0] < 0xFD) {
+//		ret = tem[0];
+//		pbuf += 1;
+//	} else if (tem[0] == 0xFD) {
+//		memcpy(&ret, &tem[1], 2);
+//		pbuf += 3;
+//	} else {
+//		/// never come here
+//	}
 	return ret;
 }
 
@@ -92,6 +95,7 @@ static bool ExInt64CompFunc(unsigned char *ipara) {
 	unsigned short data1len = GetParaLen(pbuf);
 	unsigned char *pdata1 = NULL;
 	GetParaData(pbuf, pdata1, data1len);
+
 	unsigned short data2len = GetParaLen(pbuf);
 	unsigned char *pdata2 = NULL;
 	GetParaData(pbuf, pdata2, data2len);
@@ -113,8 +117,10 @@ static bool ExInt64CompFunc(unsigned char *ipara) {
 
 //	printf("rslt:%d\r\n", rslt);
 	memset(ipara, 0, 512);
-	ipara[0] = sizeof(rslt);
-	memcpy(&ipara[1], &rslt, sizeof(rslt));
+	int length = sizeof(rslt);
+	memcpy(ipara,&length,2);
+	//ipara[0] = sizeof(rslt);
+	memcpy(&ipara[2], &rslt, sizeof(rslt));
 
 	return true;
 }
@@ -141,8 +147,10 @@ static bool ExInt64MullFunc(unsigned char *ipara) {
 	m3 = m1 * m2;
 //	printf("m3:%I64d\r\n", m3);
 	memset(ipara, 0, 512);
-	ipara[0] = sizeof(m3);
-	memcpy(&ipara[1], &m3, sizeof(m3));
+	int length = sizeof(m3);
+	memcpy(ipara,&length,2);
+	//ipara[0] = sizeof(m3);
+	memcpy(&ipara[2], &m3, sizeof(m3));
 	return true;
 }
 
@@ -167,8 +175,10 @@ static bool ExInt64AddFunc(unsigned char *ipara) {
 	m3 = m1 + m2;
 //	printf("m3:%I64d\r\n", m3);
 	memset(ipara, 0, 512);
-	ipara[0] = sizeof(m3);
-	memcpy(&ipara[1], &m3, sizeof(m3));
+	int length = sizeof(m3);
+	memcpy(ipara,&length,2);
+	//ipara[0] = sizeof(m3);
+	memcpy(&ipara[2], &m3, sizeof(m3));
 	return true;
 }
 
@@ -194,8 +204,10 @@ static bool ExInt64SubFunc(unsigned char *ipara) {
 	m3 = m1 - m2;
 //	printf("m3:%I64d\r\n", m3);
 	memset(ipara, 0, 512);
-	ipara[0] = sizeof(m3);
-	memcpy(&ipara[1], &m3, sizeof(m3));
+	int length = sizeof(m3);
+	memcpy(ipara,&length,2);
+	//ipara[0] = sizeof(m3);
+	memcpy(&ipara[2], &m3, sizeof(m3));
 	return true;
 }
 
@@ -221,8 +233,10 @@ static bool ExInt64DivFunc(unsigned char *ipara) {
 	m3 = m1 / m2;
 //	printf("m3:%I64d\r\n", m3);
 	memset(ipara, 0, 512);
-	ipara[0] = sizeof(m3);
-	memcpy(&ipara[1], &m3, sizeof(m3));
+	int length = sizeof(m3);
+	memcpy(ipara,&length,2);
+	//ipara[0] = sizeof(m3);
+	memcpy(&ipara[2], &m3, sizeof(m3));
 	return true;
 }
 
@@ -236,8 +250,11 @@ static bool ExSha256Func(unsigned char *ipara) {
 //	printf("the in para:%s\r\n", HexStr(pbuf + 1, pbuf + 1 + len, true).c_str());
 //	printf("the rslt:%s\r\n", rslt.ToString().c_str());
 	memset(ipara, 0, 512);
-	ipara[0] = 32;
-	memcpy(ipara + 1, rslt.begin(), 32);
+	int length = 32;
+	memcpy(ipara,&length,2);
+	//ipara[0] = sizeof(m3);
+	//ipara[0] = 32;
+	memcpy(ipara + 2, rslt.begin(), 32);
 	return true;
 }
 
@@ -331,8 +348,10 @@ static bool ExDesFunc(unsigned char *ipara) {
 
 //	printf("***rslt len:%d the rslt:%s\r\n", desout.size(), HexStr(desout.begin(), desout.end(), true).c_str());
 	memset(ipara, 0, 512);
-	ipara[0] = desout.size();
-	memcpy(&ipara[1], &desout[0], desout.size());
+	int length = desout.size();
+	memcpy(ipara,&length,2);
+	//ipara[0] = desout.size();
+	memcpy(&ipara[2], &desout[0], desout.size());
 	return true;
 }
 
@@ -379,8 +398,10 @@ static bool ExVerifySignatureFunc(unsigned char *ipara) {
 	}
 
 	memset(ipara, 0, 512);
-	ipara[0] = sizeof(rlt);
-	memcpy(&ipara[1], &rlt, sizeof(rlt));
+	int length = sizeof(rlt);
+	memcpy(ipara,&length,2);
+	//ipara[0] = sizeof(rlt);
+	memcpy(&ipara[2], &rlt, sizeof(rlt));
 	return true;
 }
 
@@ -402,11 +423,229 @@ static bool ExLogPrintFunc(unsigned char *ipara) {
 	unsigned char *pdata = NULL;
 	GetParaData(pbuf, pdata, datalen);
 
-	printf("%s%s\r\n", pinfo, HexStr(pdata, pdata + datalen, true).c_str());
+//	printf("%s%s\r\n", pinfo, HexStr(pdata, pdata + datalen, true).c_str());
+	printf("%s%s\r\n", pinfo, pdata);
 
 	return true;
 }
 
+static bool ExGetTxInfoFunc(unsigned char * ipara)
+{
+	unsigned char *pbuffer = ipara;
+	unsigned short length = GetParaLen(pbuffer);
+
+	unsigned char *txhash = NULL;
+	GetParaData(pbuffer, txhash, length);
+	vector<unsigned char> hash(txhash, txhash + length);
+	uint256 hash1(hash);
+	std::shared_ptr<CBaseTransaction> pBaseTx;
+	if(GetTransaction(pBaseTx,hash1))
+	{
+		memset(ipara, 0, 512);
+		CSecureTransaction *tx = static_cast<CSecureTransaction*>(pBaseTx.get());
+		length = tx->vContract.size();
+		memcpy(ipara,&length,2);
+		memcpy(&ipara[2],&tx->vContract, length);
+		int len = 0;
+		vector<unsigned char> item;
+		for (auto& it : tx->vRegAccountId)
+		{
+			len += it.size();
+			item.insert(item.end(),it.begin(),it.end());
+		}
+		if((length + len + 4) <512)
+		{
+			memcpy(ipara+length +2,&len,2);
+			memcpy(ipara+length +4,&item[0], len);
+		}
+	}
+
+
+}
+static bool ExGetTxAccountSizeFunc(unsigned char * ipara)
+{
+	unsigned char *pbuffer = ipara;
+	unsigned short length = GetParaLen(pbuffer);
+
+	unsigned char *txhash = NULL;
+	GetParaData(pbuffer, txhash, length);
+	vector<unsigned char> hash(txhash, txhash + length);
+	uint256 hash1(hash);
+	std::shared_ptr<CBaseTransaction> pBaseTx;
+	if(GetTransaction(pBaseTx,hash1))
+	{
+		memset(ipara, 0, 512);
+		CSecureTransaction *tx = static_cast<CSecureTransaction*>(pBaseTx.get());
+		int len = 0;
+		for (auto& it : tx->vRegAccountId)
+		{
+			len += it.size();
+		}
+		if((length + len + 4) <512)
+		{
+			int count = 4;
+			memset(ipara, 0, 512);
+			memcpy(ipara,&count,2);
+			memcpy(&ipara[2],&len, 4);
+		}
+	}
+
+
+}
+static bool ExGetTxContactSizeFunc(unsigned char * ipara)
+{
+	unsigned char *pbuffer = ipara;
+	unsigned short length = GetParaLen(pbuffer);
+
+	unsigned char *txhash = NULL;
+	GetParaData(pbuffer, txhash, length);
+	vector<unsigned char> hash(txhash, txhash + length);
+	uint256 hash1(hash);
+	std::shared_ptr<CBaseTransaction> pBaseTx;
+	if(GetTransaction(pBaseTx,hash1))
+	{
+		memset(ipara, 0, 512);
+		CSecureTransaction *tx = static_cast<CSecureTransaction*>(pBaseTx.get());
+		int len = tx->vContract.size();
+		if((length + len + 4) <512)
+		{
+			int count = 4;
+			memcpy(ipara,&count,2);
+			memcpy(&ipara[2],&len, 4);
+		}
+	}
+
+}
+static bool ExGetAccountPublickeyFunc(unsigned char * ipara)
+{
+	unsigned char *pbuffer = ipara;
+	unsigned short length = GetParaLen(pbuffer);
+
+	unsigned char *accountid = NULL;
+	GetParaData(pbuffer, accountid, length);
+	vector<unsigned char> id(accountid, accountid + length);
+	CAccountViewCache view(*pAccountViewTip, true);
+
+	string strParam(accountid,accountid+length);
+	CSecureAccount aAccount;
+	if(strParam.length() != 12) {
+		CBitcoinAddress address(strParam.c_str());
+		CKeyID keyid;
+		if (!address.GetKeyID(keyid))
+			return false;
+
+		if (!view.GetAccount(keyid, aAccount)) {
+			return false;
+		}
+	}
+	unsigned int len = aAccount.publicKey.size();
+	memset(ipara, 0, 512);
+	memcpy(ipara,&len,2);
+	memcpy(&ipara[2],&aAccount.publicKey[0],aAccount.publicKey.size());
+
+	 return true;
+}
+static bool ExQueryAccountBalanceFunc(unsigned char * ipara)
+{
+	unsigned char *pbuffer = ipara;
+		unsigned short length = GetParaLen(pbuffer);
+
+		unsigned char *accountid = NULL;
+		GetParaData(pbuffer, accountid, length);
+		vector<unsigned char> id(accountid, accountid + length);
+		CAccountViewCache view(*pAccountViewTip, true);
+
+		string strParam(accountid,accountid+length);
+		CSecureAccount aAccount;
+		if(strParam.length() != 12) {
+			CBitcoinAddress address(strParam.c_str());
+			CKeyID keyid;
+			if (!address.GetKeyID(keyid))
+				return false;
+
+			if (!view.GetAccount(keyid, aAccount)) {
+				return false;
+			}
+		}
+		uint64_t nbalance = aAccount.GetBalance(chainActive.Height());
+		unsigned int len = 8;
+		memset(ipara, 0, 512);
+		memcpy(ipara,&len,2);
+		memcpy(&ipara[2],&nbalance,len);
+	 return true;
+}
+static bool ExGetTxConFirmHeightFunc(unsigned char * ipara)
+{
+	unsigned char *pbuffer = ipara;
+	unsigned short length = GetParaLen(pbuffer);
+
+	unsigned char *txhash = NULL;
+	GetParaData(pbuffer, txhash, length);
+	vector<unsigned char> hash(txhash, txhash + length);
+	uint256 phash(hash);
+
+
+}
+static bool ExGetTipHeightFunc(unsigned char * ipara)
+{
+	int height = chainActive.Height();
+	memset(ipara, 0, 512);
+	ipara[0] = sizeof(int);
+	memcpy(&ipara[2], &height, sizeof(int));
+	return true;
+}
+static bool ExGetBlockHashFunc(unsigned char * ipara)
+{
+	unsigned char *pbuffer = ipara;
+	unsigned short length = GetParaLen(pbuffer);
+
+	unsigned char *pheight = NULL;
+	GetParaData(pbuffer, pheight, length);
+	int height = 0;
+	memcpy(&height,pheight,sizeof(int));
+	if(height <0|| height > chainActive.Height())
+		return false;
+	CBlockIndex *pindex = chainActive[height];
+	uint256 blockHash = pindex->GetBlockHash();
+
+	memset(ipara, 0, 512);
+	int len = sizeof(uint256);
+	memcpy(ipara,&len,2);
+	memcpy(&ipara[2], &blockHash, sizeof(uint256));
+}
+
+static bool ExGetCurTxConfirmHeightFunc(unsigned char * ipara)
+{
+	 return true;
+}
+static bool ExWriteDataDBFunc(unsigned char * ipara)
+{
+	 return true;
+}
+static bool ExDeleteDataDBFunc(unsigned char * ipara)
+{
+	 return true;
+}
+static bool ExReadDataDBFunc(unsigned char * ipara)
+{
+	 return true;
+}
+static bool ExModifyDataDBFunc(unsigned char * ipara)
+{
+	 return true;
+}
+static bool ExGetDBSizeFunc(unsigned char * ipara)
+{
+	 return true;
+}
+static bool ExGetDBValueFunc(unsigned char * ipara)
+{
+  return true;
+}
+static bool ExGetCurTxHash(unsigned char * ipara)
+{
+	return true;
+}
 const static struct __MapExterFun FunMap[] = { { 0, ExInt64CompFunc },			//
 		{ 1, ExInt64MullFunc },			//
 		{ 2, ExInt64AddFunc },			//
@@ -416,7 +655,22 @@ const static struct __MapExterFun FunMap[] = { { 0, ExInt64CompFunc },			//
 		{ 6, ExDesFunc },			    //
 		{ 7, ExVerifySignatureFunc },   //
 		{ 8, ExSignatureFunc },			//
-		{ 9, ExLogPrintFunc },			//
+		{ 9, ExLogPrintFunc },         //
+		{10,ExGetTxInfoFunc},            //
+		{11,ExGetTxAccountSizeFunc},
+		{12,ExGetTxContactSizeFunc},
+		{13,ExGetAccountPublickeyFunc},
+		{14,ExQueryAccountBalanceFunc},
+		{15,ExGetTxConFirmHeightFunc},
+		{16,ExGetTipHeightFunc},
+		{17,ExGetBlockHashFunc},
+		{301,ExGetCurTxConfirmHeightFunc},
+		{302,ExWriteDataDBFunc},
+		{303,ExDeleteDataDBFunc},
+		{304,ExReadDataDBFunc},
+		{305,ExModifyDataDBFunc},
+		{307,ExGetDBSizeFunc},
+		{308,ExGetDBValueFunc},
 		};
 
 bool CallExternalFunc(INT16U method, unsigned char *ipara) {
@@ -575,6 +829,7 @@ bool CVir8051::run() {
 #endif
 		}
 	}
+
 	return 1;
 }
 void CVir8051::SetExRamData(INT16U addr, const vector<unsigned char> data) {
