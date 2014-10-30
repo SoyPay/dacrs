@@ -18,15 +18,15 @@ class CVmOperate;
 class CVmScriptRun {
 	bool IsRun;
 	shared_ptr<CVir8051> pMcu;
-	vector<shared_ptr<CAccountInfo> > vArbitratorAcc;
-	vector<shared_ptr<CAccountInfo> > vAccount;
-	vector<shared_ptr<CAccountInfo> > RawAccont;
-	vector<shared_ptr<CAccountInfo> > NewAccont;
+	vector<shared_ptr<CAccount> > vArbitratorAcc;
+	vector<shared_ptr<CAccount> > vAccount;
+	vector<shared_ptr<CAccount> > RawAccont;
+	vector<shared_ptr<CAccount> > NewAccont;
 	vector<shared_ptr<CBaseTransaction> > listTx;
 	CVmScript vmScript;
 
 private:
-	bool intial(vector<shared_ptr<CBaseTransaction> >& Tx,CAccountViewCache& view);
+	bool intial(shared_ptr<CBaseTransaction> &Tx, CAccountViewCache& view);
 	bool IsFirstTx() const {
 		return listTx.size() == 1;
 	}
@@ -40,12 +40,12 @@ private:
 public:
 	CVmScriptRun(){};
 
-	vector<shared_ptr<CAccountInfo> > &GetRawAccont();
-	vector<shared_ptr<CAccountInfo> > &GetNewAccont();
+	vector<shared_ptr<CAccount> > &GetRawAccont();
+	vector<shared_ptr<CAccount> > &GetNewAccont();
 	bool OpeatorSecureAccount(const vector<CVmOperate>& listoperate);
-	shared_ptr<CAccountInfo> GetNewAccount(shared_ptr<CAccountInfo>& vOldAccount);
+	shared_ptr<CAccount> GetNewAccount(shared_ptr<CAccount>& vOldAccount);
 
-	bool run(vector<shared_ptr<CBaseTransaction> >& Tx,CAccountViewCache& view);
+	bool run(shared_ptr<CBaseTransaction> &Tx,CAccountViewCache& view);
 	//just for debug
 	CVmScriptRun(CAccountViewCache& view, vector<shared_ptr<CBaseTransaction> >& Tx, CVmScript& script);
 	shared_ptr<vector<CVmOperate>> GetOperate() const;
