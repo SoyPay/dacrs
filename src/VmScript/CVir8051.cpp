@@ -447,23 +447,23 @@ static bool ExGetTxInfoFunc(unsigned char * ipara)
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 	if(GetTransaction(pBaseTx,hash1))
 	{
-		memset(ipara, 0, 512);
-		CSecureTransaction *tx = static_cast<CSecureTransaction*>(pBaseTx.get());
-		length = tx->vContract.size();
-		memcpy(ipara,&length,2);
-		memcpy(&ipara[2],&tx->vContract, length);
-		int len = 0;
-		vector<unsigned char> item;
-		for (auto& it : tx->vRegAccountId)
-		{
-			len += it.size();
-			item.insert(item.end(),it.begin(),it.end());
-		}
-		if((length + len + 4) <512)
-		{
-			memcpy(ipara+length +2,&len,2);
-			memcpy(ipara+length +4,&item[0], len);
-		}
+//		memset(ipara, 0, 512);
+//		CSecureTransaction *tx = static_cast<CSecureTransaction*>(pBaseTx.get());
+//		length = tx->vContract.size();
+//		memcpy(ipara,&length,2);
+//		memcpy(&ipara[2],&tx->vContract, length);
+//		int len = 0;
+//		vector<unsigned char> item;
+//		for (auto& it : tx->vRegAccountId)
+//		{
+//			len += it.size();
+//			item.insert(item.end(),it.begin(),it.end());
+//		}
+//		if((length + len + 4) <512)
+//		{
+//			memcpy(ipara+length +2,&len,2);
+//			memcpy(ipara+length +4,&item[0], len);
+//		}
 	}
 
 
@@ -480,20 +480,20 @@ static bool ExGetTxAccountSizeFunc(unsigned char * ipara)
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 	if(GetTransaction(pBaseTx,hash1))
 	{
-		memset(ipara, 0, 512);
-		CSecureTransaction *tx = static_cast<CSecureTransaction*>(pBaseTx.get());
-		int len = 0;
-		for (auto& it : tx->vRegAccountId)
-		{
-			len += it.size();
-		}
-		if((length + len + 4) <512)
-		{
-			int count = 4;
-			memset(ipara, 0, 512);
-			memcpy(ipara,&count,2);
-			memcpy(&ipara[2],&len, 4);
-		}
+//		memset(ipara, 0, 512);
+//		CSecureTransaction *tx = static_cast<CSecureTransaction*>(pBaseTx.get());
+//		int len = 0;
+//		for (auto& it : tx->vRegAccountId)
+//		{
+//			len += it.size();
+//		}
+//		if((length + len + 4) <512)
+//		{
+//			int count = 4;
+//			memset(ipara, 0, 512);
+//			memcpy(ipara,&count,2);
+//			memcpy(&ipara[2],&len, 4);
+//		}
 	}
 
 
@@ -510,15 +510,15 @@ static bool ExGetTxContactSizeFunc(unsigned char * ipara)
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 	if(GetTransaction(pBaseTx,hash1))
 	{
-		memset(ipara, 0, 512);
-		CSecureTransaction *tx = static_cast<CSecureTransaction*>(pBaseTx.get());
-		int len = tx->vContract.size();
-		if((length + len + 4) <512)
-		{
-			int count = 4;
-			memcpy(ipara,&count,2);
-			memcpy(&ipara[2],&len, 4);
-		}
+//		memset(ipara, 0, 512);
+//		CSecureTransaction *tx = static_cast<CSecureTransaction*>(pBaseTx.get());
+//		int len = tx->vContract.size();
+//		if((length + len + 4) <512)
+//		{
+//			int count = 4;
+//			memcpy(ipara,&count,2);
+//			memcpy(&ipara[2],&len, 4);
+//		}
 	}
 
 }
