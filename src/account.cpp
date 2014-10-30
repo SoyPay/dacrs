@@ -133,6 +133,13 @@ bool CAccountViewCache::BatchWrite(const vector<CAccount> &vAccounts) {
 bool CAccountViewCache::EraseAccount(const CKeyID &keyId) {
 	if(cacheAccounts.count(keyId))
 		cacheAccounts[keyId].keyID = uint160(0);
+	else {
+		CAccount account;
+		if(pBase->GetAccount(keyId, account)) {
+			account.keyID = uint160(0);
+			cacheAccounts[keyId] = account;
+		}
+	}
 	return true;
 }
 bool CAccountViewCache::SetKeyId(const vector<unsigned char> &accountId, const CKeyID &keyId) {
@@ -157,6 +164,12 @@ bool CAccountViewCache::GetKeyId(const vector<unsigned char> &accountId, CKeyID 
 bool CAccountViewCache::EraseKeyId(const vector<unsigned char> &accountId) {
 	if (cacheKeyIds.count(HexStr(accountId)))
 		cacheKeyIds[HexStr(accountId)] = uint160(0);
+	else {
+		CKeyID keyId;
+		if(pBase->GetKeyId(accountId, keyId)) {
+			cacheKeyIds[HexStr(accountId)] = uint160(0);
+		}
+	}
 	return true;
 }
 bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAccount &secureAccount) {
@@ -196,3 +209,57 @@ bool CAccountViewCache::Flush(){
 unsigned int CAccountViewCache::GetCacheSize(){
 	return ::GetSerializeSize(cacheAccounts, SER_DISK, CLIENT_VERSION);
 }
+
+bool CDataBaseView::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {	return false;}
+bool CDataBaseView::SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {return false;}
+bool CDataBaseView::BatchWrite(const map<string, vector<unsigned char> > &mapDatas) {return false;}
+bool CDataBaseView::EraseKey(const vector<unsigned char> &vKey) {return false;}
+bool CDataBaseView::HaveData(const vector<unsigned char> &vKey) {return false;}
+
+
+CDataBaseViewBacked::CDataBaseViewBacked(CDataBaseView &dataBaseView) {pBase = &dataBaseView;}
+bool CDataBaseViewBacked::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {return pBase->GetData(vKey, vValue);}
+bool CDataBaseViewBacked::SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {return pBase->SetData(vKey, vValue);}
+bool CDataBaseViewBacked::BatchWrite(const map<string, vector<unsigned char> > &mapDatas) {return pBase->BatchWrite(mapDatas);}
+bool CDataBaseViewBacked::EraseKey(const vector<unsigned char> &vKey) {return pBase->EraseKey(vKey);}
+bool CDataBaseViewBacked::HaveData(const vector<unsigned char> &vKey) {return pBase->HaveData(vKey);}
+
+CDataBaseViewCache::CDataBaseViewCache(CDataBaseView &base, bool fDummy) : CDataBaseViewBacked(base) {}
+bool CDataBaseViewCache::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
+	if (mapDatas.count(HexStr(vKey)) > 0) {
+		vValue = mapDatas[HexStr(vKey)];
+		return true;
+	}
+	if (!pBase->GetData(vKey, vValue))
+		return false;
+	mapDatas[HexStr(vKey)] = vValue;
+	return true;
+}
+bool CDataBaseViewCache::SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {
+	mapDatas[HexStr(vKey)] = vValue;
+	return true;
+}
+bool CDataBaseViewCache::BatchWrite(const map<string, vector<unsigned char> > &mapData) {
+	for (auto &items : mapData)
+		mapDatas[items.first] = items.second;
+	return true;
+}
+bool CDataBaseViewCache::EraseKey(const vector<unsigned char> &vKey) {
+	if (mapDatas.count(HexStr(vKey)) > 0) {
+		mapDatas[HexStr(vKey)].clear();
+	} else {
+		vector<unsigned char> vValue;
+		if (pBase->GetData(vKey, vValue)) {
+			vValue.clear();
+			mapDatas[HexStr(vKey)] = vValue;
+		}
+	}
+	return true;
+}
+bool CDataBaseViewCache::HaveData(const vector<unsigned char> &vKey) {
+	if (mapDatas.count(HexStr(vKey)) > 0) {
+		return true;
+	}
+	return pBase->HaveData(vKey);
+}
+

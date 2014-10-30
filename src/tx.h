@@ -59,13 +59,12 @@ public:
 };
 
 enum TxType {
-	REG_ACCT_TX = 1,	//!< registe account
-	NORMAL_TX = 2,		//!< nomal transfer money from one account to another account
-	APPEAL_TX = 3,
-	SECURE_TX = 4,
-	FREEZE_TX = 5,
-	REWARD_TX = 6,
-	REG_SCRIPT_TX = 7,	//!< registe script or modify authorizate
+	REG_ACCT_TX = 1,
+	NORMAL_TX = 2,
+	CONTRACT_TX = 3,
+	FREEZE_TX = 4,
+	REWARD_TX = 5,
+	REG_SCRIPT_TX = 6,
 	NULL_TX,
 };
 
@@ -120,7 +119,7 @@ public:
 
 	virtual string ToString(CAccountViewCache &view) const = 0;
 
-	virtual bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) const = 0;
+	virtual bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) = 0;
 
 	virtual bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const = 0;
 
@@ -191,7 +190,7 @@ public:
 		return make_shared<CRegisterAccountTx>(this);
 	}
 
-	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) const;
+	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view);
 
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
 
@@ -267,7 +266,7 @@ public:
 		return make_shared<CTransaction>(this);
 	}
 
-	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) const;
+	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view);
 
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
 
@@ -282,117 +281,32 @@ public:
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
 
-class CAppealTransaction: public CBaseTransaction {
-
+class CContractTransaction : public CBaseTransaction {
 public:
-	vector_unsigned_char vPreAcountIndex;
-	uint256 preTxHash;
-	uint64_t llFees;
-	vector_unsigned_char vContract;
-	vector<vector_unsigned_char> signature;
-public:
-	CAppealTransaction(const CBaseTransaction *pBaseTx) {
-		assert(APPEAL_TX == pBaseTx->nTxType);
-		*this = *(CAppealTransaction *) pBaseTx;
-	}
-
-	CAppealTransaction() {
-		nTxType = APPEAL_TX;
-		llFees = 0;
-		preTxHash = uint256(0);
-		vContract.clear();
-		signature.clear();
-	}
-
-	~CAppealTransaction() {
-
-	}
-
-	uint64_t GetFee() const {
-		return llFees;
-	}
-
-	double GetPriority() const {
-		return llFees / GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
-	}
-
-	IMPLEMENT_SERIALIZE
-	(
-			READWRITE(this->nVersion);
-			nVersion = this->nVersion;
-			READWRITE(vPreAcountIndex);
-			READWRITE(preTxHash);
-			READWRITE(llFees);
-			READWRITE(vContract);
-			READWRITE(signature);
-	)
-
-	uint256 GetHash() const {
-		return SerializeHash(*this);
-	}
-
-	uint256 SignatureHash() const {
-		CHashWriter ss(SER_GETHASH, 0);
-		ss << vPreAcountIndex << preTxHash << llFees << vContract;
-		return ss.GetHash();
-	}
-
-	std::shared_ptr<CBaseTransaction> GetNewInstance() {
-		return make_shared<CAppealTransaction>(this);
-	}
-
-	virtual const vector_unsigned_char& GetvContract() {
-		return vContract;
-	}
-
-	virtual const vector_unsigned_char& GetvSigAcountList() {
-		return vPreAcountIndex;
-	}
-
-	string ToString(CAccountViewCache &view) const;
-
-	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
-
-	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) const;
-
-	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
-
-	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
-
-	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
-};
-
-class CSecureTransaction: public CBaseTransaction {
-
-public:
-	vector_unsigned_char regScriptId;
-	vector<vector_unsigned_char> vArbitratorRegAccId;
-	vector<vector_unsigned_char> vRegAccountId;
+	vector_unsigned_char scriptRegId;
+	vector<vector_unsigned_char> vAccountRegId;
 	uint64_t llFees;
 	vector_unsigned_char vContract;
 	int nValidHeight;
-	vector<vector_unsigned_char> vScripts;
+	vector<vector_unsigned_char> vSignature;
 public:
-	CSecureTransaction(const CBaseTransaction *pBaseTx) {
-		assert(SECURE_TX == pBaseTx->nTxType);
-		*this = *(CSecureTransaction *) pBaseTx;
+	CContractTransaction(const CBaseTransaction *pBaseTx) {
+		assert(CONTRACT_TX == pBaseTx->nTxType);
+		*this = *(CContractTransaction *) pBaseTx;
 	}
 
-	CSecureTransaction() {
-		nTxType = SECURE_TX;
+	CContractTransaction() {
+		nTxType = CONTRACT_TX;
 		llFees = 0;
-		regScriptId.clear();
-		vArbitratorRegAccId.clear();
-		vRegAccountId.clear();
+		scriptRegId.clear();
+		vAccountRegId.clear();
+		vContract.clear();
 		vContract.clear();
 		nValidHeight = 0;
-		vScripts.clear();
-
+		vSignature.clear();
 	}
 
-	~CSecureTransaction() {
+	~CContractTransaction() {
 
 	}
 
@@ -400,13 +314,12 @@ public:
 	(
 			READWRITE(this->nVersion);
 			nVersion = this->nVersion;
-			READWRITE(regScriptId);
-			READWRITE(vArbitratorRegAccId);
-			READWRITE(vRegAccountId);
+			READWRITE(scriptRegId);
+			READWRITE(vAccountRegId);
 			READWRITE(llFees);
 			READWRITE(vContract);
 			READWRITE(nValidHeight);
-			READWRITE(vScripts);
+			READWRITE(vSignature);
 	)
 
 	uint256 GetHash() const {
@@ -423,17 +336,17 @@ public:
 
 	uint256 SignatureHash() const {
 		CHashWriter ss(SER_GETHASH, 0);
-		ss << regScriptId << vArbitratorRegAccId << vRegAccountId << llFees << vContract << nValidHeight;
+		ss << scriptRegId << vAccountRegId << llFees << vContract << nValidHeight ;
 		return ss.GetHash();
 	}
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
-		return make_shared<CSecureTransaction>(this);
+		return make_shared<CContractTransaction>(this);
 	}
 
 	string ToString(CAccountViewCache &view) const;
 
-	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) const;
+	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view);
 
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
 
@@ -450,7 +363,6 @@ public:
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 
 };
-
 class CFreezeTransaction: public CBaseTransaction {
 
 public:
@@ -513,7 +425,7 @@ public:
 
 	string ToString(CAccountViewCache &view) const;
 
-	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) const;
+	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view);
 
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
 
@@ -587,7 +499,7 @@ public:
 
 	string ToString(CAccountViewCache &view) const;
 
-	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) const;
+	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view);
 
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const {
 		return true;
@@ -663,7 +575,7 @@ public:
 
 	string ToString(CAccountViewCache &view) const;
 
-	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) const;
+	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view);
 
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
 
@@ -696,6 +608,7 @@ enum OperType {
 };
 
 class CFund {
+
 public:
 	unsigned char nFundType;
 	uint256 uTxHash;
@@ -822,7 +735,8 @@ class CAccountOperLog {
 
 public:
 	CKeyID keyID;
-	vector<COperFund> vOperFund;IMPLEMENT_SERIALIZE(
+	vector<COperFund> vOperFund;//
+	IMPLEMENT_SERIALIZE(
 			READWRITE(keyID);
 			READWRITE(vOperFund);
 	)
@@ -1098,11 +1012,8 @@ void Serialize(Stream& os, const std::shared_ptr<CBaseTransaction> &pa, int nTyp
 	else if (pa->nTxType == NORMAL_TX) {
 		Serialize(os, *((CTransaction *) (pa.get())), nType, nVersion);
 	}
-	else if (pa->nTxType == APPEAL_TX) {
-		Serialize(os, *((CAppealTransaction *) (pa.get())), nType, nVersion);
-	}
-	else if (pa->nTxType == SECURE_TX) {
-		Serialize(os, *((CSecureTransaction *) (pa.get())), nType, nVersion);
+	else if (pa->nTxType == CONTRACT_TX) {
+		Serialize(os, *((CContractTransaction *) (pa.get())), nType, nVersion);
 	}
 	else if (pa->nTxType == FREEZE_TX) {
 		Serialize(os, *((CFreezeTransaction *) (pa.get())), nType, nVersion);
@@ -1131,13 +1042,9 @@ void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, i
 		pa = make_shared<CTransaction>();
 		Unserialize(is, *((CTransaction *) (pa.get())), nType, nVersion);
 	}
-	else if (nTxType == APPEAL_TX) {
-		pa = make_shared<CAppealTransaction>();
-		Unserialize(is, *((CAppealTransaction *) (pa.get())), nType, nVersion);
-	}
-	else if (nTxType == SECURE_TX) {
-		pa = make_shared<CSecureTransaction>();
-		Unserialize(is, *((CSecureTransaction *) (pa.get())), nType, nVersion);
+	else if (nTxType == CONTRACT_TX) {
+		pa = make_shared<CContractTransaction>();
+		Unserialize(is, *((CContractTransaction *) (pa.get())), nType, nVersion);
 	}
 	else if (nTxType == FREEZE_TX) {
 		pa = make_shared<CFreezeTransaction>();
