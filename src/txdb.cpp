@@ -475,3 +475,33 @@ bool CScriptDB::LoadRegScript(map<string, CContractScript> &mapScriptCache) {
 
 	return true;
 }
+
+
+CSciptDataDB::CSciptDataDB(size_t nCacheSize, bool fMemory, bool fWipe) :
+		db(GetDataDir() / "blocks" / "scriptdata", nCacheSize, fMemory, fWipe){
+
+}
+
+bool CSciptDataDB::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
+	return db.Read(vKey, vValue);
+}
+bool CSciptDataDB::SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {
+	return db.Write(vKey, vValue);
+}
+bool CSciptDataDB::BatchWrite(const map<string, vector<unsigned char> > &mapDatas) {
+	CLevelDBBatch batch;
+	for (auto & item : mapDatas) {
+		if (item.second.empty()) {
+			batch.Erase(ParseHex(item.first));
+		} else {
+			batch.Write(ParseHex(item.first), item.second);
+		}
+	}
+	return db.WriteBatch(batch);
+}
+bool CSciptDataDB::EraseKey(const vector<unsigned char> &vKey) {
+	return db.Erase(vKey);
+}
+bool CSciptDataDB::HaveData(const vector<unsigned char> &vKey) {
+	return db.Exists(vKey);
+}

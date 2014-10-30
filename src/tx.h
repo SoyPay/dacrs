@@ -503,6 +503,7 @@ public:
 	vector_unsigned_char script;
 	uint64_t llFees;
 	int nValidHeight;
+	CAuthorizate aAuthorizate;
 	vector_unsigned_char signature;
 public:
 	CRegistScriptTx(const CBaseTransaction *pBaseTx) {
