@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-class CAccount;
+class CAccountInfo;
 class CAccountingEntry;
 struct CBlockLocator;
 class CKeyPool;
@@ -113,8 +113,8 @@ public:
 
     bool WriteMinVersion(int nVersion);
 
-    bool ReadAccount(const string& strAccount, CAccount& account);
-    bool WriteAccount(const string& strAccount, const CAccount& account);
+    bool ReadAccount(const string& strAccount, CAccountInfo& account);
+    bool WriteAccount(const string& strAccount, const CAccountInfo& account);
 
     /// Write destination data key,value tuple to database
     bool WriteDestData(const string &address, const string &key, const string &value);

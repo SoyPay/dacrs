@@ -122,7 +122,7 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
 {
     CWalletDB walletdb(pwalletMain->strWalletFile);
 
-    CAccount account;
+    CAccountInfo account;
     walletdb.ReadAccount(strAccount, account);
 
     bool bKeyUsed = false;
