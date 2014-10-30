@@ -9,30 +9,36 @@
 #define VMSCRIPT_H_
 
 #include "serialize.h"
-#include "CVmRule.h"
 using namespace std;
+
+/**
+ * @brief Load script binary code class
+ */
 class CVmScript {
 
 public:
-	CVmRule rule;
-	vector<unsigned char> Rom;
-	vector<unsigned char> ScriptExplain;
+	vector<unsigned char> Rom;      		//!< Binary code
+	vector<unsigned char> ScriptExplain;	// !<explain the binary code action
 
 public:
+	/**
+	 * @brief
+	 * @return
+	 */
 	bool IsValid()
 	{
+		///Binary code'size less 64k
 		if(Rom.size() > 64*1024 || Rom.size()<=0)
 			return false;
 		if(Rom[0] != 0x02)
 			return false;
-		return rule.IsValid();
+		return true;
 	}
 
 	CVmScript();
 
 	 IMPLEMENT_SERIALIZE
 	(
-		READWRITE(rule);
 		READWRITE(Rom);
 		READWRITE(ScriptExplain);
 	)
