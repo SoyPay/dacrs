@@ -275,7 +275,7 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
-	if (!vmRun.run(pTx,view,chainActive.Height()))
+	if (!vmRun.run(pTx,view,nHeight))
 		return state.DoS(100,
 				ERROR("UpdateAccounts() : AppealTransaction UpdateAccount txhash=%s run script error",
 						GetHash().GetHex()), UPDATE_ACCOUNT_FAIL, "run-script-error");
@@ -324,7 +324,7 @@ bool CContractTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &
 	}
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
-	if (!vmRun.run(pTx,view,chainActive.Height()))
+	if (!vmRun.run(pTx,view,chainActive.Height() +1))
 		return false;
 
 	return true;
@@ -375,7 +375,7 @@ bool CContractTransaction::CheckTransction(CValidationState &state, CAccountView
 
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
-	if (!vmRun.run(pTx,view,chainActive.Height()))
+	if (!vmRun.run(pTx,view,chainActive.Height()+1))
 		return state.DoS(100,
 				ERROR("CheckTransaction() : AppealTransaction txhash=%s run script error",
 						GetHash().GetHex()), UPDATE_ACCOUNT_FAIL, "run-script-error");

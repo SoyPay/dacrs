@@ -31,7 +31,7 @@ class CVmScriptRun {
 	/**
 	 * current run the tx
 	 */
-	shared_ptr<CBaseTransaction>  listTx;
+	shared_ptr<CBaseTransaction> listTx;
 	/**
 	 * run the script
 	 */
@@ -45,31 +45,33 @@ private:
 	/**
 	 * @brief The initialization function
 	 * @param Tx: run the tx's contact
-	 * @param view:Cache holds account
+	 * @param view: Cache holds account
+	 *  @param nheight: run the Environment the block's height
 	 * @return : check the the tx and account is Legal true is legal false is unlegal
 	 */
-	bool intial(shared_ptr<CBaseTransaction> & Tx,CAccountViewCache& view,int nheight);
+	bool intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& view, int nheight);
 	/**
-	 *
-	 * @param listoperate:run the script return the code,check the code
-	 * @return :true check success
+	 *@brief check aciton
+	 * @param listoperate: run the script return the code,check the code
+	 * @return : true check success
 	 */
 	bool CheckOperate(const vector<CVmOperate> &listoperate) const;
 	/**
 	 *
-	 * @param listoperate:through the vm return code ,The accounts plus money and less money
-	 * @return
+	 * @param listoperate: through the vm return code ,The accounts plus money and less money
+	 * @param view:
+	 * @return true operate account success
 	 */
-	bool OpeatorSecureAccount(const vector<CVmOperate>& listoperate,CAccountViewCache& view);
+	bool OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountViewCache& view);
 	/**
 	 * @brief find the vOldAccount from NewAccont if find success remove it from NewAccont
-	 * @param vOldAccount:the argument
+	 * @param vOldAccount: the argument
 	 * @return:Return the object
 	 */
 	shared_ptr<CAccount> GetNewAccount(shared_ptr<CAccount>& vOldAccount);
 	/**
 	 * @brief find the Account from NewAccont
-	 * @param Account argument
+	 * @param Account: argument
 	 * @return:Return the object
 	 */
 	shared_ptr<CAccount> GetAccount(shared_ptr<CAccount>& Account);
@@ -98,11 +100,11 @@ public:
 	/**
 	 * @brief Is beginning to run the script
 	 * @param Tx: run the tx
-	 * @param view:the second argument
+	 * @param view: the second argument
 	 * @param nheight: block height
 	 * @return:true run success
 	 */
-	bool run(shared_ptr<CBaseTransaction>& Tx,CAccountViewCache& view,int nheight);
+	bool run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view, int nheight);
 	/**
 	 * @brief just for test
 	 * @return:
@@ -111,18 +113,21 @@ public:
 	virtual ~CVmScriptRun();
 };
 
-//#pragma pack(1)
 enum ACCOUNT_TYPE {
-	ACCOUNTID = 0,			//
-	KEYID = 1,
+	// account type
+	ACCOUNTID = 0,			//!< Registration accountid
+	KEYID = 1,			    //!< pulickey
 };
+/**
+ * @brief after run the script,the script output the code
+ */
 class CVmOperate{
 public:
-	unsigned char type;
-	unsigned char accountid[20];
-	unsigned char opeatortype;
-	unsigned int  outheight;
-	unsigned char money[8];
+	unsigned char type;				//!< the account type
+	unsigned char accountid[20];	//!< accountid
+	unsigned char opeatortype;		//!OperType
+	unsigned int  outheight;		//!< the transacion Timeout height
+	unsigned char money[8];			//!<The transfer amount
 	IMPLEMENT_SERIALIZE
 	(
 			READWRITE(type);
@@ -134,5 +139,5 @@ public:
 			READWRITE(money[i]);
 	)
 };
-//#pragma pack()
+
 #endif /* SCRIPTCHECK_H_ */
