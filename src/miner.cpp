@@ -78,9 +78,17 @@ uint64_t nLastBlockSize = 0;
 //base on the last 500 blocks
 uint64_t GetElementForBurn(void)
 {
-	CBlockIndex* pindexPrev = chainActive.Tip();
+	uint64_t sumfee;
+	unsigned int nBlock = GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
+	CBlockIndex* pindex = chainActive.Tip();
+	assert(nBlock < pindex->nHeight);
+	for(int ii = 0; ii < nBlock; ii++)
+	{
+		sumfee += pindex->GetBlockFee();
+		pindex = pindex->pprev;
+	}
 
-	return 0;
+	return (sumfee/nBlock);
 }
 
 // We want to sort transactions by priority and fee, so:

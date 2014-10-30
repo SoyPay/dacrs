@@ -12,11 +12,9 @@
 
 using namespace std;
 
-
 void static BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash) {
 	batch.Write('B', hash);
 }
-
 
 CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) :
 		CLevelDBWrapper(GetDataDir() / "blocks" / "index", nCacheSize, fMemory, fWipe) {
@@ -170,8 +168,8 @@ bool CAccountViewDB::SetBestBlock(const uint256 &hashBlock) {
 	return db.Write('B', hashBlock);
 }
 
-bool CAccountViewDB::BatchWrite(const map<CKeyID, CAccount> &mapAccounts,
-		const map<string, CKeyID> &mapKeyIds, const uint256 &hashBlock) {
+bool CAccountViewDB::BatchWrite(const map<CKeyID, CAccount> &mapAccounts, const map<string, CKeyID> &mapKeyIds,
+		const uint256 &hashBlock) {
 	CLevelDBBatch batch;
 	map<CKeyID, CAccount>::const_iterator iterAccount = mapAccounts.begin();
 	for (; iterAccount != mapAccounts.end(); ++iterAccount) {
@@ -244,13 +242,13 @@ CTransactionCacheDB::CTransactionCacheDB(size_t nCacheSize, bool fMemory, bool f
 		CLevelDBWrapper(GetDataDir() / "blocks" / "txcache", nCacheSize, fMemory, fWipe) {
 }
 
-bool CTransactionCacheDB::SetRelayTx(const uint256 &prevhash, const vector<uint256> &vHashTx) {
-	return Write(make_pair('p', prevhash), vHashTx);
-}
+//bool CTransactionCacheDB::SetRelayTx(const uint256 &prevhash, const vector<uint256> &vHashTx) {
+//	return Write(make_pair('p', prevhash), vHashTx);
+//}
 
-bool CTransactionCacheDB::GetRelayTx(const uint256 &prevhash, vector<uint256> &vHashTx) {
-	return Read(make_pair('p', prevhash), vHashTx);
-}
+//bool CTransactionCacheDB::GetRelayTx(const uint256 &prevhash, vector<uint256> &vHashTx) {
+//	return Read(make_pair('p', prevhash), vHashTx);
+//}
 
 bool CTransactionCacheDB::SetTxCache(const uint256 &blockHash, const vector<uint256> &vHashTx) {
 	return Write(make_pair('h', blockHash), vHashTx);
@@ -260,29 +258,19 @@ bool CTransactionCacheDB::GetTxCache(const uint256 &blockHash, vector<uint256> &
 	return Read(make_pair('h', blockHash), vHashTx);
 }
 
-bool CTransactionCacheDB::Flush(const map<uint256, vector<uint256> > &mapTxHashByBlockHash,
-		const map<uint256, vector<uint256> > &mapTxHashCacheByPrev) {
+bool CTransactionCacheDB::Flush(const map<uint256, vector<uint256> > &mapTxHashByBlockHash) {
 	CLevelDBBatch batch;
 	for (auto & item : mapTxHashByBlockHash) {
-		if(item.second.empty()) {
+		if (item.second.empty()) {
 			batch.Erase(make_pair('h', item.first));
 		} else {
 			batch.Write(make_pair('h', item.first), item.second);
 		}
 	}
-
-	for (auto & item : mapTxHashCacheByPrev) {
-		if (item.second.empty()) {
-			batch.Erase(make_pair('p', item.first));
-		} else {
-			batch.Write(make_pair('p', item.first), item.second);
-		}
-	}
 	return WriteBatch(batch, false);
 }
 
-bool CTransactionCacheDB::LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash,
-		map<uint256, vector<uint256> > &mapTxHashCacheByPrev) {
+bool CTransactionCacheDB::LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash) {
 
 	leveldb::Iterator *pcursor = NewIterator();
 
@@ -306,15 +294,6 @@ bool CTransactionCacheDB::LoadTransaction(map<uint256, vector<uint256> > &mapTxH
 				ssValue >> vTxhash;
 				ssKey >> blockHash;
 				mapTxHashByBlockHash[blockHash] = vTxhash;
-				pcursor->Next();
-			} else if (chType == 'p') {
-				leveldb::Slice slValue = pcursor->value();
-				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-				vector<uint256> hashTxSet;
-				uint256 preTxHash;
-				ssValue >> hashTxSet;
-				ssKey >> preTxHash;
-				mapTxHashCacheByPrev[preTxHash] = hashTxSet;
 				pcursor->Next();
 			} else {
 				break; // if shutdown requested or finished loading block index
@@ -403,23 +382,23 @@ bool CScriptDB::EraseScript(const vector<unsigned char> & scriptId) {
 
 bool CScriptDB::GetContractScript(const vector<unsigned char> &scriptId, CContractScript &contractScript) {
 	contractScript.scriptId = scriptId;
-	if(!GetScript(scriptId, contractScript.scriptContent))
+	if (!GetScript(scriptId, contractScript.scriptContent))
 		return false;
-	if(!GetArbitrator(scriptId, contractScript.setArbitratorAccId))
+	if (!GetArbitrator(scriptId, contractScript.setArbitratorAccId))
 		return false;
 	return true;
 }
 
-bool CScriptDB::Flush(const map<string, CContractScript> &mapScriptCache){
+bool CScriptDB::Flush(const map<string, CContractScript> &mapScriptCache) {
 	CLevelDBBatch batch;
 	vector<unsigned char> vScriptID;
-	map<string, CContractScript>::const_iterator iterScript =  mapScriptCache.begin();
-	for(; iterScript != mapScriptCache.end(); ++iterScript) {
+	map<string, CContractScript>::const_iterator iterScript = mapScriptCache.begin();
+	for (; iterScript != mapScriptCache.end(); ++iterScript) {
 		vScriptID = ParseHex(iterScript->first.c_str());
-		if(iterScript->second.scriptId.empty() ){
+		if (iterScript->second.scriptId.empty()) {
 			batch.Erase(make_pair('s', vScriptID));
 			batch.Erase(make_pair('a', vScriptID));
-		}else{
+		} else {
 			batch.Write(make_pair('s', vScriptID), iterScript->second.scriptContent);
 			batch.Write(make_pair('a', vScriptID), iterScript->second.setArbitratorAccId);
 		}
