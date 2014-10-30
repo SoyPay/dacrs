@@ -59,33 +59,38 @@ bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& 
 CVmScriptRun::~CVmScriptRun() {
 
 }
+tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view, int nheight,
+		uint64_t nBurnFactor) {
 
-bool CVmScriptRun::run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view, int nheight) {
 
-	if (!intial(Tx, view, nheight)) {
-		LogPrint("vm", "VmScript inital Failed\n");
-		return false;
-	}
-	if (!pMcu.get()->run()) {
-		LogPrint("vm", "VmScript run Failed\n");
-		return false;
-	}
-	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
-	CDataStream Contractstream(*retData.get(), SER_DISK, CLIENT_VERSION);
-	vector<CVmOperate> retvmcode;
-	;
-	Contractstream >> retvmcode;
-
-	if (!CheckOperate(retvmcode)) {
-		LogPrint("vm", "VmScript CheckOperate Failed \n"); //,HexStr(retData.get()->begin(),retData.get()->end()));
-		return false;
-	}
-	if (!OpeatorAccount(retvmcode, view)) {
-		LogPrint("vm", "VmScript OpeatorSecureAccount Failed\n");
-		return false;
-	}
-	return true;
+	return std::make_tuple(true, 32, string("shit"));
 }
+		//				{
+//
+//	if (!intial(Tx, view, nheight)) {
+//		LogPrint("vm", "VmScript inital Failed\n");
+//		return false;
+//	}
+//	if (!pMcu.get()->run()) {
+//		LogPrint("vm", "VmScript run Failed\n");
+//		return false;
+//	}
+//	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
+//	CDataStream Contractstream(*retData.get(), SER_DISK, CLIENT_VERSION);
+//	vector<CVmOperate> retvmcode;
+//	;
+//	Contractstream >> retvmcode;
+//
+//	if (!CheckOperate(retvmcode)) {
+//		LogPrint("vm", "VmScript CheckOperate Failed \n"); //,HexStr(retData.get()->begin(),retData.get()->end()));
+//		return false;
+//	}
+//	if (!OpeatorAccount(retvmcode, view)) {
+//		LogPrint("vm", "VmScript OpeatorSecureAccount Failed\n");
+//		return false;
+//	}
+//	return true;
+//}
 shared_ptr<CAccount> CVmScriptRun::GetNewAccount(shared_ptr<CAccount>& vOldAccount) {
 	if (NewAccont.size() == 0)
 		return NULL;

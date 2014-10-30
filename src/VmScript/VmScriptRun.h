@@ -88,28 +88,30 @@ public:
 	 */
 	CVmScriptRun();
 	/**
-	 *
-	 * @return :the variable RawAccont
+	 *@brief get be operate the account
+	 * @return the variable RawAccont
 	 */
 	vector<shared_ptr<CAccount> > &GetRawAccont();
 	/**
-	 *
+	 *@brief get after operate the account
 	 * @return :the variable NewAccont
 	 */
 	vector<shared_ptr<CAccount> > &GetNewAccont();
 	/**
-	 * @brief Is beginning to run the script
+	 * @brief  start to run the script
 	 * @param Tx: run the tx
 	 * @param view: the second argument
 	 * @param nheight: block height
-	 * @return:true run success
+	 * @param nBurnFactor: Executing a step script to spending
+	 * @return: tuple<bool,uint64_t,string>  bool represent the script run success
+	 * uint64_t if the script run sucess Run the script calls the money ,string represent run the failed's  Reason
 	 */
-	bool run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view, int nheight);
+	tuple<bool,uint64_t,string> run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view, int nheight,uint64_t nBurnFactor);
 	/**
 	 * @brief just for test
 	 * @return:
 	 */
-	shared_ptr<vector<CVmOperate>> GetOperate() const;
+	shared_ptr<vector<CVmOperate> > GetOperate() const;
 	virtual ~CVmScriptRun();
 };
 
