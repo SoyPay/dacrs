@@ -133,12 +133,8 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
+		READWRITE(*(CNetAuthorizate*)this);
 		READWRITE(VARINT(nLastOperHeight));
-		READWRITE(VARINT(nAuthorizeTime));
-		READWRITE(VARINT(nMaxMoneyPerTime));
-		READWRITE(VARINT(nUserDefine));
-		READWRITE(VARINT(nMaxMoneyTotal));
-		READWRITE(VARINT(nMaxMoneyPerDay));
 		READWRITE(VARINT(nCurMaxMoneyPerDay));
 	)
 
