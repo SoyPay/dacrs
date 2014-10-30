@@ -83,13 +83,17 @@ JSON_H = \
   
 # VmScript #
 VMSCRIPT_H = \
+	VmScript/CFundOpeator.h \
 	VmScript/CVir8051.h \
+	VmScript/CVmRule.h \
 	VmScript/VmScript.h \
 	VmScript/VmScriptRun.h \
 	VmScript/TestMcu.h
 
 VMSCRIPT_CPP = \
+	VmScript/CFundOpeator.cpp \
 	VmScript/CVir8051.cpp \
+	VmScript/CVmRule.cpp \
 	VmScript/VmScript.cpp \
 	VmScript/VmScriptRun.cpp \
 	VmScript/TestMcu.cpp

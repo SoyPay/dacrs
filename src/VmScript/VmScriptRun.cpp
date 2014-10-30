@@ -190,7 +190,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
 		// about operate account undo
 		uint64_t retValue;
-		bool flag = vmAccount.get()->OperateAccount((OperType) it.opeatortype, fund, &retValue);
+		bool flag = true;//vmAccount.get()->OperateAccount((OperType) it.opeatortype, fund, &retValue);
 		LogPrint("vm", "after muls account:%s\r\n", vmAccount.get()->ToString().c_str());
 		if (flag) {
 			return false;
