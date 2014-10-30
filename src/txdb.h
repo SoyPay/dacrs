@@ -110,4 +110,21 @@ public:
 	bool LoadRegScript(map<string, CContractScript> &mapScriptCache);
 	bool Flush(const map<string, CContractScript> &mapScriptCache);
 };
+
+class CSciptDataDB: public CDataBaseView
+{
+private:
+	CLevelDBWrapper db;
+public:
+	CSciptDataDB(size_t nCacheSize, bool fMemory=false, bool fWipe = false);
+private:
+	CSciptDataDB(const CSciptDataDB&);
+	void operator=(const CSciptDataDB&);
+public:
+	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
+	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
+	bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
+	bool EraseKey(const vector<unsigned char> &vKey);
+	bool HaveData(const vector<unsigned char> &vKey);
+};
 #endif // BITCOIN_TXDB_LEVELDB_H

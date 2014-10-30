@@ -207,7 +207,7 @@ bool CAccountViewCache::Flush(){
 	 return fOk;
 }
 unsigned int CAccountViewCache::GetCacheSize(){
-	return ::GetSerializeSize(cacheAccounts, SER_DISK, CLIENT_VERSION);
+	return ::GetSerializeSize(*this, SER_DISK, CLIENT_VERSION);
 }
 
 bool CDataBaseView::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {	return false;}
@@ -263,3 +263,13 @@ bool CDataBaseViewCache::HaveData(const vector<unsigned char> &vKey) {
 	return pBase->HaveData(vKey);
 }
 
+bool CDataBaseViewCache::Flush() {
+	bool ok = pBase->BatchWrite(mapDatas);
+	if(ok) {
+		mapDatas.clear();
+	}
+	return ok;
+}
+unsigned int CDataBaseViewCache::GetCacheSize() {
+	return ::GetSerializeSize(*this, SER_DISK, CLIENT_VERSION);
+}

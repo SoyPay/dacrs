@@ -561,6 +561,9 @@ bool CheckTransaction(CBaseTransaction *ptx, CValidationState &state, CAccountVi
 	if (::GetSerializeSize(ptx->GetNewInstance(), SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
 		return state.DoS(100, ERROR("CheckTransaction() : size limits failed"), REJECT_INVALID, "bad-txns-oversize");
 
+	if(pTxCacheTip->IsContainTx(ptx->GetHash()))
+		return state.DoS(100, ERROR("CheckTransaction() : tx has been confirmed"), REJECT_INVALID, "bad-txns-oversize");
+
 	if(!ptx->CheckTransction(state, view))
 		return false;
 
