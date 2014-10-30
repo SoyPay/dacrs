@@ -62,35 +62,36 @@ CVmScriptRun::~CVmScriptRun() {
 tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view, int nheight,
 		uint64_t nBurnFactor) {
 
+	CContractTransaction* tx = static_cast<CContractTransaction*>(Tx.get());
+	int maxstep = tx->llFees/nBurnFactor;
+	tuple<bool, uint64_t, string> mytuple;
+	if (!intial(Tx, view, nheight)) {
+		mytuple = std::make_tuple (false, 0, string("VmScript inital Failed\n"));
+		return mytuple;
+	}
+	int step = pMcu.get()->run(maxstep);
+	if (!step) {
+		mytuple = std::make_tuple (false, 0, string("VmScript run Failed\n"));
+		return mytuple;
+	}
+	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
+	CDataStream Contractstream(*retData.get(), SER_DISK, CLIENT_VERSION);
+	vector<CVmOperate> retvmcode;
+	Contractstream >> retvmcode;
 
-	return std::make_tuple(true, 32, string("shit"));
+	if (!CheckOperate(retvmcode)) {
+		mytuple = std::make_tuple (false, 0, string("VmScript CheckOperate Failed \n"));
+		return mytuple;
+	}
+	if (!OpeatorAccount(retvmcode, view)) {
+		mytuple = std::make_tuple (false, 0, string("VmScript OpeatorSecureAccount Failed\n"));
+		return mytuple;
+	}
+	uint64_t spend = step*nBurnFactor;
+	mytuple = std::make_tuple (true, spend, string("VmScript Sucess\n"));
+	return mytuple;
 }
-		//				{
-//
-//	if (!intial(Tx, view, nheight)) {
-//		LogPrint("vm", "VmScript inital Failed\n");
-//		return false;
-//	}
-//	if (!pMcu.get()->run()) {
-//		LogPrint("vm", "VmScript run Failed\n");
-//		return false;
-//	}
-//	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
-//	CDataStream Contractstream(*retData.get(), SER_DISK, CLIENT_VERSION);
-//	vector<CVmOperate> retvmcode;
-//	;
-//	Contractstream >> retvmcode;
-//
-//	if (!CheckOperate(retvmcode)) {
-//		LogPrint("vm", "VmScript CheckOperate Failed \n"); //,HexStr(retData.get()->begin(),retData.get()->end()));
-//		return false;
-//	}
-//	if (!OpeatorAccount(retvmcode, view)) {
-//		LogPrint("vm", "VmScript OpeatorSecureAccount Failed\n");
-//		return false;
-//	}
-//	return true;
-//}
+
 shared_ptr<CAccount> CVmScriptRun::GetNewAccount(shared_ptr<CAccount>& vOldAccount) {
 	if (NewAccont.size() == 0)
 		return NULL;
