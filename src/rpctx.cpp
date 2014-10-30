@@ -34,7 +34,7 @@ static boost::thread_group sThreadGroup;
 string RegIDToAddress(vector<unsigned char> vRegID) {
 	if (vRegID.size() == 6) {
 		CAccountViewCache view(*pAccountViewTip, true);
-		CAccountInfo secureAcc;
+		CAccount secureAcc;
 
 		uint64_t balance = 0;
 		if (view.GetAccount(vRegID, secureAcc)) {
@@ -183,7 +183,7 @@ Value registersecuretx(const Array& params, bool fHelp) {
 
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
-		CAccountInfo secureAcc;
+		CAccount secureAcc;
 
 		uint64_t balance = 0;
 		if (view.GetAccount(keyid, secureAcc)) {
@@ -269,7 +269,7 @@ Value createnormaltx(const Array& params, bool fHelp) {
 
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
-		CAccountInfo secureAcc;
+		CAccount secureAcc;
 
 		uint64_t balance = 0;
 		if (view.GetAccount(keyid, secureAcc)) {
@@ -355,7 +355,7 @@ Value createappealtx(const Array& params, bool fHelp) {
 
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
-		CAccountInfo secureAcc;
+		CAccount secureAcc;
 
 		tx.vPreAcountIndex = vaccindex;
 		tx.preTxHash = txhash;
@@ -424,7 +424,7 @@ Value signappealtx(const Array& params, bool fHelp) {
 		}
 
 		CAccountViewCache view(*pAccountViewTip, true);
-		CAccountInfo secureAcc;
+		CAccount secureAcc;
 
 		uint256 signhash = tx.SignatureHash();
 		int i = 0;
@@ -539,7 +539,7 @@ Value createfreezetx(const Array& params, bool fHelp) {
 		}
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
-		CAccountInfo secureAcc;
+		CAccount secureAcc;
 
 		uint64_t balance = 0;
 		if (view.GetAccount(keyid, secureAcc)) {
@@ -620,7 +620,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
-		CAccountInfo secureAcc;
+		CAccount secureAcc;
 
 		uint64_t balance = 0;
 		if (view.GetAccount(keyid, secureAcc)) {
@@ -706,7 +706,7 @@ Value createsecuretx(const Array& params, bool fHelp) {
 
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
-		CAccountInfo secureAcc;
+		CAccount secureAcc;
 
 		vector<unsigned char> vscript;
 		set<string> sob;
@@ -797,7 +797,7 @@ Value signsecuretx(const Array& params, bool fHelp) {
 
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
-		CAccountInfo secureAcc;
+		CAccount secureAcc;
 
 		if (tx.vRegAccountId.size() <= tx.vScripts.size() || tx.vRegAccountId.size() < 2) {
 			throw runtime_error("in signsecuretx :tx data err\n");
@@ -900,10 +900,10 @@ Value listaddr(const Array& params, bool fHelp) {
 
 		CAccountViewCache accView(*pAccountViewTip, true);
 		for (const auto &keyid : setKeyID) {
-			//find CAccountInfo info by keyid
+			//find CAccount info by keyid
 			bool bReg = false;
 			double dbalance = 0.0;
-			CAccountInfo secureAcc;
+			CAccount secureAcc;
 			ostringstream ostr;
 			if (accView.GetAccount(keyid, secureAcc)) {
 				bReg = secureAcc.IsRegister();
@@ -1019,7 +1019,7 @@ Value getaddramount(const Array& params, bool fHelp) {
 	{
 		LOCK(cs_main);
 
-		CAccountInfo secureAcc;
+		CAccount secureAcc;
 		CAccountViewCache accView(*pAccountViewTip, true);
 		if (accView.GetAccount(keyid, secureAcc))
 		{
@@ -1055,7 +1055,7 @@ Value getaddrfrozendetail(const Array& params, bool fHelp) {
 
 	Array array;
 
-	CAccountInfo secureAcc;
+	CAccount secureAcc;
 	CAccountViewCache accView(*pAccountViewTip, true);
 	if (accView.GetAccount(keyid, secureAcc)) {
 		secureAcc.vFreeze.insert(secureAcc.vFreeze.end(), secureAcc.vSelfFreeze.begin(),
@@ -1266,7 +1266,7 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 	}
 	CAccountViewCache view(*pAccountViewTip, true);
 	string strParam =  params[0].get_str();
-	CAccountInfo aAccount;
+	CAccount aAccount;
 	if(strParam.length() != 12) {
 		CBitcoinAddress address(params[0].get_str());
 		CKeyID keyid;
@@ -1408,7 +1408,7 @@ Value testnormaltx(const Array& params, bool fHelp) {
 	}
 
 	CAccountViewCache view(*pAccountViewTip, true);
-	CAccountInfo secureAcc;
+	CAccount secureAcc;
 
 	vector<unsigned char> vregid;
 	if (recvaddr.GetRegID(vregid)) {
@@ -1451,10 +1451,10 @@ void ThreadTestMiner(int nTimes)
 				bool bNormal = false;
 				CAccountViewCache accView(*pAccountViewTip, true);
 				for (const auto &keyid : setKeyID) {
-					//find CAccountInfo info by keyid
+					//find CAccount info by keyid
 					bool bReg = false;
 					uint64_t balance = 0;
-					CAccountInfo secureAcc;
+					CAccount secureAcc;
 					if (accView.GetAccount(keyid, secureAcc)) {
 						bReg = secureAcc.IsRegister();
 						balance = secureAcc.GetBalance(chainActive.Tip()->nHeight + 100);
@@ -1709,10 +1709,10 @@ Value getoneaddr(const Array& params, bool fHelp) {
 
 		CAccountViewCache accView(*pAccountViewTip, true);
 		for (const auto &keyid : setKeyID) {
-			//find CAccountInfo info by keyid
+			//find CAccount info by keyid
 			bool bReg = false;
 			uint64_t balance = 0;
-			CAccountInfo secureAcc;
+			CAccount secureAcc;
 
 			if (accView.GetAccount(keyid, secureAcc)) {
 				bReg = secureAcc.IsRegister();
@@ -1762,7 +1762,7 @@ Value getaddrbalance(const Array& params, bool fHelp) {
 	{
 		LOCK(cs_main);
 		CAccountViewCache accView(*pAccountViewTip, true);
-		CAccountInfo secureAcc;
+		CAccount secureAcc;
 		if (accView.GetAccount(keyid, secureAcc)) {
 			dbalance = (double) secureAcc.GetBalance(chainActive.Tip()->nHeight + 100) / (double) COIN;
 		}
