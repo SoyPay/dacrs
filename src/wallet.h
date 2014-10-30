@@ -384,11 +384,11 @@ public:
 /** Account information.
  * Stored in wallet with key "acc"+string account name.
  */
-class CAccount {
+class CAccountInfo {
 public:
 	CPubKey vchPubKey;
 
-	CAccount() {
+	CAccountInfo() {
 		SetNull();
 	}
 
