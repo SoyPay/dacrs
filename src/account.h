@@ -83,5 +83,43 @@ public:
 
 };
 
+class CDataBaseView
+{
+public:
+	virtual bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
+	virtual bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
+	virtual bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
+	virtual bool EraseKey(const vector<unsigned char> &vKey);
+	virtual bool HaveData(const vector<unsigned char> &vKey);
+	virtual ~CDataBaseView(){};
+};
+
+class CDataBaseViewBacked : public CDataBaseView {
+protected:
+	CDataBaseView * pBase;
+public:
+	CDataBaseViewBacked(CDataBaseView &dataBaseView);
+	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
+	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
+	bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
+	bool EraseKey(const vector<unsigned char> &vKey);
+	bool HaveData(const vector<unsigned char> &vKey);
+};
+
+class CDataBaseViewCache : public CDataBaseViewBacked {
+public:
+	map<string, vector<unsigned char> > mapDatas;
+public:
+	CDataBaseViewCache(CDataBaseView &base, bool fDummy=false);
+	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
+	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
+	bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
+	bool EraseKey(const vector<unsigned char> &vKey);
+	bool HaveData(const vector<unsigned char> &vKey);
+
+	bool Flush();
+	unsigned int GetCacheSize();
+};
+
 #endif
 
