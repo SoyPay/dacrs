@@ -23,20 +23,23 @@ class CVmScriptRun {
 	/**
 	 * vm before the account state
 	 */
-	vector<shared_ptr<CAccountInfo> > RawAccont;
+	vector<shared_ptr<CAccount> > RawAccont;
 	/**
 	 * vm operate the account  state
 	 */
-	vector<shared_ptr<CAccountInfo> > NewAccont;
+	vector<shared_ptr<CAccount> > NewAccont;
 	/**
 	 * current run the tx
 	 */
 	shared_ptr<CBaseTransaction>  listTx;
-	CAccountViewCache pView;
 	/**
 	 * run the script
 	 */
 	CVmScript vmScript;
+	/**
+	 * the block height
+	 */
+	int height;
 
 private:
 	/**
@@ -45,59 +48,61 @@ private:
 	 * @param view:Cache holds account
 	 * @return : check the the tx and account is Legal true is legal false is unlegal
 	 */
-	bool intial(shared_ptr<CBaseTransaction> & Tx,CAccountViewCache& view);
+	bool intial(shared_ptr<CBaseTransaction> & Tx,CAccountViewCache& view,int nheight);
 	/**
 	 *
 	 * @param listoperate:run the script return the code,check the code
 	 * @return :true check success
 	 */
 	bool CheckOperate(const vector<CVmOperate> &listoperate) const;
-public:
-	/**
-	 * A constructor.
-	 */
-	CVmScriptRun(){};
-	/**
-	 *
-	 * @return :the variable RawAccont
-	 */
-	vector<shared_ptr<CAccountInfo> > &GetRawAccont();
-	/**
-	 *
-	 * @return :the variable NewAccont
-	 */
-	vector<shared_ptr<CAccountInfo> > &GetNewAccont();
 	/**
 	 *
 	 * @param listoperate:through the vm return code ,The accounts plus money and less money
 	 * @return
 	 */
-	bool OpeatorSecureAccount(const vector<CVmOperate>& listoperate);
+	bool OpeatorSecureAccount(const vector<CVmOperate>& listoperate,CAccountViewCache& view);
 	/**
 	 * @brief find the vOldAccount from NewAccont if find success remove it from NewAccont
 	 * @param vOldAccount:the argument
 	 * @return:Return the object
 	 */
-	shared_ptr<CAccountInfo> GetNewAccount(shared_ptr<CAccountInfo>& vOldAccount);
+	shared_ptr<CAccount> GetNewAccount(shared_ptr<CAccount>& vOldAccount);
 	/**
 	 * @brief find the Account from NewAccont
 	 * @param Account argument
 	 * @return:Return the object
 	 */
-	shared_ptr<CAccountInfo> GetAccount(shared_ptr<CAccountInfo>& Account);
+	shared_ptr<CAccount> GetAccount(shared_ptr<CAccount>& Account);
 	/**
 	 * @brief get the account id
 	 * @param value: argument
 	 * @return:Return account id
 	 */
 	vector_unsigned_char GetAccountID(CVmOperate value);
+
+public:
+	/**
+	 * A constructor.
+	 */
+	CVmScriptRun();
+	/**
+	 *
+	 * @return :the variable RawAccont
+	 */
+	vector<shared_ptr<CAccount> > &GetRawAccont();
+	/**
+	 *
+	 * @return :the variable NewAccont
+	 */
+	vector<shared_ptr<CAccount> > &GetNewAccont();
 	/**
 	 * @brief Is beginning to run the script
 	 * @param Tx: run the tx
 	 * @param view:the second argument
+	 * @param nheight: block height
 	 * @return:true run success
 	 */
-	bool run(shared_ptr<CBaseTransaction>& Tx,CAccountViewCache& view);
+	bool run(shared_ptr<CBaseTransaction>& Tx,CAccountViewCache& view,int nheight);
 	/**
 	 * @brief just for test
 	 * @return:
@@ -112,14 +117,15 @@ enum ACCOUNT_TYPE {
 	KEYID = 1,
 };
 class CVmOperate{
-	ACCOUNT_TYPE TYPE;
+public:
+	unsigned char type;
 	unsigned char accountid[20];
 	unsigned char opeatortype;
 	unsigned int  outheight;
 	unsigned char money[8];
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(TYPE);
+			READWRITE(type);
 			for(int i = 0;i < 20;i++)
 			READWRITE(accountid[i]);
 			READWRITE(opeatortype);

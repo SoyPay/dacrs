@@ -6,30 +6,33 @@
  */
 #include "VmScriptRun.h"
 #include "tx.h"
-#include "CFundOpeator.h"
 #include "util.h"
 #include <boost/foreach.hpp>
-
-vector<shared_ptr<CAccountInfo> > &CVmScriptRun::GetRawAccont() {
+CVmScriptRun::CVmScriptRun() {
+	 RawAccont.clear();
+	 NewAccont.clear();
+	 height = 0;;
+}
+vector<shared_ptr<CAccount> > &CVmScriptRun::GetRawAccont() {
 	return RawAccont;
 }
-vector<shared_ptr<CAccountInfo> > &CVmScriptRun::GetNewAccont() {
+vector<shared_ptr<CAccount> > &CVmScriptRun::GetNewAccont() {
 	return NewAccont;
 }
 
-bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx,CAccountViewCache& view) {
+bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx,CAccountViewCache& view,int nheight) {
 
 	listTx = Tx;
-	pView = view;
+	height = nheight;
 	vector<unsigned char> vScript;
 
-	if (Tx.get()->nTxType != SECURE_TX) {
+	if (Tx.get()->nTxType != CONTRACT_TX) {
 		LogPrint("vm", "%s\r\n", "err param");
 		return false;
 	}
 
-	CSecureTransaction* secure = static_cast<CSecureTransaction*>(Tx.get());
-	if (pContractScriptTip->GetScript(HexStr(secure->regScriptId), vScript)) {
+	CContractTransaction* secure = static_cast<CContractTransaction*>(Tx.get());
+	if (pContractScriptTip->GetScript(HexStr(secure->scriptRegId), vScript)) {
 		CDataStream stream(vScript, SER_DISK, CLIENT_VERSION);
 		try {
 			stream >> vmScript;
@@ -41,8 +44,8 @@ bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx,CAccountViewCache& v
 	if (vmScript.IsValid() == false)
 		return false;
 
-	for (auto& tx : secure->vRegAccountId) {
-		auto tem = make_shared<CAccountInfo>();
+	for (auto& tx : secure->vAccountRegId) {
+		auto tem = make_shared<CAccount>();
 		view.GetAccount(tx, *tem.get());
 		RawAccont.push_back(tem);
 	}
@@ -56,9 +59,9 @@ CVmScriptRun::~CVmScriptRun() {
 
 }
 
-bool CVmScriptRun::run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view) {
+bool CVmScriptRun::run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view,int nheight) {
 
-	if (!intial(Tx, view)) {
+	if (!intial(Tx, view,nheight)) {
 		LogPrint("vm", "VmScript inital Failed\n");
 		return false;
 	}
@@ -76,18 +79,18 @@ bool CVmScriptRun::run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view
 		LogPrint("vm", "VmScript CheckOperate Failed \n");//,HexStr(retData.get()->begin(),retData.get()->end()));
 		return false;
 	}
-	if (!OpeatorSecureAccount(retvmcode)) {
+	if (!OpeatorSecureAccount(retvmcode,view)) {
 		LogPrint("vm", "VmScript OpeatorSecureAccount Failed\n");
 		return false;
 	}
 	return true;
 }
-shared_ptr<CAccountInfo> CVmScriptRun::GetNewAccount(shared_ptr<CAccountInfo>& vOldAccount) {
+shared_ptr<CAccount> CVmScriptRun::GetNewAccount(shared_ptr<CAccount>& vOldAccount) {
 	if (NewAccont.size() == 0)
 		return NULL;
-	vector<shared_ptr<CAccountInfo> >::iterator Iter;
+	vector<shared_ptr<CAccount> >::iterator Iter;
 	for (Iter = NewAccont.begin(); Iter != NewAccont.end(); Iter++) {
-		shared_ptr<CAccountInfo> temp = *Iter;
+		shared_ptr<CAccount> temp = *Iter;
 		if (temp.get()->keyID == vOldAccount.get()->keyID) {
 			NewAccont.erase(Iter);
 			return temp;
@@ -95,30 +98,30 @@ shared_ptr<CAccountInfo> CVmScriptRun::GetNewAccount(shared_ptr<CAccountInfo>& v
 	}
 	return NULL;
 }
-shared_ptr<CAccountInfo> CVmScriptRun::GetAccount(shared_ptr<CAccountInfo>& Account)
+shared_ptr<CAccount> CVmScriptRun::GetAccount(shared_ptr<CAccount>& Account)
 {
 	if (RawAccont.size() == 0)
 		return NULL;
-	vector<shared_ptr<CAccountInfo> >::iterator Iter;
+	vector<shared_ptr<CAccount> >::iterator Iter;
 	for (Iter = RawAccont.begin(); Iter != RawAccont.end(); Iter++) {
-		shared_ptr<CAccountInfo> temp = *Iter;
+		shared_ptr<CAccount> temp = *Iter;
 		if (Account.get()->keyID == temp.get()->keyID) {
 					return temp;
 				}
 		}
-	}
 	return NULL;
-}
+	}
+
 bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 	// judge contract rulue
 	uint64_t addmoey,miusmoney;
 	for (auto& it : listoperate) {
 
-		if(it == ADD_FREE || it == ADD_SELF_FREEZD || it == ADD_FREEZD)
+		if(it.opeatortype == ADD_FREE || it.opeatortype  == ADD_SELF_FREEZD || it.opeatortype  == ADD_FREEZD)
 		{
 			addmoey += atoi64((char*)it.money);
 		}
-		if(it == MINUS_FREE || it == MINUS_SELF_FREEZD || it == MINUS_FREEZD)
+		if(it.opeatortype  == MINUS_FREE || it.opeatortype  == MINUS_SELF_FREEZD || it.opeatortype  == MINUS_FREEZD)
 		{
 			miusmoney += atoi64((char*)it.money);
 		}
@@ -128,14 +131,14 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 	}
 	return true;
 }
-vector_unsigned_char GetAccountID(CVmOperate value)
+vector_unsigned_char CVmScriptRun::GetAccountID(CVmOperate value)
 {
 	vector_unsigned_char accountid;
-	if(value.TYPE == ACCOUNTID)
+	if(value.type == ACCOUNTID)
 	{
 		accountid.assign(value.accountid,value.accountid+6);
 	}
-	else if(value.TYPE == KEYID)
+	else if(value.type == KEYID)
 	{
 		accountid.assign(value.accountid,value.accountid+20);
 	}
@@ -154,7 +157,7 @@ shared_ptr<vector<CVmOperate>> CVmScriptRun::GetOperate() const
 	return tem;
 }
 
-bool CVmScriptRun::OpeatorSecureAccount(const vector<CVmOperate>& listoperate) {
+bool CVmScriptRun::OpeatorSecureAccount(const vector<CVmOperate>& listoperate,CAccountViewCache& view) {
 
 	NewAccont.clear();
 	for (auto& it : listoperate) {
@@ -163,7 +166,7 @@ bool CVmScriptRun::OpeatorSecureAccount(const vector<CVmOperate>& listoperate) {
 		fund.nHeight = it.outheight + chainActive.Height();
 		fund.uTxHash = listTx.get()->GetHash();
 
-		auto tem = make_shared<CAccountInfo>();
+		auto tem = make_shared<CAccount>();
 		vector_unsigned_char accountid = GetAccountID(it);;
 		if(accountid.size() == 0)
 		{
@@ -171,12 +174,12 @@ bool CVmScriptRun::OpeatorSecureAccount(const vector<CVmOperate>& listoperate) {
 		}
 
 		view.GetAccount(accountid, *tem.get());
-		shared_ptr<CAccountInfo> vmAccount = GetAccount(tem);
+		shared_ptr<CAccount> vmAccount = GetAccount(tem);
 		if(vmAccount.get() == NULL)
 		{
 			RawAccont.push_back(tem);
 		}
-		shared_ptr<CAccountInfo> vnewAccount = GetNewAccount(tem);
+		shared_ptr<CAccount> vnewAccount = GetNewAccount(tem);
 		if (vnewAccount.get() != NULL) {
 			vmAccount = vnewAccount;
 		}

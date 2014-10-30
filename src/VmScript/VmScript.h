@@ -9,12 +9,10 @@
 #define VMSCRIPT_H_
 
 #include "serialize.h"
-#include "CVmRule.h"
 using namespace std;
 class CVmScript {
 
 public:
-	CVmRule rule;
 	vector<unsigned char> Rom;
 	vector<unsigned char> ScriptExplain;
 
@@ -25,14 +23,13 @@ public:
 			return false;
 		if(Rom[0] != 0x02)
 			return false;
-		return rule.IsValid();
+		return true;
 	}
 
 	CVmScript();
 
 	 IMPLEMENT_SERIALIZE
 	(
-		READWRITE(rule);
 		READWRITE(Rom);
 		READWRITE(ScriptExplain);
 	)
