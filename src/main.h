@@ -531,10 +531,10 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex);
  *  In case pfClean is provided, operation will try to be tolerant about errors, and *pfClean
  *  will be true if no problems were found. Otherwise, the return value will be false in case
  *  of problems. Note that in any case, coins may be modified. */
-bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &view, CBlockIndex* pindex, CTransactionCache &txCache, CContractScriptCache &scriptCache, bool* pfClean = NULL);
+bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &view, CBlockIndex* pindex, CTransactionCache &txCache, CScriptDBViewCache &scriptCache, bool* pfClean = NULL);
 
 // Apply the effects of this block (with given index) on the UTXO set represented by coins
-bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &view, CBlockIndex* pindex, CTransactionCache &txCache, CContractScriptCache &scriptCache, bool fJustCheck = false);
+bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &view, CBlockIndex* pindex, CTransactionCache &txCache, CScriptDBViewCache &scriptCache, bool fJustCheck = false);
 
 // Add this block to the block index, and if necessary, switch the active block chain to this
 bool AddToBlockIndex(CBlock& block, CValidationState& state, const CDiskBlockPos& pos);
@@ -1022,8 +1022,8 @@ extern CScriptDB *pScriptDB;
 /** tx cache */
 extern CTransactionCache *pTxCacheTip;
 
-/** contract script cache */
-extern CContractScriptCache *pContractScriptTip;
+/** contract script data cache */
+extern CScriptDBViewCache *pScriptDBTip;
 
 //extern set<uint256> setTxHashCache;
 //extern map<uint256, set<uint256> > mapTxHashCacheByPrev;

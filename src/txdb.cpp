@@ -327,168 +327,18 @@ bool CTransactionCacheDB::LoadTransaction(map<uint256, vector<uint256> > &mapTxH
 	return true;
 }
 
+
 CScriptDB::CScriptDB(size_t nCacheSize, bool fMemory, bool fWipe) :
-		CLevelDBWrapper(GetDataDir() / "blocks" / "script", nCacheSize, fMemory, fWipe) {
-}
-
-bool CScriptDB::SetArbitrator(const vector<unsigned char> &scriptId, const set<string> &setArbitrator) {
-	return Write(make_pair('a', scriptId), setArbitrator);
-//	string strScriptId = HexStr(scriptId.begin(), scriptId.end());
-//	CContractScript ascript;
-//	if (!mapScript.count(strScriptId)) {
-//		return false;
-//	}
-//
-//	ascript = mapScript[strScriptId];
-//	ascript.setArbitratorAccId = setArbitrator;
-//	mapScript[strScriptId] = ascript;
-//	return true;
-}
-bool CScriptDB::SetScript(const vector<unsigned char> &scriptId, const vector<unsigned char> &vScript) {
-	return Write(make_pair('s', scriptId), vScript);
-//	string strScriptId = HexStr(scriptId.begin(), scriptId.end());
-//	CContractScript ascript;
-//	if (!mapScript.count(strScriptId)) {
-//		ascript.scriptContent = vScript;
-//		ascript.scriptId = scriptId;
-//		ascript.setArbitratorAccId.clear();
-//		mapScript[strScriptId] = ascript;
-//		return true;
-//	}
-//	ascript = mapScript[strScriptId];
-//	ascript.scriptContent = vScript;
-//	mapScript[strScriptId] = ascript;
-//	return true;
-}
-bool CScriptDB::GetArbitrator(const vector<unsigned char> &scriptId, set<string> &setArbitrator) {
-	return Read(make_pair('a', scriptId), setArbitrator);
-//	string strScriptId = HexStr(scriptId.begin(), scriptId.end());
-//	CContractScript ascript;
-//	if (!mapScript.count(strScriptId)) {
-//		return false;
-//	}
-//
-//	ascript = mapScript[strScriptId];
-//	setArbitrator = ascript.setArbitratorAccId;
-//	return true;
-}
-bool CScriptDB::GetScript(const vector<unsigned char> &scriptId, vector<unsigned char> &vScript) {
-	return Read(make_pair('s', scriptId), vScript);
-//	string strScriptId = HexStr(scriptId.begin(), scriptId.end());
-//	CContractScript ascript;
-//	if (!mapScript.count(strScriptId)) {
-//		return false;
-//	}
-//
-//	ascript = mapScript[strScriptId];
-//	vScript = ascript.scriptContent;
-//	return true;
-}
-bool CScriptDB::EraseScript(const vector<unsigned char> & scriptId) {
-	CLevelDBBatch batch;
-	batch.Erase(make_pair('s', scriptId));
-	batch.Erase(make_pair('a', scriptId));
-	return WriteBatch(batch, false);
-//	string strScriptId = HexStr(scriptId.begin(), scriptId.end());
-//	CContractScript ascript;
-//	if (!mapScript.count(strScriptId)) {
-//		return false;
-//	}
-//
-//	ascript = mapScript[strScriptId];
-//	ascript.scriptId.clear();
-//	mapScript[strScriptId] = ascript;
-//	return true;
-}
-
-bool CScriptDB::GetContractScript(const vector<unsigned char> &scriptId, CContractScript &contractScript) {
-	contractScript.scriptId = scriptId;
-	if(!GetScript(scriptId, contractScript.scriptContent))
-		return false;
-	if(!GetArbitrator(scriptId, contractScript.setArbitratorAccId))
-		return false;
-	return true;
-}
-
-bool CScriptDB::Flush(const map<string, CContractScript> &mapScriptCache){
-	CLevelDBBatch batch;
-	vector<unsigned char> vScriptID;
-	map<string, CContractScript>::const_iterator iterScript =  mapScriptCache.begin();
-	for(; iterScript != mapScriptCache.end(); ++iterScript) {
-		vScriptID = ParseHex(iterScript->first.c_str());
-		if(iterScript->second.scriptId.empty() ){
-			batch.Erase(make_pair('s', vScriptID));
-			batch.Erase(make_pair('a', vScriptID));
-		}else{
-			batch.Write(make_pair('s', vScriptID), iterScript->second.scriptContent);
-			batch.Write(make_pair('a', vScriptID), iterScript->second.setArbitratorAccId);
-		}
-	}
-
-	return WriteBatch(batch, false);
-}
-bool CScriptDB::LoadRegScript(map<string, CContractScript> &mapScriptCache) {
-
-	leveldb::Iterator *pcursor = NewIterator();
-	vector<unsigned char> vTemp;
-	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
-	ssKeySet << make_pair('a', vTemp);
-	pcursor->Seek(ssKeySet.str());
-
-	// Load mapBlockIndex
-	while (pcursor->Valid()) {
-		boost::this_thread::interruption_point();
-		try {
-			leveldb::Slice slKey = pcursor->key();
-			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
-			char chType;
-			ssKey >> chType;
-			CContractScript ascript;
-			ssKey >> ascript.scriptId;
-			string strScriptId = HexStr(ascript.scriptId.begin(), ascript.scriptId.end());
-			if (mapScriptCache.count(strScriptId)) {
-				ascript = mapScriptCache[strScriptId];
-			}
-			if (chType == 'a') {
-				leveldb::Slice slValue = pcursor->value();
-				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-				set<string> setArbitrator;
-				ssValue >> setArbitrator;
-				ascript.setArbitratorAccId.insert(setArbitrator.begin(), setArbitrator.end());
-				pcursor->Next();
-			} else if (chType == 's') {
-				leveldb::Slice slValue = pcursor->value();
-				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-				vector<unsigned char> vScript;
-				ssValue >> vScript;
-				ascript.scriptContent = vScript;
-				pcursor->Next();
-			} else {
-				break; // if shutdown requested or finished loading block index
-			}
-			mapScriptCache[strScriptId] = ascript;
-		} catch (std::exception &e) {
-			return ERROR("%s : Deserialize or I/O error - %s", __func__, e.what());
-		}
-	}
-	delete pcursor;
-
-	return true;
-}
-
-
-CSciptDataDB::CSciptDataDB(size_t nCacheSize, bool fMemory, bool fWipe) :
-		db(GetDataDir() / "blocks" / "scriptdata", nCacheSize, fMemory, fWipe){
+		db(GetDataDir() / "blocks" / "script", nCacheSize, fMemory, fWipe){
 
 }
-
-bool CSciptDataDB::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
+bool CScriptDB::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
 	return db.Read(vKey, vValue);
 }
-bool CSciptDataDB::SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {
+bool CScriptDB::SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {
 	return db.Write(vKey, vValue);
 }
-bool CSciptDataDB::BatchWrite(const map<string, vector<unsigned char> > &mapDatas) {
+bool CScriptDB::BatchWrite(const map<string, vector<unsigned char> > &mapDatas) {
 	CLevelDBBatch batch;
 	for (auto & item : mapDatas) {
 		if (item.second.empty()) {
@@ -499,9 +349,9 @@ bool CSciptDataDB::BatchWrite(const map<string, vector<unsigned char> > &mapData
 	}
 	return db.WriteBatch(batch);
 }
-bool CSciptDataDB::EraseKey(const vector<unsigned char> &vKey) {
+bool CScriptDB::EraseKey(const vector<unsigned char> &vKey) {
 	return db.Erase(vKey);
 }
-bool CSciptDataDB::HaveData(const vector<unsigned char> &vKey) {
+bool CScriptDB::HaveData(const vector<unsigned char> &vKey) {
 	return db.Exists(vKey);
 }
