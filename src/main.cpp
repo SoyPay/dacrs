@@ -134,7 +134,7 @@ namespace {
 namespace {
 struct CMainSignals {
     // Notifies listeners of updated transaction data (passing hash, transaction, and optionally the block it is found in.
-    boost::signals2::signal<void (const uint256 &, const CBaseTransaction *, const CBlock *)> SyncTransaction;
+    boost::signals2::signal<void (const uint256 &, CBaseTransaction *, const CBlock *)> SyncTransaction;
     // Notifies listeners of an erased transaction (currently disabled, requires transaction replacement).
     boost::signals2::signal<void (const uint256 &)> EraseTransaction;
     // Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible).
@@ -175,7 +175,7 @@ void UnregisterAllWallets() {
     g_signals.SyncTransaction.disconnect_all_slots();
 }
 
-void SyncWithWallets(const uint256 &hash, const CBaseTransaction *pBaseTx, const CBlock *pblock) {
+void SyncWithWallets(const uint256 &hash, CBaseTransaction *pBaseTx, const CBlock *pblock) {
     g_signals.SyncTransaction(hash, pBaseTx, pblock);
 }
 
@@ -434,10 +434,7 @@ bool AddOrphanTx(CBaseTransaction *ptx)
     }
 
     mapOrphanTransactions[hash] = ptx->GetNewInstance();
-    if(ptx->nTxType == APPEAL_TX){
-    	CAppealTransaction * pAppealTx = (CAppealTransaction *)ptx;
-    	mapOrphanTransactionsByPrev[pAppealTx->preTxHash].insert(hash);
-    }
+
     LogPrint("mempool", "stored orphan tx %s (mapsz %u)\n", hash.ToString(),
         mapOrphanTransactions.size());
     return true;
@@ -526,7 +523,7 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
 
 bool CheckSignScript(const vector<unsigned char> &accountId,const uint256& sighash,
 		const vector_unsigned_char &signatrue, CValidationState &state, CAccountViewCache &view) {
-	CAccountInfo acctInfo;
+	CAccount acctInfo;
 	if (!view.GetAccount(accountId, acctInfo)) {
 		return state.DoS(100, ERROR("CheckSignScript() :tx GetAccount falied"), REJECT_INVALID, "bad-getaccount");
 	}
@@ -672,14 +669,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
          if(!pool.addUnchecked(hash, entry))
         	 return false;
     }
-
-	if (APPEAL_TX == pBaseTx->nTxType) {
-		CAppealTransaction *pAppealTx = (CAppealTransaction *) pBaseTx;
-		if (!pool.exists(pAppealTx->preTxHash) && !pTxCacheTip->IsContainTx(pAppealTx->preTxHash)) {
-			if(pfMissingRefer)
-				*pfMissingRefer = true;
-		}
-	}
 
     g_signals.SyncTransaction(hash, pBaseTx, NULL);
 
@@ -1235,7 +1224,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 		view.SetBestBlock(pindex->GetBlockHash());
 		for (unsigned int i = 0; i < block.vptx.size(); i++) {
 			std::shared_ptr<CRewardTransaction> pRewardTx = dynamic_pointer_cast<CRewardTransaction>(block.vptx[i]);
-			CAccountInfo sourceAccount;
+			CAccount sourceAccount;
 			CRegID accountId(pindex->nHeight, i);
 			CPubKey pubKey(pRewardTx->account);
 			CKeyID keyId = pubKey.GetID();
@@ -2836,11 +2825,8 @@ void static ProcessGetData(CNode* pfrom)
                         if(NORMAL_TX == pBaseTx->nTxType ) {
                         	 ss << *((CTransaction *)(pBaseTx.get()));
                         }
-                        else if(APPEAL_TX == pBaseTx->nTxType) {
-                        	ss << *((CAppealTransaction *)pBaseTx.get());
-                        }
-                        else if(SECURE_TX == pBaseTx->nTxType) {
-                        	ss << *((CSecureTransaction *)pBaseTx.get());
+                        else if(CONTRACT_TX == pBaseTx->nTxType) {
+                        	ss << *((CContractTransaction *)pBaseTx.get());
                         }
                         else if(REG_ACCT_TX == pBaseTx->nTxType) {
                         	ss << *((CRegisterAccountTx *)pBaseTx.get());
@@ -3936,10 +3922,8 @@ std::shared_ptr<CBaseTransaction> CreateNewEmptyTransaction(unsigned char uType)
 		return make_shared<CTransaction>();
 	case REG_ACCT_TX:
 		return make_shared<CRegisterAccountTx>();
-	case APPEAL_TX:
-		return make_shared<CAppealTransaction>();
-	case SECURE_TX:
-		return make_shared<CSecureTransaction>();
+	case CONTRACT_TX:
+		return make_shared<CContractTransaction>();
 	case FREEZE_TX:
 		return make_shared<CFreezeTransaction>();
 	case REWARD_TX:

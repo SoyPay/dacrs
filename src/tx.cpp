@@ -28,7 +28,7 @@ string CRegID::ToString() const {
 
 bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
-	CAccountInfo sourceAccount;
+	CAccount sourceAccount;
 	CRegID accountId(nHeight, nIndex);
 	CKeyID keyId = pubKey.GetID();
 	if (!view.GetAccount(keyId, sourceAccount))
@@ -51,7 +51,7 @@ bool CRegisterAccountTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, 
 		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
 	//drop account
 	CRegID accountId(nHeight, nIndex);
-	CAccountInfo oldAccount;
+	CAccount oldAccount;
 	if (!view.GetAccount(accountId.vRegID, oldAccount))
 		return state.DoS(100,
 				ERROR("UpdateAccounts() : read secure account=%s info error", HexStr(accountId.vRegID).c_str()),
@@ -82,7 +82,7 @@ bool CRegisterAccountTx::IsValidHeight(int nCurHeight, int nTxCacheHeight) const
 		return false;
 	return true;
 }
-bool CRegisterAccountTx::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) const {
+bool CRegisterAccountTx::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) {
 	if (!pubKey.IsFullyValid()) {
 		return false;
 	}
@@ -116,8 +116,8 @@ bool CRegisterAccountTx::CheckTransction(CValidationState &state, CAccountViewCa
 
 bool CTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
-	CAccountInfo sourceAccount;
-	CAccountInfo desAccount;
+	CAccount sourceAccount;
+	CAccount desAccount;
 	if (!view.GetAccount(srcRegAccountId, sourceAccount))
 		return state.DoS(100,
 				ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(srcRegAccountId)),
@@ -143,7 +143,7 @@ bool CTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidatio
 	CFund addFund(FREEDOM_FUND, GetHash(), addValue, nHeight);
 	desAccount.CompactAccount(nHeight - 1);
 	desAccount.OperateAccount(ADD_FREE, addFund);
-	vector<CAccountInfo> vSecureAccounts;
+	vector<CAccount> vSecureAccounts;
 	vSecureAccounts.push_back(sourceAccount);
 	vSecureAccounts.push_back(desAccount);
 	if (!view.BatchWrite(vSecureAccounts))
@@ -155,8 +155,8 @@ bool CTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidatio
 }
 bool CTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
-	CAccountInfo sourceAccount;
-	CAccountInfo desAccount;
+	CAccount sourceAccount;
+	CAccount desAccount;
 	if (!view.GetAccount(srcRegAccountId, sourceAccount))
 		return state.DoS(100,
 				ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(srcRegAccountId)),
@@ -185,7 +185,7 @@ bool CTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValid
 				ERROR("UpdateAccounts() : read destination keyid=%s tx undo info error", desAccount.keyID.GetHex()),
 				UPDATE_ACCOUNT_FAIL, "bad-read-txundoinfo");
 	desAccount.UndoOperateAccount(accountOperLog);
-	vector<CAccountInfo> vSecureAccounts;
+	vector<CAccount> vSecureAccounts;
 	vSecureAccounts.push_back(sourceAccount);
 	vSecureAccounts.push_back(desAccount);
 
@@ -194,7 +194,7 @@ bool CTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValid
 				"bad-read-accountdb");
 	return true;
 }
-bool CTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) const {
+bool CTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) {
 	CKeyID srcKeyId;
 	if (!view.GetKeyId(srcRegAccountId, srcKeyId))
 		return false;
@@ -260,7 +260,7 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 	}
 
 	if (desRegAccountId.size() == 20) {
-		CAccountInfo acctDesInfo;
+		CAccount acctDesInfo;
 		if (view.GetAccount(desRegAccountId, acctDesInfo)) {
 			return state.DoS(100,
 					ERROR(
@@ -271,31 +271,15 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 	return true;
 }
 
-bool CAppealTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
+bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
-	vector<std::shared_ptr<CBaseTransaction> > vTx;
-	std::shared_ptr<CBaseTransaction> preTx;
-	if (!GetTransaction(preTx, preTxHash))
-		return state.DoS(100,
-				ERROR("UpdateAccounts() : AppealTransaction UpdateAccount txhash=%s get tx detail info error",
-						preTxHash.GetHex()), UPDATE_ACCOUNT_FAIL, "get-tx-error");
-	vTx.push_back(preTx);
-	vector<uint256> relayTx = txCache.GetRelayTx(preTxHash);
-	for (auto & item : relayTx) {
-		std::shared_ptr<CBaseTransaction> pTx;
-		if (!GetTransaction(pTx, item))
-			return state.DoS(100,
-					ERROR("UpdateAccounts() : AppealTransaction UpdateAccount txhash=%s get tx detail info error",
-							preTxHash.GetHex()), UPDATE_ACCOUNT_FAIL, "get-tx-error");
-		vTx.push_back(pTx);
-	}
-	vTx.push_back(GetNewInstance());
 	CVmScriptRun vmRun;
-	if (!vmRun.run(vTx,view))
+	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
+	if (!vmRun.run(pTx,view,chainActive.Height()))
 		return state.DoS(100,
 				ERROR("UpdateAccounts() : AppealTransaction UpdateAccount txhash=%s run script error",
 						GetHash().GetHex()), UPDATE_ACCOUNT_FAIL, "run-script-error");
-	vector<std::shared_ptr<CAccountInfo> > &vAccount = vmRun.GetNewAccont();
+	vector<std::shared_ptr<CAccount> > &vAccount = vmRun.GetNewAccont();
 	for (auto & itemAccount : vAccount) {
 		if (!view.SetAccount(itemAccount->keyID, *itemAccount))
 			return state.DoS(100,
@@ -305,14 +289,14 @@ bool CAppealTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 	}
 	return true;
 }
-bool CAppealTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
+bool CContractTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
 		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
 	vector<CKeyID> vKeyId;
 	if (!GetAddress(vKeyId, view))
 		return state.DoS(100, ERROR("UpdateAccounts() : AppealTransaction undo updateaccount get key id error"),
 				UPDATE_ACCOUNT_FAIL, "get-keyid-error");
 	for (auto & keyId : vKeyId) {
-		CAccountInfo secureAccount;
+		CAccount secureAccount;
 		if (!view.GetAccount(keyId, secureAccount)) {
 			return state.DoS(100,
 					ERROR("UpdateAccounts() : AppealTransaction undo updateaccount read keyid= %s info error",
@@ -330,65 +314,55 @@ bool CAppealTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, 
 	}
 	return true;
 }
-bool CAppealTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) const {
+
+bool CContractTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) {
 	CKeyID keyId;
-	std::shared_ptr<CBaseTransaction> preTx;
-	if (!GetTransaction(preTx, preTxHash))
-		return false;
-	vector<CKeyID> vPreTxAddr;
-	if (!preTx->GetAddress(vPreTxAddr, view))
-		return false;
-	for (auto & item : vPreAcountIndex) {
-		vAddr.push_back(vPreTxAddr[item]);
+	for(auto & accountId : vAccountRegId) {
+		if(!view.GetKeyId(accountId, keyId))
+			return false;
+		vAddr.push_back(keyId);
 	}
+	CVmScriptRun vmRun;
+	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
+	if (!vmRun.run(pTx,view,chainActive.Height()))
+		return false;
+
 	return true;
 }
-bool CAppealTransaction::IsValidHeight(int nCurHeight, int nTxCacheHeight) const {
-	if (pTxCacheTip->IsContainTx(preTxHash)) {
-		std::shared_ptr<CBaseTransaction> pBaseTx;
-		if(!GetTransaction(pBaseTx, preTxHash))
-			return ERROR("read pre tx from database error");
-		return pBaseTx->IsValidHeight(nCurHeight, nTxCacheHeight);
-	}
-	return ERROR("can't find pre tx hash in txcache");
 
+bool CContractTransaction::IsValidHeight(int nCurHeight, int nTxCacheHeight) const {
+	if (nValidHeight > nCurHeight + nTxCacheHeight / 2)
+		return false;
+	if (nValidHeight < nCurHeight - nTxCacheHeight / 2)
+		return false;
+	return true;
 }
-string CAppealTransaction::ToString(CAccountViewCache &view) const {
+
+string CContractTransaction::ToString(CAccountViewCache &view) const {
 	string str;
-	str += strprintf("txType=%s, hash=%s, ver=%d, vPreAcountIndex=%s, preTxHash=%s, llFees=%ld, vContract=%s\n",
-	txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, HexStr(vPreAcountIndex).c_str(), preTxHash.GetHex(), llFees, HexStr(vContract).c_str());
+	string strAccountId("");
+	for(auto accountId : vAccountRegId) {
+		strAccountId += HexStr(accountId);
+		strAccountId += "|";
+	}
+	strAccountId = strAccountId.substr(0, strAccountId.length()-1);
+	str += strprintf("txType=%s, hash=%s, ver=%d, vAccountRegId=%s, llFees=%ld, vContract=%s\n",
+	txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, strAccountId, llFees, HexStr(vContract).c_str());
 	return str;
 }
-bool CAppealTransaction::CheckTransction(CValidationState &state, CAccountViewCache &view) {
+bool CContractTransaction::CheckTransction(CValidationState &state, CAccountViewCache &view) {
 	if (!MoneyRange(llFees)) {
 		return state.DoS(100, ERROR("CheckTransaction() : appeal tx fee out of range"), REJECT_INVALID,
 				"bad-appeal-fee-toolarge");
 	}
 
-	if (vPreAcountIndex.size() != signature.size()) {
-		return state.DoS(100, ERROR("CheckTransaction() :vPre size not equal to sign size"), REJECT_INVALID,
+	if (vAccountRegId.size() != vSignature.size()) {
+		return state.DoS(100, ERROR("CheckTransaction() :account size not equal to sign size"), REJECT_INVALID,
 				"bad-vpre-size ");
 	}
 
-	std::shared_ptr<CBaseTransaction> pPrevSecureTx = CreateNewEmptyTransaction(SECURE_TX);
-	if (!GetTransaction(pPrevSecureTx, preTxHash)) {
-		return state.DoS(100, ERROR("CheckTransaction() :GetTransaction failed"), REJECT_INVALID, "bad-get-tx");
-	}
-
-	unsigned char nIndex = 0;
-	vector<unsigned char> accountID;
-	uint256 sighash = SignatureHash();
-	std::shared_ptr<CSecureTransaction> pSecureTx = dynamic_pointer_cast<CSecureTransaction>(pPrevSecureTx);
-	for (int i = 0; i < vPreAcountIndex.size(); i++) {
-		nIndex = vPreAcountIndex.at(i);
-		if(nIndex >= pSecureTx->vArbitratorRegAccId.size()) {
-			nIndex -= pSecureTx->vArbitratorRegAccId.size();
-			accountID = pSecureTx->vRegAccountId.at(nIndex);
-		} else {
-			accountID = pSecureTx->vArbitratorRegAccId.at(nIndex);
-		}
-
-		if (!CheckSignScript(accountID, sighash, signature.at(i), state, view)) {
+	for (int i = 0; i < vAccountRegId.size(); i++) {
+		if (!CheckSignScript(vAccountRegId[i], SignatureHash(), vSignature[i], state, view)) {
 			return state.DoS(100, ERROR("CheckTransaction() :CheckSignScript failed"), REJECT_INVALID,
 					"bad-signscript-check");
 		}
@@ -398,163 +372,12 @@ bool CAppealTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 	if (pTxCacheTip->IsContainTx(GetHash())) {
 		return true;
 	}
-	vector<std::shared_ptr<CBaseTransaction> > vTx;
-	std::shared_ptr<CBaseTransaction> preTx;
-	vTx.push_back(pSecureTx);
-	vector<uint256> relayTx = pTxCacheTip->GetRelayTx(preTxHash);
-	for (auto & itemTxHash : relayTx) {
-		std::shared_ptr<CBaseTransaction> pRelayTx;
-		if (!GetTransaction(pRelayTx, itemTxHash))
-			return state.DoS(100,
-					ERROR("CheckTransaction() : AppealTransaction txhash=%s get relay tx detail info error",
-							itemTxHash.GetHex()), UPDATE_ACCOUNT_FAIL, "get-tx-error");
-		vTx.push_back(pRelayTx);
-	}
-	vTx.push_back(GetNewInstance());
+
 	CVmScriptRun vmRun;
-	if (!vmRun.run(vTx,view))
+	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
+	if (!vmRun.run(pTx,view,chainActive.Height()))
 		return state.DoS(100,
 				ERROR("CheckTransaction() : AppealTransaction txhash=%s run script error",
-						GetHash().GetHex()), UPDATE_ACCOUNT_FAIL, "run-script-error");
-	return true;
-}
-
-bool CSecureTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
-	vector<std::shared_ptr<CBaseTransaction> > vTx;
-	vTx.push_back(GetNewInstance());
-	CVmScriptRun vmRun;
-	if (!vmRun.run(vTx,view))
-		return state.DoS(100,
-				ERROR("UpdateAccounts() : SecureTransaction udateaccount txhash=%s run script error",
-						GetHash().GetHex()), UPDATE_ACCOUNT_FAIL, "run-script-error");
-	vector<std::shared_ptr<CAccountInfo> > &vAccount = vmRun.GetNewAccont();
-	for (auto & itemAccount : vAccount) {
-		LogPrint("INFO", "after run script securetx:%s\n", itemAccount->ToString());
-		if (!view.SetAccount(itemAccount->keyID, *itemAccount))
-		{
-			return state.DoS(100,
-					ERROR("UpdateAccounts() : SecureTransaction udateaccount write secure account info error"),
-					UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
-		}
-		txundo.vAccountOperLog.push_back((itemAccount->accountOperLog));
-	}
-	return true;
-}
-bool CSecureTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
-		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
-	vector<vector_unsigned_char>::iterator iterAccount = vRegAccountId.begin();
-	for (; iterAccount != vRegAccountId.end(); ++iterAccount) {
-		CAccountInfo secureAccount;
-		if (!view.GetAccount(*iterAccount, secureAccount)) {
-			return state.DoS(100,
-					ERROR("UpdateAccounts() : SecureTransaction undo updateaccount read accountId= %s info error",
-							HexStr(*iterAccount)), UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
-		}
-		CAccountOperLog accountOperLog;
-		if (txundo.GetAccountOperLog(secureAccount.keyID, accountOperLog)) {
-			secureAccount.UndoOperateAccount(accountOperLog);
-			if (!view.SetAccount(*iterAccount, secureAccount))
-				return state.DoS(100,
-						ERROR(
-								"UpdateAccounts() : SecureTransaction undo updateaccount write accountId= %s account info error"),
-						UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
-		}
-	}
-	return true;
-}
-bool CSecureTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) const {
-	for (int i = 0; i < vArbitratorRegAccId.size(); ++i) {
-		CKeyID keyId;
-		if (!view.GetKeyId(vArbitratorRegAccId[i], keyId))
-			return false;
-		vAddr.push_back(keyId);
-	}
-	for (int i = 0; i < vRegAccountId.size(); ++i) {
-		CKeyID keyId;
-		if (!view.GetKeyId(vRegAccountId[i], keyId))
-			return false;
-		vAddr.push_back(keyId);
-	}
-	return true;
-}
-bool CSecureTransaction::IsValidHeight(int nCurHeight, int nTxCacheHeight) const {
-	if (nValidHeight > nCurHeight + nTxCacheHeight / 2)
-		return false;
-	if (nValidHeight < max(0,nCurHeight - nTxCacheHeight / 2))
-		return false;
-	return true;
-}
-string CSecureTransaction::ToString(CAccountViewCache &view) const {
-	string str;
-	str += strprintf("txType=%s, hash=%s, ver=%d, regScriptId=%s, vArbitrator.size=%d, vAccountId.size=%d, llFees=%ld, vContract=%s, nValidHeight=%d\n",
-	txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, HexStr(regScriptId).c_str(), vArbitratorRegAccId.size(), vRegAccountId.size(), llFees, HexStr(vContract).c_str(), nValidHeight);
-	for (unsigned int i = 0; i < vArbitratorRegAccId.size(); ++i) {
-		if (0 == i)
-			str += "arbitrator account id: \n";
-		str += "    " + HexStr(vArbitratorRegAccId[i]) + "\n";
-	}
-	for (unsigned int i = 0; i < vRegAccountId.size(); ++i) {
-		if (0 == i)
-			str += "transaction account id: \n";
-		str += "    " + HexStr(vRegAccountId[i]) + "\n";
-	}
-	return str;
-}
-bool CSecureTransaction::CheckTransction(CValidationState &state, CAccountViewCache &view) {
-	if (!MoneyRange(llFees)) {
-		return state.DoS(100, ERROR("CheckTransaction() : secure tx fee out of range"), REJECT_INVALID,
-				"bad-secure-fee-toolarge");
-	}
-
-	if (vRegAccountId.size() != vScripts.size() || vRegAccountId.size() < 2) {
-		return state.DoS(100, ERROR("CheckTransaction() :vAccountID size error"), REJECT_INVALID, "bad-sec_vAcc-size");
-	}
-
-	vector<unsigned char> vscript;
-	set<string> sob;
-	if (!pContractScriptTip->GetScript(HexStr(regScriptId), vscript)) {
-		return state.DoS(100, ERROR("CheckTransaction() :GetScript failed"), REJECT_INVALID, "bad-sec_regScriptId");
-	}
-
-	if (!pContractScriptTip->GetArbitrator(HexStr(regScriptId), sob)) {
-		return state.DoS(100, ERROR("CheckTransaction() :GetArbitrator falied"), REJECT_INVALID, "bad-sec_regScriptId");
-	}
-
-	CAccountInfo secureAcc;
-	for (auto& vregid : vArbitratorRegAccId) {
-		if (!view.GetAccount(vregid, secureAcc)) {
-			return state.DoS(100, ERROR("CheckTransaction() :unregister ID in vArbitratorAccId"), REJECT_INVALID,
-					"bad-sec-vAr");
-		}
-
-		if (sob.end() == sob.find(HexStr(vregid))) {
-			return state.DoS(100, ERROR("CheckTransaction() :unregister script ob RegID in vArbitratorAccId"),
-					REJECT_INVALID, "bad-sec_vAr");
-		}
-	}
-
-	int i = 0;
-	uint256 signhash = SignatureHash();
-	for (auto& vregid : vRegAccountId) {
-		if (!CheckSignScript(vregid, signhash, vScripts[i], state, view)) {
-			return state.DoS(100, ERROR("CheckTransaction() :CheckSignScript failed"), REJECT_INVALID,
-					"bad-signscript-check");
-		}
-		i++;
-	}
-
-	//for VerifyDB checkblock return true
-	if (pTxCacheTip->IsContainTx(GetHash())) {
-		return true;
-	}
-
-	vector<std::shared_ptr<CBaseTransaction> > vTx;
-	vTx.push_back(GetNewInstance());
-	CVmScriptRun vmRun;
-	if (!vmRun.run(vTx,view))
-		return state.DoS(100,
-				ERROR("CheckTransaction() : SecureTransaction txhash=%s run script error",
 						GetHash().GetHex()), UPDATE_ACCOUNT_FAIL, "run-script-error");
 	return true;
 }
@@ -563,7 +386,7 @@ bool CFreezeTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
 	uint64_t minusValue = llFees;
 	uint64_t freezeValue = llFreezeFunds;
-	CAccountInfo secureAccount;
+	CAccount secureAccount;
 	if (!view.GetAccount(regAccountId, secureAccount)) {
 		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(regAccountId)),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
@@ -585,7 +408,7 @@ bool CFreezeTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 }
 bool CFreezeTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
 		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
-	CAccountInfo secureAccount;
+	CAccount secureAccount;
 	if (!view.GetAccount(regAccountId, secureAccount))
 		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(regAccountId)),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
@@ -599,7 +422,7 @@ bool CFreezeTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, 
 				"bad-read-accountdb");
 	return true;
 }
-bool CFreezeTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) const {
+bool CFreezeTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) {
 	CKeyID keyId;
 	if (!view.GetKeyId(regAccountId, keyId))
 		return false;
@@ -641,7 +464,7 @@ bool CFreezeTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 
 bool CRewardTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
-	CAccountInfo secureAccount;
+	CAccount secureAccount;
 	if (!view.GetAccount(account, secureAccount)) {
 		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(account)),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
@@ -664,7 +487,7 @@ bool CRewardTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, 
 				ERROR("UpdateAccounts() : account  %s error, either accountId 6 bytes, or pubkey 65 bytes",
 						HexStr(account)), UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	}
-	CAccountInfo secureAccount;
+	CAccount secureAccount;
 	if (!view.GetAccount(account, secureAccount)) {
 		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(account)),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
@@ -679,7 +502,7 @@ bool CRewardTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, 
 				"bad-read-accountdb");
 	return true;
 }
-bool CRewardTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) const {
+bool CRewardTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) {
 	CKeyID keyId;
 	if (account.size() == 6) {
 		if (!view.GetKeyId(account, keyId))
@@ -707,7 +530,7 @@ bool CRewardTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
 	LogPrint("INFO" ,"registscript UpdateAccount\n");
-	CAccountInfo secureAccount;
+	CAccount secureAccount;
 	if (!view.GetAccount(regAccountId, secureAccount)) {
 		return state.DoS(100, ERROR("UpdateAccounts() : read regist addr %s account info error", HexStr(regAccountId)),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
@@ -763,7 +586,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 }
 bool CRegistScriptTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
-	CAccountInfo secureAccount;
+	CAccount secureAccount;
 	if (!view.GetAccount(regAccountId, secureAccount)) {
 		return state.DoS(100, ERROR("UpdateAccounts() : read regist addr %s account info error", HexStr(regAccountId)),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
@@ -796,7 +619,7 @@ bool CRegistScriptTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CVa
 				"bad-save-accountdb");
 	return true;
 }
-bool CRegistScriptTx::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) const {
+bool CRegistScriptTx::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) {
 	CKeyID keyId;
 	if (!view.GetKeyId(regAccountId, keyId))
 		return false;
@@ -819,7 +642,7 @@ string CRegistScriptTx::ToString(CAccountViewCache &view) const {
 	return str;
 }
 bool CRegistScriptTx::CheckTransction(CValidationState &state, CAccountViewCache &view) {
-	CAccountInfo  account;
+	CAccount  account;
 	if(!view.GetAccount(regAccountId, account)) {
 		return state.DoS(100, ERROR("CheckTransaction() : register script tx get registe account info error"), REJECT_INVALID,
 				"bad-read-account-info");
@@ -926,14 +749,14 @@ bool CTxUndo::GetAccountOperLog(const CKeyID &keyId, CAccountOperLog &accountOpe
 	return false;
 }
 
-void CAccountInfo::CompactAccount(int nCurHeight) {
+void CAccount::CompactAccount(int nCurHeight) {
 	MergerFund(vRewardFund, nCurHeight);
 	MergerFund(vFreeze, nCurHeight);
 	MergerFund(vSelfFreeze, nCurHeight);
 	MergerFund(vFreedomFund, nCurHeight);
 }
 
-void CAccountInfo::MergerFund(vector<CFund> &vFund, int nCurHeight) {
+void CAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
 	stable_sort(vFund.begin(), vFund.end(), greater<CFund>());
 	uint64_t value = 0;
 	vector<CFund> vMinusFunds;
@@ -981,11 +804,11 @@ void CAccountInfo::MergerFund(vector<CFund> &vFund, int nCurHeight) {
 	}
 }
 
-void CAccountInfo::WriteOperLog(const COperFund &operLog) {
+void CAccount::WriteOperLog(const COperFund &operLog) {
 	accountOperLog.InsertOperateLog(operLog);
 }
 
-bool CAccountInfo::OperateAccount(OperType type, const CFund &fund, uint64_t* pOperatedValue) {
+bool CAccount::OperateAccount(OperType type, const CFund &fund, uint64_t* pOperatedValue) {
 	if (keyID != accountOperLog.keyID)
 		accountOperLog.keyID = keyID;
 
@@ -1048,7 +871,7 @@ bool CAccountInfo::OperateAccount(OperType type, const CFund &fund, uint64_t* pO
 	return bRet;
 }
 
-void CAccountInfo::AddToFreeze(const CFund &fund) {
+void CAccount::AddToFreeze(const CFund &fund) {
 	bool bMerge = false;
 	for (auto& item:vFreeze) {
 		if (item.uTxHash == fund.uTxHash && item.nHeight == fund.nHeight) {
@@ -1063,7 +886,7 @@ void CAccountInfo::AddToFreeze(const CFund &fund) {
 	WriteOperLog(ADD_FUND, fund);
 }
 
-bool CAccountInfo::MinusFree(const CFund &fund, uint64_t& nOperateValue) {
+bool CAccount::MinusFree(const CFund &fund, uint64_t& nOperateValue) {
 	vector<CFund> vOperFund;
 	uint64_t nCandidateValue = 0;
 	vector<CFund>::iterator iterFound = vFreedomFund.begin();
@@ -1116,7 +939,7 @@ bool CAccountInfo::MinusFree(const CFund &fund, uint64_t& nOperateValue) {
 
 }
 
-bool CAccountInfo::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
+bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 	vector<COperFund>::const_reverse_iterator iterOperFundLog = accountOperLog.vOperFund.rbegin();
 	for (; iterOperFundLog != accountOperLog.vOperFund.rend(); ++iterOperFundLog) {
 		vector<CFund>::const_iterator iterFund = iterOperFundLog->vFund.begin();
@@ -1164,7 +987,7 @@ bool CAccountInfo::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 }
 
 //caculate pos
-void CAccountInfo::ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos) {
+void CAccount::ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos) {
 	int days = 0;
 	uint64_t money = 0;
 	money = llValues;
@@ -1205,7 +1028,7 @@ void CAccountInfo::ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalP
 }
 
 //caculate pos
-uint64_t CAccountInfo::GetSecureAccPos(int prevBlockHeight) const {
+uint64_t CAccount::GetSecureAccPos(int prevBlockHeight) const {
 	uint64_t accpos = 0;
 	int days = 0;
 
@@ -1225,7 +1048,7 @@ uint64_t CAccountInfo::GetSecureAccPos(int prevBlockHeight) const {
 }
 
 
-uint64_t CAccountInfo::GetMatureAmount(int nCurHeight) {
+uint64_t CAccount::GetMatureAmount(int nCurHeight) {
 	CompactAccount(nCurHeight);
 	uint64_t balance = 0;
 
@@ -1235,7 +1058,7 @@ uint64_t CAccountInfo::GetMatureAmount(int nCurHeight) {
 	return balance;
 }
 
-uint64_t CAccountInfo::GetForzenAmount(int nCurHeight) {
+uint64_t CAccount::GetForzenAmount(int nCurHeight) {
 	CompactAccount(nCurHeight);
 	uint64_t balance = 0;
 
@@ -1249,7 +1072,7 @@ uint64_t CAccountInfo::GetForzenAmount(int nCurHeight) {
 	return balance;
 }
 
-uint64_t CAccountInfo::GetBalance(int nCurHeight) {
+uint64_t CAccount::GetBalance(int nCurHeight) {
 	CompactAccount(nCurHeight);
 	uint64_t balance = llValues;
 
@@ -1259,7 +1082,7 @@ uint64_t CAccountInfo::GetBalance(int nCurHeight) {
 	return balance;
 }
 
-uint256 CAccountInfo::BuildMerkleTree(int prevBlockHeight) const {
+uint256 CAccount::BuildMerkleTree(int prevBlockHeight) const {
 	vector<uint256> vMerkleTree;
 	vMerkleTree.clear();
 
@@ -1284,7 +1107,7 @@ uint256 CAccountInfo::BuildMerkleTree(int prevBlockHeight) const {
 	return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
 }
 
-string CAccountInfo::ToString() const {
+string CAccount::ToString() const {
 	string str;
 	str += strprintf("keyID=%s, publicKey=%d, values=%ld\n",
 	HexStr(keyID).c_str(), HexStr(publicKey).c_str(), llValues);
@@ -1303,14 +1126,14 @@ string CAccountInfo::ToString() const {
 	return str;
 }
 
-void CAccountInfo::WriteOperLog(AccountOper emOperType, const CFund &fund) {
+void CAccount::WriteOperLog(AccountOper emOperType, const CFund &fund) {
 	vector<CFund> vFund;
 	vFund.push_back(fund);
 	COperFund operLog(emOperType, vFund);
 	WriteOperLog(operLog);
 }
 
-bool CAccountInfo::MinusFreezed(vector<CFund>& vFund, const CFund& fund, uint64_t& nOperateValue) {
+bool CAccount::MinusFreezed(vector<CFund>& vFund, const CFund& fund, uint64_t& nOperateValue) {
 	vector<CFund>::iterator it = vFund.begin();
 	for (; it != vFund.end(); it++) {
 		if (it->uTxHash == fund.uTxHash && it->nHeight == fund.nHeight) {
@@ -1339,7 +1162,7 @@ bool CAccountInfo::MinusFreezed(vector<CFund>& vFund, const CFund& fund, uint64_
 	}
 }
 
-bool CAccountInfo::MinusSelf(const CFund &fund, uint64_t& nOperateValue) {
+bool CAccount::MinusSelf(const CFund &fund, uint64_t& nOperateValue) {
 	vector<CFund> vOperFund;
 	uint64_t nCandidateValue = 0;
 	vector<CFund>::iterator iterFound = vSelfFreeze.begin();
@@ -1374,7 +1197,7 @@ bool CAccountInfo::MinusSelf(const CFund &fund, uint64_t& nOperateValue) {
 	}
 }
 
-bool CAccountInfo::IsFundValid(OperType type, const CFund& fund) {
+bool CAccount::IsFundValid(OperType type, const CFund& fund) {
 	switch (type) {
 	case ADD_FREE:
 		if (!IsFundValid(fund))
@@ -1419,7 +1242,7 @@ bool CAccountInfo::IsFundValid(OperType type, const CFund& fund) {
 	return true;
 }
 
-bool CAccountInfo::IsHashValidInFund(const vector<CFund>& vFund, const CFund& fund) {
+bool CAccount::IsHashValidInFund(const vector<CFund>& vFund, const CFund& fund) {
 	vector<CFund>::const_iterator it = vFund.begin();
 	for (; it != vFund.end(); it++) {
 		if (it->uTxHash == fund.uTxHash)
@@ -1429,7 +1252,7 @@ bool CAccountInfo::IsHashValidInFund(const vector<CFund>& vFund, const CFund& fu
 	return false;
 }
 
-bool CAccountInfo::IsFundValid(const CFund& fund) {
+bool CAccount::IsFundValid(const CFund& fund) {
 	if (fund.nFundType < FREEDOM || fund.nFundType >= NULL_FUNDTYPE)
 		return false;
 
@@ -1439,7 +1262,7 @@ bool CAccountInfo::IsFundValid(const CFund& fund) {
 	return true;
 }
 
-bool CAccountInfo::IsMoneyOverflow(uint64_t nAddMoney) {
+bool CAccount::IsMoneyOverflow(uint64_t nAddMoney) {
 	if (!MoneyRange(nAddMoney))
 		return false;
 
@@ -1449,7 +1272,7 @@ bool CAccountInfo::IsMoneyOverflow(uint64_t nAddMoney) {
 	return MoneyRange(static_cast<int64_t>(nTotalMoney) );
 }
 
-uint64_t CAccountInfo::GetVecMoney(const vector<CFund>& vFund){
+uint64_t CAccount::GetVecMoney(const vector<CFund>& vFund){
 	uint64_t nTotal = 0;
 	for(vector<CFund>::const_iterator it = vFund.begin();it != vFund.end();it++){
 		nTotal += it->value;
@@ -1458,7 +1281,7 @@ uint64_t CAccountInfo::GetVecMoney(const vector<CFund>& vFund){
 	return nTotal;
 }
 
-CFund& CAccountInfo::FindFund(const vector<CFund>& vFund, const uint256 &hash)
+CFund& CAccount::FindFund(const vector<CFund>& vFund, const uint256 &hash)
 {
 	CFund vret;
 	for(vector<CFund>::const_iterator it = vFund.begin();it != vFund.end();it++){
@@ -1489,18 +1312,6 @@ bool CTransactionCache::AddBlockToCache(const CBlock &block) {
 	vTxHash.clear();
 	for (auto &ptx : block.vptx) {
 		vTxHash.push_back(ptx->GetHash());
-		if (ptx->nTxType == APPEAL_TX) {
-			CAppealTransaction *pAppealTx = (CAppealTransaction*) ptx.get();
-			if (mapTxHashCacheByPrev.count(pAppealTx->preTxHash)) {
-				mapTxHashCacheByPrev[pAppealTx->preTxHash].push_back(pAppealTx->GetHash());
-			} else {
-				LogPrint("INFO", "add appeal tx to map:%s\n", pAppealTx->GetHash().GetHex());
-				vector<uint256> vAppealTx;
-				vAppealTx.clear();
-				vAppealTx.push_back(pAppealTx->GetHash());
-				mapTxHashCacheByPrev[pAppealTx->preTxHash] = vAppealTx;
-			}
-		}
 	}
 	LogPrint("INFO", "mapTxHashByBlockHash size:%d\n", mapTxHashByBlockHash.size());
 	mapTxHashByBlockHash.insert(make_pair(block.GetHash(), vTxHash));
@@ -1522,14 +1333,6 @@ bool CTransactionCache::DeleteBlockFromCache(const CBlock &block) {
 		vector<uint256> vTxHash;
 		vTxHash.clear();
 		mapTxHashByBlockHash[block.GetHash()] = vTxHash;
-		if (ptx->nTxType == APPEAL_TX) {
-			CAppealTransaction *pAppealTx = (CAppealTransaction*) ptx.get();
-			if (mapTxHashCacheByPrev.count(pAppealTx->preTxHash)) {
-				vector<uint256>::iterator itr = find(mapTxHashCacheByPrev[pAppealTx->preTxHash].begin(),
-						mapTxHashCacheByPrev[pAppealTx->preTxHash].end(), ptx->GetHash());
-				mapTxHashCacheByPrev[pAppealTx->preTxHash].erase(itr);
-			}
-		}
 	}
 	return true;
 }

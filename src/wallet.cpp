@@ -335,7 +335,7 @@ bool CWallet::AddToWallet(const CAccountTx& accTx) {
 	return true;
 }
 
-void CWallet::SyncTransaction(const uint256 &hash, const CBaseTransaction*pTx, const CBlock* pblock) {
+void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const CBlock* pblock) {
 
 	LOCK2(cs_main, cs_wallet);
 
