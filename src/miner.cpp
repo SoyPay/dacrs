@@ -89,14 +89,6 @@ void GetPriorityTx(vector<TxPriority> &vecPriority, map<uint256, vector<COrphan*
 		CBaseTransaction *pBaseTx = mi->second.GetTx().get();
 
 		if (!pTxCacheTip->IsContainTx(pBaseTx->GetHash())) {
-			if (pBaseTx->nTxType == APPEAL_TX) {
-				const CAppealTransaction *patx = (const CAppealTransaction *) pBaseTx;
-				if (!pTxCacheTip->IsContainTx(patx->preTxHash)) {
-					continue;
-				}
-			} else {
-
-			}
 			unsigned int nTxSize = ::GetSerializeSize(pBaseTx->GetNewInstance(), SER_NETWORK, PROTOCOL_VERSION);
 			double dFeePerKb = double(pBaseTx->GetFee()) / (double(nTxSize) / 1000.0);
 			dPriority = 1000.0 / double(nTxSize);

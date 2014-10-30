@@ -33,8 +33,6 @@ class CScript;
 class CBaseTransaction;
 class CRegisterAccountTx;
 class CTransaction;
-class CAppealTransaction;
-class CSecureTransaction;
 class CFreezeTransaction;
 class CRewardTransaction;
 
