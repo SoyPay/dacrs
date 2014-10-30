@@ -344,6 +344,7 @@ public:
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 
 };
+
 class CFreezeTransaction: public CBaseTransaction {
 
 public:
@@ -893,19 +894,20 @@ class CTransactionCache {
 private:
 	CTransactionCacheDB *base;
 	map<uint256, vector<uint256> > mapTxHashByBlockHash;  // key:block hash  value:tx hash
-	map<uint256, vector<uint256> > mapTxHashCacheByPrev;  // key:pre tx hash  value:relay tx hash
+//	map<uint256, vector<uint256> > mapTxHashCacheByPrev;  // key:pre tx hash  value:relay tx hash
+	bool IsContainBlock(const CBlock &block);
 public:
 	CTransactionCache(CTransactionCacheDB *pTxCacheDB);
-	void SetTxCacheSize(int nSize);
-	int GetTxCacheSize(void) const;
+//	void SetTxCacheSize(int nSize);
+//	int GetTxCacheSize(void) const;
 	bool AddBlockToCache(const CBlock &block);
 	bool DeleteBlockFromCache(const CBlock &block);
 	bool IsContainTx(const uint256 & txHash);
-	vector<uint256> GetRelayTx(const uint256 & txHash);
-	const map<uint256, vector<uint256> > &GetRelayTx(void) const;
+//	vector<uint256> GetRelayTx(const uint256 & txHash);
+//	const map<uint256, vector<uint256> > &GetRelayTx(void) const;
 	const map<uint256, vector<uint256> > &GetTxHashCache(void) const;
 	void AddTxHashCache(const uint256 & blockHash, const vector<uint256> &vTxHash);
-	void AddRelayTx(const uint256 preTxHash, const vector<uint256> &vTxHash);
+//	void AddRelayTx(const uint256 preTxHash, const vector<uint256> &vTxHash);
 	bool Flush();
 	bool LoadTransaction();
 	void Clear();

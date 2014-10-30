@@ -157,7 +157,17 @@ public:
 	int64_t nTimeFirstKey;
 
 	const CAccountTx* GetAccountTx(const uint256& hash) const;
-	bool GetTx(const uint256& hash,std::shared_ptr<CBaseTransaction> &tx) const;
+	bool GetTx(const uint256& hash, std::shared_ptr<CBaseTransaction> &tx) const;
+
+	bool IsHaveAccount(const vector<unsigned char>& accountid) {
+		for (auto item : mapKeyRegID) {
+			if (item.second.vRegID == accountid) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 
 	// check whether we are allowed to upgrade (or already support) to the named feature
 	bool CanSupportFeature(enum WalletFeature wf) {
@@ -555,14 +565,12 @@ public:
 						false)) {
 					vhash.push_back(item.first);
 				}
-			}
-			else
-			{
+			} else {
 				vhash.push_back(item.first);
 			}
 		}
 
-		for (auto hash : vhash){
+		for (auto hash : vhash) {
 			mapAccountTx.erase(hash);
 		}
 		return true;
@@ -582,10 +590,9 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
-		READWRITE(blockHash);
-		READWRITE(mapAccountTx);
+			READWRITE(blockHash);
+			READWRITE(mapAccountTx);
 	)
-
 
 };
 

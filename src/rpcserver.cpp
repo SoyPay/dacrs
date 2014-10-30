@@ -318,13 +318,13 @@ static const CRPCCommand vRPCCommands[] =
 
     { "registersecuretx",       &registersecuretx,       true,      false,      true },
     { "createnormaltx",         &createnormaltx,       	 true,      false,      true },
-    { "createappealtx",         &createappealtx,       	 true,      false,      true },
-    { "signappealtx",         	&signappealtx,       	 true,      false,      true },
+    { "createcontracttx",       &createcontracttx,       	 true,      false,      true },
+    { "signcontracttx",         &signcontracttx,       	 true,      false,      true },
 
     { "createfreezetx",         &createfreezetx,       	 true,      false,      true },
     { "registerscripttx",       &registerscripttx,       true,      false,      true },
-    { "createsecuretx",         &createsecuretx,       	 true,      false,      true },
-    { "signsecuretx",           &signsecuretx,       	 true,      false,      true },
+//    { "createsecuretx",         &createsecuretx,       	 true,      false,      true },
+//    { "signsecuretx",           &signsecuretx,       	 true,      false,      true },
 
     { "listaddr",               &listaddr,       	     true,      false,      true },
     { "listaddrtx",             &listaddrtx,       	     true,      false,      true },
