@@ -143,15 +143,15 @@ void Shutdown()
         if(pTxCacheTip)
         	pTxCacheTip->Flush();
 
-        if(pContractScriptTip)
-        	pContractScriptTip->Flush();
+        if(pScriptDBTip)
+        	pScriptDBTip->Flush();
         delete pAccountViewTip; pAccountViewTip = NULL;
         delete pAccountViewDB; pAccountViewDB = NULL;
         delete pblocktree; pblocktree = NULL;
         delete pTxCacheDB; pTxCacheDB = NULL;
         delete pScriptDB; pScriptDB = NULL;
         delete pTxCacheTip; pTxCacheTip = NULL;
-        delete pContractScriptTip; pContractScriptTip = NULL;
+        delete pScriptDBTip; pScriptDBTip = NULL;
 
 
     }
@@ -855,7 +855,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 delete pTxCacheDB;
                 delete pTxCacheTip;
                 delete pScriptDB;
-                delete pContractScriptTip;
+                delete pScriptDBTip;
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, Params().IsReindex());
                 pAccountViewDB = new CAccountViewDB(nAccountDBCache, false, Params().IsReindex());
@@ -863,16 +863,12 @@ bool AppInit2(boost::thread_group& threadGroup)
                 pTxCacheDB = new CTransactionCacheDB(nTxCacheSize, false, Params().IsReindex());
                 pTxCacheTip = new CTransactionCache(pTxCacheDB);
                 pScriptDB = new CScriptDB(nScriptCacheSize, false , Params().IsReindex());
-                pContractScriptTip = new CContractScriptCache(pScriptDB);
+                pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
 
 
                 if (Params().IsReindex())
                     pblocktree->WriteReindexing(true);
 
-				if (!pContractScriptTip->LoadRegScript()) {
-					strLoadError = _("Error loading script database");
-					break;
-				}
 				mempool.SetAccountViewDB(pAccountViewTip);
 
                 if (!LoadBlockIndex()) {

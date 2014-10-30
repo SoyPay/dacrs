@@ -94,32 +94,15 @@ public:
 			const map<uint256, vector<uint256> > &mapTxHashCacheByPrev);
 };
 
-class CScriptDB: public CLevelDBWrapper {
-public:
-	CScriptDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
-private:
-	CScriptDB(const CTransactionCacheDB&);
-	void operator=(const CTransactionCacheDB&);
-public:
-	bool SetArbitrator(const vector<unsigned char> &scriptId, const set<string> &setArbitrator);
-	bool SetScript(const vector<unsigned char> &scriptId, const vector<unsigned char> &vScript);
-	bool GetArbitrator(const vector<unsigned char> &scriptId, set<string> &setArbitrator);
-	bool GetScript(const vector<unsigned char> &scriptId, vector<unsigned char> &vScript);
-	bool GetContractScript(const vector<unsigned char> &scriptId, CContractScript &contractScript);
-	bool EraseScript(const vector<unsigned char> & scriptId);
-	bool LoadRegScript(map<string, CContractScript> &mapScriptCache);
-	bool Flush(const map<string, CContractScript> &mapScriptCache);
-};
-
-class CSciptDataDB: public CDataBaseView
+class CScriptDB: public CScriptDBView
 {
 private:
 	CLevelDBWrapper db;
 public:
-	CSciptDataDB(size_t nCacheSize, bool fMemory=false, bool fWipe = false);
+	CScriptDB(size_t nCacheSize, bool fMemory=false, bool fWipe = false);
 private:
-	CSciptDataDB(const CSciptDataDB&);
-	void operator=(const CSciptDataDB&);
+	CScriptDB(const CScriptDB&);
+	void operator=(const CScriptDB&);
 public:
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
 	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
