@@ -1,6 +1,25 @@
 #ifndef TX_H
 #define TX_H
+/*! \mainpage Developer documentation
+ *
+ * \section intro_sec Introduction
+ *
+ * This is the developer documentation of the reference client for an experimental new digital currency called Bitcoin (http://www.bitcoin.org/),
+ * which enables instant payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
+ * with no central authority: managing transactions and issuing money are carried out collectively by the network.
+ *
+ * The software is a community-driven open source project, released under the MIT license.
+ *
+ Testing automatic link generation.
 
+ * \section FuntionList
+ *    bool CAccount::AddMoney(OperType type, const CFund &fund).\n
+ *    bool CAccount::MinusMoney(OperType type, int nHeight, const CFund &fund, const vector_unsigned_char& scriptID); \n
+ *	  bool CAccount::HasAuthorityToMinus(uint64_t nMoney,int nHeight,const vector_unsigned_char& scriptID); \n
+
+ \section Navigation
+ * Use the buttons <code>Namespaces</code>, <code>Classes</code> or <code>Files</code> at the top of the page to start navigating the code.
+ */
 #include "serialize.h"
 #include <memory>
 #include "uint256.h"
@@ -579,13 +598,13 @@ enum FundType {
 };
 
 enum OperType {
-	ADD_FREE = 1,  		//add to freedom
-	MINUS_FREE, 		//minus freedom
-	ADD_SELF_FREEZD,  	//add self_freezd
-	MINUS_SELF_FREEZD,	//minus self_freeze
-	ADD_FREEZD,			//add to freezed
-	MINUS_FREEZD,		//minus freezed
-	NULL_OPERTYPE,
+	ADD_FREE = 1,  		//!< add money to freedom
+	MINUS_FREE, 		//!< minus money from freedom
+	ADD_SELF_FREEZD,  	//!< add money to self_freezd
+	MINUS_SELF_FREEZD,	//!< minus money from self_freeze
+	ADD_FREEZD,			//!< add money to to freezed
+	MINUS_FREEZD,		//!< minus money from freezed
+	NULL_OPERTYPE,		//!< invalid operate type
 };
 
 class CFund {
@@ -677,7 +696,9 @@ public:
 };
 
 enum AccountOper {
-	ADD_FUND = 1, MINUS_FUND = 2, NULL_OPER,
+	ADD_FUND = 1, 	//!< add operate
+	MINUS_FUND = 2, //!< minus operate
+	NULL_OPER,		//!< invalid
 };
 
 class COperFund {
@@ -752,6 +773,33 @@ public:
 	vector<CFund> vSelfFreeze;
 	map<vector_unsigned_char,CAuthorizate> mapAuthorizate;	//!< Key:scriptID,value :CAuthorizate
 	CAccountOperLog accountOperLog;							//!< record operlog, write at undoinfo
+public :
+	/**
+	 * @brief add money to account
+	 * @param type:	must be ADD_FREE or ADD_SELF_FREEZD or ADD_FREEZD
+	 * @param fund:	member value in fund is the amount of money to add
+	 * @return return true if operate successfully,otherwise return false
+	 */
+	bool AddMoney(OperType type, const CFund &fund);
+
+	/**
+	 * @brief :	minus money from account
+	 * @param type:	must be MINUS_FREE or MINUS_SELF_FREEZD or MINUS_FREEZD
+	 * @param nHeight:	the height that block connected into chain
+	 * @param fund:	member value in fund is the amount of money to add
+	 * @param scriptID:
+	 * @return return true if operate successfully,otherwise return false
+	 */
+	bool MinusMoney(OperType type, int nHeight, const CFund &fund, const vector_unsigned_char& scriptID);
+
+	/**
+	 * @brief:	test if we can minus money in the script
+	 * @param nMoney:	the amount of money to minus
+	 * @param nHeight:	the height that block connect into the chain
+	 * @param scriptID:
+	 * @return if we can minus the money then return ture,otherwise return false
+	 */
+	bool HasAuthorityToMinus(uint64_t nMoney,int nHeight,const vector_unsigned_char& scriptID);
 
 public:
 	CAccount(CKeyID &keyId, CPubKey &pubKey) :
@@ -793,7 +841,7 @@ public:
 		return !(llValues > 0 || !vFreedomFund.empty() || !vFreeze.empty() || !vSelfFreeze.empty());
 	}
 	void CompactAccount(int nCurHeight);
-	bool OperateAccount(OperType type, const CFund &fund, uint64_t* pOperatedValue = NULL);
+
 	bool UndoOperateAccount(const CAccountOperLog & accountOperLog);
 	CFund& FindFund(const vector<CFund>& vFund, const uint256 &hash);
 
@@ -809,74 +857,95 @@ public:
 	)
 
 private:
-	bool IsFundValid(const CFund& fund);
-	bool IsFundValid(OperType type, const CFund& fund);
-	bool IsHashValidInFund(const vector<CFund>& vFund, const CFund& fund);
 	void MergerFund(vector<CFund> &vFund, int nCurHeight);
 	void WriteOperLog(AccountOper emOperType, const CFund &fund);
 	void WriteOperLog(const COperFund &operLog);
-	bool MinusFreeToOutput(const CFund& fund);
-	bool MinusFreezed(vector<CFund>& vFund, const CFund& fund, uint64_t& nOperateValue);
-	bool MinusFree(const CFund &fund, uint64_t& nOperateValue);
-	bool MinusSelf(const CFund &fund, uint64_t& nOperateValue);
+	bool CheckAddFund(OperType type, const CFund& fund);
+	bool MinusFreezed(const CFund& fund);
+	bool MinusFree(const CFund &fund);
+	bool MinusSelf(const CFund &fund);
 	bool IsMoneyOverflow(uint64_t nAddMoney);
-	bool MinusFreeOrSelf(const CFund& fund,uint64_t& nOperateValue);
 	void AddToFreeze(const CFund &fund);
+	void UpdateAuthority(int nHeight,uint64_t nMoney, const vector_unsigned_char& scriptID);
 	uint64_t GetVecMoney(const vector<CFund>& vFund);
 };
 
-class CAuthorizate{
+class CNetAuthorizate {
 public:
-	uint32_t GetAuthorizeTime ()const {
-		return nAuthorizeTime.GetValue();
+	uint32_t GetAuthorizeTime() const {
+		return nAuthorizeTime;
 	}
-	uint64_t GetMaxMoneyPerTime ()const {
-		return nMaxMoneyPerTime.GetValue();
+	uint64_t GetMaxMoneyPerTime() const {
+		return nMaxMoneyPerTime;
 	}
-	uint64_t GetMaxMoneyTotal ()const {
-		return nMaxMoneyTotal.GetValue();
+	uint64_t GetMaxMoneyTotal() const {
+		return nMaxMoneyTotal;
 	}
-	uint64_t GetMaxMoneyPerDay ()const {
-		return nMaxMoneyPerDay.GetValue();
-	}
-	uint64_t GetCurMaxMoneyPerDay() const {
-		return nCurMaxMoneyPerDay.GetValue();
+	uint64_t GetMaxMoneyPerDay() const {
+		return nMaxMoneyPerDay;
 	}
 
 	void SetAuthorizeTime(uint32_t nTime) {
-		nAuthorizeTime.SetValue(nTime);
+		nAuthorizeTime = nTime;
 	}
 	void SetMaxMoneyPerTime(uint64_t nMoney) {
-		nMaxMoneyPerTime.SetValue(nMoney);
+		nMaxMoneyPerTime = nMoney;
 	}
 	void SetMaxMoneyTotal(uint64_t nMoney) {
-		nMaxMoneyTotal.SetValue(nMoney);
+		nMaxMoneyTotal = nMoney;
 	}
 	void SetMaxMoneyPerDay(uint64_t nMoney) {
-		nMaxMoneyPerDay.SetValue(nMoney);
-	}
-	void SetCurMaxMoneyPerDay(uint64_t nMoney) {
-		nCurMaxMoneyPerDay.SetValue(nMoney);
+		nMaxMoneyPerDay = nMoney;
 	}
 
 	IMPLEMENT_SERIALIZE
 	(
-		READWRITE(nLastOperHeight);
-		READWRITE(nAuthorizeTime);
-		READWRITE(nMaxMoneyPerTime);
-		READWRITE(nMaxMoneyTotal);
-		READWRITE(nMaxMoneyPerDay);
-		READWRITE(nCurMaxMoneyPerDay);
+			READWRITE(VARINT(nAuthorizeTime));
+			READWRITE(VARINT(nUserDefine));
+			READWRITE(VARINT(nMaxMoneyPerTime));
+			READWRITE(VARINT(nMaxMoneyTotal));
+			READWRITE(VARINT(nMaxMoneyPerDay));
+	)
+
+protected:
+	uint64_t nAuthorizeTime;
+	uint32_t nUserDefine;
+	uint64_t nMaxMoneyPerTime;
+	uint64_t nMaxMoneyTotal;
+	uint64_t nMaxMoneyPerDay;
+};
+
+
+class CAuthorizate :public CNetAuthorizate{
+public:
+	uint64_t GetCurMaxMoneyPerDay() const {
+		return nCurMaxMoneyPerDay;
+	}
+	uint32_t GetLastOperHeight() const {
+		return nLastOperHeight;
+	}
+
+	void SetCurMaxMoneyPerDay(uint64_t nMoney) {
+		nCurMaxMoneyPerDay = nMoney;
+	}
+	void SetLastOperHeight(uint32_t nHeight) {
+		nLastOperHeight = nHeight;
+	}
+
+	IMPLEMENT_SERIALIZE
+	(
+			READWRITE(VARINT(nLastOperHeight));
+			READWRITE(VARINT(nAuthorizeTime));
+			READWRITE(VARINT(nMaxMoneyPerTime));
+			READWRITE(VARINT(nUserDefine));
+			READWRITE(VARINT(nMaxMoneyTotal));
+			READWRITE(VARINT(nMaxMoneyPerDay));
+			READWRITE(VARINT(nCurMaxMoneyPerDay));
 	)
 
 private:
-	CVarData<uint32_t> nLastOperHeight;
-	CVarData<uint32_t> nAuthorizeTime;
-	CVarData<uint32_t> nUserDefine;
-	CVarData<uint64_t> nMaxMoneyPerTime;
-	CVarData<uint64_t> nMaxMoneyTotal;
-	CVarData<uint64_t> nMaxMoneyPerDay;
-	CVarData<uint64_t> nCurMaxMoneyPerDay;
+	uint32_t nLastOperHeight;
+	uint64_t nCurMaxMoneyPerDay;
 };
 
 class CContractScript {
