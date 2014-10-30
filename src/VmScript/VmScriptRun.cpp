@@ -266,7 +266,7 @@ bool CVmScriptRun::OpeatorSecureAccount(const vector<CVmOperate>& listoperate) {
 //		cout<<mulsAccount.get()->ToString().c_str()<<endl;
 //		cout<<"fund:"<<mulsfund.ToString().c_str()<<endl;
 		uint64_t retValue;
-		bool retflag = mulsAccount.get()->OperateAccount((OperType) it.muls.Opeater, mulsfund, &retValue);
+		//bool retflag = mulsAccount.get()->OperateAccount((OperType) it.muls.Opeater, mulsfund, &retValue);
 		LogPrint("vm","after muls account:%s\r\n",mulsAccount.get()->ToString().c_str());
 		if (it.muls.ResultCheck == 0x01 && retValue != atoi64((char*)it.muls.money)) {
 			return false;
@@ -280,7 +280,7 @@ bool CVmScriptRun::OpeatorSecureAccount(const vector<CVmOperate>& listoperate) {
 		}
 		LogPrint("vm","add addAccount:%s\r\n",mulsAccount.get()->ToString().c_str());
 		LogPrint("vm","fund:%s\r\n",addfund.ToString().c_str());
-		addAccount.get()->OperateAccount((OperType) it.add.Opeater, addfund);
+		//addAccount.get()->OperateAccount((OperType) it.add.Opeater, addfund);
 		LogPrint("vm","after addAccount:%s\r\n",mulsAccount.get()->ToString().c_str());
 		if(mulsAccount.get()->keyID == addAccount.get()->keyID)
 		{
