@@ -140,15 +140,15 @@ CAccountViewDB::CAccountViewDB(size_t nCacheSize, bool fMemory, bool fWipe) :
 
 }
 
-bool CAccountViewDB::GetAccount(const CKeyID &keyId, CAccountInfo &secureAccount) {
+bool CAccountViewDB::GetAccount(const CKeyID &keyId, CAccount &secureAccount) {
 	return db.Read(make_pair('k', keyId), secureAccount);
 }
 
-bool CAccountViewDB::SetAccount(const CKeyID &keyId, const CAccountInfo &secureAccount) {
+bool CAccountViewDB::SetAccount(const CKeyID &keyId, const CAccount &secureAccount) {
 	return db.Write(make_pair('k', keyId), secureAccount);
 }
 
-bool CAccountViewDB::SetAccount(const vector<unsigned char> &accountId, const CAccountInfo &secureAccount) {
+bool CAccountViewDB::SetAccount(const vector<unsigned char> &accountId, const CAccount &secureAccount) {
 	CKeyID keyId;
 	if (db.Read(make_pair('a', accountId), keyId)) {
 		return db.Write(make_pair('k', keyId), secureAccount);
@@ -170,12 +170,12 @@ bool CAccountViewDB::SetBestBlock(const uint256 &hashBlock) {
 	return db.Write('B', hashBlock);
 }
 
-bool CAccountViewDB::BatchWrite(const map<CKeyID, CAccountInfo> &mapAccounts,
+bool CAccountViewDB::BatchWrite(const map<CKeyID, CAccount> &mapAccounts,
 		const map<string, CKeyID> &mapKeyIds, const uint256 &hashBlock) {
 	CLevelDBBatch batch;
-	map<CKeyID, CAccountInfo>::const_iterator iterAccount = mapAccounts.begin();
+	map<CKeyID, CAccount>::const_iterator iterAccount = mapAccounts.begin();
 	for (; iterAccount != mapAccounts.end(); ++iterAccount) {
-		CAccountInfo saTemp = iterAccount->second;
+		CAccount saTemp = iterAccount->second;
 		CAccountOperLog accountOperLog;
 		saTemp.accountOperLog = accountOperLog;
 		if (uint160(0) == iterAccount->second.keyID) {
@@ -199,9 +199,9 @@ bool CAccountViewDB::BatchWrite(const map<CKeyID, CAccountInfo> &mapAccounts,
 	return db.WriteBatch(batch, false);
 }
 
-bool CAccountViewDB::BatchWrite(const vector<CAccountInfo> &vAccounts) {
+bool CAccountViewDB::BatchWrite(const vector<CAccount> &vAccounts) {
 	CLevelDBBatch batch;
-	vector<CAccountInfo>::const_iterator iterAccount = vAccounts.begin();
+	vector<CAccount>::const_iterator iterAccount = vAccounts.begin();
 	for (; iterAccount != vAccounts.end(); ++iterAccount) {
 		batch.Write(make_pair('k', iterAccount->keyID), *iterAccount);
 	}
@@ -224,7 +224,7 @@ bool CAccountViewDB::EraseKeyId(const vector<unsigned char> &accountId) {
 	return db.Erase(make_pair('a', accountId));
 }
 
-bool CAccountViewDB::GetAccount(const vector<unsigned char> &accountId, CAccountInfo &secureAccount) {
+bool CAccountViewDB::GetAccount(const vector<unsigned char> &accountId, CAccount &secureAccount) {
 	CKeyID keyId;
 	if (db.Read(make_pair('a', accountId), keyId)) {
 		return db.Read(make_pair('k', keyId), secureAccount);
@@ -233,7 +233,7 @@ bool CAccountViewDB::GetAccount(const vector<unsigned char> &accountId, CAccount
 }
 
 bool CAccountViewDB::SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId,
-		const CAccountInfo &secureAccount) {
+		const CAccount &secureAccount) {
 	CLevelDBBatch batch;
 	batch.Write(make_pair('a', accountId), keyId);
 	batch.Write(make_pair('k', keyId), secureAccount);

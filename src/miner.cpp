@@ -89,14 +89,6 @@ void GetPriorityTx(vector<TxPriority> &vecPriority, map<uint256, vector<COrphan*
 		CBaseTransaction *pBaseTx = mi->second.GetTx().get();
 
 		if (!pTxCacheTip->IsContainTx(pBaseTx->GetHash())) {
-			if (pBaseTx->nTxType == APPEAL_TX) {
-				const CAppealTransaction *patx = (const CAppealTransaction *) pBaseTx;
-				if (!pTxCacheTip->IsContainTx(patx->preTxHash)) {
-					continue;
-				}
-			} else {
-
-			}
 			unsigned int nTxSize = ::GetSerializeSize(pBaseTx->GetNewInstance(), SER_NETWORK, PROTOCOL_VERSION);
 			double dFeePerKb = double(pBaseTx->GetFee()) / (double(nTxSize) / 1000.0);
 			dPriority = 1000.0 / double(nTxSize);
@@ -398,7 +390,7 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey) {
 }
 
 struct CSecureAccComparator {
-	bool operator()(const CAccountInfo &a, const CAccountInfo&b) {
+	bool operator()(const CAccount &a, const CAccount&b) {
 		// First sort by acc over 30days
 		if (a.GetSecureAccPos(chainActive.Tip()->nHeight) < b.GetSecureAccPos(chainActive.Tip()->nHeight)) {
 			return false;
@@ -452,8 +444,8 @@ uint256 GetAdjustHash(const uint256 TargetHash, const uint64_t nPos) {
 extern CWallet* pwalletMain;
 bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCreateKey) {
 	set<CKeyID> setKeyID;
-	CAccountInfo secureAcc;
-	set<CAccountInfo, CSecureAccComparator> setSecureAcc;
+	CAccount secureAcc;
+	set<CAccount, CSecureAccComparator> setSecureAcc;
 
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
@@ -483,7 +475,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 		}
 
 		for(const auto &keyid:setKeyID) {
-			//find CAccountInfo info by keyid
+			//find CAccount info by keyid
 			if(setCreateKey.size()) {
 				bool bfind = false;
 				for(auto &item: setCreateKey)
@@ -616,7 +608,7 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 		return false;
 	}
 	CAccountViewCache view(accView);
-	CAccountInfo secureAcc;
+	CAccount secureAcc;
 	{
 		CRewardTransaction *prtx = (CRewardTransaction *) pBlock->vptx[0].get();
 
