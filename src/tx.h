@@ -705,6 +705,9 @@ public:
 		nHeight = 0;
 	}
 	CFund(unsigned char _type, uint256 _hash, uint64_t _value, int _Height) {
+		/**
+		 * @todo change the uint256 _hash to uint256& _hash
+		 */
 		nFundType = _type;
 		uTxHash = _hash;
 		value = _value;
@@ -897,6 +900,9 @@ public:
 		return make_shared<CAccount>(*this);
 	}
 	uint64_t GetInterest() const {
+		/**
+		 * @todo  what this   by ranger.shi
+		 */
 		uint64_t rest = 0;
 
 		return rest;

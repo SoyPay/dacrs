@@ -680,6 +680,9 @@ bool CRegistScriptTx::CheckTransction(CValidationState &state, CAccountViewCache
 }
 
 bool CFund::IsMergeFund(const int & nCurHeight, int &nMergeType) const {
+
+	assert(nCurHeight >= nHeight); //add by ranger.shi
+
 	if (nCurHeight - nHeight > nMaxCoinDay / nTargetSpacing) {
 		nMergeType = FREEDOM;
 		return true;
@@ -932,6 +935,10 @@ bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 
 //caculate pos
 void CAccount::ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos) {
+	/**
+	 * @todo change the  uint256 hash to uint256 &hash
+	 */
+
 	int days = 0;
 	uint64_t money = 0;
 	money = llValues;
