@@ -33,7 +33,7 @@ bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& 
 	}
 
 	CContractTransaction* secure = static_cast<CContractTransaction*>(Tx.get());
-	if (pContractScriptTip->GetScript(HexStr(secure->scriptRegId), vScript)) {
+	if (pScriptDBTip->GetScript(secure->scriptRegId, vScript)) {
 		CDataStream stream(vScript, SER_DISK, CLIENT_VERSION);
 		try {
 			stream >> vmScript;
