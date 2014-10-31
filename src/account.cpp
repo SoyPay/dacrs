@@ -215,7 +215,9 @@ bool CScriptDBView::SetData(const vector<unsigned char> &vKey, const vector<unsi
 bool CScriptDBView::BatchWrite(const map<string, vector<unsigned char> > &mapDatas) {return false;}
 bool CScriptDBView::EraseKey(const vector<unsigned char> &vKey) {return false;}
 bool CScriptDBView::HaveData(const vector<unsigned char> &vKey) {return false;}
-
+bool CScriptDBView::GetScript(const int &nIndex, vector<unsigned char> &vValue) {return false;}
+bool CScriptDBView::GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
+			vector<unsigned char> &vScriptData, int &nHeight) {return false;}
 
 CScriptDBViewBacked::CScriptDBViewBacked(CScriptDBView &dataBaseView) {pBase = &dataBaseView;}
 bool CScriptDBViewBacked::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {return pBase->GetData(vKey, vValue);}
@@ -223,6 +225,9 @@ bool CScriptDBViewBacked::SetData(const vector<unsigned char> &vKey, const vecto
 bool CScriptDBViewBacked::BatchWrite(const map<string, vector<unsigned char> > &mapDatas) {return pBase->BatchWrite(mapDatas);}
 bool CScriptDBViewBacked::EraseKey(const vector<unsigned char> &vKey) {return pBase->EraseKey(vKey);}
 bool CScriptDBViewBacked::HaveData(const vector<unsigned char> &vKey) {return pBase->HaveData(vKey);}
+bool CScriptDBViewBacked::GetScript(const int &nIndex, vector<unsigned char> &vValue) {return pBase->GetScript(nIndex, vValue);}
+bool CScriptDBViewBacked::GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
+			vector<unsigned char> &vScriptData, int &nHeight) {return pBase->GetScriptData(vScriptId, nIndex, vScriptData, nHeight);}
 
 CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScriptDBViewBacked(base) {}
 bool CScriptDBViewCache::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
@@ -262,7 +267,14 @@ bool CScriptDBViewCache::HaveData(const vector<unsigned char> &vKey) {
 	}
 	return pBase->HaveData(vKey);
 }
-
+bool CScriptDBViewCache::GetScript(const int &nIndex, vector<unsigned char> &vValue) {
+	return pBase->GetScript(nIndex, vValue);
+}
+bool CScriptDBViewCache::SetScript(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vValue) {
+	vector<unsigned char> scriptKey = {'d','e','f'};
+	scriptKey.insert(scriptKey.end(), vScriptId.begin(), vScriptId.end());
+	return SetData(scriptKey, vValue);
+}
 bool CScriptDBViewCache::Flush() {
 	bool ok = pBase->BatchWrite(mapDatas);
 	if(ok) {
@@ -274,8 +286,40 @@ unsigned int CScriptDBViewCache::GetCacheSize() {
 	return ::GetSerializeSize(mapDatas, SER_DISK, CLIENT_VERSION);
 }
 
-bool CScriptDBViewCache::GetScript(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
+bool CScriptDBViewCache::GetScript(const vector<unsigned char> &vScriptId, vector<unsigned char> &vValue) {
 	vector<unsigned char> scriptKey = {'d','e','f'};
-	scriptKey.insert(scriptKey.end(), vKey.begin(), vKey.end());
+	scriptKey.insert(scriptKey.end(), vScriptId.begin(), vScriptId.end());
 	return GetData(scriptKey, vValue);
+}
+bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
+			vector<unsigned char> &vScriptData, int &nHeight) {
+	vector<unsigned char> vKey = {'d','a','t','a'};
+	vKey.insert(vKey.end(), vScriptId.begin(), vScriptId.end());
+	vKey.push_back('_');
+	vKey.insert(vKey.end(), vScriptKey.begin(), vScriptKey.end());
+	vector<unsigned char> vValue;
+	if(!GetData(vKey, vValue))
+		return false;
+	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
+	ds >> nHeight;
+	ds >> vScriptData;
+	return true;
+}
+bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptData,
+		int &nHeight) {
+	return pBase->GetScriptData(vScriptId, nIndex, vScriptData, nHeight);
+}
+bool CScriptDBViewCache::SetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
+		const vector<unsigned char> &vScriptData, const int nHeight) {
+	vector<unsigned char> vKey = {'d','a','t','a'};
+	vKey.insert(vKey.end(), vScriptId.begin(), vScriptId.end());
+	vKey.push_back('_');
+	vKey.insert(vKey.end(), vScriptKey.begin(), vScriptKey.end());
+	vector<unsigned char> vValue;
+	CDataStream ds(SER_DISK, CLIENT_VERSION);
+	ds << nHeight;
+	ds << vScriptData;
+	vValue.insert(vValue.end(), ds.begin(), ds.end());
+
+	return SetData(vKey, vValue);
 }

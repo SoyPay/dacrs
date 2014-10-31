@@ -91,6 +91,10 @@ public:
 	virtual bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
 	virtual bool EraseKey(const vector<unsigned char> &vKey);
 	virtual bool HaveData(const vector<unsigned char> &vKey);
+	virtual bool GetScript(const int &nIndex, vector<unsigned char> &vValue);
+	virtual bool GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
+			vector<unsigned char> &vScriptData, int &nHeight);
+
 	virtual ~CScriptDBView(){};
 };
 
@@ -104,19 +108,32 @@ public:
 	bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
 	bool EraseKey(const vector<unsigned char> &vKey);
 	bool HaveData(const vector<unsigned char> &vKey);
+	bool GetScript(const int &nIndex, vector<unsigned char> &vValue);
+	bool GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptData,
+			int &nHeight);
+
 };
 
 class CScriptDBViewCache : public CScriptDBViewBacked {
 public:
 	map<string, vector<unsigned char> > mapDatas;
 public:
-	CScriptDBViewCache(CScriptDBView &base, bool fDummy=false);
+	CScriptDBViewCache(CScriptDBView &base, bool fDummy = false);
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
 	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
 	bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
 	bool EraseKey(const vector<unsigned char> &vKey);
 	bool HaveData(const vector<unsigned char> &vKey);
-	bool GetScript(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
+	bool GetScript(const vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
+	bool SetScript(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vValue);
+	bool GetScript(const int &nIndex, vector<unsigned char> &vValue);
+	bool GetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
+			vector<unsigned char> &vScriptData, int &nHeight);
+	bool GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptData,
+			int &nHeight);
+	bool SetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
+			const vector<unsigned char> &vScriptData, const int nHeight);
+
 	bool Flush();
 	unsigned int GetCacheSize();
 };

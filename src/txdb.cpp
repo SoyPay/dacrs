@@ -337,3 +337,78 @@ bool CScriptDB::EraseKey(const vector<unsigned char> &vKey) {
 bool CScriptDB::HaveData(const vector<unsigned char> &vKey) {
 	return db.Exists(vKey);
 }
+bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vValue) {
+	assert(nIndex >= 0);
+	leveldb::Iterator* pcursor = db.NewIterator();
+	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+	ssKeySet << string("def");
+	pcursor->Seek(ssKeySet.str());
+	int i = nIndex;
+	while(pcursor->Valid() && i-->=0) {
+		boost::this_thread::interruption_point();
+		try {
+			leveldb::Slice slKey = pcursor->key();
+			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+			string strScriptKey;
+			ssKey >> strScriptKey;
+			string strPrefix = strScriptKey.substr(0,3);
+			if (strPrefix == "def") {
+				if(i == 0) {
+					leveldb::Slice slValue = pcursor->value();
+					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+					ssValue >> vValue;
+				}
+				pcursor->Next();
+			}
+			else
+			{
+				delete pcursor;
+				return false;
+			}
+		}catch (std::exception &e) {
+				return ERROR("%s : Deserialize or I/O error - %s", __func__, e.what());
+		}
+	}
+	delete pcursor;
+	if(i >= 0)
+		return false;
+	return true;
+}
+bool CScriptDB::GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
+		vector<unsigned char> &vScriptData, int &nHeight) {
+	assert(nIndex >= 0);
+	leveldb::Iterator* pcursor = db.NewIterator();
+	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+	ssKeySet << string("data") << vScriptId;
+	pcursor->Seek(ssKeySet.str());
+	int i = nIndex;
+	while (pcursor->Valid() && i-- >= 0) {
+		boost::this_thread::interruption_point();
+		try {
+			leveldb::Slice slKey = pcursor->key();
+			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+			string strScriptKey;
+			ssKey >> strScriptKey;
+			string strPrefix = strScriptKey.substr(0, 4);
+			if (strPrefix == "data") {
+				if (i == 0) {
+					vector<unsigned char> vValue;
+					leveldb::Slice slValue = pcursor->value();
+					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+					ssValue >> nHeight;
+					ssValue >> vScriptData;
+				}
+				pcursor->Next();
+			} else {
+				delete pcursor;
+				return false;
+			}
+		} catch (std::exception &e) {
+			return ERROR("%s : Deserialize or I/O error - %s", __func__, e.what());
+		}
+	}
+	delete pcursor;
+	if(i >= 0)
+		return false;
+	return true;
+}
