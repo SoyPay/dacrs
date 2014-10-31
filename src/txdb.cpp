@@ -244,13 +244,13 @@ CTransactionCacheDB::CTransactionCacheDB(size_t nCacheSize, bool fMemory, bool f
 		CLevelDBWrapper(GetDataDir() / "blocks" / "txcache", nCacheSize, fMemory, fWipe) {
 }
 
-bool CTransactionCacheDB::SetRelayTx(const uint256 &prevhash, const vector<uint256> &vHashTx) {
-	return Write(make_pair('p', prevhash), vHashTx);
-}
-
-bool CTransactionCacheDB::GetRelayTx(const uint256 &prevhash, vector<uint256> &vHashTx) {
-	return Read(make_pair('p', prevhash), vHashTx);
-}
+//bool CTransactionCacheDB::SetRelayTx(const uint256 &prevhash, const vector<uint256> &vHashTx) {
+//	return Write(make_pair('p', prevhash), vHashTx);
+//}
+//
+//bool CTransactionCacheDB::GetRelayTx(const uint256 &prevhash, vector<uint256> &vHashTx) {
+//	return Read(make_pair('p', prevhash), vHashTx);
+//}
 
 bool CTransactionCacheDB::SetTxCache(const uint256 &blockHash, const vector<uint256> &vHashTx) {
 	return Write(make_pair('h', blockHash), vHashTx);
@@ -260,8 +260,7 @@ bool CTransactionCacheDB::GetTxCache(const uint256 &blockHash, vector<uint256> &
 	return Read(make_pair('h', blockHash), vHashTx);
 }
 
-bool CTransactionCacheDB::Flush(const map<uint256, vector<uint256> > &mapTxHashByBlockHash,
-		const map<uint256, vector<uint256> > &mapTxHashCacheByPrev) {
+bool CTransactionCacheDB::Flush(const map<uint256, vector<uint256> > &mapTxHashByBlockHash) {
 	CLevelDBBatch batch;
 	for (auto & item : mapTxHashByBlockHash) {
 		if(item.second.empty()) {
@@ -271,18 +270,10 @@ bool CTransactionCacheDB::Flush(const map<uint256, vector<uint256> > &mapTxHashB
 		}
 	}
 
-	for (auto & item : mapTxHashCacheByPrev) {
-		if (item.second.empty()) {
-			batch.Erase(make_pair('p', item.first));
-		} else {
-			batch.Write(make_pair('p', item.first), item.second);
-		}
-	}
 	return WriteBatch(batch, false);
 }
 
-bool CTransactionCacheDB::LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash,
-		map<uint256, vector<uint256> > &mapTxHashCacheByPrev) {
+bool CTransactionCacheDB::LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash) {
 
 	leveldb::Iterator *pcursor = NewIterator();
 
@@ -306,15 +297,6 @@ bool CTransactionCacheDB::LoadTransaction(map<uint256, vector<uint256> > &mapTxH
 				ssValue >> vTxhash;
 				ssKey >> blockHash;
 				mapTxHashByBlockHash[blockHash] = vTxhash;
-				pcursor->Next();
-			} else if (chType == 'p') {
-				leveldb::Slice slValue = pcursor->value();
-				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-				vector<uint256> hashTxSet;
-				uint256 preTxHash;
-				ssValue >> hashTxSet;
-				ssKey >> preTxHash;
-				mapTxHashCacheByPrev[preTxHash] = hashTxSet;
 				pcursor->Next();
 			} else {
 				break; // if shutdown requested or finished loading block index

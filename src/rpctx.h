@@ -21,12 +21,12 @@ using namespace json_spirit;
 
 extern Value registersecuretx(const Array& params, bool fHelp);
 extern Value createnormaltx(const Array& params, bool fHelp);
-extern Value createappealtx(const Array& params, bool fHelp);
-extern Value signappealtx(const Array& params, bool fHelp);
+extern Value createcontracttx(const Array& params, bool fHelp);
+extern Value signcontracttx(const Array& params, bool fHelp);
 extern Value createfreezetx(const Array& params, bool fHelp);
 extern Value registerscripttx(const Array& params, bool fHelp);
-extern Value createsecuretx(const Array& params, bool fHelp);
-extern Value signsecuretx(const Array& params, bool fHelp);
+//extern Value createsecuretx(const Array& params, bool fHelp);
+//extern Value signsecuretx(const Array& params, bool fHelp);
 
 extern Value listaddr(const Array& params, bool fHelp);
 extern Value listaddrtx(const Array& params, bool fHelp);
