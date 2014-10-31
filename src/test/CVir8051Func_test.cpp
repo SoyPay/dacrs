@@ -8,13 +8,14 @@
 #include <stdint.h>
 #include <vector>
 #include <map>
+#include "VmScript/VmScriptRun.h"
 #include "VmScript/CVir8051.h"
 #include "VmScript/TestMcu.h"
 #include <iostream>
 
 #include <boost/foreach.hpp>
 #include "tx.h"
-#include "VmScript/VmScript.h"
+#include "main.h"
 using namespace std;
 
 CVir8051 *pgoble_test = NULL;
@@ -3072,14 +3073,19 @@ BOOST_AUTO_TEST_CASE(scriptfun)
 		std::vector<unsigned char> scriptid;
 
 		CRegID scriptId(5, 9);
-		CContractScript contractScript;
-		contractScript.scriptId = scriptId.vRegID;
-		contractScript.scriptContent = vpscript;
 
 		std::shared_ptr<CContractTransaction> nTemp = std::make_shared < CContractTransaction > (CContractTransaction());
 		nTemp->scriptRegId = scriptId.vRegID;
+		nTemp.get()->llFees = 100000000000000000;
 
-		//pScriptDBTip->AddContractScript(HexStr(scriptId.vRegID), contractScript);
+		pScriptDBTip->SetScript(scriptId.vRegID, vpscript);
+		CAccountViewCache view(*pAccountViewTip, true);
+		CVmScriptRun prun;
+
+		uint64_t nBurnFactor = 1;
+		int nheight = 56;
+		std::shared_ptr<CBaseTransaction> Tx = static_cast<std::shared_ptr<CBaseTransaction> >(nTemp);
+		prun.run(Tx,view,nheight,nBurnFactor);
 
 //		m_ROM.insert(m_ROM.begin(), Array, Array + sizeof(Array));
 //

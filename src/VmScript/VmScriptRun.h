@@ -68,13 +68,13 @@ private:
 	 * @param vOldAccount: the argument
 	 * @return:Return the object
 	 */
-	shared_ptr<CAccount> GetNewAccount(shared_ptr<CAccount>& vOldAccount);
+	std::shared_ptr<CAccount> GetNewAccount(shared_ptr<CAccount>& vOldAccount);
 	/**
 	 * @brief find the Account from NewAccont
 	 * @param Account: argument
 	 * @return:Return the object
 	 */
-	shared_ptr<CAccount> GetAccount(shared_ptr<CAccount>& Account);
+	std::shared_ptr<CAccount> GetAccount(shared_ptr<CAccount>& Account);
 	/**
 	 * @brief get the account id
 	 * @param value: argument

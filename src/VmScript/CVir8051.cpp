@@ -636,14 +636,12 @@ static bool ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	unsigned short len = GetParaLen(pbuffer);
 	unsigned char *time = NULL;
 	GetParaData(pbuffer, time, len);
-	vector_unsigned_char vtime(time,time + len);
+	int height = 0;
+	memcpy(&height,time,4);
 
-	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
-	scriptid.push_back('_');
-	scriptid.insert(scriptid.end(),vkey.begin(),vkey.end());
+	const vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
 	bool flag = false;
-	vtime.insert(vtime.end(),vValue.begin(),vValue.end());
-	if(pScriptDBTip->SetData(scriptid,vValue))
+	if(pScriptDBTip->SetScriptData(scriptid,vkey,vValue,height))
 	{
 		flag = true;
 	}
@@ -681,7 +679,7 @@ static bool ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	memcpy(&ipara[2], &flag, 1);
 	return true;
 }
-static bool ExReadDataDBFunc(unsigned char * ipara,void * pVmScript) {
+static bool ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	unsigned char *pbuffer = ipara;
 	GetParaLen(pbuffer);
@@ -691,11 +689,11 @@ static bool ExReadDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	vector_unsigned_char vkey(key,key +length);
 
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
-	scriptid.push_back('_');
-	scriptid.insert(scriptid.end(),vkey.begin(),vkey.end());
+
 	vector_unsigned_char vValue;
+	int nHeight;
 	bool flag = false;
-	if(pScriptDBTip->GetData(scriptid,vValue))
+	if(pScriptDBTip->GetScriptData(scriptid,vkey,vValue,nHeight))
 	{
 		flag = true;
 	}
@@ -724,14 +722,12 @@ static bool ExModifyDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	unsigned short len = GetParaLen(pbuffer);
 	unsigned char *time = NULL;
 	GetParaData(pbuffer, time, len);
-	vector_unsigned_char vtime(time,time +len);
+	int height = 0;
+	memcpy(&height,time,4);
 
-	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
-	scriptid.push_back('_');
-	scriptid.insert(scriptid.end(),vkey.begin(),vkey.end());
+	const vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
 	bool flag = false;
-	vtime.insert(vtime.end(),vValue.begin(),vValue.end());
-	if(pScriptDBTip->SetData(scriptid,vValue))
+	if(pScriptDBTip->SetScriptData(scriptid,vkey,vValue,height))
 	{
 		flag = true;
 	}
@@ -747,7 +743,38 @@ static bool ExGetDBSizeFunc(unsigned char * ipara,void * pVmScript) {
 	return true;
 }
 static bool ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
-	return true;
+//	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+//	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+//	unsigned char *pbuffer = ipara;
+//	GetParaLen(pbuffer);
+//	unsigned short length = GetParaLen(pbuffer);
+//	unsigned char *key = NULL;
+//	GetParaData(pbuffer, key, length);
+//	vector_unsigned_char vkey(key,key +length);
+//
+//	unsigned short len = GetParaLen(pbuffer);
+//	unsigned char *pindex = NULL;
+//	GetParaData(pbuffer, pindex, len);
+//	int index = 0;
+//	memcpy(&index,pindex,4);
+//
+//	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+//
+//	vector_unsigned_char vValue;
+//	int nHeight;
+//	bool flag = false;
+//	if(pScriptDBTip->GetScriptData(scriptid,index,vValue,nHeight))
+//	{
+//		flag = true;
+//	}
+//
+//
+//	memset(ipara, 0, 512);
+//	int count = vValue.size() + sizeof(nHeight);
+//	memcpy(ipara, &count, 2);
+//	memcpy(&ipara[2], &nHeight, 4);
+//	return true;
+//	return true;
 }
 static bool ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
@@ -803,22 +830,24 @@ static bool ExReadDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 	unsigned short length = GetParaLen(pbuffer);
 	unsigned char *key = NULL;
 	GetParaData(pbuffer, key, length);
-
 	vector_unsigned_char vkey(key,key +length);
+
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
-	scriptid.push_back('_');
-	scriptid.insert(scriptid.end(),vkey.begin(),vkey.end());
+
 	vector_unsigned_char vValue;
-	if(pScriptDBTip->GetData(scriptid,vValue))
+	int nHeight;
+	bool flag = false;
+	if(pScriptDBTip->GetScriptData(scriptid,vkey,vValue,nHeight))
 	{
-		memset(ipara, 0, 512);
-		int count = 4;
-		memcpy(ipara, &count, 2);
-		memcpy(&ipara[2], &vValue[0], 4);
-		return true;
+		flag = true;
 	}
 
-	return false;
+
+	memset(ipara, 0, 512);
+	int count = 4;
+	memcpy(ipara, &count, 2);
+	memcpy(&ipara[2], &nHeight, 4);
+	return true;
 }
 static bool ExModifyDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 {
@@ -833,17 +862,16 @@ static bool ExModifyDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 	unsigned short ptimelen = GetParaLen(pbuffer);
 	unsigned char *time = NULL;
 	GetParaData(pbuffer, time, ptimelen);
-	vector_unsigned_char vtime(time,time +ptimelen);
+	int height = 0;
+	memcpy(&height,time,4);
 
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
-	scriptid.push_back('_');
-	scriptid.insert(scriptid.end(),vkey.begin(),vkey.end());
 	vector_unsigned_char vValue;
 	bool flag = false;
-	if(pScriptDBTip->GetData(scriptid,vValue))
+	int temp = 0;
+	if(pScriptDBTip->GetScriptData(scriptid,vkey,vValue,temp))
 	{
-		vtime.insert(vtime.end(),vValue.begin()+4,vValue.end());
-		if(pScriptDBTip->SetData(scriptid,vtime))
+		if(pScriptDBTip->SetScriptData(scriptid,vkey,vValue,height))
 		{
 			flag = true;
 		}
@@ -872,21 +900,18 @@ static bool ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript)
 	GetParaData(pbuffer, value, valuelen);
 	vector_unsigned_char pValue(value,value +valuelen);
 
+
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
-	scriptid.push_back('_');
-	scriptid.insert(scriptid.end(),vkey.begin(),vkey.end());
 	vector_unsigned_char vValue;
 	bool flag = false;
-	if(pScriptDBTip->GetData(scriptid,vValue))
+	int temp = 0;
+	if(pScriptDBTip->GetScriptData(scriptid,vkey,vValue,temp))
 	{
-		vValue.insert(vValue.begin()+4,pValue.begin(),pValue.end());
-		if(pScriptDBTip->SetData(scriptid,vValue))
+		if(pScriptDBTip->SetScriptData(scriptid,vkey,pValue,temp))
 		{
 			flag = true;
 		}
 	}
-
-
 	memset(ipara, 0, 512);
 	int count = 1;
 	memcpy(ipara, &count, 2);
@@ -955,7 +980,7 @@ const static struct __MapExterFun FunMap[] = { //
 		{GETCTXCONFIRMH_FUNC,ExGetCurRunEnvHeightFunc},
 		{WRITEDB_FUNC,ExWriteDataDBFunc},
 		{DELETEDB_FUNC,ExDeleteDataDBFunc},
-		{READDB_FUNC,ExReadDataDBFunc},
+		{READDB_FUNC,ExReadDataValueDBFunc},
 		{MODIFYDB_FUNC,ExModifyDataDBFunc},
 		{GETDBSIZE_FUNC,ExGetDBSizeFunc},
 		{GETDBVALUE_FUNC,ExGetDBValueFunc},
