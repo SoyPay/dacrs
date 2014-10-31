@@ -84,14 +84,12 @@ private:
 	CTransactionCacheDB(const CTransactionCacheDB&);
 	void operator=(const CTransactionCacheDB&);
 public:
-	bool SetRelayTx(const uint256 &prevhash, const vector<uint256> &vHashTx);
-	bool GetRelayTx(const uint256 &prevhash, vector<uint256> &vHashTx);
+//	bool SetRelayTx(const uint256 &prevhash, const vector<uint256> &vHashTx);
+//	bool GetRelayTx(const uint256 &prevhash, vector<uint256> &vHashTx);
 	bool SetTxCache(const uint256 &blockHash, const vector<uint256> &hashTxSet);
 	bool GetTxCache(const uint256 &hashblock, vector<uint256> &hashTx);
-	bool LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash,
-			map<uint256, vector<uint256> > &mapTxHashCacheByPrev);
-	bool Flush(const map<uint256, vector<uint256> > &mapTxHashByBlockHash,
-			const map<uint256, vector<uint256> > &mapTxHashCacheByPrev);
+	bool LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash);
+	bool Flush(const map<uint256, vector<uint256> > &mapTxHashByBlockHash);
 };
 
 class CScriptDB: public CScriptDBView
