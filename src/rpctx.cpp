@@ -671,7 +671,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		tx.nValidHeight = height;
 
 		vector<unsigned char> vscriptcontent;
-		if (pScriptDB->GetScript(vscript, vscriptcontent)) {
+		if (pScriptDBTip->GetScript(vscript, vscriptcontent)) {
 			tx.nFlag = 0;
 		}
 
@@ -1405,7 +1405,7 @@ Value disconnectblock(const Array& params, bool fHelp) {
 					pindex->GetBlockHash().ToString());
 		bool fClean = true;
 		CTransactionCache txCacheTemp(*pTxCacheTip);
-		CContractScriptCache contractScriptTemp(*pContractScriptTip);
+		CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
 		if (!DisconnectBlock(block, state, view, pindex, txCacheTemp, contractScriptTemp, &fClean))
 			return ERROR("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
 					pindex->GetBlockHash().ToString());
@@ -1427,30 +1427,30 @@ Value listregscript(const Array& params, bool fHelp) {
 	Array arrayScript;
 
 	CAccountViewCache view(*pAccountViewTip, true);
-	if (pContractScriptTip != NULL) {
-		map<string, CContractScript> &mapScript = pContractScriptTip->GetScriptCache();
-		map<string, CContractScript>::iterator iterScript = mapScript.begin();
-		for (; iterScript != mapScript.end(); ++iterScript) {
-			Object script;
-			Array arrayArbitrator;
-			script.push_back(Pair("RegScriptId", iterScript->first));
-			script.push_back(
-					Pair("RegScriptContent",
-							HexStr(iterScript->second.scriptContent.begin(), iterScript->second.scriptContent.end())));
-
-			set<string>::iterator iterArbit = iterScript->second.setArbitratorAccId.begin();
-			for (; iterArbit != iterScript->second.setArbitratorAccId.end(); ++iterArbit) {
-				Object arbitrator;
-				CKeyID keyId;
-				view.GetKeyId(ParseHex(*iterArbit), keyId);
-				arbitrator.push_back(Pair("RegId", (*iterArbit).c_str()));
-				arbitrator.push_back(Pair("KeyId", keyId.GetHex()));
-				arrayArbitrator.push_back(arbitrator);
-			}
-			script.push_back(Pair("RegisterArbitrator:", arrayArbitrator));
-			arrayScript.push_back(script);
-
-		}
+	if(pScriptDBTip != NULL) {
+//		map<string, CContractScript> &mapScript = pContractScriptTip->GetScriptCache();
+//		map<string, CContractScript>::iterator iterScript = mapScript.begin();
+//		for (; iterScript != mapScript.end(); ++iterScript) {
+//			Object script;
+//			Array arrayArbitrator;
+//			script.push_back(Pair("RegScriptId", iterScript->first));
+//			script.push_back(
+//					Pair("RegScriptContent",
+//							HexStr(iterScript->second.scriptContent.begin(), iterScript->second.scriptContent.end())));
+//
+//			set<string>::iterator iterArbit = iterScript->second.setArbitratorAccId.begin();
+//			for (; iterArbit != iterScript->second.setArbitratorAccId.end(); ++iterArbit) {
+//				Object arbitrator;
+//				CKeyID keyId;
+//				view.GetKeyId(ParseHex(*iterArbit), keyId);
+//				arbitrator.push_back(Pair("RegId", (*iterArbit).c_str()));
+//				arbitrator.push_back(Pair("KeyId", keyId.GetHex()));
+//				arrayArbitrator.push_back(arbitrator);
+//			}
+//			script.push_back(Pair("RegisterArbitrator:", arrayArbitrator));
+//			arrayScript.push_back(script);
+//
+//		}
 	}
 
 	obj.push_back(Pair("ListRegisterScript", arrayScript));
