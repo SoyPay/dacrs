@@ -1,25 +1,6 @@
 #ifndef TX_H
 #define TX_H
-/*! \mainpage Developer documentation
- *
- * \section intro_sec Introduction
- *
- * This is the developer documentation of the reference client for an experimental new digital currency called Bitcoin (http://www.bitcoin.org/),
- * which enables instant payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
- * with no central authority: managing transactions and issuing money are carried out collectively by the network.
- *
- * The software is a community-driven open source project, released under the MIT license.
- *
- Testing automatic link generation.
 
- * \section FuntionList
- *    bool CAccount::AddMoney(OperType type, const CFund &fund).\n
- *    bool CAccount::MinusMoney(OperType type, int nHeight, const CFund &fund, const vector_unsigned_char& scriptID); \n
- *	  bool CAccount::HasAuthorityToMinus(uint64_t nMoney,int nHeight,const vector_unsigned_char& scriptID); \n
-
- \section Navigation
- * Use the buttons <code>Namespaces</code>, <code>Classes</code> or <code>Files</code> at the top of the page to start navigating the code.
- */
 #include "serialize.h"
 #include <memory>
 #include "uint256.h"
@@ -59,21 +40,22 @@ public:
 };
 
 enum TxType {
-	REG_ACCT_TX = 1,
-	NORMAL_TX = 2,
-	CONTRACT_TX = 3,
-	FREEZE_TX = 4,
-	REWARD_TX = 5,
-	REG_SCRIPT_TX = 6,
-	NULL_TX,
+	REG_ACCT_TX = 1,  //!< tx that used to register account
+	NORMAL_TX = 2,    //!< transfer money from one account to another
+	CONTRACT_TX = 3,  //!< contract tx
+	FREEZE_TX = 4,    //!< freeze tx
+	REWARD_TX = 5,    //!< reward tx
+	REG_SCRIPT_TX = 6,//!< register script or modify authorization
+	NULL_TX,          //!< NULL_TX
 };
 
 enum RegScriptType {
-	SCRIPT_ID = 0, SCRIPT_CONTENT = 1, NULL_TYPE,
+	SCRIPT_ID = 0,     //!< SCRIPT_ID
+	SCRIPT_CONTENT = 1,//!< SCRIPT_CONTENT
+	NULL_TYPE,         //!< NULL_TYPE
 };
 
 class CBaseTransaction {
-
 public:
 	static int64_t nMinTxFee;
 	static int64_t nMinRelayTxFee;
@@ -588,13 +570,16 @@ public:
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
 
+/**
+ * brief:	kinds of fund type
+ */
 enum FundType {
-	FREEDOM = 1,
-	REWARD_FUND,
-	FREEDOM_FUND,
-	FREEZD_FUND,
-	SELF_FREEZD_FUND,
-	NULL_FUNDTYPE,
+	FREEDOM = 1,	    //!< FREEDOM
+	REWARD_FUND,     	//!< REWARD_FUND
+	FREEDOM_FUND,    	//!< FREEDOM_FUND
+	FREEZD_FUND,     	//!< FREEZD_FUND
+	SELF_FREEZD_FUND,	//!< SELF_FREEZD_FUND
+	NULL_FUNDTYPE,   	//!< NULL_FUNDTYPE
 };
 
 enum OperType {
@@ -608,12 +593,11 @@ enum OperType {
 };
 
 class CFund {
-
 public:
-	unsigned char nFundType;
-	uint256 uTxHash;
-	uint64_t value;
-	int nHeight;
+	unsigned char nFundType;	//!< fund type
+	uint256 uTxHash;			//!< hash of the tx which create the fund
+	uint64_t value;				//!< amount of money
+	int nHeight;				//!< time-out height
 public:
 	CFund() {
 		nFundType = 0;
@@ -696,9 +680,9 @@ public:
 };
 
 enum AccountOper {
-	ADD_FUND = 1, 	//!< add operate
-	MINUS_FUND = 2, //!< minus operate
-	NULL_OPER,		//!< invalid
+	ADD_FUND = 1, 		//!< add operate
+	MINUS_FUND = 2, 	//!< minus operate
+	NULL_OPER,			//!< invalid
 };
 
 class COperFund {
@@ -732,10 +716,9 @@ public:
 };
 
 class CAccountOperLog {
-
 public:
 	CKeyID keyID;
-	vector<COperFund> vOperFund;//
+	vector<COperFund> vOperFund;
 	IMPLEMENT_SERIALIZE(
 			READWRITE(keyID);
 			READWRITE(vOperFund);
@@ -764,13 +747,13 @@ public:
 
 class CAccount {
 public:
-	CKeyID keyID;
-	CPubKey publicKey;
-	uint64_t llValues;
-	vector<CFund> vRewardFund;
-	vector<CFund> vFreedomFund;
-	vector<CFund> vFreeze;
-	vector<CFund> vSelfFreeze;
+	CKeyID keyID;											//!< private key of the account
+	CPubKey publicKey;										//!< public key of the account
+	uint64_t llValues;										//!< freedom money which coinage greater than 30 days
+	vector<CFund> vRewardFund;								//!< reward money
+	vector<CFund> vFreedomFund;								//!< freedom money
+	vector<CFund> vFreeze;									//!< freezed money
+	vector<CFund> vSelfFreeze;								//!< self-freeze money
 	map<vector_unsigned_char,CAuthorizate> mapAuthorizate;	//!< Key:scriptID,value :CAuthorizate
 	CAccountOperLog accountOperLog;							//!< record operlog, write at undoinfo
 public :
@@ -793,14 +776,13 @@ public :
 	bool MinusMoney(OperType type, int nHeight, const CFund &fund, const vector_unsigned_char& scriptID);
 
 	/**
-	 * @brief:	test if we can minus money in the script
+	 * @brief:	test whether  can minus money  from the account by the script
 	 * @param nMoney:	the amount of money to minus
 	 * @param nHeight:	the height that block connect into the chain
 	 * @param scriptID:
 	 * @return if we can minus the money then return ture,otherwise return false
 	 */
-	bool HasAuthorityToMinus(uint64_t nMoney,int nHeight,const vector_unsigned_char& scriptID);
-
+	bool IsAuthorizedToMinus(uint64_t nMoney,int nHeight,const vector_unsigned_char& scriptID);
 public:
 	CAccount(CKeyID &keyId, CPubKey &pubKey) :
 			keyID(keyId), publicKey(pubKey) {
@@ -833,9 +815,6 @@ public:
 	uint256 BuildMerkleTree(int prevBlockHeight) const;
 	void ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos);
 	uint64_t GetSecureAccPos(int prevBlockHeight) const;
-	~CAccount() {
-
-	}
 	string ToString() const;
 	bool IsEmptyValue() const {
 		return !(llValues > 0 || !vFreedomFund.empty() || !vFreeze.empty() || !vSelfFreeze.empty());

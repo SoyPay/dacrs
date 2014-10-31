@@ -1173,7 +1173,7 @@ CFund& CAccount::FindFund(const vector<CFund>& vFund, const uint256 &hash)
 	return vret;
 }
 
-bool CAccount::HasAuthorityToMinus(uint64_t nMoney, int nHeight, const vector_unsigned_char& scriptID) {
+bool CAccount::IsAuthorizedToMinus(uint64_t nMoney, int nHeight, const vector_unsigned_char& scriptID) {
 	if (nHeight >= chainActive.Height())
 		assert(0);
 
@@ -1284,7 +1284,7 @@ bool CAccount::MinusMoney(OperType type, int nHeight, const CFund &fund, const v
 		return true;
 	}
 
-	if (!HasAuthorityToMinus(fund.value, nHeight, scriptID))
+	if (!IsAuthorizedToMinus(fund.value, nHeight, scriptID))
 		return false;
 
 	bool bRet = true;
