@@ -368,7 +368,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		CAccount secureAcc;
 
 		vector<unsigned char> vscript;
-		if (!pContractScriptTip->GetScript(HexStr(vscriptid), vscript)) {
+		if (!pScriptDBTip->GetScript(vscriptid, vscript)) {
 			throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(vscriptid)));
 		}
 
@@ -451,7 +451,7 @@ Value signcontracttx(const Array& params, bool fHelp) {
 		}
 
 		vector<unsigned char> vscript;
-		if (!pContractScriptTip->GetScript(HexStr(tx.scriptRegId), vscript)) {
+		if (!pScriptDBTip->GetScript(tx.scriptRegId, vscript)) {
 			throw runtime_error(
 					tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(tx.scriptRegId)));
 		}
