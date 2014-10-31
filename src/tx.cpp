@@ -1183,7 +1183,6 @@ CFund& CAccount::FindFund(const vector<CFund>& vFund, const uint256 &hash)
 bool CAccount::IsAuthorizedToMinus(uint64_t nMoney, int nHeight, const vector_unsigned_char& scriptID) {
 	if (nHeight >= chainActive.Height())
 		assert(0);
-
 	assert(pScriptDBTip);
 	vector<unsigned char> vscript;
 	if (!pScriptDBTip->GetScript(scriptID, vscript))
