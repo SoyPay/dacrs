@@ -1334,15 +1334,6 @@ void CAccount::UpdateAuthority(int nHeight,uint64_t nMoney, const vector_unsigne
 	authorizate.SetLastOperHeight(static_cast<uint32_t>(nHeight) );
 }
 
-bool CContractScript::IsContainScript(const vector_unsigned_char &scriptContent,
-		const map<string, CContractScript> &mapScript) const {
-	map<string, CContractScript>::const_iterator iterScript = mapScript.begin();
-	for (; iterScript != mapScript.end(); ++iterScript) {
-		if (scriptContent == iterScript->second.scriptContent)
-			return true;
-	}
-	return false;
-}
 
 CTransactionCache::CTransactionCache(CTransactionCacheDB *pTxCacheDB) {
 	base = pTxCacheDB;
