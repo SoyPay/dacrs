@@ -278,6 +278,9 @@ public:
 		srcRegAccountId.clear();
 		desRegAccountId.clear();
 		signature.clear();
+		llValues = 0;
+		llFees = 0;
+		nValidHeight = 0;
 		nTxType = NORMAL_TX;
 	}
 
@@ -930,16 +933,6 @@ private:
 	void AddToFreeze(const CFund &fund);
 	void UpdateAuthority(int nHeight,uint64_t nMoney, const vector_unsigned_char& scriptID);
 	uint64_t GetVecMoney(const vector<CFund>& vFund);
-};
-
-class CContractScript {
-public:
-	vector_unsigned_char scriptId;
-	vector_unsigned_char scriptContent;
-	set<string> setArbitratorAccId;
-public:
-	bool IsContainScript(const vector_unsigned_char &scriptContent,
-			const map<string, CContractScript> &mapScript) const;
 };
 
 class CTransactionCache {

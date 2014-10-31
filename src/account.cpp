@@ -217,7 +217,7 @@ bool CScriptDBView::EraseKey(const vector<unsigned char> &vKey) {return false;}
 bool CScriptDBView::HaveData(const vector<unsigned char> &vKey) {return false;}
 bool CScriptDBView::GetScript(const int &nIndex, vector<unsigned char> &vValue) {return false;}
 bool CScriptDBView::GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
-			vector<unsigned char> &vScriptData, int &nHeight) {return false;}
+		vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight) {return false;}
 
 CScriptDBViewBacked::CScriptDBViewBacked(CScriptDBView &dataBaseView) {pBase = &dataBaseView;}
 bool CScriptDBViewBacked::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {return pBase->GetData(vKey, vValue);}
@@ -227,21 +227,24 @@ bool CScriptDBViewBacked::EraseKey(const vector<unsigned char> &vKey) {return pB
 bool CScriptDBViewBacked::HaveData(const vector<unsigned char> &vKey) {return pBase->HaveData(vKey);}
 bool CScriptDBViewBacked::GetScript(const int &nIndex, vector<unsigned char> &vValue) {return pBase->GetScript(nIndex, vValue);}
 bool CScriptDBViewBacked::GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
-			vector<unsigned char> &vScriptData, int &nHeight) {return pBase->GetScriptData(vScriptId, nIndex, vScriptData, nHeight);}
+		vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight) {
+	return pBase->GetScriptData(vScriptId, nIndex, vScriptKey, vScriptData, nHeight);
+}
 
 CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScriptDBViewBacked(base) {}
 bool CScriptDBViewCache::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
-	if (mapDatas.count(HexStr(vKey)) > 0) {
-		vValue = mapDatas[HexStr(vKey)];
+	string key = string(vKey.begin(), vKey.end());
+	if (mapDatas.count(key) > 0) {
+		vValue = mapDatas[key];
 		return true;
 	}
 	if (!pBase->GetData(vKey, vValue))
 		return false;
-	mapDatas[HexStr(vKey)] = vValue;
+	mapDatas[key] = vValue;
 	return true;
 }
 bool CScriptDBViewCache::SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {
-	mapDatas[HexStr(vKey)] = vValue;
+	mapDatas[string(vKey.begin(), vKey.end())] = vValue;
 	return true;
 }
 bool CScriptDBViewCache::BatchWrite(const map<string, vector<unsigned char> > &mapData) {
@@ -250,19 +253,20 @@ bool CScriptDBViewCache::BatchWrite(const map<string, vector<unsigned char> > &m
 	return true;
 }
 bool CScriptDBViewCache::EraseKey(const vector<unsigned char> &vKey) {
-	if (mapDatas.count(HexStr(vKey)) > 0) {
-		mapDatas[HexStr(vKey)].clear();
+	string key = string(vKey.begin(), vKey.end());
+	if (mapDatas.count(key) > 0) {
+		mapDatas[key].clear();
 	} else {
 		vector<unsigned char> vValue;
 		if (pBase->GetData(vKey, vValue)) {
 			vValue.clear();
-			mapDatas[HexStr(vKey)] = vValue;
+			mapDatas[key] = vValue;
 		}
 	}
 	return true;
 }
 bool CScriptDBViewCache::HaveData(const vector<unsigned char> &vKey) {
-	if (mapDatas.count(HexStr(vKey)) > 0) {
+	if (mapDatas.count(string(vKey.begin(), vKey.end())) > 0) {
 		return true;
 	}
 	return pBase->HaveData(vKey);
@@ -287,31 +291,31 @@ unsigned int CScriptDBViewCache::GetCacheSize() {
 }
 
 bool CScriptDBViewCache::GetScript(const vector<unsigned char> &vScriptId, vector<unsigned char> &vValue) {
-	vector<unsigned char> scriptKey = {'d','e','f'};
+	vector<unsigned char> scriptKey = { 'd', 'e', 'f' };
 	scriptKey.insert(scriptKey.end(), vScriptId.begin(), vScriptId.end());
 	return GetData(scriptKey, vValue);
 }
 bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
-			vector<unsigned char> &vScriptData, int &nHeight) {
-	vector<unsigned char> vKey = {'d','a','t','a'};
+		vector<unsigned char> &vScriptData, int &nHeight) {
+	vector<unsigned char> vKey = { 'd', 'a', 't', 'a' };
 	vKey.insert(vKey.end(), vScriptId.begin(), vScriptId.end());
 	vKey.push_back('_');
 	vKey.insert(vKey.end(), vScriptKey.begin(), vScriptKey.end());
 	vector<unsigned char> vValue;
-	if(!GetData(vKey, vValue))
+	if (!GetData(vKey, vValue))
 		return false;
 	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
 	ds >> nHeight;
 	ds >> vScriptData;
 	return true;
 }
-bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptData,
-		int &nHeight) {
-	return pBase->GetScriptData(vScriptId, nIndex, vScriptData, nHeight);
+bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
+		vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight) {
+	return pBase->GetScriptData(vScriptId, nIndex, vScriptKey, vScriptData, nHeight);
 }
 bool CScriptDBViewCache::SetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
 		const vector<unsigned char> &vScriptData, const int nHeight) {
-	vector<unsigned char> vKey = {'d','a','t','a'};
+	vector<unsigned char> vKey = { 'd', 'a', 't', 'a' };
 	vKey.insert(vKey.end(), vScriptId.begin(), vScriptId.end());
 	vKey.push_back('_');
 	vKey.insert(vKey.end(), vScriptKey.begin(), vScriptKey.end());
@@ -322,4 +326,55 @@ bool CScriptDBViewCache::SetScriptData(const vector<unsigned char> &vScriptId, c
 	vValue.insert(vValue.end(), ds.begin(), ds.end());
 
 	return SetData(vKey, vValue);
+}
+
+bool CScriptDBViewCache::HaveScript(const vector<unsigned char> &vScriptId) {
+	vector<unsigned char> scriptKey = { 'd', 'e', 'f' };
+	string strScriptId = HexStr(vScriptId.begin(), vScriptId.end());
+	scriptKey.insert(scriptKey.end(), strScriptId.begin(), strScriptId.end());
+	return HaveData(scriptKey);
+}
+bool CScriptDBViewCache::GetScriptCount(const vector<unsigned char> &vScriptId, int &nCount) {
+	vector<unsigned char> scriptKey = { 's', 'n', 'u','m'};
+	vector<unsigned char> vValue;
+	string strScriptId = HexStr(vScriptId.begin(), vScriptId.end());
+	scriptKey.insert(scriptKey.end(), strScriptId.begin(), strScriptId.end());
+	if (!GetData(scriptKey, vValue))
+		return false;
+	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
+	ds >> nCount;
+	return true;
+}
+bool CScriptDBViewCache::EraseScript(const vector<unsigned char> &vScriptId, vector<unsigned char> &vValue) {
+	vector<unsigned char> scriptKey = { 'd', 'e', 'f' };
+	string strScriptId = HexStr(vScriptId.begin(), vScriptId.end());
+	scriptKey.insert(scriptKey.end(), strScriptId.begin(), strScriptId.end());
+	return EraseKey(scriptKey);
+}
+bool CScriptDBViewCache::GetScriptDataCount(const vector<unsigned char> &vScriptId, int &nCount) {
+	vector<unsigned char> scriptKey = { 's', 'd', 'n', 'u','m'};
+	string strScriptId = HexStr(vScriptId.begin(), vScriptId.end());
+	scriptKey.insert(scriptKey.end(), strScriptId.begin(), strScriptId.end());
+	vector<unsigned char> vValue;
+	if(!GetData(scriptKey, vValue))
+		return false;
+	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
+	ds >> nCount;
+	return true;
+}
+bool CScriptDBViewCache::EraseScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey) {
+	vector<unsigned char> scriptKey = { 'd', 'a', 't', 'a'};
+	string strScriptId = HexStr(vScriptId.begin(), vScriptId.end());
+	scriptKey.insert(scriptKey.end(), strScriptId.begin(), strScriptId.end());
+	scriptKey.push_back('_');
+	scriptKey.insert(scriptKey.end(), vScriptKey.begin(), vScriptKey.end());
+	return EraseKey(scriptKey);
+}
+bool CScriptDBViewCache::HaveScript(const vector<unsigned char> &vScriptId, const vector<unsigned char > &vScriptKey) {
+	vector<unsigned char> scriptKey = { 'd', 'a', 't', 'a'};
+	string strScriptId = HexStr(vScriptId.begin(), vScriptId.end());
+	scriptKey.insert(scriptKey.end(), strScriptId.begin(), strScriptId.end());
+	scriptKey.push_back('_');
+	scriptKey.insert(scriptKey.end(), vScriptKey.begin(), vScriptKey.end());
+	return HaveData(scriptKey);
 }

@@ -93,7 +93,7 @@ public:
 	virtual bool HaveData(const vector<unsigned char> &vKey);
 	virtual bool GetScript(const int &nIndex, vector<unsigned char> &vValue);
 	virtual bool GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
-			vector<unsigned char> &vScriptData, int &nHeight);
+			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight);
 
 	virtual ~CScriptDBView(){};
 };
@@ -109,8 +109,8 @@ public:
 	bool EraseKey(const vector<unsigned char> &vKey);
 	bool HaveData(const vector<unsigned char> &vKey);
 	bool GetScript(const int &nIndex, vector<unsigned char> &vValue);
-	bool GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptData,
-			int &nHeight);
+	bool GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptKey,
+			vector<unsigned char> &vScriptData, int &nHeight);
 
 };
 
@@ -124,12 +124,22 @@ public:
 	bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
 	bool EraseKey(const vector<unsigned char> &vKey);
 	bool HaveData(const vector<unsigned char> &vKey);
+
+
 	bool GetScript(const vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
 	bool SetScript(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vValue);
 	bool GetScript(const int &nIndex, vector<unsigned char> &vValue);
+	bool HaveScript(const vector<unsigned char> &vScriptId);
+	bool GetScriptCount(const vector<unsigned char> &vScriptId, int &nCount);
+	bool EraseScript(const vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
+
+
+	bool GetScriptDataCount(const vector<unsigned char> &vScriptId, int &nCount);
+	bool EraseScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey);
+	bool HaveScript(const vector<unsigned char> &vScriptId, const vector<unsigned char > &vScriptKey);
 	bool GetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
 			vector<unsigned char> &vScriptData, int &nHeight);
-	bool GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptData,
+	bool GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData,
 			int &nHeight);
 	bool SetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
 			const vector<unsigned char> &vScriptData, const int nHeight);

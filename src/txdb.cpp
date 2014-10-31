@@ -324,9 +324,9 @@ bool CScriptDB::BatchWrite(const map<string, vector<unsigned char> > &mapDatas) 
 	CLevelDBBatch batch;
 	for (auto & item : mapDatas) {
 		if (item.second.empty()) {
-			batch.Erase(ParseHex(item.first));
+			batch.Erase(vector<unsigned char>(item.first.begin(), item.first.end()));
 		} else {
-			batch.Write(ParseHex(item.first), item.second);
+			batch.Write(vector<unsigned char>(item.first.begin(), item.first.end()), item.second);
 		}
 	}
 	return db.WriteBatch(batch);
@@ -375,7 +375,7 @@ bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vValue) {
 	return true;
 }
 bool CScriptDB::GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
-		vector<unsigned char> &vScriptData, int &nHeight) {
+		vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight) {
 	assert(nIndex >= 0);
 	leveldb::Iterator* pcursor = db.NewIterator();
 	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
@@ -397,6 +397,7 @@ bool CScriptDB::GetScriptData(const vector<unsigned char> &vScriptId, const int 
 					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
 					ssValue >> nHeight;
 					ssValue >> vScriptData;
+					vScriptKey.insert(vScriptKey.end(), slKey.data()+4, slKey.data()+10);
 				}
 				pcursor->Next();
 			} else {
