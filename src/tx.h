@@ -18,9 +18,7 @@ class CScriptDB;
 class CBlock;
 class CTransactionCacheDB;
 class CTransactionCache;
-class CContractScriptCache;
-class CAuthorizate;
-
+class CScriptDBViewCache;
 typedef vector<unsigned char> vector_unsigned_char;
 
 class CRegID {
@@ -53,6 +51,79 @@ enum RegScriptType {
 	SCRIPT_ID = 0,     //!< SCRIPT_ID
 	SCRIPT_CONTENT = 1,//!< SCRIPT_CONTENT
 	NULL_TYPE,         //!< NULL_TYPE
+};
+
+class CNetAuthorizate {
+public:
+	uint32_t GetAuthorizeTime() const {
+		return nAuthorizeTime;
+	}
+	uint64_t GetMaxMoneyPerTime() const {
+		return nMaxMoneyPerTime;
+	}
+	uint64_t GetMaxMoneyTotal() const {
+		return nMaxMoneyTotal;
+	}
+	uint64_t GetMaxMoneyPerDay() const {
+		return nMaxMoneyPerDay;
+	}
+
+	void SetAuthorizeTime(uint32_t nTime) {
+		nAuthorizeTime = nTime;
+	}
+	void SetMaxMoneyPerTime(uint64_t nMoney) {
+		nMaxMoneyPerTime = nMoney;
+	}
+	void SetMaxMoneyTotal(uint64_t nMoney) {
+		nMaxMoneyTotal = nMoney;
+	}
+	void SetMaxMoneyPerDay(uint64_t nMoney) {
+		nMaxMoneyPerDay = nMoney;
+	}
+
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(VARINT(nAuthorizeTime));
+		READWRITE(VARINT(nUserDefine));
+		READWRITE(VARINT(nMaxMoneyPerTime));
+		READWRITE(VARINT(nMaxMoneyTotal));
+		READWRITE(VARINT(nMaxMoneyPerDay));
+	)
+
+protected:
+	uint64_t nAuthorizeTime;
+	uint32_t nUserDefine;
+	uint64_t nMaxMoneyPerTime;
+	uint64_t nMaxMoneyTotal;
+	uint64_t nMaxMoneyPerDay;
+};
+
+class CAuthorizate :public CNetAuthorizate{
+public:
+	uint64_t GetCurMaxMoneyPerDay() const {
+		return nCurMaxMoneyPerDay;
+	}
+	uint32_t GetLastOperHeight() const {
+		return nLastOperHeight;
+	}
+
+	void SetCurMaxMoneyPerDay(uint64_t nMoney) {
+		nCurMaxMoneyPerDay = nMoney;
+	}
+	void SetLastOperHeight(uint32_t nHeight) {
+		nLastOperHeight = nHeight;
+	}
+
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(*(CNetAuthorizate*)this);
+		READWRITE(VARINT(nLastOperHeight));
+		READWRITE(VARINT(nCurMaxMoneyPerDay));
+	)
+
+private:
+	uint32_t nLastOperHeight;
+	uint64_t nCurMaxMoneyPerDay;
 };
 
 class CBaseTransaction {
@@ -110,10 +181,10 @@ public:
 	}
 
 	virtual bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-			int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) = 0;
+			int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) = 0;
 
 	virtual bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-			int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) = 0;
+			int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) = 0;
 
 	virtual bool CheckTransction(CValidationState &state, CAccountViewCache &view) = 0;
 
@@ -179,10 +250,10 @@ public:
 	string ToString(CAccountViewCache &view) const;
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
@@ -255,10 +326,10 @@ public:
 	string ToString(CAccountViewCache &view) const;
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
@@ -337,14 +408,15 @@ public:
 	}
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 
 };
+
 class CFreezeTransaction: public CBaseTransaction {
 
 public:
@@ -412,10 +484,10 @@ public:
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
@@ -488,10 +560,10 @@ public:
 	}
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
@@ -504,6 +576,8 @@ public:
 	vector_unsigned_char script;
 	uint64_t llFees;
 	int nValidHeight;
+	unsigned char isHaveAuthor; // whether have authorizate, 0 represent do not have authorizate data, 1 means contrary
+	CNetAuthorizate aAuthorizate;
 	vector_unsigned_char signature;
 public:
 	CRegistScriptTx(const CBaseTransaction *pBaseTx) {
@@ -516,6 +590,7 @@ public:
 		llFees = 0;
 		nFlag = 0;
 		nValidHeight = 0;
+		isHaveAuthor = 0;
 	}
 
 	~CRegistScriptTx() {
@@ -530,6 +605,8 @@ public:
 			READWRITE(script);
 			READWRITE(llFees);
 			READWRITE(nValidHeight);
+			if(isHaveAuthor)
+				READWRITE(aAuthorizate);
 			READWRITE(signature);
 	)
 
@@ -562,10 +639,10 @@ public:
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
@@ -612,6 +689,9 @@ public:
 		nHeight = 0;
 	}
 	CFund(unsigned char _type, uint256 _hash, uint64_t _value, int _Height) {
+		/**
+		 * @todo change the uint256 _hash to uint256& _hash
+		 */
 		nFundType = _type;
 		uTxHash = _hash;
 		value = _value;
@@ -802,6 +882,9 @@ public:
 		return make_shared<CAccount>(*this);
 	}
 	uint64_t GetInterest() const {
+		/**
+		 * @todo  what this   by ranger.shi
+		 */
 		uint64_t rest = 0;
 
 		return rest;
@@ -849,84 +932,6 @@ private:
 	uint64_t GetVecMoney(const vector<CFund>& vFund);
 };
 
-class CNetAuthorizate {
-public:
-	uint32_t GetAuthorizeTime() const {
-		return nAuthorizeTime;
-	}
-	uint64_t GetMaxMoneyPerTime() const {
-		return nMaxMoneyPerTime;
-	}
-	uint64_t GetMaxMoneyTotal() const {
-		return nMaxMoneyTotal;
-	}
-	uint64_t GetMaxMoneyPerDay() const {
-		return nMaxMoneyPerDay;
-	}
-
-	void SetAuthorizeTime(uint32_t nTime) {
-		nAuthorizeTime = nTime;
-	}
-	void SetMaxMoneyPerTime(uint64_t nMoney) {
-		nMaxMoneyPerTime = nMoney;
-	}
-	void SetMaxMoneyTotal(uint64_t nMoney) {
-		nMaxMoneyTotal = nMoney;
-	}
-	void SetMaxMoneyPerDay(uint64_t nMoney) {
-		nMaxMoneyPerDay = nMoney;
-	}
-
-	IMPLEMENT_SERIALIZE
-	(
-			READWRITE(VARINT(nAuthorizeTime));
-			READWRITE(VARINT(nUserDefine));
-			READWRITE(VARINT(nMaxMoneyPerTime));
-			READWRITE(VARINT(nMaxMoneyTotal));
-			READWRITE(VARINT(nMaxMoneyPerDay));
-	)
-
-protected:
-	uint64_t nAuthorizeTime;
-	uint32_t nUserDefine;
-	uint64_t nMaxMoneyPerTime;
-	uint64_t nMaxMoneyTotal;
-	uint64_t nMaxMoneyPerDay;
-};
-
-
-class CAuthorizate :public CNetAuthorizate{
-public:
-	uint64_t GetCurMaxMoneyPerDay() const {
-		return nCurMaxMoneyPerDay;
-	}
-	uint32_t GetLastOperHeight() const {
-		return nLastOperHeight;
-	}
-
-	void SetCurMaxMoneyPerDay(uint64_t nMoney) {
-		nCurMaxMoneyPerDay = nMoney;
-	}
-	void SetLastOperHeight(uint32_t nHeight) {
-		nLastOperHeight = nHeight;
-	}
-
-	IMPLEMENT_SERIALIZE
-	(
-			READWRITE(VARINT(nLastOperHeight));
-			READWRITE(VARINT(nAuthorizeTime));
-			READWRITE(VARINT(nMaxMoneyPerTime));
-			READWRITE(VARINT(nUserDefine));
-			READWRITE(VARINT(nMaxMoneyTotal));
-			READWRITE(VARINT(nMaxMoneyPerDay));
-			READWRITE(VARINT(nCurMaxMoneyPerDay));
-	)
-
-private:
-	uint32_t nLastOperHeight;
-	uint64_t nCurMaxMoneyPerDay;
-};
-
 class CContractScript {
 public:
 	vector_unsigned_char scriptId;
@@ -957,24 +962,6 @@ public:
 	bool Flush();
 	bool LoadTransaction();
 	void Clear();
-};
-
-class CContractScriptCache {
-private:
-	CScriptDB *base;
-	map<string, CContractScript> mapScript;
-public:
-	CContractScriptCache(CScriptDB *base);
-	bool GetContractScript(const string &strKey, CContractScript &contractScript);
-	bool IsContainContractScript(const string &strKey);
-	bool AddContractScript(const string &strKey, const CContractScript &script);
-	bool DeleteContractScript(const string &strKey);
-	bool LoadRegScript();
-    bool Flush();
-    map<string, CContractScript> &GetScriptCache();
-    bool GetScript(const string &strKey, vector<unsigned char> &vscript);
-    bool GetArbitrator(const string &strKey, set<string> &setArbId);
-    bool SetArbitrator(const string &strKey, const set<string> &setArbitrator);
 };
 
 inline unsigned int GetSerializeSize(const std::shared_ptr<CBaseTransaction> &pa, int nType, int nVersion) {
