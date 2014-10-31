@@ -989,5 +989,5 @@ const char *R1Array[] =
 //	BOOST_ERROR("ERROR:THE SUITE NEED TO MODIFY!");
 //}
 //#endif
-
+//
 //BOOST_AUTO_TEST_SUITE_END()
