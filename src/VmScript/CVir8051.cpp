@@ -13,6 +13,7 @@
 #include "main.h"
 #include <openssl/des.h>
 #include <vector>
+#include "VmScriptRun.h"
 //#include "Typedef.h"
 
 //////////////////////////////////////////////////////////////////////
@@ -63,7 +64,7 @@ CVir8051::~CVir8051() {
 
 }
 
-typedef bool (*pFun)(unsigned char *);
+typedef bool (*pFun)(unsigned char *,void *);
 
 struct __MapExterFun {
 	INT16U method;
@@ -93,7 +94,7 @@ static void GetParaData(unsigned char * &pbuf, unsigned char * &pdata, unsigned 
 	pbuf += datalen;
 }
 
-static bool ExInt64CompFunc(unsigned char *ipara) {
+static bool ExInt64CompFunc(unsigned char *ipara,void * pVmScriptRun) {
 //	printf("the call func:%s\r\n", __FUNCTION__);
 	unsigned char *pbuf = ipara;
 	unsigned short len = GetParaLen(pbuf);
@@ -131,7 +132,7 @@ static bool ExInt64CompFunc(unsigned char *ipara) {
 	return true;
 }
 
-static bool ExInt64MullFunc(unsigned char *ipara) {
+static bool ExInt64MullFunc(unsigned char *ipara,void * pVmScriptRun) {
 //	printf("the call func:%s\r\n", __FUNCTION__);
 
 	unsigned char *pbuf = ipara;
@@ -160,7 +161,7 @@ static bool ExInt64MullFunc(unsigned char *ipara) {
 	return true;
 }
 
-static bool ExInt64AddFunc(unsigned char *ipara) {
+static bool ExInt64AddFunc(unsigned char *ipara,void * pVmScriptRun) {
 //	printf("the call func:%s\r\n", __FUNCTION__);
 	unsigned char *pbuf = ipara;
 	unsigned short len = GetParaLen(pbuf);
@@ -188,7 +189,7 @@ static bool ExInt64AddFunc(unsigned char *ipara) {
 	return true;
 }
 
-static bool ExInt64SubFunc(unsigned char *ipara) {
+static bool ExInt64SubFunc(unsigned char *ipara,void * pVmScriptRun) {
 //	printf("the call func:%s\r\n", __FUNCTION__);
 
 	unsigned char *pbuf = ipara;
@@ -217,7 +218,7 @@ static bool ExInt64SubFunc(unsigned char *ipara) {
 	return true;
 }
 
-static bool ExInt64DivFunc(unsigned char *ipara) {
+static bool ExInt64DivFunc(unsigned char *ipara,void * pVmScriptRun) {
 //	printf("the call func:%s\r\n", __FUNCTION__);
 
 	unsigned char *pbuf = ipara;
@@ -246,7 +247,7 @@ static bool ExInt64DivFunc(unsigned char *ipara) {
 	return true;
 }
 
-static bool ExSha256Func(unsigned char *ipara) {
+static bool ExSha256Func(unsigned char *ipara,void * pVmScriptRun) {
 //	printf("the call func:%s\r\n", __FUNCTION__);
 	unsigned char *pbuf = (unsigned char *) ipara;
 	unsigned short len = GetParaLen(pbuf);
@@ -264,7 +265,7 @@ static bool ExSha256Func(unsigned char *ipara) {
 	return true;
 }
 
-static bool ExDesFunc(unsigned char *ipara) {
+static bool ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 //	printf("the call func:%s\r\n", __FUNCTION__);
 
 	unsigned char *pbuf = ipara;
@@ -361,7 +362,7 @@ static bool ExDesFunc(unsigned char *ipara) {
 	return true;
 }
 
-static bool ExVerifySignatureFunc(unsigned char *ipara) {
+static bool ExVerifySignatureFunc(unsigned char *ipara,void * pVmScriptRun) {
 //	printf("the call func:%s\r\n", __FUNCTION__);
 	unsigned char *pbuf = ipara;
 	unsigned short len = GetParaLen(pbuf);
@@ -411,12 +412,12 @@ static bool ExVerifySignatureFunc(unsigned char *ipara) {
 	return true;
 }
 
-static bool ExSignatureFunc(unsigned char *ipara) {
+static bool ExSignatureFunc(unsigned char *ipara,void * pVmScriptRun) {
 //	printf("the call func:%s\r\n", __FUNCTION__);
 	return true;
 }
 
-static bool ExLogPrintFunc(unsigned char *ipara) {
+static bool ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
 	unsigned char *pbuf = ipara;
 	unsigned short len = GetParaLen(pbuf);
 	unsigned short infolen = GetParaLen(pbuf);
@@ -435,8 +436,9 @@ static bool ExLogPrintFunc(unsigned char *ipara) {
 	return true;
 }
 
-static bool ExGetTxInfoFunc(unsigned char * ipara) {
+static bool ExGetTxInfoFunc(unsigned char * ipara,void * pVmScriptRun) {
 	unsigned char *pbuffer = ipara;
+	GetParaLen(pbuffer);
 	unsigned short length = GetParaLen(pbuffer);
 
 	unsigned char *txhash = NULL;
@@ -463,8 +465,9 @@ static bool ExGetTxInfoFunc(unsigned char * ipara) {
 	}
 
 }
-static bool ExGetTxAccountSizeFunc(unsigned char * ipara) {
+static bool ExGetTxAccountSizeFunc(unsigned char * ipara,void * pVmScriptRun) {
 	unsigned char *pbuffer = ipara;
+	GetParaLen(pbuffer);
 	unsigned short length = GetParaLen(pbuffer);
 
 	unsigned char *txhash = NULL;
@@ -488,8 +491,9 @@ static bool ExGetTxAccountSizeFunc(unsigned char * ipara) {
 	}
 
 }
-static bool ExGetTxContactSizeFunc(unsigned char * ipara) {
+static bool ExGetTxContactSizeFunc(unsigned char * ipara,void * pVmScriptRun) {
 	unsigned char *pbuffer = ipara;
+	GetParaLen(pbuffer);
 	unsigned short length = GetParaLen(pbuffer);
 
 	unsigned char *txhash = NULL;
@@ -509,10 +513,10 @@ static bool ExGetTxContactSizeFunc(unsigned char * ipara) {
 	}
 
 }
-static bool ExGetAccountPublickeyFunc(unsigned char * ipara) {
+static bool ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScriptRun) {
 	unsigned char *pbuffer = ipara;
+	GetParaLen(pbuffer);
 	unsigned short length = GetParaLen(pbuffer);
-
 	unsigned char *accountid = NULL;
 	GetParaData(pbuffer, accountid, length);
 	vector<unsigned char> id(accountid, accountid + length);
@@ -537,8 +541,9 @@ static bool ExGetAccountPublickeyFunc(unsigned char * ipara) {
 
 	return true;
 }
-static bool ExQueryAccountBalanceFunc(unsigned char * ipara) {
+static bool ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScriptRun) {
 	unsigned char *pbuffer = ipara;
+	GetParaLen(pbuffer);
 	unsigned short length = GetParaLen(pbuffer);
 
 	unsigned char *accountid = NULL;
@@ -565,8 +570,9 @@ static bool ExQueryAccountBalanceFunc(unsigned char * ipara) {
 	memcpy(&ipara[2], &nbalance, len);
 	return true;
 }
-static bool ExGetTxConFirmHeightFunc(unsigned char * ipara) {
+static bool ExGetTxConFirmHeightFunc(unsigned char * ipara,void * pVmScriptRun) {
 	unsigned char *pbuffer = ipara;
+	GetParaLen(pbuffer);
 	unsigned short length = GetParaLen(pbuffer);
 
 	unsigned char *txhash = NULL;
@@ -575,7 +581,7 @@ static bool ExGetTxConFirmHeightFunc(unsigned char * ipara) {
 	uint256 phash(hash);
 
 }
-static bool ExGetTipHeightFunc(unsigned char * ipara) {
+static bool ExGetTipHeightFunc(unsigned char * ipara,void * pVmScriptRun) {
 	int height = chainActive.Height();
 	memset(ipara, 0, 512);
 	ipara[0] = sizeof(int);
@@ -584,8 +590,9 @@ static bool ExGetTipHeightFunc(unsigned char * ipara) {
 	memcpy(&ipara[2], &height, sizeof(int));
 	return true;
 }
-static bool ExGetBlockHashFunc(unsigned char * ipara) {
+static bool ExGetBlockHashFunc(unsigned char * ipara,void * pVmScriptRun) {
 	unsigned char *pbuffer = ipara;
+	GetParaLen(pbuffer);
 	unsigned short length = GetParaLen(pbuffer);
 
 	unsigned char *pheight = NULL;
@@ -603,57 +610,287 @@ static bool ExGetBlockHashFunc(unsigned char * ipara) {
 	memcpy(&ipara[2], &blockHash, sizeof(uint256));
 }
 
-static bool ExGetCurTxConfirmHeightFunc(unsigned char * ipara) {
+static bool ExGetCurRunEnvHeightFunc(unsigned char * ipara,void * pVmScript) {
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	int height = pVmScriptRun->GetComfirHeight();
+	memset(ipara, 0, 512);
+	int count = 4;
+	memcpy(ipara, &count, 2);
+	memcpy(&ipara[2], &height, 4);
 	return true;
 }
-static bool ExWriteDataDBFunc(unsigned char * ipara) {
-	return true;
-}
-static bool ExDeleteDataDBFunc(unsigned char * ipara) {
-	return true;
-}
-static bool ExReadDataDBFunc(unsigned char * ipara) {
-	return true;
-}
-static bool ExModifyDataDBFunc(unsigned char * ipara) {
-	return true;
-}
-static bool ExGetDBSizeFunc(unsigned char * ipara) {
-	return true;
-}
-static bool ExGetDBValueFunc(unsigned char * ipara) {
-	return true;
-}
-static bool ExGetCurTxHash(unsigned char * ipara) {
-	return true;
-}
-static bool ExIsAuthoritFunc(unsigned char * ipara) {
+static bool ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	unsigned char *pbuffer = ipara;
+	GetParaLen(pbuffer);
 	unsigned short length = GetParaLen(pbuffer);
+	unsigned char *key = NULL;
+	GetParaData(pbuffer, key, length);
+	vector_unsigned_char vkey(key,key +length);
 
-	unsigned char *txhash = NULL;
-	GetParaData(pbuffer, txhash, length);
-	vector<unsigned char> hash(txhash, txhash + length);
-	uint256 hash1(hash);
-	std::shared_ptr<CBaseTransaction> pBaseTx;
-	if (GetTransaction(pBaseTx, hash1)) {
-		memset(ipara, 0, 512);
-		CContractTransaction *tx = static_cast<CContractTransaction*>(pBaseTx.get());
-		/// un to do
+	unsigned short valuelen = GetParaLen(pbuffer);
+	unsigned char *value = NULL;
+	GetParaData(pbuffer, value, valuelen);
+	vector_unsigned_char vValue(value,value +valuelen);
+
+	unsigned short len = GetParaLen(pbuffer);
+	unsigned char *time = NULL;
+	GetParaData(pbuffer, time, len);
+	vector_unsigned_char vtime(time,time + len);
+
+	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	scriptid.push_back('_');
+	scriptid.insert(scriptid.end(),vkey.begin(),vkey.end());
+	bool flag = false;
+	vtime.insert(vtime.end(),vValue.begin(),vValue.end());
+	if(pScriptDBTip->SetData(scriptid,vValue))
+	{
+		flag = true;
 	}
 
-}
-static bool ExReadDataDBTimeFunc(unsigned char * ipara)
-{
+
+	memset(ipara, 0, 512);
+	int count = 1;
+	memcpy(ipara, &count, 2);
+	memcpy(&ipara[2], &flag, 1);
 	return true;
 }
-static bool ExModifyDataDBTimeFunc(unsigned char * ipara)
+static bool ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	unsigned char *pbuffer = ipara;
+	GetParaLen(pbuffer);
+	unsigned short length = GetParaLen(pbuffer);
+	unsigned char *key = NULL;
+	GetParaData(pbuffer, key, length);
+	vector_unsigned_char vkey(key,key +length);
+
+	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	scriptid.push_back('_');
+	scriptid.insert(scriptid.end(),vkey.begin(),vkey.end());
+	vector_unsigned_char vValue;
+	bool flag = false;
+	if(pScriptDBTip->EraseKey(scriptid))
+	{
+		flag = true;
+	}
+
+
+	memset(ipara, 0, 512);
+	int count = 1;
+	memcpy(ipara, &count, 2);
+	memcpy(&ipara[2], &flag, 1);
+	return true;
+}
+static bool ExReadDataDBFunc(unsigned char * ipara,void * pVmScript) {
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	unsigned char *pbuffer = ipara;
+	GetParaLen(pbuffer);
+	unsigned short length = GetParaLen(pbuffer);
+	unsigned char *key = NULL;
+	GetParaData(pbuffer, key, length);
+	vector_unsigned_char vkey(key,key +length);
+
+	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	scriptid.push_back('_');
+	scriptid.insert(scriptid.end(),vkey.begin(),vkey.end());
+	vector_unsigned_char vValue;
+	bool flag = false;
+	if(pScriptDBTip->GetData(scriptid,vValue))
+	{
+		flag = true;
+	}
+
+
+	memset(ipara, 0, 512);
+	int count = vValue.size();
+	memcpy(ipara, &count, 2);
+	memcpy(&ipara[2], &vValue[0], count);
+	return true;
+}
+static bool ExModifyDataDBFunc(unsigned char * ipara,void * pVmScript) {
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	unsigned char *pbuffer = ipara;
+	GetParaLen(pbuffer);
+	unsigned short length = GetParaLen(pbuffer);
+	unsigned char *key = NULL;
+	GetParaData(pbuffer, key, length);
+	vector_unsigned_char vkey(key,key +length);
+
+	unsigned short valuelen = GetParaLen(pbuffer);
+	unsigned char *value = NULL;
+	GetParaData(pbuffer, value, valuelen);
+	vector_unsigned_char vValue(value,value +valuelen);
+
+	unsigned short len = GetParaLen(pbuffer);
+	unsigned char *time = NULL;
+	GetParaData(pbuffer, time, len);
+	vector_unsigned_char vtime(time,time +len);
+
+	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	scriptid.push_back('_');
+	scriptid.insert(scriptid.end(),vkey.begin(),vkey.end());
+	bool flag = false;
+	vtime.insert(vtime.end(),vValue.begin(),vValue.end());
+	if(pScriptDBTip->SetData(scriptid,vValue))
+	{
+		flag = true;
+	}
+
+
+	memset(ipara, 0, 512);
+	int count = 1;
+	memcpy(ipara, &count, 2);
+	memcpy(&ipara[2], &flag, 1);
+	return true;
+}
+static bool ExGetDBSizeFunc(unsigned char * ipara,void * pVmScript) {
+	return true;
+}
+static bool ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
+	return true;
+}
+static bool ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	uint256 hash = pVmScriptRun->GetCurTxHash();
+	memset(ipara, 0, 512);
+	int count = sizeof(uint256);
+	memcpy(ipara, &count, 2);
+	memcpy(&ipara[2], &hash, count);
+	return true;
+}
+static bool ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	unsigned char *pbuffer = ipara;
+	GetParaLen(pbuffer);
+	unsigned short length = GetParaLen(pbuffer);
+	unsigned char *accountid = NULL;
+	GetParaData(pbuffer, accountid, length);
+	uint64_t money;
+	unsigned short len= GetParaLen(pbuffer);
+	unsigned char *pdata= NULL;
+	GetParaData(pbuffer, pdata, len);
+	memcpy(&money,pdata,sizeof(money));
+
+	vector<unsigned char> id(accountid, accountid + length);
+	CAccountViewCache view(*pAccountViewTip, true);
+
+	string strParam(accountid, accountid + length);
+	CAccount aAccount;
+	if (strParam.length() != 12) {
+		CBitcoinAddress address(strParam.c_str());
+		CKeyID keyid;
+		if (!address.GetKeyID(keyid))
+			return false;
+
+		if (!view.GetAccount(keyid, aAccount)) {
+			return false;
+		}
+	}
+	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	int height = pVmScriptRun->GetComfirHeight();
+	bool flag = aAccount.IsAuthorizedToMinus(money,height,scriptid);
+	memset(ipara, 0, 512);
+	int count = 1;
+	memcpy(ipara, &count, 2);
+	memcpy(&ipara[2], &flag, 1);
+
+}
+static bool ExReadDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 {
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	unsigned char *pbuffer = ipara;
+	GetParaLen(pbuffer);
+	unsigned short length = GetParaLen(pbuffer);
+	unsigned char *key = NULL;
+	GetParaData(pbuffer, key, length);
+
+	vector_unsigned_char vkey(key,key +length);
+	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	scriptid.push_back('_');
+	scriptid.insert(scriptid.end(),vkey.begin(),vkey.end());
+	vector_unsigned_char vValue;
+	if(pScriptDBTip->GetData(scriptid,vValue))
+	{
+		memset(ipara, 0, 512);
+		int count = 4;
+		memcpy(ipara, &count, 2);
+		memcpy(&ipara[2], &vValue[0], 4);
+		return true;
+	}
+
+	return false;
+}
+static bool ExModifyDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
+{
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	unsigned char *pbuffer = ipara;
+	GetParaLen(pbuffer);
+	unsigned short length = GetParaLen(pbuffer);
+	unsigned char *key = NULL;
+	GetParaData(pbuffer, key, length);
+	vector_unsigned_char vkey(key,key +length);
+
+	unsigned short ptimelen = GetParaLen(pbuffer);
+	unsigned char *time = NULL;
+	GetParaData(pbuffer, time, ptimelen);
+	vector_unsigned_char vtime(time,time +ptimelen);
+
+	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	scriptid.push_back('_');
+	scriptid.insert(scriptid.end(),vkey.begin(),vkey.end());
+	vector_unsigned_char vValue;
+	bool flag = false;
+	if(pScriptDBTip->GetData(scriptid,vValue))
+	{
+		vtime.insert(vtime.end(),vValue.begin()+4,vValue.end());
+		if(pScriptDBTip->SetData(scriptid,vtime))
+		{
+			flag = true;
+		}
+	}
+
+
+	memset(ipara, 0, 512);
+	int count = 1;
+	memcpy(ipara, &count, 2);
+	memcpy(&ipara[2], &flag, 1);
 	return true;
 }
 
-static bool ExModifyDataDBVavleFunc(unsigned char * ipara)
+static bool ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript)
 {
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	unsigned char *pbuffer = ipara;
+	GetParaLen(pbuffer);
+	unsigned short length = GetParaLen(pbuffer);
+	unsigned char *key = NULL;
+	GetParaData(pbuffer, key, length);
+	vector_unsigned_char vkey(key,key +length);
+
+	unsigned short valuelen = GetParaLen(pbuffer);
+	unsigned char *value = NULL;
+	GetParaData(pbuffer, value, valuelen);
+	vector_unsigned_char pValue(value,value +valuelen);
+
+	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	scriptid.push_back('_');
+	scriptid.insert(scriptid.end(),vkey.begin(),vkey.end());
+	vector_unsigned_char vValue;
+	bool flag = false;
+	if(pScriptDBTip->GetData(scriptid,vValue))
+	{
+		vValue.insert(vValue.begin()+4,pValue.begin(),pValue.end());
+		if(pScriptDBTip->SetData(scriptid,vValue))
+		{
+			flag = true;
+		}
+	}
+
+
+	memset(ipara, 0, 512);
+	int count = 1;
+	memcpy(ipara, &count, 2);
+	memcpy(&ipara[2], &flag, 1);
 	return true;
 }
 
@@ -715,7 +952,7 @@ const static struct __MapExterFun FunMap[] = { //
 		{GETTIPH_FUNC,ExGetTipHeightFunc},
 		{GETBLOCKHASH_FUNC,ExGetBlockHashFunc},
 		{ISAUTHORIT_FUNC,ExIsAuthoritFunc},
-		{GETCTXCONFIRMH_FUNC,ExGetCurTxConfirmHeightFunc},
+		{GETCTXCONFIRMH_FUNC,ExGetCurRunEnvHeightFunc},
 		{WRITEDB_FUNC,ExWriteDataDBFunc},
 		{DELETEDB_FUNC,ExDeleteDataDBFunc},
 		{READDB_FUNC,ExReadDataDBFunc},
@@ -728,11 +965,12 @@ const static struct __MapExterFun FunMap[] = { //
 		{MODIFYDBVALUE_FUNC,ExModifyDataDBVavleFunc}
 		};
 
-bool CallExternalFunc(INT16U method, unsigned char *ipara) {
-	return FunMap[method].fun(ipara);
+bool CallExternalFunc(INT16U method, unsigned char *ipara,CVmScriptRun *pVmScriptRun) {
+	return FunMap[method].fun(ipara,pVmScriptRun);
+
 }
 
-int CVir8051::run(int maxstep) {
+int CVir8051::run(int maxstep,CVmScriptRun *pVmScriptRun) {
 	INT8U code = 0;
 	int step = 0;
 
@@ -745,7 +983,7 @@ int CVir8051::run(int maxstep) {
 			//get what func will be called
 			INT16U method = ((INT16U) GetExRam(0xFBFE) | ((INT16U) GetExRam(0xFBFF) << 8));
 			unsigned char *ipara = (unsigned char *) GetExRamAddr(0xF7FE);		//input para
-			CallExternalFunc(method, ipara);
+			CallExternalFunc(method, ipara,pVmScriptRun);
 		} else if (Sys.PC == 0x0008) {
 			return step;		//return total step
 		}
@@ -771,7 +1009,7 @@ bool CVir8051::run() {
 			INT16U method = ((INT16U) GetExRam(0xFBFE) | ((INT16U) GetExRam(0xFBFF) << 8));
 			flag = method;
 			unsigned char *ipara = (unsigned char *) GetExRamAddr(0xF7FE);		//input para
-			CallExternalFunc(method, ipara);
+			//CallExternalFunc(method, ipara);
 		}
 		if (Sys.PC == 0x0007) {
 

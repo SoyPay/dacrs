@@ -8,6 +8,7 @@
 #include "hash.h"
 #include <vector>
 #include <string>
+#include "tx.h"
 
 using namespace std;
 
