@@ -486,7 +486,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 
 		CAccountViewCache accView(*pAccountViewTip, true);
 		CTransactionCache txCacheTemp(*pTxCacheTip);
-		CContractScriptCache contractScriptTemp(*pContractScriptTip);
+		CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
 		{
 			for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
 				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
@@ -623,7 +623,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 	return false;
 }
 
-bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionCache &txCache, CContractScriptCache &scriptCache, bool bJustCheckSign) {
+bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionCache &txCache, CScriptDBViewCache &scriptCache, bool bJustCheckSign) {
 
 	uint64_t maxNonce = CBaseParams::GetArg("-blockmaxnonce", 10000); //cacul times
 
@@ -830,7 +830,7 @@ CBlockTemplate* CreateNewBlock() {
 			CValidationState state;
 			CAccountViewCache accviewtemp(accview);
 			CTransactionCache txCacheTemp(*pTxCacheTip);
-			CContractScriptCache contractScriptTemp(*pContractScriptTip);
+			CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
 			if (!pBaseTx->UpdateAccount(nBlockTx + 1, accviewtemp, state, txundo, pIndexPrev->nHeight + 1, txCacheTemp, contractScriptTemp)) {
 				continue;
 			}

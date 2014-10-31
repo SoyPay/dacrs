@@ -133,10 +133,10 @@ BOOST_FIXTURE_TEST_SUITE(tx_tests,CTxTest)
 BOOST_FIXTURE_TEST_CASE(tx_add_free,CTxTest) {
 	//invalid data
 	CFund fund(NULL_FUNDTYPE, g_vHash[0].at(0), 1, CHAIN_HEIGHT + 1);
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_FREE, fund));
+	BOOST_CHECK(!accOperate.AddMoney(ADD_FREE, fund));
 	fund.nFundType = FREEDOM_FUND;
 	fund.value = MAX_MONEY;
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_FREE, fund));
+	BOOST_CHECK(!accOperate.AddMoney(ADD_FREE, fund));
 
 	vector<uint256> vReward;
 	vector<uint256> vFree;
@@ -147,12 +147,12 @@ BOOST_FIXTURE_TEST_CASE(tx_add_free,CTxTest) {
 		uint64_t nOld = GetTotalValue(accOperate.vRewardFund);
 		uint64_t randValue = random(10);
 		CFund fundReward(REWARD_FUND, vReward.at(i), randValue, CHAIN_HEIGHT + 1);
-		BOOST_CHECK(accOperate.OperateAccount(ADD_FREE, fundReward));
+		BOOST_CHECK(accOperate.AddMoney(ADD_FREE, fundReward));
 		BOOST_CHECK(GetTotalValue(accOperate.vRewardFund) == nOld + randValue);
 
 		nOld = GetTotalValue(accOperate.vFreedomFund);
 		CFund fundFree(FREEDOM_FUND, vFree.at(i), randValue, CHAIN_HEIGHT + 1);
-		BOOST_CHECK(accOperate.OperateAccount(ADD_FREE, fundFree));
+		BOOST_CHECK(accOperate.AddMoney(ADD_FREE, fundFree));
 		BOOST_CHECK(GetTotalValue(accOperate.vFreedomFund) == nOld + randValue);
 	}
 
@@ -162,6 +162,7 @@ BOOST_FIXTURE_TEST_CASE(tx_add_free,CTxTest) {
 
 BOOST_FIXTURE_TEST_CASE(tx_minus_free,CTxTest) {
 	accOperate.CompactAccount(CHAIN_HEIGHT);
+
 
 	int nBranch[3] = {0};
 	for (int i = 0; i < VECTOR_SIZE; i++) {
@@ -173,14 +174,14 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_free,CTxTest) {
 
 		if (nOldVectorSum && nOldVectorSum >= randValue) {
 			nOperateValue = 0;
-			BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE, fund, &nOperateValue));
+			//BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE, fund, &nOperateValue));
 			BOOST_CHECK(GetTotalValue(accOperate.vFreedomFund) == nOldVectorSum - randValue);
 			BOOST_CHECK(nOperateValue == randValue);
 			nBranch[0]++;
 		} else {
 			if (accOperate.llValues + nOldVectorSum >= randValue) {
 				nOperateValue = 0;
-				BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE, fund, &nOperateValue));
+				//BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE, fund, &nOperateValue));
 				BOOST_CHECK(
 						GetTotalValue(accOperate.vFreedomFund) + accOperate.llValues
 								== nOldValue + nOldVectorSum - randValue);
@@ -188,7 +189,7 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_free,CTxTest) {
 				nBranch[1]++;
 			} else {
 				nOperateValue = 0;
-				BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREE, fund, &nOperateValue) );
+				//BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREE, fund, &nOperateValue) );
 				BOOST_CHECK(GetTotalValue(accOperate.vFreedomFund) == nOldVectorSum);
 				BOOST_CHECK(nOldValue == accOperate.llValues);
 				BOOST_CHECK(nOperateValue == 0);
@@ -211,20 +212,20 @@ BOOST_FIXTURE_TEST_CASE(tx_add_self,CTxTest) {
 	CFund fundvalid(SELF_FREEZD_FUND, vSelf.at(0), 1, CHAIN_HEIGHT + 1);
 	CFund fundInvalid1(fundvalid);
 	fundInvalid1.nFundType = 0;
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_SELF_FREEZD, fundInvalid1));
+	BOOST_CHECK(!accOperate.AddMoney(ADD_SELF_FREEZD, fundInvalid1));
 	fundInvalid1.nFundType = NULL_OPERTYPE;
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_SELF_FREEZD, fundInvalid1));
+	BOOST_CHECK(!accOperate.AddMoney(ADD_SELF_FREEZD, fundInvalid1));
 
 	CFund fundInvalid2(fundvalid);
 	fundInvalid2.uTxHash = uint256(0);
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_SELF_FREEZD, fundInvalid2));
+	BOOST_CHECK(!accOperate.AddMoney(ADD_SELF_FREEZD, fundInvalid2));
 
 	//random check
 	for (int i = 0; i < VECTOR_SIZE; i++) {
 		uint64_t nOldInput = GetTotalValue(accOperate.vSelfFreeze);
 		uint64_t randValue = random(10);
 		CFund fund(SELF_FREEZD_FUND, vSelf.at(i), randValue, CHAIN_HEIGHT + 1);
-		BOOST_CHECK(accOperate.OperateAccount(ADD_SELF_FREEZD, fund));
+		BOOST_CHECK(accOperate.AddMoney(ADD_SELF_FREEZD, fund));
 		BOOST_CHECK(GetTotalValue(accOperate.vSelfFreeze) == nOldInput + randValue);
 	}
 
@@ -243,13 +244,13 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_self,CTxTest) {
 
 		if (nOldVectorSum >= randValue) {
 			nOperateValue = 0;
-			BOOST_CHECK(accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, &nOperateValue));
+			//BOOST_CHECK(accOperate.MinusMoney()(MINUS_SELF_FREEZD, fund, &nOperateValue));
 			BOOST_CHECK(GetTotalValue(accOperate.vSelfFreeze) == nOldVectorSum - randValue);
 			BOOST_CHECK(nOperateValue == randValue);
 			nBranch[0]++;
 		} else {
 			nOperateValue = 0;
-			BOOST_CHECK(!accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, &nOperateValue));
+			//BOOST_CHECK(!accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, &nOperateValue));
 			BOOST_CHECK(GetTotalValue(accOperate.vSelfFreeze) == nOldVectorSum);
 			BOOST_CHECK(nOperateValue == 0);
 			nBranch[1]++;
@@ -270,20 +271,20 @@ BOOST_FIXTURE_TEST_CASE(tx_add_freezed,CTxTest) {
 	CFund fundvalid(FREEDOM_FUND, vSelf.at(0), 1, CHAIN_HEIGHT + 1);
 	CFund fundInvalid1(fundvalid);
 	fundInvalid1.nFundType = 0;
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_FREEZD, fundInvalid1));
+	//BOOST_CHECK(!accOperate.OperateAccount(ADD_FREEZD, fundInvalid1));
 	fundInvalid1.nFundType = NULL_FUNDTYPE;
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_FREEZD, fundInvalid1));
+	//BOOST_CHECK(!accOperate.OperateAccount(ADD_FREEZD, fundInvalid1));
 
 	CFund fundInvalid2(fundvalid);
 	fundInvalid2.uTxHash = uint256(0);
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_FREEZD, fundInvalid2));
+	//BOOST_CHECK(!accOperate.OperateAccount(ADD_FREEZD, fundInvalid2));
 
 	//random check
 	for (int i = 0; i < VECTOR_SIZE; i++) {
 		uint64_t nOldInput = GetTotalValue(accOperate.vFreeze);
 		uint64_t randValue = random(10);
 		CFund fund(FREEZD_FUND, vSelf.at(i), randValue, CHAIN_HEIGHT + 1);
-		BOOST_CHECK(accOperate.OperateAccount(ADD_FREEZD, fund));
+		BOOST_CHECK(accOperate.AddMoney(ADD_FREEZD, fund));
 		BOOST_CHECK(GetTotalValue(accOperate.vFreeze) == nOldInput + randValue);
 	}
 
@@ -319,13 +320,13 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_freezed,CTxTest) {
 
 		if(accOperate.vFreeze.end() == iter){
 			//can't find the specific fund by *it,so operatreAccount should return false
-			BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREEZD, fund,&nOperaeValue) );
+			//BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREEZD, fund,&nOperaeValue) );
 			nBranch[0]++;
 			continue;
 		}
 
 		if (iter->nHeight != nHeight) {
-			BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREEZD, fund,&nOperaeValue) );
+			//BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREEZD, fund,&nOperaeValue) );
 			nBranch[1]++;
 			continue;
 		}
@@ -334,14 +335,14 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_freezed,CTxTest) {
 		uint64_t nOldIterValue = iter->value;
 		if(nRandomValue>iter->value)
 		{
-			BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREEZD, fund,&nOperaeValue) );
+			//BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREEZD, fund,&nOperaeValue) );
 			BOOST_CHECK(GetTotalValue(accOperate.vFreeze) == nOldFreezeValue);
 			BOOST_CHECK(0 == nOperaeValue);
 			nBranch[2]++;
 		}
 		else
 		{
-			BOOST_CHECK(accOperate.OperateAccount(MINUS_FREEZD, fund,&nOperaeValue) );
+			//BOOST_CHECK(accOperate.OperateAccount(MINUS_FREEZD, fund,&nOperaeValue) );
 			BOOST_CHECK(GetTotalValue(accOperate.vFreeze) + nRandomValue == nOldFreezeValue);
 			BOOST_CHECK(nRandomValue == nOperaeValue);
 			nBranch[3]++;

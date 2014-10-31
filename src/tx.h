@@ -18,9 +18,7 @@ class CScriptDB;
 class CBlock;
 class CTransactionCacheDB;
 class CTransactionCache;
-class CContractScriptCache;
-class CAuthorizate;
-
+class CScriptDBViewCache;
 typedef vector<unsigned char> vector_unsigned_char;
 
 class CRegID {
@@ -40,21 +38,95 @@ public:
 };
 
 enum TxType {
-	REG_ACCT_TX = 1,
-	NORMAL_TX = 2,
-	CONTRACT_TX = 3,
-	FREEZE_TX = 4,
-	REWARD_TX = 5,
-	REG_SCRIPT_TX = 6,
-	NULL_TX,
+	REG_ACCT_TX = 1,  //!< tx that used to register account
+	NORMAL_TX = 2,    //!< transfer money from one account to another
+	CONTRACT_TX = 3,  //!< contract tx
+	FREEZE_TX = 4,    //!< freeze tx
+	REWARD_TX = 5,    //!< reward tx
+	REG_SCRIPT_TX = 6,//!< register script or modify authorization
+	NULL_TX,          //!< NULL_TX
 };
 
 enum RegScriptType {
-	SCRIPT_ID = 0, SCRIPT_CONTENT = 1, NULL_TYPE,
+	SCRIPT_ID = 0,     //!< SCRIPT_ID
+	SCRIPT_CONTENT = 1,//!< SCRIPT_CONTENT
+	NULL_TYPE,         //!< NULL_TYPE
+};
+
+class CNetAuthorizate {
+public:
+	uint32_t GetAuthorizeTime() const {
+		return nAuthorizeTime;
+	}
+	uint64_t GetMaxMoneyPerTime() const {
+		return nMaxMoneyPerTime;
+	}
+	uint64_t GetMaxMoneyTotal() const {
+		return nMaxMoneyTotal;
+	}
+	uint64_t GetMaxMoneyPerDay() const {
+		return nMaxMoneyPerDay;
+	}
+
+	void SetAuthorizeTime(uint32_t nTime) {
+		nAuthorizeTime = nTime;
+	}
+	void SetMaxMoneyPerTime(uint64_t nMoney) {
+		nMaxMoneyPerTime = nMoney;
+	}
+	void SetMaxMoneyTotal(uint64_t nMoney) {
+		nMaxMoneyTotal = nMoney;
+	}
+	void SetMaxMoneyPerDay(uint64_t nMoney) {
+		nMaxMoneyPerDay = nMoney;
+	}
+
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(VARINT(nAuthorizeTime));
+		READWRITE(VARINT(nUserDefine));
+		READWRITE(VARINT(nMaxMoneyPerTime));
+		READWRITE(VARINT(nMaxMoneyTotal));
+		READWRITE(VARINT(nMaxMoneyPerDay));
+	)
+
+protected:
+	uint64_t nAuthorizeTime;
+	uint32_t nUserDefine;
+	uint64_t nMaxMoneyPerTime;
+	uint64_t nMaxMoneyTotal;
+	uint64_t nMaxMoneyPerDay;
+};
+
+class CAuthorizate :public CNetAuthorizate{
+public:
+	uint64_t GetCurMaxMoneyPerDay() const {
+		return nCurMaxMoneyPerDay;
+	}
+	uint32_t GetLastOperHeight() const {
+		return nLastOperHeight;
+	}
+
+	void SetCurMaxMoneyPerDay(uint64_t nMoney) {
+		nCurMaxMoneyPerDay = nMoney;
+	}
+	void SetLastOperHeight(uint32_t nHeight) {
+		nLastOperHeight = nHeight;
+	}
+
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(*(CNetAuthorizate*)this);
+		READWRITE(VARINT(nLastOperHeight));
+		READWRITE(VARINT(nCurMaxMoneyPerDay));
+	)
+
+private:
+	uint32_t nLastOperHeight;
+	uint64_t nCurMaxMoneyPerDay;
 };
 
 class CBaseTransaction {
-
 public:
 	static int64_t nMinTxFee;
 	static int64_t nMinRelayTxFee;
@@ -109,10 +181,10 @@ public:
 	}
 
 	virtual bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-			int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) = 0;
+			int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) = 0;
 
 	virtual bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-			int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) = 0;
+			int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) = 0;
 
 	virtual bool CheckTransction(CValidationState &state, CAccountViewCache &view) = 0;
 
@@ -178,10 +250,10 @@ public:
 	string ToString(CAccountViewCache &view) const;
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
@@ -254,10 +326,10 @@ public:
 	string ToString(CAccountViewCache &view) const;
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
@@ -336,10 +408,10 @@ public:
 	}
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 
@@ -412,10 +484,10 @@ public:
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
@@ -488,10 +560,10 @@ public:
 	}
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
@@ -504,6 +576,8 @@ public:
 	vector_unsigned_char script;
 	uint64_t llFees;
 	int nValidHeight;
+	unsigned char isHaveAuthor; // whether have authorizate, 0 represent do not have authorizate data, 1 means contrary
+	CNetAuthorizate aAuthorizate;
 	vector_unsigned_char signature;
 public:
 	CRegistScriptTx(const CBaseTransaction *pBaseTx) {
@@ -516,6 +590,7 @@ public:
 		llFees = 0;
 		nFlag = 0;
 		nValidHeight = 0;
+		isHaveAuthor = 0;
 	}
 
 	~CRegistScriptTx() {
@@ -530,6 +605,8 @@ public:
 			READWRITE(script);
 			READWRITE(llFees);
 			READWRITE(nValidHeight);
+			if(isHaveAuthor)
+				READWRITE(aAuthorizate);
 			READWRITE(signature);
 	)
 
@@ -562,40 +639,42 @@ public:
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CContractScriptCache &scriptCache);
+			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
 
+/**
+ * brief:	kinds of fund type
+ */
 enum FundType {
-	FREEDOM = 1,
-	REWARD_FUND,
-	FREEDOM_FUND,
-	FREEZD_FUND,
-	SELF_FREEZD_FUND,
-	NULL_FUNDTYPE,
+	FREEDOM = 1,	    //!< FREEDOM
+	REWARD_FUND,     	//!< REWARD_FUND
+	FREEDOM_FUND,    	//!< FREEDOM_FUND
+	FREEZD_FUND,     	//!< FREEZD_FUND
+	SELF_FREEZD_FUND,	//!< SELF_FREEZD_FUND
+	NULL_FUNDTYPE,   	//!< NULL_FUNDTYPE
 };
 
 enum OperType {
-	ADD_FREE = 1,  		//add to freedom
-	MINUS_FREE, 		//minus freedom
-	ADD_SELF_FREEZD,  	//add self_freezd
-	MINUS_SELF_FREEZD,	//minus self_freeze
-	ADD_FREEZD,			//add to freezed
-	MINUS_FREEZD,		//minus freezed
-	NULL_OPERTYPE,
+	ADD_FREE = 1,  		//!< add money to freedom
+	MINUS_FREE, 		//!< minus money from freedom
+	ADD_SELF_FREEZD,  	//!< add money to self_freezd
+	MINUS_SELF_FREEZD,	//!< minus money from self_freeze
+	ADD_FREEZD,			//!< add money to to freezed
+	MINUS_FREEZD,		//!< minus money from freezed
+	NULL_OPERTYPE,		//!< invalid operate type
 };
 
 class CFund {
-
 public:
-	unsigned char nFundType;
-	uint256 uTxHash;
-	uint64_t value;
-	int nHeight;
+	unsigned char nFundType;	//!< fund type
+	uint256 uTxHash;			//!< hash of the tx which create the fund
+	uint64_t value;				//!< amount of money
+	int nHeight;				//!< time-out height
 public:
 	CFund() {
 		nFundType = 0;
@@ -610,6 +689,9 @@ public:
 		nHeight = 0;
 	}
 	CFund(unsigned char _type, uint256 _hash, uint64_t _value, int _Height) {
+		/**
+		 * @todo change the uint256 _hash to uint256& _hash
+		 */
 		nFundType = _type;
 		uTxHash = _hash;
 		value = _value;
@@ -678,7 +760,9 @@ public:
 };
 
 enum AccountOper {
-	ADD_FUND = 1, MINUS_FUND = 2, NULL_OPER,
+	ADD_FUND = 1, 		//!< add operate
+	MINUS_FUND = 2, 	//!< minus operate
+	NULL_OPER,			//!< invalid
 };
 
 class COperFund {
@@ -712,10 +796,9 @@ public:
 };
 
 class CAccountOperLog {
-
 public:
 	CKeyID keyID;
-	vector<COperFund> vOperFund;//
+	vector<COperFund> vOperFund;
 	IMPLEMENT_SERIALIZE(
 			READWRITE(keyID);
 			READWRITE(vOperFund);
@@ -744,16 +827,42 @@ public:
 
 class CAccount {
 public:
-	CKeyID keyID;
-	CPubKey publicKey;
-	uint64_t llValues;
-	vector<CFund> vRewardFund;
-	vector<CFund> vFreedomFund;
-	vector<CFund> vFreeze;
-	vector<CFund> vSelfFreeze;
+	CKeyID keyID;											//!< private key of the account
+	CPubKey publicKey;										//!< public key of the account
+	uint64_t llValues;										//!< freedom money which coinage greater than 30 days
+	vector<CFund> vRewardFund;								//!< reward money
+	vector<CFund> vFreedomFund;								//!< freedom money
+	vector<CFund> vFreeze;									//!< freezed money
+	vector<CFund> vSelfFreeze;								//!< self-freeze money
 	map<vector_unsigned_char,CAuthorizate> mapAuthorizate;	//!< Key:scriptID,value :CAuthorizate
 	CAccountOperLog accountOperLog;							//!< record operlog, write at undoinfo
+public :
+	/**
+	 * @brief add money to account
+	 * @param type:	must be ADD_FREE or ADD_SELF_FREEZD or ADD_FREEZD
+	 * @param fund:	member value in fund is the amount of money to add
+	 * @return return true if operate successfully,otherwise return false
+	 */
+	bool AddMoney(OperType type, const CFund &fund);
 
+	/**
+	 * @brief :	minus money from account
+	 * @param type:	must be MINUS_FREE or MINUS_SELF_FREEZD or MINUS_FREEZD
+	 * @param nHeight:	the height that block connected into chain
+	 * @param fund:	member value in fund is the amount of money to add
+	 * @param scriptID:
+	 * @return return true if operate successfully,otherwise return false
+	 */
+	bool MinusMoney(OperType type, int nHeight, const CFund &fund, const vector_unsigned_char& scriptID);
+
+	/**
+	 * @brief:	test whether  can minus money  from the account by the script
+	 * @param nMoney:	the amount of money to minus
+	 * @param nHeight:	the height that block connect into the chain
+	 * @param scriptID:
+	 * @return if we can minus the money then return ture,otherwise return false
+	 */
+	bool IsAuthorizedToMinus(uint64_t nMoney,int nHeight,const vector_unsigned_char& scriptID);
 public:
 	CAccount(CKeyID &keyId, CPubKey &pubKey) :
 			keyID(keyId), publicKey(pubKey) {
@@ -773,6 +882,9 @@ public:
 		return make_shared<CAccount>(*this);
 	}
 	uint64_t GetInterest() const {
+		/**
+		 * @todo  what this   by ranger.shi
+		 */
 		uint64_t rest = 0;
 
 		return rest;
@@ -786,15 +898,12 @@ public:
 	uint256 BuildMerkleTree(int prevBlockHeight) const;
 	void ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos);
 	uint64_t GetSecureAccPos(int prevBlockHeight) const;
-	~CAccount() {
-
-	}
 	string ToString() const;
 	bool IsEmptyValue() const {
 		return !(llValues > 0 || !vFreedomFund.empty() || !vFreeze.empty() || !vSelfFreeze.empty());
 	}
 	void CompactAccount(int nCurHeight);
-	bool OperateAccount(OperType type, const CFund &fund, uint64_t* pOperatedValue = NULL);
+
 	bool UndoOperateAccount(const CAccountOperLog & accountOperLog);
 	CFund& FindFund(const vector<CFund>& vFund, const uint256 &hash);
 
@@ -810,74 +919,17 @@ public:
 	)
 
 private:
-	bool IsFundValid(const CFund& fund);
-	bool IsFundValid(OperType type, const CFund& fund);
-	bool IsHashValidInFund(const vector<CFund>& vFund, const CFund& fund);
 	void MergerFund(vector<CFund> &vFund, int nCurHeight);
 	void WriteOperLog(AccountOper emOperType, const CFund &fund);
 	void WriteOperLog(const COperFund &operLog);
-	bool MinusFreeToOutput(const CFund& fund);
-	bool MinusFreezed(vector<CFund>& vFund, const CFund& fund, uint64_t& nOperateValue);
-	bool MinusFree(const CFund &fund, uint64_t& nOperateValue);
-	bool MinusSelf(const CFund &fund, uint64_t& nOperateValue);
+	bool CheckAddFund(OperType type, const CFund& fund);
+	bool MinusFreezed(const CFund& fund);
+	bool MinusFree(const CFund &fund);
+	bool MinusSelf(const CFund &fund);
 	bool IsMoneyOverflow(uint64_t nAddMoney);
-	bool MinusFreeOrSelf(const CFund& fund,uint64_t& nOperateValue);
 	void AddToFreeze(const CFund &fund);
+	void UpdateAuthority(int nHeight,uint64_t nMoney, const vector_unsigned_char& scriptID);
 	uint64_t GetVecMoney(const vector<CFund>& vFund);
-};
-
-class CAuthorizate{
-public:
-	uint32_t GetAuthorizeTime ()const {
-		return nAuthorizeTime.GetValue();
-	}
-	uint64_t GetMaxMoneyPerTime ()const {
-		return nMaxMoneyPerTime.GetValue();
-	}
-	uint64_t GetMaxMoneyTotal ()const {
-		return nMaxMoneyTotal.GetValue();
-	}
-	uint64_t GetMaxMoneyPerDay ()const {
-		return nMaxMoneyPerDay.GetValue();
-	}
-	uint64_t GetCurMaxMoneyPerDay() const {
-		return nCurMaxMoneyPerDay.GetValue();
-	}
-
-	void SetAuthorizeTime(uint32_t nTime) {
-		nAuthorizeTime.SetValue(nTime);
-	}
-	void SetMaxMoneyPerTime(uint64_t nMoney) {
-		nMaxMoneyPerTime.SetValue(nMoney);
-	}
-	void SetMaxMoneyTotal(uint64_t nMoney) {
-		nMaxMoneyTotal.SetValue(nMoney);
-	}
-	void SetMaxMoneyPerDay(uint64_t nMoney) {
-		nMaxMoneyPerDay.SetValue(nMoney);
-	}
-	void SetCurMaxMoneyPerDay(uint64_t nMoney) {
-		nCurMaxMoneyPerDay.SetValue(nMoney);
-	}
-
-	IMPLEMENT_SERIALIZE
-	(
-		READWRITE(nLastOperHeight);
-		READWRITE(nAuthorizeTime);
-		READWRITE(nMaxMoneyPerTime);
-		READWRITE(nMaxMoneyTotal);
-		READWRITE(nMaxMoneyPerDay);
-		READWRITE(nCurMaxMoneyPerDay);
-	)
-
-private:
-	CVarData<uint32_t> nLastOperHeight;
-	CVarData<uint32_t> nAuthorizeTime;
-	CVarData<uint32_t> nUserDefine;
-	CVarData<uint64_t> nMaxMoneyPerTime;
-	CVarData<uint64_t> nMaxMoneyTotal;
-	CVarData<uint64_t> nMaxMoneyPerDay;
-	CVarData<uint64_t> nCurMaxMoneyPerDay;
 };
 
 class CContractScript {
@@ -911,24 +963,6 @@ public:
 	bool Flush();
 	bool LoadTransaction();
 	void Clear();
-};
-
-class CContractScriptCache {
-private:
-	CScriptDB *base;
-	map<string, CContractScript> mapScript;
-public:
-	CContractScriptCache(CScriptDB *base);
-	bool GetContractScript(const string &strKey, CContractScript &contractScript);
-	bool IsContainContractScript(const string &strKey);
-	bool AddContractScript(const string &strKey, const CContractScript &script);
-	bool DeleteContractScript(const string &strKey);
-	bool LoadRegScript();
-    bool Flush();
-    map<string, CContractScript> &GetScriptCache();
-    bool GetScript(const string &strKey, vector<unsigned char> &vscript);
-    bool GetArbitrator(const string &strKey, set<string> &setArbId);
-    bool SetArbitrator(const string &strKey, const set<string> &setArbitrator);
 };
 
 inline unsigned int GetSerializeSize(const std::shared_ptr<CBaseTransaction> &pa, int nType, int nVersion) {

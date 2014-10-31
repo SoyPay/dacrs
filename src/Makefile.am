@@ -91,9 +91,7 @@ VMSCRIPT_H = \
 	VmScript/TestMcu.h
 
 VMSCRIPT_CPP = \
-	VmScript/CFundOpeator.cpp \
 	VmScript/CVir8051.cpp \
-	VmScript/CVmRule.cpp \
 	VmScript/VmScript.cpp \
 	VmScript/VmScriptRun.cpp \
 	VmScript/TestMcu.cpp

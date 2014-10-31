@@ -83,7 +83,7 @@ public:
 
 };
 
-class CDataBaseView
+class CScriptDBView
 {
 public:
 	virtual bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
@@ -91,14 +91,14 @@ public:
 	virtual bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
 	virtual bool EraseKey(const vector<unsigned char> &vKey);
 	virtual bool HaveData(const vector<unsigned char> &vKey);
-	virtual ~CDataBaseView(){};
+	virtual ~CScriptDBView(){};
 };
 
-class CDataBaseViewBacked : public CDataBaseView {
+class CScriptDBViewBacked : public CScriptDBView {
 protected:
-	CDataBaseView * pBase;
+	CScriptDBView * pBase;
 public:
-	CDataBaseViewBacked(CDataBaseView &dataBaseView);
+	CScriptDBViewBacked(CScriptDBView &dataBaseView);
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
 	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
 	bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
@@ -106,17 +106,17 @@ public:
 	bool HaveData(const vector<unsigned char> &vKey);
 };
 
-class CDataBaseViewCache : public CDataBaseViewBacked {
+class CScriptDBViewCache : public CScriptDBViewBacked {
 public:
 	map<string, vector<unsigned char> > mapDatas;
 public:
-	CDataBaseViewCache(CDataBaseView &base, bool fDummy=false);
+	CScriptDBViewCache(CScriptDBView &base, bool fDummy=false);
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
 	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
 	bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
 	bool EraseKey(const vector<unsigned char> &vKey);
 	bool HaveData(const vector<unsigned char> &vKey);
-
+	bool GetScript(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
 	bool Flush();
 	unsigned int GetCacheSize();
 };
