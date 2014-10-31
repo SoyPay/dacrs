@@ -33,7 +33,7 @@ bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& 
 	}
 
 	CContractTransaction* secure = static_cast<CContractTransaction*>(Tx.get());
-	if (pContractScriptTip->GetScript(HexStr(secure->scriptRegId), vScript)) {
+	if (pScriptDBTip->GetScript(secure->scriptRegId, vScript)) {
 		CDataStream stream(vScript, SER_DISK, CLIENT_VERSION);
 		try {
 			stream >> vmScript;
@@ -190,7 +190,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
 		// about operate account undo
 		uint64_t retValue;
-		bool flag = vmAccount.get()->OperateAccount((OperType) it.opeatortype, fund, &retValue);
+		bool flag = true;//vmAccount.get()->OperateAccount((OperType) it.opeatortype, fund, &retValue);
 		LogPrint("vm", "after muls account:%s\r\n", vmAccount.get()->ToString().c_str());
 		if (flag) {
 			return false;
