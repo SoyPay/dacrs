@@ -405,7 +405,7 @@ CAccountViewCache *pAccountViewTip = NULL;
 CTransactionCacheDB *pTxCacheDB = NULL;
 CTransactionCache *pTxCacheTip = NULL;
 CScriptDB *pScriptDB = NULL;
-CContractScriptCache *pContractScriptTip = NULL;
+CScriptDBViewCache *pScriptDBTip = NULL;
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -560,6 +560,9 @@ bool CheckTransaction(CBaseTransaction *ptx, CValidationState &state, CAccountVi
 	// Size limits
 	if (::GetSerializeSize(ptx->GetNewInstance(), SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
 		return state.DoS(100, ERROR("CheckTransaction() : size limits failed"), REJECT_INVALID, "bad-txns-oversize");
+
+	if(pTxCacheTip->IsContainTx(ptx->GetHash()))
+		return state.DoS(100, ERROR("CheckTransaction() : tx has been confirmed"), REJECT_INVALID, "bad-txns-oversize");
 
 	if(!ptx->CheckTransction(state, view))
 		return false;
@@ -1130,7 +1133,7 @@ void UpdateTime(CBlockHeader& block, const CBlockIndex* pindexPrev)
 }
 
 
-bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &view, CBlockIndex* pindex, CTransactionCache &txCache, CContractScriptCache &scriptCache, bool* pfClean)
+bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &view, CBlockIndex* pindex, CTransactionCache &txCache, CScriptDBViewCache &scriptCache, bool* pfClean)
 {
     assert(pindex->GetBlockHash() == view.GetBestBlock());
 
@@ -1207,7 +1210,7 @@ void ThreadScriptCheck() {
 //    scriptcheckqueue.Thread();
 }
 
-bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &view, CBlockIndex* pindex, CTransactionCache &txCache, CContractScriptCache &scriptCache, bool fJustCheck)
+bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &view, CBlockIndex* pindex, CTransactionCache &txCache, CScriptDBViewCache &scriptCache, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
     // Check it again in case a previous version let a bad block in
@@ -1341,7 +1344,7 @@ bool static WriteChainState(CValidationState &state) {
             return state.Abort(_("Failed to write to account database"));
         if (!pTxCacheTip->Flush())
         	return state.Abort(_("Failed to write to tx cache database"));
-        if (! pContractScriptTip->Flush())
+        if (! pScriptDBTip->Flush())
         	return state.Abort(_("Failed to write to script db database"));
 
         nLastWrite = GetTimeMicros();
@@ -1399,7 +1402,7 @@ bool static DisconnectTip(CValidationState &state) {
     int64_t nStart = GetTimeMicros();
     {
     	CAccountViewCache view(*pAccountViewTip, true);
-        if (!DisconnectBlock(block, state, view, pindexDelete, *pTxCacheTip, *pContractScriptTip, NULL))
+        if (!DisconnectBlock(block, state, view, pindexDelete, *pTxCacheTip, *pScriptDBTip, NULL))
             return ERROR("DisconnectTip() : DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
         assert(view.Flush());
     }
@@ -1449,7 +1452,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     {
         CInv inv(MSG_BLOCK, pindexNew->GetBlockHash());
         CAccountViewCache view(*pAccountViewTip, true);
-        if (!ConnectBlock(block, state, view, pindexNew, *pTxCacheTip, *pContractScriptTip)) {
+        if (!ConnectBlock(block, state, view, pindexNew, *pTxCacheTip, *pScriptDBTip)) {
             if (state.IsInvalid())
                 InvalidBlockFound(pindexNew, state);
             return ERROR("ConnectTip() : ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
@@ -1744,7 +1747,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockIndex, CValidationState& state) {
 	CAccountViewCache view(*pAccountViewTip);
 	CTransactionCache txCacheTemp(*pTxCacheTip);
-	CContractScriptCache contractScriptTemp(*pContractScriptTip);
+	CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
 	vector<CBlock> vPreBlocks;
 	if (pPreBlockIndex->GetBlockHash() != chainActive.Tip()->GetBlockHash()) {
 		do {
@@ -2370,7 +2373,7 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth)
     LogPrint("INFO","Verifying last %i blocks at level %i\n", nCheckDepth, nCheckLevel);
     CAccountViewCache view(*pAccountViewTip, true);
     CTransactionCache txCacheTemp(*pTxCacheTip);
-    CContractScriptCache contractScriptTemp(*pContractScriptTip);
+    CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
     CBlockIndex* pindexState = chainActive.Tip();
     CBlockIndex* pindexFailure = NULL;
     int nGoodTransactions = 0;

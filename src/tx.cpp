@@ -27,7 +27,7 @@ string CRegID::ToString() const {
 }
 
 bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
+		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
 	CAccount sourceAccount;
 	CRegID accountId(nHeight, nIndex);
 	CKeyID keyId = pubKey.GetID();
@@ -48,7 +48,7 @@ bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 	return true;
 }
 bool CRegisterAccountTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
-		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
+		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
 	//drop account
 	CRegID accountId(nHeight, nIndex);
 	CAccount oldAccount;
@@ -115,7 +115,7 @@ bool CRegisterAccountTx::CheckTransction(CValidationState &state, CAccountViewCa
 }
 
 bool CTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
+		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
 	CAccount sourceAccount;
 	CAccount desAccount;
 	if (!view.GetAccount(srcRegAccountId, sourceAccount))
@@ -154,7 +154,7 @@ bool CTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidatio
 	return true;
 }
 bool CTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
+		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
 	CAccount sourceAccount;
 	CAccount desAccount;
 	if (!view.GetAccount(srcRegAccountId, sourceAccount))
@@ -272,7 +272,7 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 }
 
 bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
+		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 	/** @todo
@@ -293,7 +293,7 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 	return true;
 }
 bool CContractTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
-		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
+		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
 	vector<CKeyID> vKeyId;
 	if (!GetAddress(vKeyId, view))
 		return state.DoS(100, ERROR("UpdateAccounts() : AppealTransaction undo updateaccount get key id error"),
@@ -392,7 +392,7 @@ bool CContractTransaction::CheckTransction(CValidationState &state, CAccountView
 }
 
 bool CFreezeTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
+		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
 	uint64_t minusValue = llFees;
 	uint64_t freezeValue = llFreezeFunds;
 	CAccount secureAccount;
@@ -416,7 +416,7 @@ bool CFreezeTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 	return true;
 }
 bool CFreezeTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
-		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
+		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
 	CAccount secureAccount;
 	if (!view.GetAccount(regAccountId, secureAccount))
 		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(regAccountId)),
@@ -472,7 +472,7 @@ bool CFreezeTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 }
 
 bool CRewardTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
+		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
 	CAccount secureAccount;
 	if (!view.GetAccount(account, secureAccount)) {
 		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(account)),
@@ -490,7 +490,7 @@ bool CRewardTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 	return true;
 }
 bool CRewardTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
-		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
+		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
 	if (account.size() != 6 && account.size() != 65) {
 		return state.DoS(100,
 				ERROR("UpdateAccounts() : account  %s error, either accountId 6 bytes, or pubkey 65 bytes",
@@ -537,95 +537,95 @@ bool CRewardTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 }
 
 bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
-	LogPrint("INFO" ,"registscript UpdateAccount\n");
-	CAccount secureAccount;
-	if (!view.GetAccount(regAccountId, secureAccount)) {
-		return state.DoS(100, ERROR("UpdateAccounts() : read regist addr %s account info error", HexStr(regAccountId)),
-				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
-	}
-
-	uint64_t minusValue = llFees;
-	if (minusValue > 0) {
-		CFund fund(minusValue);
-		//secureAccount.OperateAccount(MINUS_FREE, fund);
-		txundo.vAccountOperLog.push_back(secureAccount.accountOperLog);
-		if (!view.SetAccount(regAccountId, secureAccount))
-			return state.DoS(100, ERROR("UpdateAccounts() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
-					"bad-save-accountdb");
-	}
-
-	if (SCRIPT_ID == nFlag) {
-		vector<unsigned char> vScript;
-		if (!scriptCache.GetScript(HexStr(script), vScript)) {
-			return state.DoS(100,
-					ERROR("UpdateAccounts() : Get script id=%s error", HexStr(script.begin(), script.end())),
-					UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
-		}
-		if (0 == nIndex)
-			return true;
-		set<string> setArbitrator;
-		scriptCache.GetArbitrator(HexStr(script), setArbitrator);
-		if (setArbitrator.count(HexStr(regAccountId.begin(), regAccountId.end())))
-			return state.DoS(100,
-					ERROR("UpdateAccounts() : accountid %s have regested scriptid %s",
-							HexStr(regAccountId.begin(), regAccountId.end()), HexStr(script.begin(), script.end())),
-					UPDATE_ACCOUNT_FAIL, "bad-regest-script");
-		setArbitrator.insert(HexStr(regAccountId.begin(), regAccountId.end()));
-		if (!scriptCache.SetArbitrator(HexStr(script), setArbitrator)) {
-			return state.DoS(100,
-					ERROR("UpdateAccounts() : save script id %s error", HexStr(script.begin(), script.end())),
-					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
-		}
-	} else if (SCRIPT_CONTENT == nFlag) {
-		if (0 == nIndex)
-			return true;
-		CRegID scriptId(nHeight, nIndex);
-		CContractScript contractScript;
-		contractScript.scriptId = scriptId.vRegID;
-		contractScript.scriptContent = script;
-		contractScript.setArbitratorAccId.insert(HexStr(regAccountId.begin(), regAccountId.end()));
-		if (!scriptCache.AddContractScript(HexStr(scriptId.vRegID), contractScript)) {
-			return state.DoS(100,
-					ERROR("UpdateAccounts() : save script id %s script info error", HexStr(scriptId.vRegID)),
-					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
-		}
-	}
+		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
+//	LogPrint("INFO" ,"registscript UpdateAccount\n");
+//	CAccount secureAccount;
+//	if (!view.GetAccount(regAccountId, secureAccount)) {
+//		return state.DoS(100, ERROR("UpdateAccounts() : read regist addr %s account info error", HexStr(regAccountId)),
+//				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
+//	}
+//
+//	uint64_t minusValue = llFees;
+//	if (minusValue > 0) {
+//		CFund fund(minusValue);
+//		//secureAccount.OperateAccount(MINUS_FREE, fund);
+//		txundo.vAccountOperLog.push_back(secureAccount.accountOperLog);
+//		if (!view.SetAccount(regAccountId, secureAccount))
+//			return state.DoS(100, ERROR("UpdateAccounts() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
+//					"bad-save-accountdb");
+//	}
+//
+//	if (SCRIPT_ID == nFlag) {
+//		vector<unsigned char> vScript;
+//		if (!scriptCache.GetScript(HexStr(script), vScript)) {
+//			return state.DoS(100,
+//					ERROR("UpdateAccounts() : Get script id=%s error", HexStr(script.begin(), script.end())),
+//					UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
+//		}
+//		if (0 == nIndex)
+//			return true;
+//		set<string> setArbitrator;
+//		scriptCache.GetArbitrator(HexStr(script), setArbitrator);
+//		if (setArbitrator.count(HexStr(regAccountId.begin(), regAccountId.end())))
+//			return state.DoS(100,
+//					ERROR("UpdateAccounts() : accountid %s have regested scriptid %s",
+//							HexStr(regAccountId.begin(), regAccountId.end()), HexStr(script.begin(), script.end())),
+//					UPDATE_ACCOUNT_FAIL, "bad-regest-script");
+//		setArbitrator.insert(HexStr(regAccountId.begin(), regAccountId.end()));
+//		if (!scriptCache.SetArbitrator(HexStr(script), setArbitrator)) {
+//			return state.DoS(100,
+//					ERROR("UpdateAccounts() : save script id %s error", HexStr(script.begin(), script.end())),
+//					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
+//		}
+//	} else if (SCRIPT_CONTENT == nFlag) {
+//		if (0 == nIndex)
+//			return true;
+//		CRegID scriptId(nHeight, nIndex);
+//		CContractScript contractScript;
+//		contractScript.scriptId = scriptId.vRegID;
+//		contractScript.scriptContent = script;
+//		contractScript.setArbitratorAccId.insert(HexStr(regAccountId.begin(), regAccountId.end()));
+//		if (!scriptCache.AddContractScript(HexStr(scriptId.vRegID), contractScript)) {
+//			return state.DoS(100,
+//					ERROR("UpdateAccounts() : save script id %s script info error", HexStr(scriptId.vRegID)),
+//					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
+//		}
+//	}
 	return true;
 }
 bool CRegistScriptTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-		int nHeight, CTransactionCache &txCache, CContractScriptCache &scriptCache) {
-	CAccount secureAccount;
-	if (!view.GetAccount(regAccountId, secureAccount)) {
-		return state.DoS(100, ERROR("UpdateAccounts() : read regist addr %s account info error", HexStr(regAccountId)),
-				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
-	}
-	if (SCRIPT_ID == nFlag) {
-		set<string> setArbitrator;
-		scriptCache.GetArbitrator(HexStr(script), setArbitrator);
-		setArbitrator.erase(HexStr(regAccountId.begin(), regAccountId.end()));
-		if (!scriptCache.SetArbitrator(HexStr(script), setArbitrator)) {
-			return state.DoS(100,
-					ERROR("UpdateAccounts() : save script id %s error", HexStr(script.begin(), script.end())),
-					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
-		}
-	} else if (SCRIPT_CONTENT == nFlag) {
-		CRegID scriptId(nHeight, nIndex);
-		if (!scriptCache.DeleteContractScript(HexStr(scriptId.vRegID))) {
-			return state.DoS(100, ERROR("UpdateAccounts() : erase script id %s error", HexStr(scriptId.vRegID)),
-					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
-		}
-	}
-
-	CAccountOperLog accountOperLog;
-	if (!txundo.GetAccountOperLog(secureAccount.keyID, accountOperLog))
-		return state.DoS(100, ERROR("UpdateAccounts() : read keyid=%s undo info error", secureAccount.keyID.GetHex()),
-				UPDATE_ACCOUNT_FAIL, "bad-read-txundoinfo");
-	secureAccount.UndoOperateAccount(accountOperLog);
-
-	if (!view.SetAccount(regAccountId, secureAccount))
-		return state.DoS(100, ERROR("UpdateAccounts() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
-				"bad-save-accountdb");
+		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
+//	CAccount secureAccount;
+//	if (!view.GetAccount(regAccountId, secureAccount)) {
+//		return state.DoS(100, ERROR("UpdateAccounts() : read regist addr %s account info error", HexStr(regAccountId)),
+//				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
+//	}
+//	if (SCRIPT_ID == nFlag) {
+//		set<string> setArbitrator;
+//		scriptCache.GetArbitrator(HexStr(script), setArbitrator);
+//		setArbitrator.erase(HexStr(regAccountId.begin(), regAccountId.end()));
+//		if (!scriptCache.SetArbitrator(HexStr(script), setArbitrator)) {
+//			return state.DoS(100,
+//					ERROR("UpdateAccounts() : save script id %s error", HexStr(script.begin(), script.end())),
+//					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
+//		}
+//	} else if (SCRIPT_CONTENT == nFlag) {
+//		CRegID scriptId(nHeight, nIndex);
+//		if (!scriptCache.DeleteContractScript(HexStr(scriptId.vRegID))) {
+//			return state.DoS(100, ERROR("UpdateAccounts() : erase script id %s error", HexStr(scriptId.vRegID)),
+//					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
+//		}
+//	}
+//
+//	CAccountOperLog accountOperLog;
+//	if (!txundo.GetAccountOperLog(secureAccount.keyID, accountOperLog))
+//		return state.DoS(100, ERROR("UpdateAccounts() : read keyid=%s undo info error", secureAccount.keyID.GetHex()),
+//				UPDATE_ACCOUNT_FAIL, "bad-read-txundoinfo");
+//	secureAccount.UndoOperateAccount(accountOperLog);
+//
+//	if (!view.SetAccount(regAccountId, secureAccount))
+//		return state.DoS(100, ERROR("UpdateAccounts() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
+//				"bad-save-accountdb");
 	return true;
 }
 bool CRegistScriptTx::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) {
@@ -658,7 +658,7 @@ bool CRegistScriptTx::CheckTransction(CValidationState &state, CAccountViewCache
 	}
 	if(!nFlag) {
 		vector<unsigned char> vScriptContent;
-		if(!pContractScriptTip->GetScript(HexStr(script), vScriptContent)) {
+		if(!pScriptDBTip->GetScript(script, vScriptContent)) {
 			return state.DoS(100,
 					ERROR("CheckTransaction() : register script tx get exit script content by script reg id:%s error",
 							HexStr(script.begin(), script.end())), REJECT_INVALID, "bad-read-script-info");
@@ -680,6 +680,9 @@ bool CRegistScriptTx::CheckTransction(CValidationState &state, CAccountViewCache
 }
 
 bool CFund::IsMergeFund(const int & nCurHeight, int &nMergeType) const {
+
+	assert(nCurHeight >= nHeight); //add by ranger.shi
+
 	if (nCurHeight - nHeight > nMaxCoinDay / nTargetSpacing) {
 		nMergeType = FREEDOM;
 		return true;
@@ -932,6 +935,10 @@ bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 
 //caculate pos
 void CAccount::ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos) {
+	/**
+	 * @todo change the  uint256 hash to uint256 &hash
+	 */
+
 	int days = 0;
 	uint64_t money = 0;
 	money = llValues;
@@ -1177,9 +1184,9 @@ bool CAccount::IsAuthorizedToMinus(uint64_t nMoney, int nHeight, const vector_un
 	if (nHeight >= chainActive.Height())
 		assert(0);
 
-	assert(pContractScriptTip);
+	assert(pScriptDBTip);
 	vector<unsigned char> vscript;
-	if (!pContractScriptTip->GetScript(HexStr(scriptID), vscript))
+	if (!pScriptDBTip->GetScript(scriptID, vscript))
 		return false;
 
 	map<vector_unsigned_char, CAuthorizate>::iterator it = mapAuthorizate.find(scriptID);
@@ -1417,120 +1424,5 @@ bool CTransactionCache::LoadTransaction() {
 void CTransactionCache::Clear() {
 	mapTxHashByBlockHash.clear();
 	mapTxHashCacheByPrev.clear();
-}
-
-CContractScriptCache::CContractScriptCache(CScriptDB * pScriptDB) {
-	base = pScriptDB;
-}
-
-bool CContractScriptCache::GetContractScript(const string &strKey, CContractScript &contractScript) {
-	if(mapScript.count(strKey)) {
-		contractScript = mapScript[strKey];
-		return true;
-	}
-	else {
-		if(base->Exists(strKey)) {
-			if(!base->GetContractScript(ParseHex(strKey), contractScript))
-				return false;
-			mapScript[strKey] = contractScript;
-			return true;
-		}
-	}
-	return false;
-}
-
-bool CContractScriptCache::IsContainContractScript(const string &strKey) {
-	if(mapScript.count(strKey) || base->Exists(strKey)) {
-		return true;
-	}
-	return false;
-}
-
-bool CContractScriptCache::AddContractScript(const string &strKey, const CContractScript &contractScript) {
-	mapScript[strKey] = contractScript;
-	return true;
-}
-
-bool CContractScriptCache::DeleteContractScript(const string &strKey) {
-	if(mapScript.count(strKey)) {
-		mapScript[strKey].scriptId.clear();
-	}
-	else {
-		CContractScript contractScript;
-		if(base->GetContractScript(ParseHex(strKey), contractScript)) {
-			contractScript.scriptId.clear();
-			mapScript[strKey] = contractScript;
-		}
-	}
-	return true;
-}
-
-bool CContractScriptCache::LoadRegScript() {
-	return base->LoadRegScript(mapScript);
-}
-
-bool CContractScriptCache::Flush() {
-	return base->Flush(mapScript);
-}
-
-map<string, CContractScript> &CContractScriptCache::GetScriptCache() {
-	return mapScript;
-}
-
-bool CContractScriptCache::GetScript(const string &strKey, vector<unsigned char> &vscript) {
-	if(mapScript.count(strKey)) {
-		vscript = mapScript[strKey].scriptContent;
-		return true;
-	}
-	else {
-		if(base->Exists(strKey)) {
-			CContractScript contractScript;
-			if(base->GetContractScript(ParseHex(strKey), contractScript))
-			{
-				mapScript[strKey] = contractScript;
-				vscript = contractScript.scriptContent;
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-bool CContractScriptCache::GetArbitrator(const string &strKey, set<string> &setArbId) {
-	if(mapScript.count(strKey)) {
-		setArbId = mapScript[strKey].setArbitratorAccId;
-		return true;
-	}
-	else {
-		if(base->Exists(strKey)) {
-			CContractScript contractScript;
-			if(base->GetContractScript(ParseHex(strKey), contractScript))
-			{
-				mapScript[strKey] = contractScript;
-				setArbId = contractScript.setArbitratorAccId;
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-bool CContractScriptCache::SetArbitrator(const string &strKey, const set<string> &setArbitrator) {
-	if(mapScript.count(strKey)) {
-		mapScript[strKey].setArbitratorAccId = setArbitrator;
-		return true;
-	}
-//	else {
-//		if(base->Exists(strKey)) {
-//			CContractScript contractScript;
-//			if(base->GetContractScript(ParseHex(strKey), contractScript))
-//			{
-//				contractScript.setArbitratorAccId = setArbitrator;
-//				mapScript[strKey] = contractScript;
-//				return true;
-//			}
-//		}
-//	}
-	return false;
 }
 
