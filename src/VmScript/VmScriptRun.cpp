@@ -6,10 +6,14 @@
  */
 #include "VmScriptRun.h"
 #include "tx.h"
-#include "CFundOpeator.h"
 #include "util.h"
 #include <boost/foreach.hpp>
-
+CVmScriptRun::CVmScriptRun() {
+	RawAccont.clear();
+	NewAccont.clear();
+	height = 0;
+	;
+}
 vector<shared_ptr<CAccount> > &CVmScriptRun::GetRawAccont() {
 	return RawAccont;
 }
@@ -17,141 +21,77 @@ vector<shared_ptr<CAccount> > &CVmScriptRun::GetNewAccont() {
 	return NewAccont;
 }
 
-bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx,CAccountViewCache& view) {
+bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& view, int nheight) {
 
-//	IsRun = false;
-//	listTx = Tx;
-//	vector<unsigned char> vScript;
-//
-//	auto checkPara = [&]()
-//	{
-//		if(Tx.size() ==0)
-//		return false;
-//		auto tx = Tx[0].get();
-//		if(tx->nTxType != SECURE_TX)
-//		return false;
-//		for (auto& tx : Tx) {
-//			if (tx.get()->nTxType != SECURE_TX && tx.get()->nTxType != APPEAL_TX ) {
-//				return false;
-//			}
-//		}
-//
-//		return true;
-//	};
-//
-//	if (!checkPara()) {
-//		LogPrint("vm", "%s\r\n", "err param");
-//		return false;
-//	}
-//
-//	CSecureTransaction* secure = static_cast<CSecureTransaction*>(Tx[0].get());
-//	if (pContractScriptTip->GetScript(HexStr(secure->regScriptId), vScript)) {
-//		CDataStream stream(vScript, SER_DISK, CLIENT_VERSION);
-//		try {
-//			stream >> vmScript;
-//		}catch(exception& e) {
-//			 throw runtime_error("CVmScriptRun::intial() Unserialize to vmScript error:"+string(e.what()));
-//		}
-//	}
-//
-//	if (vmScript.IsValid() == false)
-//		return false;
-//
-//	CDataStream VmData(SER_DISK, CLIENT_VERSION);
-//	Cpackes Vmpacket;
-//	//// Write VmHeadData
-//	CVmHeadData headdata;
-//	headdata.ArbitratorAccCount = secure->vArbitratorRegAccId.size();
-//	headdata.AppealTxCount = Tx.size() - 1;
-//	headdata.vAccountCount = secure->vRegAccountId.size();
-//	Vmpacket.vhead = headdata;
-//
-//	for (auto& tx : Tx) {
-//		if (tx.get()->nTxType == APPEAL_TX) {
-//			CAppealTransaction* appealTx = static_cast<CAppealTransaction*>(tx.get());
-//			CVmAppealTxPackes AppealTxData;
-//
-//			AppealTxData.AppealTxContract.insert(AppealTxData.AppealTxContract.begin(), appealTx->vContract.begin(),
-//					appealTx->vContract.end());
-//			AppealTxData.sigaccountid.insert(AppealTxData.sigaccountid.begin(), appealTx->vPreAcountIndex.begin(),
-//					appealTx->vPreAcountIndex.end());
-//
-//			Vmpacket.vAppealTxPacke.push_back(AppealTxData);
-//		} else if (tx.get()->nTxType == SECURE_TX) {
-//			CSecureTransaction* SecureTx = static_cast<CSecureTransaction*>(tx.get());
-//			vector<unsigned char> sigaccountlist;
-//			int count = SecureTx->vArbitratorRegAccId.size();
-//			for (int i = 0; i < SecureTx->vRegAccountId.size(); i++) {
-//				unsigned char ch;
-//				count += i;
-//				memcpy(&ch, &count, 1);
-//				sigaccountlist.push_back(ch);
-//			}
-//
-//			CVmSecureTxData SecureTxData;
-//			SecureTxData.Contract.insert(SecureTxData.Contract.begin(), tx.get()->GetvContract().begin(),
-//					tx.get()->GetvContract().end());
-//			SecureTxData.sigaccountid.insert(SecureTxData.sigaccountid.begin(), sigaccountlist.begin(),
-//					sigaccountlist.end());
-//			Vmpacket.vsecuretx = SecureTxData;
-//		} else {
-//			assert(0);
-//			return false;
-//		}
-//	}
-//
-//	VmData << Vmpacket;
-//
-//	for (auto& tx : secure->vArbitratorRegAccId) {
-//		auto tem = make_shared<CAccount>();
-//		view.GetAccount(tx, *tem.get());
-//		vArbitratorAcc.push_back(tem);
-//	}
-//	RawAccont.insert(RawAccont.end(), vArbitratorAcc.begin(), vArbitratorAcc.end());
-//	for (auto& tx : secure->vRegAccountId) {
-//		auto tem = make_shared<CAccount>();
-//		view.GetAccount(tx, *tem.get());
-//		RawAccont.push_back(tem);
-//	}
-//
-//	vector<unsigned char> strContract;
-//	strContract.assign(VmData.begin(), VmData.end());
-//	LogPrint("vm","Tx size:%d,Contract:%s\r\n",Tx.size(),HexStr(VmData).c_str());
-//	pMcu = make_shared<CVir8051>(vmScript.Rom, strContract);
+	listTx = Tx;
+	height = nheight;
+	vector<unsigned char> vScript;
+
+	if (Tx.get()->nTxType != CONTRACT_TX) {
+		LogPrint("vm", "%s\r\n", "err param");
+		return false;
+	}
+
+	CContractTransaction* secure = static_cast<CContractTransaction*>(Tx.get());
+	if (pScriptDBTip->GetScript(secure->scriptRegId, vScript)) {
+		CDataStream stream(vScript, SER_DISK, CLIENT_VERSION);
+		try {
+			stream >> vmScript;
+		} catch (exception& e) {
+			throw runtime_error("CVmScriptRun::intial() Unserialize to vmScript error:" + string(e.what()));
+		}
+	}
+
+	if (vmScript.IsValid() == false)
+		return false;
+
+	for (auto& tx : secure->vAccountRegId) {
+		auto tem = make_shared<CAccount>();
+		view.GetAccount(tx, *tem.get());
+		RawAccont.push_back(tem);
+	}
+
+	vector<unsigned char> strContract;
+	pMcu = make_shared<CVir8051>(vmScript.Rom, strContract);
 	return true;
 }
 
 CVmScriptRun::~CVmScriptRun() {
 
 }
+tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view, int nheight,
+		uint64_t nBurnFactor) {
 
-bool CVmScriptRun::run(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& view) {
-
-	if (!intial(Tx, view)) {
-		LogPrint("vm", "VmScript inital Failed\n");
-		return false;
+	CContractTransaction* tx = static_cast<CContractTransaction*>(Tx.get());
+	int maxstep = tx->llFees/nBurnFactor;
+	tuple<bool, uint64_t, string> mytuple;
+	if (!intial(Tx, view, nheight)) {
+		mytuple = std::make_tuple (false, 0, string("VmScript inital Failed\n"));
+		return mytuple;
 	}
-	if (!pMcu.get()->run()) {
-		LogPrint("vm", "VmScript run Failed\n");
-		return false;
+	int step = pMcu.get()->run(maxstep);
+	if (!step) {
+		mytuple = std::make_tuple (false, 0, string("VmScript run Failed\n"));
+		return mytuple;
 	}
 	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
 	CDataStream Contractstream(*retData.get(), SER_DISK, CLIENT_VERSION);
-	CVmOperatePacke retpack;
-	Contractstream >> retpack;
 	vector<CVmOperate> retvmcode;
-	retvmcode.assign(retpack.vmpackets.begin(), retpack.vmpackets.end());
+	Contractstream >> retvmcode;
 
 	if (!CheckOperate(retvmcode)) {
-		LogPrint("vm", "VmScript CheckOperate Failed \n");//,HexStr(retData.get()->begin(),retData.get()->end()));
-		return false;
+		mytuple = std::make_tuple (false, 0, string("VmScript CheckOperate Failed \n"));
+		return mytuple;
 	}
-	if (!OpeatorSecureAccount(retvmcode)) {
-		LogPrint("vm", "VmScript OpeatorSecureAccount Failed\n");
-		return false;
+	if (!OpeatorAccount(retvmcode, view)) {
+		mytuple = std::make_tuple (false, 0, string("VmScript OpeatorSecureAccount Failed\n"));
+		return mytuple;
 	}
-	return true;
+	uint64_t spend = step*nBurnFactor;
+	mytuple = std::make_tuple (true, spend, string("VmScript Sucess\n"));
+	return mytuple;
 }
+
 shared_ptr<CAccount> CVmScriptRun::GetNewAccount(shared_ptr<CAccount>& vOldAccount) {
 	if (NewAccont.size() == 0)
 		return NULL;
@@ -165,232 +105,99 @@ shared_ptr<CAccount> CVmScriptRun::GetNewAccount(shared_ptr<CAccount>& vOldAccou
 	}
 	return NULL;
 }
+shared_ptr<CAccount> CVmScriptRun::GetAccount(shared_ptr<CAccount>& Account) {
+	if (RawAccont.size() == 0)
+		return NULL;
+	vector<shared_ptr<CAccount> >::iterator Iter;
+	for (Iter = RawAccont.begin(); Iter != RawAccont.end(); Iter++) {
+		shared_ptr<CAccount> temp = *Iter;
+		if (Account.get()->keyID == temp.get()->keyID) {
+			return temp;
+		}
+	}
+	return NULL;
+}
+
 bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 	// judge contract rulue
+	uint64_t addmoey, miusmoney;
 	for (auto& it : listoperate) {
-		if (it.muls.accountid >= maxAccountIndex() || it.muls.txid >= maxTxIndex()
-				|| it.add.accountid >= maxAccountIndex() || it.add.txid >= maxTxIndex()) {
-			LogPrint("vm", "VmScript OpeatorSecureAccount accountid not vaild\n");
+
+		if (it.opeatortype == ADD_FREE || it.opeatortype == ADD_SELF_FREEZD || it.opeatortype == ADD_FREEZD) {
+			addmoey += atoi64((char*) it.money);
+		}
+		if (it.opeatortype == MINUS_FREE || it.opeatortype == MINUS_SELF_FREEZD || it.opeatortype == MINUS_FREEZD) {
+			miusmoney += atoi64((char*) it.money);
+		}
+		if (addmoey != miusmoney)
 			return false;
-		}
-		if (!(it.add.Opeater == ADD_FREE || it.add.Opeater == ADD_SELF_FREEZD || it.add.Opeater == ADD_FREEZD)) {
-			LogPrint("vm", "VmScript OpeatorSecureAccount operate not vaild\n");
-			return false;
-		}
-		if (!(it.muls.Opeater == MINUS_FREE || it.muls.Opeater == MINUS_SELF_FREEZD
-				|| it.muls.Opeater == MINUS_FREEZD )) {
-			LogPrint("vm", "VmScript OpeatorSecureAccount muls operate not vaild\n");
-			return false;
-		}
-		if (atoi64((char*)it.muls.money) != atoi64((char*)it.add.money)) {
-			LogPrint("vm", "VmScript OpeatorSecureAccount muls and add value not Equal\n");
-			return false;
-		}
-		if (IsFirstTx()) {
-			if (it.add.outheight > vmScript.rule.vpreOutHeihgt)
-			{
-				LogPrint("vm", "VmScript OpeatorSecureAccount add height not less rule height\n");
-				return false;
-			}
-		} else {
-			if (it.add.outheight > vmScript.rule.vNextOutHeight)
-			{
-				LogPrint("vm", "VmScript OpeatorSecureAccount appealtx add %d height not less rule %d height\n",it.add.outheight,vmScript.rule.vNextOutHeight);
-				return false;
-			}
-		}
-//		if (it.muls.accountid < (vArbitratorAcc.size() -1)) {
-//			if (atoi64((char*)it.muls.money) > vmScript.rule.maxReSv)
-//			{
-//				LogPrint("vm", "VmScript OpeatorSecureAccount muls money not less rule maxReSv\n");
-//				return false;
-//			}
-//		}
-//		if (it.add.accountid < (vArbitratorAcc.size() -1)) {
-//			if (atoi64((char*)it.muls.money) > vmScript.rule.maxPay)
-//			{
-//				LogPrint("vm", "VmScript OpeatorSecureAccount muls money not less rule maxPay\n");
-//				return false;
-//			}
-//		}
+
 	}
 	return true;
 }
-shared_ptr<vector<CVmOperate>> CVmScriptRun::GetOperate() const
-{
+vector_unsigned_char CVmScriptRun::GetAccountID(CVmOperate value) {
+	vector_unsigned_char accountid;
+	if (value.type == ACCOUNTID) {
+		accountid.assign(value.accountid, value.accountid + 6);
+	} else if (value.type == KEYID) {
+		accountid.assign(value.accountid, value.accountid + 20);
+	} else {
+		return accountid;
+	}
+}
+shared_ptr<vector<CVmOperate>> CVmScriptRun::GetOperate() const {
 	auto tem = make_shared<vector<CVmOperate>>();
 	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
 	CDataStream Contractstream(*retData.get(), SER_DISK, CLIENT_VERSION);
-	CVmOperatePacke retpack;
-	Contractstream >> retpack;
-	tem.get()->assign(retpack.vmpackets.begin(), retpack.vmpackets.end());
+	vector<CVmOperate> retvmcode;
+	;
+	Contractstream >> retvmcode;
 	return tem;
 }
-bool CVmScriptRun::OpeatorSecureAccount(const vector<CVmOperate>& listoperate) {
+
+bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountViewCache& view) {
 
 	NewAccont.clear();
 	for (auto& it : listoperate) {
-		CFund mulsfund;
-		mulsfund.value = atoi64((char*)it.muls.money);
-		mulsfund.nHeight = it.muls.outheight + chainActive.Height();
-		mulsfund.uTxHash = listTx[it.muls.txid].get()->GetHash();
-		if ((OperType) it.muls.Opeater == MINUS_FREEZD) {
-			mulsfund.nFundType = FREEZD_FUND;
+		CFund fund;
+		fund.value = atoi64((char*) it.money);
+		fund.nHeight = it.outheight + height;
+		fund.uTxHash = listTx.get()->GetHash();
 
-		}
-		CFund addfund;
-		addfund.value = atoi64((char*)it.add.money);
-		addfund.nHeight = it.add.outheight + chainActive.Height();
-		addfund.uTxHash = listTx[it.add.txid].get()->GetHash();
-		if ((OperType) it.add.Opeater == ADD_FREEZD) {
-			addfund.nFundType = SELF_FREEZD_FUND;
-		}
-
-		if ((OperType) it.add.Opeater == ADD_FREE) {
-			addfund.nFundType = FREEDOM_FUND;
-		}
-		shared_ptr<CAccount> mulsAccount = RawAccont[it.muls.accountid];
-		shared_ptr<CAccount> vnewAccount = GetNewAccount(mulsAccount);
-		if (vnewAccount.get() != NULL) {
-			mulsAccount = vnewAccount;
-		}
-
-		if(mulsfund.nFundType == FREEZD_FUND)
-		{
-			CFund vFind = mulsAccount.get()->FindFund(mulsAccount.get()->vFreeze,mulsfund.uTxHash);
-			mulsfund.nHeight = vFind.nHeight;
-		}
-
-		LogPrint("vm","muls account:%s\r\n",mulsAccount.get()->ToString().c_str());
-		LogPrint("vm","fund:%s\r\n",mulsfund.ToString().c_str());
-//		cout<<mulsAccount.get()->ToString().c_str()<<endl;
-//		cout<<"fund:"<<mulsfund.ToString().c_str()<<endl;
-		uint64_t retValue;
-		bool retflag = mulsAccount.get()->OperateAccount((OperType) it.muls.Opeater, mulsfund, &retValue);
-		LogPrint("vm","after muls account:%s\r\n",mulsAccount.get()->ToString().c_str());
-		if (it.muls.ResultCheck == 0x01 && retValue != atoi64((char*)it.muls.money)) {
+		auto tem = make_shared<CAccount>();
+		vector_unsigned_char accountid = GetAccountID(it);
+		;
+		if (accountid.size() == 0) {
 			return false;
 		}
-		addfund.value = retValue;
 
-		shared_ptr<CAccount> addAccount = RawAccont[it.add.accountid];
-		shared_ptr<CAccount> vaddnewAccount = GetNewAccount(addAccount);
-		if (vaddnewAccount.get() != NULL) {
-			addAccount = vaddnewAccount;
+		view.GetAccount(accountid, *tem.get());
+		shared_ptr<CAccount> vmAccount = GetAccount(tem);
+		if (vmAccount.get() == NULL) {
+			RawAccont.push_back(tem);
 		}
-		LogPrint("vm","add addAccount:%s\r\n",mulsAccount.get()->ToString().c_str());
-		LogPrint("vm","fund:%s\r\n",addfund.ToString().c_str());
-		addAccount.get()->OperateAccount((OperType) it.add.Opeater, addfund);
-		LogPrint("vm","after addAccount:%s\r\n",mulsAccount.get()->ToString().c_str());
-		if(mulsAccount.get()->keyID == addAccount.get()->keyID)
-		{
-			NewAccont.push_back(addAccount);
+		shared_ptr<CAccount> vnewAccount = GetNewAccount(tem);
+		if (vnewAccount.get() != NULL) {
+			vmAccount = vnewAccount;
 		}
-		else
-		{
-			NewAccont.push_back(mulsAccount);
-			NewAccont.push_back(addAccount);
+
+		if (fund.nFundType == FREEZD_FUND) {
+			CFund vFind = vmAccount.get()->FindFund(vmAccount.get()->vFreeze, fund.uTxHash);
+			fund.nHeight = vFind.nHeight;
 		}
+
+		LogPrint("vm", "muls account:%s\r\n", vmAccount.get()->ToString().c_str());
+		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
+		// about operate account undo
+		uint64_t retValue;
+		bool flag = true;//vmAccount.get()->OperateAccount((OperType) it.opeatortype, fund, &retValue);
+		LogPrint("vm", "after muls account:%s\r\n", vmAccount.get()->ToString().c_str());
+		if (flag) {
+			return false;
+		}
+		NewAccont.push_back(vmAccount);
 
 	}
 	return true;
 }
 
-CVmScriptRun::CVmScriptRun(CAccountViewCache& view, vector<shared_ptr<CBaseTransaction> >& Tx,CVmScript& script)
-{
-//	IsRun = false;
-//	listTx = Tx;
-//	vector<unsigned char> vScript;
-//
-//	vmScript = script;
-//	auto checkPara = [&]()
-//	{
-//		if(Tx.size() ==0)
-//		return false;
-//		auto tx = Tx[0].get();
-//		if(tx->nTxType != SECURE_TX)
-//		{
-//			return false;
-//		}
-//
-//		for (auto& tx : Tx) {
-//			if (tx.get()->nTxType != SECURE_TX && tx.get()->nTxType != APPEAL_TX) {
-//				return false;
-//			}
-//		}
-//
-//		return true;
-//	};
-//
-//	if (!checkPara()) {
-//		LogPrint("vm", "%s%s\r\n", getFilelineStr(), "err param");
-//		return;
-//	}
-//
-//	CSecureTransaction* secure = static_cast<CSecureTransaction*>(Tx[0].get());
-//
-//	CDataStream VmData(SER_DISK, CLIENT_VERSION);
-//	Cpackes Vmpacket;
-//	//// Write VmHeadData
-//	CVmHeadData headdata;
-//	headdata.ArbitratorAccCount = secure->vArbitratorRegAccId.size();
-//	headdata.AppealTxCount = Tx.size() - 1;
-//	headdata.vAccountCount = secure->vRegAccountId.size();
-//	sprintf((char*)headdata.vCurrentH,"%d",chainActive.Height());
-//
-//	Vmpacket.vhead = headdata;
-//
-//	for (auto& tx : Tx) {
-//		if (tx.get()->nTxType == APPEAL_TX) {
-//			CAppealTransaction* appealTx = static_cast<CAppealTransaction*>(tx.get());
-//			CVmAppealTxPackes AppealTxData;
-//			for (auto& ch : appealTx->vPreAcountIndex) {
-//
-//			AppealTxData.AppealTxContract.insert(AppealTxData.AppealTxContract.begin(), appealTx->vContract.begin(),
-//					appealTx->vContract.end());
-//			AppealTxData.sigaccountid.insert(AppealTxData.sigaccountid.begin(), appealTx->vPreAcountIndex.begin(),
-//					appealTx->vPreAcountIndex.end());
-//
-//			Vmpacket.vAppealTxPacke.push_back(AppealTxData);
-//			}
-//		}
-//		if (tx.get()->nTxType == SECURE_TX) {
-//			CSecureTransaction* SecureTx = static_cast<CSecureTransaction*>(tx.get());
-//			vector<unsigned char> sigaccountlist;
-//			int count = SecureTx->vArbitratorRegAccId.size();
-//			for (int i = 0; i < SecureTx->vRegAccountId.size(); i++) {
-//				unsigned char ch;
-//				count += i;
-//				memcpy(&ch, &count, 1);
-//				sigaccountlist.push_back(ch);
-//			}
-//
-//			CVmSecureTxData SecureTxData;
-//			SecureTxData.Contract.insert(SecureTxData.Contract.begin(), tx.get()->GetvContract().begin(),
-//					tx.get()->GetvContract().end());
-//			SecureTxData.sigaccountid.insert(SecureTxData.sigaccountid.begin(), sigaccountlist.begin(),
-//					sigaccountlist.end());
-//			Vmpacket.vsecuretx = SecureTxData;
-//		}
-//	}
-//
-//	VmData << Vmpacket;
-//
-//	for (auto& tx : secure->vArbitratorRegAccId) {
-//		auto tem = make_shared<CAccount>();
-//		view.GetAccount(tx, *tem.get());
-//		vArbitratorAcc.push_back(tem);
-//	}
-//	RawAccont.insert(RawAccont.end(), vArbitratorAcc.begin(), vArbitratorAcc.end());
-//	for (auto& tx : secure->vRegAccountId) {
-//		auto tem = make_shared<CAccount>();
-//		view.GetAccount(tx, *tem.get());
-//		RawAccont.push_back(tem);
-//	}
-//
-//	vector<unsigned char> strContract;
-//	strContract.assign(VmData.begin(), VmData.end());
-//
-////	cout << "contct:"<<HexStr(strContract).c_str() << endl;
-//	pMcu = make_shared<CVir8051>(vmScript.Rom, strContract);
-}

@@ -79,7 +79,7 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry)
 		CValidationState state;
 		CTxUndo txundo;
 		CTransactionCache txCacheTemp(*pTxCacheTip);
-		CContractScriptCache contractScriptTemp(*pContractScriptTip);
+		CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
 		if (!entry.GetTx()->UpdateAccount(0, *pAccountViewCache, state, txundo, chainActive.Tip()->nHeight + 1,
 				txCacheTemp, contractScriptTemp))
 			return false;
