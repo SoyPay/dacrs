@@ -1217,7 +1217,6 @@ CFund& CAccount::FindFund(const vector<CFund>& vFund, const vector_unsigned_char
 bool CAccount::IsAuthorizedToMinus(uint64_t nMoney, int nHeight, const vector_unsigned_char& scriptID) {
 	if (nHeight >= chainActive.Height())
 		assert(0);
-
 	assert(pScriptDBTip);
 	vector<unsigned char> vscript;
 	if (!pScriptDBTip->GetScript(scriptID, vscript))
@@ -1426,47 +1425,55 @@ void CAccount::UpdateAuthority(int nHeight,uint64_t nMoney, const vector_unsigne
 	authorizate.SetLastOperHeight(static_cast<uint32_t>(nHeight) );
 }
 
-bool CContractScript::IsContainScript(const vector_unsigned_char &scriptContent,
-		const map<string, CContractScript> &mapScript) const {
-	map<string, CContractScript>::const_iterator iterScript = mapScript.begin();
-	for (; iterScript != mapScript.end(); ++iterScript) {
-		if (scriptContent == iterScript->second.scriptContent)
-			return true;
-	}
-	return false;
-}
 
 CTransactionCache::CTransactionCache(CTransactionCacheDB *pTxCacheDB) {
 	base = pTxCacheDB;
 }
 
+bool CTransactionCache::IsContainBlock(const CBlock &block) {
+	return (mapTxHashByBlockHash.count(block.GetHash()) > 0);
+}
+
 bool CTransactionCache::AddBlockToCache(const CBlock &block) {
-	vector<uint256> vTxHash;
-	vTxHash.clear();
-	for (auto &ptx : block.vptx) {
-		vTxHash.push_back(ptx->GetHash());
+
+	if (IsContainBlock(block)) {
+		LogPrint("INFO", "the block hash:%s isn't in TxCache\n", block.GetHash().GetHex());
+	} else {
+		vector<uint256> vTxHash;
+		vTxHash.clear();
+		for (auto &ptx : block.vptx) {
+			vTxHash.push_back(ptx->GetHash());
+		}
+		mapTxHashByBlockHash.insert(make_pair(block.GetHash(), vTxHash));
 	}
+
 	LogPrint("INFO", "mapTxHashByBlockHash size:%d\n", mapTxHashByBlockHash.size());
-	mapTxHashByBlockHash.insert(make_pair(block.GetHash(), vTxHash));
-	for(auto &item : mapTxHashByBlockHash) {
+	for (auto &item : mapTxHashByBlockHash) {
 		LogPrint("INFO", "blockhash:%s\n", item.first.GetHex());
-		for(auto &txHash : item.second)
+		for (auto &txHash : item.second)
 			LogPrint("INFO", "txhash:%s\n", txHash.GetHex());
 	}
-	for(auto &item : mapTxHashCacheByPrev) {
-		LogPrint("INFO", "prehash:%s\n", item.first.GetHex());
-		for(auto &relayTx : item.second)
-			LogPrint("INFO", "relay tx hash:%s\n", relayTx.GetHex());
-	}
+//	for(auto &item : mapTxHashCacheByPrev) {
+//		LogPrint("INFO", "prehash:%s\n", item.first.GetHex());
+//		for(auto &relayTx : item.second)
+//			LogPrint("INFO", "relay tx hash:%s\n", relayTx.GetHex());
+//	}
 	return true;
 }
 
 bool CTransactionCache::DeleteBlockFromCache(const CBlock &block) {
-	for (auto &ptx : block.vptx) {
-		vector<uint256> vTxHash;
-		vTxHash.clear();
-		mapTxHashByBlockHash[block.GetHash()] = vTxHash;
+	if (IsContainBlock(block)) {
+		for (auto &ptx : block.vptx) {
+			vector<uint256> vTxHash;
+			vTxHash.clear();
+			mapTxHashByBlockHash[block.GetHash()] = vTxHash;
+		}
+		return true;
+	} else {
+		LogPrint("INFO", "the block hash:%s isn't in TxCache\n", block.GetHash().GetHex());
+		return false;
 	}
+
 	return true;
 }
 
@@ -1479,20 +1486,20 @@ bool CTransactionCache::IsContainTx(const uint256 & txHash) {
 	return false;
 }
 
-vector<uint256> CTransactionCache::GetRelayTx(const uint256 & txHash) {
-	return mapTxHashCacheByPrev[txHash];
-}
-
-const map<uint256, vector<uint256> > &CTransactionCache::GetRelayTx(void) const {
-	return mapTxHashCacheByPrev;
-}
+//vector<uint256> CTransactionCache::GetRelayTx(const uint256 & txHash) {
+//	return mapTxHashCacheByPrev[txHash];
+//}
+//
+//const map<uint256, vector<uint256> > &CTransactionCache::GetRelayTx(void) const {
+//	return mapTxHashCacheByPrev;
+//}
 
 const map<uint256, vector<uint256> > &CTransactionCache::GetTxHashCache(void) const {
 	return mapTxHashByBlockHash;
 }
 
 bool CTransactionCache::Flush() {
-	bool bRet = base->Flush(mapTxHashByBlockHash, mapTxHashCacheByPrev);
+	bool bRet = base->Flush(mapTxHashByBlockHash);
 //	if (bRet) {
 //		mapTxHashByBlockHash.clear();
 //		mapTxHashCacheByPrev.clear();
@@ -1504,17 +1511,16 @@ void CTransactionCache::AddTxHashCache(const uint256 & blockHash, const vector<u
 	mapTxHashByBlockHash[blockHash] = vTxHash;
 }
 
-void CTransactionCache::AddRelayTx(const uint256 preTxHash, const vector<uint256> &vTxHash) {
-	mapTxHashCacheByPrev[preTxHash].clear();
-	mapTxHashCacheByPrev[preTxHash].assign(vTxHash.begin(), vTxHash.end());
-}
+//void CTransactionCache::AddRelayTx(const uint256 preTxHash, const vector<uint256> &vTxHash) {
+//	mapTxHashCacheByPrev[preTxHash].clear();
+//	mapTxHashCacheByPrev[preTxHash].assign(vTxHash.begin(), vTxHash.end());
+//}
 
 bool CTransactionCache::LoadTransaction() {
-	return base->LoadTransaction(mapTxHashByBlockHash, mapTxHashCacheByPrev);
+	return base->LoadTransaction(mapTxHashByBlockHash);
 }
 
 void CTransactionCache::Clear() {
 	mapTxHashByBlockHash.clear();
-	mapTxHashCacheByPrev.clear();
 }
 

@@ -4,6 +4,11 @@
 
 #if !defined(AFX_CVir8051COMDIRVER_H__97382C29_90C6_4E40_9581_6474D5D71406__INCLUDED_)
 #define AFX_CVir8051COMDIRVER_H__97382C29_90C6_4E40_9581_6474D5D71406__INCLUDED_
+
+#include <cstdio>
+
+class CVmScriptRun;
+
 typedef unsigned char INT8U;
 typedef unsigned short INT16U;
 
@@ -41,6 +46,7 @@ typedef unsigned short INT16U;
 #include <string>
 #include <memory>
 using namespace std;
+class CVmScriptRun;
 class CVir8051;
 class CUPSfr;
 typedef struct tagpsw PSW;
@@ -236,7 +242,7 @@ public:
 	INT8U SetRamData(INT8U addr, INT8U data);
 	~CVir8051();
 	bool run();
-	int run(int maxstep);
+	int run(int maxstep,CVmScriptRun *pVmScriptRun);
 	void StepRun(INT8U code);
 
 	INT8U GetOpcode(void) const;

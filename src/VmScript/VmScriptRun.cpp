@@ -69,7 +69,7 @@ tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& T
 		mytuple = std::make_tuple (false, 0, string("VmScript inital Failed\n"));
 		return mytuple;
 	}
-	int step = pMcu.get()->run(maxstep);
+	int step = pMcu.get()->run(maxstep,this);
 	if (!step) {
 		mytuple = std::make_tuple (false, 0, string("VmScript run Failed\n"));
 		return mytuple;
@@ -135,7 +135,7 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 	}
 	return true;
 }
-vector_unsigned_char CVmScriptRun::GetAccountID(CVmOperate value) {
+vector_unsigned_char& CVmScriptRun::GetAccountID(CVmOperate value) {
 	vector_unsigned_char accountid;
 	if (value.type == ACCOUNTID) {
 		accountid.assign(value.accountid, value.accountid + 6);
@@ -188,6 +188,17 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 
 		LogPrint("vm", "muls account:%s\r\n", vmAccount.get()->ToString().c_str());
 		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
+		if (it.opeatortype == ADD_FREE || it.opeatortype == ADD_SELF_FREEZD || it.opeatortype == ADD_FREEZD) {
+			vmAccount.get()->AddMoney((OperType)it.opeatortype,fund);
+			}
+		else if (it.opeatortype == MINUS_FREE || it.opeatortype == MINUS_SELF_FREEZD || it.opeatortype == MINUS_FREEZD) {
+			CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
+			vmAccount.get()->MinusMoney((OperType)it.opeatortype,height,fund,tx->scriptRegId);
+			}
+		else
+		{
+			LogPrint("vm", "fund:vm operte error\r\n");
+		}
 		// about operate account undo
 		uint64_t retValue;
 		bool flag = true;//vmAccount.get()->OperateAccount((OperType) it.opeatortype, fund, &retValue);
@@ -201,3 +212,16 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 	return true;
 }
 
+vector_unsigned_char& CVmScriptRun::GetScriptID()
+{
+	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
+	return tx->scriptRegId;
+}
+int CVmScriptRun::GetComfirHeight()
+{
+	return height;
+}
+uint256 CVmScriptRun::GetCurTxHash()
+{
+	return listTx.get()->GetHash();
+}

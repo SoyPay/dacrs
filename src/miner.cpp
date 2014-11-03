@@ -75,6 +75,22 @@ public:
 uint64_t nLastBlockTx = 0;
 uint64_t nLastBlockSize = 0;
 
+//base on the last 500 blocks
+uint64_t GetElementForBurn(void)
+{
+	uint64_t sumfee;
+	unsigned int nBlock = GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
+	CBlockIndex* pindex = chainActive.Tip();
+	assert(nBlock < pindex->nHeight);
+	for(int ii = 0; ii < nBlock; ii++)
+	{
+		sumfee += pindex->GetBlockFee();
+		pindex = pindex->pprev;
+	}
+
+	return (sumfee/nBlock);
+}
+
 // We want to sort transactions by priority and fee, so:
 
 void GetPriorityTx(vector<TxPriority> &vecPriority, map<uint256, vector<COrphan*> > &mapDependers) {
@@ -85,12 +101,25 @@ void GetPriorityTx(vector<TxPriority> &vecPriority, map<uint256, vector<COrphan*
 	list<COrphan> vOrphan; // list memory doesn't move
 	double dPriority = 0;
 	for (map<uint256, CTxMemPoolEntry>::iterator mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi) {
-		int nTxHeight = mi->second.GetHeight();
+		int nTxHeight = mi->second.GetHeight();//get Chain height when the tx entering the mempool
 		CBaseTransaction *pBaseTx = mi->second.GetTx().get();
 
 		if (!pTxCacheTip->IsContainTx(pBaseTx->GetHash())) {
 			unsigned int nTxSize = ::GetSerializeSize(pBaseTx->GetNewInstance(), SER_NETWORK, PROTOCOL_VERSION);
+#if 0
+			{
+				uint64_t element = GetElementForBurn();
+				uint64_t burnfee = xx(element, pBaseTx);
+				if(pBaseTx->GetFee() < burnfee)
+				{
+					LogPrint("INFO","the pBaseTx->GetFee() < burnfee\n");
+					assert(0);
+				}
+				double dFeePerKb = double(pBaseTx->GetFee() - ) / (double(nTxSize) / 1000.0);
+			}
+#else
 			double dFeePerKb = double(pBaseTx->GetFee()) / (double(nTxSize) / 1000.0);
+#endif
 			dPriority = 1000.0 / double(nTxSize);
 			vecPriority.push_back(TxPriority(dPriority, dFeePerKb, mi->second.GetTx()));
 		}

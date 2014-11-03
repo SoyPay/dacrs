@@ -84,14 +84,12 @@ private:
 	CTransactionCacheDB(const CTransactionCacheDB&);
 	void operator=(const CTransactionCacheDB&);
 public:
-	bool SetRelayTx(const uint256 &prevhash, const vector<uint256> &vHashTx);
-	bool GetRelayTx(const uint256 &prevhash, vector<uint256> &vHashTx);
+//	bool SetRelayTx(const uint256 &prevhash, const vector<uint256> &vHashTx);
+//	bool GetRelayTx(const uint256 &prevhash, vector<uint256> &vHashTx);
 	bool SetTxCache(const uint256 &blockHash, const vector<uint256> &hashTxSet);
 	bool GetTxCache(const uint256 &hashblock, vector<uint256> &hashTx);
-	bool LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash,
-			map<uint256, vector<uint256> > &mapTxHashCacheByPrev);
-	bool Flush(const map<uint256, vector<uint256> > &mapTxHashByBlockHash,
-			const map<uint256, vector<uint256> > &mapTxHashCacheByPrev);
+	bool LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash);
+	bool Flush(const map<uint256, vector<uint256> > &mapTxHashByBlockHash);
 };
 
 class CScriptDB: public CScriptDBView
@@ -109,5 +107,9 @@ public:
 	bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
 	bool EraseKey(const vector<unsigned char> &vKey);
 	bool HaveData(const vector<unsigned char> &vKey);
+	bool GetScript(const int &nIndex, vector<unsigned char> &vValue);
+	bool GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData,
+			int &nHeight);
+
 };
 #endif // BITCOIN_TXDB_LEVELDB_H
