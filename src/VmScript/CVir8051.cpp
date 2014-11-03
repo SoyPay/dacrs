@@ -740,41 +740,59 @@ static bool ExModifyDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	return true;
 }
 static bool ExGetDBSizeFunc(unsigned char * ipara,void * pVmScript) {
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	vector<unsigned char> vScriptKey;
+	int count = 0;
+	bool flag = false;
+	if(!pScriptDBTip->GetScriptCount(scriptid,count))
+	{
+		return false;
+	}
+	memset(ipara, 0, 512);
+	int len = 4;
+	memcpy(ipara, &len, 2);
+	memcpy(&ipara[2], &count, len);
 	return true;
 }
 static bool ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
-//	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-//	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-//	unsigned char *pbuffer = ipara;
-//	GetParaLen(pbuffer);
-//	unsigned short length = GetParaLen(pbuffer);
-//	unsigned char *key = NULL;
-//	GetParaData(pbuffer, key, length);
-//	vector_unsigned_char vkey(key,key +length);
-//
-//	unsigned short len = GetParaLen(pbuffer);
-//	unsigned char *pindex = NULL;
-//	GetParaData(pbuffer, pindex, len);
-//	int index = 0;
-//	memcpy(&index,pindex,4);
-//
-//	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
-//
-//	vector_unsigned_char vValue;
-//	int nHeight;
-//	bool flag = false;
-//	if(pScriptDBTip->GetScriptData(scriptid,index,vValue,nHeight))
-//	{
-//		flag = true;
-//	}
-//
-//
-//	memset(ipara, 0, 512);
-//	int count = vValue.size() + sizeof(nHeight);
-//	memcpy(ipara, &count, 2);
-//	memcpy(&ipara[2], &nHeight, 4);
-//	return true;
-//	return true;
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	unsigned char *pbuffer = ipara;
+	GetParaLen(pbuffer);
+	unsigned short length = GetParaLen(pbuffer);
+	unsigned char *key = NULL;
+	GetParaData(pbuffer, key, length);
+	vector_unsigned_char vkey(key,key +length);
+
+	unsigned short len = GetParaLen(pbuffer);
+	unsigned char *pindex = NULL;
+	GetParaData(pbuffer, pindex, len);
+	int index = 0;
+	memcpy(&index,pindex,4);
+
+	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+
+	vector_unsigned_char vValue;
+	int nHeight;
+	vector<unsigned char> vScriptKey;
+	bool flag = false;
+	if(!pScriptDBTip->GetScriptData(scriptid,index,vScriptKey,vValue,nHeight))
+	{
+		return false;
+	}
+
+
+	memset(ipara, 0, 512);
+	int count = vScriptKey.size();
+	memcpy(ipara, &count, 2);
+	memcpy(&ipara[2], &vScriptKey.at(0), count);
+	count = vValue.size();
+	memcpy(&ipara[vScriptKey.size()+2], &count, 2);
+	memcpy(&ipara[vScriptKey.size()+4], &vValue.at(0), count);
+	count = 4;
+	memcpy(&ipara[vScriptKey.size()+4], &count, 2);
+	memcpy(&ipara[vScriptKey.size()+6], &nHeight, 4);
+	return true;
 }
 static bool ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
@@ -783,6 +801,7 @@ static bool ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
 	int count = sizeof(uint256);
 	memcpy(ipara, &count, 2);
 	memcpy(&ipara[2], &hash, count);
+	cout<<"hash:" <<hash.ToString().c_str()<<endl;
 	return true;
 }
 static bool ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
@@ -942,17 +961,17 @@ enum CALL_API_FUN {
 
 
 	//// tx api
-	GETCTXCONFIRMH_FUNC = 301,//!< GETCTXCONFIRMH_FUNC
-	WRITEDB_FUNC = 302,       //!< WRITEDB_FUNC
-	DELETEDB_FUNC = 303,      //!< DELETEDB_FUNC
-	READDB_FUNC = 304,        //!< READDB_FUNC
-	MODIFYDB_FUNC = 305,      //!< MODIFYDB_FUNC
-	GETDBSIZE_FUNC = 306,     //!< GETDBSIZE_FUNC
-	GETDBVALUE_FUNC = 307,    //!< GETDBVALUE_FUNC
-	GetCURTXHASH_FUNC = 308,  //!< GetCURTXHASH_FUNC
-	READDBTIME_FUNC = 309,     //!< READDBTIME_FUNC
-	MODIFYDBTIME_FUNC = 310,  //!< MODIFYDBTIME_FUNC
-	MODIFYDBVALUE_FUNC = 311,  //!< MODIFYDBVALUE_FUNC
+	GETCTXCONFIRMH_FUNC ,//!< GETCTXCONFIRMH_FUNC
+	WRITEDB_FUNC,       //!< WRITEDB_FUNC
+	DELETEDB_FUNC,      //!< DELETEDB_FUNC
+	READDB_FUNC,        //!< READDB_FUNC
+	MODIFYDB_FUNC,      //!< MODIFYDB_FUNC
+	GETDBSIZE_FUNC,     //!< GETDBSIZE_FUNC
+	GETDBVALUE_FUNC,    //!< GETDBVALUE_FUNC
+	GetCURTXHASH_FUNC,  //!< GetCURTXHASH_FUNC
+	READDBTIME_FUNC,     //!< READDBTIME_FUNC
+	MODIFYDBTIME_FUNC,  //!< MODIFYDBTIME_FUNC
+	MODIFYDBVALUE_FUNC,  //!< MODIFYDBVALUE_FUNC
 
 
 };
