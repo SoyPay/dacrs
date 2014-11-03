@@ -745,7 +745,7 @@ static bool ExGetDBSizeFunc(unsigned char * ipara,void * pVmScript) {
 	vector<unsigned char> vScriptKey;
 	int count = 0;
 	bool flag = false;
-	if(!pScriptDBTip->GetScriptCount(scriptid,count))
+	if(!pScriptDBTip->GetScriptDataCount(scriptid,count))
 	{
 		return false;
 	}
