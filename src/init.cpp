@@ -833,9 +833,10 @@ bool AppInit2(boost::thread_group& threadGroup)
     nTotalCache -= nBlockTreeDBCache;
     size_t nAccountDBCache = nTotalCache / 2; // use half of the remaining cache for coindb cache
     nTotalCache -= nAccountDBCache;
-    size_t nTxCacheSize = nTotalCache / 2;
-    nTotalCache -= nTxCacheSize;
     size_t nScriptCacheSize = nTotalCache / 2;
+    nTotalCache -= nScriptCacheSize;
+    size_t nTxCacheSize = nTotalCache / 2;
+
     Params().SetCoinCacheSize(nTotalCache / 300); // coins in memory require around 300 bytes
 
     bool fLoaded = false;
