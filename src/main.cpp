@@ -886,10 +886,6 @@ int64_t GetBlockValue(int nHeight, int64_t nFees)
     return nSubsidy + nFees;
 }
 
-//const int64_t nTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-//const int64_t nTargetSpacing = 10 * 60;
-//const int64_t nInterval = nTargetTimespan / nTargetSpacing;
-//const int64_t nMaxCoinDay = 30 * 24 * 60 * 60;
 
 //
 // minimum amount of work that could possibly be required nTime after
@@ -933,7 +929,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 		CBigNum bnNew;
 		bnNew.SetCompact(pindexPrev->nBits);
 		int64_t nTargetSpacing = nStakeTargetSpacing;
-		int64_t nInterval = nTargetTimespan / nTargetSpacing;
+		int64_t nInterval = Params().GetTargetTimespan() / nTargetSpacing;
 		bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
 		bnNew /= ((nInterval + 1) * nTargetSpacing);
 
