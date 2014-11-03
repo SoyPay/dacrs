@@ -35,6 +35,8 @@ class CBloomFilter;
 class CInv;
 class CContractScript;
 
+/** the total blocks of burn fee need */
+static const unsigned int DEFAULT_BURN_BLOCK_SIZE = 500;
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 /** Default for -blockmaxsize and -blockminsize, which control the range of sizes the mining code will create **/
@@ -658,6 +660,9 @@ public:
     // Verification status of this block. See enum BlockStatus
     unsigned int nStatus;
 
+    //the block's fee
+    uint64_t nblockfee;
+
     // block header
     int nVersion;
     uint256 hashMerkleRoot;
@@ -682,6 +687,7 @@ public:
         nChainTx = 0;
         nStatus = 0;
         nSequenceId = 0;
+        nblockfee = 0; //add the block's fee
 
         nVersion       = 0;
         hashMerkleRoot = 0;
@@ -691,7 +697,7 @@ public:
         vSignature.clear();
     }
 
-    CBlockIndex(CBlockHeader& block)
+    CBlockIndex(CBlock& block)
     {
         phashBlock = NULL;
         pprev = NULL;
@@ -704,6 +710,7 @@ public:
         nChainTx = 0;
         nStatus = 0;
         nSequenceId = 0;
+        nblockfee = block.GetFee(); //add the block's fee
 
         nVersion       = block.nVersion;
         hashMerkleRoot = block.hashMerkleRoot;
@@ -745,6 +752,10 @@ public:
         block.vSignature     = vSignature;
         return block;
     }
+
+    int64_t GetBlockFee() const {
+    		return nblockfee;
+    	}
 
     uint256 GetBlockHash() const
     {
@@ -830,6 +841,7 @@ public:
         if (!(nType & SER_GETHASH))
             READWRITE(VARINT(nVersion));
 
+    	READWRITE(nblockfee);
         READWRITE(VARINT(nHeight));
         READWRITE(VARINT(nStatus));
         READWRITE(VARINT(nTx));

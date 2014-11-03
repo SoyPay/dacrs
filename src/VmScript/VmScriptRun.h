@@ -68,19 +68,19 @@ private:
 	 * @param vOldAccount: the argument
 	 * @return:Return the object
 	 */
-	shared_ptr<CAccount> GetNewAccount(shared_ptr<CAccount>& vOldAccount);
+	std::shared_ptr<CAccount> GetNewAccount(shared_ptr<CAccount>& vOldAccount);
 	/**
 	 * @brief find the Account from NewAccont
 	 * @param Account: argument
 	 * @return:Return the object
 	 */
-	shared_ptr<CAccount> GetAccount(shared_ptr<CAccount>& Account);
+	std::shared_ptr<CAccount> GetAccount(shared_ptr<CAccount>& Account);
 	/**
 	 * @brief get the account id
 	 * @param value: argument
 	 * @return:Return account id
 	 */
-	vector_unsigned_char GetAccountID(CVmOperate value);
+	vector_unsigned_char& GetAccountID(CVmOperate value);
 
 public:
 	/**
@@ -106,12 +106,16 @@ public:
 	 * @return: tuple<bool,uint64_t,string>  bool represent the script run success
 	 * uint64_t if the script run sucess Run the script calls the money ,string represent run the failed's  Reason
 	 */
-	tuple<bool,uint64_t,string> run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view, int nheight,uint64_t nBurnFactor);
+	tuple<bool,uint64_t,string> run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view,
+			int nheight,uint64_t nBurnFactor);
 	/**
 	 * @brief just for test
 	 * @return:
 	 */
 	shared_ptr<vector<CVmOperate> > GetOperate() const;
+	vector_unsigned_char& GetScriptID();
+	int GetComfirHeight();
+	uint256 GetCurTxHash();
 	virtual ~CVmScriptRun();
 };
 
