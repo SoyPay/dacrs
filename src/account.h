@@ -131,10 +131,12 @@ public:
 	bool GetScript(const int &nIndex, vector<unsigned char> &vValue);
 	bool HaveScript(const vector<unsigned char> &vScriptId);
 	bool GetScriptCount(const vector<unsigned char> &vScriptId, int &nCount);
+	bool SetScriptCount(const vector<unsigned char> &vScriptId, const int nCount);
 	bool EraseScript(const vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
 
 
 	bool GetScriptDataCount(const vector<unsigned char> &vScriptId, int &nCount);
+	bool SetScriptDataCount(const vector<unsigned char> &vScriptId, int nCount);
 	bool EraseScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey);
 	bool HaveScript(const vector<unsigned char> &vScriptId, const vector<unsigned char > &vScriptKey);
 	bool GetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
