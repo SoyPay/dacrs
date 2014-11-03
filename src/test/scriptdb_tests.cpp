@@ -7,24 +7,24 @@
 using namespace std;
 vector<string> g_vScriptID;
 void ReadData() {
-	auto_ptr<CAccountViewDB> pAccountViewDB(new CAccountViewDB(1000, false, false));
-	auto_ptr<CAccountViewCache> pAccountViewTip(new CAccountViewCache(*pAccountViewDB));
-	CAccountViewCache view(*pAccountViewTip, true);
-	map<string, CContractScript> &mapScript = pContractScriptTip->GetScriptCache();
-	map<string, CContractScript>::iterator iterScript = mapScript.begin();
-	for (; iterScript != mapScript.end(); ++iterScript) {
-		g_vScriptID.push_back(iterScript->first);
-		//cout<<"RegScriptId:"<<iterScript->first.c_str()<<endl;
-		//cout<<"RegScriptContent:"<<HexStr(iterScript->second.scriptContent.begin(), iterScript->second.scriptContent.end())<<endl;
-
-		set<string>::iterator iterArbit = iterScript->second.setArbitratorAccId.begin();
-		for (; iterArbit != iterScript->second.setArbitratorAccId.end(); ++iterArbit) {
-			CKeyID keyId;
-			view.GetKeyId(ParseHex(*iterArbit), keyId);
-			//cout<<"RegId:"<<(*iterArbit).c_str()<<endl;
-			//cout<<"KeyId:"<<keyId.GetHex()<<endl;
-		}
-	}
+//	auto_ptr<CAccountViewDB> pAccountViewDB(new CAccountViewDB(1000, false, false));
+//	auto_ptr<CAccountViewCache> pAccountViewTip(new CAccountViewCache(*pAccountViewDB));
+//	CAccountViewCache view(*pAccountViewTip, true);
+//	map<string, CContractScript> &mapScript = pContractScriptTip->GetScriptCache();
+//	map<string, CContractScript>::iterator iterScript = mapScript.begin();
+//	for (; iterScript != mapScript.end(); ++iterScript) {
+//		g_vScriptID.push_back(iterScript->first);
+//		//cout<<"RegScriptId:"<<iterScript->first.c_str()<<endl;
+//		//cout<<"RegScriptContent:"<<HexStr(iterScript->second.scriptContent.begin(), iterScript->second.scriptContent.end())<<endl;
+//
+//		set<string>::iterator iterArbit = iterScript->second.setArbitratorAccId.begin();
+//		for (; iterArbit != iterScript->second.setArbitratorAccId.end(); ++iterArbit) {
+//			CKeyID keyId;
+//			view.GetKeyId(ParseHex(*iterArbit), keyId);
+//			//cout<<"RegId:"<<(*iterArbit).c_str()<<endl;
+//			//cout<<"KeyId:"<<keyId.GetHex()<<endl;
+//		}
+//	}
 }
 
 void GenerateMinerEx() {

@@ -162,7 +162,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		CFund fund;
 		fund.value = atoi64((char*) it.money);
 		fund.nHeight = it.outheight + height;
-		fund.uTxHash = listTx.get()->GetHash();
+		//fund.uTxHash = listTx.get()->GetHash();
 
 		auto tem = make_shared<CAccount>();
 		vector_unsigned_char accountid = GetAccountID(it);
@@ -182,7 +182,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		}
 
 		if (fund.nFundType == FREEZD_FUND) {
-			CFund vFind = vmAccount.get()->FindFund(vmAccount.get()->vFreeze, fund.uTxHash);
+			CFund vFind = vmAccount.get()->FindFund(vmAccount.get()->vFreeze, fund.scriptID);
 			fund.nHeight = vFind.nHeight;
 		}
 
