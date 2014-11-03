@@ -671,35 +671,31 @@ enum OperType {
 
 class CFund {
 public:
-	unsigned char nFundType;	//!< fund type
-	uint256 uTxHash;			//!< hash of the tx which create the fund
-	uint64_t value;				//!< amount of money
-	int nHeight;				//!< time-out height
+	unsigned char nFundType;		//!< fund type
+	vector_unsigned_char scriptID;	//!< hash of the tx which create the fund
+	uint64_t value;					//!< amount of money
+	int nHeight;					//!< time-out height
 public:
 	CFund() {
 		nFundType = 0;
-		uTxHash = 0;
 		value = 0;
 		nHeight = 0;
 	}
 	CFund(uint64_t _value) {
 		nFundType = 0;
-		uTxHash = 0;
 		value = _value;
 		nHeight = 0;
 	}
-	CFund(unsigned char _type, uint256 _hash, uint64_t _value, int _Height) {
-		/**
-		 * @todo change the uint256 _hash to uint256& _hash
-		 */
+	CFund(unsigned char _type, uint64_t _value, int _Height,const vector_unsigned_char& _scriptID = vector_unsigned_char()) {
 		nFundType = _type;
-		uTxHash = _hash;
 		value = _value;
 		nHeight = _Height;
+		if (!_scriptID.empty())
+			scriptID = _scriptID;
 	}
 	CFund(const CFund &fund) {
 		nFundType = fund.nFundType;
-		uTxHash = fund.uTxHash;
+		scriptID = fund.scriptID;
 		value = fund.value;
 		nHeight = fund.nHeight;
 	}
@@ -708,7 +704,7 @@ public:
 			return *this;
 		}
 		this->nFundType = fund.nFundType;
-		this->uTxHash = fund.uTxHash;
+		this->scriptID = fund.scriptID;
 		this->value = fund.value;
 		this->nHeight = fund.nHeight;
 		return *this;
@@ -738,7 +734,7 @@ public:
 	friend bool operator ==(const CFund &fa, const CFund &fb) {
 		if (fa.nFundType != fb.nFundType)
 			return false;
-		if (fa.uTxHash != fb.uTxHash)
+		if (fa.scriptID != fb.scriptID)
 			return false;
 		if (fa.value != fb.value)
 			return false;
@@ -750,7 +746,7 @@ public:
 	IMPLEMENT_SERIALIZE
 	(
 			READWRITE(nFundType);
-			READWRITE(uTxHash);
+			READWRITE(scriptID);
 			READWRITE(value);
 			READWRITE(nHeight);
 
@@ -837,6 +833,7 @@ public:
 	map<vector_unsigned_char,CAuthorizate> mapAuthorizate;	//!< Key:scriptID,value :CAuthorizate
 	CAccountOperLog accountOperLog;							//!< record operlog, write at undoinfo
 public :
+	bool OperateAccount(OperType type, const CFund &fund, int nHeight = 0);
 	/**
 	 * @brief add money to account
 	 * @param type:	must be ADD_FREE or ADD_SELF_FREEZD or ADD_FREEZD
@@ -903,9 +900,10 @@ public:
 		return !(llValues > 0 || !vFreedomFund.empty() || !vFreeze.empty() || !vSelfFreeze.empty());
 	}
 	void CompactAccount(int nCurHeight);
+	void AddToFreedom(const CFund &fund,bool bWriteLog = true);
 
 	bool UndoOperateAccount(const CAccountOperLog & accountOperLog);
-	CFund& FindFund(const vector<CFund>& vFund, const uint256 &hash);
+	CFund& FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID);
 
 	IMPLEMENT_SERIALIZE
 	(

@@ -28,10 +28,10 @@ struct TestingSetup {
 		{
 			//vmscript test init
 			delete pScriptDB;
-			delete pContractScriptTip;
+			//delete pContractScriptTip;
 
 			pScriptDB = new CScriptDB(1024*1024, false , false);
-			pContractScriptTip = new CContractScriptCache(pScriptDB);
+			//pContractScriptTip = new CContractScriptCache(pScriptDB);
 		}
 		mapArgs["-datadir"] = "D:\\bitcoin";
 		ReadConfigFile(mapArgs, mapMultiArgs);

@@ -1028,11 +1028,6 @@ extern CScriptDBViewCache *pScriptDBTip;
 //extern set<uint256> setTxHashCache;
 //extern map<uint256, set<uint256> > mapTxHashCacheByPrev;
 
-static const int64_t nTargetTimespan = 30 * 60;
-const int64_t nTargetSpacing = 10 * 60;
-const int64_t nInterval = nTargetTimespan / nTargetSpacing;
-const int64_t nMaxCoinDay = 30 * 24 * 60 * 60;
-
 //extern map<string, CContractScript> mapScript;
 
 struct CBlockTemplate
