@@ -28,19 +28,21 @@ struct TestingSetup {
 		{
 			//vmscript test init
 			delete pScriptDB;
+			delete pScriptDBTip;
 		//	delete pContractScriptTip;
 
 			pScriptDB = new CScriptDB(1024*1024, false , false);
+			pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
 		//	pContractScriptTip = new CContractScriptCache(pScriptDB);
 		}
-		mapArgs["-datadir"] = "D:\\bitcoin";
-		ReadConfigFile(mapArgs, mapMultiArgs);
-		if (!SelectParamsFromCommandLine()) {
-		       fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
-		}
+//		mapArgs["-datadir"] = "D:\\bitcoin";
+//		ReadConfigFile(mapArgs, mapMultiArgs);
+//		if (!SelectParamsFromCommandLine()) {
+//		       fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
+//		}
 //		Params().InitalConfig();
 	}
-   // CCoinsViewDB *pcoinsdbview;
+//    CCoinsViewDB *pcoinsdbview;
 //    boost::filesystem::path pathTemp;
 //    boost::thread_group threadGroup;
 //
@@ -54,8 +56,8 @@ struct TestingSetup {
 //        boost::filesystem::create_directories(pathTemp);
 //        mapArgs["-datadir"] = pathTemp.string();
 //        pblocktree = new CBlockTreeDB(1 << 20, true);
-//      //  pcoinsdbview = new CCoinsViewDB(1 << 23, true);
-//      //  pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
+//        pcoinsdbview = new CCoinsViewDB(1 << 23, true);
+//        pcoinsTip = new CCoinsViewCache(*pcoinsdbview);
 //        InitBlockIndex();
 //#ifdef ENABLE_WALLET
 //        bool fFirstRun;
@@ -67,7 +69,7 @@ struct TestingSetup {
 //        for (int i=0; i < nScriptCheckThreads-1; i++)
 //            threadGroup.create_thread(&ThreadScriptCheck);
 //        RegisterNodeSignals(GetNodeSignals());
- //   }
+//    }
 
     ~TestingSetup()
     {
