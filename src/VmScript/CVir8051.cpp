@@ -436,20 +436,44 @@ static bool ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
 	return true;
 }
 
-static bool ExGetTxInfoFunc(unsigned char * ipara,void * pVmScriptRun) {
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
 
-	unsigned char *txhash = NULL;
-	GetParaData(pbuffer, txhash, length);
-	vector<unsigned char> hash(txhash, txhash + length);
-	uint256 hash1(hash);
+
+bool GetData(unsigned char * ipara, vector<std::shared_ptr < std::vector<unsigned char> > > &ret) {
+	int totallen = GetParaLen(ipara);
+	totallen -= 2;
+	assert(totallen >= 0);
+	while (totallen > 0) {
+		unsigned short length = GetParaLen(ipara);
+		totallen -= (length + 2);
+		assert(totallen >= 0);
+		if (totallen < 0) {
+			return false;
+		}
+		ret.insert(ret.end(),std::make_shared<vector<unsigned char>>(ipara, ipara + length));
+//		ret.assign(std::make_shared<vector<unsigned char>>(ipara, ipara + length));
+	}
+	return true;
+}
+
+static bool ExGetTxInfoFunc(unsigned char * ipara,void * pVmScriptRun) {
+
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 1);
+//	unsigned char *pbuffer = ipara;
+//	GetParaLen(pbuffer);
+//	unsigned short length = GetParaLen(pbuffer);
+//
+//	unsigned char *txhash = NULL;
+//	GetParaData(pbuffer, txhash, length);
+//	vector<unsigned char> hash(txhash, txhash + length);
+	uint256 hash1(*retdata.at(0));
+
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 	if (GetTransaction(pBaseTx, hash1)) {
 		memset(ipara, 0, 512);
 		CContractTransaction *tx = static_cast<CContractTransaction*>(pBaseTx.get());
-		length = tx->vContract.size();
+		int length = tx->vContract.size();
 		memcpy(ipara, &length, 2);
 		memcpy(&ipara[2], &tx->vContract, length);
 		int len = 0;
@@ -621,27 +645,33 @@ static bool ExGetCurRunEnvHeightFunc(unsigned char * ipara,void * pVmScript) {
 }
 static bool ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
-	unsigned char *key = NULL;
-	GetParaData(pbuffer, key, length);
-	vector_unsigned_char vkey(key,key +length);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 3);
 
-	unsigned short valuelen = GetParaLen(pbuffer);
-	unsigned char *value = NULL;
-	GetParaData(pbuffer, value, valuelen);
-	vector_unsigned_char vValue(value,value +valuelen);
 
-	unsigned short len = GetParaLen(pbuffer);
-	unsigned char *time = NULL;
-	GetParaData(pbuffer, time, len);
+
+//	unsigned char *pbuffer = ipara;
+//	GetParaLen(pbuffer);
+//	unsigned short length = GetParaLen(pbuffer);
+//	unsigned char *key = NULL;
+//	GetParaData(pbuffer, key, length);
+//	vector_unsigned_char vkey(key,key +length);
+//
+//	unsigned short valuelen = GetParaLen(pbuffer);
+//	unsigned char *value = NULL;
+//	GetParaData(pbuffer, value, valuelen);
+//	vector_unsigned_char vValue(value,value +valuelen);
+//
+//	unsigned short len = GetParaLen(pbuffer);
+//	unsigned char *time = NULL;
+//	GetParaData(pbuffer, time, len);
 	int height = 0;
-	memcpy(&height,time,4);
+	memcpy(&height,&retdata.at(2).get()[0],4);
 
 	const vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
 	bool flag = false;
-	if(pScriptDBTip->SetScriptData(scriptid,vkey,vValue,height))
+	if(pScriptDBTip->SetScriptData(scriptid,*retdata.at(0),*retdata.at(1),height))
 	{
 		flag = true;
 	}
