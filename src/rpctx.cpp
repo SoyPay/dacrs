@@ -878,7 +878,7 @@ Value getaddrfrozendetail(const Array& params, bool fHelp) {
 		for (auto &item : secureAcc.vFreeze) {
 			Object obj;
 			obj.clear();
-			obj.push_back(Pair("tx hash:", item.uTxHash.ToString()));
+			obj.push_back(Pair("tx hash:", HexStr(item.scriptID).c_str()));
 			obj.push_back(Pair("frozen amount:", item.value));
 			obj.push_back(Pair("height of timeout:", item.nHeight));
 			array.push_back(obj);
@@ -1101,28 +1101,20 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 	array.push_back(str);
 	for (int i = 0; i < aAccount.vRewardFund.size(); ++i) {
 		CFund fund = aAccount.vRewardFund[i];
-		array.push_back(
-				tinyformat::format("%-20.20s%-70.70s%-25.8lf%-6.6d", fundTypeArray[fund.nFundType],
-						fund.uTxHash.GetHex(), fund.value, fund.nHeight));
+		//array.push_back(tinyformat::format("%-20.20s%-70.70s%-25.8lf%-6.6d",fundTypeArray[fund.nFundType], fund.uTxHash.GetHex(), fund.value, fund.nHeight));
 	}
 
 	for (int i = 0; i < aAccount.vFreedomFund.size(); ++i) {
 		CFund fund = aAccount.vFreedomFund[i];
-		array.push_back(
-				tinyformat::format("%-20.20s%-70.70s%-25.8lf%-6.6d", fundTypeArray[fund.nFundType],
-						fund.uTxHash.GetHex(), fund.value, fund.nHeight));
+		//array.push_back(tinyformat::format("%-20.20s%-70.70s%-25.8lf%-6.6d",fundTypeArray[fund.nFundType], fund.uTxHash.GetHex(), fund.value, fund.nHeight));
 	}
 	for (int i = 0; i < aAccount.vFreeze.size(); ++i) {
 		CFund fund = aAccount.vFreeze[i];
-		array.push_back(
-				tinyformat::format("%-20.20s%-70.70s%-25.8lf%-6.6d", fundTypeArray[fund.nFundType],
-						fund.uTxHash.GetHex(), fund.value, fund.nHeight));
+		//array.push_back(tinyformat::format("%-20.20s%-70.70s%-25.8lf%-6.6d",fundTypeArray[fund.nFundType], fund.uTxHash.GetHex(), fund.value, fund.nHeight));
 	}
 	for (int i = 0; i < aAccount.vSelfFreeze.size(); ++i) {
 		CFund fund = aAccount.vSelfFreeze[i];
-		array.push_back(
-				tinyformat::format("%-20.20s%-70.70s%-25.8lf%-6.6d", fundTypeArray[fund.nFundType],
-						fund.uTxHash.GetHex(), fund.value, fund.nHeight));
+		//array.push_back(tinyformat::format("%-20.20s%-70.70s%-25.8lf%-6.6d",fundTypeArray[fund.nFundType], fund.uTxHash.GetHex(), fund.value, fund.nHeight));
 	}
 	obj.push_back(Pair("detailinfo:", array));
 	return obj;
