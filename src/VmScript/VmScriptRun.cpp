@@ -12,6 +12,7 @@ CVmScriptRun::CVmScriptRun() {
 	RawAccont.clear();
 	NewAccont.clear();
 	height = 0;
+	m_ScriptDBTip = NULL;
 }
 vector<shared_ptr<CAccount> > &CVmScriptRun::GetRawAccont() {
 	return RawAccont;
@@ -32,7 +33,7 @@ bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& 
 	}
 
 	CContractTransaction* secure = static_cast<CContractTransaction*>(Tx.get());
-	if (pScriptDBTip->GetScript(secure->scriptRegId, vScript)) {
+	if (m_ScriptDBTip->GetScript(secure->scriptRegId, vScript)) {
 		CDataStream stream(vScript, SER_DISK, CLIENT_VERSION);
 		try {
 			stream >> vmScript;
@@ -58,15 +59,21 @@ bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& 
 CVmScriptRun::~CVmScriptRun() {
 
 }
-tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view, int nheight,
+tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view,CScriptDBViewCache& VmDB, int nheight,
 		uint64_t nBurnFactor) {
 
+	if(nBurnFactor == 0)
+	{
+		assert(0);
+		return std::make_tuple (false, 0, string("VmScript nBurnFactor == 0 \n"));
+	}
+	m_ScriptDBTip = &VmDB;
 	CContractTransaction* tx = static_cast<CContractTransaction*>(Tx.get());
 	int maxstep = tx->llFees/nBurnFactor;
 	tuple<bool, uint64_t, string> mytuple;
 	if (!intial(Tx, view, nheight)) {
-		mytuple = std::make_tuple (false, 0, string("VmScript inital Failed\n"));
-		return mytuple;
+		return std::make_tuple (false, 0, string("VmScript inital Failed\n"));
+
 	}
 	unsigned int  step = pMcu.get()->run(maxstep,this);
 	if (0 == step) {
@@ -79,16 +86,15 @@ tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& T
 	Contractstream >> retvmcode;
 
 	if (!CheckOperate(retvmcode)) {
-		mytuple = std::make_tuple (false, 0, string("VmScript CheckOperate Failed \n"));
-		return mytuple;
+		return std::make_tuple (false, 0, string("VmScript CheckOperate Failed \n"));
+
 	}
 	if (!OpeatorAccount(retvmcode, view)) {
-		mytuple = std::make_tuple (false, 0, string("VmScript OpeatorSecureAccount Failed\n"));
-		return mytuple;
+		return std::make_tuple (false, 0, string("VmScript OpeatorSecureAccount Failed\n"));
 	}
 	uint64_t spend = step*nBurnFactor;
-	mytuple = std::make_tuple (true, spend, string("VmScript Sucess\n"));
-	return mytuple;
+	return std::make_tuple (true, spend, string("VmScript Sucess\n"));
+
 }
 
 shared_ptr<CAccount> CVmScriptRun::GetNewAccount(shared_ptr<CAccount>& vOldAccount) {
@@ -137,15 +143,14 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 	}
 	return true;
 }
-vector_unsigned_char& CVmScriptRun::GetAccountID(CVmOperate value) {
+vector_unsigned_char CVmScriptRun::GetAccountID(CVmOperate value) {
 	vector_unsigned_char accountid;
 	if (value.type == ACCOUNTID) {
 		accountid.assign(value.accountid, value.accountid + 6);
 	} else if (value.type == KEYID) {
 		accountid.assign(value.accountid, value.accountid + 20);
-	} else {
-		return accountid;
 	}
+	return accountid;
 }
 shared_ptr<vector<CVmOperate>> CVmScriptRun::GetOperate() const {
 	auto tem = make_shared<vector<CVmOperate>>();
@@ -214,4 +219,8 @@ int CVmScriptRun::GetComfirHeight()
 uint256 CVmScriptRun::GetCurTxHash()
 {
 	return listTx.get()->GetHash();
+}
+CScriptDBViewCache* CVmScriptRun::GetScriptDB()
+{
+	return m_ScriptDBTip;
 }
