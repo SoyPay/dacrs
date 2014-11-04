@@ -329,13 +329,17 @@ bool CScriptDB::EraseKey(const vector<unsigned char> &vKey) {
 bool CScriptDB::HaveData(const vector<unsigned char> &vKey) {
 	return db.Exists(vKey);
 }
-bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vValue) {
-	assert(nIndex >= 0);
+bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue) {
+	assert(nIndex >= 0 && nIndex <=1);
 	leveldb::Iterator* pcursor = db.NewIterator();
 	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
 	string strPrefixTemp("def");
 	ssKeySet.insert(ssKeySet.end(), 9);
 	ssKeySet.insert(ssKeySet.end(), &strPrefixTemp[0], &strPrefixTemp[3]);
+	if(!vScriptId.empty()) {
+		vector<char> vId(vScriptId.begin(), vScriptId.end());
+		ssKeySet.insert(ssKeySet.end(), vId.begin(), vId.end());
+	}
 	pcursor->Seek(ssKeySet.str());
 	int i = nIndex;
 	while(pcursor->Valid() && i-->=0) {
@@ -351,6 +355,8 @@ bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vValue) {
 					leveldb::Slice slValue = pcursor->value();
 					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
 					ssValue >> vValue;
+					vScriptId.clear();
+					vScriptId.insert(vScriptId.end(), slKey.data()+4, slKey.data()+10);
 				}
 				pcursor->Next();
 			}
@@ -370,7 +376,7 @@ bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vValue) {
 }
 bool CScriptDB::GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
 		vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight) {
-	assert(nIndex >= 0);
+	assert(nIndex >= 0 && nIndex <=1);
 	leveldb::Iterator* pcursor = db.NewIterator();
 	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
 

@@ -29,18 +29,16 @@ struct TestingSetup {
 			//vmscript test init
 			delete pScriptDB;
 			delete pScriptDBTip;
-		//	delete pContractScriptTip;
 
 			pScriptDB = new CScriptDB(1024*1024, false , false);
 			pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
-		//	pContractScriptTip = new CContractScriptCache(pScriptDB);
 		}
-//		mapArgs["-datadir"] = "D:\\bitcoin";
-//		ReadConfigFile(mapArgs, mapMultiArgs);
-//		if (!SelectParamsFromCommandLine()) {
-//		       fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
-//		}
-//		Params().InitalConfig();
+		mapArgs["-datadir"] = "D:\\bitcoin";
+		ReadConfigFile(mapArgs, mapMultiArgs);
+		if (!SelectParamsFromCommandLine()) {
+		       fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
+		}
+		Params().InitalConfig();
 	}
 //    CCoinsViewDB *pcoinsdbview;
 //    boost::filesystem::path pathTemp;

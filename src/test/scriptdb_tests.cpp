@@ -13,9 +13,12 @@ void init() {
 
 void testscriptdb() {
 	vector<unsigned char> vScriptId = {0x01,0x00,0x00,0x00,0x01,0x00};
+	vector<unsigned char> vScriptId1 = {0x01,0x00,0x00,0x00,0x02,0x00};
 	vector<unsigned char> vScriptContent = {0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01};
+	vector<unsigned char> vScriptContent1 = {0x01,0x02,0x03,0x04,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01};
 	//write script content to db
 	BOOST_CHECK(pScriptDBTip->SetScript(vScriptId, vScriptContent));
+	BOOST_CHECK(pScriptDBTip->SetScript(vScriptId1, vScriptContent1));
 	//write all data in caches to db
 	BOOST_CHECK(pScriptDBTip->Flush());
 	//test if the script id is exist in db
@@ -27,16 +30,22 @@ void testscriptdb() {
 	BOOST_CHECK(vScriptContent == vScript);
 	int nCount;
 	//get script numbers from db
-	BOOST_CHECK(pScriptDBTip->GetScriptCount(vScriptId, nCount));
+	BOOST_CHECK(pScriptDBTip->GetScriptCount(nCount));
 	//if the number is one
-	BOOST_CHECK_EQUAL(nCount, 1);
+	BOOST_CHECK_EQUAL(nCount, 2);
 	//get index 0 script from db
 	vScript.clear();
-	BOOST_CHECK(pScriptDBTip->GetScript(0,vScript));
+	vector<unsigned char> vId;
+	BOOST_CHECK(pScriptDBTip->GetScript(0,vId,vScript));
+	BOOST_CHECK(vScriptId == vId);
+	BOOST_CHECK(vScriptContent == vScript);
+	BOOST_CHECK(pScriptDBTip->GetScript(1,vId,vScript));
+	BOOST_CHECK(vScriptId1 == vId);
+	BOOST_CHECK(vScriptContent1 == vScript);
 	//delete script from db
 	BOOST_CHECK(pScriptDBTip->EraseScript(vScriptId));
-	BOOST_CHECK(pScriptDBTip->GetScriptCount(vScriptId, nCount));
-	BOOST_CHECK_EQUAL(nCount, 0);
+	BOOST_CHECK(pScriptDBTip->GetScriptCount(nCount));
+	BOOST_CHECK_EQUAL(nCount, 1);
 	//write all data in caches to db
 	BOOST_CHECK(pScriptDBTip->Flush());
 }
