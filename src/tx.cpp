@@ -136,13 +136,13 @@ bool CTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidatio
 	uint64_t minusValue = llFees + llValues;
 	CFund minusFund(minusValue);
 	sourceAccount.CompactAccount(nHeight - 1);
-//	if (!sourceAccount.OperateAccount(MINUS_FREE, minusFund))
-//		return state.DoS(100, ERROR("UpdateAccounts() : secure accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
-//				"bad-read-accountdb");
+	if (!sourceAccount.OperateAccount(MINUS_FREE, minusFund))
+		return state.DoS(100, ERROR("UpdateAccounts() : secure accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
+				"bad-read-accountdb");
 	uint64_t addValue = llValues;
 	CFund addFund(FREEDOM_FUND,addValue, nHeight);
 	desAccount.CompactAccount(nHeight - 1);
-	//desAccount.OperateAccount(ADD_FREE, addFund);
+	desAccount.OperateAccount(ADD_FREE, addFund);
 	vector<CAccount> vSecureAccounts;
 	vSecureAccounts.push_back(sourceAccount);
 	vSecureAccounts.push_back(desAccount);
@@ -275,9 +275,9 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
-	/** @todo
-	 *
-	 */
+//	/** @todo
+//	 *
+//	 */
 //	if (!vmRun.run(pTx,view,nHeight))
 //		return state.DoS(100,
 //				ERROR("UpdateAccounts() : AppealTransaction UpdateAccount txhash=%s run script error",
@@ -1486,14 +1486,6 @@ bool CTransactionCache::IsContainTx(const uint256 & txHash) {
 	return false;
 }
 
-//vector<uint256> CTransactionCache::GetRelayTx(const uint256 & txHash) {
-//	return mapTxHashCacheByPrev[txHash];
-//}
-//
-//const map<uint256, vector<uint256> > &CTransactionCache::GetRelayTx(void) const {
-//	return mapTxHashCacheByPrev;
-//}
-
 const map<uint256, vector<uint256> > &CTransactionCache::GetTxHashCache(void) const {
 	return mapTxHashByBlockHash;
 }
@@ -1510,11 +1502,6 @@ bool CTransactionCache::Flush() {
 void CTransactionCache::AddTxHashCache(const uint256 & blockHash, const vector<uint256> &vTxHash) {
 	mapTxHashByBlockHash[blockHash] = vTxHash;
 }
-
-//void CTransactionCache::AddRelayTx(const uint256 preTxHash, const vector<uint256> &vTxHash) {
-//	mapTxHashCacheByPrev[preTxHash].clear();
-//	mapTxHashCacheByPrev[preTxHash].assign(vTxHash.begin(), vTxHash.end());
-//}
 
 bool CTransactionCache::LoadTransaction() {
 	return base->LoadTransaction(mapTxHashByBlockHash);

@@ -91,7 +91,7 @@ public:
 	virtual bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
 	virtual bool EraseKey(const vector<unsigned char> &vKey);
 	virtual bool HaveData(const vector<unsigned char> &vKey);
-	virtual bool GetScript(const int &nIndex, vector<unsigned char> &vValue);
+	virtual bool GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
 	virtual bool GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
 			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight);
 
@@ -108,7 +108,7 @@ public:
 	bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
 	bool EraseKey(const vector<unsigned char> &vKey);
 	bool HaveData(const vector<unsigned char> &vKey);
-	bool GetScript(const int &nIndex, vector<unsigned char> &vValue);
+	bool GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
 	bool GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptKey,
 			vector<unsigned char> &vScriptData, int &nHeight);
 
@@ -139,13 +139,15 @@ public:
 	 * @return true if save succeed, otherwise false
 	 */
 	bool SetScript(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vValue);
+
 	/**
 	 * @brief Get Script content from scriptdb by index
 	 * @param nIndex the value must be non-negative
+	 * @param vScriptId
 	 * @param vValue
 	 * @return true if get script succeed, otherwise false
 	 */
-	bool GetScript(const int &nIndex, vector<unsigned char> &vValue);
+	bool GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
 	/**
 	 * @brief Detect if scriptdb contains the script by scriptid
 	 * @param vScriptId
@@ -154,18 +156,16 @@ public:
 	bool HaveScript(const vector<unsigned char> &vScriptId);
 	/**
 	 * @brief Get all number of scripts in scriptdb
-	 * @param vScriptId
 	 * @param nCount
 	 * @return true if get succeed, otherwise false
 	 */
-	bool GetScriptCount(const vector<unsigned char> &vScriptId, int &nCount);
+	bool GetScriptCount(int &nCount);
 	/**
 	 * @brief Save all number of scripts in scriptdb
-	 * @param vScriptId
 	 * @param nCount
 	 * @return true if save count succeed, otherwise false
 	 */
-	bool SetScriptCount(const vector<unsigned char> &vScriptId, const int nCount);
+	bool SetScriptCount(const int nCount);
 	/**
 	 * @brief Delete script from script db by scriptId
 	 * @param vScriptId
