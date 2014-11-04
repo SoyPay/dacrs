@@ -8,6 +8,7 @@
 #include "txdb.h"
 #include "VmScript/VmScriptRun.h"
 #include "core.h"
+#include "miner.h"
 
 static string txTypeArray[] = { "NULL_TXTYPE", "REG_ACCT_TX", "NORMAL_TX", "APPEAL_TX", "SECURE_TX", "FREEZE_TX",
 		"REWARD_TX", "REG_SCRIPT_TX" };
@@ -275,18 +276,17 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
-//	/** @todo
-//	 *
-//	 */
-//	if (!vmRun.run(pTx,view,nHeight))
-//		return state.DoS(100,
-//				ERROR("UpdateAccounts() : AppealTransaction UpdateAccount txhash=%s run script error",
-//						GetHash().GetHex()), UPDATE_ACCOUNT_FAIL, "run-script-error");
+	uint64_t el = GetElementForBurn();
+	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptCache, nHeight, el);
+	if (!std::get<0>(ret))
+		return state.DoS(100,
+				ERROR("UpdateAccounts() : ContractTransaction UpdateAccount txhash=%s run script error:%s",
+						GetHash().GetHex(), std::get<2>(ret)), UPDATE_ACCOUNT_FAIL, "run-script-error");
 	vector<std::shared_ptr<CAccount> > &vAccount = vmRun.GetNewAccont();
 	for (auto & itemAccount : vAccount) {
 		if (!view.SetAccount(itemAccount->keyID, *itemAccount))
 			return state.DoS(100,
-					ERROR("UpdateAccounts() : AppealTransaction Udateaccount write secure account info error"),
+					ERROR("UpdateAccounts() : ContractTransaction Udateaccount write secure account info error"),
 					UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 		txundo.vAccountOperLog.push_back((itemAccount->accountOperLog));
 	}
@@ -296,13 +296,13 @@ bool CContractTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view
 		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
 	vector<CKeyID> vKeyId;
 	if (!GetAddress(vKeyId, view))
-		return state.DoS(100, ERROR("UpdateAccounts() : AppealTransaction undo updateaccount get key id error"),
+		return state.DoS(100, ERROR("UpdateAccounts() : ContractTransaction undo updateaccount get key id error"),
 				UPDATE_ACCOUNT_FAIL, "get-keyid-error");
 	for (auto & keyId : vKeyId) {
 		CAccount secureAccount;
 		if (!view.GetAccount(keyId, secureAccount)) {
 			return state.DoS(100,
-					ERROR("UpdateAccounts() : AppealTransaction undo updateaccount read keyid= %s info error",
+					ERROR("UpdateAccounts() : ContractTransaction undo updateaccount read keyid= %s info error",
 							keyId.GetHex()), UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 		}
 		CAccountOperLog accountOperLog;
@@ -311,7 +311,7 @@ bool CContractTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view
 			if (!view.SetAccount(keyId, secureAccount))
 				return state.DoS(100,
 						ERROR(
-								"UpdateAccounts() : AppealTransaction undo updateaccount write accountId= %s account info error"),
+								"UpdateAccounts() : ContractTransaction undo updateaccount write accountId= %s account info error"),
 						UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 		}
 	}
@@ -327,11 +327,10 @@ bool CContractTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &
 	}
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
-	/** @todo
-	 *
-	 */
-//	if (!vmRun.run(pTx,view,chainActive.Height() +1))
-//		return false;
+	uint64_t el = GetElementForBurn();
+	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, *pScriptDBTip, chainActive.Height() +1, el);
+	if (!std::get<0>(ret))
+		return ERROR("GetAddress()  : %s", std::get<2>(ret));
 
 	return true;
 }
@@ -381,13 +380,14 @@ bool CContractTransaction::CheckTransction(CValidationState &state, CAccountView
 
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
-	/** @todo
-	 *
-	 */
-//	if (!vmRun.run(pTx,view,chainActive.Height()+1))
-//		return state.DoS(100,
-//				ERROR("CheckTransaction() : AppealTransaction txhash=%s run script error",
-//						GetHash().GetHex()), UPDATE_ACCOUNT_FAIL, "run-script-error");
+
+	uint64_t el = GetElementForBurn();
+	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, *pScriptDBTip, chainActive.Height() +1, el);
+
+	if (!std::get<0>(ret))
+		return state.DoS(100,
+				ERROR("CheckTransaction() : ContractTransaction txhash=%s run script error,%s",
+						GetHash().GetHex(), std::get<2>(ret)), UPDATE_ACCOUNT_FAIL, "run-script-error");
 	return true;
 }
 
