@@ -12,7 +12,7 @@ CVmScriptRun::CVmScriptRun() {
 	RawAccont.clear();
 	NewAccont.clear();
 	height = 0;
-	;
+	m_ScriptDBTip = NULL;
 }
 vector<shared_ptr<CAccount> > &CVmScriptRun::GetRawAccont() {
 	return RawAccont;
@@ -33,7 +33,7 @@ bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& 
 	}
 
 	CContractTransaction* secure = static_cast<CContractTransaction*>(Tx.get());
-	if (pScriptDBTip->GetScript(secure->scriptRegId, vScript)) {
+	if (m_ScriptDBTip->GetScript(secure->scriptRegId, vScript)) {
 		CDataStream stream(vScript, SER_DISK, CLIENT_VERSION);
 		try {
 			stream >> vmScript;
@@ -59,7 +59,7 @@ bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& 
 CVmScriptRun::~CVmScriptRun() {
 
 }
-tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view, int nheight,
+tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view,CScriptDBViewCache& VmDB, int nheight,
 		uint64_t nBurnFactor) {
 
 	if(nBurnFactor == 0)
@@ -67,6 +67,7 @@ tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& T
 		assert(0);
 		return std::make_tuple (false, 0, string("VmScript nBurnFactor == 0 \n"));
 	}
+	m_ScriptDBTip = &VmDB;
 	CContractTransaction* tx = static_cast<CContractTransaction*>(Tx.get());
 	int maxstep = tx->llFees/nBurnFactor;
 	tuple<bool, uint64_t, string> mytuple;
@@ -74,9 +75,10 @@ tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& T
 		return std::make_tuple (false, 0, string("VmScript inital Failed\n"));
 
 	}
-	int step = pMcu.get()->run(maxstep,this);
-	if (!step) {
-		return std::make_tuple (false, 0, string("VmScript run Failed\n"));
+	unsigned int  step = pMcu.get()->run(maxstep,this);
+	if (0 == step) {
+		mytuple = std::make_tuple (false, 0, string("VmScript run Failed\n"));
+		return mytuple;
 	}
 	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
 	CDataStream Contractstream(*retData.get(), SER_DISK, CLIENT_VERSION);
@@ -124,13 +126,16 @@ shared_ptr<CAccount> CVmScriptRun::GetAccount(shared_ptr<CAccount>& Account) {
 bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 	// judge contract rulue
 	uint64_t addmoey, miusmoney;
+	uint64_t temp = 0;
 	for (auto& it : listoperate) {
 
 		if (it.opeatortype == ADD_FREE || it.opeatortype == ADD_SELF_FREEZD || it.opeatortype == ADD_FREEZD) {
-			addmoey += atoi64((char*) it.money);
+			memcpy(&temp,it.money,sizeof(it.money));
+			addmoey += temp;
 		}
 		if (it.opeatortype == MINUS_FREE || it.opeatortype == MINUS_SELF_FREEZD || it.opeatortype == MINUS_FREEZD) {
-			miusmoney += atoi64((char*) it.money);
+			memcpy(&temp,it.money,sizeof(it.money));
+			miusmoney += temp;
 		}
 		if (addmoey != miusmoney)
 			return false;
@@ -138,15 +143,14 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 	}
 	return true;
 }
-vector_unsigned_char& CVmScriptRun::GetAccountID(CVmOperate value) {
+vector_unsigned_char CVmScriptRun::GetAccountID(CVmOperate value) {
 	vector_unsigned_char accountid;
 	if (value.type == ACCOUNTID) {
 		accountid.assign(value.accountid, value.accountid + 6);
 	} else if (value.type == KEYID) {
 		accountid.assign(value.accountid, value.accountid + 20);
-	} else {
-		return accountid;
 	}
+	return accountid;
 }
 shared_ptr<vector<CVmOperate>> CVmScriptRun::GetOperate() const {
 	auto tem = make_shared<vector<CVmOperate>>();
@@ -162,14 +166,14 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 
 	NewAccont.clear();
 	for (auto& it : listoperate) {
+		CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
 		CFund fund;
-		fund.value = atoi64((char*) it.money);
+		memcpy(&fund.value,it.money,sizeof(it.money));
 		fund.nHeight = it.outheight + height;
-		//fund.uTxHash = listTx.get()->GetHash();
+		fund.scriptID = tx->scriptRegId;
 
 		auto tem = make_shared<CAccount>();
 		vector_unsigned_char accountid = GetAccountID(it);
-		;
 		if (accountid.size() == 0) {
 			return false;
 		}
@@ -191,22 +195,10 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 
 		LogPrint("vm", "muls account:%s\r\n", vmAccount.get()->ToString().c_str());
 		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
-		if (it.opeatortype == ADD_FREE || it.opeatortype == ADD_SELF_FREEZD || it.opeatortype == ADD_FREEZD) {
-			vmAccount.get()->AddMoney((OperType)it.opeatortype,fund);
-			}
-		else if (it.opeatortype == MINUS_FREE || it.opeatortype == MINUS_SELF_FREEZD || it.opeatortype == MINUS_FREEZD) {
-			CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
-			vmAccount.get()->MinusMoney((OperType)it.opeatortype,height,fund,tx->scriptRegId);
-			}
-		else
-		{
-			LogPrint("vm", "fund:vm operte error\r\n");
-		}
-		// about operate account undo
-		uint64_t retValue;
-		bool flag = true;//vmAccount.get()->OperateAccount((OperType) it.opeatortype, fund, &retValue);
+		bool ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype,fund,height);
+
 		LogPrint("vm", "after muls account:%s\r\n", vmAccount.get()->ToString().c_str());
-		if (flag) {
+		if (ret) {
 			return false;
 		}
 		NewAccont.push_back(vmAccount);
@@ -227,4 +219,8 @@ int CVmScriptRun::GetComfirHeight()
 uint256 CVmScriptRun::GetCurTxHash()
 {
 	return listTx.get()->GetHash();
+}
+CScriptDBViewCache* CVmScriptRun::GetScriptDB()
+{
+	return m_ScriptDBTip;
 }
