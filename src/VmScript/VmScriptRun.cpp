@@ -62,17 +62,21 @@ CVmScriptRun::~CVmScriptRun() {
 tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view, int nheight,
 		uint64_t nBurnFactor) {
 
+	if(nBurnFactor == 0)
+	{
+		assert(0);
+		return std::make_tuple (false, 0, string("VmScript nBurnFactor == 0 \n"));
+	}
 	CContractTransaction* tx = static_cast<CContractTransaction*>(Tx.get());
 	int maxstep = tx->llFees/nBurnFactor;
 	tuple<bool, uint64_t, string> mytuple;
 	if (!intial(Tx, view, nheight)) {
-		mytuple = std::make_tuple (false, 0, string("VmScript inital Failed\n"));
-		return mytuple;
+		return std::make_tuple (false, 0, string("VmScript inital Failed\n"));
+
 	}
 	int step = pMcu.get()->run(maxstep,this);
 	if (!step) {
-		mytuple = std::make_tuple (false, 0, string("VmScript run Failed\n"));
-		return mytuple;
+		return std::make_tuple (false, 0, string("VmScript run Failed\n"));
 	}
 	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
 	CDataStream Contractstream(*retData.get(), SER_DISK, CLIENT_VERSION);
@@ -80,16 +84,15 @@ tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& T
 	Contractstream >> retvmcode;
 
 	if (!CheckOperate(retvmcode)) {
-		mytuple = std::make_tuple (false, 0, string("VmScript CheckOperate Failed \n"));
-		return mytuple;
+		return std::make_tuple (false, 0, string("VmScript CheckOperate Failed \n"));
+
 	}
 	if (!OpeatorAccount(retvmcode, view)) {
-		mytuple = std::make_tuple (false, 0, string("VmScript OpeatorSecureAccount Failed\n"));
-		return mytuple;
+		return std::make_tuple (false, 0, string("VmScript OpeatorSecureAccount Failed\n"));
 	}
 	uint64_t spend = step*nBurnFactor;
-	mytuple = std::make_tuple (true, spend, string("VmScript Sucess\n"));
-	return mytuple;
+	return std::make_tuple (true, spend, string("VmScript Sucess\n"));
+
 }
 
 shared_ptr<CAccount> CVmScriptRun::GetNewAccount(shared_ptr<CAccount>& vOldAccount) {
