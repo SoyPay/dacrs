@@ -12,7 +12,6 @@ CVmScriptRun::CVmScriptRun() {
 	RawAccont.clear();
 	NewAccont.clear();
 	height = 0;
-	;
 }
 vector<shared_ptr<CAccount> > &CVmScriptRun::GetRawAccont() {
 	return RawAccont;
@@ -69,8 +68,8 @@ tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& T
 		mytuple = std::make_tuple (false, 0, string("VmScript inital Failed\n"));
 		return mytuple;
 	}
-	int step = pMcu.get()->run(maxstep,this);
-	if (!step) {
+	unsigned int  step = pMcu.get()->run(maxstep,this);
+	if (0 == step) {
 		mytuple = std::make_tuple (false, 0, string("VmScript run Failed\n"));
 		return mytuple;
 	}
@@ -124,10 +123,10 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 	for (auto& it : listoperate) {
 
 		if (it.opeatortype == ADD_FREE || it.opeatortype == ADD_SELF_FREEZD || it.opeatortype == ADD_FREEZD) {
-			addmoey += atoi64((char*) it.money);
+			//addmoey += atoi64((char*) it.money);
 		}
 		if (it.opeatortype == MINUS_FREE || it.opeatortype == MINUS_SELF_FREEZD || it.opeatortype == MINUS_FREEZD) {
-			miusmoney += atoi64((char*) it.money);
+			//miusmoney += atoi64((char*) it.money);
 		}
 		if (addmoey != miusmoney)
 			return false;
@@ -166,7 +165,6 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 
 		auto tem = make_shared<CAccount>();
 		vector_unsigned_char accountid = GetAccountID(it);
-		;
 		if (accountid.size() == 0) {
 			return false;
 		}
