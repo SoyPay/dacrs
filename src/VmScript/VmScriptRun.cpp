@@ -120,13 +120,16 @@ shared_ptr<CAccount> CVmScriptRun::GetAccount(shared_ptr<CAccount>& Account) {
 bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 	// judge contract rulue
 	uint64_t addmoey, miusmoney;
+	uint64_t temp = 0;
 	for (auto& it : listoperate) {
 
 		if (it.opeatortype == ADD_FREE || it.opeatortype == ADD_SELF_FREEZD || it.opeatortype == ADD_FREEZD) {
-			//addmoey += atoi64((char*) it.money);
+			memcpy(&temp,it.money,sizeof(it.money));
+			addmoey += temp;
 		}
 		if (it.opeatortype == MINUS_FREE || it.opeatortype == MINUS_SELF_FREEZD || it.opeatortype == MINUS_FREEZD) {
-			//miusmoney += atoi64((char*) it.money);
+			memcpy(&temp,it.money,sizeof(it.money));
+			miusmoney += temp;
 		}
 		if (addmoey != miusmoney)
 			return false;
@@ -158,10 +161,11 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 
 	NewAccont.clear();
 	for (auto& it : listoperate) {
+		CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
 		CFund fund;
-		fund.value = atoi64((char*) it.money);
+		memcpy(&fund.value,it.money,sizeof(it.money));
 		fund.nHeight = it.outheight + height;
-		//fund.uTxHash = listTx.get()->GetHash();
+		fund.scriptID = tx->scriptRegId;
 
 		auto tem = make_shared<CAccount>();
 		vector_unsigned_char accountid = GetAccountID(it);
@@ -186,22 +190,10 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 
 		LogPrint("vm", "muls account:%s\r\n", vmAccount.get()->ToString().c_str());
 		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
-		if (it.opeatortype == ADD_FREE || it.opeatortype == ADD_SELF_FREEZD || it.opeatortype == ADD_FREEZD) {
-			vmAccount.get()->AddMoney((OperType)it.opeatortype,fund);
-			}
-		else if (it.opeatortype == MINUS_FREE || it.opeatortype == MINUS_SELF_FREEZD || it.opeatortype == MINUS_FREEZD) {
-			CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
-			vmAccount.get()->MinusMoney((OperType)it.opeatortype,height,fund,tx->scriptRegId);
-			}
-		else
-		{
-			LogPrint("vm", "fund:vm operte error\r\n");
-		}
-		// about operate account undo
-		uint64_t retValue;
-		bool flag = true;//vmAccount.get()->OperateAccount((OperType) it.opeatortype, fund, &retValue);
+		bool ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype,fund,height);
+
 		LogPrint("vm", "after muls account:%s\r\n", vmAccount.get()->ToString().c_str());
-		if (flag) {
+		if (ret) {
 			return false;
 		}
 		NewAccont.push_back(vmAccount);
