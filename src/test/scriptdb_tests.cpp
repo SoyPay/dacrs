@@ -59,9 +59,9 @@ void testscriptdatadb() {
 	vector<unsigned char> vScriptData1 = {0x01,0x01,0x01,0x00,0x00};
 	//write script data to db
 	BOOST_CHECK(pScriptDBTip->SetScriptData(vScriptId, vScriptKey, vScriptData, 100));
-	BOOST_CHECK(pScriptDBTip->SetScriptData(vScriptId, vScriptKey1, vScriptData1, 101));
 	//write all data in caches to db
 	BOOST_CHECK(pScriptDBTip->Flush());
+	BOOST_CHECK(pScriptDBTip->SetScriptData(vScriptId, vScriptKey1, vScriptData1, 101));
 	//test if the script id is exist in db
 	BOOST_CHECK(pScriptDBTip->HaveScriptData(vScriptId, vScriptKey));
 	vector<unsigned char> vScript;

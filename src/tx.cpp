@@ -393,7 +393,7 @@ bool CContractTransaction::CheckTransction(CValidationState &state, CAccountView
 
 bool CFreezeTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
-	uint64_t minusValue = llFees;
+	uint64_t minusValue = llFees + llFreezeFunds;
 	uint64_t freezeValue = llFreezeFunds;
 	CAccount secureAccount;
 	if (!view.GetAccount(regAccountId, secureAccount)) {
@@ -402,13 +402,13 @@ bool CFreezeTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 	}
 	secureAccount.CompactAccount(nHeight - 1);
 	CFund minusFund(minusValue);
-//	if (!secureAccount.OperateAccount(MINUS_FREE, minusFund))
-//		return state.DoS(100, ERROR("UpdateAccounts() : secure accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
-//				"bad-read-accountdb");
+	if (!secureAccount.OperateAccount(MINUS_FREE, minusFund))
+		return state.DoS(100, ERROR("UpdateAccounts() : secure accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
+				"bad-read-accountdb");
 	CFund selfFund(SELF_FREEZD_FUND,freezeValue, nUnfreezeHeight);
-//	if (!secureAccount.OperateAccount(ADD_SELF_FREEZD, selfFund))
-//		return state.DoS(100, ERROR("UpdateAccounts() : secure accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
-//				"bad-read-accountdb");
+	if (!secureAccount.OperateAccount(ADD_SELF_FREEZD, selfFund))
+		return state.DoS(100, ERROR("UpdateAccounts() : secure accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
+				"bad-read-accountdb");
 	if (!view.SetAccount(regAccountId, secureAccount))
 		return state.DoS(100, ERROR("UpdateAccounts() : batch write secure account info error"), UPDATE_ACCOUNT_FAIL,
 				"bad-read-accountdb");
