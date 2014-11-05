@@ -815,7 +815,7 @@ static bool ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 	}
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
 	int height = pVmScriptRun->GetComfirHeight();
-	bool flag = aAccount.IsAuthorizedToMinus(money,height,scriptid);
+	bool flag = aAccount.IsAuthorized(money,height,scriptid);
 	memset(ipara, 0, 512);
 	int count = 1;
 	memcpy(ipara, &count, 2);
@@ -1362,7 +1362,7 @@ void CVir8051::StepRun(INT8U code) {
 		Opcode_32_RETI();
 		break;
 	}
-		/*ÏÂÃæÒÑ¾­²âÊÔPASS*/
+		/*ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½PASS*/
 	case 0x33: {
 		Opcode_33_RLC_A();
 		break;
@@ -1415,7 +1415,7 @@ void CVir8051::StepRun(INT8U code) {
 		Opcode_3F_ADDC_A_R7();
 		break;
 	}
-		/*ÉÏÃæÒÑ¾­²âÊÔPASS*/
+		/*ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½PASS*/
 	case 0x40: {
 		Opcode_40_JC_Rel();
 		break;
@@ -1752,7 +1752,7 @@ void CVir8051::StepRun(INT8U code) {
 		Opcode_93_MOVC_A_DPTR();
 		break;
 	}
-		/*ÏÂÃæÒÑ¾­²âÊÔPASS*/
+		/*ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½PASS*/
 	case 0x94: {
 		Opcode_94_SUBB_A_Data();
 		break;
@@ -2209,7 +2209,7 @@ bool CVir8051::GetBitFlag(INT8U addr) {
 	return (GetBitRamRef(addr) & (BIT0 << (addr % 8))) != 0;
 }
 
-//bool CVir8051::GetBitFlag(INT8U addr, INT8U n) const { // addrµ¥ÔªµØÖ·£¬nÊÇ¶ÔÓ¦µÄµÚ¼¸Î»
+//bool CVir8051::GetBitFlag(INT8U addr, INT8U n) const { // addrï¿½ï¿½Ôªï¿½ï¿½Ö·ï¿½ï¿½nï¿½Ç¶ï¿½Ó¦ï¿½ÄµÚ¼ï¿½Î»
 //	INT8U temp;
 //	Assert(addr <= 0xF0);
 //	// memcpy(&temp,GetPointRamAddr((addr/8)+0x20),sizeof(temp));
@@ -2280,7 +2280,7 @@ bool CVir8051::GetDebugPC(INT16U pc) const {
 	return (pc == Sys.PC);
 }
 
-void CVir8051::GetOpcodeData(void * const p, INT8U len) const {  //ÏÈÈ¡¸ßÎ»×Ö½Ú
+void CVir8051::GetOpcodeData(void * const p, INT8U len) const {  //ï¿½ï¿½È¡ï¿½ï¿½Î»ï¿½Ö½ï¿½
 	memcpy(p, &m_ExeFile[Sys.PC + 1], len);
 }
 void CVir8051::AJMP(INT8U opCode, INT8U data) {
@@ -2606,7 +2606,7 @@ INT16U CVir8051::GetLcallAddr(void) {
 //            }
 //           case 1:
 //            {
-//               Rges.R7 = RetData[0];//·ÅÈë·µ»ØÊý¾Ý
+//               Rges.R7 = RetData[0];//ï¿½ï¿½ï¿½ë·µï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //              return true;
 //            }
 //
@@ -2890,7 +2890,7 @@ void CVir8051::MD_SUBB(INT8U data) {
 		Sys.psw().cy = 0;
 	}
 
-//ÏÂÃæ²éÒç³öÎ»
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»
 	INT8U flagac = 0;
 	if (tepa < data + bcy) {
 		flagac++;
@@ -3060,7 +3060,7 @@ void CVir8051::Opcode_33_RLC_A(void) {
 void CVir8051::Opcode_34_ADDC_A_Data(void) {
 	INT8U data;
 	GetOpcodeData(&data, 1);
-	MD_ADDC(data);   //¼ÓÉÏ
+	MD_ADDC(data);   //ï¿½ï¿½ï¿½ï¿½
 
 	Sys.PC += 2;
 }
@@ -3856,7 +3856,7 @@ void CVir8051::Opcode_A0_ORL_C_Bit(void) {
 //	if (Sys.psw().cy) {
 //		temp++;
 //	}
-//	if (!data) //°Ñ·´
+//	if (!data) //ï¿½Ñ·ï¿½
 //	{
 //		temp++;
 //	}
@@ -3986,7 +3986,7 @@ void CVir8051::Opcode_B0_ANL_C_Bit_1(void) {  // ANL C ~Bit
 //		temp++;
 //	}
 //
-//	if (!data)  //È¡·´
+//	if (!data)  //È¡ï¿½ï¿½
 //	{
 //		temp++;
 //	}

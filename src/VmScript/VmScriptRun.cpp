@@ -189,11 +189,11 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		LogPrint("vm", "muls account:%s\r\n", vmAccount.get()->ToString().c_str());
 		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
 		if (it.opeatortype == ADD_FREE || it.opeatortype == ADD_SELF_FREEZD || it.opeatortype == ADD_FREEZD) {
-			vmAccount.get()->AddMoney((OperType)it.opeatortype,fund);
+			vmAccount.get()->OperateAccount((OperType)it.opeatortype,fund);
 			}
 		else if (it.opeatortype == MINUS_FREE || it.opeatortype == MINUS_SELF_FREEZD || it.opeatortype == MINUS_FREEZD) {
 			CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
-			vmAccount.get()->MinusMoney((OperType)it.opeatortype,height,fund,tx->scriptRegId);
+			vmAccount.get()->OperateAccount((OperType)it.opeatortype,fund,height);
 			}
 		else
 		{
