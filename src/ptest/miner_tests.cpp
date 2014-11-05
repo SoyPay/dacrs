@@ -229,7 +229,6 @@ public:
 
 		char *argv[] = {"rpctest", "getaddramount",temp};
 		int argc = sizeof(argv)/sizeof(char*);
-
 		Value value;
 		int ret = CommandLineRPC_GetValue(argc, argv, value);
 		if (!ret)
@@ -617,7 +616,7 @@ BOOST_FIXTURE_TEST_CASE(block_normaltx_and_regaccounttx,CMinerTest)
 		BOOST_REQUIRE(GetNewAddr(destaddr));
 		BOOST_REQUIRE(CreateNormalTx(srcaddr,destaddr,height));
 		totalfee += nCurFee;
-		LogPrint("test_miners","srcaddr:%s\r\ndestaddr:%s\r\nnCurFee:%I64d",
+		LogPrint("test_miners","srcaddr:%s\r\ndestaddr:%s\r\nnCurFee:%I64d\r\n",
 				srcaddr.c_str(), destaddr.c_str(), nCurFee);
 		AccOperLog &operlog1 = mapAccOperLog[srcaddr];
 		AccOperLog &operlog2 = mapAccOperLog[destaddr];
