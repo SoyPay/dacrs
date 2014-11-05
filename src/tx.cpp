@@ -38,7 +38,7 @@ bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 	sourceAccount.publicKey = pubKey;
 	if (llFees > 0) {
 		CFund fund(llFees);
-		//sourceAccount.OperateAccount(MINUS_FREE, fund);
+		sourceAccount.OperateAccount(MINUS_FREE, fund);
 	}
 	if (!view.SaveAccountInfo(accountId.vRegID, keyId, sourceAccount)) {
 		return state.DoS(100, ERROR("UpdateAccounts() : write source addr %s account info error", accountId.ToString()),
@@ -402,13 +402,13 @@ bool CFreezeTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 	}
 	secureAccount.CompactAccount(nHeight - 1);
 	CFund minusFund(minusValue);
-//	if (!secureAccount.OperateAccount(MINUS_FREE, minusFund))
-//		return state.DoS(100, ERROR("UpdateAccounts() : secure accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
-//				"bad-read-accountdb");
+	if (!secureAccount.OperateAccount(MINUS_FREE, minusFund))
+		return state.DoS(100, ERROR("UpdateAccounts() : secure accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
+				"bad-read-accountdb");
 	CFund selfFund(SELF_FREEZD_FUND,freezeValue, nUnfreezeHeight);
-//	if (!secureAccount.OperateAccount(ADD_SELF_FREEZD, selfFund))
-//		return state.DoS(100, ERROR("UpdateAccounts() : secure accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
-//				"bad-read-accountdb");
+	if (!secureAccount.OperateAccount(ADD_SELF_FREEZD, selfFund))
+		return state.DoS(100, ERROR("UpdateAccounts() : secure accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
+				"bad-read-accountdb");
 	if (!view.SetAccount(regAccountId, secureAccount))
 		return state.DoS(100, ERROR("UpdateAccounts() : batch write secure account info error"), UPDATE_ACCOUNT_FAIL,
 				"bad-read-accountdb");
@@ -481,7 +481,7 @@ bool CRewardTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 	LogPrint("INFO", "before rewardtx confirm account:%s\n", secureAccount.ToString());
 	secureAccount.ClearAccPos(GetHash(), nHeight - 1, Params().GetIntervalPos());
 	CFund fund(REWARD_FUND,rewardValue, nHeight);
-	//secureAccount.OperateAccount(ADD_FREE, fund);
+	secureAccount.OperateAccount(ADD_FREE, fund);
 	LogPrint("INFO", "after rewardtx confirm account:%s\n", secureAccount.ToString());
 	if (!view.SetAccount(account, secureAccount))
 		return state.DoS(100, ERROR("UpdateAccounts() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
@@ -835,7 +835,7 @@ void CAccount::AddToFreeze(const CFund &fund) {
 }
 
 void CAccount::AddToFreedom(const CFund &fund,bool bWriteLog) {
-	int nCurHeight = chainActive.Height();
+	int nCurHeight = chainActive.Height() + 1;
 	assert(fund.nHeight <= nCurHeight);
 	int nTenDayBlocks = 10 * ( (24 * 60 * 60) / Params().GetTargetSpacing());
 	int nHeightPoint = fund.nHeight - fund.nHeight % nTenDayBlocks;

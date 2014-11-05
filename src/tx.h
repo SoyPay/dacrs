@@ -64,6 +64,16 @@ public:
 		nMaxMoneyTotal = 0;
 		nMaxMoneyPerDay = 0;
 	}
+
+	CNetAuthorizate(uint32_t nauthorizetime, uint64_t nuserdefine, uint64_t nmaxmoneypertime, uint64_t nmaxmoneytotal,
+			uint64_t nmaxmoneyperday) {
+		nAuthorizeTime = nauthorizetime;
+		nUserDefine = nuserdefine;
+		nMaxMoneyPerTime = nmaxmoneypertime;
+		nMaxMoneyTotal = nmaxmoneytotal;
+		nMaxMoneyPerDay = nmaxmoneyperday;
+	}
+
 	uint32_t GetAuthorizeTime() const {
 		return nAuthorizeTime;
 	}
@@ -597,15 +607,15 @@ public:
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
 
+#define SCRIPT_ID_SIZE (6)
+
 class CRegistScriptTx: public CBaseTransaction {
 
 public:
 	vector_unsigned_char regAccountId;
-	unsigned char nFlag; //0: exist scriptId, 1 new script content
 	vector_unsigned_char script;
 	uint64_t llFees;
 	int nValidHeight;
-	unsigned char isHaveAuthor; // whether have authorizate, 0 represent do not have authorizate data, 1 means contrary
 	CNetAuthorizate aAuthorizate;
 	vector_unsigned_char signature;
 public:
@@ -617,9 +627,7 @@ public:
 	CRegistScriptTx() {
 		nTxType = REG_SCRIPT_TX;
 		llFees = 0;
-		nFlag = 0;
 		nValidHeight = 0;
-		isHaveAuthor = 0;
 	}
 
 	~CRegistScriptTx() {
@@ -630,12 +638,10 @@ public:
 			READWRITE(this->nVersion);
 			nVersion = this->nVersion;
 			READWRITE(regAccountId);
-			READWRITE(nFlag);
 			READWRITE(script);
 			READWRITE(llFees);
 			READWRITE(nValidHeight);
-			if(isHaveAuthor)
-				READWRITE(aAuthorizate);
+			READWRITE(aAuthorizate);
 			READWRITE(signature);
 	)
 
@@ -649,7 +655,7 @@ public:
 
 	uint256 SignatureHash() const {
 		CHashWriter ss(SER_GETHASH, 0);
-		ss << regAccountId << nFlag << script << llFees << nValidHeight;
+		ss << regAccountId << script << llFees << nValidHeight << aAuthorizate;
 		return ss.GetHash();
 	}
 

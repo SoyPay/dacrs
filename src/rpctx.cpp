@@ -125,7 +125,6 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		result.push_back(Pair("txtype", "RegScriptTx"));
 		result.push_back(Pair("ver", prtx->nVersion));
 		result.push_back(Pair("addr", RegIDToAddress(prtx->regAccountId)));
-		result.push_back(Pair("new", prtx->nFlag));
 		result.push_back(Pair("script", HexStr(prtx->script)));
 		result.push_back(Pair("fees", prtx->llFees));
 		result.push_back(Pair("height", prtx->nValidHeight));
@@ -138,19 +137,19 @@ Object TxToJSON(CBaseTransaction *pTx) {
 }
 
 //create a register account tx
-Value registersecuretx(const Array& params, bool fHelp) {
+Value registeraccounttx(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 3) {
-		string msg = "registersecuretx nrequired \"bitcoin addr\" fee height\n"
+		string msg = "registeraccounttx nrequired \"addr\" fee height\n"
 				"\nregister secure account\n"
 				"\nArguments:\n"
-				"1.\"bitcoin addr\": (string)\n"
+				"1.\"addr\": (string)\n"
 				"2.fee: (numeric) pay to miner\n"
 				"3.height: (numeric)create height\n"
 				"\nResult:\n"
 				"\"txhash\": (string)\n"
-				"\nExamples:\n" + HelpExampleCli("registersecuretx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 1")
+				"\nExamples:\n" + HelpExampleCli("registeraccounttx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 1")
 				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("registersecuretx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 1");
+				+ HelpExampleRpc("registeraccounttx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 1");
 		throw runtime_error(msg);
 	}
 
@@ -164,7 +163,7 @@ Value registersecuretx(const Array& params, bool fHelp) {
 	//get keyid
 	CKeyID keyid;
 	if (!address.GetKeyID(keyid)) {
-		throw runtime_error("in registersecuretx :address err\n");
+		throw runtime_error("in registeraccounttx :address err\n");
 	}
 
 	CRegisterAccountTx rtx;
@@ -183,16 +182,16 @@ Value registersecuretx(const Array& params, bool fHelp) {
 		}
 
 		if (secureAcc.IsRegister()) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "in registersecuretx Error: Account is already registered");
+			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: Account is already registered");
 		}
 		if (balance < fee) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "in registersecuretx Error: Account balance is insufficient.");
+			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: Account balance is insufficient.");
 		}
 
 		//pubkey
 		CPubKey pubkey;
 		if (!pwalletMain->GetPubKey(keyid, pubkey)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "in registersecuretx Error: not find key.");
+			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: not find key.");
 		}
 
 		rtx.pubKey = pubkey;
@@ -203,10 +202,10 @@ Value registersecuretx(const Array& params, bool fHelp) {
 		CKey key;
 		pwalletMain->GetKey(keyid, key);
 		if (!key.Sign(rtx.SignatureHash(), rtx.signature)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "in registersecuretx Error: Sign failed.");
+			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: Sign failed.");
 		}
 		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &rtx)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "registersecuretx Error: CommitTransaction failed.");
+			throw JSONRPCError(RPC_WALLET_ERROR, "registeraccounttx Error: CommitTransaction failed.");
 		}
 	}
 	return rtx.GetHash().ToString();
@@ -223,7 +222,7 @@ Value createnormaltx(const Array& params, bool fHelp) {
 						"2.\"recv addr\": (string)\n"
 						"3.money: (numeric) pay to recv addr\n"
 						"4.fee: (numeric) pay to miner\n"
-						"5.height: (numeric)create height\n"
+						"5.height: (numeric)valid  height\n"
 						"\nResult:\n"
 						"\"txhash\": (string)\n"
 						"\nExamples:\n"
@@ -316,15 +315,14 @@ Value createnormaltx(const Array& params, bool fHelp) {
 //create a contract tx
 Value createcontracttx(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 5) {
-		string msg = "createsecuretx nrequired \"scriptid\" [\"accountid\",...] \"fee\" \"contract\" \"height\"\n"
+		string msg = "createsecuretx nrequired \"scriptid\" [\"addr\",...] \"fee\" \"contract\" \"height\"\n"
 				"\ncreate contract\n"
 				"\nArguments:\n"
 				"1.\"scriptid\": (string)\n"
-				"2.[\"accountid\",...]: (string list)\n"
-				"3.fee: (numeric) pay to miner\n"
-				"4.\"contract\": (string)"
-				"5.height: (numeric)create height\n"
-				"6.[\"accountid\",...]: (string list)\n"
+				"2.[\"addr\",...]: (string list)\n"
+				"3.\"contract\": (string)\n"
+				"4.\"fee\": (numeric) pay to miner\n"
+				"5.\"height\": (numeric)create height\n"
 				"\nResult:\n"
 				"\"contract tx str\": (string)\n"
 				"\nExamples:\n"
@@ -347,7 +345,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 
 	//get addresss
 	vector<unsigned char> vscriptid = ParseHex(params[0].get_str());
-	Array accountid = params[1].get_array();
+	Array addr = params[1].get_array();
 	uint64_t fee = params[2].get_uint64();
 	vector<unsigned char> vcontract = ParseHex(params[3].get_str());
 	uint32_t height = params[4].get_int();
@@ -373,14 +371,19 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		}
 
 		vector<vector<unsigned char> > vaccountid;
-		for (auto& item : accountid) {
-			vector<unsigned char> accountid = ParseHex(item.get_str());
+		for (auto& item : addr) {
+			CBitcoinAddress tmpaddr(item.get_str());
+			CKeyID keyid;
+			if (!tmpaddr.GetKeyID(keyid)) {
+				throw runtime_error("in createcontracttx :address err\n");
+			}
+			CRegID accountid = pwalletMain->mapKeyRegID[keyid];
 			CAccount account;
-			if (!pAccountViewTip->GetAccount(accountid, account)) {
+			if (!pAccountViewTip->GetAccount(accountid.vRegID, account)) {
 				throw runtime_error(
 						tinyformat::format("createcontracttx :account id %s is not exist\n", item.get_str()));
 			}
-			vaccountid.push_back(accountid);
+			vaccountid.push_back(accountid.vRegID);
 		}
 
 		//get keyid by accountid
@@ -607,16 +610,22 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		string msg = "registerscripttx nrequired \"addr\" \"script\" fee height\n"
 				"\nregister script\n"
 				"\nArguments:\n"
-				"1.\"addr\": (string)\n"
-				"2.\"script\": (string)\n"
-				"3.fee: (numeric) pay to miner\n"
-				"4.height: (numeric)create height\n"
+				"1.\"addr\": (string required)\n"
+				"2.\"script or scriptid\": (string required)\n"
+				"3.\"fee\": (numeric required) pay to miner\n"
+				"4.\"height\": (numeric required)valid height\n"
+				"5.\"nAuthorizeTime\": (numeric, optional)\n"
+				"6.\"nMaxMoneyPerTime\": (numeric, optional)\n"
+				"7.\"nMaxMoneyTotal\": (numeric, optional)\n"
+				"8.\"nMaxMoneyPerDay\": (numeric, optional)\n"
+				"9.\"nUserDefine\": (numeric, optional)\n"
 				"\nResult:\n"
 				"\"txhash\": (string)\n"
 				"\nExamples:\n"
-				+ HelpExampleCli("registerscripttx", "5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 01020304 100000 1")
-				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("registerscripttx", "5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 01020304 100000 1");
+				+ HelpExampleCli("registerscripttx",
+						"\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" 010203040506 100000 1") + "\nAs json rpc call\n"
+				+ HelpExampleRpc("registerscripttx",
+						"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 010203040506 100000 1");
 		throw runtime_error(msg);
 	}
 
@@ -627,6 +636,34 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	vector<unsigned char> vscript = ParseHex(params[1].get_str());
 	uint64_t fee = params[2].get_uint64();
 	uint32_t height = params[3].get_int();
+
+	uint32_t nAuthorizeTime;
+	uint64_t nMaxMoneyPerTime;
+	uint64_t nMaxMoneyTotal;
+	uint64_t nMaxMoneyPerDay;
+	uint64_t nUserDefine;
+
+	if (params.size() > 4) {
+		RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(int_type)(int_type));
+		nAuthorizeTime = params[4].get_int();
+	}
+	if (params.size() > 5) {
+		RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(int_type)(int_type)(int_type));
+		nMaxMoneyPerTime = params[5].get_uint64();
+	}
+	if (params.size() > 6) {
+		RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(int_type)(int_type)(int_type)(int_type));
+		nMaxMoneyTotal = params[6].get_uint64();
+	}
+	if (params.size() > 7) {
+		RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(int_type)(int_type)(int_type)(int_type)(int_type));
+		nMaxMoneyPerDay = params[7].get_uint64();
+	}
+	if (params.size() > 8) {
+		RPCTypeCheck(params,
+				list_of(str_type)(str_type)(int_type)(int_type)(int_type)(int_type)(int_type)(int_type)(int_type));
+		nUserDefine = params[8].get_uint64();
+	}
 
 	if (fee > 0 && fee < CTransaction::nMinTxFee) {
 		throw runtime_error("in registerscripttx :fee is smaller than nMinTxFee\n");
@@ -664,16 +701,29 @@ Value registerscripttx(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registerscripttx Error: Account balance is insufficient.");
 		}
 
+		if (vscript.size() == SCRIPT_ID_SIZE) {
+			vector<unsigned char> vscriptcontent;
+			if (pScriptDBTip->GetScript(vscript, vscriptcontent)) {
+				throw JSONRPCError(RPC_WALLET_ERROR, "in registerscripttx Error: Account balance is insufficient.");
+			}
+		}
+
 		tx.regAccountId = pwalletMain->mapKeyRegID[keyid].vRegID;
 		tx.script = vscript;
-		tx.nFlag = 1;
 		tx.llFees = fee;
 		tx.nValidHeight = height;
+//		tx.aAuthorizate(nAuthorizeTime, nUserDefine, nMaxMoneyPerTime, nMaxMoneyTotal,
+//				nMaxMoneyPerDay);
+		tx.aAuthorizate.SetAuthorizeTime(nAuthorizeTime);
+		tx.aAuthorizate.SetMaxMoneyPerTime(nMaxMoneyPerTime);
+		tx.aAuthorizate.SetMaxMoneyTotal(nMaxMoneyTotal);
+		tx.aAuthorizate.SetMaxMoneyPerDay(nMaxMoneyPerDay);
+		tx.aAuthorizate.SetUserData(nUserDefine);
 
-		vector<unsigned char> vscriptcontent;
-		if (pScriptDBTip->GetScript(vscript, vscriptcontent)) {
-			tx.nFlag = 0;
-		}
+//		vector<unsigned char> vscriptcontent;
+//		if (pScriptDBTip->GetScript(vscript, vscriptcontent)) {
+//			tx.nFlag = 0;
+//		}
 
 		CKey key;
 		pwalletMain->GetKey(keyid, key);
@@ -772,7 +822,7 @@ Value listaddrtx(const Array& params, bool fHelp) {
 	//get keyid
 	CKeyID keyid;
 	if (!address.GetKeyID(keyid)) {
-		throw runtime_error("in registersecuretx :address err\n");
+		throw runtime_error("in registeraccounttx :address err\n");
 	}
 
 	bool bshowdetail = 0;
@@ -786,7 +836,7 @@ Value listaddrtx(const Array& params, bool fHelp) {
 		LOCK2(cs_main, pwalletMain->cs_wallet);
 
 		if (!pwalletMain->HaveKey(keyid)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "in registersecuretx Error: not find key.");
+			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: not find key.");
 		}
 
 		for (auto&wtx : pwalletMain->mapWalletTx) {
