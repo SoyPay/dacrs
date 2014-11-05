@@ -1420,29 +1420,23 @@ Value listregscript(const Array& params, bool fHelp) {
 
 	CAccountViewCache view(*pAccountViewTip, true);
 	if(pScriptDBTip != NULL) {
-//		map<string, CContractScript> &mapScript = pContractScriptTip->GetScriptCache();
-//		map<string, CContractScript>::iterator iterScript = mapScript.begin();
-//		for (; iterScript != mapScript.end(); ++iterScript) {
-//			Object script;
-//			Array arrayArbitrator;
-//			script.push_back(Pair("RegScriptId", iterScript->first));
-//			script.push_back(
-//					Pair("RegScriptContent",
-//							HexStr(iterScript->second.scriptContent.begin(), iterScript->second.scriptContent.end())));
-//
-//			set<string>::iterator iterArbit = iterScript->second.setArbitratorAccId.begin();
-//			for (; iterArbit != iterScript->second.setArbitratorAccId.end(); ++iterArbit) {
-//				Object arbitrator;
-//				CKeyID keyId;
-//				view.GetKeyId(ParseHex(*iterArbit), keyId);
-//				arbitrator.push_back(Pair("RegId", (*iterArbit).c_str()));
-//				arbitrator.push_back(Pair("KeyId", keyId.GetHex()));
-//				arrayArbitrator.push_back(arbitrator);
-//			}
-//			script.push_back(Pair("RegisterArbitrator:", arrayArbitrator));
-//			arrayScript.push_back(script);
-//
-//		}
+		int nCount(0);
+		if(!pScriptDBTip->GetScriptCount(nCount))
+			throw JSONRPCError(RPC_DATABASE_ERROR, "get script error: cannot get registered count.");
+		vector<unsigned char> vScriptId;
+		vector<unsigned char> vScript;
+		Object script;
+		if(!pScriptDBTip->GetScript(0, vScriptId, vScript))
+			throw JSONRPCError(RPC_DATABASE_ERROR, "get script error: cannot get registered script.");
+		script.push_back(Pair("scriptId", HexStr(vScriptId)));
+		script.push_back(Pair("scriptContent", string(vScript.begin(), vScript.end())));
+		arrayScript.push_back(script);
+		while(pScriptDBTip->GetScript(1, vScriptId, vScript)) {
+			Object obj;
+			obj.push_back(Pair("scriptId", HexStr(vScriptId)));
+			obj.push_back(Pair("scriptContent", string(vScript.begin(), vScript.end())));
+			arrayScript.push_back(obj);
+		}
 	}
 
 	obj.push_back(Pair("ListRegisterScript", arrayScript));

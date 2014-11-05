@@ -215,7 +215,7 @@ bool CScriptDBView::SetData(const vector<unsigned char> &vKey, const vector<unsi
 bool CScriptDBView::BatchWrite(const map<string, vector<unsigned char> > &mapDatas) {return false;}
 bool CScriptDBView::EraseKey(const vector<unsigned char> &vKey) {return false;}
 bool CScriptDBView::HaveData(const vector<unsigned char> &vKey) {return false;}
-bool CScriptDBView::GetScript(const int &nIndex, vector<unsigned char> &vValue) {return false;}
+bool CScriptDBView::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue) {return false;}
 bool CScriptDBView::GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
 		vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight) {return false;}
 
@@ -225,7 +225,7 @@ bool CScriptDBViewBacked::SetData(const vector<unsigned char> &vKey, const vecto
 bool CScriptDBViewBacked::BatchWrite(const map<string, vector<unsigned char> > &mapDatas) {return pBase->BatchWrite(mapDatas);}
 bool CScriptDBViewBacked::EraseKey(const vector<unsigned char> &vKey) {return pBase->EraseKey(vKey);}
 bool CScriptDBViewBacked::HaveData(const vector<unsigned char> &vKey) {return pBase->HaveData(vKey);}
-bool CScriptDBViewBacked::GetScript(const int &nIndex, vector<unsigned char> &vValue) {return pBase->GetScript(nIndex, vValue);}
+bool CScriptDBViewBacked::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue) {return pBase->GetScript(nIndex, vScriptId, vValue);}
 bool CScriptDBViewBacked::GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
 		vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight) {
 	return pBase->GetScriptData(vScriptId, nIndex, vScriptKey, vScriptData, nHeight);
@@ -274,17 +274,18 @@ bool CScriptDBViewCache::HaveData(const vector<unsigned char> &vKey) {
 	}
 	return pBase->HaveData(vKey);
 }
-bool CScriptDBViewCache::GetScript(const int &nIndex, vector<unsigned char> &vValue) {
-	return pBase->GetScript(nIndex, vValue);
+bool CScriptDBViewCache::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue) {
+	return pBase->GetScript(nIndex, vScriptId, vValue);
 }
 bool CScriptDBViewCache::SetScript(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vValue) {
 	vector<unsigned char> scriptKey = {'d','e','f'};
 	scriptKey.insert(scriptKey.end(), vScriptId.begin(), vScriptId.end());
+
 	if (!HaveScript(vScriptId)) {
 		int nCount(0);
-		GetScriptCount(vScriptId, nCount);
+		GetScriptCount(nCount);
 		++nCount;
-		if (!SetScriptCount(vScriptId, nCount))
+		if (!SetScriptCount(nCount))
 			return false;
 	}
 	return SetData(scriptKey, vValue);
@@ -353,19 +354,17 @@ bool CScriptDBViewCache::HaveScript(const vector<unsigned char> &vScriptId) {
 	scriptKey.insert(scriptKey.end(), vScriptId.begin(), vScriptId.end());
 	return HaveData(scriptKey);
 }
-bool CScriptDBViewCache::GetScriptCount(const vector<unsigned char> &vScriptId, int &nCount) {
+bool CScriptDBViewCache::GetScriptCount(int &nCount) {
 	vector<unsigned char> scriptKey = { 's', 'n', 'u','m'};
 	vector<unsigned char> vValue;
-	scriptKey.insert(scriptKey.end(), vScriptId.begin(), vScriptId.end());
 	if (!GetData(scriptKey, vValue))
 		return false;
 	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
 	ds >> nCount;
 	return true;
 }
-bool CScriptDBViewCache::SetScriptCount(const vector<unsigned char> &vScriptId, const int nCount) {
+bool CScriptDBViewCache::SetScriptCount(const int nCount) {
 	vector<unsigned char> scriptKey = { 's', 'n', 'u','m'};
-	scriptKey.insert(scriptKey.end(), vScriptId.begin(), vScriptId.end());
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	ds << nCount;
 	vector<unsigned char> vValue(ds.begin(), ds.end());
@@ -378,10 +377,10 @@ bool CScriptDBViewCache::EraseScript(const vector<unsigned char> &vScriptId) {
 	scriptKey.insert(scriptKey.end(), vScriptId.begin(), vScriptId.end());
 	if (HaveScript(vScriptId)) {
 		int nCount(0);
-		if (!GetScriptCount(vScriptId, nCount))
+		if (!GetScriptCount(nCount))
 			return false;
 		--nCount;
-		if (!SetScriptCount(vScriptId, nCount))
+		if (!SetScriptCount(nCount))
 			return false;
 	}
 	return EraseKey(scriptKey);
