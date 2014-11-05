@@ -733,7 +733,8 @@ static bool ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 
 	vector<unsigned char> key =AddChar(*retdata.at(0));
 	int size = key.size();
-	if(scriptDB->SetScriptData(scriptid,key,*retdata.at(1),height))
+	CScriptDBOperLog operlog;
+	if(scriptDB->SetScriptData(scriptid,key,*retdata.at(1),height,operlog))
 	{
 		flag = true;
 	}
@@ -760,8 +761,9 @@ static bool ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 		return false;
 	}
 
+	CScriptDBOperLog operlog;
 	vector<unsigned char> key =AddChar(*retdata.at(0));
-	if(scriptDB->EraseScriptData(scriptid,key))
+	if(scriptDB->EraseScriptData(scriptid,key,operlog))
 	{
 		flag = true;
 	}
@@ -819,8 +821,9 @@ static bool ExModifyDataDBFunc(unsigned char * ipara,void * pVmScript) {
 		return false;
 	}
 
+	CScriptDBOperLog operlog;
 	vector<unsigned char> key =AddChar(*retdata.at(0));
-	if(!scriptDB->SetScriptData(scriptid,key,*retdata.at(1).get(),height))
+	if(!scriptDB->SetScriptData(scriptid,key,*retdata.at(1).get(),height,operlog))
 	{
 		flag = false;
 	}
@@ -995,10 +998,11 @@ static bool ExModifyDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 		return false;
 	}
 
+	CScriptDBOperLog operlog;
 	vector<unsigned char> key =AddChar(*retdata.at(0));
 	if(scriptDB->GetScriptData(scriptid,key,vValue,temp))
 	{
-		if(scriptDB->SetScriptData(scriptid,key,vValue,height))
+		if(scriptDB->SetScriptData(scriptid,key,vValue,height,operlog))
 		{
 			flag = true;
 		}
@@ -1042,10 +1046,11 @@ static bool ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript)
 		return false;
 	}
 
+	CScriptDBOperLog operlog;
 	vector<unsigned char> key =AddChar(*retdata.at(0));
 	if(scriptDB->GetScriptData(scriptid,key,vValue,temp))
 	{
-		if(scriptDB->SetScriptData(scriptid,key,*retdata.at(1),temp))
+		if(scriptDB->SetScriptData(scriptid,key,*retdata.at(1),temp,operlog))
 		{
 			flag = true;
 		}

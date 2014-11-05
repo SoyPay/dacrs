@@ -106,6 +106,10 @@ public:
 		nMaxMoneyPerDay = nMoney;
 	}
 
+	bool IsValid() {
+		return true;
+	}
+
 	IMPLEMENT_SERIALIZE
 	(
 		READWRITE(VARINT(nAuthorizeTime));
@@ -806,6 +810,15 @@ public:
 	vector<unsigned char> vKey;
 	vector<unsigned char> vValue;
 
+	CScriptDBOperLog (const vector<unsigned char> vKeyIn, const vector<unsigned char> vValueIn) {
+		vKey = vKeyIn;
+		vValue = vValueIn;
+	}
+
+	CScriptDBOperLog() {
+
+	}
+
 	IMPLEMENT_SERIALIZE
 	(
 		READWRITE(vKey);
@@ -865,8 +878,10 @@ class CTxUndo {
 public:
 	vector<CAccountOperLog> vAccountOperLog;
 	vector<CScriptDBOperLog> vScriptOperLog;
-	IMPLEMENT_SERIALIZE(
-			READWRITE(vAccountOperLog);
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(vAccountOperLog);
+		READWRITE(vScriptOperLog);
 	)
 
 public:
