@@ -70,6 +70,8 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 bool CheckWork(CBlock* pblock, CWallet& wallet);
 /** Base sha256 mining transform */
 void SHA256Transform(void* pstate, void* pinput, const void* pinit);
+/** Get burn element */
+uint64_t GetElementForBurn(void);
 
 void GetPriorityTx(vector<TxPriority> &vecPriority, map<uint256, vector<COrphan*> > &mapDependers);
 extern double dHashesPerSec;

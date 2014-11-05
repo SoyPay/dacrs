@@ -107,7 +107,7 @@ public:
 	bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
 	bool EraseKey(const vector<unsigned char> &vKey);
 	bool HaveData(const vector<unsigned char> &vKey);
-	bool GetScript(const int &nIndex, vector<unsigned char> &vValue);
+	bool GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
 	bool GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData,
 			int &nHeight);
 

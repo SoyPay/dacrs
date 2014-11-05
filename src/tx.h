@@ -56,9 +56,20 @@ enum RegScriptType {
 
 class CNetAuthorizate {
 public:
+	CNetAuthorizate()
+	{
+		nAuthorizeTime = 0;
+		nUserDefine = 0;
+		nMaxMoneyPerTime = 0;
+		nMaxMoneyTotal = 0;
+		nMaxMoneyPerDay = 0;
+	}
 	uint32_t GetAuthorizeTime() const {
 		return nAuthorizeTime;
 	}
+	uint64_t GetUserData() const {
+			return nUserDefine;
+		}
 	uint64_t GetMaxMoneyPerTime() const {
 		return nMaxMoneyPerTime;
 	}
@@ -75,16 +86,15 @@ public:
 	void SetMaxMoneyPerTime(uint64_t nMoney) {
 		nMaxMoneyPerTime = nMoney;
 	}
+	void SetUserData(uint64_t data) {
+		nUserDefine = data;
+		}
 	void SetMaxMoneyTotal(uint64_t nMoney) {
 		nMaxMoneyTotal = nMoney;
 	}
 	void SetMaxMoneyPerDay(uint64_t nMoney) {
 		nMaxMoneyPerDay = nMoney;
 	}
-	void SetUserDefine(uint64_t nDefine) {
-		nUserDefine = nDefine;
-	}
-
 
 	IMPLEMENT_SERIALIZE
 	(
@@ -96,7 +106,7 @@ public:
 	)
 
 protected:
-	uint64_t nAuthorizeTime;
+	uint32_t nAuthorizeTime;
 	uint64_t nUserDefine;
 	uint64_t nMaxMoneyPerTime;
 	uint64_t nMaxMoneyTotal;
@@ -104,7 +114,18 @@ protected:
 };
 
 class CAuthorizate :public CNetAuthorizate{
+
 public:
+	CAuthorizate(CNetAuthorizate te) {
+		nAuthorizeTime = te.GetAuthorizeTime();
+		nUserDefine = te.GetUserData();
+		nMaxMoneyPerTime = te.GetMaxMoneyPerTime();
+		nMaxMoneyTotal = te.GetMaxMoneyTotal();
+		nMaxMoneyPerDay = te.GetMaxMoneyPerDay();
+		nLastOperHeight = 0;
+		nCurMaxMoneyPerDay = 0;
+	}
+
 	uint64_t GetCurMaxMoneyPerDay() const {
 		return nCurMaxMoneyPerDay;
 	}
@@ -576,15 +597,15 @@ public:
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
 
-#define SCRIPT_ID_SIZE (6)
-
 class CRegistScriptTx: public CBaseTransaction {
 
 public:
 	vector_unsigned_char regAccountId;
+	unsigned char nFlag; //0: exist scriptId, 1 new script content
 	vector_unsigned_char script;
 	uint64_t llFees;
 	int nValidHeight;
+	unsigned char isHaveAuthor; // whether have authorizate, 0 represent do not have authorizate data, 1 means contrary
 	CNetAuthorizate aAuthorizate;
 	vector_unsigned_char signature;
 public:
@@ -596,7 +617,9 @@ public:
 	CRegistScriptTx() {
 		nTxType = REG_SCRIPT_TX;
 		llFees = 0;
+		nFlag = 0;
 		nValidHeight = 0;
+		isHaveAuthor = 0;
 	}
 
 	~CRegistScriptTx() {
@@ -607,10 +630,12 @@ public:
 			READWRITE(this->nVersion);
 			nVersion = this->nVersion;
 			READWRITE(regAccountId);
+			READWRITE(nFlag);
 			READWRITE(script);
 			READWRITE(llFees);
 			READWRITE(nValidHeight);
-			READWRITE(aAuthorizate);
+			if(isHaveAuthor)
+				READWRITE(aAuthorizate);
 			READWRITE(signature);
 	)
 
@@ -624,7 +649,7 @@ public:
 
 	uint256 SignatureHash() const {
 		CHashWriter ss(SER_GETHASH, 0);
-		ss << regAccountId << script << llFees << nValidHeight << aAuthorizate;
+		ss << regAccountId << nFlag << script << llFees << nValidHeight;
 		return ss.GetHash();
 	}
 
@@ -675,35 +700,31 @@ enum OperType {
 
 class CFund {
 public:
-	unsigned char nFundType;	//!< fund type
-	uint256 uTxHash;			//!< hash of the tx which create the fund
-	uint64_t value;				//!< amount of money
-	int nHeight;				//!< time-out height
+	unsigned char nFundType;		//!< fund type
+	vector_unsigned_char scriptID;	//!< hash of the tx which create the fund
+	uint64_t value;					//!< amount of money
+	int nHeight;					//!< time-out height
 public:
 	CFund() {
 		nFundType = 0;
-		uTxHash = 0;
 		value = 0;
 		nHeight = 0;
 	}
 	CFund(uint64_t _value) {
 		nFundType = 0;
-		uTxHash = 0;
 		value = _value;
 		nHeight = 0;
 	}
-	CFund(unsigned char _type, uint256 _hash, uint64_t _value, int _Height) {
-		/**
-		 * @todo change the uint256 _hash to uint256& _hash
-		 */
+	CFund(unsigned char _type, uint64_t _value, int _Height,const vector_unsigned_char& _scriptID = vector_unsigned_char()) {
 		nFundType = _type;
-		uTxHash = _hash;
 		value = _value;
 		nHeight = _Height;
+		if (!_scriptID.empty())
+			scriptID = _scriptID;
 	}
 	CFund(const CFund &fund) {
 		nFundType = fund.nFundType;
-		uTxHash = fund.uTxHash;
+		scriptID = fund.scriptID;
 		value = fund.value;
 		nHeight = fund.nHeight;
 	}
@@ -712,7 +733,7 @@ public:
 			return *this;
 		}
 		this->nFundType = fund.nFundType;
-		this->uTxHash = fund.uTxHash;
+		this->scriptID = fund.scriptID;
 		this->value = fund.value;
 		this->nHeight = fund.nHeight;
 		return *this;
@@ -742,7 +763,7 @@ public:
 	friend bool operator ==(const CFund &fa, const CFund &fb) {
 		if (fa.nFundType != fb.nFundType)
 			return false;
-		if (fa.uTxHash != fb.uTxHash)
+		if (fa.scriptID != fb.scriptID)
 			return false;
 		if (fa.value != fb.value)
 			return false;
@@ -754,7 +775,7 @@ public:
 	IMPLEMENT_SERIALIZE
 	(
 			READWRITE(nFundType);
-			READWRITE(uTxHash);
+			READWRITE(scriptID);
 			READWRITE(value);
 			READWRITE(nHeight);
 
@@ -841,6 +862,7 @@ public:
 	map<vector_unsigned_char,CAuthorizate> mapAuthorizate;	//!< Key:scriptID,value :CAuthorizate
 	CAccountOperLog accountOperLog;							//!< record operlog, write at undoinfo
 public :
+	bool OperateAccount(OperType type, const CFund &fund, int nHeight = 0);
 	/**
 	 * @brief add money to account
 	 * @param type:	must be ADD_FREE or ADD_SELF_FREEZD or ADD_FREEZD
@@ -907,9 +929,10 @@ public:
 		return !(llValues > 0 || !vFreedomFund.empty() || !vFreeze.empty() || !vSelfFreeze.empty());
 	}
 	void CompactAccount(int nCurHeight);
+	void AddToFreedom(const CFund &fund,bool bWriteLog = true);
 
 	bool UndoOperateAccount(const CAccountOperLog & accountOperLog);
-	CFund& FindFund(const vector<CFund>& vFund, const uint256 &hash);
+	CFund& FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID);
 
 	IMPLEMENT_SERIALIZE
 	(
