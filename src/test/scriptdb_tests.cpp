@@ -57,11 +57,12 @@ void testscriptdatadb() {
 	vector<unsigned char> vScriptKey1 = {0x01,0x00,0x02,0x03,0x04,0x05,0x07,0x06};
 	vector<unsigned char> vScriptData = {0x01,0x01,0x01,0x01,0x01};
 	vector<unsigned char> vScriptData1 = {0x01,0x01,0x01,0x00,0x00};
+	CScriptDBOperLog operlog;
 	//write script data to db
-	BOOST_CHECK(pScriptDBTip->SetScriptData(vScriptId, vScriptKey, vScriptData, 100));
+	BOOST_CHECK(pScriptDBTip->SetScriptData(vScriptId, vScriptKey, vScriptData, 100, operlog));
 	//write all data in caches to db
 	BOOST_CHECK(pScriptDBTip->Flush());
-	BOOST_CHECK(pScriptDBTip->SetScriptData(vScriptId, vScriptKey1, vScriptData1, 101));
+	BOOST_CHECK(pScriptDBTip->SetScriptData(vScriptId, vScriptKey1, vScriptData1, 101, operlog));
 	//test if the script id is exist in db
 	BOOST_CHECK(pScriptDBTip->HaveScriptData(vScriptId, vScriptKey));
 	vector<unsigned char> vScript;
@@ -90,7 +91,7 @@ void testscriptdatadb() {
 	BOOST_CHECK(vScript == vScriptData1);
 	BOOST_CHECK_EQUAL(nValidHeight,101);
 	//delete script from db
-	BOOST_CHECK(pScriptDBTip->EraseScriptData(vScriptId, vScriptKey));
+	BOOST_CHECK(pScriptDBTip->EraseScriptData(vScriptId, vScriptKey, operlog));
 	BOOST_CHECK(pScriptDBTip->GetScriptDataCount(vScriptId, nCount));
 	BOOST_CHECK_EQUAL(nCount, 1);
 	//write all data in caches to db
