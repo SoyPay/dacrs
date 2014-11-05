@@ -27,12 +27,12 @@ struct TestingSetup {
 	TestingSetup() {
 		{
 			//vmscript test init
-			delete pScriptDB;
-			delete pScriptDBTip;
+//			delete pScriptDB;
+//			delete pScriptDBTip;
 		//	delete pContractScriptTip;
 
-			pScriptDB = new CScriptDB(1024*1024, false , false);
-			pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
+//			pScriptDB = new CScriptDB(1024*1024, false , false);
+//			pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
 		//	pContractScriptTip = new CContractScriptCache(pScriptDB);
 		}
 //		mapArgs["-datadir"] = "D:\\bitcoin";
