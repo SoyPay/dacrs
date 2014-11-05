@@ -85,11 +85,11 @@ tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& T
 	vector<CVmOperate> retvmcode;
 	Contractstream >> retvmcode;
 
-	if (!CheckOperate(retvmcode)) {
+	if (!CheckOperate(m_output)) {
 		return std::make_tuple (false, 0, string("VmScript CheckOperate Failed \n"));
 
 	}
-	if (!OpeatorAccount(retvmcode, view)) {
+	if (!OpeatorAccount(m_output, view)) {
 		return std::make_tuple (false, 0, string("VmScript OpeatorSecureAccount Failed\n"));
 	}
 	uint64_t spend = step*nBurnFactor;
@@ -223,4 +223,8 @@ uint256 CVmScriptRun::GetCurTxHash()
 CScriptDBViewCache* CVmScriptRun::GetScriptDB()
 {
 	return m_ScriptDBTip;
+}
+void CVmScriptRun::InsertOutputData(vector<CVmOperate> source)
+{
+	m_output.insert(m_output.end(),source.begin(),source.end());
 }

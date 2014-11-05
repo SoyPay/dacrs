@@ -835,7 +835,7 @@ void CAccount::AddToFreeze(const CFund &fund) {
 }
 
 void CAccount::AddToFreedom(const CFund &fund,bool bWriteLog) {
-	int nCurHeight = chainActive.Height();
+	int nCurHeight = chainActive.Height() + 1;
 	assert(fund.nHeight <= nCurHeight);
 	int nTenDayBlocks = 10 * ( (24 * 60 * 60) / Params().GetTargetSpacing());
 	int nHeightPoint = fund.nHeight - fund.nHeight % nTenDayBlocks;
