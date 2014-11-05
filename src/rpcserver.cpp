@@ -316,7 +316,7 @@ static const CRPCCommand vRPCCommands[] =
     { "getwork",                &getwork,                true,      false,     true  },
     { "setgenerate",            &setgenerate,            true,      true,      false },
 
-    { "registersecuretx",       &registersecuretx,       true,      false,      true },
+//    { "registeraccounttx",       &registeraccounttx,       true,      false,      true },
     { "createnormaltx",         &createnormaltx,       	 true,      false,      true },
     { "createcontracttx",       &createcontracttx,       	 true,      false,      true },
     { "signcontracttx",         &signcontracttx,       	 true,      false,      true },
