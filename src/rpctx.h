@@ -19,7 +19,7 @@ using namespace json_spirit;
 
 
 
-extern Value registersecuretx(const Array& params, bool fHelp);
+extern Value registeraccounttx(const Array& params, bool fHelp);
 extern Value createnormaltx(const Array& params, bool fHelp);
 extern Value createcontracttx(const Array& params, bool fHelp);
 extern Value signcontracttx(const Array& params, bool fHelp);
