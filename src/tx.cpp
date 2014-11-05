@@ -656,7 +656,7 @@ bool CRegistScriptTx::CheckTransction(CValidationState &state, CAccountViewCache
 		return state.DoS(100, ERROR("CheckTransaction() : register script tx get registe account info error"), REJECT_INVALID,
 				"bad-read-account-info");
 	}
-	if(!nFlag) {
+	if(script.size() == SCRIPT_ID_SIZE) {
 		vector<unsigned char> vScriptContent;
 		if(!pScriptDBTip->GetScript(script, vScriptContent)) {
 			return state.DoS(100,
