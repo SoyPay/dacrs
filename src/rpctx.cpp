@@ -341,17 +341,21 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 
-	RPCTypeCheck(params, list_of(str_type)(array_type)(int_type)(str_type)(int_type));
+	RPCTypeCheck(params, list_of(str_type)(array_type)(str_type)(int_type)(int_type));
 
 	//get addresss
 	vector<unsigned char> vscriptid = ParseHex(params[0].get_str());
 	Array addr = params[1].get_array();
-	uint64_t fee = params[2].get_uint64();
-	vector<unsigned char> vcontract = ParseHex(params[3].get_str());
+	vector<unsigned char> vcontract = ParseHex(params[2].get_str());
+	uint64_t fee = params[3].get_uint64();
 	uint32_t height = params[4].get_int();
 
 	if (fee > 0 && fee < CTransaction::nMinTxFee) {
-		throw runtime_error("in createsecuretx :fee is smaller than nMinTxFee\n");
+		throw runtime_error("in createcontracttx :fee is smaller than nMinTxFee\n");
+	}
+
+	if (vscriptid.size() != SCRIPT_ID_SIZE) {
+		throw runtime_error("in createcontracttx :vscriptid size is error!\n");
 	}
 
 	assert(pwalletMain != NULL);
@@ -365,10 +369,10 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		CAccountViewCache view(*pAccountViewTip, true);
 		CAccount secureAcc;
 
-		vector<unsigned char> vscript;
-		if (!pScriptDBTip->GetScript(vscriptid, vscript)) {
-			throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(vscriptid)));
-		}
+//		vector<unsigned char> vscript;
+//		if (!pScriptDBTip->GetScript(vscriptid, vscript)) {
+//			throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(vscriptid)));
+//		}
 
 		vector<vector<unsigned char> > vaccountid;
 		for (auto& item : addr) {
@@ -505,10 +509,17 @@ Value signcontracttx(const Array& params, bool fHelp) {
 	}
 
 	{
-		CDataStream ds(SER_DISK, CLIENT_VERSION);
-		ds << tx;
-		LogPrint("INFO", "signcontracttx ok!\r\n");
-		return HexStr(ds.begin(), ds.end());
+		if(tx.vSignature.size() == tx.vAccountRegId.size())
+		{
+			return tx.GetHash().ToString();
+		}
+		else
+		{
+			CDataStream ds(SER_DISK, CLIENT_VERSION);
+			ds << tx;
+			LogPrint("INFO", "signcontracttx ok!\r\n");
+			return HexStr(ds.begin(), ds.end());
+		}
 	}
 }
 
