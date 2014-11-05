@@ -375,9 +375,9 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 		vKey.insert(vKey.end(), vScriptKey.begin(), vScriptKey.end());
 		map<string, vector<unsigned char> >::iterator iterFindKey = mapDatas.find(string(vKey.begin(), vKey.end()));
 		string dataKey("");
-		if(iterFindKey != mapDatas.end())
+		if(iterFindKey != mapDatas.end() && ++iterFindKey != mapDatas.end())
 		{
-			dataKey = (iterFindKey++)->first;
+			dataKey = iterFindKey->first;
 		}
 		if (!pBase->GetScriptData(vScriptId, nIndex, vScriptKey, vScriptData, nHeight)) {
 			if ("" == dataKey)
