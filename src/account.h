@@ -117,6 +117,7 @@ public:
 class CScriptDBViewCache : public CScriptDBViewBacked {
 public:
 	map<string, vector<unsigned char> > mapDatas;
+
 public:
 	CScriptDBViewCache(CScriptDBView &base, bool fDummy = false);
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
@@ -193,7 +194,7 @@ public:
 	 * @param vScriptKey must be 8 bytes
 	 * @return true if delete succeed, otherwise false
 	 */
-	bool EraseScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey);
+	bool EraseScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey, CScriptDBOperLog &operLog);
 
 	/**
 	 * @brief Detect if scriptdb contains the item of script's data by scriptid and scriptkey
@@ -235,7 +236,7 @@ public:
 	 * @return true if save succeed, otherwise false
 	 */
 	bool SetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
-			const vector<unsigned char> &vScriptData, const int nHeight);
+			const vector<unsigned char> &vScriptData, const int nHeight, CScriptDBOperLog &operLog);
 
 	/**
 	 * @brief write all data in the caches to script db

@@ -177,8 +177,8 @@ Array RPCConvertValues(const string &strMethod, const vector<string> &strParams)
 
     if (strMethod == "getnewaddress"       && n > 0) ConvertTo<bool>(params[0]);
 
-    if (strMethod == "registersecuretx"          && n > 1) ConvertTo<int64_t>(params[1]);
-    if (strMethod == "registersecuretx"          && n > 2) ConvertTo<int>(params[2]);
+    if (strMethod == "registeraccounttx"          && n > 1) ConvertTo<int64_t>(params[1]);
+    if (strMethod == "registeraccounttx"          && n > 2) ConvertTo<int>(params[2]);
 
     if (strMethod == "createnormaltx"          && n > 2) ConvertTo<int64_t>(params[2]);
     if (strMethod == "createnormaltx"          && n > 3) ConvertTo<int64_t>(params[3]);
@@ -198,6 +198,10 @@ Array RPCConvertValues(const string &strMethod, const vector<string> &strParams)
     if (strMethod == "createsecuretx"          && n > 2) ConvertTo<Array>(params[2]);
     if (strMethod == "createsecuretx"          && n > 4) ConvertTo<int>(params[4]);
     if (strMethod == "createsecuretx"          && n > 5) ConvertTo<int>(params[5]);
+
+    if (strMethod == "createcontracttx"          && n > 1) ConvertTo<Array>(params[1]);
+	if (strMethod == "createcontracttx"          && n > 3) ConvertTo<int64_t>(params[3]);
+	if (strMethod == "createcontracttx"          && n > 4) ConvertTo<int>(params[4]);
 
     if (strMethod == "listaddrtx"          && n > 1) ConvertTo<bool>(params[1]);
     if (strMethod == "listunconfirmedtx"          && n > 0) ConvertTo<bool>(params[0]);
