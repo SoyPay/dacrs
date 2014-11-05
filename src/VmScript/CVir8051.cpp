@@ -1056,7 +1056,28 @@ static bool ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript)
 	memcpy(&ipara[2], &flag, 1);
 	return true;
 }
+static bool ExWriteOutputFunc(unsigned char * ipara,void * pVmScript)
+{
 
+	unsigned char * pbuffer = ipara;
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 1);
+
+	vector<CVmOperate> source;
+	CVmOperate temp;
+	int Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
+	int count = GetParaLen(pbuffer)/Size;
+	CDataStream ss(*retdata.at(0),SER_DISK, CLIENT_VERSION);
+
+	while(count--)
+	{
+		ss >> temp;
+      source.push_back(temp);
+	}
+	pVmScriptRun->InsertOutputData(source);
+}
 enum CALL_API_FUN {
 	COMP_FUNC = 0,            //!< COMP_FUNC
 	MULL_MONEY ,              //!< MULL_MONEY
@@ -1091,7 +1112,7 @@ enum CALL_API_FUN {
 	READDBTIME_FUNC,     //!< READDBTIME_FUNC
 	MODIFYDBTIME_FUNC,  //!< MODIFYDBTIME_FUNC
 	MODIFYDBVALUE_FUNC,  //!< MODIFYDBVALUE_FUNC
-
+	WRITEOUTPUT_FUNC,     //!<WRITEOUTPUT_FUNC
 
 };
 
@@ -1126,6 +1147,7 @@ const static struct __MapExterFun FunMap[] = { //
 		{READDBTIME_FUNC,ExReadDataDBTimeFunc},
 		{MODIFYDBTIME_FUNC,ExModifyDataDBTimeFunc},
 		{MODIFYDBVALUE_FUNC,ExModifyDataDBVavleFunc},
+		{WRITEOUTPUT_FUNC,ExWriteOutputFunc},
 		};
 
 bool CallExternalFunc(INT16U method, unsigned char *ipara,CVmScriptRun *pVmScriptRun) {
