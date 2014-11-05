@@ -40,6 +40,7 @@ class CVmScriptRun {
 	 * the block height
 	 */
 	int height;
+	CScriptDBViewCache *m_ScriptDBTip;
 
 private:
 	/**
@@ -80,7 +81,7 @@ private:
 	 * @param value: argument
 	 * @return:Return account id
 	 */
-	vector_unsigned_char& GetAccountID(CVmOperate value);
+	vector_unsigned_char GetAccountID(CVmOperate value);
 
 public:
 	/**
@@ -106,7 +107,7 @@ public:
 	 * @return: tuple<bool,uint64_t,string>  bool represent the script run success
 	 * uint64_t if the script run sucess Run the script calls the money ,string represent run the failed's  Reason
 	 */
-	tuple<bool,uint64_t,string> run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view,
+	tuple<bool,uint64_t,string> run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view,CScriptDBViewCache& VmDB,
 			int nheight,uint64_t nBurnFactor);
 	/**
 	 * @brief just for test
@@ -114,6 +115,7 @@ public:
 	 */
 	shared_ptr<vector<CVmOperate> > GetOperate() const;
 	vector_unsigned_char& GetScriptID();
+	CScriptDBViewCache* GetScriptDB();
 	int GetComfirHeight();
 	uint256 GetCurTxHash();
 	virtual ~CVmScriptRun();

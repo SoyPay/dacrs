@@ -413,7 +413,7 @@ AX_BOOST_PROGRAM_OPTIONS
 AX_BOOST_THREAD
 AX_BOOST_CHRONO
 
-if test x$use_tests = xyes; then
+if test x$use_tests = xyes || test x$use_ptests = xyes; then
 
   if test x$HEXDUMP = x; then
     AC_MSG_ERROR(hexdump is required for tests)
