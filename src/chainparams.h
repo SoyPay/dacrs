@@ -48,6 +48,10 @@ protected:
 	bool fBenchmark;
 	bool fTxIndex;
 	int64_t nTimeBestReceived;
+	int64_t nTargetSpacing;
+	int64_t nTargetTimespan;
+	int64_t nInterval;
+	int64_t nMaxCoinDay;
 	unsigned int nScriptCheckThreads;
 	int64_t nCoinCacheSize;
 	int nTxCacheHeight;
@@ -60,11 +64,8 @@ public:
 		vector<string> te = m_mapMultiArgs[str];
 		temp.get()->assign(te.begin(), te.end());
 		return temp;
-
 	}
-
 	virtual bool InitalConfig() {
-
 		fServer = GetBoolArg("-server", false);
 		fDebug = !m_mapMultiArgs["-debug"].empty();
 		if (fDebug) {
@@ -142,6 +143,18 @@ public:
 		return fTxIndex;
 	}
 
+	int64_t GetTargetSpacing() const {
+		return nTargetSpacing;
+	}
+	int64_t GetTargetTimespan() const {
+		return nTargetTimespan;
+	}
+	int64_t GetInterval() const {
+		return nInterval;
+	}
+	int64_t GetMaxCoinDay() const {
+		return nMaxCoinDay;
+	}
 	int64_t GetBestRecvTime() const {
 		return nTimeBestReceived;
 	}
@@ -269,6 +282,10 @@ protected:
 		nTimeBestReceived = 0;
 		nScriptCheckThreads = 0;
 		nCoinCacheSize = 2000000;
+		nTargetSpacing = 10*60;
+		nTargetTimespan = 30 * 60;
+		nInterval = nTargetTimespan / nTargetSpacing;
+		nMaxCoinDay = 30 * 24 * 60 * 60;
 	}
 
 	uint256 hashGenesisBlock;

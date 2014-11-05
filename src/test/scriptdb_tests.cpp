@@ -1,122 +1,107 @@
-#include "rpcclient.h"
-#include "util.h"
-#include <boost/test/unit_test.hpp>
+#include "main.h"
 #include "txdb.h"
 #include "account.h"
 #include <iostream>
+#include <boost/test/unit_test.hpp>
+
 using namespace std;
-vector<string> g_vScriptID;
-void ReadData() {
-	auto_ptr<CAccountViewDB> pAccountViewDB(new CAccountViewDB(1000, false, false));
-	auto_ptr<CAccountViewCache> pAccountViewTip(new CAccountViewCache(*pAccountViewDB));
-	CAccountViewCache view(*pAccountViewTip, true);
-//	map<string, CContractScript> &mapScript; //= pContractScriptTip->GetScriptCache();
-//	map<string, CContractScript>::iterator iterScript = mapScript.begin();
-//	for (; iterScript != mapScript.end(); ++iterScript) {
-//		g_vScriptID.push_back(iterScript->first);
-//		//cout<<"RegScriptId:"<<iterScript->first.c_str()<<endl;
-//		//cout<<"RegScriptContent:"<<HexStr(iterScript->second.scriptContent.begin(), iterScript->second.scriptContent.end())<<endl;
-//
-//		set<string>::iterator iterArbit = iterScript->second.setArbitratorAccId.begin();
-//		for (; iterArbit != iterScript->second.setArbitratorAccId.end(); ++iterArbit) {
-//			CKeyID keyId;
-//			view.GetKeyId(ParseHex(*iterArbit), keyId);
-//			//cout<<"RegId:"<<(*iterArbit).c_str()<<endl;
-//			//cout<<"KeyId:"<<keyId.GetHex()<<endl;
-//		}
-//	}
+
+void init() {
+	 pScriptDB = new CScriptDB(size_t(4<<20), false , Params().IsReindex());
+	 pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
 }
 
-void GenerateMinerEx() {
-	//cout <<"Generate miner" << endl;
-	int argc = 3;
-	char *argv[3] = { "rpctest", "setgenerate", "true" };
-	CommandLineRPC(argc, argv);
+void testscriptdb() {
+	vector<unsigned char> vScriptId = {0x01,0x00,0x00,0x00,0x01,0x00};
+	vector<unsigned char> vScriptId1 = {0x01,0x00,0x00,0x00,0x02,0x00};
+	vector<unsigned char> vScriptContent = {0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01};
+	vector<unsigned char> vScriptContent1 = {0x01,0x02,0x03,0x04,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01};
+	//write script content to db
+	BOOST_CHECK(pScriptDBTip->SetScript(vScriptId, vScriptContent));
+	BOOST_CHECK(pScriptDBTip->SetScript(vScriptId1, vScriptContent1));
+	//write all data in caches to db
+	BOOST_CHECK(pScriptDBTip->Flush());
+	//test if the script id is exist in db
+	BOOST_CHECK(pScriptDBTip->HaveScript(vScriptId));
+	vector<unsigned char> vScript;
+	//read script content from db by scriptId
+	BOOST_CHECK(pScriptDBTip->GetScript(vScriptId,vScript));
+	// if the readed script content equals with original
+	BOOST_CHECK(vScriptContent == vScript);
+	int nCount;
+	//get script numbers from db
+	BOOST_CHECK(pScriptDBTip->GetScriptCount(nCount));
+	//if the number is one
+	BOOST_CHECK_EQUAL(nCount, 2);
+	//get index 0 script from db
+	vScript.clear();
+	vector<unsigned char> vId;
+	BOOST_CHECK(pScriptDBTip->GetScript(0,vId,vScript));
+	BOOST_CHECK(vScriptId == vId);
+	BOOST_CHECK(vScriptContent == vScript);
+	BOOST_CHECK(pScriptDBTip->GetScript(1,vId,vScript));
+	BOOST_CHECK(vScriptId1 == vId);
+	BOOST_CHECK(vScriptContent1 == vScript);
+	//delete script from db
+	BOOST_CHECK(pScriptDBTip->EraseScript(vScriptId));
+	BOOST_CHECK(pScriptDBTip->GetScriptCount(nCount));
+	BOOST_CHECK_EQUAL(nCount, 1);
+	//write all data in caches to db
+	BOOST_CHECK(pScriptDBTip->Flush());
 }
 
-void CreateRegScriptTxEx() {
-	//cout <<"CreateRegScriptTx" << endl;
-	int argc = 6;
-	char *argv[6] = { "rpctest", "registerscripttx", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9", "321654hddf",
-			"1000000", "10" };
-	CommandLineRPC(argc, argv);
+
+void testscriptdatadb() {
+	vector<unsigned char> vScriptId = {0x01,0x00,0x00,0x00,0x02,0x00};
+	vector<unsigned char> vScriptKey = {0x01,0x00,0x02,0x03,0x04,0x05,0x06,0x07};
+	vector<unsigned char> vScriptKey1 = {0x01,0x00,0x02,0x03,0x04,0x05,0x07,0x06};
+	vector<unsigned char> vScriptData = {0x01,0x01,0x01,0x01,0x01};
+	vector<unsigned char> vScriptData1 = {0x01,0x01,0x01,0x00,0x00};
+	//write script data to db
+	BOOST_CHECK(pScriptDBTip->SetScriptData(vScriptId, vScriptKey, vScriptData, 100));
+	BOOST_CHECK(pScriptDBTip->SetScriptData(vScriptId, vScriptKey1, vScriptData1, 101));
+	//write all data in caches to db
+	BOOST_CHECK(pScriptDBTip->Flush());
+	//test if the script id is exist in db
+	BOOST_CHECK(pScriptDBTip->HaveScriptData(vScriptId, vScriptKey));
+	vector<unsigned char> vScript;
+	int nValidHeight;
+	//read script content from db by scriptId
+	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId,vScriptKey,vScript,nValidHeight));
+	// if the readed script content equals with original
+	BOOST_CHECK(vScriptData == vScript);
+	BOOST_CHECK_EQUAL(nValidHeight, 100);
+	int nCount;
+	//get script numbers from db
+	BOOST_CHECK(pScriptDBTip->GetScriptDataCount(vScriptId, nCount));
+	//if the number is one
+	BOOST_CHECK_EQUAL(nCount, 2);
+	//get index 0 script from db
+	vScript.clear();
+	vector<unsigned char> vKey;
+	vKey.clear();
+	nValidHeight = 0;
+	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId,0,vKey,vScript,nValidHeight));
+	BOOST_CHECK(vKey == vScriptKey);
+	BOOST_CHECK(vScript == vScriptData);
+	BOOST_CHECK_EQUAL(nValidHeight,100);
+	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId,1,vKey,vScript,nValidHeight));
+	BOOST_CHECK(vKey == vScriptKey1);
+	BOOST_CHECK(vScript == vScriptData1);
+	BOOST_CHECK_EQUAL(nValidHeight,101);
+	//delete script from db
+	BOOST_CHECK(pScriptDBTip->EraseScriptData(vScriptId, vScriptKey));
+	BOOST_CHECK(pScriptDBTip->GetScriptDataCount(vScriptId, nCount));
+	BOOST_CHECK_EQUAL(nCount, 1);
+	//write all data in caches to db
+	BOOST_CHECK(pScriptDBTip->Flush());
 }
+
 BOOST_AUTO_TEST_SUITE(scriptdb_test)
-
-#if 0
-
-BOOST_AUTO_TEST_CASE(scriptdb_Mine)
+BOOST_AUTO_TEST_CASE(test)
 {
-	//cout<<"start mine"<<endl;
-	GenerateMinerEx();
-
+	init();
+	testscriptdb();
+	testscriptdatadb();
 }
-
-BOOST_AUTO_TEST_CASE(scriptdb_createregtx)
-{
-	//cout<<"Create RegScript"<<endl;
-	CreateRegScriptTxEx();
-}
-
-BOOST_AUTO_TEST_CASE(scriptdb_readwrite)
-{
-
-	map<string, CContractScript> &mapScript = pContractScriptTip->GetScriptCache();
-	BOOST_CHECK(mapScript.empty() );
-	auto_ptr<CScriptDB> pScriptDB(new CScriptDB(1000,false,false) );
-	BOOST_CHECK(NULL !=pScriptDB.get() && pScriptDB->LoadRegScript(mapScript) );
-	ReadData();
-
-	//set data
-	string strData("654321ab");
-	set<string> setData;
-	setData.insert(string("arbitrator"));
-	for(auto& item:g_vScriptID) {
-		vector<unsigned char> scriptID;
-		scriptID = ParseHex(item.c_str() );
-		vector<unsigned char> scriptContent;
-		scriptContent = ParseHex(strData);
-		pScriptDB->SetScript(scriptID,scriptContent);
-		pScriptDB->SetArbitrator(scriptID,setData);
-	}
-
-	BOOST_CHECK(pScriptDB->Flush(mapScript) );
-
-	//get and compare
-	mapScript.clear();
-	BOOST_CHECK(NULL !=pScriptDB.get() && pScriptDB->LoadRegScript(mapScript) );
-	for (auto& item : g_vScriptID) {
-		vector<unsigned char> scriptID;
-		scriptID = ParseHex(item.c_str());
-		vector<unsigned char> scriptContent;
-		pScriptDB->GetScript(scriptID, scriptContent);
-
-		set<string> getData;
-		pScriptDB->GetArbitrator(scriptID,getData);
-		BOOST_CHECK(strData == string(HexStr(scriptContent)));
-		BOOST_CHECK(setData == getData);
-	}
-
-	//erase
-	map<string, CContractScript>::iterator iterScript = mapScript.begin();
-	for (; iterScript != mapScript.end(); ++iterScript) {
-		//iterScript->second.scriptId.clear();
-		vector<unsigned char> scriptID;
-		scriptID = ParseHex(iterScript->first);
-		BOOST_CHECK(pScriptDB->EraseScript(scriptID));
-	}
-
-	BOOST_CHECK(pScriptDB->Flush(mapScript) );
-	mapScript.clear();
-	BOOST_CHECK(NULL !=pScriptDB.get() && pScriptDB->LoadRegScript(mapScript) );
-	BOOST_CHECK(mapScript.empty() );
-	ReadData();
-}
-
-#else
-BOOST_AUTO_TEST_CASE(xxxx) {
-	BOOST_ERROR("ERROR:THE SUITE NEED TO MODIFY!");
-}
-#endif
-
 BOOST_AUTO_TEST_SUITE_END()

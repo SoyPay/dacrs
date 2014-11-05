@@ -23,4 +23,5 @@ soypay_ptest_LDADD += $(BDB_LIBS)
 soypay_ptest_SOURCES = \
   p_test.cpp \
   main_tests.cpp \
-  miner_tests.cpp
+  miner_tests.cpp \
+  vmfun_tests.cpp
