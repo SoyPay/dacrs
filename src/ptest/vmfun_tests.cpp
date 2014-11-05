@@ -29,7 +29,7 @@ void GetAccountState1() {
 	GetAccountInfo("5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG");
 }
 void CreateRegScriptTx1() {
-	cout <<"CreateRegBetScriptTx" << endl;
+	cout <<"CreateRegScriptTx1" << endl;
 	int argc = 6;
 	char *argv[6] =
 			{ "rpctest", "registerscripttx", "5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG",
