@@ -56,9 +56,30 @@ enum RegScriptType {
 
 class CNetAuthorizate {
 public:
+	CNetAuthorizate()
+	{
+		nAuthorizeTime = 0;
+		nUserDefine = 0;
+		nMaxMoneyPerTime = 0;
+		nMaxMoneyTotal = 0;
+		nMaxMoneyPerDay = 0;
+	}
+
+	CNetAuthorizate(uint32_t nauthorizetime, uint64_t nuserdefine, uint64_t nmaxmoneypertime, uint64_t nmaxmoneytotal,
+			uint64_t nmaxmoneyperday) {
+		nAuthorizeTime = nauthorizetime;
+		nUserDefine = nuserdefine;
+		nMaxMoneyPerTime = nmaxmoneypertime;
+		nMaxMoneyTotal = nmaxmoneytotal;
+		nMaxMoneyPerDay = nmaxmoneyperday;
+	}
+
 	uint32_t GetAuthorizeTime() const {
 		return nAuthorizeTime;
 	}
+	uint64_t GetUserData() const {
+			return nUserDefine;
+		}
 	uint64_t GetMaxMoneyPerTime() const {
 		return nMaxMoneyPerTime;
 	}
@@ -75,11 +96,18 @@ public:
 	void SetMaxMoneyPerTime(uint64_t nMoney) {
 		nMaxMoneyPerTime = nMoney;
 	}
+	void SetUserData(uint64_t data) {
+		nUserDefine = data;
+		}
 	void SetMaxMoneyTotal(uint64_t nMoney) {
 		nMaxMoneyTotal = nMoney;
 	}
 	void SetMaxMoneyPerDay(uint64_t nMoney) {
 		nMaxMoneyPerDay = nMoney;
+	}
+
+	bool IsValid() {
+		return true;
 	}
 
 	IMPLEMENT_SERIALIZE
@@ -92,15 +120,30 @@ public:
 	)
 
 protected:
-	uint64_t nAuthorizeTime;
-	uint32_t nUserDefine;
+	uint32_t nAuthorizeTime;
+	uint64_t nUserDefine;
 	uint64_t nMaxMoneyPerTime;
 	uint64_t nMaxMoneyTotal;
 	uint64_t nMaxMoneyPerDay;
 };
 
 class CAuthorizate :public CNetAuthorizate{
+
 public:
+	CAuthorizate(CNetAuthorizate te) {
+		nAuthorizeTime = te.GetAuthorizeTime();
+		nUserDefine = te.GetUserData();
+		nMaxMoneyPerTime = te.GetMaxMoneyPerTime();
+		nMaxMoneyTotal = te.GetMaxMoneyTotal();
+		nMaxMoneyPerDay = te.GetMaxMoneyPerDay();
+		nLastOperHeight = 0;
+		nCurMaxMoneyPerDay = 0;
+	}
+	CAuthorizate() {
+		nLastOperHeight = 0;
+		nCurMaxMoneyPerDay = 0;
+	}
+
 	uint64_t GetCurMaxMoneyPerDay() const {
 		return nCurMaxMoneyPerDay;
 	}
@@ -572,15 +615,15 @@ public:
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
 
+#define SCRIPT_ID_SIZE (6)
+
 class CRegistScriptTx: public CBaseTransaction {
 
 public:
 	vector_unsigned_char regAccountId;
-	unsigned char nFlag; //0: exist scriptId, 1 new script content
 	vector_unsigned_char script;
 	uint64_t llFees;
 	int nValidHeight;
-	unsigned char isHaveAuthor; // whether have authorizate, 0 represent do not have authorizate data, 1 means contrary
 	CNetAuthorizate aAuthorizate;
 	vector_unsigned_char signature;
 public:
@@ -592,9 +635,7 @@ public:
 	CRegistScriptTx() {
 		nTxType = REG_SCRIPT_TX;
 		llFees = 0;
-		nFlag = 0;
 		nValidHeight = 0;
-		isHaveAuthor = 0;
 	}
 
 	~CRegistScriptTx() {
@@ -605,12 +646,10 @@ public:
 			READWRITE(this->nVersion);
 			nVersion = this->nVersion;
 			READWRITE(regAccountId);
-			READWRITE(nFlag);
 			READWRITE(script);
 			READWRITE(llFees);
 			READWRITE(nValidHeight);
-			if(isHaveAuthor)
-				READWRITE(aAuthorizate);
+			READWRITE(aAuthorizate);
 			READWRITE(signature);
 	)
 
@@ -624,7 +663,7 @@ public:
 
 	uint256 SignatureHash() const {
 		CHashWriter ss(SER_GETHASH, 0);
-		ss << regAccountId << nFlag << script << llFees << nValidHeight;
+		ss << regAccountId << script << llFees << nValidHeight << aAuthorizate;
 		return ss.GetHash();
 	}
 
@@ -765,9 +804,32 @@ enum AccountOper {
 	NULL_OPER,			//!< invalid
 };
 
+
+class CScriptDBOperLog {
+public:
+	vector<unsigned char> vKey;
+	vector<unsigned char> vValue;
+
+	CScriptDBOperLog (const vector<unsigned char> vKeyIn, const vector<unsigned char> vValueIn) {
+		vKey = vKeyIn;
+		vValue = vValueIn;
+	}
+
+	CScriptDBOperLog() {
+
+	}
+
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(vKey);
+		READWRITE(vValue);
+	)
+};
+
+
 class COperFund {
 public:
-	unsigned char operType;  //1:ADD_VALUE 2:MINUS_VALUE
+	unsigned char operType;  //!<1:ADD_VALUE 2:MINUS_VALUE
 	vector<CFund> vFund;
 
 	IMPLEMENT_SERIALIZE
@@ -815,9 +877,11 @@ public:
 class CTxUndo {
 public:
 	vector<CAccountOperLog> vAccountOperLog;
-
-	IMPLEMENT_SERIALIZE(
-			READWRITE(vAccountOperLog);
+	vector<CScriptDBOperLog> vScriptOperLog;
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(vAccountOperLog);
+		READWRITE(vScriptOperLog);
 	)
 
 public:

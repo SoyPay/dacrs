@@ -93,25 +93,46 @@ static void GetParaData(unsigned char * &pbuf, unsigned char * &pdata, unsigned 
 	pdata = pbuf;
 	pbuf += datalen;
 }
+static bool GetData(unsigned char * ipara, vector<std::shared_ptr < std::vector<unsigned char> > > &ret) {
+	int totallen = GetParaLen(ipara);
+	assert(totallen >= 0);
+	while (totallen > 0) {
+		unsigned short length = GetParaLen(ipara);
+		totallen -= (length + 2);
+		assert(totallen >= 0);
+		if (totallen < 0) {
+			return false;
+		}
+		ret.insert(ret.end(),std::make_shared<vector<unsigned char>>(ipara, ipara + length));
+		ipara += length;
+
+//		ret.assign(std::make_shared<vector<unsigned char>>(ipara, ipara + length));
+	}
+	return true;
+}
 
 static bool ExInt64CompFunc(unsigned char *ipara,void * pVmScriptRun) {
-//	printf("the call func:%s\r\n", __FUNCTION__);
-	unsigned char *pbuf = ipara;
-	unsigned short len = GetParaLen(pbuf);
-//	printf("the total len:%d\r\n", len);
-	unsigned short data1len = GetParaLen(pbuf);
-	unsigned char *pdata1 = NULL;
-	GetParaData(pbuf, pdata1, data1len);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 2);
 
-	unsigned short data2len = GetParaLen(pbuf);
-	unsigned char *pdata2 = NULL;
-	GetParaData(pbuf, pdata2, data2len);
+	//	printf("the call func:%s\r\n", __FUNCTION__);
+//	unsigned char *pbuf = ipara;
+//	unsigned short len = GetParaLen(pbuf);
+////	printf("the total len:%d\r\n", len);
+//	unsigned short data1len = GetParaLen(pbuf);
+//	unsigned char *pdata1 = NULL;
+//	GetParaData(pbuf, pdata1, data1len);
+//
+//	unsigned short data2len = GetParaLen(pbuf);
+//	unsigned char *pdata2 = NULL;
+//	GetParaData(pbuf, pdata2, data2len);
 //	printf("len:%d the data1:%s\r\n", data1len, HexStr(pdata1, pdata1 + data1len, true).c_str());
 //	printf("len:%d the data2:%s\r\n", data2len, HexStr(pdata2, pdata2 + data2len, true).c_str());
 	int64_t m1, m2;
 	unsigned char rslt;
-	memcpy(&m1, pdata1, sizeof(m1));
-	memcpy(&m2, pdata2, sizeof(m2));
+	memcpy(&m1,  &retdata.at(0).get()->at(0), sizeof(m1));
+	memcpy(&m2,  &retdata.at(1).get()->at(0), sizeof(m2));
 //	printf("m1:%I64d\r\n", m1);
 //	printf("m2:%I64d\r\n", m2);
 	if (m1 > m2) {
@@ -133,22 +154,25 @@ static bool ExInt64CompFunc(unsigned char *ipara,void * pVmScriptRun) {
 }
 
 static bool ExInt64MullFunc(unsigned char *ipara,void * pVmScriptRun) {
-//	printf("the call func:%s\r\n", __FUNCTION__);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 2);
+	//	printf("the call func:%s\r\n", __FUNCTION__);
 
-	unsigned char *pbuf = ipara;
-	unsigned short len = GetParaLen(pbuf);
-//	printf("the total len:%d\r\n", len);
-	unsigned short data1len = GetParaLen(pbuf);
-	unsigned char *pdata1 = NULL;
-	GetParaData(pbuf, pdata1, data1len);
-	unsigned short data2len = GetParaLen(pbuf);
-	unsigned char *pdata2 = NULL;
-	GetParaData(pbuf, pdata2, data2len);
+//	unsigned char *pbuf = ipara;
+//	unsigned short len = GetParaLen(pbuf);
+////	printf("the total len:%d\r\n", len);
+//	unsigned short data1len = GetParaLen(pbuf);
+//	unsigned char *pdata1 = NULL;
+//	GetParaData(pbuf, pdata1, data1len);
+//	unsigned short data2len = GetParaLen(pbuf);
+//	unsigned char *pdata2 = NULL;
+//	GetParaData(pbuf, pdata2, data2len);
 //	printf("len:%d the data1:%s\r\n", data1len, HexStr(pdata1, pdata1 + data1len, true).c_str());
 //	printf("len:%d the data2:%s\r\n", data2len, HexStr(pdata2, pdata2 + data2len, true).c_str());
 	int64_t m1, m2, m3;
-	memcpy(&m1, pdata1, sizeof(m1));
-	memcpy(&m2, pdata2, sizeof(m2));
+	memcpy(&m1, &retdata.at(0).get()->at(0), sizeof(m1));
+	memcpy(&m2, &retdata.at(1).get()->at(0), sizeof(m2));
 //	printf("m1:%I64d\r\n", m1);
 //	printf("m2:%I64d\r\n", m2);
 	m3 = m1 * m2;
@@ -162,21 +186,25 @@ static bool ExInt64MullFunc(unsigned char *ipara,void * pVmScriptRun) {
 }
 
 static bool ExInt64AddFunc(unsigned char *ipara,void * pVmScriptRun) {
-//	printf("the call func:%s\r\n", __FUNCTION__);
-	unsigned char *pbuf = ipara;
-	unsigned short len = GetParaLen(pbuf);
-//	printf("the total len:%d\r\n", len);
-	unsigned short data1len = GetParaLen(pbuf);
-	unsigned char *pdata1 = NULL;
-	GetParaData(pbuf, pdata1, data1len);
-	unsigned short data2len = GetParaLen(pbuf);
-	unsigned char *pdata2 = NULL;
-	GetParaData(pbuf, pdata2, data2len);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 2);
+
+//	//	printf("the call func:%s\r\n", __FUNCTION__);
+//	unsigned char *pbuf = ipara;
+//	unsigned short len = GetParaLen(pbuf);
+////	printf("the total len:%d\r\n", len);
+//	unsigned short data1len = GetParaLen(pbuf);
+//	unsigned char *pdata1 = NULL;
+//	GetParaData(pbuf, pdata1, data1len);
+//	unsigned short data2len = GetParaLen(pbuf);
+//	unsigned char *pdata2 = NULL;
+//	GetParaData(pbuf, pdata2, data2len);
 //	printf("len:%d the data1:%s\r\n", data1len, HexStr(pdata1, pdata1 + data1len, true).c_str());
 //	printf("len:%d the data2:%s\r\n", data2len, HexStr(pdata2, pdata2 + data2len, true).c_str());
 	int64_t m1, m2, m3;
-	memcpy(&m1, pdata1, sizeof(m1));
-	memcpy(&m2, pdata2, sizeof(m2));
+	memcpy(&m1,  &retdata.at(0).get()->at(0), sizeof(m1));
+	memcpy(&m2,  &retdata.at(1).get()->at(0), sizeof(m2));
 //	printf("m1:%I64d\r\n", m1);
 //	printf("m2:%I64d\r\n", m2);
 	m3 = m1 + m2;
@@ -190,22 +218,25 @@ static bool ExInt64AddFunc(unsigned char *ipara,void * pVmScriptRun) {
 }
 
 static bool ExInt64SubFunc(unsigned char *ipara,void * pVmScriptRun) {
-//	printf("the call func:%s\r\n", __FUNCTION__);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 2);
+	//	printf("the call func:%s\r\n", __FUNCTION__);
 
-	unsigned char *pbuf = ipara;
-	unsigned short len = GetParaLen(pbuf);
-//	printf("the total len:%d\r\n", len);
-	unsigned short data1len = GetParaLen(pbuf);
-	unsigned char *pdata1 = NULL;
-	GetParaData(pbuf, pdata1, data1len);
-	unsigned short data2len = GetParaLen(pbuf);
-	unsigned char *pdata2 = NULL;
-	GetParaData(pbuf, pdata2, data2len);
+//	unsigned char *pbuf = ipara;
+//	unsigned short len = GetParaLen(pbuf);
+////	printf("the total len:%d\r\n", len);
+//	unsigned short data1len = GetParaLen(pbuf);
+//	unsigned char *pdata1 = NULL;
+//	GetParaData(pbuf, pdata1, data1len);
+//	unsigned short data2len = GetParaLen(pbuf);
+//	unsigned char *pdata2 = NULL;
+//	GetParaData(pbuf, pdata2, data2len);
 //	printf("len:%d the data1:%s\r\n", data1len, HexStr(pdata1, pdata1 + data1len, true).c_str());
 //	printf("len:%d the data2:%s\r\n", data2len, HexStr(pdata2, pdata2 + data2len, true).c_str());
 	int64_t m1, m2, m3;
-	memcpy(&m1, pdata1, sizeof(m1));
-	memcpy(&m2, pdata2, sizeof(m2));
+	memcpy(&m1, &retdata.at(0).get()->at(0), sizeof(m1));
+	memcpy(&m2, &retdata.at(1).get()->at(0), sizeof(m2));
 //	printf("m1:%I64d\r\n", m1);
 //	printf("m2:%I64d\r\n", m2);
 	m3 = m1 - m2;
@@ -219,22 +250,26 @@ static bool ExInt64SubFunc(unsigned char *ipara,void * pVmScriptRun) {
 }
 
 static bool ExInt64DivFunc(unsigned char *ipara,void * pVmScriptRun) {
-//	printf("the call func:%s\r\n", __FUNCTION__);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 2);
 
-	unsigned char *pbuf = ipara;
-	unsigned short len = GetParaLen(pbuf);
-//	printf("the total len:%d\r\n", len);
-	unsigned short data1len = GetParaLen(pbuf);
-	unsigned char *pdata1 = NULL;
-	GetParaData(pbuf, pdata1, data1len);
-	unsigned short data2len = GetParaLen(pbuf);
-	unsigned char *pdata2 = NULL;
-	GetParaData(pbuf, pdata2, data2len);
+	//	printf("the call func:%s\r\n", __FUNCTION__);
+
+//	unsigned char *pbuf = ipara;
+//	unsigned short len = GetParaLen(pbuf);
+////	printf("the total len:%d\r\n", len);
+//	unsigned short data1len = GetParaLen(pbuf);
+//	unsigned char *pdata1 = NULL;
+//	GetParaData(pbuf, pdata1, data1len);
+//	unsigned short data2len = GetParaLen(pbuf);
+//	unsigned char *pdata2 = NULL;
+//	GetParaData(pbuf, pdata2, data2len);
 //	printf("len:%d the data1:%s\r\n", data1len, HexStr(pdata1, pdata1 + data1len, true).c_str());
 //	printf("len:%d the data2:%s\r\n", data2len, HexStr(pdata2, pdata2 + data2len, true).c_str());
 	int64_t m1, m2, m3;
-	memcpy(&m1, pdata1, sizeof(m1));
-	memcpy(&m2, pdata2, sizeof(m2));
+	memcpy(&m1, &retdata.at(0).get()->at(0), sizeof(m1));
+	memcpy(&m2, &retdata.at(1).get()->at(0), sizeof(m2));
 //	printf("m1:%I64d\r\n", m1);
 //	printf("m2:%I64d\r\n", m2);
 	m3 = m1 / m2;
@@ -248,12 +283,16 @@ static bool ExInt64DivFunc(unsigned char *ipara,void * pVmScriptRun) {
 }
 
 static bool ExSha256Func(unsigned char *ipara,void * pVmScriptRun) {
-//	printf("the call func:%s\r\n", __FUNCTION__);
-	unsigned char *pbuf = (unsigned char *) ipara;
-	unsigned short len = GetParaLen(pbuf);
-	unsigned char *pdata = NULL;
-	GetParaData(pbuf, pdata, len);
-	uint256 rslt = Hash(pdata, pdata + len);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 1);
+
+//	//	printf("the call func:%s\r\n", __FUNCTION__);
+//	unsigned char *pbuf = (unsigned char *) ipara;
+//	unsigned short len = GetParaLen(pbuf);
+//	unsigned char *pdata = NULL;
+//	GetParaData(pbuf, pdata, len);
+	uint256 rslt = Hash(&retdata.at(0).get()->at(0), &retdata.at(0).get()->at(0) + retdata.at(0).get()->size());
 //	printf("the in para:%s\r\n", HexStr(pbuf + 1, pbuf + 1 + len, true).c_str());
 //	printf("the rslt:%s\r\n", rslt.ToString().c_str());
 	memset(ipara, 0, 512);
@@ -266,20 +305,24 @@ static bool ExSha256Func(unsigned char *ipara,void * pVmScriptRun) {
 }
 
 static bool ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
-//	printf("the call func:%s\r\n", __FUNCTION__);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 3);
 
-	unsigned char *pbuf = ipara;
-	unsigned short len = GetParaLen(pbuf);
-//	printf("the total len:%d\r\n", len);
-	unsigned short datalen = GetParaLen(pbuf);
-	unsigned char *pdata = NULL;
-	GetParaData(pbuf, pdata, datalen);
-	unsigned short keylen = GetParaLen(pbuf);
-	unsigned char *pkey = NULL;
-	GetParaData(pbuf, pkey, keylen);
-	unsigned short flaglen = GetParaLen(pbuf);
-	unsigned char *pflag = NULL;
-	GetParaData(pbuf, pflag, flaglen);
+	//	printf("the call func:%s\r\n", __FUNCTION__);
+
+//	unsigned char *pbuf = ipara;
+//	unsigned short len = GetParaLen(pbuf);
+////	printf("the total len:%d\r\n", len);
+//	unsigned short datalen = GetParaLen(pbuf);
+//	unsigned char *pdata = NULL;
+//	GetParaData(pbuf, pdata, datalen);
+//	unsigned short keylen = GetParaLen(pbuf);
+//	unsigned char *pkey = NULL;
+//	GetParaData(pbuf, pkey, keylen);
+//	unsigned short flaglen = GetParaLen(pbuf);
+//	unsigned char *pflag = NULL;
+//	GetParaData(pbuf, pflag, flaglen);
 
 //	printf("len:%d the data:%s\r\n", datalen, HexStr(pdata, pdata + datalen, true).c_str());
 //	printf("len:%d the key:%s\r\n", keylen, HexStr(pkey, pkey + keylen, true).c_str());
@@ -288,8 +331,8 @@ static bool ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 
 	vector<unsigned char> desdata;
 	vector<unsigned char> desout;
-	unsigned char datalen_rest = datalen % 8;
-	desdata.assign(pdata, pdata + datalen);
+	unsigned char datalen_rest = retdata.at(0).get()->size() % 8;
+	desdata.assign(retdata.at(0).get()->begin(), retdata.at(0).get()->end());
 	if (datalen_rest) {
 		desdata.insert(desdata.end(), 8 - datalen_rest, 0);
 	}
@@ -300,10 +343,11 @@ static bool ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 
 	desout.resize(desdata.size());
 
-	if (*pflag == 1) {
-		if (keylen == 8) {
+	unsigned char flag = retdata.at(2).get()->at(0);
+	if (flag == 1) {
+		if (retdata.at(1).get()->size() == 8) {
 //			printf("the des encrypt\r\n");
-			memcpy(key, pkey, keylen);
+			memcpy(key, &retdata.at(1).get()->at(0), retdata.at(1).get()->size());
 			DES_set_key_unchecked(&key, &deskey1);
 			for (int ii = 0; ii < desdata.size() / 8; ii++) {
 				memcpy(&in, &desdata[ii * 8], sizeof(in));
@@ -314,10 +358,10 @@ static bool ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 			}
 		} else {
 //			printf("the 3 des encrypt\r\n");
-			memcpy(key, pkey, keylen);
+			memcpy(key, &retdata.at(1).get()->at(0), retdata.at(1).get()->size());
 			DES_set_key_unchecked(&key, &deskey1);
 			DES_set_key_unchecked(&key, &deskey3);
-			memcpy(key, pkey + 8, keylen);
+			memcpy(key, &retdata.at(1).get()->at(0) + 8, retdata.at(1).get()->size());
 			DES_set_key_unchecked(&key, &deskey2);
 			for (int ii = 0; ii < desdata.size() / 8; ii++) {
 				memcpy(&in, &desdata[ii * 8], sizeof(in));
@@ -327,9 +371,9 @@ static bool ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 
 		}
 	} else {
-		if (keylen == 8) {
+		if (retdata.at(1).get()->size() == 8) {
 //			printf("the des decrypt\r\n");
-			memcpy(key, pkey, keylen);
+			memcpy(key, &retdata.at(1).get()->at(0), retdata.at(1).get()->size());
 			DES_set_key_unchecked(&key, &deskey1);
 			for (int ii = 0; ii < desdata.size() / 8; ii++) {
 				memcpy(&in, &desdata[ii * 8], sizeof(in));
@@ -340,10 +384,10 @@ static bool ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 			}
 		} else {
 //			printf("the 3 des decrypt\r\n");
-			memcpy(key, pkey, keylen);
+			memcpy(key, &retdata.at(1).get()->at(0), retdata.at(1).get()->size());
 			DES_set_key_unchecked(&key, &deskey1);
 			DES_set_key_unchecked(&key, &deskey3);
-			memcpy(key, pkey + 8, keylen);
+			memcpy(key, &retdata.at(1).get()->at(0) + 8, retdata.at(1).get()->size());
 			DES_set_key_unchecked(&key, &deskey2);
 			for (int ii = 0; ii < desdata.size() / 8; ii++) {
 				memcpy(&in, &desdata[ii * 8], sizeof(in));
@@ -363,29 +407,33 @@ static bool ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 }
 
 static bool ExVerifySignatureFunc(unsigned char *ipara,void * pVmScriptRun) {
-//	printf("the call func:%s\r\n", __FUNCTION__);
-	unsigned char *pbuf = ipara;
-	unsigned short len = GetParaLen(pbuf);
-//	printf("the total len:%d\r\n", len);
-	unsigned short datalen = GetParaLen(pbuf);
-	unsigned char *pdata = NULL;
-	GetParaData(pbuf, pdata, datalen);
-	unsigned short keylen = GetParaLen(pbuf);
-	unsigned char *pkey = NULL;
-	GetParaData(pbuf, pkey, keylen);
-	unsigned short hashlen = GetParaLen(pbuf);
-	unsigned char *phash = NULL;
-	GetParaData(pbuf, phash, hashlen);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 3);
+
+	//	printf("the call func:%s\r\n", __FUNCTION__);
+//	unsigned char *pbuf = ipara;
+//	unsigned short len = GetParaLen(pbuf);
+////	printf("the total len:%d\r\n", len);
+//	unsigned short datalen = GetParaLen(pbuf);
+//	unsigned char *pdata = NULL;
+//	GetParaData(pbuf, pdata, datalen);
+//	unsigned short keylen = GetParaLen(pbuf);
+//	unsigned char *pkey = NULL;
+//	GetParaData(pbuf, pkey, keylen);
+//	unsigned short hashlen = GetParaLen(pbuf);
+//	unsigned char *phash = NULL;
+//	GetParaData(pbuf, phash, hashlen);
 //	printf("len:%d the data:%s\r\n", datalen, HexStr(pdata, pdata + datalen, true).c_str());
 //	printf("len:%d the key:%s\r\n", keylen, HexStr(pkey, pkey + keylen, true).c_str());
 //	printf("len:%d the hash:%s\r\n", hashlen, HexStr(phash, phash + hashlen, true).c_str());
 
-	CPubKey pk(pkey, pkey + keylen);
-	vector<unsigned char> sig(pdata, pdata + datalen);
-	uint256 hash(vector<unsigned char>(phash, phash + hashlen));
+	CPubKey pk(retdata.at(1).get()->begin(),retdata.at(1).get()->end());
+//	vector<unsigned char> sig(pdata, pdata + datalen);
+	uint256 hash(*retdata.at(2).get());
 
 //	printf("pk:%s\r\n", HexStr(pk.begin(), pk.end(), true).c_str());
-//	printf("sig:%s\r\n", HexStr(sig.begin(), sig.end(), true).c_str());
+//	printf("sig:%s\r\n", HexStr(*retdata.at(0)).c_str());
 //	printf("hash:%s\r\n", HexStr(hash.begin(), hash.end(), true).c_str());
 	bool rlt;
 //	if (pk.Verify(hash, sig)) {
@@ -396,7 +444,7 @@ static bool ExVerifySignatureFunc(unsigned char *ipara,void * pVmScriptRun) {
 //	} else {
 //		memset(ipara, 0, 512);
 //	}
-	if (pk.Verify(hash, sig)) {
+	if (pk.Verify(hash, *retdata.at(0))) {
 //		printf("verify ok!\r\n");
 		rlt = true;
 	} else {
@@ -418,38 +466,54 @@ static bool ExSignatureFunc(unsigned char *ipara,void * pVmScriptRun) {
 }
 
 static bool ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
-	unsigned char *pbuf = ipara;
-	unsigned short len = GetParaLen(pbuf);
-	unsigned short infolen = GetParaLen(pbuf);
-	unsigned char *pinfo = NULL;
-	GetParaData(pbuf, pinfo, infolen);
-	if (infolen > 1) {
-		pinfo[infolen - 1] = '\0';
-	}
-	unsigned short datalen = GetParaLen(pbuf);
-	unsigned char *pdata = NULL;
-	GetParaData(pbuf, pdata, datalen);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 2);
 
+//	unsigned char *pbuf = ipara;
+//	unsigned short len = GetParaLen(pbuf);
+//	unsigned short infolen = GetParaLen(pbuf);
+//	unsigned char *pinfo = NULL;
+//	GetParaData(pbuf, pinfo, infolen);
+	if (retdata.at(0).get()->size() > 1) {
+		//retdata.at(0).get()[retdata.at(0).get()->size() - 1] = '\0';
+		retdata.at(0).get()->push_back('\0');
+	}
+//	unsigned short datalen = GetParaLen(pbuf);
+//	unsigned char *pdata = NULL;
+//	GetParaData(pbuf, pdata, datalen);
+
+	string pinfo((*retdata[0]).begin(), (*retdata[0]).end());
+	string pdata((*retdata[1]).begin(), (*retdata[1]).end());
 //	printf("%s%s\r\n", pinfo, HexStr(pdata, pdata + datalen, true).c_str());
-	printf("%s%s\r\n", pinfo, pdata);
+	printf("%s%s\r\n", pinfo.c_str(), pdata.c_str());
 
 	return true;
 }
 
-static bool ExGetTxInfoFunc(unsigned char * ipara,void * pVmScriptRun) {
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
 
-	unsigned char *txhash = NULL;
-	GetParaData(pbuffer, txhash, length);
-	vector<unsigned char> hash(txhash, txhash + length);
-	uint256 hash1(hash);
+
+
+
+static bool ExGetTxInfoFunc(unsigned char * ipara,void * pVmScriptRun) {
+
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 1);
+//	unsigned char *pbuffer = ipara;
+//	GetParaLen(pbuffer);
+//	unsigned short length = GetParaLen(pbuffer);
+//
+//	unsigned char *txhash = NULL;
+//	GetParaData(pbuffer, txhash, length);
+//	vector<unsigned char> hash(txhash, txhash + length);
+	uint256 hash1(*retdata.at(0));
+
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 	if (GetTransaction(pBaseTx, hash1)) {
 		memset(ipara, 0, 512);
 		CContractTransaction *tx = static_cast<CContractTransaction*>(pBaseTx.get());
-		length = tx->vContract.size();
+		int length = tx->vContract.size();
 		memcpy(ipara, &length, 2);
 		memcpy(&ipara[2], &tx->vContract, length);
 		int len = 0;
@@ -466,14 +530,18 @@ static bool ExGetTxInfoFunc(unsigned char * ipara,void * pVmScriptRun) {
 
 }
 static bool ExGetTxAccountSizeFunc(unsigned char * ipara,void * pVmScriptRun) {
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 1);
 
-	unsigned char *txhash = NULL;
-	GetParaData(pbuffer, txhash, length);
-	vector<unsigned char> hash(txhash, txhash + length);
-	uint256 hash1(hash);
+//	unsigned char *pbuffer = ipara;
+//	GetParaLen(pbuffer);
+//	unsigned short length = GetParaLen(pbuffer);
+//
+//	unsigned char *txhash = NULL;
+//	GetParaData(pbuffer, txhash, length);
+//	vector<unsigned char> hash(txhash, txhash + length);
+	uint256 hash1(*retdata.at(0));
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 	if (GetTransaction(pBaseTx, hash1)) {
 		memset(ipara, 0, 512);
@@ -482,7 +550,7 @@ static bool ExGetTxAccountSizeFunc(unsigned char * ipara,void * pVmScriptRun) {
 		for (auto& it : tx->vAccountRegId) {
 			len += it.size();
 		}
-		if ((length + len + 4) < 512) {
+		if ((retdata.at(0).get()->size() + len + 4) < 512) {
 			int count = 4;
 			memset(ipara, 0, 512);
 			memcpy(ipara, &count, 2);
@@ -492,20 +560,24 @@ static bool ExGetTxAccountSizeFunc(unsigned char * ipara,void * pVmScriptRun) {
 
 }
 static bool ExGetTxContactSizeFunc(unsigned char * ipara,void * pVmScriptRun) {
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 1);
 
-	unsigned char *txhash = NULL;
-	GetParaData(pbuffer, txhash, length);
-	vector<unsigned char> hash(txhash, txhash + length);
-	uint256 hash1(hash);
+//	unsigned char *pbuffer = ipara;
+//	GetParaLen(pbuffer);
+//	unsigned short length = GetParaLen(pbuffer);
+//
+//	unsigned char *txhash = NULL;
+//	GetParaData(pbuffer, txhash, length);
+//	vector<unsigned char> hash(txhash, txhash + length);
+	uint256 hash1(*retdata.at(0));
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 	if (GetTransaction(pBaseTx, hash1)) {
 		memset(ipara, 0, 512);
 		CContractTransaction *tx = static_cast<CContractTransaction*>(pBaseTx.get());
 		int len = tx->vContract.size();
-		if ((length + len + 4) < 512) {
+		if ((retdata.at(0).get()->size() + len + 4) < 512) {
 			int count = 4;
 			memcpy(ipara, &count, 2);
 			memcpy(&ipara[2], &len, 4);
@@ -514,15 +586,19 @@ static bool ExGetTxContactSizeFunc(unsigned char * ipara,void * pVmScriptRun) {
 
 }
 static bool ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScriptRun) {
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
-	unsigned char *accountid = NULL;
-	GetParaData(pbuffer, accountid, length);
-	vector<unsigned char> id(accountid, accountid + length);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 1);
+
+//	unsigned char *pbuffer = ipara;
+//	GetParaLen(pbuffer);
+//	unsigned short length = GetParaLen(pbuffer);
+//	unsigned char *accountid = NULL;
+//	GetParaData(pbuffer, accountid, length);
+//	vector<unsigned char> id(accountid, accountid + length);
 	CAccountViewCache view(*pAccountViewTip, true);
 
-	string strParam(accountid, accountid + length);
+	string strParam((*retdata[0]).begin(), (*retdata[0]).end());
 	CAccount aAccount;
 	if (strParam.length() != 12) {
 		CBitcoinAddress address(strParam.c_str());
@@ -542,16 +618,20 @@ static bool ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScriptRun)
 	return true;
 }
 static bool ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScriptRun) {
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 1);
 
-	unsigned char *accountid = NULL;
-	GetParaData(pbuffer, accountid, length);
-	vector<unsigned char> id(accountid, accountid + length);
+//	unsigned char *pbuffer = ipara;
+//	GetParaLen(pbuffer);
+//	unsigned short length = GetParaLen(pbuffer);
+//
+//	unsigned char *accountid = NULL;
+//	GetParaData(pbuffer, accountid, length);
+//	vector<unsigned char> id(accountid, accountid + length);
 	CAccountViewCache view(*pAccountViewTip, true);
 
-	string strParam(accountid, accountid + length);
+	string strParam((*retdata[0]).begin(), (*retdata[0]).end());
 	CAccount aAccount;
 	if (strParam.length() != 12) {
 		CBitcoinAddress address(strParam.c_str());
@@ -591,14 +671,18 @@ static bool ExGetTipHeightFunc(unsigned char * ipara,void * pVmScriptRun) {
 	return true;
 }
 static bool ExGetBlockHashFunc(unsigned char * ipara,void * pVmScriptRun) {
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 1);
 
-	unsigned char *pheight = NULL;
-	GetParaData(pbuffer, pheight, length);
+//	unsigned char *pbuffer = ipara;
+//	GetParaLen(pbuffer);
+//	unsigned short length = GetParaLen(pbuffer);
+//
+//	unsigned char *pheight = NULL;
+//	GetParaData(pbuffer, pheight, length);
 	int height = 0;
-	memcpy(&height, pheight, sizeof(int));
+	memcpy(&height, &retdata.at(0).get()[0], sizeof(int));
 	if (height < 0 || height > chainActive.Height())
 		return false;
 	CBlockIndex *pindex = chainActive[height];
@@ -619,29 +703,38 @@ static bool ExGetCurRunEnvHeightFunc(unsigned char * ipara,void * pVmScript) {
 	memcpy(&ipara[2], &height, 4);
 	return true;
 }
+static vector<unsigned char> AddChar(vector<unsigned char>&param)
+{
+	if(param.size() >= 8)
+		return param;
+	int count = 8-param.size();
+	while(count--)
+	{
+		param.push_back('0');
+	}
+	return param;
+}
 static bool ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
-	unsigned char *key = NULL;
-	GetParaData(pbuffer, key, length);
-	vector_unsigned_char vkey(key,key +length);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 3);
 
-	unsigned short valuelen = GetParaLen(pbuffer);
-	unsigned char *value = NULL;
-	GetParaData(pbuffer, value, valuelen);
-	vector_unsigned_char vValue(value,value +valuelen);
-
-	unsigned short len = GetParaLen(pbuffer);
-	unsigned char *time = NULL;
-	GetParaData(pbuffer, time, len);
 	int height = 0;
-	memcpy(&height,time,4);
+	memcpy(&height,&retdata.at(2).get()[0],4);
 
 	const vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
 	bool flag = false;
-	if(pScriptDBTip->SetScriptData(scriptid,vkey,vValue,height))
+	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
+	if(retdata.at(0).get()->size() > 8)
+	{
+		return false;
+	}
+
+	vector<unsigned char> key =AddChar(*retdata.at(0));
+	int size = key.size();
+	CScriptDBOperLog operlog;
+	if(scriptDB->SetScriptData(scriptid,key,*retdata.at(1),height,operlog))
 	{
 		flag = true;
 	}
@@ -655,19 +748,22 @@ static bool ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 }
 static bool ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
-	unsigned char *key = NULL;
-	GetParaData(pbuffer, key, length);
-	vector_unsigned_char vkey(key,key +length);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 1);
 
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
-	scriptid.push_back('_');
-	scriptid.insert(scriptid.end(),vkey.begin(),vkey.end());
-	vector_unsigned_char vValue;
+
 	bool flag = false;
-	if(pScriptDBTip->EraseKey(scriptid))
+	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
+	if(retdata.at(0).get()->size() > 8)
+	{
+		return false;
+	}
+
+	CScriptDBOperLog operlog;
+	vector<unsigned char> key =AddChar(*retdata.at(0));
+	if(scriptDB->EraseScriptData(scriptid,key,operlog))
 	{
 		flag = true;
 	}
@@ -681,21 +777,24 @@ static bool ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 }
 static bool ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
-	unsigned char *key = NULL;
-	GetParaData(pbuffer, key, length);
-	vector_unsigned_char vkey(key,key +length);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 1);
 
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
 
 	vector_unsigned_char vValue;
 	int nHeight;
-	bool flag = false;
-	if(pScriptDBTip->GetScriptData(scriptid,vkey,vValue,nHeight))
+	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
+	if(retdata.at(0).get()->size() > 8)
 	{
-		flag = true;
+		return false;
+	}
+
+	vector<unsigned char> key =AddChar(*retdata.at(0));
+	if(!scriptDB->GetScriptData(scriptid,key,vValue,nHeight))
+	{
+		return false;
 	}
 
 
@@ -707,29 +806,26 @@ static bool ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) {
 }
 static bool ExModifyDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
-	unsigned char *key = NULL;
-	GetParaData(pbuffer, key, length);
-	vector_unsigned_char vkey(key,key +length);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 3);
 
-	unsigned short valuelen = GetParaLen(pbuffer);
-	unsigned char *value = NULL;
-	GetParaData(pbuffer, value, valuelen);
-	vector_unsigned_char vValue(value,value +valuelen);
-
-	unsigned short len = GetParaLen(pbuffer);
-	unsigned char *time = NULL;
-	GetParaData(pbuffer, time, len);
 	int height = 0;
-	memcpy(&height,time,4);
+	memcpy(&height,&retdata.at(2).get()[0],4);
 
 	const vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
 	bool flag = false;
-	if(pScriptDBTip->SetScriptData(scriptid,vkey,vValue,height))
+	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
+	if(retdata.at(0).get()->size() > 8)
 	{
-		flag = true;
+		return false;
+	}
+
+	CScriptDBOperLog operlog;
+	vector<unsigned char> key =AddChar(*retdata.at(0));
+	if(!scriptDB->SetScriptData(scriptid,key,*retdata.at(1).get(),height,operlog))
+	{
+		flag = false;
 	}
 
 
@@ -740,41 +836,61 @@ static bool ExModifyDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	return true;
 }
 static bool ExGetDBSizeFunc(unsigned char * ipara,void * pVmScript) {
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	vector<unsigned char> vScriptKey;
+	int count = 0;
+	bool flag = false;
+	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
+	if(!scriptDB->GetScriptDataCount(scriptid,count))
+	{
+		return false;
+	}
+	memset(ipara, 0, 512);
+	int len = 4;
+	memcpy(ipara, &len, 2);
+	memcpy(&ipara[2], &count, len);
 	return true;
 }
 static bool ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
-//	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-//	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-//	unsigned char *pbuffer = ipara;
-//	GetParaLen(pbuffer);
-//	unsigned short length = GetParaLen(pbuffer);
-//	unsigned char *key = NULL;
-//	GetParaData(pbuffer, key, length);
-//	vector_unsigned_char vkey(key,key +length);
-//
-//	unsigned short len = GetParaLen(pbuffer);
-//	unsigned char *pindex = NULL;
-//	GetParaData(pbuffer, pindex, len);
-//	int index = 0;
-//	memcpy(&index,pindex,4);
-//
-//	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
-//
-//	vector_unsigned_char vValue;
-//	int nHeight;
-//	bool flag = false;
-//	if(pScriptDBTip->GetScriptData(scriptid,index,vValue,nHeight))
-//	{
-//		flag = true;
-//	}
-//
-//
-//	memset(ipara, 0, 512);
-//	int count = vValue.size() + sizeof(nHeight);
-//	memcpy(ipara, &count, 2);
-//	memcpy(&ipara[2], &nHeight, 4);
-//	return true;
-//	return true;
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 2 || retdata.size() == 1);
+
+	int index = 0;
+	memcpy(&index,&retdata.at(0).get()->at(0),sizeof(int));
+	if(!(index == 0 ||(index == 1 && retdata.size() == 2)))
+	{
+		return false;
+	}
+	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+
+	vector_unsigned_char vValue;
+	int nHeight;
+	vector<unsigned char> vScriptKey;
+	if(index == 1)
+	{
+		vScriptKey =*retdata.at(1);
+	}
+
+	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
+	if(!scriptDB->GetScriptData(scriptid,index,vScriptKey,vValue,nHeight))
+	{
+		return false;
+	}
+
+	memset(ipara, 0, 512);
+	int count = vScriptKey.size();
+	memcpy(ipara, &count, 2);
+	memcpy(&ipara[2], &vScriptKey.at(0), count);
+	count = vValue.size();
+	memcpy(&ipara[vScriptKey.size()+2], &count, 2);
+	memcpy(&ipara[vScriptKey.size()+4], &vValue.at(0), count);
+	count = 4;
+	memcpy(&ipara[vScriptKey.size()+4], &count, 2);
+	memcpy(&ipara[vScriptKey.size()+6], &nHeight, 4);
+	return true;
 }
 static bool ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
@@ -783,6 +899,7 @@ static bool ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
 	int count = sizeof(uint256);
 	memcpy(ipara, &count, 2);
 	memcpy(&ipara[2], &hash, count);
+	cout<<"hash:" <<hash.ToString().c_str()<<endl;
 	return true;
 }
 static bool ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
@@ -825,21 +942,23 @@ static bool ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 static bool ExReadDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
-	unsigned char *key = NULL;
-	GetParaData(pbuffer, key, length);
-	vector_unsigned_char vkey(key,key +length);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 1);
 
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
-
 	vector_unsigned_char vValue;
 	int nHeight;
-	bool flag = false;
-	if(pScriptDBTip->GetScriptData(scriptid,vkey,vValue,nHeight))
+	CScriptDBViewCache *scriptDB = pVmScriptRun->GetScriptDB();
+	if(retdata.at(0).get()->size() > 8)
 	{
-		flag = true;
+		return false;
+	}
+
+	vector<unsigned char> key =AddChar(*retdata.at(0));
+	if(!scriptDB->GetScriptData(scriptid,key,vValue,nHeight))
+	{
+		return false;
 	}
 
 
@@ -852,26 +971,38 @@ static bool ExReadDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 static bool ExModifyDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
-	unsigned char *key = NULL;
-	GetParaData(pbuffer, key, length);
-	vector_unsigned_char vkey(key,key +length);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 2);
 
-	unsigned short ptimelen = GetParaLen(pbuffer);
-	unsigned char *time = NULL;
-	GetParaData(pbuffer, time, ptimelen);
+//	unsigned char *pbuffer = ipara;
+//	GetParaLen(pbuffer);
+//	unsigned short length = GetParaLen(pbuffer);
+//	unsigned char *key = NULL;
+//	GetParaData(pbuffer, key, length);
+//	vector_unsigned_char vkey(key,key +length);
+//
+//	unsigned short ptimelen = GetParaLen(pbuffer);
+//	unsigned char *time = NULL;
+//	GetParaData(pbuffer, time, ptimelen);
 	int height = 0;
-	memcpy(&height,time,4);
+	memcpy(&height,&retdata.at(1).get()[0],4);
 
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
 	vector_unsigned_char vValue;
 	bool flag = false;
 	int temp = 0;
-	if(pScriptDBTip->GetScriptData(scriptid,vkey,vValue,temp))
+	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
+	if(retdata.at(0).get()->size() > 8)
 	{
-		if(pScriptDBTip->SetScriptData(scriptid,vkey,vValue,height))
+		return false;
+	}
+
+	CScriptDBOperLog operlog;
+	vector<unsigned char> key =AddChar(*retdata.at(0));
+	if(scriptDB->GetScriptData(scriptid,key,vValue,temp))
+	{
+		if(scriptDB->SetScriptData(scriptid,key,vValue,height,operlog))
 		{
 			flag = true;
 		}
@@ -888,26 +1019,38 @@ static bool ExModifyDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 static bool ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript)
 {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
-	unsigned char *key = NULL;
-	GetParaData(pbuffer, key, length);
-	vector_unsigned_char vkey(key,key +length);
 
-	unsigned short valuelen = GetParaLen(pbuffer);
-	unsigned char *value = NULL;
-	GetParaData(pbuffer, value, valuelen);
-	vector_unsigned_char pValue(value,value +valuelen);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 2);
+//	unsigned char *pbuffer = ipara;
+//	GetParaLen(pbuffer);
+//	unsigned short length = GetParaLen(pbuffer);
+//	unsigned char *key = NULL;
+//	GetParaData(pbuffer, key, length);
+//	vector_unsigned_char vkey(key,key +length);
+//
+//	unsigned short valuelen = GetParaLen(pbuffer);
+//	unsigned char *value = NULL;
+//	GetParaData(pbuffer, value, valuelen);
+//	vector_unsigned_char pValue(value,value +valuelen);
 
 
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
 	vector_unsigned_char vValue;
 	bool flag = false;
 	int temp = 0;
-	if(pScriptDBTip->GetScriptData(scriptid,vkey,vValue,temp))
+	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
+	if(retdata.at(0).get()->size() > 8)
 	{
-		if(pScriptDBTip->SetScriptData(scriptid,vkey,pValue,temp))
+		return false;
+	}
+
+	CScriptDBOperLog operlog;
+	vector<unsigned char> key =AddChar(*retdata.at(0));
+	if(scriptDB->GetScriptData(scriptid,key,vValue,temp))
+	{
+		if(scriptDB->SetScriptData(scriptid,key,*retdata.at(1),temp,operlog))
 		{
 			flag = true;
 		}
@@ -942,17 +1085,17 @@ enum CALL_API_FUN {
 
 
 	//// tx api
-	GETCTXCONFIRMH_FUNC = 301,//!< GETCTXCONFIRMH_FUNC
-	WRITEDB_FUNC = 302,       //!< WRITEDB_FUNC
-	DELETEDB_FUNC = 303,      //!< DELETEDB_FUNC
-	READDB_FUNC = 304,        //!< READDB_FUNC
-	MODIFYDB_FUNC = 305,      //!< MODIFYDB_FUNC
-	GETDBSIZE_FUNC = 306,     //!< GETDBSIZE_FUNC
-	GETDBVALUE_FUNC = 307,    //!< GETDBVALUE_FUNC
-	GetCURTXHASH_FUNC = 308,  //!< GetCURTXHASH_FUNC
-	READDBTIME_FUNC = 309,     //!< READDBTIME_FUNC
-	MODIFYDBTIME_FUNC = 310,  //!< MODIFYDBTIME_FUNC
-	MODIFYDBVALUE_FUNC = 311,  //!< MODIFYDBVALUE_FUNC
+	GETCTXCONFIRMH_FUNC ,//!< GETCTXCONFIRMH_FUNC
+	WRITEDB_FUNC,       //!< WRITEDB_FUNC
+	DELETEDB_FUNC,      //!< DELETEDB_FUNC
+	READDB_FUNC,        //!< READDB_FUNC
+	MODIFYDB_FUNC,      //!< MODIFYDB_FUNC
+	GETDBSIZE_FUNC,     //!< GETDBSIZE_FUNC
+	GETDBVALUE_FUNC,    //!< GETDBVALUE_FUNC
+	GetCURTXHASH_FUNC,  //!< GetCURTXHASH_FUNC
+	READDBTIME_FUNC,     //!< READDBTIME_FUNC
+	MODIFYDBTIME_FUNC,  //!< MODIFYDBTIME_FUNC
+	MODIFYDBVALUE_FUNC,  //!< MODIFYDBVALUE_FUNC
 
 
 };
@@ -987,7 +1130,7 @@ const static struct __MapExterFun FunMap[] = { //
 		{GetCURTXHASH_FUNC,ExGetCurTxHash},
 		{READDBTIME_FUNC,ExReadDataDBTimeFunc},
 		{MODIFYDBTIME_FUNC,ExModifyDataDBTimeFunc},
-		{MODIFYDBVALUE_FUNC,ExModifyDataDBVavleFunc}
+		{MODIFYDBVALUE_FUNC,ExModifyDataDBVavleFunc},
 		};
 
 bool CallExternalFunc(INT16U method, unsigned char *ipara,CVmScriptRun *pVmScriptRun) {
@@ -1034,7 +1177,8 @@ bool CVir8051::run() {
 			INT16U method = ((INT16U) GetExRam(0xFBFE) | ((INT16U) GetExRam(0xFBFF) << 8));
 			flag = method;
 			unsigned char *ipara = (unsigned char *) GetExRamAddr(0xF7FE);		//input para
-			//CallExternalFunc(method, ipara);
+			CVmScriptRun *pVmScript = NULL;
+			CallExternalFunc(method, ipara,pVmScript);
 		}
 		if (Sys.PC == 0x0007) {
 
