@@ -125,6 +125,10 @@ public:
 		nLastOperHeight = 0;
 		nCurMaxMoneyPerDay = 0;
 	}
+	CAuthorizate() {
+		nLastOperHeight = 0;
+		nCurMaxMoneyPerDay = 0;
+	}
 
 	uint64_t GetCurMaxMoneyPerDay() const {
 		return nCurMaxMoneyPerDay;
