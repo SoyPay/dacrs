@@ -56,9 +56,20 @@ enum RegScriptType {
 
 class CNetAuthorizate {
 public:
+	CNetAuthorizate()
+	{
+		nAuthorizeTime = 0;
+		nUserDefine = 0;
+		nMaxMoneyPerTime = 0;
+		nMaxMoneyTotal = 0;
+		nMaxMoneyPerDay = 0;
+	}
 	uint32_t GetAuthorizeTime() const {
 		return nAuthorizeTime;
 	}
+	uint64_t GetUserData() const {
+			return nUserDefine;
+		}
 	uint64_t GetMaxMoneyPerTime() const {
 		return nMaxMoneyPerTime;
 	}
@@ -75,6 +86,9 @@ public:
 	void SetMaxMoneyPerTime(uint64_t nMoney) {
 		nMaxMoneyPerTime = nMoney;
 	}
+	void SetUserData(uint64_t data) {
+		nUserDefine = data;
+		}
 	void SetMaxMoneyTotal(uint64_t nMoney) {
 		nMaxMoneyTotal = nMoney;
 	}
@@ -92,15 +106,26 @@ public:
 	)
 
 protected:
-	uint64_t nAuthorizeTime;
-	uint32_t nUserDefine;
+	uint32_t nAuthorizeTime;
+	uint64_t nUserDefine;
 	uint64_t nMaxMoneyPerTime;
 	uint64_t nMaxMoneyTotal;
 	uint64_t nMaxMoneyPerDay;
 };
 
 class CAuthorizate :public CNetAuthorizate{
+
 public:
+	CAuthorizate(CNetAuthorizate te) {
+		nAuthorizeTime = te.GetAuthorizeTime();
+		nUserDefine = te.GetUserData();
+		nMaxMoneyPerTime = te.GetMaxMoneyPerTime();
+		nMaxMoneyTotal = te.GetMaxMoneyTotal();
+		nMaxMoneyPerDay = te.GetMaxMoneyPerDay();
+		nLastOperHeight = 0;
+		nCurMaxMoneyPerDay = 0;
+	}
+
 	uint64_t GetCurMaxMoneyPerDay() const {
 		return nCurMaxMoneyPerDay;
 	}
