@@ -325,6 +325,85 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 }
 bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
 		vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight) {
+	if(0 == nIndex) {
+		vector<unsigned char> vKey = { 'd', 'a', 't', 'a' };
+		vKey.insert(vKey.end(), vScriptId.begin(), vScriptId.end());
+		vKey.push_back('_');
+		string findKey(vKey.begin(), vKey.end());
+		string dataKey("");
+		for (auto &item : mapDatas) {
+			if (std::string::npos != item.first.find(findKey.c_str())) {
+				dataKey = item.first;
+				break;
+			}
+		}
+		if(!pBase->GetScriptData(vScriptId, nIndex, vScriptKey, vScriptData, nHeight)) {
+			if ("" == dataKey)
+				return false;
+			else {
+				vScriptKey.insert(vScriptKey.end(), dataKey.begin()+11, dataKey.end());
+				CDataStream ds(mapDatas[dataKey], SER_DISK, CLIENT_VERSION);
+				ds >> nHeight;
+				ds >> vScriptData;
+				return true;
+			}
+		}
+		else {
+			vector<unsigned char> dataKeyTemp(vKey.begin(), vKey.end());
+			dataKeyTemp.insert(dataKeyTemp.end(), vScriptKey.begin(), vScriptKey.end());
+			string strdataKeyTemp(dataKeyTemp.begin(), dataKeyTemp.end());
+			if(strdataKeyTemp < dataKey) {
+				return true;
+			}
+			else {
+				vScriptKey.insert(vScriptKey.end(), dataKey.begin()+11, dataKey.end());
+				CDataStream ds(mapDatas[dataKey], SER_DISK, CLIENT_VERSION);
+				ds >> nHeight;
+				ds >> vScriptData;
+				return true;
+			}
+		}
+	}
+	else if (1 == nIndex) {
+		vector<unsigned char> vKey = { 'd', 'a', 't', 'a' };
+		vKey.insert(vKey.end(), vScriptId.begin(), vScriptId.end());
+		vKey.push_back('_');
+		vKey.insert(vKey.end(), vScriptKey.begin(), vScriptKey.end());
+		map<string, vector<unsigned char> >::iterator iterFindKey = mapDatas.find(string(vKey.begin(), vKey.end()));
+		string dataKey("");
+		if(iterFindKey != mapDatas.end())
+		{
+			dataKey = (iterFindKey++)->first;
+		}
+		if (!pBase->GetScriptData(vScriptId, nIndex, vScriptKey, vScriptData, nHeight)) {
+			if ("" == dataKey)
+				return false;
+			else {
+				vScriptKey.insert(vScriptKey.end(), dataKey.begin() + 11, dataKey.end());
+				CDataStream ds(mapDatas[dataKey], SER_DISK, CLIENT_VERSION);
+				ds >> nHeight;
+				ds >> vScriptData;
+				return true;
+			}
+		} else {
+			vector<unsigned char> dataKeyTemp(vKey.begin(), vKey.end());
+			dataKeyTemp.insert(dataKeyTemp.end(), vScriptKey.begin(), vScriptKey.end());
+			string strdataKeyTemp(dataKeyTemp.begin(), dataKeyTemp.end());
+			if (strdataKeyTemp < dataKey) {
+				return true;
+			} else {
+				vScriptKey.insert(vScriptKey.end(), dataKey.begin() + 11, dataKey.end());
+				CDataStream ds(mapDatas[dataKey], SER_DISK, CLIENT_VERSION);
+				ds >> nHeight;
+				ds >> vScriptData;
+				return true;
+			}
+		}
+
+	}
+	else {
+		assert(0);
+	}
 	return pBase->GetScriptData(vScriptId, nIndex, vScriptKey, vScriptData, nHeight);
 }
 bool CScriptDBViewCache::SetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,

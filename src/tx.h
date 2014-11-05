@@ -125,6 +125,10 @@ public:
 		nLastOperHeight = 0;
 		nCurMaxMoneyPerDay = 0;
 	}
+	CAuthorizate() {
+		nLastOperHeight = 0;
+		nCurMaxMoneyPerDay = 0;
+	}
 
 	uint64_t GetCurMaxMoneyPerDay() const {
 		return nCurMaxMoneyPerDay;
@@ -790,9 +794,23 @@ enum AccountOper {
 	NULL_OPER,			//!< invalid
 };
 
+
+class CScriptDBOperLog {
+public:
+	vector<unsigned char> vKey;
+	vector<unsigned char> vValue;
+
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(vKey);
+		READWRITE(vValue);
+	)
+};
+
+
 class COperFund {
 public:
-	unsigned char operType;  //1:ADD_VALUE 2:MINUS_VALUE
+	unsigned char operType;  //!<1:ADD_VALUE 2:MINUS_VALUE
 	vector<CFund> vFund;
 
 	IMPLEMENT_SERIALIZE
@@ -840,7 +858,7 @@ public:
 class CTxUndo {
 public:
 	vector<CAccountOperLog> vAccountOperLog;
-
+	vector<CScriptDBOperLog> vScriptOperLog;
 	IMPLEMENT_SERIALIZE(
 			READWRITE(vAccountOperLog);
 	)
