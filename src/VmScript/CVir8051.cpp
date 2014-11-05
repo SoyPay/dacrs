@@ -870,12 +870,12 @@ static bool ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
 	{
 		vScriptKey =*retdata.at(1);
 	}
+
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
 	if(!scriptDB->GetScriptData(scriptid,index,vScriptKey,vValue,nHeight))
 	{
 		return false;
 	}
-
 
 	memset(ipara, 0, 512);
 	int count = vScriptKey.size();
