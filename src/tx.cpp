@@ -393,7 +393,7 @@ bool CContractTransaction::CheckTransction(CValidationState &state, CAccountView
 
 bool CFreezeTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
-	uint64_t minusValue = llFees;
+	uint64_t minusValue = llFees + llFreezeFunds;
 	uint64_t freezeValue = llFreezeFunds;
 	CAccount secureAccount;
 	if (!view.GetAccount(regAccountId, secureAccount)) {
