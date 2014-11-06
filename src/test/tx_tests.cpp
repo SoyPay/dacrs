@@ -208,20 +208,20 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_free,CTxTest) {
 		if (nOldVectorSum >= randValue) {
 			if (accOperate.IsAuthorized(fund.value, nRunTimeHeight, scriptID)) {
 				//run branch 0:enough money in vector and authorized by script
-				BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID));
+				BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID,true));
 				BOOST_CHECK(GetTotalValue(accOperate.vFreedomFund) == nOldVectorSum - randValue);
 				CheckAuthorization(OldAuthor, fund.value, nRunTimeHeight, scriptID);
 				nBranch[0]++;
 			} else {
 				//run branch 1:enough money in vector but not authorized by script
-				BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID));
+				BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID,true));
 				nBranch[1]++;
 			}
 		} else {
 			if (accOperate.llValues + nOldVectorSum >= randValue) {
 				if (accOperate.IsAuthorized(fund.value, nRunTimeHeight, scriptID)) {
 					//run branch 2:enough money in (vector+llvalue) and authorized by script
-					BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID));
+					BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID,true));
 					BOOST_CHECK(
 							GetTotalValue(accOperate.vFreedomFund) + accOperate.llValues
 									== nOldValue + nOldVectorSum - randValue);
@@ -229,13 +229,13 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_free,CTxTest) {
 					nBranch[2]++;
 				} else {
 					//run branch 3:enough money in (vector+llvalue) but not authorized by script
-					BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID));
+					BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID,true));
 					nBranch[3]++;
 				}
 
 			} else {
 				//run branch 4:not enough money
-				BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID));
+				BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID,true));
 				BOOST_CHECK(GetTotalValue(accOperate.vFreedomFund) == nOldVectorSum);
 				BOOST_CHECK(nOldValue == accOperate.llValues);
 				nBranch[4]++;
@@ -289,18 +289,18 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_self,CTxTest) {
 		if (nOldVectorSum >= randValue) {
 			if (accOperate.IsAuthorized(fund.value, nRunTimeHeight, scriptID)) {
 				//branch 0:enough money and authorized by script
-				BOOST_CHECK(accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, nRunTimeHeight, &scriptID));
+				BOOST_CHECK(accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, nRunTimeHeight, &scriptID,true));
 				BOOST_CHECK(GetTotalValue(accOperate.vSelfFreeze) == nOldVectorSum - randValue);
 				nBranch[0]++;
 			} else {
 				//branch 0:enough money but not authorized by script
-				BOOST_CHECK(!accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, nRunTimeHeight, &scriptID));
+				BOOST_CHECK(!accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, nRunTimeHeight, &scriptID,true));
 				nBranch[1]++;
 			}
 
 		} else {
 			//not enough money
-			BOOST_CHECK(!accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, nRunTimeHeight, &scriptID));
+			BOOST_CHECK(!accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, nRunTimeHeight, &scriptID,true));
 			BOOST_CHECK(GetTotalValue(accOperate.vSelfFreeze) == nOldVectorSum);
 			nBranch[2]++;
 		}
