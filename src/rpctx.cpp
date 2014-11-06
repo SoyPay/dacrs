@@ -617,7 +617,7 @@ Value createfreezetx(const Array& params, bool fHelp) {
 
 //create a register script tx
 Value registerscripttx(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 4) {
+	if (fHelp || params.size() < 4) {
 		string msg = "registerscripttx nrequired \"addr\" \"script\" fee height\n"
 				"\nregister script\n"
 				"\nArguments:\n"
