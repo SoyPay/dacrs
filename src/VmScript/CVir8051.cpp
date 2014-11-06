@@ -1074,7 +1074,7 @@ static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 	}
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
 	int height = pVmScriptRun->GetComfirHeight();
-	bool ret = aAccount.IsAuthorizedToMinus(money,height,scriptid);
+	bool ret = aAccount.IsAuthorized(money,height,scriptid);
 //	memset(ipara, 0, 512);
 //	int count = 1;
 //	memcpy(ipara, &count, 2);
