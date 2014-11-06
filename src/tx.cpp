@@ -561,7 +561,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 					ERROR("UpdateAccounts() : Get script id=%s error", HexStr(script.begin(), script.end())),
 					UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
 		}
-		if(aAuthorizate.IsValid()) {
+		if(!aAuthorizate.IsNull()) {
 			secureAccount.mapAuthorizate[script] = aAuthorizate;
 		}
 	}
@@ -584,7 +584,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 					ERROR("UpdateAccounts() : save script id %s script info error", HexStr(scriptId.vRegID)),
 					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
-		if(aAuthorizate.IsValid()) {
+		if(!aAuthorizate.IsNull()) {
 			secureAccount.mapAuthorizate[scriptId.vRegID] = aAuthorizate;
 		}
 	}
@@ -675,6 +675,9 @@ bool CRegistScriptTx::CheckTransction(CValidationState &state, CAccountViewCache
 		return state.DoS(100, ERROR("CheckTransaction() :CheckSignScript failed"), REJECT_INVALID,
 				"bad-signscript-check");
 	}
+
+	if (!aAuthorizate.IsValid())
+		return state.DoS(100, ERROR("CheckTransaction() : Authorizate data invalid"), REJECT_INVALID, "bad-signcript-check");
 
 	return true;
 }
