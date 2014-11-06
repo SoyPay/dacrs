@@ -911,7 +911,7 @@ public :
 	 * @return if operate successfully return ture,otherwise return false
 	 */
 	bool OperateAccount(OperType type, const CFund &fund, int nHeight = 0,
-			const vector_unsigned_char* pscriptID = NULL,bool bCheckAuthorized = true );
+			const vector_unsigned_char* pscriptID = NULL,bool bCheckAuthorized = false );
 
 	/**
 	 * @brief:	test whether  can minus money  from the account by the script

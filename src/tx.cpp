@@ -1228,14 +1228,8 @@ CFund& CAccount::FindFund(const vector<CFund>& vFund, const vector_unsigned_char
 }
 
 bool CAccount::IsAuthorized(uint64_t nMoney, int nHeight, const vector_unsigned_char& scriptID) {
-	if (nHeight >= chainActive.Height()) {
-		assert(0);
-		return false;
-	}
-
-	assert(pScriptDBTip);
 	vector<unsigned char> vscript;
-	if (!pScriptDBTip->GetScript(scriptID, vscript))
+	if (pScriptDBTip && !pScriptDBTip->GetScript(scriptID, vscript))
 		return false;
 
 	map<vector_unsigned_char, CAuthorizate>::iterator it = mapAuthorizate.find(scriptID);
