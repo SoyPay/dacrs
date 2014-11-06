@@ -110,6 +110,10 @@ public:
 		return true;
 	}
 
+	bool IsNull() {
+		return true;
+	}
+
 	IMPLEMENT_SERIALIZE
 	(
 		READWRITE(VARINT(nAuthorizeTime));
@@ -138,12 +142,17 @@ public:
 		nMaxMoneyPerDay = te.GetMaxMoneyPerDay();
 		nLastOperHeight = 0;
 		nCurMaxMoneyPerDay = 0;
+		nCurMaxMoneyTotal = 0;
 	}
 	CAuthorizate() {
 		nLastOperHeight = 0;
 		nCurMaxMoneyPerDay = 0;
+		nCurMaxMoneyTotal = 0;
 	}
 
+	uint64_t GetCurMaxMoneyTotal() const {
+		return nCurMaxMoneyTotal;
+	}
 	uint64_t GetCurMaxMoneyPerDay() const {
 		return nCurMaxMoneyPerDay;
 	}
@@ -151,6 +160,9 @@ public:
 		return nLastOperHeight;
 	}
 
+	void SetCurMaxMoneyTotal(uint64_t nMoney) {
+		nCurMaxMoneyTotal = nMoney;
+	}
 	void SetCurMaxMoneyPerDay(uint64_t nMoney) {
 		nCurMaxMoneyPerDay = nMoney;
 	}
@@ -163,11 +175,13 @@ public:
 		READWRITE(*(CNetAuthorizate*)this);
 		READWRITE(VARINT(nLastOperHeight));
 		READWRITE(VARINT(nCurMaxMoneyPerDay));
+		READWRITE(VARINT(nCurMaxMoneyTotal));
 	)
 
 private:
 	uint32_t nLastOperHeight;
 	uint64_t nCurMaxMoneyPerDay;
+	uint64_t nCurMaxMoneyTotal;
 };
 
 class CBaseTransaction {
@@ -900,25 +914,19 @@ public:
 	vector<CFund> vSelfFreeze;								//!< self-freeze money
 	map<vector_unsigned_char,CAuthorizate> mapAuthorizate;	//!< Key:scriptID,value :CAuthorizate
 	CAccountOperLog accountOperLog;							//!< record operlog, write at undoinfo
-public :
-	bool OperateAccount(OperType type, const CFund &fund, int nHeight = 0);
-	/**
-	 * @brief add money to account
-	 * @param type:	must be ADD_FREE or ADD_SELF_FREEZD or ADD_FREEZD
-	 * @param fund:	member value in fund is the amount of money to add
-	 * @return return true if operate successfully,otherwise return false
-	 */
-	bool AddMoney(OperType type, const CFund &fund);
 
+public :
 	/**
-	 * @brief :	minus money from account
-	 * @param type:	must be MINUS_FREE or MINUS_SELF_FREEZD or MINUS_FREEZD
+	 * @brief operate account
+	 * @param type:	operate type
+	 * @param fund
 	 * @param nHeight:	the height that block connected into chain
-	 * @param fund:	member value in fund is the amount of money to add
-	 * @param scriptID:
-	 * @return return true if operate successfully,otherwise return false
+	 * @param pscriptID
+	 * @param bCheckAuthorized
+	 * @return if operate successfully return ture,otherwise return false
 	 */
-	bool MinusMoney(OperType type, int nHeight, const CFund &fund, const vector_unsigned_char& scriptID);
+	bool OperateAccount(OperType type, const CFund &fund, int nHeight = 0,
+			const vector_unsigned_char* pscriptID = NULL,bool bCheckAuthorized = false );
 
 	/**
 	 * @brief:	test whether  can minus money  from the account by the script
@@ -927,7 +935,7 @@ public :
 	 * @param scriptID:
 	 * @return if we can minus the money then return ture,otherwise return false
 	 */
-	bool IsAuthorizedToMinus(uint64_t nMoney,int nHeight,const vector_unsigned_char& scriptID);
+	bool IsAuthorized(uint64_t nMoney,int nHeight,const vector_unsigned_char& scriptID);
 public:
 	CAccount(CKeyID &keyId, CPubKey &pubKey) :
 			keyID(keyId), publicKey(pubKey) {
@@ -969,6 +977,7 @@ public:
 	}
 	void CompactAccount(int nCurHeight);
 	void AddToFreedom(const CFund &fund,bool bWriteLog = true);
+	void AddToFreeze(const CFund &fund,bool bWriteLog = true);
 
 	bool UndoOperateAccount(const CAccountOperLog & accountOperLog);
 	CFund& FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID);
@@ -988,12 +997,13 @@ private:
 	void MergerFund(vector<CFund> &vFund, int nCurHeight);
 	void WriteOperLog(AccountOper emOperType, const CFund &fund);
 	void WriteOperLog(const COperFund &operLog);
+	bool IsFundValid(OperType type, const CFund &fund, int nHeight, const vector_unsigned_char* pscriptID = NULL,
+			bool bCheckAuthorized = false);
 	bool CheckAddFund(OperType type, const CFund& fund);
 	bool MinusFreezed(const CFund& fund);
 	bool MinusFree(const CFund &fund);
 	bool MinusSelf(const CFund &fund);
 	bool IsMoneyOverflow(uint64_t nAddMoney);
-	void AddToFreeze(const CFund &fund);
 	void UpdateAuthority(int nHeight,uint64_t nMoney, const vector_unsigned_char& scriptID);
 	uint64_t GetVecMoney(const vector<CFund>& vFund);
 };

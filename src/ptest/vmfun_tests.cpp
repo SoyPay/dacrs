@@ -12,7 +12,6 @@
 #include "VmScript/VmScriptRun.h"
 #include "VmScript/CVir8051.h"
 #include "VmScript/TestMcu.h"
-#include "test/updateaccount_tests.cpp"
 #include "json/json_spirit_writer_template.h"
 #include "rpcclient.h"
 using namespace std;
@@ -20,9 +19,52 @@ using namespace boost;
 using namespace json_spirit;
 
 extern Object CallRPC(const string& strMethod, const Array& params);
-extern  int TestCallRPC(std::string strMethod, const std::vector<std::string> &vParams, std::string &strRet);
-extern  void GetAccountInfo(char *address);
+extern int TestCallRPC(std::string strMethod, const std::vector<std::string> &vParams, std::string &strRet);
+extern void GetAccountInfo(char *address);
 extern void GenerateMiner();
+	//
+//	string strPrint;
+//	int nRet;
+//	Array params = RPCConvertValues(strMethod, vParams);
+//
+//	Object reply = CallRPC(strMethod, params);
+//
+//	// Parse reply
+//	const Value& result = find_value(reply, "result");
+//	const Value& error = find_value(reply, "error");
+//
+//	if (error.type() != null_type) {
+//		// Error
+//		strPrint = "error: " + write_string(error, false);
+//		int code = find_value(error.get_obj(), "code").get_int();
+//		nRet = abs(code);
+//	} else {
+//		// Result
+//		if (result.type() == null_type)
+//			strPrint = "";
+//		else if (result.type() == str_type)
+//			strPrint = result.get_str();
+//		else
+//			strPrint = write_string(result, true);
+//	}
+//	strRet = strPrint;
+//	BOOST_MESSAGE(strPrint);
+//	//cout << strPrint << endl;
+//	return nRet;
+//}
+//static void GetAccountInfo(char *address) {
+//	int argc = 3;
+//	char *argv[3] = { "rpctest", "getaccountinfo", address };
+//	CommandLineRPC(argc, argv);
+//
+//}
+//static void GenerateMiner() {
+//	int argc = 3;
+//	char *argv[3] = { "rpctest", "setgenerate", "true" };
+//	CommandLineRPC(argc, argv);
+//}
+
+
 std::string TxHash("");
 
 void GetAccountState1() {

@@ -561,13 +561,24 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 					ERROR("UpdateAccounts() : Get script id=%s error", HexStr(script.begin(), script.end())),
 					UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
 		}
-		if(aAuthorizate.IsValid()) {
+		if(!aAuthorizate.IsNull()) {
 			secureAccount.mapAuthorizate[script] = aAuthorizate;
 		}
 	}
 	else {
+		CVmScript vmScript;
+		CDataStream stream(script, SER_DISK, CLIENT_VERSION);
+		try {
+			stream >> vmScript;
+		} catch (exception& e) {
+			return state.DoS(100, ERROR(("UpdateAccounts() :intial() Unserialize to vmScript error:" + string(e.what())).c_str()),
+					UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
+		}
+		if(!vmScript.IsValid())
+			return state.DoS(100, ERROR("UpdateAccounts() : vmScript invalid"), UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
 		if (0 == nIndex)
 		return true;
+
 		CRegID scriptId(nHeight, nIndex);
 		//create script account
 		CKeyID keyId = Hash160(scriptId.vRegID);
@@ -584,7 +595,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 					ERROR("UpdateAccounts() : save script id %s script info error", HexStr(scriptId.vRegID)),
 					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
-		if(aAuthorizate.IsValid()) {
+		if(!aAuthorizate.IsNull()) {
 			secureAccount.mapAuthorizate[scriptId.vRegID] = aAuthorizate;
 		}
 	}
@@ -676,13 +687,13 @@ bool CRegistScriptTx::CheckTransction(CValidationState &state, CAccountViewCache
 				"bad-signscript-check");
 	}
 
+	if (!aAuthorizate.IsValid())
+		return state.DoS(100, ERROR("CheckTransaction() : Authorizate data invalid"), REJECT_INVALID, "bad-signcript-check");
+
 	return true;
 }
 
 bool CFund::IsMergeFund(const int & nCurHeight, int &nMergeType) const {
-
-	assert(nCurHeight >= nHeight); //add by ranger.shi
-
 	if (nCurHeight - nHeight > Params().GetMaxCoinDay() / Params().GetTargetSpacing()) {
 		nMergeType = FREEDOM;
 		return true;
@@ -819,9 +830,9 @@ void CAccount::WriteOperLog(const COperFund &operLog) {
 	accountOperLog.InsertOperateLog(operLog);
 }
 
-void CAccount::AddToFreeze(const CFund &fund) {
+void CAccount::AddToFreeze(const CFund &fund, bool bWriteLog) {
 	bool bMerge = false;
-	for (auto& item:vFreeze) {
+	for (auto& item : vFreeze) {
 		if (item.scriptID == fund.scriptID && item.nHeight == fund.nHeight) {
 			item.value += fund.value;
 			bMerge = true;
@@ -831,13 +842,17 @@ void CAccount::AddToFreeze(const CFund &fund) {
 	if (!bMerge)
 		vFreeze.push_back(fund);
 
-	WriteOperLog(ADD_FUND, fund);
+	if (bWriteLog)
+		WriteOperLog(ADD_FUND, fund);
 }
 
-void CAccount::AddToFreedom(const CFund &fund,bool bWriteLog) {
-	int nCurHeight = chainActive.Height() + 1;
-	assert(fund.nHeight <= nCurHeight);
-	int nTenDayBlocks = 10 * ( (24 * 60 * 60) / Params().GetTargetSpacing());
+void CAccount::AddToFreedom(const CFund &fund, bool bWriteLog) {
+	int nCurHeight = chainActive.Height()+1;
+	if (fund.nHeight > nCurHeight) {
+		assert(fund.nHeight <= nCurHeight);
+		return;
+	}
+	int nTenDayBlocks = 10 * ((24 * 60 * 60) / Params().GetTargetSpacing());
 	int nHeightPoint = fund.nHeight - fund.nHeight % nTenDayBlocks;
 	vector<CFund>::iterator it = find_if(vFreedomFund.begin(), vFreedomFund.end(), [&](const CFund& fundInVector)
 	{	return fundInVector.nHeight == nHeightPoint;});
@@ -929,7 +944,6 @@ bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 				break;
 			case FREEDOM_FUND:
 				if (ADD_FUND == iterOperFundLog->operType) {
-					//vFreedomFund.erase(remove(vFreedomFund.begin(), vFreedomFund.end(), *iterFund), vFreedomFund.end());
 					auto it = find_if(vFreedomFund.begin(), vFreedomFund.end(), [&](const CFund& fundInVector) {
 						if (fundInVector.nFundType== iterFund->nFundType &&
 								fundInVector.nHeight == iterFund->nHeight&&
@@ -941,17 +955,31 @@ bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 					if (!it->value)
 						vFreedomFund.erase(it);
 				} else if (MINUS_FUND == iterOperFundLog->operType)
-					AddToFreedom(*iterFund,false);
+					AddToFreedom(*iterFund, false);
 				break;
 			case FREEZD_FUND:
-				if (ADD_FUND == iterOperFundLog->operType)
-					vFreeze.erase(remove(vFreeze.begin(), vFreeze.end(), *iterFund), vFreeze.end());
-				else if (MINUS_FUND == iterOperFundLog->operType)
-					vFreeze.push_back(*iterFund);
+				if (ADD_FUND == iterOperFundLog->operType) {
+					auto it = find_if(vFreeze.begin(), vFreeze.end(), [&](const CFund& fundInVector) {
+						if (fundInVector.nFundType== iterFund->nFundType &&
+								fundInVector.nHeight == iterFund->nHeight&&
+								fundInVector.scriptID == iterFund->scriptID &&
+								fundInVector.value>=iterFund->value)
+						return true;
+					});
+
+					assert(it != vFreeze.end());
+					it->value -= iterFund->value;
+					if (!it->value)
+						vFreeze.erase(it);
+				} else if (MINUS_FUND == iterOperFundLog->operType)
+					AddToFreeze(*iterFund, false);
 				break;
 			case SELF_FREEZD_FUND:
-				if (ADD_FUND == iterOperFundLog->operType)
-					vSelfFreeze.erase(remove(vSelfFreeze.begin(), vSelfFreeze.end(), *iterFund), vSelfFreeze.end());
+				if (ADD_FUND == iterOperFundLog->operType) {
+					auto it = find(vSelfFreeze.begin(), vSelfFreeze.end(), *iterFund);
+					assert(it != vSelfFreeze.end());
+					vSelfFreeze.erase(it);
+				}
 				else if (MINUS_FUND == iterOperFundLog->operType)
 					vSelfFreeze.push_back(*iterFund);
 				break;
@@ -1045,11 +1073,11 @@ uint64_t CAccount::GetForzenAmount(int nCurHeight) {
 	CompactAccount(nCurHeight);
 	uint64_t balance = 0;
 
-	for(auto &fund:vFreeze) {
+	for (auto &fund : vFreeze) {
 		balance += fund.value;
 	}
 
-	for(auto &fund:vSelfFreeze) {
+	for (auto &fund : vSelfFreeze) {
 		balance += fund.value;
 	}
 	return balance;
@@ -1059,7 +1087,7 @@ uint64_t CAccount::GetBalance(int nCurHeight) {
 	CompactAccount(nCurHeight);
 	uint64_t balance = llValues;
 
-	for(auto &fund:vFreedomFund) {
+	for (auto &fund : vFreedomFund) {
 		balance += fund.value;
 	}
 	return balance;
@@ -1138,13 +1166,14 @@ bool CAccount::MinusFreezed(const CFund& fund) {
 	} else {
 		WriteOperLog(MINUS_FUND, *it);
 
-		CFund logfund(*it);
-		logfund.value = it->value - fund.value;
-		WriteOperLog(ADD_FUND, logfund);
-		vFreeze.erase(it);
-
-		if (logfund.value)
-			vFreeze.push_back(logfund);
+		if (it->value > fund.value) {
+			CFund logfund(*it);
+			logfund.value = it->value - fund.value;
+			vFreeze.erase(it);
+			AddToFreeze(logfund);
+		} else {
+			vFreeze.erase(it);
+		}
 		return true;
 	}
 }
@@ -1202,24 +1231,19 @@ uint64_t CAccount::GetVecMoney(const vector<CFund>& vFund){
 	return nTotal;
 }
 
-CFund& CAccount::FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID)
-{
+CFund& CAccount::FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID) {
 	CFund vret;
-	for(vector<CFund>::const_iterator it = vFund.begin();it != vFund.end();it++){
-		if(it->scriptID == scriptID)
-		{
+	for (vector<CFund>::const_iterator it = vFund.begin(); it != vFund.end(); it++) {
+		if (it->scriptID == scriptID) {
 			vret = *it;
 		}
 	}
 	return vret;
 }
 
-bool CAccount::IsAuthorizedToMinus(uint64_t nMoney, int nHeight, const vector_unsigned_char& scriptID) {
-	if (nHeight >= chainActive.Height())
-		assert(0);
-	assert(pScriptDBTip);
+bool CAccount::IsAuthorized(uint64_t nMoney, int nHeight, const vector_unsigned_char& scriptID) {
 	vector<unsigned char> vscript;
-	if (!pScriptDBTip->GetScript(scriptID, vscript))
+	if (pScriptDBTip && !pScriptDBTip->GetScript(scriptID, vscript))
 		return false;
 
 	map<vector_unsigned_char, CAuthorizate>::iterator it = mapAuthorizate.find(scriptID);
@@ -1236,120 +1260,88 @@ bool CAccount::IsAuthorizedToMinus(uint64_t nMoney, int nHeight, const vector_un
 	}
 
 	if (authorizate.GetMaxMoneyPerTime() < nMoney || authorizate.GetMaxMoneyTotal() < nMoney
-			|| authorizate.GetCurMaxMoneyPerDay() < nMoney)
+			|| authorizate.GetCurMaxMoneyTotal() < nMoney || authorizate.GetCurMaxMoneyPerDay() < nMoney)
 		return false;
 
 	return true;
 }
 
-bool CAccount::CheckAddFund(OperType type, const CFund& fund) {
-	if (ADD_FREE != type && ADD_SELF_FREEZD != type && ADD_FREEZD != type)
-		return false;
-
-//	if (!fund.uTxHash)
-//		return false;
-
+bool CAccount::IsFundValid(OperType type, const CFund &fund, int nHeight, const vector_unsigned_char* pscriptID,
+		bool bCheckAuthorized) {
 	switch (type) {
-	case ADD_FREE:
+	case ADD_FREE: {
 		if (REWARD_FUND != fund.nFundType && FREEDOM_FUND != fund.nFundType)
 			return false;
-		break;
-
-	case ADD_SELF_FREEZD:
-		if (SELF_FREEZD_FUND != fund.nFundType)
-			return false;
-		break;
-
-	case ADD_FREEZD:
-		if (FREEZD_FUND != fund.nFundType)
+		if (!IsMoneyOverflow(fund.value))
 			return false;
 		break;
 	}
 
-	if (!IsMoneyOverflow(fund.value))
+	case ADD_SELF_FREEZD: {
+		if (SELF_FREEZD_FUND != fund.nFundType)
+			return false;
+		if (!IsMoneyOverflow(fund.value))
+			return false;
+		break;
+	}
+
+	case ADD_FREEZD: {
+		if (FREEZD_FUND != fund.nFundType)
+			return false;
+		if (!IsMoneyOverflow(fund.value))
+			return false;
+		break;
+	}
+
+	case MINUS_FREEZD: {
+		assert(pScriptDBTip);
+		vector<unsigned char> vscript;
+		if (!pScriptDBTip->GetScript(fund.scriptID, vscript))
+			return false;
+		break;
+	}
+
+	case MINUS_FREE:
+	case MINUS_SELF_FREEZD: {
+		if (bCheckAuthorized && pscriptID &&!IsAuthorized(fund.value, nHeight, *pscriptID))
+			return false;
+		break;
+	}
+
+	default:
+		assert(0);
 		return false;
+	}
 
 	return true;
 }
 
-bool CAccount::OperateAccount(OperType type, const CFund &fund, int nHeight) {
+bool CAccount::OperateAccount(OperType type, const CFund &fund, int nHeight,
+		const vector_unsigned_char* pscriptID,
+		bool bCheckAuthorized) {
 	if (keyID != accountOperLog.keyID)
 		accountOperLog.keyID = keyID;
 
-//	if (!IsFundValid(type, fund))
-//		return false;
+	if (!IsFundValid(type, fund, nHeight, pscriptID,bCheckAuthorized))
+		return false;
 
-	if (!fund.value){
+	if (!fund.value)
 		return true;
-	}
 
 	bool bRet = true;
 	uint64_t nOperateValue = 0;
 	switch (type) {
 	case ADD_FREE: {
-		if (REWARD_FUND == fund.nFundType)
-			vRewardFund.push_back(fund);
-		else
-			vFreedomFund.push_back(fund);
-
-		WriteOperLog(ADD_FUND, fund);
-		break;
-	}
-
-	case MINUS_FREE: {
-		bRet = MinusFree(fund);
-		break;
-	}
-
-	case ADD_SELF_FREEZD: {
-		vSelfFreeze.push_back(fund);
-		WriteOperLog(ADD_FUND, fund);
-		break;
-	}
-
-	case MINUS_SELF_FREEZD: {
-		bRet = MinusSelf(fund);
-		break;
-	}
-
-	case ADD_FREEZD: {
-		AddToFreeze(fund);
-		break;
-	}
-
-	case MINUS_FREEZD: {
-		bRet = MinusFreezed(fund);
-		break;
-	}
-
-	default:
-		assert(0);
-	}
-
-	return bRet;
-}
-
-bool CAccount::AddMoney(OperType type, const CFund &fund) {
-	if (keyID != accountOperLog.keyID)
-		accountOperLog.keyID = keyID;
-
-	if (!CheckAddFund(type, fund))
-		return false;
-
-	if (!fund.value) {
-		return true;
-	}
-
-	bool bRet = true;
-	switch (type) {
-	case ADD_FREE: {
 		if (REWARD_FUND == fund.nFundType) {
 			vRewardFund.push_back(fund);
 			WriteOperLog(ADD_FUND, fund);
-		}
-		else
+		} else
 			AddToFreedom(fund);
+		break;
+	}
 
+	case MINUS_FREE: {
+		bRet = MinusFree(fund);
 		break;
 	}
 
@@ -1359,41 +1351,13 @@ bool CAccount::AddMoney(OperType type, const CFund &fund) {
 		break;
 	}
 
-	case ADD_FREEZD: {
-		AddToFreeze(fund);
-		break;
-	}
-
-	default:
-		assert(0);
-	}
-
-	return bRet;
-}
-
-bool CAccount::MinusMoney(OperType type, int nHeight, const CFund &fund, const vector_unsigned_char& scriptID) {
-	if (keyID != accountOperLog.keyID)
-		accountOperLog.keyID = keyID;
-
-	if (MINUS_FREE != type && MINUS_SELF_FREEZD != type && MINUS_FREEZD != type)
-		return false;
-
-	if (!fund.value) {
-		return true;
-	}
-
-	if (!IsAuthorizedToMinus(fund.value, nHeight, scriptID))
-		return false;
-
-	bool bRet = true;
-	switch (type) {
-	case MINUS_FREE: {
-		bRet = MinusFree(fund);
-		break;
-	}
-
 	case MINUS_SELF_FREEZD: {
 		bRet = MinusSelf(fund);
+		break;
+	}
+
+	case ADD_FREEZD: {
+		AddToFreeze(fund);
 		break;
 	}
 
@@ -1406,25 +1370,27 @@ bool CAccount::MinusMoney(OperType type, int nHeight, const CFund &fund, const v
 		assert(0);
 	}
 
-	if (bRet) {
-		UpdateAuthority(nHeight,fund.value,scriptID);
-	}
+	if ((MINUS_FREE == type || MINUS_SELF_FREEZD == type) && bCheckAuthorized && bRet)
+		UpdateAuthority(nHeight, fund.value, *pscriptID);
+
 	return bRet;
 }
 
-void CAccount::UpdateAuthority(int nHeight,uint64_t nMoney, const vector_unsigned_char& scriptID) {
+void CAccount::UpdateAuthority(int nHeight, uint64_t nMoney, const vector_unsigned_char& scriptID) {
 	map<vector_unsigned_char, CAuthorizate>::iterator it = mapAuthorizate.find(scriptID);
-	assert(it != mapAuthorizate.end());
+	if (it == mapAuthorizate.end() ) {
+		assert(it != mapAuthorizate.end());
+		return ;
+	}
 
 	CAuthorizate& authorizate = it->second;
 	uint64_t nCurMaxMoneyPerDay = authorizate.GetCurMaxMoneyPerDay();
 	uint64_t nMaxMoneyTotal = authorizate.GetMaxMoneyTotal();
-	assert(nCurMaxMoneyPerDay > nMoney && nMaxMoneyTotal > nMoney);
+	assert(nCurMaxMoneyPerDay >= nMoney && nMaxMoneyTotal >= nMoney);
 	authorizate.SetCurMaxMoneyPerDay(nCurMaxMoneyPerDay - nMoney);
 	authorizate.SetMaxMoneyTotal(nMaxMoneyTotal - nMoney);
-	authorizate.SetLastOperHeight(static_cast<uint32_t>(nHeight) );
+	authorizate.SetLastOperHeight(static_cast<uint32_t>(nHeight));
 }
-
 
 CTransactionCache::CTransactionCache(CTransactionCacheDB *pTxCacheDB) {
 	base = pTxCacheDB;
@@ -1478,9 +1444,9 @@ bool CTransactionCache::DeleteBlockFromCache(const CBlock &block) {
 }
 
 bool CTransactionCache::IsContainTx(const uint256 & txHash) {
-	for(auto & item : mapTxHashByBlockHash) {
+	for (auto & item : mapTxHashByBlockHash) {
 		vector<uint256>::iterator it = find(item.second.begin(), item.second.end(), txHash);
-		if(it != item.second.end())
+		if (it != item.second.end())
 			return true;
 	}
 	return false;
