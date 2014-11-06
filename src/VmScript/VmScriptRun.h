@@ -42,6 +42,8 @@ class CVmScriptRun {
 	int height;
 	CScriptDBViewCache *m_ScriptDBTip;
 	vector<CVmOperate> m_output;
+	shared_ptr<vector<CScriptDBOperLog> > m_dblog;
+
 
 private:
 	/**
@@ -120,6 +122,7 @@ public:
 	int GetComfirHeight();
 	uint256 GetCurTxHash();
 	void InsertOutputData(vector<CVmOperate> source);
+	shared_ptr<vector<CScriptDBOperLog> > GetDbLog();
 	virtual ~CVmScriptRun();
 };
 

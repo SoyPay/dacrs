@@ -13,6 +13,7 @@ CVmScriptRun::CVmScriptRun() {
 	NewAccont.clear();
 	height = 0;
 	m_ScriptDBTip = NULL;
+	m_dblog = std::make_shared<std::vector<CScriptDBOperLog> >();
 }
 vector<shared_ptr<CAccount> > &CVmScriptRun::GetRawAccont() {
 	return RawAccont;
@@ -68,6 +69,7 @@ tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& T
 		return std::make_tuple (false, 0, string("VmScript nBurnFactor == 0 \n"));
 	}
 	m_ScriptDBTip = &VmDB;
+
 	CContractTransaction* tx = static_cast<CContractTransaction*>(Tx.get());
 	int maxstep = tx->llFees/nBurnFactor;
 	tuple<bool, uint64_t, string> mytuple;
@@ -227,4 +229,8 @@ CScriptDBViewCache* CVmScriptRun::GetScriptDB()
 void CVmScriptRun::InsertOutputData(vector<CVmOperate> source)
 {
 	m_output.insert(m_output.end(),source.begin(),source.end());
+}
+shared_ptr<vector<CScriptDBOperLog> > CVmScriptRun::GetDbLog()
+{
+	return m_dblog;
 }

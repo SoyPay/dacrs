@@ -411,7 +411,11 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		tx.nValidHeight = height;
 		tx.vSignature.push_back(signature);
 	}
-
+	if(tx.vSignature.size() == tx.vAccountRegId.size())
+	{
+		return tx.GetHash().ToString();
+	}
+	else
 	{
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
 		ds << tx;
