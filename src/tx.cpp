@@ -566,8 +566,19 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 		}
 	}
 	else {
+		CVmScript vmScript;
+		CDataStream stream(script, SER_DISK, CLIENT_VERSION);
+		try {
+			stream >> vmScript;
+		} catch (exception& e) {
+			return state.DoS(100, ERROR(("UpdateAccounts() :intial() Unserialize to vmScript error:" + string(e.what())).c_str()),
+					UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
+		}
+		if(!vmScript.IsValid())
+			return state.DoS(100, ERROR("UpdateAccounts() : vmScript invalid"), UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
 		if (0 == nIndex)
 		return true;
+
 		CRegID scriptId(nHeight, nIndex);
 		//create script account
 		CKeyID keyId = Hash160(scriptId.vRegID);
