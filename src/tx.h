@@ -138,12 +138,17 @@ public:
 		nMaxMoneyPerDay = te.GetMaxMoneyPerDay();
 		nLastOperHeight = 0;
 		nCurMaxMoneyPerDay = 0;
+		nCurMaxMoneyTotal = 0;
 	}
 	CAuthorizate() {
 		nLastOperHeight = 0;
 		nCurMaxMoneyPerDay = 0;
+		nCurMaxMoneyTotal = 0;
 	}
 
+	uint64_t GetCurMaxMoneyTotal() const {
+		return nCurMaxMoneyTotal;
+	}
 	uint64_t GetCurMaxMoneyPerDay() const {
 		return nCurMaxMoneyPerDay;
 	}
@@ -151,6 +156,9 @@ public:
 		return nLastOperHeight;
 	}
 
+	void SetCurMaxMoneyTotal(uint64_t nMoney) {
+		nCurMaxMoneyTotal = nMoney;
+	}
 	void SetCurMaxMoneyPerDay(uint64_t nMoney) {
 		nCurMaxMoneyPerDay = nMoney;
 	}
@@ -163,11 +171,13 @@ public:
 		READWRITE(*(CNetAuthorizate*)this);
 		READWRITE(VARINT(nLastOperHeight));
 		READWRITE(VARINT(nCurMaxMoneyPerDay));
+		READWRITE(VARINT(nCurMaxMoneyTotal));
 	)
 
 private:
 	uint32_t nLastOperHeight;
 	uint64_t nCurMaxMoneyPerDay;
+	uint64_t nCurMaxMoneyTotal;
 };
 
 class CBaseTransaction {
@@ -900,6 +910,7 @@ public:
 	vector<CFund> vSelfFreeze;								//!< self-freeze money
 	map<vector_unsigned_char,CAuthorizate> mapAuthorizate;	//!< Key:scriptID,value :CAuthorizate
 	CAccountOperLog accountOperLog;							//!< record operlog, write at undoinfo
+
 public :
 	/**
 	 * @brief operate account
@@ -983,7 +994,7 @@ private:
 	void WriteOperLog(AccountOper emOperType, const CFund &fund);
 	void WriteOperLog(const COperFund &operLog);
 	bool IsFundValid(OperType type, const CFund &fund, int nHeight, const vector_unsigned_char* pscriptID = NULL,
-			bool bCheckAuthorized = true);
+			bool bCheckAuthorized = false);
 	bool CheckAddFund(OperType type, const CFund& fund);
 	bool MinusFreezed(const CFund& fund);
 	bool MinusFree(const CFund &fund);

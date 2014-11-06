@@ -1246,13 +1246,14 @@ bool CAccount::IsAuthorized(uint64_t nMoney, int nHeight, const vector_unsigned_
 	}
 
 	if (authorizate.GetMaxMoneyPerTime() < nMoney || authorizate.GetMaxMoneyTotal() < nMoney
-			|| authorizate.GetCurMaxMoneyPerDay() < nMoney)
+			|| authorizate.GetCurMaxMoneyTotal() < nMoney || authorizate.GetCurMaxMoneyPerDay() < nMoney)
 		return false;
 
 	return true;
 }
 
-bool CAccount::IsFundValid(OperType type, const CFund &fund, int nHeight, const vector_unsigned_char* pscriptID,bool bCheckAuthorized) {
+bool CAccount::IsFundValid(OperType type, const CFund &fund, int nHeight, const vector_unsigned_char* pscriptID,
+		bool bCheckAuthorized) {
 	switch (type) {
 	case ADD_FREE: {
 		if (REWARD_FUND != fund.nFundType && FREEDOM_FUND != fund.nFundType)
@@ -1288,7 +1289,7 @@ bool CAccount::IsFundValid(OperType type, const CFund &fund, int nHeight, const 
 
 	case MINUS_FREE:
 	case MINUS_SELF_FREEZD: {
-		if (bCheckAuthorized && !IsAuthorized(fund.value, nHeight, *pscriptID))
+		if (bCheckAuthorized && pscriptID &&!IsAuthorized(fund.value, nHeight, *pscriptID))
 			return false;
 		break;
 	}
@@ -1302,11 +1303,12 @@ bool CAccount::IsFundValid(OperType type, const CFund &fund, int nHeight, const 
 }
 
 bool CAccount::OperateAccount(OperType type, const CFund &fund, int nHeight,
-		const vector_unsigned_char* pscriptID ,bool bCheckAuthorized) {
+		const vector_unsigned_char* pscriptID,
+		bool bCheckAuthorized) {
 	if (keyID != accountOperLog.keyID)
 		accountOperLog.keyID = keyID;
 
-	if (!IsFundValid(type, fund, nHeight, pscriptID))
+	if (!IsFundValid(type, fund, nHeight, pscriptID,bCheckAuthorized))
 		return false;
 
 	if (!fund.value)
@@ -1354,7 +1356,7 @@ bool CAccount::OperateAccount(OperType type, const CFund &fund, int nHeight,
 		assert(0);
 	}
 
-	if ((MINUS_FREE == type || MINUS_SELF_FREEZD == type) && bRet)
+	if ((MINUS_FREE == type || MINUS_SELF_FREEZD == type) && bCheckAuthorized && bRet)
 		UpdateAuthority(nHeight, fund.value, *pscriptID);
 
 	return bRet;
