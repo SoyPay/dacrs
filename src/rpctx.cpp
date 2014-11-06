@@ -390,6 +390,12 @@ Value createcontracttx(const Array& params, bool fHelp) {
 			vaccountid.push_back(accountid.vRegID);
 		}
 
+		tx.scriptRegId = vscriptid;
+		tx.vAccountRegId = vaccountid;
+		tx.llFees = fee;
+		tx.vContract = vcontract;
+		tx.nValidHeight = height;
+
 		//get keyid by accountid
 		CKeyID keyid;
 		if (!view.GetKeyId(vaccountid.at(0), keyid)) {
@@ -404,18 +410,24 @@ Value createcontracttx(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: Sign failed.");
 		}
 
-		tx.scriptRegId = vscriptid;
-		tx.vAccountRegId = vaccountid;
-		tx.llFees = fee;
-		tx.vContract = vcontract;
-		tx.nValidHeight = height;
 		tx.vSignature.push_back(signature);
 	}
 
 	{
-		CDataStream ds(SER_DISK, CLIENT_VERSION);
-		ds << tx;
-		return HexStr(ds.begin(), ds.end());
+		if(tx.vSignature.size() == tx.vAccountRegId.size())
+		{
+			if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
+						throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: CommitTransaction failed.");
+					}
+			return tx.GetHash().ToString();
+		}
+		else
+		{
+			CDataStream ds(SER_DISK, CLIENT_VERSION);
+			ds << tx;
+			LogPrint("INFO", "createcontracttx ok!\r\n");
+			return HexStr(ds.begin(), ds.end());
+		}
 	}
 }
 
@@ -452,8 +464,7 @@ Value signcontracttx(const Array& params, bool fHelp) {
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
 
-		if (tx.vAccountRegId.size() < 2 || tx.vSignature.size() >= tx.vAccountRegId.size()
-				|| tx.vSignature.size() < 1) {
+		if (tx.vAccountRegId.size() < 1 || tx.vSignature.size() >= tx.vAccountRegId.size()) {
 			throw runtime_error("in signsecuretx :tx data err\n");
 		}
 
@@ -470,7 +481,7 @@ Value signcontracttx(const Array& params, bool fHelp) {
 			}
 		}
 
-		vector<unsigned char> accountid = tx.vAccountRegId.at(tx.vSignature.size() - 1);
+		vector<unsigned char> accountid = tx.vAccountRegId.at(tx.vSignature.size());
 
 		if (!pwalletMain->IsHaveAccount(accountid)) {
 			LogPrint("INFO", "signcontracttx error: Not to my time!\r\n");
@@ -511,6 +522,9 @@ Value signcontracttx(const Array& params, bool fHelp) {
 	{
 		if(tx.vSignature.size() == tx.vAccountRegId.size())
 		{
+			if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
+						throw JSONRPCError(RPC_WALLET_ERROR, "signcontracttx Error: CommitTransaction failed.");
+					}
 			return tx.GetHash().ToString();
 		}
 		else
