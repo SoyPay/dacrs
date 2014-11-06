@@ -110,6 +110,10 @@ public:
 		return true;
 	}
 
+	bool IsNull() {
+		return true;
+	}
+
 	IMPLEMENT_SERIALIZE
 	(
 		READWRITE(VARINT(nAuthorizeTime));
