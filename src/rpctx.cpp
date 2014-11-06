@@ -1494,7 +1494,7 @@ Value listregscript(const Array& params, bool fHelp) {
 		if(!pScriptDBTip->GetScript(0, vScriptId, vScript))
 			throw JSONRPCError(RPC_DATABASE_ERROR, "get script error: cannot get registered script.");
 		script.push_back(Pair("scriptId", HexStr(vScriptId)));
-		script.push_back(Pair("scriptContent", string(vScript.begin(), vScript.end())));
+		script.push_back(Pair("scriptContent", HexStr(vScript.begin(), vScript.end())));
 		arrayScript.push_back(script);
 		while(pScriptDBTip->GetScript(1, vScriptId, vScript)) {
 			Object obj;
