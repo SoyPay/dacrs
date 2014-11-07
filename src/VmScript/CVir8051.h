@@ -242,7 +242,7 @@ public:
 	INT8U SetRamData(INT8U addr, INT8U data);
 	~CVir8051();
 	bool run();
-	int run(int maxstep,CVmScriptRun *pVmScriptRun);
+	int run(uint64_t maxstep,CVmScriptRun *pVmScriptRun);
 	void StepRun(INT8U code);
 
 	INT8U GetOpcode(void) const;
