@@ -1188,9 +1188,9 @@ RET_DEFINE CallExternalFunc(INT16U method, unsigned char *ipara,CVmScriptRun *pV
 
 }
 
-int CVir8051::run(int maxstep,CVmScriptRun *pVmScriptRun) {
+int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 	INT8U code = 0;
-	int step = 0;
+	uint64_t step = 0;
 
 	while (1) {
 		code = GetOpcode();
