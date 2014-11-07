@@ -81,14 +81,16 @@ uint64_t GetElementForBurn(void)
 	uint64_t sumfee;
 	unsigned int nBlock = GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
 	CBlockIndex* pindex = chainActive.Tip();
-	assert(nBlock < pindex->nHeight);
-	for(int ii = 0; ii < nBlock; ii++)
-	{
-		sumfee += pindex->GetBlockFee();
-		pindex = pindex->pprev;
-	}
+	if (nBlock > pindex->nHeight) {
+		return 100000;
+	} else {
+		for (int ii = 0; ii < nBlock; ii++) {
+			sumfee += pindex->GetBlockFee();
+			pindex = pindex->pprev;
+		}
 
-	return (sumfee/nBlock);
+		return (sumfee / nBlock);
+	}
 }
 
 // We want to sort transactions by priority and fee, so:
