@@ -372,7 +372,7 @@ public:
 		char caddr[1024] = { 0 };
 		strncpy(caddr, addrs.c_str(), sizeof(addrs)-1);
 
-		char ccontract[1024] = { 0 };
+		char ccontract[128*1024] = { 0 };
 		strncpy(ccontract, contract.c_str(), sizeof(contract)-1);
 
 		char fee[64] = { 0 };
@@ -383,7 +383,7 @@ public:
 		char height[16] = {0};
 		sprintf(height,"%d",nHeight);
 
-		char *argv[] = { "rpctest", "registerscripttx", cscriptid, caddr, ccontract, fee, height};
+		char *argv[] = { "rpctest", "createcontracttx", cscriptid, caddr, ccontract, fee, height};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -704,8 +704,8 @@ BOOST_FIXTURE_TEST_CASE(block_regscripttx_and_contracttx,CMinerTest)
 	nCurHeight = height;
 	//test regscripttx
 	{
-		string tmpcontract = "12345678979874562123654897321321456";
-		BOOST_REQUIRE(RegisterScriptTx(srcaddr, tmpcontract, height));
+		string script = "fd3e0102001d000000000022220000000000000000222202011112013512013a75d0007581bf750900750a0f020017250910af08f509400c150a8008f5094002150ad2af222509c582c0e0e50a34ffc583c0e0e509c3958224f910af0885830a858209800885830a858209d2afcef0a3e520f0a37808e608f0a3defaeff0a3e58124fbf8e608f0a3e608f0a30808e608f0a3e608f0a315811581d0e0fed0e0f815811581e8c0e0eec0e022850a83850982e0a3fee0a3f5207808e0a3f608dffae0a3ffe0a3c0e0e0a3c0e0e0a3c0e0e0a3c0e010af0885820985830a800885820985830ad2afd083d0822274f8120042e990fbfef01200087f010200a8c082c083ea90fbfef0eba3f012001202010cd083d0822274f812004274fe12002ceafeebff850982850a83eef0a3eff0aa09ab0a790112013d80ea79010200e80200142200";
+		BOOST_REQUIRE(RegisterScriptTx(srcaddr, script, height));
 		AccOperLog &operlog1 = mapAccOperLog[srcaddr];
 		AccState acc1(0, -nCurFee, 0);
 		operlog1.Add(height,acc1);
@@ -740,10 +740,15 @@ BOOST_FIXTURE_TEST_CASE(block_regscripttx_and_contracttx,CMinerTest)
 
 	//test contracttx
 	{
+		CRegID scriptId(height, (uint16_t)1);
+
 		string conaddr;
 		do {
 			BOOST_REQUIRE(GetOneAddr(conaddr, "1100000000000", "true"));
 		} while (conaddr == srcaddr);
+		string vconaddr = "[" + conaddr + "]";
+//		BOOST_REQUIRE(RegisterScriptTx(srcaddr, script, height));
+
 	}
 }
 
