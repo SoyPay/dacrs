@@ -514,14 +514,17 @@ static RET_DEFINE ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
 	GetData(ipara,retdata);
 	assert(retdata.size() == 2);
 
-	if (retdata.at(0).get()->size() > 1) {
-		retdata.at(0).get()->push_back('\0');
-	}
-
-	string pinfo((*retdata[0]).begin(), (*retdata[0]).end());
+	CDataStream tep1(*retdata.at(0), SER_DISK, CLIENT_VERSION);
+	bool flag ;
+	tep1 >> flag;
 	string pdata((*retdata[1]).begin(), (*retdata[1]).end());
-
-	printf("%s%s\r\n", pinfo.c_str(), pdata.c_str());
+	if(flag)
+	{
+		printf("%s\r\n", HexStr(pdata).c_str());
+	}else
+	{
+		printf("%s\r\n",pdata.c_str());
+	}
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	return std::make_tuple (true, tem);
 }
@@ -530,61 +533,65 @@ static RET_DEFINE ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
 
 
 
-static RET_DEFINE ExGetTxInfoFunc(unsigned char * ipara,void * pVmScriptRun) {
+static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun) {
 
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 	GetData(ipara,retdata);
-	assert(retdata.size() == 1);
+	assert(retdata.size() == 2);
 
-	uint256 hash1(*retdata.at(0));
+	CDataStream tep1(*retdata.at(0), SER_DISK, CLIENT_VERSION);
+	uint256 hash1(0);
+	tep1 >>hash1;
+	cout<<"ExGetTxContractsFunc:"<<HexStr(hash1).c_str()<<endl;
+    CDataStream tep(*retdata.at(1),SER_DISK, CLIENT_VERSION);
+    unsigned short maxlen = 0 ;
+    tep >> maxlen;
+
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+
 	if (GetTransaction(pBaseTx, hash1)) {
-		memset(ipara, 0, 512);
 		CContractTransaction *tx = static_cast<CContractTransaction*>(pBaseTx.get());
 		 (*tem.get()).push_back(tx->vContract);
-		int length = tx->vContract.size();
-		int len = 0;
-		vector<unsigned char> item;
-		for (auto& it : tx->vAccountRegId) {
-			len += it.size();
-			item.insert(item.end(), it.begin(), it.end());
+		if(tx->vContract.size() > maxlen)
+		{
+			return std::make_tuple (false, tem);
 		}
-		if ((length + len + 4) < 512) {
-			(*tem.get()).push_back(item);
-		}
+
 	}
 	return std::make_tuple (true, tem);
 }
-static RET_DEFINE ExGetTxAccountSizeFunc(unsigned char * ipara,void * pVmScriptRun) {
-	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-	GetData(ipara,retdata);
-	assert(retdata.size() == 1);
+static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun) {
+	vector<std::shared_ptr<vector<unsigned char> > > retdata;
+	GetData(ipara, retdata);
+	assert(retdata.size() == 2);
 
-	uint256 hash1(*retdata.at(0));
+	CDataStream tep1(*retdata.at(0), SER_DISK, CLIENT_VERSION);
+	uint256 hash1(0);
+	tep1 >>hash1;
+	cout<<"ExGetTxAccountsFunc:"<<HexStr(hash1).c_str()<<endl;
+	CDataStream tep(*retdata.at(1), SER_DISK, CLIENT_VERSION);
+	unsigned short maxlen = 0;
+	tep >> maxlen;
+
 	std::shared_ptr<CBaseTransaction> pBaseTx;
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+
+	auto tem = make_shared<std::vector<vector<unsigned char> > >();
 
 	if (GetTransaction(pBaseTx, hash1)) {
-		memset(ipara, 0, 512);
 		CContractTransaction *tx = static_cast<CContractTransaction*>(pBaseTx.get());
-		int len = 0;
+		vector<unsigned char> item;
 		for (auto& it : tx->vAccountRegId) {
-			len += it.size();
+			item.insert(item.end(), it.begin(), it.end());
 		}
-		if ((retdata.at(0).get()->size() + len + 4) < 512) {
-		    tep << len;
-		    vector<unsigned char> tep1(tep.begin(),tep.end());
-		    (*tem.get()).push_back(tep1);
+		if (item.size() > maxlen) {
+			std::make_tuple(false, tem);
 		}
+
+		(*tem.get()).push_back(item);
 	}
-
-
-
-	return std::make_tuple (true, tem);
+	return std::make_tuple(true, tem);
 }
 static RET_DEFINE ExGetTxContactSizeFunc(unsigned char * ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
@@ -629,8 +636,10 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
+    vector<char> te;
     tep << aAccount.publicKey;
-    vector<unsigned char> tep1(tep.begin(),tep.end());
+    tep >>te;
+    vector<unsigned char> tep1(te.begin(),te.end());
     (*tem.get()).push_back(tep1);
 
 	return std::make_tuple (flag, tem);
@@ -702,7 +711,7 @@ static RET_DEFINE ExGetBlockHashFunc(unsigned char * ipara,void * pVmScriptRun) 
 	}
 	CBlockIndex *pindex = chainActive[height];
 	uint256 blockHash = pindex->GetBlockHash();
-
+	cout<<"ExGetBlockHashFunc:"<<HexStr(blockHash).c_str()<<endl;
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << blockHash;
     vector<unsigned char> tep1(tep.begin(),tep.end());
@@ -933,7 +942,7 @@ static RET_DEFINE ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
     tep << hash;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
-
+    cout<<"ExGetCurTxHash:"<<HexStr(hash).c_str()<<endl;
 	return std::make_tuple (true, tem);
 }
 static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
@@ -1122,19 +1131,18 @@ enum CALL_API_FUN {
 	VERFIY_SIGNATURE_FUNC,    //!< VERFIY_SIGNATURE_FUNC
 	SIGNATURE_FUNC,           //!< SIGNATURE_FUNC
 	PRINT_FUNC,               //!< PRINT_FUNC
-	GETTXINFO_FUNC,           //!< GETTXINFO_FUNC
-	GETTXACCSIZE_FUNC,        //!< GETTXACCSIZE_FUNC
-	GETCONTACTSIZE_FUNC,      //!< GETCONTACTSIZE_FUNC
+	GETTX_CONTRACT_FUNC,      //!< GETTX_CONTRACT_FUNC
+	GETTX_ACCOUNT_FUNC,       //!< GETTX_ACCOUNT_FUNC
 	GETACCPUB_FUNC,           //!< GETACCPUB_FUNC
 	QUEYACCBALANCE_FUNC,      //!< QUEYACCBALANCE_FUNC
 	GETTXCONFIRH_FUNC,        //!< GETTXCONFIRH_FUNC
 	GETTIPH_FUNC,             //!< GETTIPH_FUNC
 	GETBLOCKHASH_FUNC,        //!< GETBLOCKHASH_FUNC
-	ISAUTHORIT_FUNC,         //!<ISAUTHORIT
+	ISAUTHORIT_FUNC,                //!<ISAUTHORIT
 
 
 	//// tx api
-	GETCTXCONFIRMH_FUNC ,//!< GETCTXCONFIRMH_FUNC
+	GETCTXCONFIRMH_FUNC,//!< GETCTXCONFIRMH_FUNC
 	WRITEDB_FUNC,       //!< WRITEDB_FUNC
 	DELETEDB_FUNC,      //!< DELETEDB_FUNC
 	READDB_FUNC,        //!< READDB_FUNC
@@ -1144,9 +1152,8 @@ enum CALL_API_FUN {
 	GetCURTXHASH_FUNC,  //!< GetCURTXHASH_FUNC
 	READDBTIME_FUNC,     //!< READDBTIME_FUNC
 	MODIFYDBTIME_FUNC,  //!< MODIFYDBTIME_FUNC
-	MODIFYDBVALUE_FUNC,  //!< MODIFYDBVALUE_FUNC
+	MODIFYDBVALUE_FUNC ,  //!< MODIFYDBVALUE_FUNC
 	WRITEOUTPUT_FUNC,     //!<WRITEOUTPUT_FUNC
-
 };
 
 const static struct __MapExterFun FunMap[] = { //
@@ -1160,9 +1167,8 @@ const static struct __MapExterFun FunMap[] = { //
 		{ VERFIY_SIGNATURE_FUNC, ExVerifySignatureFunc },   //
 		{ SIGNATURE_FUNC, ExSignatureFunc },			//
 		{ PRINT_FUNC, ExLogPrintFunc },         //
-		{GETTXINFO_FUNC,ExGetTxInfoFunc},            //
-		{GETTXACCSIZE_FUNC,ExGetTxAccountSizeFunc},
-		{GETCONTACTSIZE_FUNC,ExGetTxContactSizeFunc},
+		{GETTX_CONTRACT_FUNC,ExGetTxContractsFunc},            //
+		{GETTX_ACCOUNT_FUNC,ExGetTxAccountsFunc},
 		{GETACCPUB_FUNC,ExGetAccountPublickeyFunc},
 		{QUEYACCBALANCE_FUNC,ExQueryAccountBalanceFunc},
 		{GETTXCONFIRH_FUNC,ExGetTxConFirmHeightFunc},
@@ -1199,36 +1205,40 @@ int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 		//call func out of 8051
 		if (Sys.PC == 0x0012) {
 			//get what func will be called
-			INT16U method = ((INT16U) GetExRam(0xFBFE) | ((INT16U) GetExRam(0xFBFF) << 8));
+			INT16U methodID = ((INT16U) GetExRam(0xFBFE) | ((INT16U) GetExRam(0xFBFF) << 8));
 			unsigned char *ipara = (unsigned char *) GetExRamAddr(0xF7FE);		//input para
+			RET_DEFINE retdata = CallExternalFunc(methodID, ipara, pVmScriptRun);
+			memset(ipara, 0, MAX_SHARE_RAM);
 
-			RET_DEFINE retdata=CallExternalFunc(method, ipara,pVmScriptRun);
-			memset(ipara, 0, 512);
-			if(std::get<0>(retdata))
-			{
-				auto  tem = std::get<1>(retdata);
+			if (std::get<0>(retdata)) {
+				auto tem = std::get<1>(retdata);
 				int pos = 0;
-				for (auto& it : *tem.get())
-				{
-					int size = it.size();
-					memcpy(&ipara[pos], &size, 2);
-					memcpy(&ipara[pos + 2], &it.at(0), size);
-					pos += size + 2;
+				int totalsize = 0;
+				for (auto& it : *tem.get()) {
+					totalsize += it.size() + 2;
+				}
+				if (totalsize + 2 < MAX_SHARE_RAM) { //if data not over
+					for (auto& it : *tem.get()) {
+						int size = it.size();
+						memcpy(&ipara[pos], &size, 2);
+						memcpy(&ipara[pos + 2], &it.at(0), size);
+						pos += size + 2;
+					}
 				}
 			}
-
 		} else if (Sys.PC == 0x0008) {
-			return step;		//return total step
-		}
-		if (maxstep != 0 && step > maxstep) {
-			return 0;		//force return
-		}
+				return step;		//return total step
+			}
+			if (maxstep != 0 && step > maxstep) {
+				return 0;		//force return
+			}
 	}
 
 	return 1;
 }
 
 bool CVir8051::run() {
+
 	INT8U code = 0;
 	INT16U flag;
 	while (1) {
@@ -1243,19 +1253,24 @@ bool CVir8051::run() {
 			flag = method;
 			unsigned char *ipara = (unsigned char *) GetExRamAddr(0xF7FE);		//input para
 			CVmScriptRun *pVmScript = NULL;
-			RET_DEFINE retdata=CallExternalFunc(method, ipara,pVmScript);
-			memset(ipara, 0, 512);
-			if(std::get<0>(retdata))
-			{
-				auto  tem = std::get<1>(retdata);
+			RET_DEFINE retdata = CallExternalFunc(method, ipara, pVmScript);
+			memset(ipara, 0, MAX_SHARE_RAM);
+			if (std::get<0>(retdata)) {
+				auto tem = std::get<1>(retdata);
 				int pos = 0;
-				for (auto& it : *tem.get())
-				{
-					int size = it.size();
-					memcpy(&ipara[pos], &size, 2);
-					memcpy(&ipara[pos + 2], &it.at(0), size);
-					pos += size + 2;
+				int totalsize = 0;
+				for (auto& it : *tem.get()) {
+					totalsize += it.size() + 2;
 				}
+				if (totalsize + 2 < MAX_SHARE_RAM) {
+					for (auto& it : *tem.get()) {
+						int size = it.size();
+						memcpy(&ipara[pos], &size, 2);
+						memcpy(&ipara[pos + 2], &it.at(0), size);
+						pos += size + 2;
+					}
+				}
+
 			}
 		}
 		if (Sys.PC == 0x0007) {
