@@ -602,9 +602,8 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 					prtx->nHeight = pPrevIndex->nHeight+1;
 					pBlock->hashMerkleRoot = pBlock->BuildMerkleTree();
 
-					CTxDestination destid = CAccountID(item.keyID, pwalletMain->mapKeyRegID[item.keyID].vRegID);
-
-					printf("CreatePosTx addr = %s\r\n",CBitcoinAddress(destid).ToString().c_str());
+					CTxDestination minerId = CAccountID(item.keyID, pwalletMain->mapKeyRegID[item.keyID].vRegID);
+					printf("CreatePosTx addr = %s\r\n",CBitcoinAddress(minerId).ToString().c_str());
 					LogPrint("postx", "find pos tx hash succeed: \n"
 									  "   pos hash:%s \n"
 									  "adjust hash:%s \r\n", curhash.GetHex(), adjusthash.GetHex());
