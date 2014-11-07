@@ -1448,13 +1448,15 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     {
         CInv inv(MSG_BLOCK, pindexNew->GetBlockHash());
         CAccountViewCache view(*pAccountViewTip, true);
-        if (!ConnectBlock(block, state, view, pindexNew, *pTxCacheTip, *pScriptDBTip)) {
+        CScriptDBViewCache scriptDBView(*pScriptDBTip, true);
+        if (!ConnectBlock(block, state, view, pindexNew, *pTxCacheTip, scriptDBView)) {
             if (state.IsInvalid())
                 InvalidBlockFound(pindexNew, state);
             return ERROR("ConnectTip() : ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
         }
         mapBlockSource.erase(inv.hash);
         assert(view.Flush());
+        assert(scriptDBView.Flush());
         CAccountViewCache viewtemp(*pAccountViewTip, true);
         uint256 uBestblockHash = viewtemp.GetBestBlock();
         LogPrint("INFO","uBestBlockHash: %s",uBestblockHash.GetHex() );
