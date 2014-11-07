@@ -71,7 +71,7 @@ tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& T
 	m_ScriptDBTip = &VmDB;
 
 	CContractTransaction* tx = static_cast<CContractTransaction*>(Tx.get());
-	int maxstep = tx->llFees;///nBurnFactor;
+	uint64_t maxstep = tx->llFees;///nBurnFactor;
 	tuple<bool, uint64_t, string> mytuple;
 	if (!intial(Tx, view, nheight)) {
 		return std::make_tuple (false, 0, string("VmScript inital Failed\n"));
