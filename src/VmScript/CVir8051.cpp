@@ -493,13 +493,6 @@ static RET_DEFINE ExVerifySignatureFunc(unsigned char *ipara,void * pVmScriptRun
 		rlt = false;
 	}
 
-//	memset(ipara, 0, 512);
-//	int length = sizeof(rlt);
-//	memcpy(ipara, &length, 2);
-//	//ipara[0] = sizeof(rlt);
-//	memcpy(&ipara[2], &rlt, sizeof(rlt));
-//	return true;
-
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << rlt;
@@ -521,22 +514,13 @@ static RET_DEFINE ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
 	GetData(ipara,retdata);
 	assert(retdata.size() == 2);
 
-//	unsigned char *pbuf = ipara;
-//	unsigned short len = GetParaLen(pbuf);
-//	unsigned short infolen = GetParaLen(pbuf);
-//	unsigned char *pinfo = NULL;
-//	GetParaData(pbuf, pinfo, infolen);
 	if (retdata.at(0).get()->size() > 1) {
-		//retdata.at(0).get()[retdata.at(0).get()->size() - 1] = '\0';
 		retdata.at(0).get()->push_back('\0');
 	}
-//	unsigned short datalen = GetParaLen(pbuf);
-//	unsigned char *pdata = NULL;
-//	GetParaData(pbuf, pdata, datalen);
 
 	string pinfo((*retdata[0]).begin(), (*retdata[0]).end());
 	string pdata((*retdata[1]).begin(), (*retdata[1]).end());
-//	printf("%s%s\r\n", pinfo, HexStr(pdata, pdata + datalen, true).c_str());
+
 	printf("%s%s\r\n", pinfo.c_str(), pdata.c_str());
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	return std::make_tuple (true, tem);
@@ -642,12 +626,6 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 			flag = false;
 		}
 	}
-//	unsigned int len = aAccount.publicKey.size();
-//	memset(ipara, 0, 512);
-//	memcpy(ipara, &len, 2);
-//	memcpy(&ipara[2], &aAccount.publicKey[0], aAccount.publicKey.size());
-//
-//	return true;
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -662,13 +640,6 @@ static RET_DEFINE ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScri
 	GetData(ipara,retdata);
 	assert(retdata.size() == 1);
 
-//	unsigned char *pbuffer = ipara;
-//	GetParaLen(pbuffer);
-//	unsigned short length = GetParaLen(pbuffer);
-//
-//	unsigned char *accountid = NULL;
-//	GetParaData(pbuffer, accountid, length);
-//	vector<unsigned char> id(accountid, accountid + length);
 	CAccountViewCache view(*pAccountViewTip, true);
 	bool flag = true;
 	string strParam((*retdata[0]).begin(), (*retdata[0]).end());
@@ -684,12 +655,6 @@ static RET_DEFINE ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScri
 		}
 	}
 	uint64_t nbalance = aAccount.GetBalance(chainActive.Height());
-//	unsigned int len = 8;
-//	memset(ipara, 0, 512);
-//	memcpy(ipara, &len, 2);
-//	memcpy(&ipara[2], &nbalance, len);
-//	return true;
-
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << nbalance;
@@ -715,13 +680,6 @@ static RET_DEFINE ExGetTxConFirmHeightFunc(unsigned char * ipara,void * pVmScrip
 }
 static RET_DEFINE ExGetTipHeightFunc(unsigned char * ipara,void * pVmScriptRun) {
 	int height = chainActive.Height();
-//	memset(ipara, 0, 512);
-//	ipara[0] = sizeof(int);
-//	unsigned int len = 4;
-//	memcpy(ipara, &len, 2);
-//	memcpy(&ipara[2], &height, sizeof(int));
-//	return true;
-
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << height;
@@ -735,43 +693,28 @@ static RET_DEFINE ExGetBlockHashFunc(unsigned char * ipara,void * pVmScriptRun) 
 	GetData(ipara,retdata);
 	assert(retdata.size() == 1);
 
-//	unsigned char *pbuffer = ipara;
-//	GetParaLen(pbuffer);
-//	unsigned short length = GetParaLen(pbuffer);
-//
-//	unsigned char *pheight = NULL;
-//	GetParaData(pbuffer, pheight, length);
 	int height = 0;
-	bool flag = true;
 	memcpy(&height, &retdata.at(0).get()->at(0), sizeof(int));
-	if (height < 0 || height > chainActive.Height())
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+	if (height <= 0 || height > chainActive.Height())
 	{
-		flag= false;
+		return std::make_tuple (false, tem);
 	}
 	CBlockIndex *pindex = chainActive[height];
 	uint256 blockHash = pindex->GetBlockHash();
 
-//	memset(ipara, 0, 512);
-//	int len = sizeof(uint256);
-//	memcpy(ipara, &len, 2);
-//	memcpy(&ipara[2], &blockHash, sizeof(uint256));
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << blockHash;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
 
-	return std::make_tuple (flag, tem);
+	return std::make_tuple (true, tem);
 }
 
 static RET_DEFINE ExGetCurRunEnvHeightFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	int height = pVmScriptRun->GetComfirHeight();
-//	memset(ipara, 0, 512);
-//	int count = 4;
-//	memcpy(ipara, &count, 2);
-//	memcpy(&ipara[2], &height, 4);
-//	return true;
+
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << height;
@@ -818,13 +761,6 @@ static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 		flag = true;
 	}
 
-
-//	memset(ipara, 0, 512);
-//	int count = 1;
-//	memcpy(ipara, &count, 2);
-//	memcpy(&ipara[2], &flag, 1);
-//	return true;
-
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << flag;
@@ -857,12 +793,6 @@ static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 		flag = true;
 	}
 
-
-//	memset(ipara, 0, 512);
-//	int count = 1;
-//	memcpy(ipara, &count, 2);
-//	memcpy(&ipara[2], &flag, 1);
-//	return true;
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << flag;
@@ -894,13 +824,6 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) 
 	{
 		flag = false;
 	}
-
-
-//	memset(ipara, 0, 512);
-//	int count = vValue.size();
-//	memcpy(ipara, &count, 2);
-//	memcpy(&ipara[2], &vValue[0], count);
-//	return true;
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -936,13 +859,6 @@ static RET_DEFINE ExModifyDataDBFunc(unsigned char * ipara,void * pVmScript) {
 		flag = true;
 	}
 
-
-//	memset(ipara, 0, 512);
-//	int count = 1;
-//	memcpy(ipara, &count, 2);
-//	memcpy(&ipara[2], &flag, 1);
-//	return true;
-
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << flag;
@@ -962,11 +878,6 @@ static RET_DEFINE ExGetDBSizeFunc(unsigned char * ipara,void * pVmScript) {
 	{
 		flag = false;
 	}
-//	memset(ipara, 0, 512);
-//	int len = 4;
-//	memcpy(ipara, &len, 2);
-//	memcpy(&ipara[2], &count, len);
-//	return true;
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -1005,18 +916,6 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
 		flag =  false;
 	}
 
-//	memset(ipara, 0, 512);
-//	int count = vScriptKey.size();
-//	memcpy(ipara, &count, 2);
-//	memcpy(&ipara[2], &vScriptKey.at(0), count);
-//	count = vValue.size();
-//	memcpy(&ipara[vScriptKey.size()+2], &count, 2);
-//	memcpy(&ipara[vScriptKey.size()+4], &vValue.at(0), count);
-//	count = 4;
-//	memcpy(&ipara[vScriptKey.size()+4], &count, 2);
-//	memcpy(&ipara[vScriptKey.size()+6], &nHeight, 4);
-//	return true;
-
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     (*tem.get()).push_back(vScriptKey);
 	(*tem.get()).push_back(vValue);
@@ -1029,12 +928,6 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
 static RET_DEFINE ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	uint256 hash = pVmScriptRun->GetCurTxHash();
-//	memset(ipara, 0, 512);
-//	int count = sizeof(uint256);
-//	memcpy(ipara, &count, 2);
-//	memcpy(&ipara[2], &hash, count);
-//	cout<<"hash:" <<hash.ToString().c_str()<<endl;
-
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << hash;
@@ -1042,7 +935,6 @@ static RET_DEFINE ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
     (*tem.get()).push_back(tep1);
 
 	return std::make_tuple (true, tem);
-	//return true;
 }
 static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
@@ -1075,10 +967,6 @@ static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
 	int height = pVmScriptRun->GetComfirHeight();
 	bool ret = aAccount.IsAuthorized(money,height,scriptid);
-//	memset(ipara, 0, 512);
-//	int count = 1;
-//	memcpy(ipara, &count, 2);
-//	memcpy(&ipara[2], &flag, 1);
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -1111,13 +999,6 @@ static RET_DEFINE ExReadDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 	{
 		flag =  false;
 	}
-
-
-//	memset(ipara, 0, 512);
-//	int count = 4;
-//	memcpy(ipara, &count, 2);
-//	memcpy(&ipara[2], &nHeight, 4);
-//	return true;
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -1160,13 +1041,6 @@ static RET_DEFINE ExModifyDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 		}
 	}
 
-//
-//	memset(ipara, 0, 512);
-//	int count = 1;
-//	memcpy(ipara, &count, 2);
-//	memcpy(&ipara[2], &flag, 1);
-//	return true;
-
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << flag;
@@ -1183,18 +1057,6 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 	GetData(ipara,retdata);
 	assert(retdata.size() == 2);
-//	unsigned char *pbuffer = ipara;
-//	GetParaLen(pbuffer);
-//	unsigned short length = GetParaLen(pbuffer);
-//	unsigned char *key = NULL;
-//	GetParaData(pbuffer, key, length);
-//	vector_unsigned_char vkey(key,key +length);
-//
-//	unsigned short valuelen = GetParaLen(pbuffer);
-//	unsigned char *value = NULL;
-//	GetParaData(pbuffer, value, valuelen);
-//	vector_unsigned_char pValue(value,value +valuelen);
-
 
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
 	vector_unsigned_char vValue;
@@ -1218,11 +1080,6 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript
 			flag = true;
 		}
 	}
-//	memset(ipara, 0, 512);
-//	int count = 1;
-//	memcpy(ipara, &count, 2);
-//	memcpy(&ipara[2], &flag, 1);
-//	return true;
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
