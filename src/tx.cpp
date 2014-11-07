@@ -366,7 +366,7 @@ bool CContractTransaction::CheckTransction(CValidationState &state, CAccountView
 				"bad-appeal-fee-toolarge");
 	}
 
-	if (vAccountRegId.size() != vSignature.size()) {
+	if ((vAccountRegId.size()) != (vSignature.size())) {
 		return state.DoS(100, ERROR("CheckTransaction() :account size not equal to sign size"), REJECT_INVALID,
 				"bad-vpre-size ");
 	}
