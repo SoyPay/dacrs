@@ -412,26 +412,20 @@ Value createcontracttx(const Array& params, bool fHelp) {
 
 		tx.vSignature.push_back(signature);
 	}
+
 	if(tx.vSignature.size() == tx.vAccountRegId.size())
 	{
+		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
+					throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: CommitTransaction failed.");
+				}
 		return tx.GetHash().ToString();
 	}
 	else
 	{
-		if(tx.vSignature.size() == tx.vAccountRegId.size())
-		{
-			if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
-						throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: CommitTransaction failed.");
-					}
-			return tx.GetHash().ToString();
-		}
-		else
-		{
-			CDataStream ds(SER_DISK, CLIENT_VERSION);
-			ds << tx;
-			LogPrint("INFO", "createcontracttx ok!\r\n");
-			return HexStr(ds.begin(), ds.end());
-		}
+		CDataStream ds(SER_DISK, CLIENT_VERSION);
+		ds << tx;
+		LogPrint("INFO", "createcontracttx ok!\r\n");
+		return HexStr(ds.begin(), ds.end());
 	}
 }
 
