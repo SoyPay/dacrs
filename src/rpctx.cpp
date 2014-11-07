@@ -341,6 +341,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 
+
 	RPCTypeCheck(params, list_of(str_type)(array_type)(str_type)(int_type)(int_type));
 
 	//get addresss
@@ -357,6 +358,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 	if (vscriptid.size() != SCRIPT_ID_SIZE) {
 		throw runtime_error("in createcontracttx :vscriptid size is error!\n");
 	}
+
 
 	assert(pwalletMain != NULL);
 
@@ -396,6 +398,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		tx.vContract = vcontract;
 		tx.nValidHeight = height;
 
+
 		//get keyid by accountid
 		CKeyID keyid;
 		if (!view.GetKeyId(vaccountid.at(0), keyid)) {
@@ -412,12 +415,11 @@ Value createcontracttx(const Array& params, bool fHelp) {
 
 		tx.vSignature.push_back(signature);
 	}
-
 	if(tx.vSignature.size() == tx.vAccountRegId.size())
 	{
 		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
-					throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: CommitTransaction failed.");
-				}
+			throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: CommitTransaction failed.");
+		}
 		return tx.GetHash().ToString();
 	}
 	else
@@ -1160,9 +1162,7 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 			return "can not get account info by regid:" + strParam;
 		}
 	}
-
-	string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "IN_FREEZD_FUND",
-			"OUT_FREEZD_FUND", "SELF_FREEZD_FUND" };
+	string fundTypeArray[] = {"NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "FREEZD_FUND", "SELF_FREEZD_FUND"};
 
 	Object obj;
 	obj.push_back(Pair("keyID:", HexStr(aAccount.keyID.begin(), aAccount.keyID.end()).c_str()));
@@ -1170,24 +1170,24 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 	obj.push_back(Pair("llValues:", tinyformat::format("%s", aAccount.llValues)));
 	Array array;
 	//string str = ("fundtype  txhash                                  value                        height");
-	string str = tinyformat::format("%-20.20s%-70.70s%-25.8lf%-6.6d", "fundtype", "txhash", "value", "height");
+	string str = tinyformat::format("%-20.20s%-20.20s%-25.8lf%-6.6d", "fundtype", "scriptid", "value", "height");
 	array.push_back(str);
 	for (int i = 0; i < aAccount.vRewardFund.size(); ++i) {
 		CFund fund = aAccount.vRewardFund[i];
-		//array.push_back(tinyformat::format("%-20.20s%-70.70s%-25.8lf%-6.6d",fundTypeArray[fund.nFundType], fund.uTxHash.GetHex(), fund.value, fund.nHeight));
+		array.push_back(tinyformat::format("%-20.20s%-20.20s%-25.8lf%-6.6d",fundTypeArray[fund.nFundType], HexStr(fund.scriptID), fund.value, fund.nHeight));
 	}
 
 	for (int i = 0; i < aAccount.vFreedomFund.size(); ++i) {
 		CFund fund = aAccount.vFreedomFund[i];
-		//array.push_back(tinyformat::format("%-20.20s%-70.70s%-25.8lf%-6.6d",fundTypeArray[fund.nFundType], fund.uTxHash.GetHex(), fund.value, fund.nHeight));
+		array.push_back(tinyformat::format("%-20.20s%-20.20s%-25.8lf%-6.6d",fundTypeArray[fund.nFundType], HexStr(fund.scriptID), fund.value, fund.nHeight));
 	}
 	for (int i = 0; i < aAccount.vFreeze.size(); ++i) {
 		CFund fund = aAccount.vFreeze[i];
-		//array.push_back(tinyformat::format("%-20.20s%-70.70s%-25.8lf%-6.6d",fundTypeArray[fund.nFundType], fund.uTxHash.GetHex(), fund.value, fund.nHeight));
+		array.push_back(tinyformat::format("%-20.20s%-20.20s%-25.8lf%-6.6d",fundTypeArray[fund.nFundType], HexStr(fund.scriptID), fund.value, fund.nHeight));
 	}
 	for (int i = 0; i < aAccount.vSelfFreeze.size(); ++i) {
 		CFund fund = aAccount.vSelfFreeze[i];
-		//array.push_back(tinyformat::format("%-20.20s%-70.70s%-25.8lf%-6.6d",fundTypeArray[fund.nFundType], fund.uTxHash.GetHex(), fund.value, fund.nHeight));
+		array.push_back(tinyformat::format("%-20.20s%-20.20s%-25.8lf%-6.6d",fundTypeArray[fund.nFundType], HexStr(fund.scriptID), fund.value, fund.nHeight));
 	}
 	obj.push_back(Pair("detailinfo:", array));
 	return obj;

@@ -10,7 +10,7 @@
 #include "core.h"
 #include "miner.h"
 
-static string txTypeArray[] = { "NULL_TXTYPE", "REG_ACCT_TX", "NORMAL_TX", "APPEAL_TX", "SECURE_TX", "FREEZE_TX",
+static string txTypeArray[] = { "NULL_TXTYPE", "REG_ACCT_TX", "NORMAL_TX", "CONTRACT_TX", "FREEZE_TX",
 		"REWARD_TX", "REG_SCRIPT_TX" };
 
 
@@ -290,6 +290,7 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 					UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 		txundo.vAccountOperLog.push_back((itemAccount->accountOperLog));
 	}
+	txundo.vScriptOperLog = *vmRun.GetDbLog();
 	return true;
 }
 bool CContractTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
@@ -315,6 +316,10 @@ bool CContractTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view
 						UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 		}
 	}
+	for(auto &operlog : txundo.vScriptOperLog)
+		if(!scriptCache.SetData(operlog.vKey, operlog.vValue))
+			return state.DoS(100,
+					ERROR("UpdateAccounts() : ContractTransaction undo scriptdb data error"), UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 	return true;
 }
 
@@ -1028,12 +1033,8 @@ void CAccount::ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos) 
 	}
 	{
 		if (money > 0) {
-			COperFund acclog;
-			acclog.operType = ADD_FUND;
 			CFund fund(FREEDOM_FUND, money, prevBlockHeight + 1);
 			AddToFreedom(fund);
-			acclog.vFund.push_back(fund);
-			WriteOperLog(acclog);
 		}
 	}
 }
