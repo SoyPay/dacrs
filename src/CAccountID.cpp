@@ -8,39 +8,44 @@
 #include "CAccountID.h"
 #include "util.h"
 
-unsigned int CID::GetSerializeSize(int nType, int nVersion ) const {
-	if (!accId.IsEmpty()) {
-		return accId.GetSerializeSize(nType, nVersion);
+unsigned int CUserId::GetSerializeSize(int nType, int nVersion ) const {
+	if (!regId.IsEmpty()) {
+		return regId.GetSerializeSize(nType, nVersion);
 	}
 	return ::GetSerializeSize(KeyId,nType, nVersion);
 
 }
 
 template<typename Stream>
-void CID::Serialize(Stream& s, int nType, int nVersion ) const {
-	if (!accId.IsEmpty()) {
-		accId.Serialize(s, nType, nVersion);
+void CUserId::Serialize(Stream& s, int nType, int nVersion ) const {
+	if (!regId.IsEmpty()) {
+		regId.Serialize(s, nType, nVersion);
 		return;
 	}
 	::Serialize(s,KeyId, nType, nVersion);
 }
 
 template<typename Stream>
-void CID::Unserialize(Stream& s, int nType , int nVersion) {
-	if (!accId.IsEmpty()) {
-		accId.Unserialize(s, nType, nVersion);
+void CUserId::Unserialize(Stream& s, int nType , int nVersion) {
+	vector<unsigned char> dat;
+	::Unserialize(s, dat, nType, nVersion);
+	CDataStream ss(nType, nVersion);
+	ss << dat;
+	if(dat.size() != 20)
+	{
+		ss >> regId;
 		return;
 	}
-	::Unserialize(s,KeyId, nType, nVersion);
+	ss >> KeyId ;
 }
 
-const CAccountId &CID::getAccountId() const {
-	return accId;
+const CRegId &CUserId::GetRegId() const {
+	return regId;
 }
-const vector<unsigned char> CID::GetKeyId() const {
+const vector<unsigned char> CUserId::GetKeyId() const {
 	return KeyId;
 }
-const bool CID::IsContainKeyId() const {
+const bool CUserId::IsContainKeyId() const {
 	return KeyId.size() == 20;
 }
 

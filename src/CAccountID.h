@@ -21,17 +21,23 @@
 #include <vector>
 #include "util.h"
 
-class CAccountId {
+class CRegId {
 	int nHeight;
 	int nIndex;
+	vector<unsigned char> vRegID;
 public:
-	CAccountId() {
+	CRegId() {
 		nHeight = -1;
 		nIndex = -1;
+		vRegID.clear();
 	}
-	CAccountId(int high, int index) {
+	CRegId(int high, int index) {
 		nHeight = high;
 		nIndex = index;
+		CDataStream ss(SER_DISK, 0);
+		ss << VARINT(nHeight);
+		ss << VARINT(nIndex);
+		ss >> vRegID;
 	}
 
 	bool IsEmpty() const {
@@ -45,58 +51,27 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
-	if(fGetSize)
-	{
-		nSerSize += ::GetSerializeSize(VARINT(nHeight), nType, nVersion);
-		nSerSize += ::GetSerializeSize(VARINT(nIndex),nType, nVersion);
-	}
-	if(fWrite)
-	{
-		CDataStream ss( nType, nVersion);
-		ss << VARINT(nHeight);
-		ss << VARINT(nIndex);
-		vector<char> te;
-		ss >> te;
-		READWRITE(te);
-	}
-	if(fRead)
-	{
-		CDataStream ss(SER_DISK, 0);
-		vector<char> te;
-		READWRITE(te);
-		ss << te;
-		ss >> VARINT(nHeight);
-		ss >> VARINT(nIndex);
-
-	}
+		READWRITE(vRegID);
 	)
 
 };
 
-class CKeyId {
-public:
-	vector<unsigned char> vKeyID; //
-	IMPLEMENT_SERIALIZE
-	(
-			READWRITE(vKeyID);
-	)
 
-};
-class CID {
-	CAccountId accId;
+class CUserId {
+	CRegId regId;
 	vector<unsigned char> KeyId;
 public:
-	CID(const CAccountId &acid) {
-		accId = acid;
+	CUserId(const CRegId &acid) {
+		regId = acid;
 	}
-	CID(const CAccountId &acid,const vector<unsigned char> &kid) {
-		accId = acid;
+	CUserId(const CRegId &acid,const vector<unsigned char> &kid) {
+		regId = acid;
 		KeyId = kid;
 	}
-	CID(const vector<unsigned char> &kid) {
+	CUserId(const vector<unsigned char> &kid) {
 		KeyId = kid;
 	}
-	CID(int high, int index):accId(high,index)
+	CUserId(int high, int index):regId(high,index)
 	{
 
 	}
@@ -107,7 +82,7 @@ public:
     void Serialize(Stream& s, int nType=0, int nVersion=PROTOCOL_VERSION) const;
     template<typename Stream>
     void Unserialize(Stream& s, int nType=0, int nVersion=PROTOCOL_VERSION);
-    const CAccountId &getAccountId() const ;
+    const CRegId &GetRegId() const ;
 	const vector<unsigned char> GetKeyId() const ;
 	const bool IsContainKeyId() const ;
 };
