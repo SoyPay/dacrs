@@ -624,3 +624,9 @@ bool CExtPubKey::Derive(CExtPubKey &out, unsigned int nChild) const {
     out.nChild = nChild;
     return pubkey.Derive(out.pubkey, out.vchChainCode, nChild, vchChainCode);
 }
+
+
+
+
+
+
