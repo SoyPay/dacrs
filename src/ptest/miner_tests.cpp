@@ -768,10 +768,14 @@ BOOST_FIXTURE_TEST_CASE(block_regscripttx_and_contracttx,CMinerTest)
 		} while (conaddr == srcaddr);
 		string vconaddr = "[\"" + conaddr + "\"] ";
 
+		AccState initState;
+		BOOST_REQUIRE(GetAccState(conaddr,initState));
+		mapAccState[conaddr] = initState;//insert
+
 		string scriptid;
 		BOOST_REQUIRE(GetOneScriptId(scriptid));
 
-		BOOST_REQUIRE(CreateContractTx(scriptid, "[\"61hQauDa6F1Uaiuh685BMTz6uPduMwaTGvme2frGyD\"]", "010203040506070809", height));
+		BOOST_REQUIRE(CreateContractTx(scriptid, vconaddr, "010203040506070809", height));
 
 		AccOperLog &operlog1 = mapAccOperLog[conaddr];
 		AccState acc1(0, -nCurFee, 0);
