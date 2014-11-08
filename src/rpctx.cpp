@@ -341,6 +341,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 
+
 	RPCTypeCheck(params, list_of(str_type)(array_type)(str_type)(int_type)(int_type));
 
 	//get addresss
@@ -357,6 +358,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 	if (vscriptid.size() != SCRIPT_ID_SIZE) {
 		throw runtime_error("in createcontracttx :vscriptid size is error!\n");
 	}
+
 
 	assert(pwalletMain != NULL);
 
@@ -396,6 +398,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		tx.vContract = vcontract;
 		tx.nValidHeight = height;
 
+
 		//get keyid by accountid
 		CKeyID keyid;
 		if (!view.GetKeyId(vaccountid.at(0), keyid)) {
@@ -414,24 +417,17 @@ Value createcontracttx(const Array& params, bool fHelp) {
 	}
 	if(tx.vSignature.size() == tx.vAccountRegId.size())
 	{
+		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
+			throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: CommitTransaction failed.");
+		}
 		return tx.GetHash().ToString();
 	}
 	else
 	{
-		if(tx.vSignature.size() == tx.vAccountRegId.size())
-		{
-			if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
-						throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: CommitTransaction failed.");
-					}
-			return tx.GetHash().ToString();
-		}
-		else
-		{
-			CDataStream ds(SER_DISK, CLIENT_VERSION);
-			ds << tx;
-			LogPrint("INFO", "createcontracttx ok!\r\n");
-			return HexStr(ds.begin(), ds.end());
-		}
+		CDataStream ds(SER_DISK, CLIENT_VERSION);
+		ds << tx;
+		LogPrint("INFO", "createcontracttx ok!\r\n");
+		return HexStr(ds.begin(), ds.end());
 	}
 }
 
