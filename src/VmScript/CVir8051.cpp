@@ -537,15 +537,13 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
 
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 	GetData(ipara,retdata);
-	assert(retdata.size() == 2);
+	assert(retdata.size() == 1);
 
 	CDataStream tep1(*retdata.at(0), SER_DISK, CLIENT_VERSION);
 	uint256 hash1(0);
 	tep1 >>hash1;
 	cout<<"ExGetTxContractsFunc:"<<HexStr(hash1).c_str()<<endl;
-    CDataStream tep(*retdata.at(1),SER_DISK, CLIENT_VERSION);
-    unsigned short maxlen = 0 ;
-    tep >> maxlen;
+
 
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 
@@ -554,10 +552,6 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
 	if (GetTransaction(pBaseTx, hash1)) {
 		CContractTransaction *tx = static_cast<CContractTransaction*>(pBaseTx.get());
 		 (*tem.get()).push_back(tx->vContract);
-		if(tx->vContract.size() > maxlen)
-		{
-			return std::make_tuple (false, tem);
-		}
 
 	}
 	return std::make_tuple (true, tem);
@@ -565,15 +559,12 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
 static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun) {
 	vector<std::shared_ptr<vector<unsigned char> > > retdata;
 	GetData(ipara, retdata);
-	assert(retdata.size() == 2);
+	assert(retdata.size() == 1);
 
 	CDataStream tep1(*retdata.at(0), SER_DISK, CLIENT_VERSION);
 	uint256 hash1(0);
 	tep1 >>hash1;
 	cout<<"ExGetTxAccountsFunc:"<<HexStr(hash1).c_str()<<endl;
-	CDataStream tep(*retdata.at(1), SER_DISK, CLIENT_VERSION);
-	unsigned short maxlen = 0;
-	tep >> maxlen;
 
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 
@@ -585,35 +576,12 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 		for (auto& it : tx->vAccountRegId) {
 			item.insert(item.end(), it.begin(), it.end());
 		}
-		if (item.size() > maxlen) {
-			std::make_tuple(false, tem);
-		}
 
 		(*tem.get()).push_back(item);
 	}
 	return std::make_tuple(true, tem);
 }
-static RET_DEFINE ExGetTxContactSizeFunc(unsigned char * ipara,void * pVmScriptRun) {
-	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-	GetData(ipara,retdata);
-	assert(retdata.size() == 1);
 
-	uint256 hash1(*retdata.at(0));
-	std::shared_ptr<CBaseTransaction> pBaseTx;
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
-	if (GetTransaction(pBaseTx, hash1)) {
-		memset(ipara, 0, 512);
-		CContractTransaction *tx = static_cast<CContractTransaction*>(pBaseTx.get());
-		int len = tx->vContract.size();
-		if ((retdata.at(0).get()->size() + len + 4) < 512) {
-		    tep << len;
-		    vector<unsigned char> tep1(tep.begin(),tep.end());
-		    (*tem.get()).push_back(tep1);
-		}
-	}
-	return std::make_tuple (true, tem);
-}
 static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 	GetData(ipara,retdata);
@@ -1119,6 +1087,8 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmScript)
       source.push_back(temp);
 	}
 	pVmScriptRun->InsertOutputData(source);
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+	return std::make_tuple (true , tem);
 }
 enum CALL_API_FUN {
 	COMP_FUNC = 0,            //!< COMP_FUNC
@@ -1205,8 +1175,8 @@ int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 		//call func out of 8051
 		if (Sys.PC == 0x0012) {
 			//get what func will be called
-			INT16U methodID = ((INT16U) GetExRam(0xFBFE) | ((INT16U) GetExRam(0xFBFF) << 8));
-			unsigned char *ipara = (unsigned char *) GetExRamAddr(0xF7FE);		//input para
+			INT16U methodID = ((INT16U) GetExRam(VM_FUN_CALL_ADDR) | ((INT16U) GetExRam(VM_FUN_CALL_ADDR+1) << 8));
+			unsigned char *ipara = (unsigned char *) GetExRamAddr(VM_SHARE_ADDR);		//input para
 			RET_DEFINE retdata = CallExternalFunc(methodID, ipara, pVmScriptRun);
 			memset(ipara, 0, MAX_SHARE_RAM);
 
@@ -1249,9 +1219,9 @@ bool CVir8051::run() {
 		//call func out of 8051
 		if (Sys.PC == 0x0012) {
 			//get what func will be called
-			INT16U method = ((INT16U) GetExRam(0xFBFE) | ((INT16U) GetExRam(0xFBFF) << 8));
+			INT16U method = ((INT16U) GetExRam(VM_FUN_CALL_ADDR) | ((INT16U) GetExRam(VM_FUN_CALL_ADDR+1) << 8));
 			flag = method;
-			unsigned char *ipara = (unsigned char *) GetExRamAddr(0xF7FE);		//input para
+			unsigned char *ipara = (unsigned char *) GetExRamAddr(VM_SHARE_ADDR);		//input para
 			CVmScriptRun *pVmScript = NULL;
 			RET_DEFINE retdata = CallExternalFunc(method, ipara, pVmScript);
 			memset(ipara, 0, MAX_SHARE_RAM);
