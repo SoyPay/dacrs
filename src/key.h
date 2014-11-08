@@ -10,22 +10,14 @@
 #define READDATA(s, obj)    s.read((char*)&(obj), sizeof(obj))
 
 #include "allocators.h"
-//#include "hash.h"
-//#include "serialize.h"
+#include "hash.h"
+#include "serialize.h"
 #include "uint256.h"
 
 #include <stdexcept>
 #include <vector>
+#include "util.h"
 
-// secp256k1:
-// const unsigned int PRIVATE_KEY_SIZE = 279;
-// const unsigned int PUBLIC_KEY_SIZE  = 65;
-// const unsigned int SIGNATURE_SIZE   = 72;
-//
-/**
- * @todo  to fix the problem
- */
-#if 0
 class CAccountId {
 public:
 	CAccountId() {
@@ -36,36 +28,48 @@ public:
 		nHeight = high;
 		nIndex = index;
 	}
+	  void SetKey(vector<unsigned char>  vk) const
+		  {
 
+		  }
 	bool IsEmpty() const {
 		return (nHeight == -1 && nIndex == -1);
 	}
 	int nHeight;
 	int nIndex; //
-private:
-	vector<unsigned char> ToVector() const {
-		CDataStream Temp;
-		Temp << VARINT(nIndex);
-		Temp << VARINT(nHeight);
-		return vector<unsigned char>(Temp.begin(), Temp.end());
+	string ToString() {
+		return strprintf("nHeight =%d, nIndex=%ld\n",nHeight,nIndex);
 	}
-
-	bool VectorToThis(vector<unsigned char>& vec) const {
-		CDataStream Temp(vec.begin(),vec.end());
-		Temp >> VARINT(nIndex);
-		Temp >> VARINT(nHeight);
-		return true;
-	}
+public:
 
 	IMPLEMENT_SERIALIZE
-	( if (fWrite) {
-				vector<unsigned char> data = ToVector();
-				READWRITE(data);
-			} else {
-				vector<unsigned char> data;
-				READWRITE(data);
-				VectorToThis(data);
-			})
+	(
+	if(fGetSize)
+	{
+		nSerSize += ::GetSerializeSize(VARINT(nHeight), nType, nVersion);
+		nSerSize += ::GetSerializeSize(VARINT(nIndex),nType, nVersion);
+	}
+	if(fWrite)
+	{
+		CDataStream ss( nType, nVersion);
+		ss << VARINT(nHeight);
+		ss << VARINT(nIndex);
+		vector<char> te;
+		ss >> te;
+		READWRITE(te);
+	}
+	if(fRead)
+	{
+		CDataStream ss(SER_DISK, 0);
+		vector<char> te;
+		READWRITE(te);
+		ss << te;
+		ss >> VARINT(nHeight);
+		ss >> VARINT(nIndex);
+
+	}
+	)
+
 };
 
 class CKeyId {
@@ -75,57 +79,77 @@ public:
 	(
 			READWRITE(vKeyID);
 	)
+
 };
 class CID {
 
-CAccountId accId;
-CKeyId mKeyId;
+
 public:
-	CID(const CAccountId &acid)
-	{
-		accId =acid;
+	CAccountId accId;
+	CKeyId mKeyId;
+
+
+	CID(const CAccountId &acid) {
+		accId = acid;
 	}
-	CID(const CKeyId &kid)
-	{
-		mKeyId =kid;
+	CID(const CKeyId &kid) {
+		mKeyId = kid;
 	}
 
-string ToString() const;
+	string ToString() const;
 
-IMPLEMENT_SERIALIZE
-(
-		if (fWrite)	{
-			if(accId.IsEmpty()) {
-				READWRITE(mKeyId);
-			}
-			else {
-				READWRITE(accId);
-			}
+	IMPLEMENT_SERIALIZE
+	(
+			if (fWrite) {
+				vector<unsigned char> data;
+				 if(accId.IsEmpty()) {
+					READWRITE(mKeyId);
+				}
+				else {
+					READWRITE(accId);
+				}
 
-		} else {
-			vector<unsigned char> data;
-			READWRITE(data);
-			if(data.size() == 20) {
-				mKeyId.vKeyID=data;
-			}
-			else {
-				accId.VectorToThis(data);
-			}
 
-		}) //
+			}
+			if(fRead) {
+				vector<unsigned char> data;
+				READWRITE(data);
+				CDataStream ss(SER_DISK, 0);
+				ss << data;
+				if(data.size() == 20) {
 
-const CAccountId &getAccountId()const
-{
-	return accId;
-}
-const CKeyId &GetKeyId() const {
-	return mKeyId;
-}
-const bool IsContainKeyId() const {
-	return mKeyId.vKeyID.size() == 20;
-}
+				}
+				else {
+					assert(data.size() >= 2);
+
+				}
+
+			}
+//			if(fGetSize)
+//			{
+//				if(!accId.IsEmpty()) {
+//					return accId.GetSerializeSize(nType, nVersion);
+//				}
+//				else
+//				{
+//					return mKeyId.GetSerializeSize(nType, nVersion);
+//
+//				}
+//			}
+	)
+	//
+
+	const CAccountId &getAccountId() const {
+		return accId;
+	}
+	const CKeyId &GetKeyId() const {
+		return mKeyId;
+	}
+	const bool IsContainKeyId() const {
+		return mKeyId.vKeyID.size() == 20;
+	}
 };
-#endif
+
 
 
 /** A reference to a CKey: the Hash160 of its serialized public key */
