@@ -286,7 +286,11 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 	if (!sourceAccount.OperateAccount(MINUS_FREE, minusFund))
 		return state.DoS(100, ERROR("UpdateAccounts() : secure accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
 				"bad-read-accountdb");
+	if(!view.SetAccount(*(vAccountRegId.rbegin()), sourceAccount)){
+		return state.DoS(100, ERROR("UpdataAccounts() :save account%s info error", HexStr(*(vAccountRegId.rbegin()))),
+				UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 
+	}
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 	uint64_t el = GetElementForBurn();
