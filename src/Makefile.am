@@ -43,6 +43,7 @@ BITCOIN_CORE_H = \
   hash.h \
   init.h \
   key.h \
+  CAccountID.h \
   keystore.h \
   leveldbwrapper.h \
   limitedmap.h \
@@ -148,6 +149,7 @@ libsoypay_common_a_SOURCES = \
   core.cpp \
   hash.cpp \
   key.cpp \
+  CAccountID.cpp \
   netbase.cpp \
   protocol.cpp \
   rpcprotocol.cpp \
