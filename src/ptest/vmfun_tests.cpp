@@ -163,13 +163,13 @@ BOOST_AUTO_TEST_SUITE(VM_fun)
 BOOST_AUTO_TEST_CASE(Gloal_fun)
 {
 	//cout << "=====================init account info ========================" << endl;
-	GetAccountState1();
-	CreateRegScriptTx1();
-	GenerateMiner();
-	cout << "=====================create tx 1========================" << endl;
-	ListRegScript1();
-	CreateTx();
-	GenerateMiner();
+//	GetAccountState1();
+//	CreateRegScriptTx1();
+//	GenerateMiner();
+//	cout << "=====================create tx 1========================" << endl;
+//	ListRegScript1();
+//	CreateTx();
+//	GenerateMiner();
 //	GetAccountState1();
 }
 
