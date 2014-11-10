@@ -274,6 +274,23 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 
 bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
+
+	CAccount sourceAccount;
+	uint64_t minusValue = llFees;
+	CFund minusFund(minusValue);
+	if (!view.GetAccount(*(vAccountRegId.rbegin()), sourceAccount))
+		return state.DoS(100,
+				ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(*(vAccountRegId.rbegin()))),
+				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
+	sourceAccount.CompactAccount(nHeight - 1);
+	if (!sourceAccount.OperateAccount(MINUS_FREE, minusFund))
+		return state.DoS(100, ERROR("UpdateAccounts() : secure accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
+				"bad-read-accountdb");
+	if(!view.SetAccount(*(vAccountRegId.rbegin()), sourceAccount)){
+		return state.DoS(100, ERROR("UpdataAccounts() :save account%s info error", HexStr(*(vAccountRegId.rbegin()))),
+				UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
+
+	}
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 	uint64_t el = GetElementForBurn();
@@ -295,25 +312,19 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 }
 bool CContractTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
 		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
-	vector<CKeyID> vKeyId;
-	if (!GetAddress(vKeyId, view))
-		return state.DoS(100, ERROR("UpdateAccounts() : ContractTransaction undo updateaccount get key id error"),
-				UPDATE_ACCOUNT_FAIL, "get-keyid-error");
-	for (auto & keyId : vKeyId) {
-		CAccount secureAccount;
-		if (!view.GetAccount(keyId, secureAccount)) {
+
+	for(auto & operacctlog : txundo.vAccountOperLog) {
+		CAccount account;
+		if(!view.GetAccount(operacctlog.keyID, account))  {
 			return state.DoS(100,
-					ERROR("UpdateAccounts() : ContractTransaction undo updateaccount read keyid= %s info error",
-							keyId.GetHex()), UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
+							ERROR("UpdateAccounts() : ContractTransaction undo updateaccount read accountId= %s account info error"),
+							UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 		}
-		CAccountOperLog accountOperLog;
-		if (txundo.GetAccountOperLog(keyId, accountOperLog)) {
-			secureAccount.UndoOperateAccount(accountOperLog);
-			if (!view.SetAccount(keyId, secureAccount))
-				return state.DoS(100,
-						ERROR(
-								"UpdateAccounts() : ContractTransaction undo updateaccount write accountId= %s account info error"),
-						UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
+		account.UndoOperateAccount(operacctlog);
+		if(!view.SetAccount(operacctlog.keyID, account)) {
+			return state.DoS(100,
+					ERROR("UpdateAccounts() : ContractTransaction undo updateaccount write accountId= %s account info error"),
+					UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 		}
 	}
 	for(auto &operlog : txundo.vScriptOperLog)
