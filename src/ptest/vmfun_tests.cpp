@@ -66,7 +66,14 @@ extern void GenerateMiner();
 
 
 std::string TxHash("");
-
+void GenerateMiner(int count) {
+	//cout <<"Generate miner" << endl;
+	int argc = 3;
+	char buffer[10] = {0};
+	sprintf(buffer,"%d",count);
+	char *argv[4] = { "rpctest", "setgenerate", "true", buffer};
+	CommandLineRPC(argc, argv);
+}
 void GetAccountState1() {
 	GetAccountInfo("5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG");
 }
@@ -104,6 +111,44 @@ void ListRegScript1() {
 	char *argv[2] = { "rpctest", "listregscript" };
 	CommandLineRPC(argc, argv);
 }
+void CreateFirstTx()
+{
+	int argc = 8;
+	std::vector<std::string> vInputParams;
+	vInputParams.clear();
+	vInputParams.push_back("010000000100");
+	vInputParams.push_back(
+			"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]");
+	vInputParams.push_back("01");
+	vInputParams.push_back("100000000");
+	vInputParams.push_back("10");
+	std::string strReturn("");
+	if (TestCallRPC("createcontracttx", vInputParams, strReturn) > 0) {
+		vInputParams.clear();
+		cout << "create secure tx succeed1:"<<strReturn<< endl;
+		TxHash = strReturn;
+	}
+	return ;
+}
+void CreateSecondTx()
+{
+	int argc = 8;
+	std::vector<std::string> vInputParams;
+	vInputParams.clear();
+	vInputParams.push_back("010000000100");
+	vInputParams.push_back(
+			"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]");
+	vInputParams.push_back("02");
+	vInputParams.push_back("100000000");
+	vInputParams.push_back("10");
+	std::string strReturn("");
+	if (TestCallRPC("createcontracttx", vInputParams, strReturn) > 0) {
+		vInputParams.clear();
+		cout << "create secure tx succeed1:"<<strReturn<< endl;
+		TxHash = strReturn;
+	}
+	return ;
+}
 BOOST_AUTO_TEST_SUITE(VM_fun)
 
 BOOST_AUTO_TEST_CASE(Gloal_fun)
@@ -116,6 +161,20 @@ BOOST_AUTO_TEST_CASE(Gloal_fun)
 	ListRegScript1();
 	CreateTx();
 	GenerateMiner();
+//	GetAccountState1();
+}
+
+BOOST_AUTO_TEST_CASE(test_fun)
+{
+	GetAccountState1();
+	CreateRegScriptTx1();
+	GenerateMiner();
+	cout << "=====================create tx 1========================" << endl;
+	ListRegScript1();
+	CreateFirstTx();
+	GenerateMiner(10);
+
+	CreateSecondTx();
 //	GetAccountState1();
 }
 BOOST_AUTO_TEST_SUITE_END()
