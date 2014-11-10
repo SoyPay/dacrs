@@ -593,23 +593,24 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 	string strParam((*retdata[0]).begin(), (*retdata[0]).end());
 	CAccount aAccount;
 	CKeyID keyid;
-	if (strParam.length() != 12) {
-		CBitcoinAddress address(strParam.c_str());
-		if (!address.GetKeyID(keyid))
-			flag = false;
-
-		if (!view.GetAccount(keyid, aAccount)) {
-			flag = false;
-		}
+	if (!view.GetAccount(keyid, aAccount)) {
+		flag = false;
 	}
-	else {
-		if (!view.GetKeyId(ParseHex(strParam), keyid)) {
-			flag = false;
-		}
-		if (!view.GetAccount(keyid, aAccount)) {
-			flag = false;
-		}
-	}
+//
+//	if (strParam.length() != 12) {
+//		CBitcoinAddress address(strParam.c_str());
+//		if (!address.GetKeyID(keyid))
+//			flag = false;
+//
+//	}
+//	else {
+//		if (!view.GetKeyId(ParseHex(strParam), keyid)) {
+//			flag = false;
+//		}
+//		if (!view.GetAccount(keyid, aAccount)) {
+//			flag = false;
+//		}
+//	}
 
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
