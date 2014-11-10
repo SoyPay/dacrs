@@ -591,9 +591,10 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 
 	string strParam((*retdata[0]).begin(), (*retdata[0]).end());
 	CAccount aAccount;
+	CKeyID keyid;
 	if (strParam.length() != 12) {
 		CBitcoinAddress address(strParam.c_str());
-		CKeyID keyid;
+
 		if (!address.GetKeyID(keyid))
 			flag = false;
 
@@ -601,7 +602,14 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 			flag = false;
 		}
 	}
-
+	else {
+		if (!view.GetKeyId(ParseHex(strParam), keyid)) {
+			flag = false;
+		}
+		if (!view.GetAccount(keyid, aAccount)) {
+			flag = false;
+		}
+	}
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     vector<char> te;
