@@ -24,6 +24,8 @@
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"
 
+#include "boost/tuple/tuple.hpp"
+
 using namespace std;
 using namespace boost;
 using namespace boost::assign;
@@ -1552,6 +1554,10 @@ Value getoneaddr(const Array& params, bool fHelp) {
 		}
 
 		CAccountViewCache accView(*pAccountViewTip, true);
+
+		vector<boost::tuple<CKeyID,bool> > objkeyid;
+		objkeyid.clear();
+
 		for (const auto &keyid : setKeyID) {
 			//find CAccount info by keyid
 			bool bReg = false;
@@ -1568,18 +1574,29 @@ Value getoneaddr(const Array& params, bool fHelp) {
 			}
 
 			if (balance >= min_money && bReg == bneedReg) {
-
-				CTxDestination destid;
-				if (bReg) {
-					destid = CAccountID(keyid, pwalletMain->mapKeyRegID[keyid].vRegID);
-				} else {
-					destid = keyid;
-				}
-				str = CBitcoinAddress(destid).ToString();
-				break;
+				boost::tuple<CKeyID,bool> tmp(keyid, bReg);
+				objkeyid.push_back(tmp);
 			}
 		}
+
+		{
+			if(objkeyid.size() > 0)
+			{
+				int num = GetRandInt((objkeyid.size() - 1));
+				CTxDestination destid;
+				if (get<1>(objkeyid.at(num))) {
+					destid = CAccountID(get<0>(objkeyid.at(num)), pwalletMain->mapKeyRegID[get<0>(objkeyid.at(num))].vRegID);
+				} else {
+					destid = get<0>(objkeyid.at(num));
+				}
+				str = CBitcoinAddress(destid).ToString();
+			}
+		}
+
 	}
+
+
+
 	return str;
 }
 
