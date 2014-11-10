@@ -52,8 +52,7 @@ bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& 
 		RawAccont.push_back(tem);
 	}
 
-	vector<unsigned char> strContract;
-	pMcu = make_shared<CVir8051>(vmScript.Rom, strContract);
+	pMcu = make_shared<CVir8051>(vmScript.Rom, secure->vContract);
 	return true;
 }
 
