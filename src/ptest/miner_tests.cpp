@@ -204,6 +204,24 @@ public:
 		return false;
 	}
 
+	bool GetOneScriptId(std::string &regscriptid)
+	{
+		//CommanRpc
+		char *argv[] = {"rpctest", "listscriptregid"};
+		int argc = sizeof(argv)/sizeof(char*);
+
+		Value value;
+		int ret = CommandLineRPC_GetValue(argc,argv,value);
+		if(!ret)
+		{
+			Object &Oid = value.get_obj();
+			regscriptid = Oid[0].value_.get_str();
+			LogPrint("test_miners","GetOneAddr:%s\r\n",regscriptid.c_str());
+			return true;
+		}
+		return false;
+	}
+
 	bool GetNewAddr(std::string &addr)
 	{
 		//CommanRpc
@@ -366,14 +384,16 @@ public:
 
 	bool CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract, const int nHeight)
 	{
-		char cscriptid[6] = { 0 };
-		strncpy(cscriptid, scriptid.c_str(), sizeof(scriptid)-1);
+		char cscriptid[1024] = { 0 };
+//		vector<char> te(scriptid.begin(),scriptid.end());
+//		&te[0]
+//		strncpy(cscriptid, scriptid.c_str(), sizeof(scriptid)-1);
 
-		char caddr[1024] = { 0 };
-		strncpy(caddr, addrs.c_str(), sizeof(addrs)-1);
+//		char caddr[1024] = { 0 };
+//		strncpy(caddr, addrs.c_str(), sizeof(addrs)-1);
 
-		char ccontract[128*1024] = { 0 };
-		strncpy(ccontract, contract.c_str(), sizeof(contract)-1);
+//		char ccontract[128*1024] = { 0 };
+//		strncpy(ccontract, contract.c_str(), sizeof(contract)-1);
 
 		char fee[64] = { 0 };
 		int nfee = GetRandomFee();
@@ -383,14 +403,14 @@ public:
 		char height[16] = {0};
 		sprintf(height,"%d",nHeight);
 
-		char *argv[] = { "rpctest", "createcontracttx", cscriptid, caddr, ccontract, fee, height};
+		 char *argv[] = { "rpctest", "createcontracttx", (char *)(scriptid.c_str()), (char *)(addrs.c_str()), (char *)(contract.c_str()), fee, height};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
 		int ret = CommandLineRPC_GetValue(argc, argv, value);
 		if (!ret)
 		{
-			LogPrint("test_miners","RegisterSecureTx:%s\r\n",value.get_str().c_str());
+			LogPrint("test_miners","createcontracttx:%s\r\n",value.get_str().c_str());
 			return true;
 		}
 		return false;
@@ -746,9 +766,47 @@ BOOST_FIXTURE_TEST_CASE(block_regscripttx_and_contracttx,CMinerTest)
 		do {
 			BOOST_REQUIRE(GetOneAddr(conaddr, "1100000000000", "true"));
 		} while (conaddr == srcaddr);
-		string vconaddr = "[" + conaddr + "]";
-//		BOOST_REQUIRE(RegisterScriptTx(srcaddr, script, height));
+		string vconaddr = "[\"" + conaddr + "\"] ";
 
+		AccState initState;
+		BOOST_REQUIRE(GetAccState(conaddr,initState));
+		mapAccState[conaddr] = initState;//insert
+
+		string scriptid;
+		BOOST_REQUIRE(GetOneScriptId(scriptid));
+
+		BOOST_REQUIRE(CreateContractTx(scriptid, vconaddr, "010203040506070809", height));
+
+		AccOperLog &operlog1 = mapAccOperLog[conaddr];
+		AccState acc1(0, -nCurFee, 0);
+		operlog1.Add(height,acc1);
+
+		BOOST_REQUIRE(GenerateOneBlock());
+		height++;
+
+		BOOST_REQUIRE(IsAllTxInBlock());
+		string mineraddr;
+		string blockhash;
+		BOOST_REQUIRE(GetBlockHash(height,blockhash));
+		BOOST_REQUIRE(GetBlockMinerAddr(blockhash,mineraddr));
+
+		if(mineraddr == conaddr)
+		{
+			AccState acc(nCurFee, 0, 0);
+			mapAccOperLog[mineraddr].Add(height,acc);
+		}
+		else
+		{
+			BOOST_REQUIRE(GetAccState(mineraddr,initState));
+			mapAccState[mineraddr] = initState;//insert
+		}
+
+		for(auto & item:mapAccOperLog)
+		{
+			AccState lastState;
+			BOOST_REQUIRE(GetAccState(item.first,lastState));
+			BOOST_REQUIRE(CheckAccState(item.first,lastState));
+		}
 	}
 }
 
