@@ -132,7 +132,6 @@ protected:
 };
 
 class CAuthorizate :public CNetAuthorizate{
-
 public:
 	CAuthorizate(CNetAuthorizate te) {
 		nAuthorizeTime = te.GetAuthorizeTime();
@@ -142,17 +141,12 @@ public:
 		nMaxMoneyPerDay = te.GetMaxMoneyPerDay();
 		nLastOperHeight = 0;
 		nCurMaxMoneyPerDay = 0;
-		nCurMaxMoneyTotal = 0;
 	}
 	CAuthorizate() {
 		nLastOperHeight = 0;
 		nCurMaxMoneyPerDay = 0;
-		nCurMaxMoneyTotal = 0;
 	}
 
-	uint64_t GetCurMaxMoneyTotal() const {
-		return nCurMaxMoneyTotal;
-	}
 	uint64_t GetCurMaxMoneyPerDay() const {
 		return nCurMaxMoneyPerDay;
 	}
@@ -160,9 +154,6 @@ public:
 		return nLastOperHeight;
 	}
 
-	void SetCurMaxMoneyTotal(uint64_t nMoney) {
-		nCurMaxMoneyTotal = nMoney;
-	}
 	void SetCurMaxMoneyPerDay(uint64_t nMoney) {
 		nCurMaxMoneyPerDay = nMoney;
 	}
@@ -175,13 +166,11 @@ public:
 		READWRITE(*(CNetAuthorizate*)this);
 		READWRITE(VARINT(nLastOperHeight));
 		READWRITE(VARINT(nCurMaxMoneyPerDay));
-		READWRITE(VARINT(nCurMaxMoneyTotal));
 	)
 
 private:
 	uint32_t nLastOperHeight;
 	uint64_t nCurMaxMoneyPerDay;
-	uint64_t nCurMaxMoneyTotal;
 };
 
 class CBaseTransaction {
@@ -752,18 +741,18 @@ public:
 	}
 	CFund(const CFund &fund) {
 		nFundType = fund.nFundType;
-		scriptID = fund.scriptID;
 		value = fund.value;
 		nHeight = fund.nHeight;
+		scriptID = fund.scriptID;
 	}
 	CFund & operator =(const CFund &fund) {
 		if (this == &fund) {
 			return *this;
 		}
 		this->nFundType = fund.nFundType;
-		this->scriptID = fund.scriptID;
 		this->value = fund.value;
 		this->nHeight = fund.nHeight;
+		this->scriptID = fund.scriptID;
 		return *this;
 	}
 	~CFund() {
@@ -843,7 +832,8 @@ public:
 
 class COperFund {
 public:
-	unsigned char operType;  //!<1:ADD_VALUE 2:MINUS_VALUE
+	unsigned char operType;  		//!<1:ADD_VALUE 2:MINUS_VALUE
+	unsigned char bAuthorizated;
 	vector<CFund> vFund;
 
 	IMPLEMENT_SERIALIZE
@@ -854,34 +844,100 @@ public:
 public:
 	COperFund() {
 		operType = NULL_OPER;
+		bAuthorizated = false;
 		vFund.clear();
 	}
 
-	COperFund(unsigned char nType, const vector<CFund>& vOperFund) {
+	COperFund(unsigned char nType, const vector<CFund>& vOperFund,bool _bAuthorizated = false) {
 		operType = nType;
 		vFund = vOperFund;
+		bAuthorizated = _bAuthorizated;
 	}
 
-	COperFund(unsigned char nType, const CFund& fund) {
+	COperFund(unsigned char nType, const CFund& fund,bool _bAuthorizated) {
 		operType = nType;
 		vFund.push_back(fund);
+		bAuthorizated = _bAuthorizated;
 	}
 
 	string ToString() const;
 
 };
 
+class CAuthorizateLog {
+public:
+	CAuthorizateLog() {
+		bValid = false;
+		nLastOperHeight = 0;
+		nLastCurMaxMoneyPerDay = 0;
+		nLastMaxMoneyTotal = 0;
+		scriptID.clear();
+	}
+
+	CAuthorizateLog(int nHeight,uint64_t nMoneyPerDay, uint64_t nTotalMoney, bool _bValid,const vector_unsigned_char& _scriptID) {
+		bValid = _bValid;
+		nLastOperHeight = nHeight;
+		nLastCurMaxMoneyPerDay = nMoneyPerDay;
+		nLastMaxMoneyTotal = nTotalMoney;
+		scriptID = _scriptID;
+	}
+
+	int GetLastOperHeight() const{
+		return nLastOperHeight;
+	}
+	uint64_t GetLastCurMaxMoneyPerDay() const {
+		return nLastCurMaxMoneyPerDay;
+	}
+	uint64_t GetLastMaxMoneyTotal() const {
+		return nLastMaxMoneyTotal;
+	}
+	const vector_unsigned_char& GetScriptID() const {
+		return scriptID;
+	}
+	void SetLastOperHeight(int nHeight)  {
+		assert(nHeight>0);
+		nLastOperHeight = nHeight;
+	}
+	void SetScriptID(const vector_unsigned_char& _scriptID) {
+		scriptID = _scriptID;
+	}
+	bool IsLogValid() const{
+		return bValid;
+	}
+
+	string ToString() const;
+	IMPLEMENT_SERIALIZE
+	(
+			READWRITE(bValid);
+			READWRITE(nLastOperHeight);
+			READWRITE(nLastCurMaxMoneyPerDay);
+			READWRITE(scriptID);
+	)
+private:
+	bool bValid;
+	int nLastOperHeight;
+	uint64_t nLastCurMaxMoneyPerDay;
+	uint64_t nLastMaxMoneyTotal;
+	vector_unsigned_char scriptID;
+};
+
 class CAccountOperLog {
 public:
 	CKeyID keyID;
 	vector<COperFund> vOperFund;
+	CAuthorizateLog   authorLog;
 	IMPLEMENT_SERIALIZE(
 			READWRITE(keyID);
 			READWRITE(vOperFund);
+			READWRITE(authorLog);
 	)
 public:
 	void InsertOperateLog(const COperFund& op) {
 		vOperFund.push_back(op);
+	}
+
+	void InsertAuthorLog(const CAuthorizateLog& log) {
+		authorLog = log;
 	}
 
 	string ToString() const;
@@ -978,6 +1034,7 @@ public:
 	void CompactAccount(int nCurHeight);
 	void AddToFreedom(const CFund &fund,bool bWriteLog = true);
 	void AddToFreeze(const CFund &fund,bool bWriteLog = true);
+	void AddToSelfFreeze(const CFund &fund,bool bWriteLog = true);
 
 	bool UndoOperateAccount(const CAccountOperLog & accountOperLog);
 	CFund& FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID);
@@ -995,16 +1052,18 @@ public:
 
 private:
 	void MergerFund(vector<CFund> &vFund, int nCurHeight);
-	void WriteOperLog(AccountOper emOperType, const CFund &fund);
+	void WriteOperLog(AccountOper emOperType, const CFund &fund,bool bAuthorizated = false);
 	void WriteOperLog(const COperFund &operLog);
 	bool IsFundValid(OperType type, const CFund &fund, int nHeight, const vector_unsigned_char* pscriptID = NULL,
 			bool bCheckAuthorized = false);
 	bool CheckAddFund(OperType type, const CFund& fund);
 	bool MinusFreezed(const CFund& fund);
-	bool MinusFree(const CFund &fund);
-	bool MinusSelf(const CFund &fund);
+	bool MinusFree(const CFund &fund,bool bAuthorizated);
+	bool MinusSelf(const CFund &fund,bool bAuthorizated);
 	bool IsMoneyOverflow(uint64_t nAddMoney);
 	void UpdateAuthority(int nHeight,uint64_t nMoney, const vector_unsigned_char& scriptID);
+	void UndoAuthorityOnDay(uint64_t nUndoMoney,const CAuthorizateLog& log);
+	void UndoAuthorityOverDay(const CAuthorizateLog& log);
 	uint64_t GetVecMoney(const vector<CFund>& vFund);
 };
 
