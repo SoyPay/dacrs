@@ -147,7 +147,50 @@ void CreateSecondTx()
 	vInputParams.push_back("010000000100");
 	vInputParams.push_back(
 			"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]");
-	vInputParams.push_back("02");
+	vector<unsigned char >str =ParseHex(TxHash);
+	string param ="02";
+	string temp(str.begin(),str.end());
+	param += temp;
+	vInputParams.push_back(param);
+	vInputParams.push_back("100000000");
+	vInputParams.push_back("10");
+	std::string strReturn("");
+	if (TestCallRPC("createcontracttx", vInputParams, strReturn) > 0) {
+		vInputParams.clear();
+		cout << "create secure tx succeed1:"<<strReturn<< endl;
+		TxHash = strReturn;
+	}
+	return ;
+}
+
+void CreateThirdTx()
+{
+	int argc = 8;
+	std::vector<std::string> vInputParams;
+	vInputParams.clear();
+	vInputParams.push_back("010000000100");
+	vInputParams.push_back(
+			"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]");
+	vInputParams.push_back("03");
+	vInputParams.push_back("100000000");
+	vInputParams.push_back("10");
+	std::string strReturn("");
+	if (TestCallRPC("createcontracttx", vInputParams, strReturn) > 0) {
+		vInputParams.clear();
+		cout << "create secure tx succeed1:"<<strReturn<< endl;
+		TxHash = strReturn;
+	}
+	return ;
+}
+void CreateForthTx()
+{
+	int argc = 8;
+	std::vector<std::string> vInputParams;
+	vInputParams.clear();
+	vInputParams.push_back("010000000100");
+	vInputParams.push_back(
+			"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]");
+	vInputParams.push_back("04");
 	vInputParams.push_back("100000000");
 	vInputParams.push_back("10");
 	std::string strReturn("");
@@ -178,12 +221,21 @@ BOOST_AUTO_TEST_CASE(test_fun)
 	GetAccountState1();
 	CreateRegScriptTx2();
 	GenerateMiner();
-	cout << "=====================create tx 1========================" << endl;
+	cout << "start first" << endl;
 	ListRegScript1();
 	CreateFirstTx();
 	GenerateMiner(10);
 
+	cout << "strat second:" << endl;
 	CreateSecondTx();
-//	GetAccountState1();
+	GenerateMiner(1);
+
+	cout << "strat third:" << endl;
+	CreateThirdTx();
+	GenerateMiner(1);
+
+	cout << "strat forth:" << endl;
+	CreateForthTx();
+	GenerateMiner(1);
 }
 BOOST_AUTO_TEST_SUITE_END()
