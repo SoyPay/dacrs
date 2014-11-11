@@ -10,7 +10,7 @@
 #include "core.h"
 #include "miner.h"
 
-static string txTypeArray[] = { "NULL_TXTYPE", "REG_ACCT_TX", "NORMAL_TX", "APPEAL_TX", "SECURE_TX", "FREEZE_TX",
+static string txTypeArray[] = { "NULL_TXTYPE", "REG_ACCT_TX", "NORMAL_TX", "CONTRACT_TX", "FREEZE_TX",
 		"REWARD_TX", "REG_SCRIPT_TX" };
 
 
@@ -274,6 +274,23 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 
 bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
+
+	CAccount sourceAccount;
+	uint64_t minusValue = llFees;
+	CFund minusFund(minusValue);
+	if (!view.GetAccount(*(vAccountRegId.rbegin()), sourceAccount))
+		return state.DoS(100,
+				ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(*(vAccountRegId.rbegin()))),
+				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
+	sourceAccount.CompactAccount(nHeight - 1);
+	if (!sourceAccount.OperateAccount(MINUS_FREE, minusFund))
+		return state.DoS(100, ERROR("UpdateAccounts() : secure accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
+				"bad-read-accountdb");
+	if(!view.SetAccount(*(vAccountRegId.rbegin()), sourceAccount)){
+		return state.DoS(100, ERROR("UpdataAccounts() :save account%s info error", HexStr(*(vAccountRegId.rbegin()))),
+				UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
+
+	}
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 	uint64_t el = GetElementForBurn();
@@ -290,31 +307,30 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 					UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 		txundo.vAccountOperLog.push_back((itemAccount->accountOperLog));
 	}
+	txundo.vScriptOperLog = *vmRun.GetDbLog();
 	return true;
 }
 bool CContractTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
 		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
-	vector<CKeyID> vKeyId;
-	if (!GetAddress(vKeyId, view))
-		return state.DoS(100, ERROR("UpdateAccounts() : ContractTransaction undo updateaccount get key id error"),
-				UPDATE_ACCOUNT_FAIL, "get-keyid-error");
-	for (auto & keyId : vKeyId) {
-		CAccount secureAccount;
-		if (!view.GetAccount(keyId, secureAccount)) {
+
+	for(auto & operacctlog : txundo.vAccountOperLog) {
+		CAccount account;
+		if(!view.GetAccount(operacctlog.keyID, account))  {
 			return state.DoS(100,
-					ERROR("UpdateAccounts() : ContractTransaction undo updateaccount read keyid= %s info error",
-							keyId.GetHex()), UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
+							ERROR("UpdateAccounts() : ContractTransaction undo updateaccount read accountId= %s account info error"),
+							UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 		}
-		CAccountOperLog accountOperLog;
-		if (txundo.GetAccountOperLog(keyId, accountOperLog)) {
-			secureAccount.UndoOperateAccount(accountOperLog);
-			if (!view.SetAccount(keyId, secureAccount))
-				return state.DoS(100,
-						ERROR(
-								"UpdateAccounts() : ContractTransaction undo updateaccount write accountId= %s account info error"),
-						UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
+		account.UndoOperateAccount(operacctlog);
+		if(!view.SetAccount(operacctlog.keyID, account)) {
+			return state.DoS(100,
+					ERROR("UpdateAccounts() : ContractTransaction undo updateaccount write accountId= %s account info error"),
+					UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 		}
 	}
+	for(auto &operlog : txundo.vScriptOperLog)
+		if(!scriptCache.SetData(operlog.vKey, operlog.vValue))
+			return state.DoS(100,
+					ERROR("UpdateAccounts() : ContractTransaction undo scriptdb data error"), UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 	return true;
 }
 
@@ -361,7 +377,7 @@ bool CContractTransaction::CheckTransction(CValidationState &state, CAccountView
 				"bad-appeal-fee-toolarge");
 	}
 
-	if (vAccountRegId.size() != vSignature.size()) {
+	if ((vAccountRegId.size()) != (vSignature.size())) {
 		return state.DoS(100, ERROR("CheckTransaction() :account size not equal to sign size"), REJECT_INVALID,
 				"bad-vpre-size ");
 	}
@@ -566,8 +582,19 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 		}
 	}
 	else {
+		CVmScript vmScript;
+		CDataStream stream(script, SER_DISK, CLIENT_VERSION);
+		try {
+			stream >> vmScript;
+		} catch (exception& e) {
+			return state.DoS(100, ERROR(("UpdateAccounts() :intial() Unserialize to vmScript error:" + string(e.what())).c_str()),
+					UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
+		}
+		if(!vmScript.IsValid())
+			return state.DoS(100, ERROR("UpdateAccounts() : vmScript invalid"), UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
 		if (0 == nIndex)
 		return true;
+
 		CRegID scriptId(nHeight, nIndex);
 		//create script account
 		CKeyID keyId = Hash160(scriptId.vRegID);
