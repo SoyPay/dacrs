@@ -58,6 +58,13 @@ void testscriptdatadb() {
 	vector<unsigned char> vScriptData = {0x01,0x01,0x01,0x01,0x01};
 	vector<unsigned char> vScriptData1 = {0x01,0x01,0x01,0x00,0x00};
 	CScriptDBOperLog operlog;
+	BOOST_CHECK(pScriptDBTip->SetScriptData(vScriptId, vScriptKey, vScriptData, 100, operlog));
+	int height = 0;
+	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId,vScriptKey,vScriptData,height));
+	pScriptDBTip->GetScriptCount(height);
+	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId,0,vScriptKey,vScriptData,height));
+	BOOST_CHECK(pScriptDBTip->SetScriptData(vScriptId, vScriptKey, vScriptData, 100, operlog));
+
 	//write script data to db
 	BOOST_CHECK(pScriptDBTip->SetScriptData(vScriptId, vScriptKey, vScriptData, 100, operlog));
 	//write all data in caches to db

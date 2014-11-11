@@ -10,123 +10,13 @@
 #define READDATA(s, obj)    s.read((char*)&(obj), sizeof(obj))
 
 #include "allocators.h"
-//#include "hash.h"
-//#include "serialize.h"
+#include "hash.h"
+#include "serialize.h"
 #include "uint256.h"
 
 #include <stdexcept>
 #include <vector>
-
-// secp256k1:
-// const unsigned int PRIVATE_KEY_SIZE = 279;
-// const unsigned int PUBLIC_KEY_SIZE  = 65;
-// const unsigned int SIGNATURE_SIZE   = 72;
-//
-/**
- * @todo  to fix the problem
- */
-#if 0
-class CAccountId {
-public:
-	CAccountId() {
-		nHeight = -1;
-		nIndex = -1;
-	}
-	CAccountId(int high, int index) {
-		nHeight = high;
-		nIndex = index;
-	}
-
-	bool IsEmpty() const {
-		return (nHeight == -1 && nIndex == -1);
-	}
-	int nHeight;
-	int nIndex; //
-private:
-	vector<unsigned char> ToVector() const {
-		CDataStream Temp;
-		Temp << VARINT(nIndex);
-		Temp << VARINT(nHeight);
-		return vector<unsigned char>(Temp.begin(), Temp.end());
-	}
-
-	bool VectorToThis(vector<unsigned char>& vec) const {
-		CDataStream Temp(vec.begin(),vec.end());
-		Temp >> VARINT(nIndex);
-		Temp >> VARINT(nHeight);
-		return true;
-	}
-
-	IMPLEMENT_SERIALIZE
-	( if (fWrite) {
-				vector<unsigned char> data = ToVector();
-				READWRITE(data);
-			} else {
-				vector<unsigned char> data;
-				READWRITE(data);
-				VectorToThis(data);
-			})
-};
-
-class CKeyId {
-public:
-	vector<unsigned char> vKeyID; //
-	IMPLEMENT_SERIALIZE
-	(
-			READWRITE(vKeyID);
-	)
-};
-class CID {
-
-CAccountId accId;
-CKeyId mKeyId;
-public:
-	CID(const CAccountId &acid)
-	{
-		accId =acid;
-	}
-	CID(const CKeyId &kid)
-	{
-		mKeyId =kid;
-	}
-
-string ToString() const;
-
-IMPLEMENT_SERIALIZE
-(
-		if (fWrite)	{
-			if(accId.IsEmpty()) {
-				READWRITE(mKeyId);
-			}
-			else {
-				READWRITE(accId);
-			}
-
-		} else {
-			vector<unsigned char> data;
-			READWRITE(data);
-			if(data.size() == 20) {
-				mKeyId.vKeyID=data;
-			}
-			else {
-				accId.VectorToThis(data);
-			}
-
-		}) //
-
-const CAccountId &getAccountId()const
-{
-	return accId;
-}
-const CKeyId &GetKeyId() const {
-	return mKeyId;
-}
-const bool IsContainKeyId() const {
-	return mKeyId.vKeyID.size() == 20;
-}
-};
-#endif
-
+#include "util.h"
 
 /** A reference to a CKey: the Hash160 of its serialized public key */
 class CKeyID: public uint160 {
@@ -327,7 +217,8 @@ public:
 	//
 	// Note that this is consensus critical as CheckSig() calls it!
 	bool IsValid() const {
-		return size() > 0;
+//		return size() > 0;
+		return size() == 33;//force use Compressed key
 	}
 
 	// fully validate whether this is a valid public key (more expensive than IsValid())

@@ -229,6 +229,9 @@ class CVir8051 {
 	static const int MAX_ROM = 0xFFFF;
 	static const int MAX_EX_RAM = 0xFFFF;
 	static const int MAX_IN_RAM = 0xff;
+	static const int MAX_SHARE_RAM = 4*1024;
+	static const int VM_SHARE_ADDR = 0xEFFF;
+	static const int VM_FUN_CALL_ADDR = 0xEFFD;
 
 
 public:
@@ -242,7 +245,7 @@ public:
 	INT8U SetRamData(INT8U addr, INT8U data);
 	~CVir8051();
 	bool run();
-	int run(int maxstep,CVmScriptRun *pVmScriptRun);
+	int run(uint64_t maxstep,CVmScriptRun *pVmScriptRun);
 	void StepRun(INT8U code);
 
 	INT8U GetOpcode(void) const;

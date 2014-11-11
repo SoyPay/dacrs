@@ -81,14 +81,16 @@ uint64_t GetElementForBurn(void)
 	uint64_t sumfee;
 	unsigned int nBlock = GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
 	CBlockIndex* pindex = chainActive.Tip();
-	assert(nBlock < pindex->nHeight);
-	for(int ii = 0; ii < nBlock; ii++)
-	{
-		sumfee += pindex->GetBlockFee();
-		pindex = pindex->pprev;
-	}
+	if (nBlock > pindex->nHeight) {
+		return 100000;
+	} else {
+		for (int ii = 0; ii < nBlock; ii++) {
+			sumfee += pindex->GetBlockFee();
+			pindex = pindex->pprev;
+		}
 
-	return (sumfee/nBlock);
+		return (sumfee / nBlock);
+	}
 }
 
 // We want to sort transactions by priority and fee, so:
@@ -600,7 +602,8 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 					prtx->nHeight = pPrevIndex->nHeight+1;
 					pBlock->hashMerkleRoot = pBlock->BuildMerkleTree();
 
-					printf("CreatePosTx addr = %s\r\n",CBitcoinAddress(item.keyID).ToString().c_str());
+					CTxDestination minerId = CAccountID(item.keyID, pwalletMain->mapKeyRegID[item.keyID].vRegID);
+					printf("CreatePosTx addr = %s\r\n",CBitcoinAddress(minerId).ToString().c_str());
 					LogPrint("postx", "find pos tx hash succeed: \n"
 									  "   pos hash:%s \n"
 									  "adjust hash:%s \r\n", curhash.GetHex(), adjusthash.GetHex());
