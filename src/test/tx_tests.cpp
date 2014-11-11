@@ -317,7 +317,7 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_free,CTxTest) {
 	}
 
 	for (int i = 0; i < sizeof(nBranch) / sizeof(nBranch[0]); i++)
-		cout << "branch " << i << " is " << nBranch[i] << endl;
+		BOOST_TEST_MESSAGE(strprintf("branch %d is %d" ,i , nBranch[i]));
 }
 
 BOOST_FIXTURE_TEST_CASE(tx_add_self,CTxTest) {
@@ -355,7 +355,7 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_self,CTxTest) {
 	for (int i = 1; i <= TEST_SIZE / 10; i++) {
 		nRunTimeHeight += 10;
 		bOverDay = nRunTimeHeight / DAY_BLOCKS > nLastOperHeight / DAY_BLOCKS;
-		bCheckAuthority = ( (0 == i%2)?true:false);
+		bCheckAuthority = ((0 == i % 2) ? true : false);
 
 		for (int j = 0; j < 10; j++) {
 			uint64_t nOldVectorSum = GetTotalValue(accOperate.vSelfFreeze);
@@ -384,8 +384,6 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_self,CTxTest) {
 					BOOST_CHECK(GetTotalValue(accOperate.vSelfFreeze) == nOldVectorSum - randValue);
 					nBranch[2]++;
 				}
-
-
 			} else {
 				//not enough money
 				BOOST_CHECK(!accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, nRunTimeHeight, &scriptID, true));
@@ -406,7 +404,7 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_self,CTxTest) {
 	}
 
 	for (int i = 0; i < sizeof(nBranch) / sizeof(nBranch[0]); i++)
-		cout << "branch " << i << " is " << nBranch[i] << endl;
+		BOOST_TEST_MESSAGE(strprintf("branch %d is %d" ,i , nBranch[i]));
 }
 
 BOOST_FIXTURE_TEST_CASE(tx_add_freezed,CTxTest) {
@@ -476,7 +474,7 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_freezed,CTxTest) {
 	}
 
 	for (int i = 0; i < sizeof(nBranch) / sizeof(nBranch[0]); i++)
-		cout << "branch " << i << " is " << nBranch[i] << endl;
+		BOOST_TEST_MESSAGE(strprintf("branch %d is %d" ,i , nBranch[i]));
 	accOperate.UndoOperateAccount(accOperate.accountOperLog);
 	CheckAccountEqual();
 
