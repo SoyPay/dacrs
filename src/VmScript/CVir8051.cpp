@@ -575,9 +575,10 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 	if (GetTransaction(pBaseTx, hash1)) {
 		CContractTransaction *tx = static_cast<CContractTransaction*>(pBaseTx.get());
 		vector<unsigned char> item;
-		for (auto& it : tx->vAccountRegId) {
-			item.insert(item.end(), it.begin(), it.end());
-		}
+		//! @todo
+//		for (auto& it : tx->vAccountRegId) {
+//			item.insert(item.end(), it.begin(), it.end());
+//		}
 
 		(*tem.get()).push_back(item);
 	}

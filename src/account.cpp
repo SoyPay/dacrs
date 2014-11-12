@@ -198,6 +198,26 @@ bool CAccountViewCache::SaveAccountInfo(const vector<unsigned char> &accountId, 
 	cacheAccounts[keyId] = account;
 	return true;
 }
+bool CAccountViewCache::GetAccount(const CUserID &userId, CAccount &account) {
+	if(userId.type() == typeid(CRegID)) {
+		return GetAccount(boost::get<CRegID>(userId).GetRegID(), account);
+	}else if(userId.type() == typeid(CKeyID)) {
+		return GetAccount(boost::get<CKeyID>(userId), account);
+	}else if(userId.type() == typeid(CPubKey)) {
+		return GetAccount(boost::get<CPubKey>(userId).GetID(), account);
+	}
+	return false;
+}
+bool CAccountViewCache::GetKeyId(const CUserID &userId, CKeyID &keyId) {
+	if (userId.type() == typeid(CRegID)) {
+		return GetKeyId(boost::get<CRegID>(userId).GetRegID(), keyId);
+	} else if (userId.type() == typeid(CPubKey)) {
+		keyId = boost::get<CPubKey>(userId).GetID();
+		return true;
+	}
+	return false;
+}
+
 bool CAccountViewCache::Flush(){
 	 bool fOk = pBase->BatchWrite(cacheAccounts, cacheKeyIds, hashBlock);
 	 if (fOk) {
@@ -307,6 +327,13 @@ bool CScriptDBViewCache::GetScript(const vector<unsigned char> &vScriptId, vecto
 	scriptKey.insert(scriptKey.end(), vScriptId.begin(), vScriptId.end());
 	return GetData(scriptKey, vValue);
 }
+bool CScriptDBViewCache::GetScript(const CUserID &userId, vector<unsigned char> &vValue) {
+	if(userId.type() == typeid(CRegID)) {
+		return GetScript(boost::get<CUserID>(userId), vValue);
+	}
+	return false;
+}
+
 bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
 		vector<unsigned char> &vScriptData, int &nHeight) {
 	assert(vScriptKey.size() == 8);

@@ -33,22 +33,14 @@ using namespace json_spirit;
 
 static boost::thread_group sThreadGroup;
 
-string RegIDToAddress(vector<unsigned char> vRegID) {
-	if (vRegID.size() == 6) {
-		CAccountViewCache view(*pAccountViewTip, true);
-		CAccount secureAcc;
-
-		uint64_t balance = 0;
-		if (view.GetAccount(vRegID, secureAcc)) {
-			CAccountID accid(secureAcc.keyID, vRegID);
-			return CBitcoinAddress(accid).ToString();
-		}
-	} else if (vRegID.size() == 20) {
-		CKeyID keyid;
-		memcpy(keyid.begin(), &vRegID[0], 20);
-		return CBitcoinAddress(keyid).ToString();
+string RegIDToAddress(CUserID &userId) {
+	CAccountViewCache view(*pAccountViewTip, true);
+	CAccount acct;
+	if(!view.GetAccount(userId, acct)) {
+		CID id(userId);
+		return HexStr(id.GetID());
 	}
-	return HexStr(vRegID);
+	return CBitcoinAddress(acct.keyID).ToString();
 }
 
 Object TxToJSON(CBaseTransaction *pTx) {
@@ -59,8 +51,9 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		CRegisterAccountTx *prtx = (CRegisterAccountTx *) pTx;
 		result.push_back(Pair("txtype", "RegisterAccTx"));
 		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("addr", CBitcoinAddress(prtx->pubKey.GetID()).ToString()));
-		result.push_back(Pair("pubkey", HexStr(prtx->pubKey.begin(), prtx->pubKey.end())));
+		result.push_back(Pair("addr", CBitcoinAddress(boost::get<CPubKey>(prtx->userId).GetID()).ToString()));
+		CID id(prtx->userId);
+		result.push_back(Pair("pubkey", HexStr(id.GetID())));
 		result.push_back(Pair("fees", prtx->llFees));
 		result.push_back(Pair("height", prtx->nValidHeight));
 		break;
@@ -69,8 +62,8 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		CTransaction *prtx = (CTransaction *) pTx;
 		result.push_back(Pair("txtype", "NormalTx"));
 		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("srcaddr", RegIDToAddress(prtx->srcRegAccountId)));
-		result.push_back(Pair("desaddr", RegIDToAddress(prtx->desRegAccountId)));
+		result.push_back(Pair("srcaddr", RegIDToAddress(prtx->srcUserId)));
+		result.push_back(Pair("desaddr", RegIDToAddress(prtx->desUserId)));
 		result.push_back(Pair("money", prtx->llValues));
 		result.push_back(Pair("fees", prtx->llFees));
 		result.push_back(Pair("height", prtx->nValidHeight));
@@ -80,7 +73,8 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		CContractTransaction *prtx = (CContractTransaction *) pTx;
 		result.push_back(Pair("txtype", "ContractTx"));
 		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("script id", HexStr(prtx->scriptRegId)));
+		CID id(prtx->scriptRegId);
+		result.push_back(Pair("script id", HexStr(id.GetID())));
 		{
 			Array array;
 			for(auto& item : prtx->vAccountRegId)
@@ -196,7 +190,7 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: not find key.");
 		}
 
-		rtx.pubKey = pubkey;
+		rtx.userId = pubkey;
 		rtx.llFees = fee;
 		rtx.nValidHeight = nvalidheight;
 
@@ -266,14 +260,14 @@ Value createnormaltx(const Array& params, bool fHelp) {
 
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
-		CAccount secureAcc;
+		CAccount acct;
 
 		uint64_t balance = 0;
-		if (view.GetAccount(keyid, secureAcc)) {
-			balance = secureAcc.GetBalance(chainActive.Tip()->nHeight);
+		if (view.GetAccount(keyid, acct)) {
+			balance = acct.GetBalance(chainActive.Tip()->nHeight);
 		}
 
-		if (!secureAcc.IsRegister()) {
+		if (!acct.IsRegister()) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in createnormaltx Error: Account is not registered.");
 		}
 
@@ -285,18 +279,18 @@ Value createnormaltx(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in createnormaltx Error: Account balance is insufficient.");
 		}
 
+		CUserID desUserId;
 		vector<unsigned char> vregid;
 		if (recvaddr.GetRegID(vregid)) {
-			if (!view.GetAccount(vregid, secureAcc)) {
-				vregid.clear();
-				vregid.insert(vregid.end(), recvkeyid.begin(), recvkeyid.end());
+			if (!view.GetAccount(vregid, acct)) {
+				desUserId = CRegID(vregid);
 			}
 		} else {
-			vregid.insert(vregid.end(), recvkeyid.begin(), recvkeyid.end());
+			desUserId = recvkeyid;
 		}
 
-		tx.srcRegAccountId = pwalletMain->mapKeyRegID[keyid].vRegID;
-		tx.desRegAccountId = vregid;
+		tx.srcUserId = pwalletMain->mapKeyRegID[keyid];
+		tx.desUserId = desUserId;
 		tx.llValues = money;
 		tx.llFees = fee;
 		tx.nValidHeight = nvalidheight;
@@ -378,7 +372,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 //			throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(vscriptid)));
 //		}
 
-		vector<vector<unsigned char> > vaccountid;
+		vector<CUserID > vaccountid;
 		for (auto& item : addr) {
 			CBitcoinAddress tmpaddr(item.get_str());
 			CKeyID keyid;
@@ -387,14 +381,14 @@ Value createcontracttx(const Array& params, bool fHelp) {
 			}
 			CRegID accountid = pwalletMain->mapKeyRegID[keyid];
 			CAccount account;
-			if (!pAccountViewTip->GetAccount(accountid.vRegID, account)) {
+			if (!pAccountViewTip->GetAccount(accountid.GetRegID(), account)) {
 				throw runtime_error(
 						tinyformat::format("createcontracttx :account id %s is not exist\n", item.get_str()));
 			}
-			vaccountid.push_back(accountid.vRegID);
+			vaccountid.push_back(CUserID(accountid));
 		}
 
-		tx.scriptRegId = vscriptid;
+		tx.scriptRegId = CRegID(vscriptid);
 		tx.vAccountRegId = vaccountid;
 		tx.llFees = fee;
 		tx.vContract = vcontract;
@@ -404,7 +398,8 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		//get keyid by accountid
 		CKeyID keyid;
 		if (!view.GetKeyId(vaccountid.at(0), keyid)) {
-			LogPrint("INFO", "vaccountid:%s have no key id\r\n", HexStr(vaccountid.at(0)).c_str());
+			CID id(vaccountid.at(0));
+			LogPrint("INFO", "vaccountid:%s have no key id\r\n", HexStr(id.GetID()).c_str());
 			assert(0);
 		}
 
@@ -472,18 +467,20 @@ Value signcontracttx(const Array& params, bool fHelp) {
 
 		vector<unsigned char> vscript;
 		if (!pScriptDBTip->GetScript(tx.scriptRegId, vscript)) {
+			CID id(tx.scriptRegId);
 			throw runtime_error(
-					tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(tx.scriptRegId)));
+					tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(id.GetID())));
 		}
 
 		for (auto& item : tx.vAccountRegId) {
 			CAccount account;
 			if (!pAccountViewTip->GetAccount(item, account)) {
-				throw runtime_error(tinyformat::format("createcontracttx :account id %s is not exist\n", HexStr(item)));
+				CID id(item);
+				throw runtime_error(tinyformat::format("createcontracttx :account id %s is not exist\n", HexStr(id.GetID())));
 			}
 		}
 
-		vector<unsigned char> accountid = tx.vAccountRegId.at(tx.vSignature.size());
+		vector<unsigned char> accountid = boost::get<CRegID>(tx.vAccountRegId.at(tx.vSignature.size())).GetRegID();
 
 		if (!pwalletMain->IsHaveAccount(accountid)) {
 			LogPrint("INFO", "signcontracttx error: Not to my time!\r\n");
@@ -494,8 +491,9 @@ Value signcontracttx(const Array& params, bool fHelp) {
 		for (int ii = 0; ii < tx.vSignature.size(); ii++) {
 			CAccount account;
 			if (!view.GetAccount(tx.vAccountRegId.at(ii), account)) {
+				CID id(tx.vAccountRegId.at(ii));
 				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-						string("unregister RegID: ") + HexStr(tx.vAccountRegId.at(ii)));
+						string("unregister RegID: ") + HexStr(id.GetID()));
 			}
 
 			if (!account.publicKey.Verify(tx.SignatureHash(), tx.vSignature.at(ii))) {
@@ -612,7 +610,7 @@ Value createfreezetx(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in createfreezetx Error: Account balance is insufficient.");
 		}
 
-		tx.regAccountId = pwalletMain->mapKeyRegID[keyid].vRegID;
+		tx.regAccountId = pwalletMain->mapKeyRegID[keyid];
 		tx.llFreezeFunds = frozenmoney;
 		tx.llFees = fee;
 		tx.nValidHeight = height;
@@ -735,7 +733,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 			}
 		}
 
-		tx.regAccountId = pwalletMain->mapKeyRegID[keyid].vRegID;
+		tx.regAccountId = pwalletMain->mapKeyRegID[keyid];
 		tx.script = vscript;
 		tx.llFees = fee;
 		tx.nValidHeight = height;
@@ -817,7 +815,8 @@ Value listaddr(const Array& params, bool fHelp) {
 
 			CTxDestination destid;
 			if (bReg) {
-				destid = CAccountID(keyid, pwalletMain->mapKeyRegID[keyid].vRegID);
+				vector<unsigned char> vRegId = pwalletMain->mapKeyRegID[keyid].GetRegID();
+				destid = CAccountID(keyid, vRegId);
 			} else {
 				destid = keyid;
 			}
@@ -1081,7 +1080,8 @@ Value listregid(const Array& params, bool fHelp) {
 		LOCK2(cs_main, pwalletMain->cs_wallet);
 
 		for (auto& item : pwalletMain->mapKeyRegID) {
-			array.push_back(CBitcoinAddress(CAccountID(item.first, item.second.vRegID)).ToString());
+			vector<unsigned char> vRegId = item.second.GetRegID();
+			array.push_back(CBitcoinAddress(CAccountID(item.first, vRegId)).ToString());
 			Object obj;
 			obj.clear();
 			obj.push_back(Pair(CBitcoinAddress(item.first).ToString(), item.second.ToString()));
@@ -1211,9 +1211,11 @@ void ThreadCreateNormalTx(const CKeyID keyid, const vector<unsigned char> vregid
 			{
 				LOCK2(cs_main, pwalletMain->cs_wallet);
 				EnsureWalletIsUnlocked();
+				CRegID regId;
+				regId.SetRegID(vregid);
 
-				tx.srcRegAccountId = pwalletMain->mapKeyRegID[keyid].vRegID;
-				tx.desRegAccountId = vregid;
+				tx.srcUserId = pwalletMain->mapKeyRegID[keyid];
+				tx.desUserId = regId;
 				tx.llValues = money;
 				tx.llFees = fee;
 				tx.nValidHeight = chainActive.Tip()->nHeight;
@@ -1340,9 +1342,9 @@ void ThreadTestMiner(int nTimes) {
 						for (int i = 0; i < 10; i++) {
 							CTransaction tx;
 							CPubKey pubkey = pwalletMain->GenerateNewKey();
-							tx.srcRegAccountId = pwalletMain->mapKeyRegID[keyid].vRegID;
+							tx.srcUserId = pwalletMain->mapKeyRegID[keyid];
 							CKeyID deskeyid = pubkey.GetID();
-							tx.desRegAccountId.insert(tx.desRegAccountId.end(), deskeyid.begin(), deskeyid.end());
+							tx.desUserId = deskeyid;
 							tx.llValues = min_money;
 							tx.llFees = fee * (i + 1);
 							tx.nValidHeight = chainActive.Tip()->nHeight;
@@ -1362,7 +1364,7 @@ void ThreadTestMiner(int nTimes) {
 						}
 						{
 							CFreezeTransaction tx;
-							tx.regAccountId = pwalletMain->mapKeyRegID[keyid].vRegID;
+							tx.regAccountId = pwalletMain->mapKeyRegID[keyid];
 							tx.llFreezeFunds = min_money / 2;
 							tx.llFees = fee;
 							tx.nValidHeight = chainActive.Tip()->nHeight;
@@ -1381,7 +1383,7 @@ void ThreadTestMiner(int nTimes) {
 						}
 					} else if (!bReg && balance > money) {
 						CRegisterAccountTx rtx;
-						pwalletMain->GetPubKey(keyid, rtx.pubKey);
+						pwalletMain->GetPubKey(keyid, boost::get<CPubKey>(rtx.userId));
 						rtx.llFees = fee;
 						rtx.nValidHeight = chainActive.Tip()->nHeight;
 						//sign
@@ -1585,7 +1587,8 @@ Value getoneaddr(const Array& params, bool fHelp) {
 				int num = GetRandInt((objkeyid.size() - 1));
 				CTxDestination destid;
 				if (get<1>(objkeyid.at(num))) {
-					destid = CAccountID(get<0>(objkeyid.at(num)), pwalletMain->mapKeyRegID[get<0>(objkeyid.at(num))].vRegID);
+					vector<unsigned char> vRegId = pwalletMain->mapKeyRegID[get<0>(objkeyid.at(num))].GetRegID();
+					destid = CAccountID(get<0>(objkeyid.at(num)), vRegId);
 				} else {
 					destid = get<0>(objkeyid.at(num));
 				}

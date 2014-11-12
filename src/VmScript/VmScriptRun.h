@@ -117,7 +117,7 @@ public:
 	 * @return:
 	 */
 	shared_ptr<vector<CVmOperate> > GetOperate() const;
-	vector_unsigned_char& GetScriptID();
+	const vector_unsigned_char& GetScriptID();
 	CScriptDBViewCache* GetScriptDB();
 	int GetComfirHeight();
 	uint256 GetCurTxHash();

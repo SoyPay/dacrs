@@ -19,13 +19,13 @@
 #include <string.h>
 #include <utility>
 #include <vector>
-
 #include "version.h"
 #include "uint256.h"
 #include <openssl/ripemd.h>
 #include <openssl/sha.h>
 #include <boost/tuple/tuple.hpp>
 #include <boost/type_traits/is_fundamental.hpp>
+
 
 class CAutoFile;
 class CDataStream;
@@ -35,6 +35,8 @@ class CRegisterAccountTx;
 class CTransaction;
 class CFreezeTransaction;
 class CRewardTransaction;
+
+
 
 static const unsigned int MAX_SIZE = 0x02000000;
 
@@ -377,6 +379,8 @@ public:
 template<typename I>
 CVarInt<I> WrapVarInt(I& n) { return CVarInt<I>(n); }
 
+
+
 //
 // Forward declarations
 //
@@ -431,6 +435,7 @@ template<typename Stream, typename K, typename Pred, typename A> void Unserializ
 extern inline unsigned int GetSerializeSize(const std::shared_ptr<CBaseTransaction> &pa, int nType, int nVersion);
 template<typename Stream> void Serialize(Stream& os, const std::shared_ptr<CBaseTransaction> &pa, int nType, int nVersion);
 template<typename Stream> void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, int nVersion);
+
 
 class CSerActionGetSerializeSize { };
 class CSerActionSerialize { };
