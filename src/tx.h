@@ -8,6 +8,7 @@
 #include "hash.h"
 #include <vector>
 #include <string>
+#include <boost/variant.hpp>
 #include "tx.h"
 
 using namespace std;
@@ -20,13 +21,47 @@ class CBlock;
 class CTransactionCacheDB;
 class CTransactionCache;
 class CScriptDBViewCache;
+class CRegID;
+class CID;
 typedef vector<unsigned char> vector_unsigned_char;
 
-class CRegID {
+class CNullID {
 public:
-	vector<unsigned char> vRegID;
+    friend bool operator==(const CNullID &a, const CNullID &b) { return true; }
+    friend bool operator<(const CNullID &a, const CNullID &b) { return true; }
+};
+
+typedef boost::variant<CNullID, CRegID, CKeyID, CPubKey> CUserID;
+
+
+class CRegID {
+private:
+	uint32_t nHeight;
+	uint16_t nIndex;
+	mutable vector<unsigned char> vRegID;
+	void SetRegIDByCompact(const vector<unsigned char> &vIn);
+public:
+	friend class CID;
+	const vector<unsigned char> &GetRegID() const {return vRegID;}
+	void SetRegID(const vector<unsigned char> &vIn) {
+		assert(vIn.size() == 6);
+		vRegID = vIn;
+		CDataStream ds(vIn, SER_DISK, CLIENT_VERSION);
+		ds >> nHeight;
+		ds >> nIndex;
+	}
 
 	CRegID(string strRegID);
+
+	CRegID(const vector<unsigned char> &vIn) {
+		assert(vIn.size() == 6);
+		vRegID = vIn;
+		nHeight = 0;
+		nIndex = 0;
+		CDataStream ds(vIn, SER_DISK, CLIENT_VERSION);
+		ds >> nHeight;
+		ds >> nIndex;
+	}
 
 	CRegID(uint32_t nHeight = 0, uint16_t nIndex = 0);
 
@@ -34,9 +69,62 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(vRegID);
+		READWRITE(VARINT(nHeight));
+		READWRITE(VARINT(nIndex));
+		if(fRead) {
+			vRegID.clear();
+			vRegID.insert(vRegID.end(), BEGIN(nHeight), END(nHeight));
+			vRegID.insert(vRegID.end(), BEGIN(nIndex), END(nIndex));
+		}
+	)
+
+};
+
+
+class CID {
+private:
+	vector_unsigned_char vchData;
+public:
+	const vector_unsigned_char &GetID() {
+		return vchData;
+	}
+	bool Set(const CRegID &id);
+    bool Set(const CKeyID &id);
+    bool Set(const CPubKey &id);
+    bool Set(const CUserID &userid);
+    CID() {}
+    CID(const CUserID &dest) {Set(dest);}
+    CUserID GetUserId();
+    IMPLEMENT_SERIALIZE
+	(
+		READWRITE(vchData);
 	)
 };
+
+
+class CIDVisitor: public boost::static_visitor<bool> {
+private:
+	CID *pId;
+public:
+	CIDVisitor(CID *pIdIn) :
+		pId(pIdIn) {
+	}
+	bool operator()(const CRegID &id) const {
+			return pId->Set(id);
+	}
+	bool operator()(const CKeyID &id) const {
+		return pId->Set(id);
+	}
+	bool operator()(const CPubKey &id) const {
+		return pId->Set(id);
+	}
+	bool operator()(const CNullID &no) const {
+		return false;
+	}
+};
+
+
+
 
 enum TxType {
 	REG_ACCT_TX = 1,  //!< tx that used to register account
@@ -251,7 +339,7 @@ public:
 class CRegisterAccountTx: public CBaseTransaction {
 
 public:
-	CPubKey pubKey;
+	mutable CUserID userId;
 	int64_t llFees;
 	int nValidHeight;
 	vector<unsigned char> signature;
@@ -264,6 +352,8 @@ public:
 
 	CRegisterAccountTx() {
 		nTxType = REG_ACCT_TX;
+		llFees = 0;
+		nValidHeight = 0;
 	}
 
 	~CRegisterAccountTx() {
@@ -271,12 +361,16 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(this->nVersion);
-			nVersion = this->nVersion;
-			READWRITE(pubKey);
-			READWRITE(llFees);
-			READWRITE(nValidHeight);
-			READWRITE(signature);
+		READWRITE(this->nVersion);
+		nVersion = this->nVersion;
+		CID id(userId);
+		READWRITE(id);
+		if(fRead) {
+			userId = id.GetUserId();
+		}
+		READWRITE(VARINT(llFees));
+		READWRITE(VARINT(nValidHeight));
+		READWRITE(signature);
 	)
 
 	uint64_t GetFee() const {
@@ -293,7 +387,8 @@ public:
 
 	uint256 SignatureHash() const {
 		CHashWriter ss(SER_GETHASH, 0);
-		ss << pubKey << llFees << nValidHeight;
+		CID id(userId);
+		ss << id << VARINT(llFees) << VARINT(nValidHeight);
 		return ss.GetHash();
 	}
 
@@ -319,10 +414,10 @@ public:
 class CTransaction: public CBaseTransaction {
 
 public:
-	vector_unsigned_char srcRegAccountId;
+	mutable CUserID srcUserId;
 	uint64_t llFees;
 	uint64_t llValues;
-	vector_unsigned_char desRegAccountId;
+	mutable CUserID desUserId;
 	int nValidHeight;
 	vector_unsigned_char signature;
 public:
@@ -333,8 +428,6 @@ public:
 	}
 
 	CTransaction() {
-		srcRegAccountId.clear();
-		desRegAccountId.clear();
 		signature.clear();
 		llValues = 0;
 		llFees = 0;
@@ -350,12 +443,18 @@ public:
 	(
 			READWRITE(this->nVersion);
 			nVersion = this->nVersion;
-			READWRITE(srcRegAccountId);
-			READWRITE(llFees);
-			READWRITE(llValues);
-			READWRITE(desRegAccountId);
-			READWRITE(nValidHeight);
+			CID srcId(srcUserId);
+			READWRITE(srcId);
+			READWRITE(VARINT(llFees));
+			READWRITE(VARINT(llValues));
+			CID desId(desUserId);
+			READWRITE(desId);
+			READWRITE(VARINT(nValidHeight));
 			READWRITE(signature);
+			if(fRead) {
+				srcUserId = srcId.GetUserId();
+				desUserId = desId.GetUserId();
+			}
 	)
 
 	uint64_t GetFee() const {
@@ -372,7 +471,9 @@ public:
 
 	uint256 SignatureHash() const {
 		CHashWriter ss(SER_GETHASH, 0);
-		ss << srcRegAccountId << llFees << llValues << desRegAccountId << nValidHeight;
+		CID srcId(srcUserId);
+		CID desId(desUserId);
+		ss << srcId << VARINT(llFees) << VARINT(llValues) << desId << VARINT(nValidHeight);
 		return ss.GetHash();
 	}
 
@@ -397,8 +498,8 @@ public:
 
 class CContractTransaction : public CBaseTransaction {
 public:
-	vector_unsigned_char scriptRegId;
-	vector<vector_unsigned_char> vAccountRegId;
+	mutable CUserID scriptRegId;
+	mutable vector<CUserID> vAccountRegId;
 	uint64_t llFees;
 	vector_unsigned_char vContract;
 	int nValidHeight;
@@ -412,7 +513,6 @@ public:
 	CContractTransaction() {
 		nTxType = CONTRACT_TX;
 		llFees = 0;
-		scriptRegId.clear();
 		vAccountRegId.clear();
 		vContract.clear();
 		vContract.clear();
@@ -428,11 +528,25 @@ public:
 	(
 			READWRITE(this->nVersion);
 			nVersion = this->nVersion;
-			READWRITE(scriptRegId);
-			READWRITE(vAccountRegId);
-			READWRITE(llFees);
+			CID scriptId(scriptRegId);
+			READWRITE(scriptId);
+			for(auto &acctRegId : vAccountRegId) {
+				vector<CID> vAcctId;
+				vAcctId.push_back(CID(acctRegId));
+				READWRITE(vAcctId);
+			}
+			if(fRead) {
+				scriptRegId = scriptId.GetUserId();
+				vector<CID> vAcctId;
+				READWRITE(vAcctId);
+				for(auto &acctId : vAcctId) {
+					CUserID userId = acctId.GetUserId();
+					vAccountRegId.push_back(userId);
+				}
+			}
+			READWRITE(VARINT(llFees));
 			READWRITE(vContract);
-			READWRITE(nValidHeight);
+			READWRITE(VARINT(nValidHeight));
 			READWRITE(vSignature);
 	)
 
@@ -450,7 +564,13 @@ public:
 
 	uint256 SignatureHash() const {
 		CHashWriter ss(SER_GETHASH, 0);
-		ss << scriptRegId << vAccountRegId << llFees << vContract << nValidHeight ;
+		CID scriptId(scriptRegId);
+		ss << scriptId;
+		for(auto & acctRegId : vAccountRegId) {
+			CID acctId(acctRegId);
+			ss << acctId;
+		}
+		ss << VARINT(llFees) << vContract << VARINT(nValidHeight) ;
 		return ss.GetHash();
 	}
 
@@ -481,7 +601,7 @@ public:
 class CFreezeTransaction: public CBaseTransaction {
 
 public:
-	vector_unsigned_char regAccountId;
+	mutable CUserID regAccountId;
 	uint64_t llFees;
 	uint64_t llFreezeFunds;
 	int nValidHeight;
@@ -497,6 +617,7 @@ public:
 		nTxType = FREEZE_TX;
 		llFees = 0;
 		llFreezeFunds = 0;
+		nValidHeight = 0;
 		nUnfreezeHeight = 0;
 	}
 
@@ -512,11 +633,15 @@ public:
 	(
 			READWRITE(this->nVersion);
 			nVersion = this->nVersion;
-			READWRITE(regAccountId);
-			READWRITE(llFees);
-			READWRITE(llFreezeFunds);
-			READWRITE(nValidHeight);
-			READWRITE(nUnfreezeHeight);
+			CID regId(regAccountId);
+			READWRITE(regId);
+			if(fRead) {
+				regAccountId = regId.GetUserId();
+			}
+			READWRITE(VARINT(llFees));
+			READWRITE(VARINT(llFreezeFunds));
+			READWRITE(VARINT(nValidHeight));
+			READWRITE(VARINT(nUnfreezeHeight));
 			READWRITE(signature);
 	)
 
@@ -534,7 +659,8 @@ public:
 
 	uint256 SignatureHash() const {
 		CHashWriter ss(SER_GETHASH, 0);
-		ss << regAccountId << llFees << llFreezeFunds << nValidHeight << nUnfreezeHeight;
+		CID regId(regAccountId);
+		ss << regId << VARINT(llFees) << VARINT(llFreezeFunds) << VARINT(nValidHeight) << VARINT(nUnfreezeHeight);
 		return ss.GetHash();
 	}
 
@@ -556,7 +682,7 @@ public:
 class CRewardTransaction: public CBaseTransaction {
 
 public:
-	vector_unsigned_char account;   // in genesis block are pubkey, otherwise are account id
+	mutable CUserID account;   // in genesis block are pubkey, otherwise are account id
 	uint64_t rewardValue;
 	int nHeight;
 public:
@@ -567,7 +693,11 @@ public:
 
 	CRewardTransaction(const vector_unsigned_char &accountIn, const uint64_t rewardValueIn, const int _nHeight) {
 		nTxType = REWARD_TX;
-		account = accountIn;
+		if (accountIn.size() > 6) {
+			account = CPubKey(accountIn);
+		} else {
+			account = CRegID(accountIn);
+		}
 		rewardValue = rewardValueIn;
 		nHeight = _nHeight;
 	}
@@ -581,14 +711,84 @@ public:
 	~CRewardTransaction() {
 	}
 
-	IMPLEMENT_SERIALIZE
-	(
-			READWRITE(this->nVersion);
+	unsigned int GetSerializeSize(int nType, int nVersion) const {
+		CSerActionGetSerializeSize ser_action;
+		const bool fGetSize = true;
+		const bool fWrite = false;
+		const bool fRead = false;
+		unsigned int nSerSize = 0;
+		ser_streamplaceholder s;
+		(void) ((!!(fGetSize || fWrite || fRead))
+				|| (_assert("fGetSize||fWrite||fRead", "D:\\soypay\\src\\tx.h", 720), 0)); /* suppress warning */
+		s.nType = nType;
+		s.nVersion = nVersion;
+		{
+			(nSerSize += ::SerReadWrite(s, (this->nVersion), nType, nVersion, ser_action));
 			nVersion = this->nVersion;
-			READWRITE(account);
-			READWRITE(rewardValue);
-			READWRITE(nHeight);
-	)
+			CID acctId(account);
+			(nSerSize += ::SerReadWrite(s, (acctId), nType, nVersion, ser_action));
+			if (fRead) {
+				account = acctId.GetUserId();
+			}
+			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(rewardValue)))), nType, nVersion, ser_action));
+			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(nHeight)))), nType, nVersion, ser_action));
+		}
+		return nSerSize;
+	}
+	template<typename Stream>
+	void Serialize(Stream& s, int nType, int nVersion) const {
+		CSerActionSerialize ser_action;
+		const bool fGetSize = false;
+		const bool fWrite = true;
+		const bool fRead = false;
+		unsigned int nSerSize = 0;
+		(void) ((!!(fGetSize || fWrite || fRead))
+				|| (_assert("fGetSize||fWrite||fRead", "D:\\soypay\\src\\tx.h", 720), 0)); /* suppress warning */
+		{
+			(nSerSize += ::SerReadWrite(s, (this->nVersion), nType, nVersion, ser_action));
+			nVersion = this->nVersion;
+			CID acctId(account);
+			(nSerSize += ::SerReadWrite(s, (acctId), nType, nVersion, ser_action));
+			if (fRead) {
+				account = acctId.GetUserId();
+			}
+			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(rewardValue)))), nType, nVersion, ser_action));
+			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(nHeight)))), nType, nVersion, ser_action));
+		}
+	}
+	template<typename Stream>
+	void Unserialize(Stream& s, int nType, int nVersion) {
+		CSerActionUnserialize ser_action;
+		const bool fGetSize = false;
+		const bool fWrite = false;
+		const bool fRead = true;
+		unsigned int nSerSize = 0;
+		(void) ((!!(fGetSize || fWrite || fRead))
+				|| (_assert("fGetSize||fWrite||fRead", "D:\\soypay\\src\\tx.h", 720), 0)); /* suppress warning */
+		{
+			(nSerSize += ::SerReadWrite(s, (this->nVersion), nType, nVersion, ser_action));
+			nVersion = this->nVersion;
+			CID acctId(account);
+			(nSerSize += ::SerReadWrite(s, (acctId), nType, nVersion, ser_action));
+			if (fRead) {
+				account = acctId.GetUserId();
+			}
+			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(rewardValue)))), nType, nVersion, ser_action));
+			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(nHeight)))), nType, nVersion, ser_action));
+		}
+	}
+//	IMPLEMENT_SERIALIZE
+//	(
+//		READWRITE(this->nVersion);
+//		nVersion = this->nVersion;
+//		CID acctId(account);
+//		READWRITE(acctId);
+//		if(fRead) {
+//			account = acctId.GetUserId();
+//		}
+//		READWRITE(VARINT(rewardValue));
+//		READWRITE(VARINT(nHeight));
+//	)
 
 	uint256 GetHash() const {
 		return SerializeHash(*this);
@@ -600,7 +800,8 @@ public:
 
 	uint256 SignatureHash() const {
 		CHashWriter ss(SER_GETHASH, 0);
-		ss << account << rewardValue << nHeight;
+		CID accId(account);
+		ss << accId << VARINT(rewardValue) << VARINT(nHeight);
 		return ss.GetHash();
 	}
 
@@ -634,7 +835,7 @@ public:
 class CRegistScriptTx: public CBaseTransaction {
 
 public:
-	vector_unsigned_char regAccountId;
+	mutable CUserID regAccountId;
 	vector_unsigned_char script;
 	uint64_t llFees;
 	int nValidHeight;
@@ -657,14 +858,18 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(this->nVersion);
-			nVersion = this->nVersion;
-			READWRITE(regAccountId);
-			READWRITE(script);
-			READWRITE(llFees);
-			READWRITE(nValidHeight);
-			READWRITE(aAuthorizate);
-			READWRITE(signature);
+		READWRITE(this->nVersion);
+		nVersion = this->nVersion;
+		CID regAcctId(regAccountId);
+		READWRITE(regAcctId);
+		if(fRead) {
+			regAccountId = regAcctId.GetUserId();
+		}
+		READWRITE(script);
+		READWRITE(VARINT(llFees));
+		READWRITE(VARINT(nValidHeight));
+		READWRITE(aAuthorizate);
+		READWRITE(signature);
 	)
 
 	uint256 GetHash() const {
@@ -677,7 +882,8 @@ public:
 
 	uint256 SignatureHash() const {
 		CHashWriter ss(SER_GETHASH, 0);
-		ss << regAccountId << script << llFees << nValidHeight << aAuthorizate;
+		CID regAccId(regAccountId);
+		ss << regAccId << script << VARINT(llFees) << VARINT(nValidHeight) << aAuthorizate;
 		return ss.GetHash();
 	}
 
@@ -1030,6 +1236,7 @@ public:
 	bool LoadTransaction();
 	void Clear();
 };
+
 
 inline unsigned int GetSerializeSize(const std::shared_ptr<CBaseTransaction> &pa, int nType, int nVersion) {
 	return pa->GetSerializeSize(nType, nVersion) + 1;

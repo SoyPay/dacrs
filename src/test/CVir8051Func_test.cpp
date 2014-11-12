@@ -3218,7 +3218,7 @@ BOOST_AUTO_TEST_CASE(scriptfun)
 		scriptData << vscript;
 		vpscript.assign(scriptData.begin(),scriptData.end());
 
-		vector<vector_unsigned_char> account;
+		//vector<vector_unsigned_char> account;
 
 		CAccount sourceAccount;
 		CRegID accountId(2, 1);
@@ -3228,7 +3228,7 @@ BOOST_AUTO_TEST_CASE(scriptfun)
 		CKeyID keyId1 = (CKeyID) hash;
 		sourceAccount.keyID = keyId1;
 		sourceAccount.llValues = 100;
-		account.push_back(accountId.vRegID);
+		//account.push_back(accountId.vRegID);
 
 
 		vector<vector_unsigned_char> strContract;
@@ -3237,12 +3237,12 @@ BOOST_AUTO_TEST_CASE(scriptfun)
 		CRegID scriptId(5, 9);
 
 		std::shared_ptr<CContractTransaction> nTemp = std::make_shared < CContractTransaction > (CContractTransaction());
-		nTemp->scriptRegId = scriptId.vRegID;
+		nTemp->scriptRegId = scriptId;
 		nTemp.get()->llFees = 100000000000000000;
 
 		 pScriptDB = new CScriptDB(size_t(4<<20), false , Params().IsReindex());
 		 pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
-		pScriptDBTip->SetScript(scriptId.vRegID, vpscript);
+		pScriptDBTip->SetScript(scriptId.GetRegID(), vpscript);
 		CAccountViewCache view(*pAccountViewTip, true);
 		CVmScriptRun prun;
 
@@ -3401,7 +3401,7 @@ BOOST_AUTO_TEST_CASE(outfun)
 		scriptData << vscript;
 		vpscript.assign(scriptData.begin(),scriptData.end());
 
-		vector<vector_unsigned_char> account;
+//		vector<vector_unsigned_char> account;
 
 		CAccount sourceAccount;
 		CRegID accountId(2, 1);
@@ -3411,7 +3411,7 @@ BOOST_AUTO_TEST_CASE(outfun)
 		CKeyID keyId1 = (CKeyID) hash;
 		sourceAccount.keyID = keyId1;
 		sourceAccount.llValues = 100;
-		account.push_back(accountId.vRegID);
+//		account.push_back(accountId.vRegID);
 
 
 		vector<vector_unsigned_char> strContract;
@@ -3420,12 +3420,12 @@ BOOST_AUTO_TEST_CASE(outfun)
 		CRegID scriptId(5, 9);
 
 		std::shared_ptr<CContractTransaction> nTemp = std::make_shared < CContractTransaction > (CContractTransaction());
-		nTemp->scriptRegId = scriptId.vRegID;
+		nTemp->scriptRegId = scriptId;
 		nTemp.get()->llFees = 100000000000000000;
 
-		 pScriptDB = new CScriptDB(size_t(4<<20), false , Params().IsReindex());
-		 pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
-		pScriptDBTip->SetScript(scriptId.vRegID, vpscript);
+		pScriptDB = new CScriptDB(size_t(4<<20), false , Params().IsReindex());
+		pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
+		pScriptDBTip->SetScript(scriptId.GetRegID(), vpscript);
 		CAccountViewCache view(*pAccountViewTip, true);
 		CVmScriptRun prun;
 

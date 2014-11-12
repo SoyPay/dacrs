@@ -172,7 +172,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		CFund fund;
 		memcpy(&fund.value,it.money,sizeof(it.money));
 		fund.nHeight = it.outheight + height;
-		fund.scriptID = tx->scriptRegId;
+		fund.scriptID = boost::get<CRegID>(tx->scriptRegId).GetRegID();
 
 		auto tem = make_shared<CAccount>();
 		vector_unsigned_char accountid = GetAccountID(it);
@@ -209,10 +209,10 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 	return true;
 }
 
-vector_unsigned_char& CVmScriptRun::GetScriptID()
+const vector_unsigned_char& CVmScriptRun::GetScriptID()
 {
 	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
-	return tx->scriptRegId;
+	return boost::get<CRegID>(tx->scriptRegId).GetRegID();
 }
 int CVmScriptRun::GetComfirHeight()
 {

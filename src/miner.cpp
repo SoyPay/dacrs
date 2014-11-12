@@ -598,11 +598,11 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 				if (pwalletMain->GetKey(item.keyID, key) && pwalletMain->GetRegID(item.keyID, regid)) {
 					CRewardTransaction *prtx = (CRewardTransaction *) pBlock->vptx[0].get();
 					prtx->rewardValue += item.GetInterest();
-					prtx->account = regid.vRegID;
+					prtx->account = regid;
 					prtx->nHeight = pPrevIndex->nHeight+1;
 					pBlock->hashMerkleRoot = pBlock->BuildMerkleTree();
-
-					CTxDestination minerId = CAccountID(item.keyID, pwalletMain->mapKeyRegID[item.keyID].vRegID);
+					vector<unsigned char> vRegId = pwalletMain->mapKeyRegID[item.keyID].GetRegID();
+					CTxDestination minerId = CAccountID(item.keyID, vRegId);
 					printf("CreatePosTx addr = %s\r\n",CBitcoinAddress(minerId).ToString().c_str());
 					LogPrint("postx", "find pos tx hash succeed: \n"
 									  "   pos hash:%s \n"
@@ -611,7 +611,10 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 							"nVersion=%d, hashPreBlock=%s, hashMerkleRoot=%s, nValue=%ld, nTime=%ld, nNonce=%ld\n",
 							postxinfo.nVersion, postxinfo.hashPrevBlock.GetHex(), postxinfo.hashMerkleRoot.GetHex(),
 							postxinfo.nValues, postxinfo.nTime, postxinfo.nNonce);
+					cout << "miner block hash:" << pBlock->SignatureHash().GetHex() << endl;
+					cout << "miner keyid's pubkey:" << HexStr(key.GetPubKey().begin(), key.GetPubKey().end()) << endl;
 					if (key.Sign(pBlock->SignatureHash(), pBlock->vSignature)) {
+						cout << "miner signature:" << HexStr(pBlock->vSignature) << endl;
 						return true;
 					} else {
 						LogPrint("postx", "sign fail\r\n");
@@ -663,6 +666,9 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 
 		if (view.GetAccount(prtx->account, secureAcc)) {
 			//available acc
+			cout << "check block hash:" << pBlock->SignatureHash().GetHex() << endl;
+			cout << "check signature:" << HexStr(pBlock->vSignature) << endl;
+			cout << "check pubkey:" << HexStr(secureAcc.publicKey.begin(), secureAcc.publicKey.end()) << endl;
 			if (!secureAcc.publicKey.Verify(pBlock->SignatureHash(), pBlock->vSignature)) {
 //				LogPrint("postx", "publickey:%s, keyid:%s\n", secureAcc.publicKey.GetHash().GetHex(), secureAcc.keyID.GetHex());
 //				LogPrint("postx", "block verify fail\r\n");
