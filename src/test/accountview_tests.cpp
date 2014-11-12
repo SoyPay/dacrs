@@ -32,7 +32,7 @@ public:
 
 bool CAccountViewTest::EraseKeyID() {
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		pAccountViewTip->EraseKeyId(vRandomRegID.at(i).vRegID);
+		pAccountViewTip->EraseKeyId(vRandomRegID.at(i).GetRegID());
 	}
 
 	return true;
@@ -65,11 +65,11 @@ bool CAccountViewTest::TestGetAccount(bool bCheckExist) {
 	//get account by accountID
 	for (int i = 0; i < VECTOR_SIZE; i++) {
 		if (bCheckExist) {
-			if (!pAccountViewTip->GetAccount(vRandomRegID.at(i).vRegID, account)) {
+			if (!pAccountViewTip->GetAccount(vRandomRegID.at(i).GetRegID(), account)) {
 				return false;
 			}
 		} else {
-			if (pAccountViewTip->GetAccount(vRandomRegID.at(i).vRegID, account)) {
+			if (pAccountViewTip->GetAccount(vRandomRegID.at(i).GetRegID(), account)) {
 				return false;
 			}
 		}
@@ -80,7 +80,7 @@ bool CAccountViewTest::TestGetAccount(bool bCheckExist) {
 
 bool CAccountViewTest::SetKeyID() {
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		pAccountViewTip->SetKeyId(vRandomRegID.at(i).vRegID, vRandomKeyID.at(i));
+		pAccountViewTip->SetKeyId(vRandomRegID.at(i).GetRegID(), vRandomKeyID.at(i));
 	}
 
 	return true;
@@ -116,11 +116,11 @@ bool CAccountViewTest::CheckKeyMap(bool bCheckExist) {
 	CKeyID keyID;
 	for (int i = 0; i < VECTOR_SIZE; i++) {
 		if (bCheckExist) {
-			if (!pAccountViewTip->GetKeyId(vRandomRegID.at(i).vRegID, keyID)) {
+			if (!pAccountViewTip->GetKeyId(vRandomRegID.at(i).GetRegID(), keyID)) {
 				return false;
 			}
 		} else {
-			if (pAccountViewTip->GetKeyId(vRandomRegID.at(i).vRegID, keyID)) {
+			if (pAccountViewTip->GetKeyId(vRandomRegID.at(i).GetRegID(), keyID)) {
 				return false;
 			}
 		}

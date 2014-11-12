@@ -10,8 +10,7 @@
 #define READDATA(s, obj)    s.read((char*)&(obj), sizeof(obj))
 
 #include "allocators.h"
-#include "hash.h"
-#include "serialize.h"
+
 #include "uint256.h"
 
 #include <stdexcept>

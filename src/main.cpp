@@ -1225,12 +1225,12 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 			std::shared_ptr<CRewardTransaction> pRewardTx = dynamic_pointer_cast<CRewardTransaction>(block.vptx[i]);
 			CAccount sourceAccount;
 			CRegID accountId(pindex->nHeight, i);
-			CPubKey pubKey(pRewardTx->account);
+			CPubKey pubKey = boost::get<CPubKey>(pRewardTx->account);
 			CKeyID keyId = pubKey.GetID();
 			sourceAccount.keyID = keyId;
 			sourceAccount.publicKey = pubKey;
 			sourceAccount.llValues = pRewardTx->rewardValue;
-			assert(view.SaveAccountInfo(accountId.vRegID, keyId, sourceAccount));
+			assert(view.SaveAccountInfo(accountId.GetRegID(), keyId, sourceAccount));
 		}
 		return true;
 	}

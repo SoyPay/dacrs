@@ -161,7 +161,7 @@ public:
 
 	bool IsHaveAccount(const vector<unsigned char>& accountid) {
 		for (auto item : mapKeyRegID) {
-			if (item.second.vRegID == accountid) {
+			if (item.second.GetRegID() == accountid) {
 				return true;
 			}
 		}

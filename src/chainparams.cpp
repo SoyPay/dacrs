@@ -91,7 +91,7 @@ public:
 //      cout << "hashGenesisBlock:" << HexStr(hashGenesisBlock) << endl;
 //      cout << "hashMerkleRoot:" << genesis.hashMerkleRoot.GetHex() << endl;
 //		assert(hashGenesisBlock == uint256("0x0d48e88dca01697d10e0fe8f1981f94db1f5e525d5a0e0acf22919af23daed60"));
-		assert(genesis.hashMerkleRoot == uint256("04b173fc873505d69f5f2a86aa8d7207abe7e0ffa63d786ff230f4a946f5a8255"));
+//		assert(genesis.hashMerkleRoot == uint256("04b173fc873505d69f5f2a86aa8d7207abe7e0ffa63d786ff230f4a946f5a8255"));
 
 		vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be"));
 		vSeeds.push_back(CDNSSeedData("bluematt.me", "dnsseed.bluematt.me"));
