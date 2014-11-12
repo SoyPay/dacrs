@@ -175,13 +175,10 @@ bool CAccountViewDB::BatchWrite(const map<CKeyID, CAccount> &mapAccounts,
 	CLevelDBBatch batch;
 	map<CKeyID, CAccount>::const_iterator iterAccount = mapAccounts.begin();
 	for (; iterAccount != mapAccounts.end(); ++iterAccount) {
-		CAccount saTemp = iterAccount->second;
-		CAccountOperLog accountOperLog;
-		saTemp.accountOperLog = accountOperLog;
 		if (uint160(0) == iterAccount->second.keyID) {
 			batch.Erase(make_pair('k', iterAccount->first));
 		} else {
-			batch.Write(make_pair('k', iterAccount->first), saTemp);
+			batch.Write(make_pair('k', iterAccount->first), iterAccount->second);
 		}
 	}
 

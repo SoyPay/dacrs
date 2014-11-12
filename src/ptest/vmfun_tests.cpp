@@ -129,7 +129,7 @@ void CreateFirstTx()
 	vInputParams.push_back(
 			"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]");
 	vInputParams.push_back("01");
-	vInputParams.push_back("100000000");
+	vInputParams.push_back("1000000");
 	vInputParams.push_back("10");
 	std::string strReturn("");
 	if (TestCallRPC("createcontracttx", vInputParams, strReturn) > 0) {
