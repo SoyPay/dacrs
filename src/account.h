@@ -77,6 +77,8 @@ public:
 	bool EraseKeyId(const vector<unsigned char> &accountId);
 	bool GetAccount(const vector<unsigned char> &accountId, CAccount &account);
 	bool SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &account);
+	bool GetAccount(const CUserID &userId, CAccount &account);
+	bool GetKeyId(const CUserID &userId, CKeyID &keyId);
 
 	bool Flush();
 	unsigned int GetCacheSize();
@@ -141,6 +143,7 @@ public:
 	 */
 	bool SetScript(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vValue);
 
+	bool GetScript(const CUserID &userId, vector<unsigned char> &vValue);
 	/**
 	 * @brief Get Script content from scriptdb by index
 	 * @param nIndex the value must be non-negative

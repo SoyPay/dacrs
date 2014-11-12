@@ -356,7 +356,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 				//confirm the tx is mine
 				if (IsMine(sptx.get())) {
 					CRewardTransaction* prtx = (CRewardTransaction*) sptx.get();
-					CPubKey pubkey(prtx->account);
+					CPubKey pubkey = boost::get<CPubKey>(prtx->account);
 					CKeyID keyid = pubkey.GetID();
 					CRegID regid(0, i);
 					mapKeyRegID[keyid] = regid;
@@ -379,7 +379,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 						uint256 hashtx = sptx->GetHash();
 
 						if (sptx->nTxType == REG_ACCT_TX) {
-							CKeyID keyid = ((CRegisterAccountTx*) sptx.get())->pubKey.GetID();
+							CKeyID keyid = boost::get<CKeyID>(((CRegisterAccountTx*) sptx.get())->userId);
 							CRegID regid(pblock->nHeight, i);
 							mapKeyRegID[keyid] = regid;
 							{
@@ -421,7 +421,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 							bupdate = true;
 
 							if (item.second->nTxType == REG_ACCT_TX) {
-								CKeyID keyid = ((CRegisterAccountTx*) item.second.get())->pubKey.GetID();
+								CKeyID keyid = boost::get<CKeyID>(((CRegisterAccountTx*) item.second.get())->userId);
 								if (mapKeyRegID.erase(keyid)) {
 									CWalletDB(strWalletFile).EraseRegID(keyid);
 								}
@@ -605,7 +605,7 @@ void CWallet::DelInvalidRegID() {
 					if (item.second->nTxType == REG_ACCT_TX) {
 
 						if (IsMine(item.second.get())) {
-							CKeyID keyid = ((CRegisterAccountTx*) item.second.get())->pubKey.GetID();
+							CKeyID keyid = boost::get<CPubKey>(((CRegisterAccountTx*) item.second.get())->userId).GetID();
 							if (mapKeyRegID.erase(keyid)) {
 								CWalletDB(strWalletFile).EraseRegID(keyid);
 							}
