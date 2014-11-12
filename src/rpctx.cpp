@@ -666,7 +666,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	uint64_t nMaxMoneyPerTime;
 	uint64_t nMaxMoneyTotal;
 	uint64_t nMaxMoneyPerDay;
-	uint64_t nUserDefine;
+	vector<unsigned char> vUserDefine;
 
 	if (params.size() > 4) {
 		RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(int_type)(int_type));
@@ -686,8 +686,8 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	}
 	if (params.size() > 8) {
 		RPCTypeCheck(params,
-				list_of(str_type)(str_type)(int_type)(int_type)(int_type)(int_type)(int_type)(int_type)(int_type));
-		nUserDefine = params[8].get_uint64();
+				list_of(str_type)(str_type)(int_type)(int_type)(int_type)(int_type)(int_type)(int_type)(str_type));
+		vUserDefine = ParseHex(params[8].get_str());
 	}
 
 	if (fee > 0 && fee < CTransaction::nMinTxFee) {
@@ -743,7 +743,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		tx.aAuthorizate.SetMaxMoneyPerTime(nMaxMoneyPerTime);
 		tx.aAuthorizate.SetMaxMoneyTotal(nMaxMoneyTotal);
 		tx.aAuthorizate.SetMaxMoneyPerDay(nMaxMoneyPerDay);
-		tx.aAuthorizate.SetUserData(nUserDefine);
+		tx.aAuthorizate.SetUserData(vUserDefine);
 
 //		vector<unsigned char> vscriptcontent;
 //		if (pScriptDBTip->GetScript(vscript, vscriptcontent)) {

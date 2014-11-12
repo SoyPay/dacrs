@@ -147,13 +147,13 @@ public:
 	CNetAuthorizate()
 	{
 		nAuthorizeTime = 0;
-		nUserDefine = 0;
+		nUserDefine.clear();
 		nMaxMoneyPerTime = 0;
 		nMaxMoneyTotal = 0;
 		nMaxMoneyPerDay = 0;
 	}
 
-	CNetAuthorizate(uint32_t nauthorizetime, uint64_t nuserdefine, uint64_t nmaxmoneypertime, uint64_t nmaxmoneytotal,
+	CNetAuthorizate(uint32_t nauthorizetime, vector<unsigned char> nuserdefine, uint64_t nmaxmoneypertime, uint64_t nmaxmoneytotal,
 			uint64_t nmaxmoneyperday) {
 		nAuthorizeTime = nauthorizetime;
 		nUserDefine = nuserdefine;
@@ -165,7 +165,7 @@ public:
 	uint32_t GetAuthorizeTime() const {
 		return nAuthorizeTime;
 	}
-	uint64_t GetUserData() const {
+	const vector<unsigned char> &GetUserData() const {
 			return nUserDefine;
 		}
 	uint64_t GetMaxMoneyPerTime() const {
@@ -184,7 +184,7 @@ public:
 	void SetMaxMoneyPerTime(uint64_t nMoney) {
 		nMaxMoneyPerTime = nMoney;
 	}
-	void SetUserData(uint64_t data) {
+	void SetUserData(const vector<unsigned char> &data) {
 		nUserDefine = data;
 		}
 	void SetMaxMoneyTotal(uint64_t nMoney) {
@@ -205,7 +205,7 @@ public:
 	IMPLEMENT_SERIALIZE
 	(
 		READWRITE(VARINT(nAuthorizeTime));
-		READWRITE(VARINT(nUserDefine));
+		READWRITE(nUserDefine);
 		READWRITE(VARINT(nMaxMoneyPerTime));
 		READWRITE(VARINT(nMaxMoneyTotal));
 		READWRITE(VARINT(nMaxMoneyPerDay));
@@ -213,7 +213,7 @@ public:
 
 protected:
 	uint32_t nAuthorizeTime;
-	uint64_t nUserDefine;
+	vector<unsigned char> nUserDefine;
 	uint64_t nMaxMoneyPerTime;
 	uint64_t nMaxMoneyTotal;
 	uint64_t nMaxMoneyPerDay;
@@ -249,12 +249,77 @@ public:
 		nLastOperHeight = nHeight;
 	}
 
-	IMPLEMENT_SERIALIZE
-	(
-		READWRITE(*(CNetAuthorizate*)this);
-		READWRITE(VARINT(nLastOperHeight));
-		READWRITE(VARINT(nCurMaxMoneyPerDay));
-	)
+	unsigned int GetSerializeSize(int nType, int nVersion) const {
+		CSerActionGetSerializeSize ser_action;
+		unsigned int nSerSize = 0;
+		ser_streamplaceholder s;
+		s.nType = nType;
+		vector<unsigned char> vData;
+		vData.clear();
+		if (nAuthorizeTime > 0) {
+			CDataStream ds(SER_DISK, CLIENT_VERSION);
+			ds << VARINT(nAuthorizeTime);
+			ds << nUserDefine;
+			ds << VARINT(nMaxMoneyPerTime);
+			ds << VARINT(nMaxMoneyTotal);
+			ds << VARINT(nMaxMoneyPerDay);
+			ds << VARINT(nLastOperHeight);
+			ds << VARINT(nCurMaxMoneyPerDay);
+			vData.insert(vData.end(), ds.begin(), ds.end());
+		}
+		s.nVersion = nVersion;
+		{
+			(nSerSize += ::SerReadWrite(s, (vData), nType, nVersion, ser_action));
+		}
+		return nSerSize;
+	}
+	template<typename Stream>
+	void Serialize(Stream& s, int nType, int nVersion) const {
+		CSerActionSerialize ser_action;
+		unsigned int nSerSize = 0;
+		vector<unsigned char> vData;
+		vData.clear();
+		if (nAuthorizeTime > 0) {
+			CDataStream ds(SER_DISK, CLIENT_VERSION);
+			ds << VARINT(nAuthorizeTime);
+			ds << nUserDefine;
+			ds << VARINT(nMaxMoneyPerTime);
+			ds << VARINT(nMaxMoneyTotal);
+			ds << VARINT(nMaxMoneyPerDay);
+			ds << VARINT(nLastOperHeight);
+			ds << VARINT(nCurMaxMoneyPerDay);
+			vData.insert(vData.end(), ds.begin(), ds.end());
+		}
+		{
+			(nSerSize += ::SerReadWrite(s, (vData), nType, nVersion, ser_action));
+		}
+	}
+	template<typename Stream>
+	void Unserialize(Stream& s, int nType, int nVersion) {
+		CSerActionUnserialize ser_action;
+		unsigned int nSerSize = 0;
+		vector<unsigned char> vData;
+		vData.clear();
+		{
+			(nSerSize += ::SerReadWrite(s, (vData), nType, nVersion, ser_action));
+		}
+		if (!vData.empty()) {
+			CDataStream ds(vData, SER_DISK, CLIENT_VERSION);
+			ds >> VARINT(nAuthorizeTime);
+			ds >> nUserDefine;
+			ds >> VARINT(nMaxMoneyPerTime);
+			ds >> VARINT(nMaxMoneyTotal);
+			ds >> VARINT(nMaxMoneyPerDay);
+			ds >> VARINT(nLastOperHeight);
+			ds >> VARINT(nCurMaxMoneyPerDay);
+		}
+	}
+//	IMPLEMENT_SERIALIZE
+//	(
+//		READWRITE(*(CNetAuthorizate*)this);
+//		READWRITE(VARINT(nLastOperHeight));
+//		READWRITE(VARINT(nCurMaxMoneyPerDay));
+//	)
 
 private:
 	uint32_t nLastOperHeight;
@@ -700,84 +765,18 @@ public:
 	~CRewardTransaction() {
 	}
 
-	unsigned int GetSerializeSize(int nType, int nVersion) const {
-		CSerActionGetSerializeSize ser_action;
-		const bool fGetSize = true;
-		const bool fWrite = false;
-		const bool fRead = false;
-		unsigned int nSerSize = 0;
-		ser_streamplaceholder s;
-		(void) ((!!(fGetSize || fWrite || fRead))
-				|| (_assert("fGetSize||fWrite||fRead", "D:\\soypay\\src\\tx.h", 720), 0)); /* suppress warning */
-		s.nType = nType;
-		s.nVersion = nVersion;
-		{
-			(nSerSize += ::SerReadWrite(s, (this->nVersion), nType, nVersion, ser_action));
-			nVersion = this->nVersion;
-			CID acctId(account);
-			(nSerSize += ::SerReadWrite(s, (acctId), nType, nVersion, ser_action));
-			if (fRead) {
-				account = acctId.GetUserId();
-			}
-			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(rewardValue)))), nType, nVersion, ser_action));
-			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(nHeight)))), nType, nVersion, ser_action));
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(this->nVersion);
+		nVersion = this->nVersion;
+		CID acctId(account);
+		READWRITE(acctId);
+		if(fRead) {
+			account = acctId.GetUserId();
 		}
-		return nSerSize;
-	}
-	template<typename Stream>
-	void Serialize(Stream& s, int nType, int nVersion) const {
-		CSerActionSerialize ser_action;
-		const bool fGetSize = false;
-		const bool fWrite = true;
-		const bool fRead = false;
-		unsigned int nSerSize = 0;
-		(void) ((!!(fGetSize || fWrite || fRead))
-				|| (_assert("fGetSize||fWrite||fRead", "D:\\soypay\\src\\tx.h", 720), 0)); /* suppress warning */
-		{
-			(nSerSize += ::SerReadWrite(s, (this->nVersion), nType, nVersion, ser_action));
-			nVersion = this->nVersion;
-			CID acctId(account);
-			(nSerSize += ::SerReadWrite(s, (acctId), nType, nVersion, ser_action));
-			if (fRead) {
-				account = acctId.GetUserId();
-			}
-			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(rewardValue)))), nType, nVersion, ser_action));
-			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(nHeight)))), nType, nVersion, ser_action));
-		}
-	}
-	template<typename Stream>
-	void Unserialize(Stream& s, int nType, int nVersion) {
-		CSerActionUnserialize ser_action;
-		const bool fGetSize = false;
-		const bool fWrite = false;
-		const bool fRead = true;
-		unsigned int nSerSize = 0;
-		(void) ((!!(fGetSize || fWrite || fRead))
-				|| (_assert("fGetSize||fWrite||fRead", "D:\\soypay\\src\\tx.h", 720), 0)); /* suppress warning */
-		{
-			(nSerSize += ::SerReadWrite(s, (this->nVersion), nType, nVersion, ser_action));
-			nVersion = this->nVersion;
-			CID acctId(account);
-			(nSerSize += ::SerReadWrite(s, (acctId), nType, nVersion, ser_action));
-			if (fRead) {
-				account = acctId.GetUserId();
-			}
-			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(rewardValue)))), nType, nVersion, ser_action));
-			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(nHeight)))), nType, nVersion, ser_action));
-		}
-	}
-//	IMPLEMENT_SERIALIZE
-//	(
-//		READWRITE(this->nVersion);
-//		nVersion = this->nVersion;
-//		CID acctId(account);
-//		READWRITE(acctId);
-//		if(fRead) {
-//			account = acctId.GetUserId();
-//		}
-//		READWRITE(VARINT(rewardValue));
-//		READWRITE(VARINT(nHeight));
-//	)
+		READWRITE(VARINT(rewardValue));
+		READWRITE(VARINT(nHeight));
+	)
 
 	uint256 GetHash() const {
 		return SerializeHash(*this);
@@ -1019,7 +1018,7 @@ public:
 	vector<unsigned char> vKey;
 	vector<unsigned char> vValue;
 
-	CScriptDBOperLog (const vector<unsigned char> vKeyIn, const vector<unsigned char> vValueIn) {
+	CScriptDBOperLog (const vector<unsigned char> &vKeyIn, const vector<unsigned char> &vValueIn) {
 		vKey = vKeyIn;
 		vValue = vValueIn;
 	}
@@ -1112,13 +1111,81 @@ public:
 	}
 
 	string ToString() const;
-	IMPLEMENT_SERIALIZE
-	(
-			READWRITE(bValid);
-			READWRITE(nLastOperHeight);
-			READWRITE(nLastCurMaxMoneyPerDay);
-			READWRITE(scriptID);
-	)
+	void SetNULL() {
+		bValid = false;
+		nLastOperHeight = 0;
+		nLastCurMaxMoneyPerDay = 0;
+		nLastMaxMoneyTotal = 0;
+		scriptID.clear();
+	}
+
+	unsigned int GetSerializeSize(int nType, int nVersion) const {
+		CSerActionGetSerializeSize ser_action;
+		unsigned int nSerSize = 0;
+		ser_streamplaceholder s;
+		s.nType = nType;
+		vector<unsigned char> vData;
+		vData.clear();
+		if(bValid) {
+			CDataStream ds(SER_DISK, CLIENT_VERSION);
+			ds << bValid;
+			ds << VARINT(nLastOperHeight);
+			ds << VARINT(nLastCurMaxMoneyPerDay);
+			ds << VARINT(nLastMaxMoneyTotal);
+			ds << scriptID;
+			vData.insert(vData.end(), ds.begin(), ds.end());
+		}
+		s.nVersion = nVersion;
+		{
+			(nSerSize += ::SerReadWrite(s, (vData), nType, nVersion, ser_action));
+		}
+		return nSerSize;
+	}
+	template<typename Stream>
+	void Serialize(Stream& s, int nType, int nVersion) const {
+		CSerActionSerialize ser_action;
+		unsigned int nSerSize = 0;
+		vector<unsigned char> vData;
+		vData.clear();
+		if(bValid) {
+			CDataStream ds(SER_DISK, CLIENT_VERSION);
+			ds << bValid;
+			ds << VARINT(nLastOperHeight);
+			ds << VARINT(nLastCurMaxMoneyPerDay);
+			ds << VARINT(nLastMaxMoneyTotal);
+			ds << scriptID;
+			vData.insert(vData.end(), ds.begin(), ds.end());
+		}
+		{
+			(nSerSize += ::SerReadWrite(s, (bValid), nType, nVersion, ser_action));
+		}
+	}
+	template<typename Stream>
+	void Unserialize(Stream& s, int nType, int nVersion) {
+		CSerActionUnserialize ser_action;
+		unsigned int nSerSize = 0;
+		vector<unsigned char> vData;
+		vData.clear();
+		{
+			(nSerSize += ::SerReadWrite(s, (vData), nType, nVersion, ser_action));
+		}
+		if (!vData.empty()) {
+			CDataStream ds(vData, SER_DISK, CLIENT_VERSION);
+			ds >> bValid;
+			ds >> VARINT(nLastOperHeight);
+			ds >> VARINT(nLastCurMaxMoneyPerDay);
+			ds >> VARINT(nLastMaxMoneyTotal);
+			ds >> scriptID;
+		}
+	}
+
+//	IMPLEMENT_SERIALIZE
+//	(
+//		READWRITE(bValid);
+//		READWRITE(nLastOperHeight);
+//		READWRITE(nLastCurMaxMoneyPerDay);
+//		READWRITE(scriptID);
+//	)
 private:
 	bool bValid;
 	int nLastOperHeight;
@@ -1129,13 +1196,35 @@ private:
 
 class CAccountOperLog {
 public:
-	CKeyID keyID;
-	vector<COperFund> vOperFund;
-	CAuthorizateLog   authorLog;
-	IMPLEMENT_SERIALIZE(
-			READWRITE(keyID);
-			READWRITE(vOperFund);
-			READWRITE(authorLog);
+
+	mutable CKeyID keyID;
+	mutable vector<COperFund> vOperFund;
+	mutable CAuthorizateLog   authorLog;
+	IMPLEMENT_SERIALIZE
+	(
+		vector<unsigned char> vData;
+		if(fWrite || fGetSize) {
+			if(keyID == uint160(0)) {
+				vData.clear();
+			}
+			else {
+				CDataStream ds(SER_DISK, CLIENT_VERSION);
+				ds << keyID;
+				ds << vOperFund;
+				ds << authorLog;
+				vData.insert(vData.end(), ds.begin(), ds.end());
+			}
+		}
+		READWRITE(vData);
+		if(fRead) {
+			if(!vData.empty()) {
+				CDataStream ds(vData, SER_DISK, CLIENT_VERSION);
+				ds >> keyID;
+				ds >> vOperFund;
+				ds >> authorLog;
+			}
+		}
+
 	)
 public:
 	void InsertOperateLog(const COperFund& op) {
@@ -1147,6 +1236,11 @@ public:
 	}
 
 	string ToString() const;
+
+	void SetNULL() {
+		keyID = uint160(0);
+		vOperFund.clear();
+	}
 
 };
 
