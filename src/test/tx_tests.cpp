@@ -6,10 +6,11 @@
 #include "account.h"
 #include "main.h"
 using namespace std;
-#define MONTH_BLOCKS (30*(24 * 60 * 60)/(10*60))
+#define DAY_BLOCKS	((24 * 60 * 60)/(10*60))
+#define MONTH_BLOCKS (30*DAY_BLOCKS)
 #define CHAIN_HEIGHT (10*MONTH_BLOCKS+10)
 #define TEST_SIZE 10000
-#define MAX_FUND_MONEY 10
+#define MAX_FUND_MONEY 15
 #define RANDOM_FUND_MONEY (random(MAX_FUND_MONEY)+1)
 #define random(x) (rand()%x)
 
@@ -33,7 +34,7 @@ void GenerateRandomHash(vector<uint256>& vHash, uint64_t nSize = TEST_SIZE) {
 	vRandom.reserve(32);
 
 	//generate key hash
-	for (int i = 0; i < nSize; i++) {
+	for (int i = 1; i <= nSize; i++) {
 		CKey key;
 		key.MakeNewKey(false);
 		string str(key.begin(), key.end());
@@ -63,6 +64,8 @@ struct CTxTest {
 	CBlockIndex block;
 	CAccount accOperate;
 	CAccount accBeforOperate;
+	CAccount accYesterDayLastOper;
+	vector<unsigned char> scriptID;
 	vector_unsigned_char v[11]; //0~9 is valid,10 is used to for invalid scriptID
 
 	CTxTest() {
@@ -71,14 +74,14 @@ struct CTxTest {
 	}
 
 	void InitAuthorization(const string& str) {
-		vector<unsigned char> scriptID = ParseHex(str.c_str());
+		scriptID = ParseHex(str.c_str());
 		CAuthorizate author;
 		author.SetAuthorizeTime(CHAIN_HEIGHT + 100);
-		author.SetMaxMoneyPerDay(1000);
-		author.SetCurMaxMoneyPerDay(author.GetMaxMoneyPerDay());
-		author.SetLastOperHeight(0);
-		author.SetMaxMoneyPerTime(27);
-		author.SetMaxMoneyTotal(20*TEST_SIZE);
+		author.SetMaxMoneyPerDay(800);
+		author.SetCurMaxMoneyPerDay(0);
+		author.SetLastOperHeight(1);
+		author.SetMaxMoneyPerTime(37);
+		author.SetMaxMoneyTotal(10*TEST_SIZE);
 		accOperate.mapAuthorizate[scriptID] = author;
 	}
 
@@ -90,8 +93,8 @@ struct CTxTest {
 			v[i] = ParseHex(buf);
 		}
 
-		for (int i = 0; i < TEST_SIZE; i++) {
-			accOperate.vRewardFund.push_back(CFund(REWARD_FUND, RANDOM_FUND_MONEY, random(20)));
+		for (int i = 0; i < TEST_SIZE/100; i++) {
+			accOperate.vRewardFund.push_back(CFund(REWARD_FUND, RANDOM_FUND_MONEY, random(5)));
 		}
 
 		for (int i = 0; i < TEST_SIZE; i++) {
@@ -104,13 +107,13 @@ struct CTxTest {
 		}
 
 		for (int i = 0; i < TEST_SIZE; i++) {
-			accOperate.vSelfFreeze.push_back(CFund(SELF_FREEZD_FUND, RANDOM_FUND_MONEY, random(20)));
+			accOperate.AddToSelfFreeze(CFund(SELF_FREEZD_FUND, RANDOM_FUND_MONEY*2, random(20)) ,false);
 		}
 	}
 
 	void Init() {
 		srand((unsigned) time(NULL));
-		accOperate.llValues = TEST_SIZE;
+		accOperate.llValues = TEST_SIZE*5;
 		block.nHeight = CHAIN_HEIGHT;
 		chainActive.SetTip(&block);
 		BOOST_CHECK(NULL != chainActive.Tip());
@@ -122,12 +125,31 @@ struct CTxTest {
 		InitFund();
 	}
 
-	void CheckAccountEqual() {
+	void IsAuthorityEqual(const vector_unsigned_char& scriptID) {
+		auto itBefore = accBeforOperate.mapAuthorizate.find(scriptID);
+		BOOST_CHECK(accBeforOperate.mapAuthorizate.end() != itBefore);
+
+		auto it = accOperate.mapAuthorizate.find(scriptID);
+		BOOST_CHECK(accBeforOperate.mapAuthorizate.end() != it);
+
+		CAuthorizate& authorizate = it->second;
+		CAuthorizate& authorizateBefor = itBefore->second;
+		BOOST_CHECK(authorizate.GetCurMaxMoneyPerDay() == authorizateBefor.GetCurMaxMoneyPerDay() &&
+				authorizate.GetMaxMoneyTotal() == authorizateBefor.GetMaxMoneyTotal() &&
+				authorizate.GetLastOperHeight() == authorizateBefor.GetLastOperHeight() );
+		//cout<<"old oper height: "<<authorizateBefor.GetLastOperHeight()<<" new oper height: "<<authorizate.GetLastOperHeight()<<endl;
+	}
+
+	void CheckAccountEqual(bool bCheckAuthority = true) {
 		BOOST_CHECK(IsEqual(accBeforOperate.vRewardFund, accOperate.vRewardFund));
 		BOOST_CHECK(IsEqual(accBeforOperate.vFreedomFund, accOperate.vFreedomFund));
 		BOOST_CHECK(IsEqual(accBeforOperate.vFreeze, accOperate.vFreeze));
 		BOOST_CHECK(IsEqual(accBeforOperate.vSelfFreeze, accOperate.vSelfFreeze));
 		BOOST_CHECK(accBeforOperate.llValues == accOperate.llValues);
+
+		//cout<<"old: "<<GetTotalValue(accBeforOperate.vSelfFreeze)<<" new: "<<GetTotalValue(accOperate.vSelfFreeze)<<endl;
+		if (bCheckAuthority)
+			IsAuthorityEqual(scriptID);
 	}
 
 	uint64_t GetTotalValue(const vector<CFund>& vFund) {
@@ -157,10 +179,14 @@ struct CTxTest {
 		BOOST_CHECK(OldAuth.GetMaxMoneyTotal() == newAuthor.GetMaxMoneyTotal() + nMoney);
 
 		const uint64_t nBlocksPerDay = 24 * 60 / 10;	//amount of blocks that connected into chain per day
-		if (OldAuth.GetLastOperHeight() / nBlocksPerDay < nHeight / nBlocksPerDay)
+		if (OldAuth.GetLastOperHeight() / nBlocksPerDay < nHeight / nBlocksPerDay && 0 != nMoney) {
 			BOOST_CHECK(OldAuth.GetMaxMoneyPerDay() == newAuthor.GetCurMaxMoneyPerDay() + nMoney);
+		}
 		else
+		{
+			//cout<<"old: "<<OldAuth.GetCurMaxMoneyPerDay()<<" Money:"<<nMoney<<" new: "<<newAuthor.GetCurMaxMoneyPerDay()<<endl;
 			BOOST_CHECK(OldAuth.GetCurMaxMoneyPerDay() == newAuthor.GetCurMaxMoneyPerDay() + nMoney);
+		}
 	}
 };
 
@@ -193,61 +219,105 @@ BOOST_FIXTURE_TEST_CASE(tx_add_free,CTxTest) {
 	CheckAccountEqual();
 }
 
+/**
+ * brief	:each height test 10 times
+ */
 BOOST_FIXTURE_TEST_CASE(tx_minus_free,CTxTest) {
-	vector<unsigned char> scriptID = ParseHex("00112233");
-	int nBranch[5] = { 0 };
+	int nBranch[7] = { 0 };
 	int nRunTimeHeight = 0;
-	for (int i = 0; i < TEST_SIZE; i++) {
-		nRunTimeHeight += 1;
-		uint64_t nOldVectorSum = GetTotalValue(accOperate.vFreedomFund);
-		uint64_t nOldValue = accOperate.llValues;
-		uint64_t randValue = random(40);
-		CFund fund(REWARD_FUND, randValue, random(20));
-		CAuthorizate OldAuthor = accOperate.mapAuthorizate[scriptID];
+	int nLastOperHeight = 0;
+	bool bOverDay = false;
+	bool bCheckAuthority = true;
 
-		if (nOldVectorSum >= randValue) {
-			if (accOperate.IsAuthorized(fund.value, nRunTimeHeight, scriptID)) {
-				//run branch 0:enough money in vector and authorized by script
-				BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID,true));
-				BOOST_CHECK(GetTotalValue(accOperate.vFreedomFund) == nOldVectorSum - randValue);
-				CheckAuthorization(OldAuthor, fund.value, nRunTimeHeight, scriptID);
-				nBranch[0]++;
-			} else {
-				//run branch 1:enough money in vector but not authorized by script
-				BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID,true));
-				nBranch[1]++;
-			}
-		} else {
-			if (accOperate.llValues + nOldVectorSum >= randValue) {
-				if (accOperate.IsAuthorized(fund.value, nRunTimeHeight, scriptID)) {
-					//run branch 2:enough money in (vector+llvalue) and authorized by script
-					BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID,true));
-					BOOST_CHECK(
-							GetTotalValue(accOperate.vFreedomFund) + accOperate.llValues
-									== nOldValue + nOldVectorSum - randValue);
-					CheckAuthorization(OldAuthor, fund.value, nRunTimeHeight, scriptID);
-					nBranch[2]++;
+	for (int i = 1; i <= TEST_SIZE / 10; i++) {
+		nRunTimeHeight += 10;
+		bOverDay = nRunTimeHeight / DAY_BLOCKS > nLastOperHeight / DAY_BLOCKS;
+		bCheckAuthority = ((0 == i % 2) ? true : false);
+
+		for (int j = 0; j < 10; j++) {
+			uint64_t nOldVectorSum = GetTotalValue(accOperate.vFreedomFund);
+			uint64_t nOldValue = accOperate.llValues;
+			uint64_t minusValue = random(40) + 1;
+			CFund fund(REWARD_FUND, minusValue, random(20));
+			CAuthorizate OldAuthor = accOperate.mapAuthorizate[scriptID];
+
+			if (nOldVectorSum >= minusValue) {
+				if (bCheckAuthority) {
+					if (accOperate.IsAuthorized(fund.value, nRunTimeHeight, scriptID)) {
+						//run branch 0:enough money in vector and not signed but authorized by script
+						BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID, true));
+						BOOST_CHECK(GetTotalValue(accOperate.vFreedomFund) == nOldVectorSum - minusValue);
+						CheckAuthorization(OldAuthor, fund.value, nRunTimeHeight, scriptID);
+						nBranch[0]++;
+
+						nLastOperHeight = nRunTimeHeight;
+						if (!bOverDay)
+							accYesterDayLastOper = accOperate;
+					} else {
+						//run branch 1:enough money in vector but not signed and not authorized by script
+						BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID, true));
+						nBranch[1]++;
+					}
 				} else {
-					//run branch 3:enough money in (vector+llvalue) but not authorized by script
-					BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID,true));
-					nBranch[3]++;
+					//run branch 2:enough money in vector and signed by account(no need to check authority)
+					BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID, false));
+					BOOST_CHECK(GetTotalValue(accOperate.vFreedomFund) == nOldVectorSum - minusValue);
+					nBranch[2]++;
 				}
 
 			} else {
-				//run branch 4:not enough money
-				BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID,true));
-				BOOST_CHECK(GetTotalValue(accOperate.vFreedomFund) == nOldVectorSum);
-				BOOST_CHECK(nOldValue == accOperate.llValues);
-				nBranch[4]++;
+				if (accOperate.llValues + nOldVectorSum >= minusValue) {
+					if (bCheckAuthority) {
+						if (accOperate.IsAuthorized(fund.value, nRunTimeHeight, scriptID)) {
+							//run branch 3:enough money in (vector+llvalue) authorized by script but not signed
+							BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID, true));
+							BOOST_CHECK(
+									GetTotalValue(accOperate.vFreedomFund) + accOperate.llValues
+											== nOldValue + nOldVectorSum - minusValue);
+							CheckAuthorization(OldAuthor, fund.value, nRunTimeHeight, scriptID);
+							nBranch[3]++;
+
+							nLastOperHeight = nRunTimeHeight;
+							if (!bOverDay)
+								accYesterDayLastOper = accOperate;
+						} else {
+							//run branch 4:enough money in (vector+llvalue) but not signed and not authorized by script
+							BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID, true));
+							nBranch[4]++;
+						}
+
+					} else {
+						//run branch 5:enough money in (vector+llvalue) and signed by account(no need to check authority)
+						BOOST_CHECK(accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID, false));
+						BOOST_CHECK(
+								GetTotalValue(accOperate.vFreedomFund) + accOperate.llValues
+										== nOldValue + nOldVectorSum - minusValue);
+						nBranch[5]++;
+					}
+
+				} else {
+					//run branch 6:not enough money
+					BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREE, fund, nRunTimeHeight, &scriptID, true));
+					BOOST_CHECK(GetTotalValue(accOperate.vFreedomFund) == nOldVectorSum);
+					BOOST_CHECK(nOldValue == accOperate.llValues);
+					nBranch[6]++;
+				}
 			}
 		}
+
+		CAccount accountAfterOper = accOperate;
+		accOperate.UndoOperateAccount(accOperate.accountOperLog);
+		CheckAccountEqual(bCheckAuthority);
+
+		accOperate = accountAfterOper;
+		CAccountOperLog log;
+		accOperate.accountOperLog = log;
+
+		accBeforOperate = accOperate;
 	}
 
 	for (int i = 0; i < sizeof(nBranch) / sizeof(nBranch[0]); i++)
-		cout << "branch " << i << " is " << nBranch[i] << endl;
-
-	accOperate.UndoOperateAccount(accOperate.accountOperLog);
-	CheckAccountEqual();
+		BOOST_TEST_MESSAGE(strprintf("branch %d is %d" ,i , nBranch[i]));
 }
 
 BOOST_FIXTURE_TEST_CASE(tx_add_self,CTxTest) {
@@ -276,40 +346,65 @@ BOOST_FIXTURE_TEST_CASE(tx_add_self,CTxTest) {
 
 BOOST_FIXTURE_TEST_CASE(tx_minus_self,CTxTest) {
 	accOperate.CompactAccount(5);
-	int nBranch[3] = { 0 };
+	int nBranch[4] = { 0 };
 	int nRunTimeHeight = 0;
-	vector<unsigned char> scriptID = ParseHex("00112233");
-	CAuthorizate OldAuthor = accOperate.mapAuthorizate[scriptID];
-	for (int i = 0; i < TEST_SIZE; i++) {
-		nRunTimeHeight += 1;
-		uint64_t nOldVectorSum = GetTotalValue(accOperate.vSelfFreeze);
-		uint64_t randValue = random(30);
-		CFund fund(REWARD_FUND, randValue, random(20));
+	int nLastOperHeight = 0;
+	bool bOverDay = false;
+	bool bCheckAuthority = true;
 
-		if (nOldVectorSum >= randValue) {
-			if (accOperate.IsAuthorized(fund.value, nRunTimeHeight, scriptID)) {
-				//branch 0:enough money and authorized by script
-				BOOST_CHECK(accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, nRunTimeHeight, &scriptID,true));
-				BOOST_CHECK(GetTotalValue(accOperate.vSelfFreeze) == nOldVectorSum - randValue);
-				nBranch[0]++;
+	for (int i = 1; i <= TEST_SIZE / 10; i++) {
+		nRunTimeHeight += 10;
+		bOverDay = nRunTimeHeight / DAY_BLOCKS > nLastOperHeight / DAY_BLOCKS;
+		bCheckAuthority = ((0 == i % 2) ? true : false);
+
+		for (int j = 0; j < 10; j++) {
+			uint64_t nOldVectorSum = GetTotalValue(accOperate.vSelfFreeze);
+			uint64_t randValue = random(40);
+			CFund fund(REWARD_FUND, randValue, random(20));
+			CAuthorizate OldAuthor = accOperate.mapAuthorizate[scriptID];
+
+			if (nOldVectorSum >= randValue) {
+				if (bCheckAuthority) {
+					if (accOperate.IsAuthorized(fund.value, nRunTimeHeight, scriptID)) {
+						//branch 0:enough money and authorized by script
+						BOOST_CHECK(
+								accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, nRunTimeHeight, &scriptID, true));
+						BOOST_CHECK(GetTotalValue(accOperate.vSelfFreeze) == nOldVectorSum - randValue);
+						CheckAuthorization(OldAuthor, fund.value, nRunTimeHeight, scriptID);
+						nBranch[0]++;
+						nLastOperHeight = nRunTimeHeight;
+					} else {
+						//branch 0:enough money but not authorized by script
+						BOOST_CHECK(
+								!accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, nRunTimeHeight, &scriptID, true));
+						nBranch[1]++;
+					}
+				} else {
+					BOOST_CHECK(accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, nRunTimeHeight, &scriptID, false));
+					BOOST_CHECK(GetTotalValue(accOperate.vSelfFreeze) == nOldVectorSum - randValue);
+					nBranch[2]++;
+				}
 			} else {
-				//branch 0:enough money but not authorized by script
-				BOOST_CHECK(!accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, nRunTimeHeight, &scriptID,true));
-				nBranch[1]++;
+				//not enough money
+				BOOST_CHECK(!accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, nRunTimeHeight, &scriptID, true));
+				BOOST_CHECK(GetTotalValue(accOperate.vSelfFreeze) == nOldVectorSum);
+				nBranch[3]++;
 			}
-
-		} else {
-			//not enough money
-			BOOST_CHECK(!accOperate.OperateAccount(MINUS_SELF_FREEZD, fund, nRunTimeHeight, &scriptID,true));
-			BOOST_CHECK(GetTotalValue(accOperate.vSelfFreeze) == nOldVectorSum);
-			nBranch[2]++;
 		}
+
+		CAccount accountAfterOper = accOperate;
+		accOperate.UndoOperateAccount(accOperate.accountOperLog);
+		CheckAccountEqual(bCheckAuthority);
+
+		accOperate = accountAfterOper;
+		CAccountOperLog log;
+		accOperate.accountOperLog = log;
+
+		accBeforOperate = accOperate;
 	}
 
 	for (int i = 0; i < sizeof(nBranch) / sizeof(nBranch[0]); i++)
-		cout << "branch " << i << " is " << nBranch[i] << endl;
-	accOperate.UndoOperateAccount(accOperate.accountOperLog);
-	CheckAccountEqual();
+		BOOST_TEST_MESSAGE(strprintf("branch %d is %d" ,i , nBranch[i]));
 }
 
 BOOST_FIXTURE_TEST_CASE(tx_add_freezed,CTxTest) {
@@ -379,7 +474,7 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_freezed,CTxTest) {
 	}
 
 	for (int i = 0; i < sizeof(nBranch) / sizeof(nBranch[0]); i++)
-		cout << "branch " << i << " is " << nBranch[i] << endl;
+		BOOST_TEST_MESSAGE(strprintf("branch %d is %d" ,i , nBranch[i]));
 	accOperate.UndoOperateAccount(accOperate.accountOperLog);
 	CheckAccountEqual();
 

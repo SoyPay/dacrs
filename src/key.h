@@ -216,7 +216,8 @@ public:
 	//
 	// Note that this is consensus critical as CheckSig() calls it!
 	bool IsValid() const {
-		return size() > 0;
+//		return size() > 0;
+		return size() == 33;//force use Compressed key
 	}
 
 	// fully validate whether this is a valid public key (more expensive than IsValid())
