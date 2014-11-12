@@ -291,6 +291,11 @@ static RET_DEFINE ExInt64DivFunc(unsigned char *ipara,void * pVmScriptRun) {
 	memcpy(&m2, &retdata.at(1).get()->at(0), sizeof(m2));
 //	printf("m1:%I64d\r\n", m1);
 //	printf("m2:%I64d\r\n", m2);
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+	if( m2 == 0)
+	{
+		return std::make_tuple (false, tem);
+	}
 	m3 = m1 / m2;
 //	printf("m3:%I64d\r\n", m3);
 //	memset(ipara, 0, 512);
@@ -299,7 +304,6 @@ static RET_DEFINE ExInt64DivFunc(unsigned char *ipara,void * pVmScriptRun) {
 //	//ipara[0] = sizeof(m3);
 //	memcpy(&ipara[2], &m3, sizeof(m3));
 //	return true;
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << m3;
     vector<unsigned char> tep1(tep.begin(),tep.end());
@@ -440,10 +444,7 @@ static RET_DEFINE ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 //	return true;
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
-    tep << desout;
-    vector<unsigned char> tep1(tep.begin(),tep.end());
-    (*tem.get()).push_back(tep1);
+    (*tem.get()).push_back(desout);
 
 	return std::make_tuple (true, tem);
 }
@@ -1254,112 +1255,14 @@ bool CVir8051::run() {
 
 			}
 		}
-		if (Sys.PC == 0x0007) {
-
-		}
 		if (Sys.PC == 0x0008) {
 			{
-				INT8U result = GetExRam(0xFBFF);
-				if (result == 0x00) {
-					return 0;
-				} else if (result == 0x08) {
-					unsigned char *pcheck = (unsigned char *) GetExRamAddr(0xF000);		//check data
-					INT8U len = pcheck[0];
-					switch (flag) {
-					case 0: {
-						if (pcheck[1] == 2) {
-							return true;
-						} else {
-							return false;
-						}
-					}
-						break;
-					case 1: {
-						int64_t rslt;
-						memcpy(&rslt, &pcheck[1], len);
-						if (rslt == 285916242777615) {
-							return true;
-						} else {
-							return false;
-						}
-					}
-						break;
-					case 2: {
-						int64_t rslt;
-						memcpy(&rslt, &pcheck[1], len);
-						if (rslt == 4328785416) {
-							return true;
-						} else {
-							return false;
-						}
-					}
-
-						break;
-					case 3: {
-						int64_t rslt;
-						memcpy(&rslt, &pcheck[1], len);
-						if (rslt == 4328653314) {
-							return true;
-						} else {
-							return false;
-						}
-					}
-
-						break;
-					case 4: {
-						int64_t rslt;
-						memcpy(&rslt, &pcheck[1], len);
-						if (rslt == 65536) {
-							return true;
-						} else {
-							return false;
-						}
-					}
-
-						break;
-					case 5: {
-						char xx[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
-						uint256 expect = Hash(xx, xx + sizeof(xx));
-						uint256 rslt;
-						memcpy(rslt.begin(), &pcheck[1], len);
-						if (expect == rslt) {
-							return true;
-						} else {
-							return false;
-						}
-					}
-						break;
-					case 6: {
-						char xx[] = { 0x17, 0x26, 0xc7, 0x5f, 0x28, 0x16, 0x71, 0x5f, 0xde, 0x89, 0x62, 0x08, 0x43,
-								0x34, 0x39, 0xa7 };
-						if (!memcmp(xx, &pcheck[1], len)) {
-							return true;
-						} else {
-							return false;
-						}
-					}
-						break;
-					case 7: {
-						if (pcheck[1] == true) {
-							return true;
-						} else {
-							return false;
-						}
-					}
-						break;
-					case 8: {
-						assert(0);
-					}
-						break;
-					default: {
-						assert(0);
-					}
-						break;
-					}
-
-				} else {
+				INT8U result=GetExRam(0xEFFD);
+				if(result == 0x01)
+				{
 					return 1;
 				}
+				return 0;
 			}
 		}
 	}
