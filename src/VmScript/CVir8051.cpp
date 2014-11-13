@@ -14,6 +14,7 @@
 #include <openssl/des.h>
 #include <vector>
 #include "VmScriptRun.h"
+#include "tx.h"
 //#include "Typedef.h"
 
 //////////////////////////////////////////////////////////////////////
@@ -575,10 +576,12 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 	if (GetTransaction(pBaseTx, hash1)) {
 		CContractTransaction *tx = static_cast<CContractTransaction*>(pBaseTx.get());
 		vector<unsigned char> item;
-		//! @todo
-//		for (auto& it : tx->vAccountRegId) {
-//			item.insert(item.end(), it.begin(), it.end());
-//		}
+
+		for (auto& it : tx->vAccountRegId) {
+//			CID id(it);
+			vector<unsigned char> id = boost::get<CRegID>(it).GetRegID();
+			item.insert(item.end(), id.begin(), id.end());
+		}
 
 		(*tem.get()).push_back(item);
 	}
@@ -586,34 +589,19 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 }
 
 static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScriptRun) {
+	CVmScriptRun *pVmScript = (CVmScriptRun *)pVmScriptRun;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 	GetData(ipara,retdata);
 	assert(retdata.size() == 1);
     bool flag = true;
-	CAccountViewCache view(*pAccountViewTip, true);
 
 	string strParam((*retdata[0]).begin(), (*retdata[0]).end());
 	CAccount aAccount;
-	CKeyID keyid;
-	if (!view.GetAccount(keyid, aAccount)) {
+	CRegID regid(*retdata.at(0));
+	CUserID userid(regid);
+	if (!pVmScript->GetCatchView()->GetAccount(userid, aAccount)) {
 		flag = false;
 	}
-//
-//	if (strParam.length() != 12) {
-//		CBitcoinAddress address(strParam.c_str());
-//		if (!address.GetKeyID(keyid))
-//			flag = false;
-//
-//	}
-//	else {
-//		if (!view.GetKeyId(ParseHex(strParam), keyid)) {
-//			flag = false;
-//		}
-//		if (!view.GetAccount(keyid, aAccount)) {
-//			flag = false;
-//		}
-//	}
-
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -626,23 +614,18 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 	return std::make_tuple (flag, tem);
 }
 static RET_DEFINE ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScriptRun) {
+	CVmScriptRun *pVmScript = (CVmScriptRun *)pVmScriptRun;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 	GetData(ipara,retdata);
 	assert(retdata.size() == 1);
 
-	CAccountViewCache view(*pAccountViewTip, true);
 	bool flag = true;
 	string strParam((*retdata[0]).begin(), (*retdata[0]).end());
 	CAccount aAccount;
-	if (strParam.length() != 12) {
-		CBitcoinAddress address(strParam.c_str());
-		CKeyID keyid;
-		if (!address.GetKeyID(keyid))
-			flag =  false;
-
-		if (!view.GetAccount(keyid, aAccount)) {
-			flag =  false;
-		}
+	CRegID regid(*retdata.at(0));
+	CUserID userid(regid);
+	if (!pVmScript->GetCatchView()->GetAccount(userid, aAccount)) {
+		flag = false;
 	}
 	uint64_t nbalance = aAccount.GetBalance(chainActive.Height());
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
