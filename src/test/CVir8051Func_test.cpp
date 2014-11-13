@@ -19,6 +19,31 @@
 using namespace std;
 
 CVir8051 *pgoble_test = NULL;
+std::vector<unsigned char> GetScriptBin(char *filepath) {
+
+	std::vector<unsigned char> m_ROM;
+	assert(filepath);
+	FILE *m_file = fopen(filepath, "rb");
+	if (m_file != NULL) {
+		fseek(m_file, 0, SEEK_SET);
+		fseek(m_file, 0, SEEK_END);
+		int len = ftell(m_file);
+		fseek(m_file, 0, SEEK_SET);
+		char *buffer = (char*) malloc(len);
+		memset(buffer, 0, len);
+		fread(buffer, 1, len + 1, m_file);
+		m_ROM.insert(m_ROM.begin(), buffer, buffer + len);
+		if (buffer != NULL) {
+			free(buffer);
+			buffer = NULL;
+		}
+		if (m_file != NULL) {
+			fclose(m_file);
+			m_file = NULL;
+		}
+	}
+	return m_ROM;
+}
 
 BOOST_AUTO_TEST_SUITE(C8051_fun)
 
@@ -6978,8 +7003,16 @@ BOOST_AUTO_TEST_CASE(print_out)
 
 	};
 	CVmScript vscript;
-	vscript.Rom.insert(vscript.Rom.begin(),Array, Array + sizeof(Array));
-	vector_unsigned_char vpscript;
+	vscript.Rom.insert(vscript.Rom.begin(),Array,Array+sizeof(Array));
+	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
+	scriptData << vscript;
+	cout<<"script:"<<HexStr(scriptData).c_str()<<endl;
+}
+BOOST_AUTO_TEST_CASE(print_out1)
+{
+	std::vector<unsigned char> vtemp = GetScriptBin("D:\\VmSdk\\sdk\\Debug\\Exe\\sdk.bin");
+	CVmScript vscript;
+	vscript.Rom.insert(vscript.Rom.begin(),vtemp.begin(),vtemp.end());
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << vscript;
 	cout<<"script:"<<HexStr(scriptData).c_str()<<endl;
