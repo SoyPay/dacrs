@@ -80,11 +80,13 @@ bool CAccountViewCache::GetAccount(const CKeyID &keyId, CAccount &account) {
 }
 bool CAccountViewCache::SetAccount(const CKeyID &keyId, const CAccount &account) {
 	cacheAccounts[keyId] = account;
+	cacheAccounts[keyId].accountOperLog.SetNULL();
 	return true;
 }
 bool CAccountViewCache::SetAccount(const vector<unsigned char> &accountId, const CAccount &account) {
 	if(cacheKeyIds.count(HexStr(accountId))) {
 		cacheAccounts[cacheKeyIds[HexStr(accountId)]] = account;
+		cacheAccounts[cacheKeyIds[HexStr(accountId)]].accountOperLog.SetNULL();
 		return true;
 	}
 	return false;
@@ -111,6 +113,7 @@ bool CAccountViewCache::BatchWrite(const map<CKeyID, CAccount> &mapAccounts, con
 			cacheAccounts.erase(it->first);
 		} else {
 			cacheAccounts[it->first] = it->second;
+			cacheAccounts[it->first].accountOperLog.SetNULL();
 		}
 	}
 
@@ -124,9 +127,11 @@ bool CAccountViewCache::BatchWrite(const vector<CAccount> &vAccounts) {
 		if(it->IsEmptyValue() && !it->IsRegister()) {
 			CAccount account = *it;
 			account.keyID = uint160(0);
+			account.accountOperLog.SetNULL();
 			cacheAccounts[it->keyID] = account;
 		} else {
 			cacheAccounts[it->keyID] = *it;
+			cacheAccounts[it->keyID].accountOperLog.SetNULL();
 		}
 	return true;
 }
@@ -196,6 +201,7 @@ bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAcco
 bool CAccountViewCache::SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &account) {
 	cacheKeyIds[HexStr(accountId)] = keyId;
 	cacheAccounts[keyId] = account;
+	cacheAccounts[keyId].accountOperLog.SetNULL();
 	return true;
 }
 bool CAccountViewCache::GetAccount(const CUserID &userId, CAccount &account) {
@@ -329,7 +335,7 @@ bool CScriptDBViewCache::GetScript(const vector<unsigned char> &vScriptId, vecto
 }
 bool CScriptDBViewCache::GetScript(const CUserID &userId, vector<unsigned char> &vValue) {
 	if(userId.type() == typeid(CRegID)) {
-		return GetScript(boost::get<CUserID>(userId), vValue);
+		return GetScript(boost::get<CRegID>(userId).GetRegID(), vValue);
 	}
 	return false;
 }

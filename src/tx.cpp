@@ -173,7 +173,8 @@ bool CTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidatio
 
 
 	CID destId(desUserId);
-	view.GetAccount(desUserId, desAccount);
+	if(!view.GetAccount(desUserId, desAccount))
+		desAccount.keyID = boost::get<CKeyID>(desUserId);
 
 	uint64_t minusValue = llFees + llValues;
 	CFund minusFund(minusValue);
@@ -292,7 +293,7 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 
 	CAccount acctDesInfo;
 	if (desUserId.type() == typeid(CKeyID)) {
-		if (view.GetAccount(desUserId, acctDesInfo)) {
+		if (view.GetAccount(desUserId, acctDesInfo) && acctDesInfo.IsRegister()) {
 			return state.DoS(100,
 					ERROR(
 							"CheckTransaction() : normal tx des account have regested, destination addr must be account id"),
@@ -376,7 +377,11 @@ bool CContractTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 	uint64_t el = GetElementForBurn();
-	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, *pScriptDBTip, chainActive.Height() +1, el);
+	int height = chainActive.Height();
+	if(!pTxCacheTip->IsContainTx(GetHash())) {
+		height += 1;
+	}
+	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, *pScriptDBTip, height, el);
 	if (!std::get<0>(ret))
 		return ERROR("GetAddress()  : %s", std::get<2>(ret));
 
@@ -524,20 +529,20 @@ bool CFreezeTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 bool CRewardTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
 	CID id(account);
-	CAccount secureAccount;
-	if (!view.GetAccount(account, secureAccount)) {
+	CAccount acctInfo;
+	if (!view.GetAccount(account, acctInfo)) {
 		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(id.GetID())),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	}
-	LogPrint("INFO", "before rewardtx confirm account:%s\n", secureAccount.ToString());
-	secureAccount.ClearAccPos(GetHash(), nHeight - 1, Params().GetIntervalPos());
+	LogPrint("INFO", "before rewardtx confirm account:%s\n", acctInfo.ToString());
+	acctInfo.ClearAccPos(GetHash(), nHeight - 1, Params().GetIntervalPos());
 	CFund fund(REWARD_FUND,rewardValue, nHeight);
-	secureAccount.OperateAccount(ADD_FREE, fund);
-	LogPrint("INFO", "after rewardtx confirm account:%s\n", secureAccount.ToString());
-	if (!view.SetAccount(secureAccount.keyID, secureAccount))
+	acctInfo.OperateAccount(ADD_FREE, fund);
+	LogPrint("INFO", "after rewardtx confirm account:%s\n", acctInfo.ToString());
+	if (!view.SetAccount(acctInfo.keyID, acctInfo))
 		return state.DoS(100, ERROR("UpdateAccounts() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
 				"bad-save-accountdb");
-	txundo.vAccountOperLog.push_back(secureAccount.accountOperLog);
+	txundo.vAccountOperLog.push_back(acctInfo.accountOperLog);
 	return true;
 }
 bool CRewardTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
@@ -624,6 +629,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 		CDataStream stream(script, SER_DISK, CLIENT_VERSION);
 		try {
 			stream >> vmScript;
+			LogPrint("INFO", "register script: %s", HexStr(script).c_str());
 		} catch (exception& e) {
 			return state.DoS(100, ERROR(("UpdateAccounts() :intial() Unserialize to vmScript error:" + string(e.what())).c_str()),
 					UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
@@ -1113,7 +1119,7 @@ void CAccount::ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos) 
 		COperFund acclog;
 		acclog.operType = MINUS_FUND;
 		{
-			CFund fund(FREEDOM, 0, llValues);
+			CFund fund(FREEDOM, llValues, 0);
 			acclog.vFund.push_back(fund);
 			llValues = 0;
 		}
@@ -1431,6 +1437,7 @@ bool CAccount::IsFundValid(OperType type, const CFund &fund, int nHeight, const 
 bool CAccount::OperateAccount(OperType type, const CFund &fund, int nHeight,
 		const vector_unsigned_char* pscriptID,
 		bool bCheckAuthorized) {
+	assert(keyID != uint160(0));
 	if (keyID != accountOperLog.keyID)
 		accountOperLog.keyID = keyID;
 
