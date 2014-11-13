@@ -70,7 +70,9 @@ struct CTxTest {
 
 	CTxTest() {
 		Init();
+		accOperate.keyID = uint160(1);
 		accBeforOperate = accOperate;
+
 	}
 
 	void InitAuthorization(const string& str) {

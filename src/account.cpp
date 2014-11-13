@@ -223,6 +223,44 @@ bool CAccountViewCache::GetKeyId(const CUserID &userId, CKeyID &keyId) {
 	}
 	return false;
 }
+bool CAccountViewCache::SetAccount(const CUserID &userId, const CAccount &account) {
+	if(userId.type() == typeid(CRegID)) {
+		return SetAccount(boost::get<CRegID>(userId).GetRegID(), account);
+	}
+	else if(userId.type() == typeid(CKeyID)){
+		return SetAccount(boost::get<CKeyID>(userId), account);
+	}
+	else
+		return false;
+}
+bool CAccountViewCache::SetKeyId(const CUserID &userId, const CKeyID &keyId) {
+	if(userId.type() == typeid(CRegID)) {
+		return SetKeyId(boost::get<CRegID>(userId).GetRegID(), keyId);
+	}
+	else {
+		return false;
+	}
+}
+bool CAccountViewCache::EraseAccount(const CUserID &userId) {
+	if(userId.type() == typeid(CKeyID)) {
+		return EraseAccount(boost::get<CKeyID>(userId));
+	}
+	else
+		return false;
+}
+bool CAccountViewCache::HaveAccount(const CUserID &userId) {
+	if(userId.type() == typeid(CKeyID)) {
+		return HaveAccount(boost::get<CKeyID>(userId));
+	}
+	else
+		return false;
+}
+bool CAccountViewCache::EraseKeyId(const CUserID &userId) {
+	if (userId.type() == typeid(CRegID)) {
+		return EraseKeyId(boost::get<CRegID>(userId).GetRegID());
+	} else
+		return false;
+}
 
 bool CAccountViewCache::Flush(){
 	 bool fOk = pBase->BatchWrite(cacheAccounts, cacheKeyIds, hashBlock);
