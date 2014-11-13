@@ -195,11 +195,14 @@ public:
 	}
 
 	bool IsValid() {
+		if(nUserDefine.size() > 128) {
+			return false;
+		}
 		return true;
 	}
 
 	bool IsNull() {
-		return true;
+		return (nAuthorizeTime == 0);
 	}
 
 	IMPLEMENT_SERIALIZE

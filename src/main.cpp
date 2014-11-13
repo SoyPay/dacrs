@@ -524,7 +524,8 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
 bool CheckSignScript(const vector<unsigned char> &accountId,const uint256& sighash,
 		const vector_unsigned_char &signatrue, CValidationState &state, CAccountViewCache &view) {
 	CAccount acctInfo;
-	if (!view.GetAccount(accountId, acctInfo)) {
+	CRegID regId(accountId);
+	if (!view.GetAccount(regId, acctInfo)) {
 		return state.DoS(100, ERROR("CheckSignScript() :tx GetAccount falied"), REJECT_INVALID, "bad-getaccount");
 	}
 
