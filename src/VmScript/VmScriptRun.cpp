@@ -13,6 +13,7 @@ CVmScriptRun::CVmScriptRun() {
 	NewAccont.clear();
 	height = 0;
 	m_ScriptDBTip = NULL;
+	m_view = NULL;
 	m_dblog = std::make_shared<std::vector<CScriptDBOperLog> >();
 }
 vector<shared_ptr<CAccount> > &CVmScriptRun::GetRawAccont() {
@@ -26,6 +27,7 @@ bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& 
 
 	listTx = Tx;
 	height = nheight;
+	m_view = &view;
 	vector<unsigned char> vScript;
 
 	if (Tx.get()->nTxType != CONTRACT_TX) {
@@ -224,6 +226,10 @@ uint256 CVmScriptRun::GetCurTxHash()
 CScriptDBViewCache* CVmScriptRun::GetScriptDB()
 {
 	return m_ScriptDBTip;
+}
+CAccountViewCache * CVmScriptRun::GetCatchView()
+{
+	return m_view;
 }
 void CVmScriptRun::InsertOutputData(vector<CVmOperate> source)
 {

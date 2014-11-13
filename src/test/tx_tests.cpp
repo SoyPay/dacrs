@@ -68,11 +68,18 @@ struct CTxTest {
 	vector<unsigned char> scriptID;
 	vector_unsigned_char v[11]; //0~9 is valid,10 is used to for invalid scriptID
 
+
 	CTxTest() {
 		Init();
 		accOperate.keyID = uint160(1);
 		accBeforOperate = accOperate;
 
+	}
+	~CTxTest(){
+		delete pScriptDB;
+		pScriptDB = NULL;
+		delete pScriptDBTip;
+		pScriptDBTip = NULL;
 	}
 
 	void InitAuthorization(const string& str) {
@@ -83,8 +90,15 @@ struct CTxTest {
 		author.SetCurMaxMoneyPerDay(0);
 		author.SetLastOperHeight(1);
 		author.SetMaxMoneyPerTime(37);
-		author.SetMaxMoneyTotal(10*TEST_SIZE);
+		author.SetMaxMoneyTotal(10 * TEST_SIZE);
 		accOperate.mapAuthorizate[scriptID] = author;
+		accOperate.keyID = uint160(1);
+
+		pScriptDB = new CScriptDB(1024 * 1024, false, false);
+		pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
+		vector<unsigned char> vScriptContent = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+				0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
+		BOOST_CHECK(pScriptDBTip->SetScript(scriptID, vScriptContent));
 	}
 
 	void InitFund() {
@@ -111,6 +125,12 @@ struct CTxTest {
 		for (int i = 0; i < TEST_SIZE; i++) {
 			accOperate.AddToSelfFreeze(CFund(SELF_FREEZD_FUND, RANDOM_FUND_MONEY*2, random(20)) ,false);
 		}
+
+		vector<unsigned char> vScriptContent1 = {0x01,0x02,0x03,0x04,0x01,0x01,0x01,0x01,0x01,
+				0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01};
+
+		for(auto &item:v)
+			BOOST_CHECK(pScriptDBTip->SetScript(item, vScriptContent1));
 	}
 
 	void Init() {
@@ -462,13 +482,13 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_freezed,CTxTest) {
 		uint64_t nOldFreezeValue = GetTotalValue(accOperate.vFreeze);
 		uint64_t nOldIterValue = iter->value;
 		if (nRandomValue <= iter->value) {
-			//branch 0:enough money and execute minus-operation
+			//branch 1:enough money and execute minus-operation
 			BOOST_CHECK(accOperate.OperateAccount(MINUS_FREEZD, fund));
 			BOOST_CHECK(GetTotalValue(accOperate.vFreeze) + nRandomValue == nOldFreezeValue);
 			nBranch[1]++;
 
 		} else {
-			//branch 0:not enough money
+			//branch 2:not enough money
 			BOOST_CHECK(!accOperate.OperateAccount(MINUS_FREEZD, fund));
 			BOOST_CHECK(GetTotalValue(accOperate.vFreeze) == nOldFreezeValue);
 			nBranch[2]++;
