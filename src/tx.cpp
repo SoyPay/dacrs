@@ -1358,7 +1358,7 @@ CFund& CAccount::FindFund(const vector<CFund>& vFund, const vector_unsigned_char
 
 bool CAccount::IsAuthorized(uint64_t nMoney, int nHeight, const vector_unsigned_char& scriptID) {
 	vector<unsigned char> vscript;
-	if (pScriptDBTip && !pScriptDBTip->GetScript(scriptID, vscript))
+	if (NULL == pScriptDBTip || !pScriptDBTip->GetScript(scriptID, vscript))
 		return false;
 
 	auto it = mapAuthorizate.find(scriptID);
@@ -1566,6 +1566,19 @@ void CAccount::UndoAuthorityOnDay(uint64_t nUndoMoney, const CAuthorizateLog& lo
 	authorizate.SetCurMaxMoneyPerDay(nNewMaxMoneyPerDay);
 	authorizate.SetMaxMoneyTotal(nNewMaxMoneyTotal);
 	authorizate.SetLastOperHeight(accountOperLog.authorLog.GetLastOperHeight());
+}
+
+bool CAccount::GetUserData(const vector_unsigned_char& scriptID, vector<unsigned char> & vData) {
+	vector<unsigned char> vscript;
+	if (NULL == pScriptDBTip || !pScriptDBTip->GetScript(scriptID, vscript))
+		return false;
+
+	auto it = mapAuthorizate.find(scriptID);
+	if (it == mapAuthorizate.end())
+		return false;
+
+	vData = mapAuthorizate[scriptID].GetUserData();
+	return true;
 }
 
 CTransactionCache::CTransactionCache(CTransactionCacheDB *pTxCacheDB) {

@@ -71,7 +71,11 @@ tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& T
 	}
 	m_ScriptDBTip = &VmDB;
 
+	int nCount;
+
 	CContractTransaction* tx = static_cast<CContractTransaction*>(Tx.get());
+	VmDB.GetScriptDataCount(boost::get<CRegID>(tx->scriptRegId).GetRegID(),nCount);
+	//cout << "before run script db data size:" << nCount <<endl;
 	uint64_t maxstep = tx->llFees;///nBurnFactor;
 	tuple<bool, uint64_t, string> mytuple;
 	if (!intial(Tx, view, nheight)) {
@@ -83,6 +87,10 @@ tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& T
 		mytuple = std::make_tuple (false, 0, string("VmScript run Failed\n"));
 		return mytuple;
 	}
+
+	VmDB.GetScriptDataCount(boost::get<CRegID>(tx->scriptRegId).GetRegID(),nCount);
+	//cout << "after run script db data size:" << nCount <<endl;
+
 	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
 	CDataStream Contractstream(*retData.get(), SER_DISK, CLIENT_VERSION);
 	vector<CVmOperate> retvmcode;
