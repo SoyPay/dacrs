@@ -383,7 +383,7 @@ bool CScriptDB::GetScriptData(const vector<unsigned char> &vScriptId, const int 
 	vector<char> vId(vScriptId.begin(), vScriptId.end());
 	ssKeySet.insert(ssKeySet.end(), vId.begin(), vId.end());
 	ssKeySet.insert(ssKeySet.end(),'_');
-	if (!vScriptKey.empty()) {
+	if (1 == nIndex && !vScriptKey.empty()) {
 		vector<char> vsKey(vScriptKey.begin(), vScriptKey.end());
 		ssKeySet.insert(ssKeySet.end(), vsKey.begin(), vsKey.end());
 	}

@@ -17,7 +17,7 @@
 #include "walletdb.h"
 
 #include "miner.h"
-
+#include "VmScript/VmScript.h"
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
@@ -170,14 +170,15 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
-		CAccount secureAcc;
+		CAccount account;
 
 		uint64_t balance = 0;
-		if (view.GetAccount(keyid, secureAcc)) {
-			balance = secureAcc.GetBalance(chainActive.Tip()->nHeight);
+		CUserID userId = keyid;
+		if (view.GetAccount(userId, account)) {
+			balance = account.GetBalance(chainActive.Tip()->nHeight);
 		}
 
-		if (secureAcc.IsRegister()) {
+		if (account.IsRegister()) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: Account is already registered");
 		}
 		if (balance < fee) {
@@ -263,7 +264,8 @@ Value createnormaltx(const Array& params, bool fHelp) {
 		CAccount acct;
 
 		uint64_t balance = 0;
-		if (view.GetAccount(keyid, acct)) {
+		CUserID userId = keyid;
+		if (view.GetAccount(userId, acct)) {
 			balance = acct.GetBalance(chainActive.Tip()->nHeight);
 		}
 
@@ -282,7 +284,8 @@ Value createnormaltx(const Array& params, bool fHelp) {
 		CUserID desUserId;
 		vector<unsigned char> vregid;
 		if (recvaddr.GetRegID(vregid)) {
-			if (!view.GetAccount(vregid, acct)) {
+			CRegID regId(vregid);
+			if (!view.GetAccount(regId, acct)) {
 				desUserId = CRegID(vregid);
 			}
 		} else {
@@ -381,7 +384,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 			}
 			CRegID accountid = pwalletMain->mapKeyRegID[keyid];
 			CAccount account;
-			if (!pAccountViewTip->GetAccount(accountid.GetRegID(), account)) {
+			if (!pAccountViewTip->GetAccount(accountid, account)) {
 				throw runtime_error(
 						tinyformat::format("createcontracttx :account id %s is not exist\n", item.get_str()));
 			}
@@ -504,7 +507,7 @@ Value signcontracttx(const Array& params, bool fHelp) {
 		//sig
 		//get keyid by accountid
 		CKeyID keyid;
-		if (!view.GetKeyId(accountid, keyid)) {
+		if (!view.GetKeyId(tx.vAccountRegId.at(tx.vSignature.size()), keyid)) {
 			LogPrint("INFO", "vaccountid:%s have no key id\r\n", HexStr(accountid).c_str());
 			assert(0);
 		}
@@ -591,14 +594,15 @@ Value createfreezetx(const Array& params, bool fHelp) {
 		}
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
-		CAccount secureAcc;
+		CAccount account;
 
 		uint64_t balance = 0;
-		if (view.GetAccount(keyid, secureAcc)) {
-			balance = secureAcc.GetBalance(chainActive.Tip()->nHeight);
+		CUserID userId = keyid;
+		if (view.GetAccount(userId, account)) {
+			balance = account.GetBalance(chainActive.Tip()->nHeight);
 		}
 
-		if (!secureAcc.IsRegister()) {
+		if (!account.IsRegister()) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in createfreezetx Error: Account is not registered.");
 		}
 
@@ -636,14 +640,16 @@ Value registerscripttx(const Array& params, bool fHelp) {
 				"\nregister script\n"
 				"\nArguments:\n"
 				"1.\"addr\": (string required)\n"
-				"2.\"script or scriptid\": (string required)\n"
-				"3.\"fee\": (numeric required) pay to miner\n"
-				"4.\"height\": (numeric required)valid height\n"
-				"5.\"nAuthorizeTime\": (numeric, optional)\n"
-				"6.\"nMaxMoneyPerTime\": (numeric, optional)\n"
-				"7.\"nMaxMoneyTotal\": (numeric, optional)\n"
-				"8.\"nMaxMoneyPerDay\": (numeric, optional)\n"
-				"9.\"nUserDefine\": (numeric, optional)\n"
+				"2.\"flag\": (numeric, required)\n"
+				"3.\"script or scriptid\": (string required), if flag=0 is script's file path, else if flag=1 scriptid\n"
+				"4.\"fee\": (numeric required) pay to miner\n"
+				"5.\"height\": (numeric required)valid height\n"
+				"6.\"script description\":(string optional) new script description\n"
+				"7.\"nAuthorizeTime\": (numeric, optional)\n"
+				"8.\"nMaxMoneyPerTime\": (numeric, optional)\n"
+				"9.\"nMaxMoneyTotal\": (numeric, optional)\n"
+				"10.\"nMaxMoneyPerDay\": (numeric, optional)\n"
+				"11.\"nUserDefine\": (numeric, optional)\n"
 				"\nResult:\n"
 				"\"txhash\": (string)\n"
 				"\nExamples:\n"
@@ -654,13 +660,53 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 
-	RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(int_type));
-
+	RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type));
+	CVmScript vmScript;
 	//get addresss
 	CBitcoinAddress addr(params[0].get_str());
-	vector<unsigned char> vscript = ParseHex(params[1].get_str());
-	uint64_t fee = params[2].get_uint64();
-	uint32_t height = params[3].get_int();
+	vector<unsigned char> vscript;
+	int flag = params[1].get_int();
+	if (0 == flag) {
+		string path = params[2].get_str();
+		 FILE* file = fopen(path.c_str(), "rb+");
+		 if(!file) {
+			 throw runtime_error("create registerscripttx open script file"+path+"error");
+		 }
+		 long lSize;
+		 size_t nSize = 1;
+		 fseek(file , 0 , SEEK_END);
+		 lSize = ftell (file);
+		 rewind (file);
+
+		 // allocate memory to contain the whole file:
+		 char *buffer = (char*) malloc(sizeof(char) * lSize);
+		 if (buffer == NULL) {
+			throw runtime_error("allocate memory failed");
+		 }
+
+		 if(fread(buffer, 1, lSize, file) != lSize) {
+				throw runtime_error("read script file error");
+		 }
+		 vmScript.Rom.insert(vscript.end(), buffer, buffer+lSize);
+		 CDataStream ds(SER_DISK, CLIENT_VERSION);
+		 ds << vmScript;
+
+//		 FILE* file1 = fopen("d:\\script.txt", "a+");
+//		 if(!file1) {
+//			 throw runtime_error("open file script.txt error");
+//		 }
+//		 string strScript= HexStr(ds);
+//		 if(fwrite(strScript.c_str(), 1, strScript.length(), file1) != strScript.length())
+//			 throw runtime_error("write script to file error");
+//		 fclose(file1);
+		 fclose(file);
+
+	} else if (1 == flag) {
+		vscript = ParseHex(params[2].get_str());
+	}
+
+	uint64_t fee = params[3].get_uint64();
+	uint32_t height = params[4].get_int();
 
 	uint32_t nAuthorizeTime;
 	uint64_t nMaxMoneyPerTime;
@@ -668,26 +714,30 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	uint64_t nMaxMoneyPerDay;
 	vector<unsigned char> vUserDefine;
 
-	if (params.size() > 4) {
-		RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(int_type)(int_type));
-		nAuthorizeTime = params[4].get_int();
-	}
 	if (params.size() > 5) {
-		RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(int_type)(int_type)(int_type));
-		nMaxMoneyPerTime = params[5].get_uint64();
+		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type));
+		string scriptDesc = params[5].get_str();
+		vmScript.ScriptExplain.insert(vmScript.ScriptExplain.end(),scriptDesc.begin(), scriptDesc.end());
 	}
 	if (params.size() > 6) {
-		RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(int_type)(int_type)(int_type)(int_type));
-		nMaxMoneyTotal = params[6].get_uint64();
+		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type));
+		nAuthorizeTime = params[6].get_int();
 	}
 	if (params.size() > 7) {
-		RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(int_type)(int_type)(int_type)(int_type)(int_type));
-		nMaxMoneyPerDay = params[7].get_uint64();
+		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type)(int_type));
+		nMaxMoneyPerTime = params[7].get_uint64();
 	}
 	if (params.size() > 8) {
-		RPCTypeCheck(params,
-				list_of(str_type)(str_type)(int_type)(int_type)(int_type)(int_type)(int_type)(int_type)(str_type));
-		vUserDefine = ParseHex(params[8].get_str());
+		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type)(int_type)(int_type));
+		nMaxMoneyTotal = params[8].get_uint64();
+	}
+	if (params.size() > 9) {
+		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type)(int_type)(int_type)(int_type));
+		nMaxMoneyPerDay = params[9].get_uint64();
+	}
+	if (params.size() > 10) {
+		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type)(int_type)(int_type)(int_type)(str_type));
+		vUserDefine = ParseHex(params[10].get_str());
 	}
 
 	if (fee > 0 && fee < CTransaction::nMinTxFee) {
@@ -707,14 +757,15 @@ Value registerscripttx(const Array& params, bool fHelp) {
 
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
-		CAccount secureAcc;
+		CAccount account;
 
 		uint64_t balance = 0;
-		if (view.GetAccount(keyid, secureAcc)) {
-			balance = secureAcc.GetBalance(chainActive.Tip()->nHeight);
+		CUserID userId = keyid;
+		if (view.GetAccount(userId, account)) {
+			balance = account.GetBalance(chainActive.Tip()->nHeight);
 		}
 
-		if (!secureAcc.IsRegister()) {
+		if (!account.IsRegister()) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registerscripttx Error: Account is not registered.");
 		}
 
@@ -797,11 +848,12 @@ Value listaddr(const Array& params, bool fHelp) {
 			//find CAccount info by keyid
 			bool bReg = false;
 			double dbalance = 0.0;
-			CAccount secureAcc;
+			CAccount account;
 			ostringstream ostr;
-			if (accView.GetAccount(keyid, secureAcc)) {
-				bReg = secureAcc.IsRegister();
-				dbalance = (double) secureAcc.GetBalance(chainActive.Tip()->nHeight + 100) / (double) COIN;
+			CUserID userId = keyid;
+			if (accView.GetAccount(userId, account)) {
+				bReg = account.IsRegister();
+				dbalance = (double) account.GetBalance(chainActive.Tip()->nHeight + 100) / (double) COIN;
 			}
 
 			if (bReg && !pwalletMain->mapKeyRegID.count(keyid)) {
@@ -911,13 +963,14 @@ Value getaddramount(const Array& params, bool fHelp) {
 	{
 		LOCK(cs_main);
 
-		CAccount secureAcc;
+		CAccount account;
 		CAccountViewCache accView(*pAccountViewTip, true);
-		if (accView.GetAccount(keyid, secureAcc)) {
+		CUserID userId = keyid;
+		if (accView.GetAccount(userId, account)) {
 			int curheight = chainActive.Tip()->nHeight;
-			double dbalance = (double) secureAcc.GetBalance(curheight) / (double) COIN;
-			double dmature = (double) secureAcc.GetMatureAmount(curheight) / (double) COIN;
-			double dfrozen = (double) secureAcc.GetForzenAmount(curheight) / (double) COIN;
+			double dbalance = (double) account.GetBalance(curheight) / (double) COIN;
+			double dmature = (double) account.GetMatureAmount(curheight) / (double) COIN;
+			double dfrozen = (double) account.GetForzenAmount(curheight) / (double) COIN;
 
 			obj.push_back(Pair("mature amount", dmature));
 			obj.push_back(Pair("free amount", dbalance));
@@ -946,12 +999,13 @@ Value getaddrfrozendetail(const Array& params, bool fHelp) {
 
 	Array array;
 
-	CAccount secureAcc;
+	CAccount acctInfo;
 	CAccountViewCache accView(*pAccountViewTip, true);
-	if (accView.GetAccount(keyid, secureAcc)) {
-		secureAcc.vFreeze.insert(secureAcc.vFreeze.end(), secureAcc.vSelfFreeze.begin(), secureAcc.vSelfFreeze.end());
+	CUserID userId = keyid;
+	if (accView.GetAccount(userId, acctInfo)) {
+		acctInfo.vFreeze.insert(acctInfo.vFreeze.end(), acctInfo.vSelfFreeze.begin(), acctInfo.vSelfFreeze.end());
 
-		for (auto &item : secureAcc.vFreeze) {
+		for (auto &item : acctInfo.vFreeze) {
 			Object obj;
 			obj.clear();
 			obj.push_back(Pair("tx hash:", HexStr(item.scriptID).c_str()));
@@ -1156,11 +1210,13 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 		if (!address.GetKeyID(keyid))
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
 
-		if (!view.GetAccount(keyid, aAccount)) {
+		CUserID userId = keyid;
+		if (!view.GetAccount(userId, aAccount)) {
 			return "can not get account info by address:" + strParam;
 		}
 	} else {
-		if (!view.GetAccount(ParseHex(strParam), aAccount)) {
+		CRegID regId(ParseHex(strParam));
+		if (!view.GetAccount(regId, aAccount)) {
 			return "can not get account info by regid:" + strParam;
 		}
 	}
@@ -1281,18 +1337,19 @@ Value testnormaltx(const Array& params, bool fHelp) {
 	}
 
 	CAccountViewCache view(*pAccountViewTip, true);
-	CAccount secureAcc;
+	CAccount acctInfo;
 
 	vector<unsigned char> vregid;
 	if (recvaddr.GetRegID(vregid)) {
-		if (!view.GetAccount(vregid, secureAcc)) {
+		CRegID regId(vregid);
+		if (!view.GetAccount(regId, acctInfo)) {
 			vregid.clear();
 			vregid.insert(vregid.end(), recvkeyid.begin(), recvkeyid.end());
 		}
 	} else {
 		vregid.insert(vregid.end(), recvkeyid.begin(), recvkeyid.end());
 	}
-	sThreadGroup.create_thread(boost::bind(&ThreadCreateNormalTx, keyid, vregid, times));
+	//sThreadGroup.create_thread(boost::bind(&ThreadCreateNormalTx, keyid, vregid, times));
 
 	return NULL;
 }
@@ -1327,7 +1384,8 @@ void ThreadTestMiner(int nTimes) {
 					bool bReg = false;
 					uint64_t balance = 0;
 					CAccount secureAcc;
-					if (accView.GetAccount(keyid, secureAcc)) {
+					CUserID userId = keyid;
+					if (accView.GetAccount(userId, secureAcc)) {
 						bReg = secureAcc.IsRegister();
 						balance = secureAcc.GetBalance(chainActive.Tip()->nHeight + 100);
 					}
@@ -1565,8 +1623,8 @@ Value getoneaddr(const Array& params, bool fHelp) {
 			bool bReg = false;
 			uint64_t balance = 0;
 			CAccount secureAcc;
-
-			if (accView.GetAccount(keyid, secureAcc)) {
+			CUserID userId = keyid;
+			if (accView.GetAccount(userId, secureAcc)) {
 				bReg = secureAcc.IsRegister();
 				balance = secureAcc.GetBalance(chainActive.Tip()->nHeight + 100);
 			}
@@ -1624,7 +1682,8 @@ Value getaddrbalance(const Array& params, bool fHelp) {
 		LOCK(cs_main);
 		CAccountViewCache accView(*pAccountViewTip, true);
 		CAccount secureAcc;
-		if (accView.GetAccount(keyid, secureAcc)) {
+		CUserID userId = keyid;
+		if (accView.GetAccount(userId, secureAcc)) {
 			dbalance = (double) secureAcc.GetBalance(chainActive.Tip()->nHeight + 100) / (double) COIN;
 		}
 	}
