@@ -334,7 +334,10 @@ bool CScriptDBViewCache::EraseKey(const vector<unsigned char> &vKey) {
 }
 bool CScriptDBViewCache::HaveData(const vector<unsigned char> &vKey) {
 	if (mapDatas.count(string(vKey.begin(), vKey.end())) > 0) {
-		return true;
+		if(!mapDatas[string(vKey.begin(), vKey.end())].empty())
+			return true;
+		else
+			return false;
 	}
 	return pBase->HaveData(vKey);
 }
@@ -389,6 +392,8 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 	vector<unsigned char> vValue;
 	if (!GetData(vKey, vValue))
 		return false;
+	if(vValue.empty())
+		return false;
 	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
 	ds >> nHeight;
 	ds >> vScriptData;
@@ -402,9 +407,11 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 		vKey.push_back('_');
 		string findKey(vKey.begin(), vKey.end());
 		string dataKey("");
+		vector<unsigned char> vDataValue;
 		for (auto &item : mapDatas) {
 			if (std::string::npos != item.first.find(findKey.c_str())) {
 				dataKey = item.first;
+				vDataValue = item.second;
 				break;
 			}
 		}
@@ -415,9 +422,11 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 				vScriptKey.clear();
 				vScriptData.clear();
 				vScriptKey.insert(vScriptKey.end(), dataKey.begin()+11, dataKey.end());
-				CDataStream ds(mapDatas[dataKey], SER_DISK, CLIENT_VERSION);
-				ds >> nHeight;
-				ds >> vScriptData;
+				if(!mapDatas[dataKey].empty()) {
+					CDataStream ds(mapDatas[dataKey], SER_DISK, CLIENT_VERSION);
+					ds >> nHeight;
+					ds >> vScriptData;
+				}
 				return true;
 			}
 		}
@@ -428,7 +437,11 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 			if(strdataKeyTemp < dataKey) {
 				return true;
 			}
-			else {
+			else if(strdataKeyTemp == dataKey && vDataValue.empty()){
+				mapDatas[dataKey] = vDataValue;
+				return GetScriptData(vScriptId, 1, vScriptKey, vScriptData, nHeight);
+			}
+			else{
 				vScriptKey.clear();
 				vScriptData.clear();
 				vScriptKey.insert(vScriptKey.end(), dataKey.begin()+11, dataKey.end());
@@ -457,9 +470,11 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 				vScriptKey.clear();
 				vScriptData.clear();
 				vScriptKey.insert(vScriptKey.end(), dataKey.begin() + 11, dataKey.end());
-				CDataStream ds(mapDatas[dataKey], SER_DISK, CLIENT_VERSION);
-				ds >> nHeight;
-				ds >> vScriptData;
+				if (!mapDatas[dataKey].empty()) {
+					CDataStream ds(mapDatas[dataKey], SER_DISK, CLIENT_VERSION);
+					ds >> nHeight;
+					ds >> vScriptData;
+				}
 				return true;
 			}
 		} else {

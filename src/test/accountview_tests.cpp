@@ -13,7 +13,14 @@ public:
 		pAccountViewTip = new CAccountViewCache(*pAccountViewDB);
 		Init();
 	}
-
+	~CAccountViewTest() {
+		if(pAccountViewDB != NULL) {
+			delete pAccountViewDB;
+		}
+		if(pAccountViewTip != NULL) {
+			delete pAccountViewTip;
+		}
+	}
 	bool EraseAccount();
 	bool EraseKeyID();
 	bool HaveAccount();
@@ -32,7 +39,7 @@ public:
 
 bool CAccountViewTest::EraseKeyID() {
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		pAccountViewTip->EraseKeyId(vRandomRegID.at(i).GetRegID());
+		pAccountViewTip->EraseKeyId(vRandomRegID.at(i));
 	}
 
 	return true;
@@ -40,7 +47,8 @@ bool CAccountViewTest::EraseKeyID() {
 
 bool CAccountViewTest::EraseAccount() {
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		pAccountViewTip->EraseAccount(vRandomKeyID.at(i));
+		CUserID userId = vRandomKeyID.at(i);
+		pAccountViewTip->EraseAccount(userId);
 	}
 
 	return true;
@@ -51,12 +59,13 @@ bool CAccountViewTest::TestGetAccount(bool bCheckExist) {
 
 	//get account by keyID
 	for (int i = 0; i < VECTOR_SIZE; i++) {
+		CUserID userId = vRandomKeyID.at(i);
 		if (bCheckExist) {
-			if (!pAccountViewTip->GetAccount(vRandomKeyID.at(i), account)) {
+			if (!pAccountViewTip->GetAccount(userId, account)) {
 				return false;
 			}
 		} else {
-			if (pAccountViewTip->GetAccount(vRandomKeyID.at(i), account)) {
+			if (pAccountViewTip->GetAccount(userId, account)) {
 				return false;
 			}
 		}
@@ -64,12 +73,13 @@ bool CAccountViewTest::TestGetAccount(bool bCheckExist) {
 
 	//get account by accountID
 	for (int i = 0; i < VECTOR_SIZE; i++) {
+		CUserID userId = vRandomKeyID.at(i);
 		if (bCheckExist) {
-			if (!pAccountViewTip->GetAccount(vRandomRegID.at(i).GetRegID(), account)) {
+			if (!pAccountViewTip->GetAccount(userId, account)) {
 				return false;
 			}
 		} else {
-			if (pAccountViewTip->GetAccount(vRandomRegID.at(i).GetRegID(), account)) {
+			if (pAccountViewTip->GetAccount(userId, account)) {
 				return false;
 			}
 		}
@@ -80,7 +90,7 @@ bool CAccountViewTest::TestGetAccount(bool bCheckExist) {
 
 bool CAccountViewTest::SetKeyID() {
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		pAccountViewTip->SetKeyId(vRandomRegID.at(i).GetRegID(), vRandomKeyID.at(i));
+		pAccountViewTip->SetKeyId(vRandomRegID.at(i), vRandomKeyID.at(i));
 	}
 
 	return true;
@@ -116,11 +126,11 @@ bool CAccountViewTest::CheckKeyMap(bool bCheckExist) {
 	CKeyID keyID;
 	for (int i = 0; i < VECTOR_SIZE; i++) {
 		if (bCheckExist) {
-			if (!pAccountViewTip->GetKeyId(vRandomRegID.at(i).GetRegID(), keyID)) {
+			if (!pAccountViewTip->GetKeyId(vRandomRegID.at(i), keyID)) {
 				return false;
 			}
 		} else {
-			if (pAccountViewTip->GetKeyId(vRandomRegID.at(i).GetRegID(), keyID)) {
+			if (pAccountViewTip->GetKeyId(vRandomRegID.at(i), keyID)) {
 				return false;
 			}
 		}
@@ -131,7 +141,8 @@ bool CAccountViewTest::CheckKeyMap(bool bCheckExist) {
 
 bool CAccountViewTest::HaveAccount() {
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		if (pAccountViewTip->HaveAccount(vRandomKeyID.at(i)))
+		CUserID userId = vRandomKeyID.at(i);
+		if (pAccountViewTip->HaveAccount(userId))
 			return false;
 	}
 
@@ -139,7 +150,7 @@ bool CAccountViewTest::HaveAccount() {
 }
 BOOST_FIXTURE_TEST_SUITE(accountview_tests,CAccountViewTest)
 
-#if 0
+
 
 BOOST_FIXTURE_TEST_CASE(regid_test,CAccountViewTest)
 {
@@ -161,7 +172,8 @@ BOOST_FIXTURE_TEST_CASE(setaccount_test1,CAccountViewTest)
 {
 	BOOST_CHECK(SetKeyID() );
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		BOOST_CHECK(pAccountViewTip->SetAccount(vRandomKeyID.at(i), vAccount.at(i)) );
+		CUserID userId = vRandomKeyID.at(i);
+		BOOST_CHECK(pAccountViewTip->SetAccount(userId, vAccount.at(i)) );
 	}
 
 	BOOST_CHECK(TestGetAccount(true) );
@@ -178,7 +190,8 @@ BOOST_FIXTURE_TEST_CASE(setaccount_test2,CAccountViewTest)
 {
 	BOOST_CHECK(SetKeyID());
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		BOOST_CHECK(pAccountViewTip->SetAccount(vRandomRegID.at(i).vRegID, vAccount.at(i)) );
+		CUserID userId = vRandomRegID.at(i);
+		BOOST_CHECK(pAccountViewTip->SetAccount(userId, vAccount.at(i)));
 	}
 
 	BOOST_CHECK(TestGetAccount(true));
@@ -206,10 +219,5 @@ BOOST_FIXTURE_TEST_CASE(BatchWrite_test,CAccountViewTest)
 	BOOST_CHECK(TestGetAccount(false));
 }
 
-#else
-BOOST_AUTO_TEST_CASE(xxxx) {
-	BOOST_ERROR("ERROR:THE SUITE NEED TO MODIFY!");
-}
-#endif
 
 BOOST_AUTO_TEST_SUITE_END()

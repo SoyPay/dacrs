@@ -191,8 +191,14 @@ Array RPCConvertValues(const string &strMethod, const vector<string> &strParams)
     if (strMethod == "createfreezetx"          && n > 3) ConvertTo<int>(params[3]);
     if (strMethod == "createfreezetx"          && n > 4) ConvertTo<int>(params[4]);
 
-    if (strMethod == "registerscripttx"          && n > 2) ConvertTo<int64_t>(params[2]);
-    if (strMethod == "registerscripttx"          && n > 3) ConvertTo<int>(params[3]);
+    if (strMethod == "registerscripttx"          && n > 1) ConvertTo<int>(params[1]);
+    if (strMethod == "registerscripttx"          && n > 3) ConvertTo<int64_t>(params[3]);
+    if (strMethod == "registerscripttx"          && n > 4) ConvertTo<int>(params[4]);
+    if (strMethod == "registerscripttx"          && n > 5) ConvertTo<int>(params[5]);
+    if (strMethod == "registerscripttx"          && n > 7) ConvertTo<uint64_t>(params[6]);
+    if (strMethod == "registerscripttx"          && n > 8) ConvertTo<uint64_t>(params[7]);
+    if (strMethod == "registerscripttx"          && n > 9) ConvertTo<uint64_t>(params[8]);
+
 
     if (strMethod == "createsecuretx"          && n > 1) ConvertTo<Array>(params[1]);
     if (strMethod == "createsecuretx"          && n > 2) ConvertTo<Array>(params[2]);

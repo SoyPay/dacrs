@@ -933,7 +933,8 @@ static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 		if (!address.GetKeyID(keyid))
 			flag =  false;
 
-		if (!view.GetAccount(keyid, aAccount)) {
+		CUserID userId = keyid;
+		if (!view.GetAccount(userId, aAccount)) {
 			flag =  false;
 		}
 	}
