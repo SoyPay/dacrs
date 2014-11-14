@@ -188,8 +188,8 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		if (accountid.size() == 0) {
 			return false;
 		}
-
-		view.GetAccount(accountid, *tem.get());
+		CRegID regId(accountid);
+		view.GetAccount(regId, *tem.get());
 		shared_ptr<CAccount> vmAccount = GetAccount(tem);
 		if (vmAccount.get() == NULL) {
 			RawAccont.push_back(tem);
