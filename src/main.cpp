@@ -663,10 +663,10 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
             dFreeCount += nSize;
         }
 
-        if (fRejectInsaneFee && nFees > CTransaction::nMinRelayTxFee * 10000)
+        if (fRejectInsaneFee && nFees > Params().GetMaxFee())
             return ERROR("AcceptToMemoryPool: : insane fees %s, %d > %d",
                          hash.ToString(),
-                         nFees, CTransaction::nMinRelayTxFee * 10000);
+                         nFees, Params().GetMaxFee());
 
         // Store transaction in memory
          if(!pool.addUnchecked(hash, entry))

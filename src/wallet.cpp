@@ -580,7 +580,7 @@ bool CWallet::CommitTransaction(CBaseTransaction *pTx) {
 		// Broadcast
 		{
 			CValidationState state;
-			if (!::AcceptToMemoryPool(mempool, state, pTx, true, NULL, true)) {
+			if (!::AcceptToMemoryPool(mempool, state, pTx, true, NULL)) {
 				// This must not fail. The transaction has already been signed and recorded.
 				LogPrint("INFO","CommitTransaction() : Error: Transaction not valid\n");
 				return false;
