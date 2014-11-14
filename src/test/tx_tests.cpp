@@ -71,7 +71,9 @@ struct CTxTest {
 
 	CTxTest() {
 		Init();
+		accOperate.keyID = uint160(1);
 		accBeforOperate = accOperate;
+
 	}
 	~CTxTest(){
 		delete pScriptDB;

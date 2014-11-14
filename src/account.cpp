@@ -223,6 +223,44 @@ bool CAccountViewCache::GetKeyId(const CUserID &userId, CKeyID &keyId) {
 	}
 	return false;
 }
+bool CAccountViewCache::SetAccount(const CUserID &userId, const CAccount &account) {
+	if(userId.type() == typeid(CRegID)) {
+		return SetAccount(boost::get<CRegID>(userId).GetRegID(), account);
+	}
+	else if(userId.type() == typeid(CKeyID)){
+		return SetAccount(boost::get<CKeyID>(userId), account);
+	}
+	else
+		return false;
+}
+bool CAccountViewCache::SetKeyId(const CUserID &userId, const CKeyID &keyId) {
+	if(userId.type() == typeid(CRegID)) {
+		return SetKeyId(boost::get<CRegID>(userId).GetRegID(), keyId);
+	}
+	else {
+		return false;
+	}
+}
+bool CAccountViewCache::EraseAccount(const CUserID &userId) {
+	if(userId.type() == typeid(CKeyID)) {
+		return EraseAccount(boost::get<CKeyID>(userId));
+	}
+	else
+		return false;
+}
+bool CAccountViewCache::HaveAccount(const CUserID &userId) {
+	if(userId.type() == typeid(CKeyID)) {
+		return HaveAccount(boost::get<CKeyID>(userId));
+	}
+	else
+		return false;
+}
+bool CAccountViewCache::EraseKeyId(const CUserID &userId) {
+	if (userId.type() == typeid(CRegID)) {
+		return EraseKeyId(boost::get<CRegID>(userId).GetRegID());
+	} else
+		return false;
+}
 
 bool CAccountViewCache::Flush(){
 	 bool fOk = pBase->BatchWrite(cacheAccounts, cacheKeyIds, hashBlock);
@@ -369,9 +407,11 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 		vKey.push_back('_');
 		string findKey(vKey.begin(), vKey.end());
 		string dataKey("");
+		vector<unsigned char> vDataValue;
 		for (auto &item : mapDatas) {
 			if (std::string::npos != item.first.find(findKey.c_str())) {
 				dataKey = item.first;
+				vDataValue = item.second;
 				break;
 			}
 		}
@@ -382,9 +422,11 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 				vScriptKey.clear();
 				vScriptData.clear();
 				vScriptKey.insert(vScriptKey.end(), dataKey.begin()+11, dataKey.end());
-				CDataStream ds(mapDatas[dataKey], SER_DISK, CLIENT_VERSION);
-				ds >> nHeight;
-				ds >> vScriptData;
+				if(!mapDatas[dataKey].empty()) {
+					CDataStream ds(mapDatas[dataKey], SER_DISK, CLIENT_VERSION);
+					ds >> nHeight;
+					ds >> vScriptData;
+				}
 				return true;
 			}
 		}
@@ -395,7 +437,11 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 			if(strdataKeyTemp < dataKey) {
 				return true;
 			}
-			else {
+			else if(strdataKeyTemp == dataKey && vDataValue.empty()){
+				mapDatas[dataKey] = vDataValue;
+				return GetScriptData(vScriptId, 1, vScriptKey, vScriptData, nHeight);
+			}
+			else{
 				vScriptKey.clear();
 				vScriptData.clear();
 				vScriptKey.insert(vScriptKey.end(), dataKey.begin()+11, dataKey.end());
@@ -424,9 +470,11 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 				vScriptKey.clear();
 				vScriptData.clear();
 				vScriptKey.insert(vScriptKey.end(), dataKey.begin() + 11, dataKey.end());
-				CDataStream ds(mapDatas[dataKey], SER_DISK, CLIENT_VERSION);
-				ds >> nHeight;
-				ds >> vScriptData;
+				if (!mapDatas[dataKey].empty()) {
+					CDataStream ds(mapDatas[dataKey], SER_DISK, CLIENT_VERSION);
+					ds >> nHeight;
+					ds >> vScriptData;
+				}
 				return true;
 			}
 		} else {

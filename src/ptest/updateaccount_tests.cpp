@@ -76,6 +76,14 @@ void CreateRegScriptTx() {
 	CommandLineRPC(argc, argv);
 }
 
+void CreateRegScriptTxTest() {
+	//cout <<"CreateRegScriptTx" << endl;
+	int argc = 7;
+	char *argv[7] =
+			{ "rpctest", "registerscripttx", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9","0","d:\\sdk.bin","1000000", "10" };
+	CommandLineRPC(argc, argv);
+}
+
 void CreateRegBetScriptTx() {
 	//cout <<"CreateRegBetScriptTx" << endl;
 	int argc = 6;
@@ -279,7 +287,8 @@ BOOST_AUTO_TEST_CASE(create_normaltx)
 }
 BOOST_AUTO_TEST_CASE(create_regscripttx)
 {
-	CreateRegScriptTx();
+//	CreateRegScriptTx();
+	CreateRegScriptTxTest();
 }
 BOOST_AUTO_TEST_CASE(create_registertx)
 {

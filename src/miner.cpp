@@ -420,7 +420,7 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey) {
 	return CreateNewBlock(scriptPubKey);
 }
 
-struct CSecureAccComparator {
+struct CAccountComparator {
 	bool operator()(const CAccount &a, const CAccount&b) {
 		// First sort by acc over 30days
 		if (a.GetSecureAccPos(chainActive.Tip()->nHeight) < b.GetSecureAccPos(chainActive.Tip()->nHeight)) {
@@ -475,8 +475,8 @@ uint256 GetAdjustHash(const uint256 TargetHash, const uint64_t nPos) {
 extern CWallet* pwalletMain;
 bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCreateKey) {
 	set<CKeyID> setKeyID;
-	CAccount secureAcc;
-	set<CAccount, CSecureAccComparator> setSecureAcc;
+	CAccount acctInfo;
+	set<CAccount, CAccountComparator> setAcctInfo;
 
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
@@ -519,16 +519,17 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 				}
 				if(!bfind) continue;
 			}
-			if (accView.GetAccount(keyid, secureAcc)) {
+			CUserID userId = keyid;
+			if (accView.GetAccount(userId, acctInfo)) {
 				//available
-				if (secureAcc.IsRegister() && secureAcc.GetSecureAccPos(pPrevIndex->nHeight) > 0) {
-					setSecureAcc.insert(secureAcc);
+				if (acctInfo.IsRegister() && acctInfo.GetSecureAccPos(pPrevIndex->nHeight) > 0) {
+					setAcctInfo.insert(acctInfo);
 				}
 			}
 		}
 	}
 
-	if (setSecureAcc.empty()) {
+	if (setAcctInfo.empty()) {
 		setCreateKey.clear();
 		LogPrint("INFO","CreatePosTx setSecureAcc empty\n");
 		return false;
@@ -539,7 +540,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 	uint256 prevblockhash = pPrevIndex->GetBlockHash();
 	const uint256 targetHash = CBigNum().SetCompact(pBlock->nBits).getuint256(); //target hash difficult
 
-	for(const auto &item: setSecureAcc) {
+	for(const auto &item: setAcctInfo) {
 
 		uint64_t posacc = item.GetSecureAccPos(pPrevIndex->nHeight);
 		if (posacc == 0) //have no pos

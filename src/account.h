@@ -61,25 +61,32 @@ public:
     uint256 hashBlock;
     map<CKeyID, CAccount> cacheAccounts;
     map<string, CKeyID> cacheKeyIds;
-public:
-    CAccountViewCache(CAccountView &base, bool fDummy=false);
+
+private:
 	bool GetAccount(const CKeyID &keyId, CAccount &account);
 	bool SetAccount(const CKeyID &keyId, const CAccount &account);
 	bool SetAccount(const vector<unsigned char> &accountId, const CAccount &account);
 	bool HaveAccount(const CKeyID &keyId);
-	uint256 GetBestBlock();
-	bool SetBestBlock(const uint256 &hashBlock);
-	bool BatchWrite(const map<CKeyID, CAccount> &mapAccounts, const map<string, CKeyID> &mapKeyIds, const uint256 &hashBlock);
-	bool BatchWrite(const vector<CAccount> &vAccounts);
 	bool EraseAccount(const CKeyID &keyId);
 	bool SetKeyId(const vector<unsigned char> &accountId, const CKeyID &keyId);
 	bool GetKeyId(const vector<unsigned char> &accountId, CKeyID &keyId);
 	bool EraseKeyId(const vector<unsigned char> &accountId);
 	bool GetAccount(const vector<unsigned char> &accountId, CAccount &account);
-	bool SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &account);
-	bool GetAccount(const CUserID &userId, CAccount &account);
-	bool GetKeyId(const CUserID &userId, CKeyID &keyId);
 
+public:
+    CAccountViewCache(CAccountView &base, bool fDummy=false);
+	uint256 GetBestBlock();
+	bool SetBestBlock(const uint256 &hashBlock);
+	bool BatchWrite(const map<CKeyID, CAccount> &mapAccounts, const map<string, CKeyID> &mapKeyIds, const uint256 &hashBlock);
+	bool BatchWrite(const vector<CAccount> &vAccounts);
+	bool GetAccount(const CUserID &userId, CAccount &account);
+	bool SetAccount(const CUserID &userId, const CAccount &account);
+	bool GetKeyId(const CUserID &userId, CKeyID &keyId);
+	bool SetKeyId(const CUserID &userId, const CKeyID &keyId);
+	bool EraseAccount(const CUserID &userId);
+	bool EraseKeyId(const CUserID &userId);
+	bool HaveAccount(const CUserID &userId);
+	bool SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &account);
 	bool Flush();
 	unsigned int GetCacheSize();
 

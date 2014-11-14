@@ -26,12 +26,14 @@ extern void noui_connect();
 struct TestingSetup {
 	TestingSetup() {
 		{
-			//vmscript test init
-//			delete pScriptDB;
-//			delete pScriptDBTip;
+//			vmscript test init
+			if(pScriptDB)
+				delete pScriptDB;
+			if(pScriptDBTip)
+				delete pScriptDBTip;
 //
-//			pScriptDB = new CScriptDB(1024*1024, false , false);
-//			pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
+			pScriptDB = new CScriptDB(1024*1024, false , false);
+			pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
 		}
 		mapArgs["-datadir"] = "D:\\bitcoin";
 		ReadConfigFile(mapArgs, mapMultiArgs);
