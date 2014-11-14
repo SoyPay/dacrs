@@ -296,7 +296,10 @@ bool CScriptDBViewCache::EraseKey(const vector<unsigned char> &vKey) {
 }
 bool CScriptDBViewCache::HaveData(const vector<unsigned char> &vKey) {
 	if (mapDatas.count(string(vKey.begin(), vKey.end())) > 0) {
-		return true;
+		if(!mapDatas[string(vKey.begin(), vKey.end())].empty())
+			return true;
+		else
+			return false;
 	}
 	return pBase->HaveData(vKey);
 }
@@ -350,6 +353,8 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 	vKey.insert(vKey.end(), vScriptKey.begin(), vScriptKey.end());
 	vector<unsigned char> vValue;
 	if (!GetData(vKey, vValue))
+		return false;
+	if(vValue.empty())
 		return false;
 	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
 	ds >> nHeight;
@@ -450,6 +455,7 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 bool CScriptDBViewCache::SetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
 		const vector<unsigned char> &vScriptData, const int nHeight, CScriptDBOperLog &operLog) {
 	assert(vScriptKey.size() == 8);
+	cout << "SetScriptData add key:" << HexStr(vScriptKey) << endl;
 	vector<unsigned char> vKey = { 'd', 'a', 't', 'a' };
 	vKey.insert(vKey.end(), vScriptId.begin(), vScriptId.end());
 	vKey.push_back('_');

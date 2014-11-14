@@ -7015,6 +7015,7 @@ BOOST_AUTO_TEST_CASE(print_out1)
 	vscript.Rom.insert(vscript.Rom.begin(),vtemp.begin(),vtemp.end());
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << vscript;
+	cout<<"vecote:"<<HexStr(vtemp).c_str()<<endl;
 	cout<<"script:"<<HexStr(scriptData).c_str()<<endl;
 }
 BOOST_AUTO_TEST_SUITE_END()

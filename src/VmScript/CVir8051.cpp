@@ -542,10 +542,9 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
 	GetData(ipara,retdata);
 	assert(retdata.size() == 1);
 
-	CDataStream tep1(*retdata.at(0), SER_DISK, CLIENT_VERSION);
-	uint256 hash1(0);
-	tep1 >>hash1;
-	cout<<"ExGetTxContractsFunc:"<<HexStr(hash1).c_str()<<endl;
+	uint256 hash1(*retdata.at(0));
+	cout<<"ExGetTxContractsFunc1:"<<hash1.GetHex()<<endl;
+
 
 
 	std::shared_ptr<CBaseTransaction> pBaseTx;
@@ -567,7 +566,7 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 	CDataStream tep1(*retdata.at(0), SER_DISK, CLIENT_VERSION);
 	uint256 hash1(0);
 	tep1 >>hash1;
-	cout<<"ExGetTxAccountsFunc:"<<HexStr(hash1).c_str()<<endl;
+	cout<<"ExGetTxAccountsFunc:"<<hash1.GetHex()<<endl;
 
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 
@@ -703,7 +702,7 @@ static vector<unsigned char> AddChar(vector<unsigned char>&param)
 	int count = 8-param.size();
 	while(count--)
 	{
-		param.push_back('0');
+		param.push_back('\x0');
 	}
 	return param;
 }
@@ -799,10 +798,7 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) 
 	}
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
-    tep << vValue;
-    vector<unsigned char> tep1(tep.begin(),tep.end());
-    (*tem.get()).push_back(tep1);
+    (*tem.get()).push_back(vValue);
 
 	return std::make_tuple (flag, tem);
 }
@@ -822,14 +818,17 @@ static RET_DEFINE ExModifyDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	{
 		flag =  false;
 	}
-
 	CScriptDBOperLog operlog;
 	vector<unsigned char> key =AddChar(*retdata.at(0));
-	if(scriptDB->SetScriptData(scriptid,key,*retdata.at(1).get(),height,operlog))
-	{
-		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
-		m_dblog.get()->push_back(operlog);
-		flag = true;
+	vector_unsigned_char vTemp;
+	int nHeight;
+	if(scriptDB->GetScriptData(scriptid, key, vTemp, nHeight)) {
+		if(scriptDB->SetScriptData(scriptid,key,*retdata.at(1).get(),height,operlog))
+		{
+			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
+			m_dblog.get()->push_back(operlog);
+			flag = true;
+		}
 	}
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -851,7 +850,6 @@ static RET_DEFINE ExGetDBSizeFunc(unsigned char * ipara,void * pVmScript) {
 	{
 		flag = false;
 	}
-
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << count;
@@ -911,32 +909,21 @@ static RET_DEFINE ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
 }
 static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
-	unsigned char *accountid = NULL;
-	GetParaData(pbuffer, accountid, length);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 2);
+
 	uint64_t money;
-	unsigned short len= GetParaLen(pbuffer);
-	unsigned char *pdata= NULL;
-	GetParaData(pbuffer, pdata, len);
-	memcpy(&money,pdata,sizeof(money));
+	memcpy(&money,&retdata.at(1).get()->at(0),sizeof(money));
 
-	vector<unsigned char> id(accountid, accountid + length);
-	CAccountViewCache view(*pAccountViewTip, true);
 	bool flag = true;
-	string strParam(accountid, accountid + length);
 	CAccount aAccount;
-	if (strParam.length() != 12) {
-		CBitcoinAddress address(strParam.c_str());
-		CKeyID keyid;
-		if (!address.GetKeyID(keyid))
-			flag =  false;
-
-		if (!view.GetAccount(keyid, aAccount)) {
-			flag =  false;
-		}
+	CRegID regid(*retdata.at(0));
+	CUserID userid(regid);
+	if (!pVmScriptRun->GetCatchView()->GetAccount(userid, aAccount)) {
+		flag = false;
 	}
+
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
 	int height = pVmScriptRun->GetComfirHeight();
 	bool ret = aAccount.IsAuthorized(money,height,scriptid);
@@ -1193,7 +1180,12 @@ int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 				}
 			}
 		} else if (Sys.PC == 0x0008) {
-				return step;		//return total step
+				INT8U result=GetExRam(0xEFFD);
+				if(result == 0x01)
+				{
+					return step;
+				}
+				return 0;
 			}
 			if (maxstep != 0 && step > maxstep) {
 				return 0;		//force return
