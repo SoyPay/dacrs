@@ -1292,6 +1292,14 @@ public :
 	 * @return if we can minus the money then return ture,otherwise return false
 	 */
 	bool IsAuthorized(uint64_t nMoney,int nHeight,const vector_unsigned_char& scriptID);
+
+	/**
+	 * @brief get user defined data in authorizate class by scriptID
+	 * @param scriptID
+	 * @param vData user defined data
+	 * @return true if success,otherwise false
+	 */
+	bool GetUserData(const vector_unsigned_char& scriptID,vector<unsigned char> & vData);
 public:
 	CAccount(CKeyID &keyId, CPubKey &pubKey) :
 			keyID(keyId), publicKey(pubKey) {
