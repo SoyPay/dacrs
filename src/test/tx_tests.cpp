@@ -98,7 +98,8 @@ struct CTxTest {
 		pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
 		vector<unsigned char> vScriptContent = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
 				0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
-		BOOST_CHECK(pScriptDBTip->SetScript(scriptID, vScriptContent));
+		CRegID regScriptId(scriptID);
+		BOOST_CHECK(pScriptDBTip->SetScript(regScriptId, vScriptContent));
 	}
 
 	void InitFund() {
@@ -129,8 +130,10 @@ struct CTxTest {
 		vector<unsigned char> vScriptContent1 = {0x01,0x02,0x03,0x04,0x01,0x01,0x01,0x01,0x01,
 				0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01};
 
+		CRegID regId;
 		for(auto &item:v)
-			BOOST_CHECK(pScriptDBTip->SetScript(item, vScriptContent1));
+			regId.SetRegID(item);
+			BOOST_CHECK(pScriptDBTip->SetScript(regId, vScriptContent1));
 	}
 
 	void Init() {
