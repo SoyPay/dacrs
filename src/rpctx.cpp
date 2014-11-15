@@ -182,6 +182,8 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: Account is already registered");
 		}
 		if (balance < fee) {
+			//cout<<"blance:"<<balance<<"fee:"<<fee<endl;
+			LogPrint("vm1","blance:%ld,fee:%ld",balance,fee);
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: Account balance is insufficient.");
 		}
 
@@ -687,10 +689,10 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		 if(fread(buffer, 1, lSize, file) != lSize) {
 				throw runtime_error("read script file error");
 		 }
-		 vmScript.Rom.insert(vscript.end(), buffer, buffer+lSize);
+		 vmScript.Rom.insert(vmScript.Rom.end(), buffer, buffer+lSize);
 		 CDataStream ds(SER_DISK, CLIENT_VERSION);
 		 ds << vmScript;
-
+		 vscript.assign(ds.begin(), ds.end());
 //		 FILE* file1 = fopen("d:\\script.txt", "a+");
 //		 if(!file1) {
 //			 throw runtime_error("open file script.txt error");
@@ -699,6 +701,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 //		 if(fwrite(strScript.c_str(), 1, strScript.length(), file1) != strScript.length())
 //			 throw runtime_error("write script to file error");
 //		 fclose(file1);
+		 if(file != NULL)
 		 fclose(file);
 
 	} else if (1 == flag) {
@@ -779,8 +782,8 @@ Value registerscripttx(const Array& params, bool fHelp) {
 
 		if (vscript.size() == SCRIPT_ID_SIZE) {
 			vector<unsigned char> vscriptcontent;
-			if (pScriptDBTip->GetScript(vscript, vscriptcontent)) {
-				throw JSONRPCError(RPC_WALLET_ERROR, "in registerscripttx Error: Account balance is insufficient.");
+			if (!pScriptDBTip->GetScript(vscript, vscriptcontent)) {
+				throw JSONRPCError(RPC_WALLET_ERROR, "Get Script id failed.");
 			}
 		}
 

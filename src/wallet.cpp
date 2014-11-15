@@ -379,7 +379,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 						uint256 hashtx = sptx->GetHash();
 
 						if (sptx->nTxType == REG_ACCT_TX) {
-							CKeyID keyid = boost::get<CKeyID>(((CRegisterAccountTx*) sptx.get())->userId);
+							CKeyID keyid = (boost::get<CPubKey>(((CRegisterAccountTx*) sptx.get())->userId)).GetID();
 							CRegID regid(pblock->nHeight, i);
 							mapKeyRegID[keyid] = regid;
 							{
