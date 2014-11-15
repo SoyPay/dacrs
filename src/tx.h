@@ -42,7 +42,7 @@ private:
 	void SetRegIDByCompact(const vector<unsigned char> &vIn);
 public:
 	friend class CID;
-	const vector<unsigned char> &GetRegID() const {return vRegID;}
+	vector<unsigned char> &GetRegID() const {return vRegID;}
 	void SetRegID(const vector<unsigned char> &vIn) {
 		assert(vIn.size() == 6);
 		vRegID = vIn;
