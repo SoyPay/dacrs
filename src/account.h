@@ -97,7 +97,7 @@ class CScriptDBView
 public:
 	virtual bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
 	virtual bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
-	virtual bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
+	virtual bool BatchWrite(const map<vector<unsigned char>, vector<unsigned char> > &mapDatas);
 	virtual bool EraseKey(const vector<unsigned char> &vKey);
 	virtual bool HaveData(const vector<unsigned char> &vKey);
 	virtual bool GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
@@ -114,7 +114,7 @@ public:
 	CScriptDBViewBacked(CScriptDBView &dataBaseView);
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
 	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
-	bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
+	bool BatchWrite(const map<vector<unsigned char>, vector<unsigned char> > &mapDatas);
 	bool EraseKey(const vector<unsigned char> &vKey);
 	bool HaveData(const vector<unsigned char> &vKey);
 	bool GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
@@ -125,13 +125,13 @@ public:
 
 class CScriptDBViewCache : public CScriptDBViewBacked {
 public:
-	map<string, vector<unsigned char> > mapDatas;
+	map<vector<unsigned char>, vector<unsigned char> > mapDatas;
 
 public:
 	CScriptDBViewCache(CScriptDBView &base, bool fDummy = false);
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
 	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
-	bool BatchWrite(const map<string, vector<unsigned char> > &mapDatas);
+	bool BatchWrite(const map<vector<unsigned char>, vector<unsigned char> > &mapDatas);
 	bool EraseKey(const vector<unsigned char> &vKey);
 	bool HaveData(const vector<unsigned char> &vKey);
 
