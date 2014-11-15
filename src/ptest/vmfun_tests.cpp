@@ -253,10 +253,9 @@ BOOST_AUTO_TEST_CASE(test_fun)
 	CreateRegScriptTx2();
 	GenerateMiner();
 	cout << "start first" << endl;
-	ListRegScript1();
+//	ListRegScript1();
 	CreateFirstTx();
 	GenerateMiner();
-
 	cout << "strat second:" << endl;
 	CreateSecondTx();
 	GenerateMiner();

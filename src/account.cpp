@@ -410,9 +410,11 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 		vector<unsigned char> vDataValue;
 		for (auto &item : mapDatas) {
 			if (std::string::npos != item.first.find(findKey.c_str())) {
-				dataKey = item.first;
+				if(item.second.empty()) {
+					continue;
+				}
 				vDataValue = item.second;
-				break;
+				dataKey = item.first;
 			}
 		}
 		if(!pBase->GetScriptData(vScriptId, nIndex, vScriptKey, vScriptData, nHeight)) {
@@ -422,11 +424,9 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 				vScriptKey.clear();
 				vScriptData.clear();
 				vScriptKey.insert(vScriptKey.end(), dataKey.begin()+11, dataKey.end());
-				if(!mapDatas[dataKey].empty()) {
-					CDataStream ds(mapDatas[dataKey], SER_DISK, CLIENT_VERSION);
-					ds >> nHeight;
-					ds >> vScriptData;
-				}
+				CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
+				ds >> nHeight;
+				ds >> vScriptData;
 				return true;
 			}
 		}
@@ -434,12 +434,19 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 			vector<unsigned char> dataKeyTemp(vKey.begin(), vKey.end());
 			dataKeyTemp.insert(dataKeyTemp.end(), vScriptKey.begin(), vScriptKey.end());
 			string strdataKeyTemp(dataKeyTemp.begin(), dataKeyTemp.end());
+			if ("" == dataKey)
+				return true;
 			if(strdataKeyTemp < dataKey) {
+				if(mapDatas.count(strdataKeyTemp) == 0)
+					return true;
+				else {
+					mapDatas[strdataKeyTemp].clear();  //在缓存中dataKeyTemp已经被删除过了，重新将此key对应的value清除
+					return GetScriptData(vScriptId, 1, vScriptKey, vScriptData, nHeight); //重新从数据库中获取下一条数据
+				}
 				return true;
 			}
 			else if(strdataKeyTemp == dataKey && vDataValue.empty()){
-				mapDatas[dataKey] = vDataValue;
-				return GetScriptData(vScriptId, 1, vScriptKey, vScriptData, nHeight);
+				return true;
 			}
 			else{
 				vScriptKey.clear();
@@ -471,16 +478,19 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 				vScriptData.clear();
 				vScriptKey.insert(vScriptKey.end(), dataKey.begin() + 11, dataKey.end());
 				if (!mapDatas[dataKey].empty()) {
-					CDataStream ds(mapDatas[dataKey], SER_DISK, CLIENT_VERSION);
-					ds >> nHeight;
-					ds >> vScriptData;
+					return false;
 				}
+			CDataStream ds(mapDatas[dataKey], SER_DISK, CLIENT_VERSION);
+			ds >> nHeight;
+			ds >> vScriptData;
 				return true;
 			}
 		} else {
 			vector<unsigned char> dataKeyTemp(vKey.begin(), vKey.end());
 			dataKeyTemp.insert(dataKeyTemp.end(), vScriptKey.begin(), vScriptKey.end());
 			string strdataKeyTemp(dataKeyTemp.begin(), dataKeyTemp.end());
+			if("" == dataKey)
+				return true;
 			if (strdataKeyTemp < dataKey) {
 				return true;
 			} else {
@@ -503,7 +513,7 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 bool CScriptDBViewCache::SetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
 		const vector<unsigned char> &vScriptData, const int nHeight, CScriptDBOperLog &operLog) {
 	assert(vScriptKey.size() == 8);
-//	cout << "SetScriptData add key:" << HexStr(vScriptKey) << endl;
+	//cout << "SetScriptData add key:" << HexStr(vScriptKey) << endl;
 	vector<unsigned char> vKey = { 'd', 'a', 't', 'a' };
 	vKey.insert(vKey.end(), vScriptId.begin(), vScriptId.end());
 	vKey.push_back('_');
@@ -588,7 +598,7 @@ bool CScriptDBViewCache::SetScriptDataCount(const vector<unsigned char> &vScript
 bool CScriptDBViewCache::EraseScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey, CScriptDBOperLog &operLog) {
 	assert(vScriptKey.size() == 8);
 	vector<unsigned char> scriptKey = { 'd', 'a', 't', 'a'};
-
+	//cout << "delete key:" << HexStr(vScriptKey) << endl;
 	scriptKey.insert(scriptKey.end(), vScriptId.begin(), vScriptId.end());
 	scriptKey.push_back('_');
 	scriptKey.insert(scriptKey.end(), vScriptKey.begin(), vScriptKey.end());
