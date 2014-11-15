@@ -1093,12 +1093,15 @@ static RET_DEFINE ExGetAuthoritedDefineFunc(unsigned char * ipara,void * pVmScri
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
 	int height = pVmScriptRun->GetComfirHeight();
 
+	vector<unsigned char> vData;
+	if(!aAccount.GetUserData(scriptid,vData))
+	{
+		flag = false;
+	}
+
 	/// untodo
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-//    CDataStream tep(SER_DISK, CLIENT_VERSION);
-//    tep << ret;
-//    vector<unsigned char> tep1(tep.begin(),tep.end());
-//    (*tem.get()).push_back(tep1);
+   (*tem.get()).push_back(vData);
 
 	return std::make_tuple (flag, tem);
 }
@@ -1205,6 +1208,8 @@ int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 				if (totalsize + 2 < MAX_SHARE_RAM) { //if data not over
 					for (auto& it : *tem.get()) {
 						int size = it.size();
+						if(size == 0)
+							continue;
 						memcpy(&ipara[pos], &size, 2);
 						memcpy(&ipara[pos + 2], &it.at(0), size);
 						pos += size + 2;
