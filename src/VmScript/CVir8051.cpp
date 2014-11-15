@@ -715,7 +715,7 @@ static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	int height = 0;
 	memcpy(&height,&retdata.at(2).get()->at(0),4);
 
-	const vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	const CRegID scriptid = pVmScriptRun->GetScriptRegID();
 	bool flag = true;
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
 	if(retdata.at(0).get()->size() > 8)
@@ -747,7 +747,7 @@ static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	GetData(ipara,retdata);
 	assert(retdata.size() == 1);
 
-	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	CRegID scriptid = pVmScriptRun->GetScriptRegID();
 
 	bool flag = false;
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
@@ -779,7 +779,7 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) 
 	GetData(ipara,retdata);
 	assert(retdata.size() == 1);
 
-	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	CRegID scriptid = pVmScriptRun->GetScriptRegID();
 
 	vector_unsigned_char vValue;
 	int nHeight;
@@ -811,7 +811,7 @@ static RET_DEFINE ExModifyDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	int height = 0;
 	memcpy(&height,&retdata.at(2).get()->at(0),4);
 
-	const vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	const CRegID scriptid = pVmScriptRun->GetScriptRegID();
 	bool flag = false;
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
 	if(retdata.at(0).get()->size() > 8)
@@ -841,7 +841,7 @@ static RET_DEFINE ExModifyDataDBFunc(unsigned char * ipara,void * pVmScript) {
 }
 static RET_DEFINE ExGetDBSizeFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	CRegID scriptid = pVmScriptRun->GetScriptRegID();
 	vector<unsigned char> vScriptKey;
 	int count = 0;
 	bool flag = true;
@@ -871,7 +871,7 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
 	{
 		flag =  false;
 	}
-	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	CRegID scriptid = pVmScriptRun->GetScriptRegID();
 
 	vector_unsigned_char vValue;
 	int nHeight;
@@ -924,9 +924,9 @@ static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 		flag = false;
 	}
 
-	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	CRegID scriptid = pVmScriptRun->GetScriptRegID();
 	int height = pVmScriptRun->GetComfirHeight();
-	bool ret = aAccount.IsAuthorized(money,height,scriptid);
+	bool ret = aAccount.IsAuthorized(money,height,scriptid.GetRegID());
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -944,7 +944,7 @@ static RET_DEFINE ExReadDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 	GetData(ipara,retdata);
 	assert(retdata.size() == 1);
 
-	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	CRegID scriptid = pVmScriptRun->GetScriptRegID();
 	vector_unsigned_char vValue;
 	int nHeight;
 	bool flag = true;
@@ -978,7 +978,7 @@ static RET_DEFINE ExModifyDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 	int height = 0;
 	memcpy(&height,&retdata.at(1).get()->at(0),4);
 
-	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	CRegID scriptid = pVmScriptRun->GetScriptRegID();
 	vector_unsigned_char vValue;
 	bool flag = false;
 	bool ret = true;
@@ -1018,7 +1018,7 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript
 	GetData(ipara,retdata);
 	assert(retdata.size() == 2);
 
-	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	CRegID scriptid = pVmScriptRun->GetScriptRegID();
 	vector_unsigned_char vValue;
 	bool flag = false;
 	int temp = 0;
