@@ -415,6 +415,7 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 				}
 				vDataValue = item.second;
 				dataKey = item.first;
+				break;
 			}
 		}
 		if(!pBase->GetScriptData(vScriptId, nIndex, vScriptKey, vScriptData, nHeight)) {
