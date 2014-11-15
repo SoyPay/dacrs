@@ -38,11 +38,15 @@ void testscriptdb() {
 	//get index 0 script from db
 	vScript.clear();
 	vector<unsigned char> vId;
-	BOOST_CHECK(pScriptDBTip->GetScript(0,vId,vScript));
-	BOOST_CHECK(vScriptId == vId);
+
+	int nIndex = 0;
+	CRegID regId;
+	BOOST_CHECK(pScriptDBTip->GetScript(0, regId, vScript));
+	BOOST_CHECK(vScriptId == regId.GetRegID());
 	BOOST_CHECK(vScriptContent == vScript);
-	BOOST_CHECK(pScriptDBTip->GetScript(1,vId,vScript));
-	BOOST_CHECK(vScriptId1 == vId);
+	nIndex = 1;
+	BOOST_CHECK(pScriptDBTip->GetScript(1, regId, vScript));
+	BOOST_CHECK(vScriptId1 == regId.GetRegID());
 	BOOST_CHECK(vScriptContent1 == vScript);
 	//delete script from db
 	BOOST_CHECK(pScriptDBTip->EraseScript(regScriptId));
