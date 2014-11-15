@@ -309,7 +309,7 @@ bool CScriptDB::GetData(const vector<unsigned char> &vKey, vector<unsigned char>
 bool CScriptDB::SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {
 	return db.Write(vKey, vValue);
 }
-bool CScriptDB::BatchWrite(const map<string, vector<unsigned char> > &mapDatas) {
+bool CScriptDB::BatchWrite(const map<vector<unsigned char>, vector<unsigned char> > &mapDatas) {
 	CLevelDBBatch batch;
 	for (auto & item : mapDatas) {
 		if (item.second.empty()) {
@@ -331,7 +331,7 @@ bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, v
 	leveldb::Iterator* pcursor = db.NewIterator();
 	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
 	string strPrefixTemp("def");
-	ssKeySet.insert(ssKeySet.end(), 9);
+	//ssKeySet.insert(ssKeySet.end(), 9);
 	ssKeySet.insert(ssKeySet.end(), &strPrefixTemp[0], &strPrefixTemp[3]);
 	if(!vScriptId.empty()) {
 		vector<char> vId(vScriptId.begin(), vScriptId.end());
@@ -343,9 +343,9 @@ bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, v
 		boost::this_thread::interruption_point();
 		try {
 			leveldb::Slice slKey = pcursor->key();
-			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
-			string strScriptKey;
-			ssKey >> strScriptKey;
+//			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+			string strScriptKey(slKey.data(), 0, slKey.size());
+//			ssKey >> strScriptKey;
 			string strPrefix = strScriptKey.substr(0,3);
 			if (strPrefix == "def") {
 				if(-1 == i) {
@@ -353,7 +353,7 @@ bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, v
 					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
 					ssValue >> vValue;
 					vScriptId.clear();
-					vScriptId.insert(vScriptId.end(), slKey.data()+4, slKey.data()+10);
+					vScriptId.insert(vScriptId.end(), slKey.data()+3, slKey.data()+slKey.size());
 				}
 				pcursor->Next();
 			}
@@ -378,7 +378,7 @@ bool CScriptDB::GetScriptData(const vector<unsigned char> &vScriptId, const int 
 	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
 
 	string strPrefixTemp("data");
-	ssKeySet.insert(ssKeySet.end(), 19);
+	//ssKeySet.insert(ssKeySet.end(), 19);
 	ssKeySet.insert(ssKeySet.end(), &strPrefixTemp[0], &strPrefixTemp[4]);
 	vector<char> vId(vScriptId.begin(), vScriptId.end());
 	ssKeySet.insert(ssKeySet.end(), vId.begin(), vId.end());
@@ -393,9 +393,9 @@ bool CScriptDB::GetScriptData(const vector<unsigned char> &vScriptId, const int 
 		boost::this_thread::interruption_point();
 		try {
 			leveldb::Slice slKey = pcursor->key();
-			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
-			string strScriptKey;
-			ssKey >> strScriptKey;
+//			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+			string strScriptKey(slKey.data(), 0, slKey.size());
+//			ssKey >> strScriptKey;
 			string strPrefix = strScriptKey.substr(0, 4);
 			if (strPrefix == "data") {
 				if (-1 == i) {
@@ -405,7 +405,7 @@ bool CScriptDB::GetScriptData(const vector<unsigned char> &vScriptId, const int 
 					ssValue >> nHeight;
 					ssValue >> vScriptData;
 					vScriptKey.clear();
-					vScriptKey.insert(vScriptKey.end(), slKey.data()+12, slKey.data()+20);
+					vScriptKey.insert(vScriptKey.end(), slKey.data()+11, slKey.data()+slKey.size());
 				}
 				pcursor->Next();
 			} else {
