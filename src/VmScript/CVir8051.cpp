@@ -740,7 +740,6 @@ static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
     tep << flag;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
-
 	return std::make_tuple (true, tem);
 }
 static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
@@ -838,7 +837,6 @@ static RET_DEFINE ExModifyDataDBFunc(unsigned char * ipara,void * pVmScript) {
     tep << flag;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
-
 	return std::make_tuple (true, tem);
 }
 static RET_DEFINE ExGetDBSizeFunc(unsigned char * ipara,void * pVmScript) {

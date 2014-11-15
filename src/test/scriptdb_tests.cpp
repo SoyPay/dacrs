@@ -90,6 +90,7 @@ void testscriptdatadb() {
 	vKey.clear();
 	nValidHeight = 0;
 	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId,0,vKey,vScript,nValidHeight));
+	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId,0,vKey,vScript,nValidHeight));
 	BOOST_CHECK(vKey == vScriptKey);
 	BOOST_CHECK(vScript == vScriptData);
 	BOOST_CHECK_EQUAL(nValidHeight,100);
@@ -99,6 +100,8 @@ void testscriptdatadb() {
 	BOOST_CHECK_EQUAL(nValidHeight,101);
 	//delete script from db
 	BOOST_CHECK(pScriptDBTip->EraseScriptData(vScriptId, vScriptKey, operlog));
+	vKey.clear();
+	vScript.clear();
 	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId,0,vKey,vScript,nValidHeight));
 	BOOST_CHECK(vKey == vScriptKey1);
 	BOOST_CHECK(vScript == vScriptData1);
