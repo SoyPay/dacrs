@@ -36,7 +36,7 @@ bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& 
 	}
 
 	CContractTransaction* secure = static_cast<CContractTransaction*>(Tx.get());
-	if (m_ScriptDBTip->GetScript(secure->scriptRegId, vScript)) {
+	if (m_ScriptDBTip->GetScript(boost::get<CRegID>(secure->scriptRegId), vScript)) {
 		CDataStream stream(vScript, SER_DISK, CLIENT_VERSION);
 		try {
 			stream >> vmScript;
@@ -74,7 +74,7 @@ tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& T
 	int nCount;
 
 	CContractTransaction* tx = static_cast<CContractTransaction*>(Tx.get());
-	VmDB.GetScriptDataCount(boost::get<CRegID>(tx->scriptRegId).GetRegID(),nCount);
+	VmDB.GetScriptDataCount(boost::get<CRegID>(tx->scriptRegId),nCount);
 	//cout << "before run script db data size:" << nCount <<endl;
 	uint64_t maxstep = tx->llFees;///nBurnFactor;
 	tuple<bool, uint64_t, string> mytuple;
@@ -88,7 +88,7 @@ tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& T
 		return mytuple;
 	}
 
-	VmDB.GetScriptDataCount(boost::get<CRegID>(tx->scriptRegId).GetRegID(),nCount);
+	VmDB.GetScriptDataCount(boost::get<CRegID>(tx->scriptRegId),nCount);
 	//cout << "after run script db data size:" << nCount <<endl;
 
 	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
@@ -218,10 +218,10 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 	return true;
 }
 
-const vector_unsigned_char& CVmScriptRun::GetScriptID()
+const CRegID& CVmScriptRun::GetScriptRegID()
 {
 	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
-	return boost::get<CRegID>(tx->scriptRegId).GetRegID();
+	return boost::get<CRegID>(tx->scriptRegId);
 }
 int CVmScriptRun::GetComfirHeight()
 {

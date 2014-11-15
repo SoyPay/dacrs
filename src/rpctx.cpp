@@ -469,7 +469,7 @@ Value signcontracttx(const Array& params, bool fHelp) {
 		}
 
 		vector<unsigned char> vscript;
-		if (!pScriptDBTip->GetScript(tx.scriptRegId, vscript)) {
+		if (!pScriptDBTip->GetScript(boost::get<CRegID>(tx.scriptRegId), vscript)) {
 			CID id(tx.scriptRegId);
 			throw runtime_error(
 					tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(id.GetID())));
@@ -779,7 +779,8 @@ Value registerscripttx(const Array& params, bool fHelp) {
 
 		if (vscript.size() == SCRIPT_ID_SIZE) {
 			vector<unsigned char> vscriptcontent;
-			if (pScriptDBTip->GetScript(vscript, vscriptcontent)) {
+//			CRegID regid(vscript) ;
+			if (pScriptDBTip->GetScript(CRegID(vscript), vscriptcontent)) {
 				throw JSONRPCError(RPC_WALLET_ERROR, "in registerscripttx Error: Account balance is insufficient.");
 			}
 		}
@@ -1558,17 +1559,17 @@ Value listregscript(const Array& params, bool fHelp) {
 		int nCount(0);
 		if(!pScriptDBTip->GetScriptCount(nCount))
 			throw JSONRPCError(RPC_DATABASE_ERROR, "get script error: cannot get registered count.");
-		vector<unsigned char> vScriptId;
+		CRegID regId;
 		vector<unsigned char> vScript;
 		Object script;
-		if(!pScriptDBTip->GetScript(0, vScriptId, vScript))
+		if(!pScriptDBTip->GetScript(0, regId, vScript))
 			throw JSONRPCError(RPC_DATABASE_ERROR, "get script error: cannot get registered script.");
-		script.push_back(Pair("scriptId", HexStr(vScriptId)));
+		script.push_back(Pair("scriptId", HexStr(regId.GetRegID())));
 		script.push_back(Pair("scriptContent", HexStr(vScript.begin(), vScript.end())));
 		arrayScript.push_back(script);
-		while(pScriptDBTip->GetScript(1, vScriptId, vScript)) {
+		while(pScriptDBTip->GetScript(1, regId, vScript)) {
 			Object obj;
-			obj.push_back(Pair("scriptId", HexStr(vScriptId)));
+			obj.push_back(Pair("scriptId", HexStr(regId.GetRegID())));
 			obj.push_back(Pair("scriptContent", string(vScript.begin(), vScript.end())));
 			arrayScript.push_back(obj);
 		}
