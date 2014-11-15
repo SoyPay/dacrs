@@ -129,6 +129,35 @@ public:
 
 public:
 	CScriptDBViewCache(CScriptDBView &base, bool fDummy = false);
+	bool GetScript(const CRegID &scriptId, vector<unsigned char> &vValue);
+	bool GetScript(const int nIndex, CRegID &scriptId, vector<unsigned char> &vValue);
+	bool SetScript(const CRegID &scriptId, const vector<unsigned char> &vValue);
+	bool HaveScript(const CRegID &scriptId);
+	bool EraseScript(const CRegID &scriptId);
+	bool GetScriptDataCount(const CRegID &scriptId, int &nCount);
+	bool EraseScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey, CScriptDBOperLog &operLog);
+	bool HaveScriptData(const CRegID &scriptId, const vector<unsigned char > &vScriptKey);
+	bool GetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
+				vector<unsigned char> &vScriptData, int &nHeight);
+	bool GetScriptData(const CRegID &scriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData,
+			int &nHeight);
+	bool SetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
+				const vector<unsigned char> &vScriptData, const int nHeight, CScriptDBOperLog &operLog);
+
+	/**
+	 * @brief Get all number of scripts in scriptdb
+	 * @param nCount
+	 * @return true if get succeed, otherwise false
+	 */
+	bool GetScriptCount(int &nCount);
+	/**
+	 * @brief write all data in the caches to script db
+	 * @return
+	 */
+	bool Flush();
+	unsigned int GetCacheSize();
+
+private:
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
 	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
 	bool BatchWrite(const map<vector<unsigned char>, vector<unsigned char> > &mapDatas);
@@ -143,34 +172,26 @@ public:
      */
 	bool GetScript(const vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
 	/**
-	 * @brief Save script content to scriptdb
-	 * @param vScriptId
-	 * @param vValue
-	 * @return true if save succeed, otherwise false
-	 */
-	bool SetScript(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vValue);
-
-	bool GetScript(const CUserID &userId, vector<unsigned char> &vValue);
-	/**
 	 * @brief Get Script content from scriptdb by index
 	 * @param nIndex the value must be non-negative
 	 * @param vScriptId
 	 * @param vValue
 	 * @return true if get script succeed, otherwise false
 	 */
-	bool GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
+	bool GetScript(const int nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
+	/**
+	 * @brief Save script content to scriptdb
+	 * @param vScriptId
+	 * @param vValue
+	 * @return true if save succeed, otherwise false
+	 */
+	bool SetScript(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vValue);
 	/**
 	 * @brief Detect if scriptdb contains the script by scriptid
 	 * @param vScriptId
 	 * @return true if contains script, otherwise false
 	 */
 	bool HaveScript(const vector<unsigned char> &vScriptId);
-	/**
-	 * @brief Get all number of scripts in scriptdb
-	 * @param nCount
-	 * @return true if get succeed, otherwise false
-	 */
-	bool GetScriptCount(int &nCount);
 	/**
 	 * @brief Save all number of scripts in scriptdb
 	 * @param nCount
@@ -183,7 +204,6 @@ public:
 	 * @return true if delete succeed, otherwise false
 	 */
 	bool EraseScript(const vector<unsigned char> &vScriptId);
-
 	/**
 	 * @brief Get all numbers of script data in script db
 	 * @param vScriptId
@@ -205,7 +225,6 @@ public:
 	 * @return true if delete succeed, otherwise false
 	 */
 	bool EraseScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey, CScriptDBOperLog &operLog);
-
 	/**
 	 * @brief Detect if scriptdb contains the item of script's data by scriptid and scriptkey
 	 * @param vScriptId
@@ -213,7 +232,6 @@ public:
 	 * @return true if contains the item, otherwise false
 	 */
 	bool HaveScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char > &vScriptKey);
-
 	/**
 	 * @brief Get script data and valide height by scriptid and scriptkey
 	 * @param vScriptId
@@ -224,7 +242,6 @@ public:
 	 */
 	bool GetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
 			vector<unsigned char> &vScriptData, int &nHeight);
-
 	/**
 	 * @brief Get script data and valide height by scriptid and nIndex
 	 * @param vScriptId
@@ -236,7 +253,6 @@ public:
 	 */
 	bool GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData,
 			int &nHeight);
-
 	/**
 	 * @brief Save script data and valide height into script db
 	 * @param vScriptId
@@ -248,13 +264,6 @@ public:
 	bool SetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
 			const vector<unsigned char> &vScriptData, const int nHeight, CScriptDBOperLog &operLog);
 
-	/**
-	 * @brief write all data in the caches to script db
-	 * @return
-	 */
-	bool Flush();
-	unsigned int GetCacheSize();
 };
-
 #endif
 
