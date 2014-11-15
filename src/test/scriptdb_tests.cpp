@@ -53,8 +53,10 @@ void testscriptdb() {
 
 void testscriptdatadb() {
 	vector<unsigned char> vScriptId = {0x01,0x00,0x00,0x00,0x02,0x00};
-	vector<unsigned char> vScriptKey = {0x01,0x00,0x02,0x03,0x04,0x05,0x06,0x07};
-	vector<unsigned char> vScriptKey1 = {0x01,0x00,0x02,0x03,0x04,0x05,0x07,0x06};
+//  vector<unsigned char> vScriptKey = {0x01,0x00,0x02,0x03,0x04,0x05,0x06,0x07};
+//	vector<unsigned char> vScriptKey1 = {0x01,0x00,0x02,0x03,0x04,0x05,0x07,0x06};
+	vector<unsigned char> vScriptKey = {0x01,0x00,0x02};
+	vector<unsigned char> vScriptKey1 = {0x01,0x00,0x02,0x03};
 	vector<unsigned char> vScriptData = {0x01,0x01,0x01,0x01,0x01};
 	vector<unsigned char> vScriptData1 = {0x01,0x01,0x01,0x00,0x00};
 	CScriptDBOperLog operlog;
@@ -62,7 +64,7 @@ void testscriptdatadb() {
 	int height = 0;
 	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId,vScriptKey,vScriptData,height));
 	pScriptDBTip->GetScriptCount(height);
-	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId,0,vScriptKey,vScriptData,height));
+	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId, 0, vScriptKey, vScriptData, height));
 	BOOST_CHECK(pScriptDBTip->SetScriptData(vScriptId, vScriptKey, vScriptData, 100, operlog));
 
 	//write script data to db
@@ -75,7 +77,7 @@ void testscriptdatadb() {
 	vector<unsigned char> vScript;
 	int nValidHeight;
 	//read script content from db by scriptId
-	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId,vScriptKey,vScript,nValidHeight));
+	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId, vScriptKey, vScript, nValidHeight));
 	// if the readed script content equals with original
 	BOOST_CHECK(vScriptData == vScript);
 	BOOST_CHECK_EQUAL(nValidHeight, 100);
@@ -89,17 +91,19 @@ void testscriptdatadb() {
 	vector<unsigned char> vKey;
 	vKey.clear();
 	nValidHeight = 0;
-	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId,0,vKey,vScript,nValidHeight));
+	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId, 0, vKey, vScript, nValidHeight));
 	BOOST_CHECK(vKey == vScriptKey);
 	BOOST_CHECK(vScript == vScriptData);
 	BOOST_CHECK_EQUAL(nValidHeight,100);
-	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId,1,vKey,vScript,nValidHeight));
+	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId, 1, vKey, vScript, nValidHeight));
 	BOOST_CHECK(vKey == vScriptKey1);
 	BOOST_CHECK(vScript == vScriptData1);
 	BOOST_CHECK_EQUAL(nValidHeight,101);
 	//delete script from db
 	BOOST_CHECK(pScriptDBTip->EraseScriptData(vScriptId, vScriptKey, operlog));
-	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId,0,vKey,vScript,nValidHeight));
+	vKey.clear();
+	vScript.clear();
+	BOOST_CHECK(pScriptDBTip->GetScriptData(vScriptId, 0, vKey, vScript, nValidHeight));
 	BOOST_CHECK(vKey == vScriptKey1);
 	BOOST_CHECK(vScript == vScriptData1);
 	BOOST_CHECK_EQUAL(nValidHeight,101);

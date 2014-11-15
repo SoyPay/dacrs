@@ -31,10 +31,15 @@ private:
 
 public:
     template<typename K, typename V> void Write(const K& key, const V& value) {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+    	leveldb::Slice slKey;
+    	CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
-        leveldb::Slice slKey(&ssKey[0], ssKey.size());
+		if (typeid(key) == typeid(std::vector<unsigned char>)) {
+			slKey = leveldb::Slice(&ssKey[1], ssKey.size() - 1);
+		} else {
+			slKey = leveldb::Slice(&ssKey[0], ssKey.size());
+		}
 
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         ssValue.reserve(ssValue.GetSerializeSize(value));
@@ -44,10 +49,15 @@ public:
     }
 
     template<typename K> void Erase(const K& key) {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+    	leveldb::Slice slKey;
+    	CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
-        leveldb::Slice slKey(&ssKey[0], ssKey.size());
+		if (typeid(key) == typeid(std::vector<unsigned char>)) {
+			slKey = leveldb::Slice(&ssKey[1], ssKey.size() - 1);
+		} else {
+			slKey = leveldb::Slice(&ssKey[0], ssKey.size());
+		}
 
         batch.Delete(slKey);
     }
@@ -82,11 +92,15 @@ public:
     ~CLevelDBWrapper();
 
     template<typename K, typename V> bool Read(const K& key, V& value) throw(leveldb_error) {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        ssKey.reserve(ssKey.GetSerializeSize(key));
-        ssKey << key;
-        leveldb::Slice slKey(&ssKey[0], ssKey.size());
-
+    	leveldb::Slice slKey;
+    	CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+		ssKey.reserve(ssKey.GetSerializeSize(key));
+		ssKey << key;
+    	if(typeid(key) == typeid(std::vector<unsigned char>)) {
+			slKey = leveldb::Slice(&ssKey[1], ssKey.size()-1);
+        }else{
+        	slKey = leveldb::Slice(&ssKey[0], ssKey.size());
+        }
         string strValue;
         leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
         if (!status.ok()) {
@@ -111,10 +125,15 @@ public:
     }
 
     template<typename K> bool Exists(const K& key) throw(leveldb_error) {
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+    	leveldb::Slice slKey;
+    	CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
-        leveldb::Slice slKey(&ssKey[0], ssKey.size());
+		if (typeid(key) == typeid(std::vector<unsigned char>)) {
+			slKey = leveldb::Slice(&ssKey[1], ssKey.size() - 1);
+		} else {
+			slKey = leveldb::Slice(&ssKey[0], ssKey.size());
+		}
 
         string strValue;
         leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
