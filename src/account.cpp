@@ -403,7 +403,6 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 		vector<unsigned char> vKey = { 'd', 'a', 't', 'a' };
 		vKey.insert(vKey.end(), vScriptId.begin(), vScriptId.end());
 		vKey.push_back('_');
-//		string findKey(vKey.begin(), vKey.end());
 		vector<unsigned char> vDataKey;
 		vector<unsigned char> vDataValue;
 		vDataKey.clear();
@@ -418,11 +417,6 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 				vDataValue = item.second;
 				break;
 			}
-//			if (std::string::npos != item.first.find(findKey.c_str())) {
-//				dataKey = item.first;
-//				vDataValue = item.second;
-//				break;
-//			}
 		}
 		if(!pBase->GetScriptData(vScriptId, nIndex, vScriptKey, vScriptData, nHeight)) {
 			if (vDataKey.empty())
@@ -443,7 +437,6 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 		else {
 			vector<unsigned char> dataKeyTemp(vKey.begin(), vKey.end());
 			dataKeyTemp.insert(dataKeyTemp.end(), vScriptKey.begin(), vScriptKey.end());
-//			string strdataKeyTemp(dataKeyTemp.begin(), dataKeyTemp.end());
 			if(vDataKey.empty()) {  //缓存中没有符合条件的key，直接返回从数据库中查询结果
 				return true;
 			}
@@ -457,8 +450,6 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 			}
 			else if(dataKeyTemp == vDataKey && vDataValue.empty()){ //若数据库中查询的key与缓存查询的key相等，直接返回查询的结果
 				return true;
-//				mapDatas[vDataKey] = vDataValue;
-//				return GetScriptData(vScriptId, 1, vScriptKey, vScriptData, nHeight);
 			}
 			else{
 				vScriptKey.clear();
@@ -501,7 +492,6 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 		} else {
 			vector<unsigned char> dataKeyTemp(vKey.begin(), vKey.end());
 			dataKeyTemp.insert(dataKeyTemp.end(), vScriptKey.begin(), vScriptKey.end());
-//			string strdataKeyTemp(dataKeyTemp.begin(), dataKeyTemp.end());
 			if (vDataKey.empty())
 					return true;
 			if (dataKeyTemp < vDataKey) {
@@ -525,14 +515,6 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 }
 bool CScriptDBViewCache::SetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
 		const vector<unsigned char> &vScriptData, const int nHeight, CScriptDBOperLog &operLog) {
-//	int nSize = vScriptKey.size();
-//	if(nSize > 32)
-//		return false;
-//	vector<unsigned char> vUserKey(vScriptKey);
-//	if (vUserKey.size() < 32) {
-//		unsigned char ch = 0;
-//		vUserKey.insert(vUserKey.end(), 32 - nSize, ch);
-//	}
 	vector<unsigned char> vKey = { 'd', 'a', 't', 'a' };
 	vKey.insert(vKey.end(), vScriptId.begin(), vScriptId.end());
 	vKey.push_back('_');
@@ -615,7 +597,6 @@ bool CScriptDBViewCache::SetScriptDataCount(const vector<unsigned char> &vScript
 }
 
 bool CScriptDBViewCache::EraseScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey, CScriptDBOperLog &operLog) {
-//	assert(vScriptKey.size() == 8);
 	vector<unsigned char> scriptKey = { 'd', 'a', 't', 'a'};
 
 	scriptKey.insert(scriptKey.end(), vScriptId.begin(), vScriptId.end());
@@ -641,7 +622,6 @@ bool CScriptDBViewCache::EraseScriptData(const vector<unsigned char> &vScriptId,
 	return true;
 }
 bool CScriptDBViewCache::HaveScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char > &vScriptKey) {
-//	assert(vScriptKey.size() == 8);
 	vector<unsigned char> scriptKey = { 'd', 'a', 't', 'a'};
 	scriptKey.insert(scriptKey.end(), vScriptId.begin(), vScriptId.end());
 	scriptKey.push_back('_');
