@@ -725,10 +725,10 @@ static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 		flag = false;
 	}
 
-	vector<unsigned char> key =AddChar(*retdata.at(0));
-	int size = key.size();
+//	vector<unsigned char> key =AddChar(*retdata.at(0));
+//	int size = key.size();
 	CScriptDBOperLog operlog;
-	if(scriptDB->SetScriptData(scriptid,key,*retdata.at(1),height,operlog))
+	if(scriptDB->SetScriptData(scriptid,*retdata.at(0),*retdata.at(1),height,operlog))
 	{
 		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
 		(*m_dblog.get()).push_back(operlog);
@@ -758,8 +758,8 @@ static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	}
 
 	CScriptDBOperLog operlog;
-	vector<unsigned char> key =AddChar(*retdata.at(0));
-	if(scriptDB->EraseScriptData(scriptid,key,operlog))
+	//vector<unsigned char> key =AddChar(*retdata.at(0));
+	if(scriptDB->EraseScriptData(scriptid,*retdata.at(0),operlog))
 	{
 		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
 		m_dblog.get()->push_back(operlog);
@@ -791,9 +791,9 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) 
 		flag = false;
 	}
 
-	vector<unsigned char> key =AddChar(*retdata.at(0));
+	//vector<unsigned char> key =AddChar(*retdata.at(0));
 
-	if(!scriptDB->GetScriptData(scriptid,key,vValue,nHeight))
+	if(!scriptDB->GetScriptData(scriptid,*retdata.at(0),vValue,nHeight))
 	{
 		flag = false;
 	}
@@ -820,11 +820,11 @@ static RET_DEFINE ExModifyDataDBFunc(unsigned char * ipara,void * pVmScript) {
 		flag =  false;
 	}
 	CScriptDBOperLog operlog;
-	vector<unsigned char> key =AddChar(*retdata.at(0));
+	//vector<unsigned char> key =AddChar(*retdata.at(0));
 	vector_unsigned_char vTemp;
 	int nHeight;
-	if(scriptDB->GetScriptData(scriptid, key, vTemp, nHeight)) {
-		if(scriptDB->SetScriptData(scriptid,key,*retdata.at(1).get(),height,operlog))
+	if(scriptDB->GetScriptData(scriptid, *retdata.at(0), vTemp, nHeight)) {
+		if(scriptDB->SetScriptData(scriptid,*retdata.at(0),*retdata.at(1).get(),height,operlog))
 		{
 			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
 			m_dblog.get()->push_back(operlog);
@@ -878,7 +878,7 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
 	vector<unsigned char> vScriptKey;
 	if(index == 1)
 	{
-		vScriptKey =*retdata.at(1);
+		vScriptKey.assign(retdata.at(1).get()->begin(),retdata.at(1).get()->end());
 	}
 
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
@@ -955,8 +955,8 @@ static RET_DEFINE ExReadDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 		flag =  false;
 	}
 
-	vector<unsigned char> key =AddChar(*retdata.at(0));
-	if(!scriptDB->GetScriptData(scriptid,key,vValue,nHeight))
+	//vector<unsigned char> key =AddChar(*retdata.at(0));
+	if(!scriptDB->GetScriptData(scriptid,*retdata.at(0),vValue,nHeight))
 	{
 		flag =  false;
 	}
@@ -991,10 +991,10 @@ static RET_DEFINE ExModifyDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 	}
 
 	CScriptDBOperLog operlog;
-	vector<unsigned char> key =AddChar(*retdata.at(0));
-	if(scriptDB->GetScriptData(scriptid,key,vValue,temp))
+	//vector<unsigned char> key =AddChar(*retdata.at(0));
+	if(scriptDB->GetScriptData(scriptid,*retdata.at(0),vValue,temp))
 	{
-		if(scriptDB->SetScriptData(scriptid,key,vValue,height,operlog))
+		if(scriptDB->SetScriptData(scriptid,*retdata.at(0),vValue,height,operlog))
 		{
 			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
 			m_dblog.get()->push_back(operlog);
@@ -1031,10 +1031,10 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript
 	}
 
 	CScriptDBOperLog operlog;
-	vector<unsigned char> key =AddChar(*retdata.at(0));
-	if(scriptDB->GetScriptData(scriptid,key,vValue,temp))
+//	vector<unsigned char> key =AddChar(*retdata.at(0));
+	if(scriptDB->GetScriptData(scriptid,*retdata.at(0),vValue,temp))
 	{
-		if(scriptDB->SetScriptData(scriptid,key,*retdata.at(1),temp,operlog))
+		if(scriptDB->SetScriptData(scriptid,*retdata.at(0),*retdata.at(1),temp,operlog))
 		{
 			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
 			m_dblog.get()->push_back(operlog);
