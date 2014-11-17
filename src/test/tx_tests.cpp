@@ -131,9 +131,10 @@ struct CTxTest {
 				0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01};
 
 		CRegID regId;
-		for(auto &item:v)
+		for(auto &item:v){
 			regId.SetRegID(item);
 			BOOST_CHECK(pScriptDBTip->SetScript(regId, vScriptContent1));
+		}
 	}
 
 	void Init() {
