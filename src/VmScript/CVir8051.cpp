@@ -882,10 +882,7 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
 	}
 
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
-	if(!(scriptDB->GetScriptData(scriptid,index,vScriptKey,vValue,nHeight)))
-	{
-		flag =  false;
-	}
+	flag = scriptDB->GetScriptData(scriptid,index,vScriptKey,vValue,nHeight);
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     (*tem.get()).push_back(vScriptKey);
