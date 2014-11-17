@@ -166,13 +166,13 @@ BOOST_AUTO_TEST_CASE(chain_main) {
 	BOOST_CHECK(SysParamsMain().AlertKey() == ParseHex("04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda91109"
 			"71b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6"
 			"956e7c5ecbcd68284"));
-	BOOST_CHECK(SysParamsMain().GetDefaultPort() == 8333);
+	BOOST_CHECK(SysParamsMain().GetDefaultPort() == 8555);
 	BOOST_CHECK(SysParamsMain().ProofOfWorkLimit() == CBigNum(~uint256(0) >> 20));
 	BOOST_CHECK(SysParamsMain().SubsidyHalvingInterval() == 210000);
 	BOOST_CHECK(SysParamsMain().RequireRPCPassword() == true);
 	BOOST_CHECK(SysParamsMain().DataDir() == "");
 	BOOST_CHECK(SysParamsMain().NetworkID() == CBaseParams::MAIN);
-	BOOST_CHECK(SysParamsMain().RPCPort() == 8332);
+	BOOST_CHECK(SysParamsMain().RPCPort() == 8552);
 }
 
 BOOST_AUTO_TEST_CASE(chain_test) {
@@ -186,13 +186,13 @@ BOOST_AUTO_TEST_CASE(chain_test) {
 	BOOST_CHECK(SysParamsTest().AlertKey() == ParseHex("04302390343f91cc401d56d68b123028bf52e5fca"
 			"1939df127f63c6467cdf9c8e2c14b61104cf817d0b"
 			"780da337893ecc4aaff1309e536162dabbdb45200ca2b0a"));
-	BOOST_CHECK(SysParamsTest().GetDefaultPort() == 18333);
+	BOOST_CHECK(SysParamsTest().GetDefaultPort() == 18555);
 //	BOOST_CHECK(SysParamsTest().ProofOfWorkLimit() == CBigNum(~uint256(0) >> 8));
 	BOOST_CHECK(SysParamsTest().SubsidyHalvingInterval() == 210000);
 	BOOST_CHECK(SysParamsTest().RequireRPCPassword() == true);
 	BOOST_CHECK(SysParamsTest().DataDir() == "testnet3");
 	BOOST_CHECK(SysParamsTest().NetworkID() == CBaseParams::TESTNET);
-	BOOST_CHECK(SysParamsTest().RPCPort() == 18332);
+	BOOST_CHECK(SysParamsTest().RPCPort() == 18552);
 }
 
 BOOST_AUTO_TEST_CASE(chain_regtest) {
@@ -206,13 +206,13 @@ BOOST_AUTO_TEST_CASE(chain_regtest) {
 	BOOST_CHECK(SysParamsReg().AlertKey() == ParseHex("04302390343f91cc401d56d68b123028bf52e5fca"
 			"1939df127f63c6467cdf9c8e2c14b61104cf817d0b"
 			"780da337893ecc4aaff1309e536162dabbdb45200ca2b0a"));
-	BOOST_CHECK(SysParamsReg().GetDefaultPort() == 18444);
+	BOOST_CHECK(SysParamsReg().GetDefaultPort() == 18666);
 	BOOST_CHECK(SysParamsReg().ProofOfWorkLimit() == CBigNum(~uint256(0) >> 8));
 	BOOST_CHECK(SysParamsReg().SubsidyHalvingInterval() == 150);
 	BOOST_CHECK(SysParamsReg().RequireRPCPassword() == false);
 	BOOST_CHECK(SysParamsReg().DataDir() == "regtest");
 	BOOST_CHECK(SysParamsReg().NetworkID() == CBaseParams::REGTEST);
-	BOOST_CHECK(SysParamsReg().RPCPort() == 18332);
+	BOOST_CHECK(SysParamsReg().RPCPort() == 18552);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
