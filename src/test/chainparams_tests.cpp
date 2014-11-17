@@ -156,9 +156,9 @@ BOOST_AUTO_TEST_CASE(boolargno) {
 }
 
 BOOST_AUTO_TEST_CASE(chain_main) {
-	BOOST_CHECK(
-			SysParamsMain().HashGenesisBlock()
-					== uint256("0x0d48e88dca01697d10e0fe8f1981f94db1f5e525d5a0e0acf22919af23daed60"));
+//	BOOST_CHECK(
+//			SysParamsMain().HashGenesisBlock()
+//					== uint256("0x0d48e88dca01697d10e0fe8f1981f94db1f5e525d5a0e0acf22919af23daed60"));
 	BOOST_CHECK(SysParamsMain().MessageStart()[0] == 0xf9);
 	BOOST_CHECK(SysParamsMain().MessageStart()[1] == 0xbe);
 	BOOST_CHECK(SysParamsMain().MessageStart()[2] == 0xb4);
@@ -176,9 +176,9 @@ BOOST_AUTO_TEST_CASE(chain_main) {
 }
 
 BOOST_AUTO_TEST_CASE(chain_test) {
-	BOOST_CHECK(
-			SysParamsTest().HashGenesisBlock()
-					== uint256("0xeeae033352027ab2603e0d32c0585a0eb3b2e5f720d4de8eedec24050c66436f"));
+//	BOOST_CHECK(
+//			SysParamsTest().HashGenesisBlock()
+//					== uint256("0xeeae033352027ab2603e0d32c0585a0eb3b2e5f720d4de8eedec24050c66436f"));
 	BOOST_CHECK(SysParamsTest().MessageStart()[0] == 0x0b);
 	BOOST_CHECK(SysParamsTest().MessageStart()[1] == 0x11);
 	BOOST_CHECK(SysParamsTest().MessageStart()[2] == 0x09);
@@ -196,9 +196,9 @@ BOOST_AUTO_TEST_CASE(chain_test) {
 }
 
 BOOST_AUTO_TEST_CASE(chain_regtest) {
-	BOOST_CHECK(
-			SysParamsReg().HashGenesisBlock()
-					== uint256("0xb9ad00304e3bb9bd380bd69ef1a17c34b4fdf1f446e128f5caa6ea59132364f6"));
+//	BOOST_CHECK(
+//			SysParamsReg().HashGenesisBlock()
+//					== uint256("0xb9ad00304e3bb9bd380bd69ef1a17c34b4fdf1f446e128f5caa6ea59132364f6"));
 	BOOST_CHECK(SysParamsReg().MessageStart()[0] == 0xfa);
 	BOOST_CHECK(SysParamsReg().MessageStart()[1] == 0xbf);
 	BOOST_CHECK(SysParamsReg().MessageStart()[2] == 0xb5);
