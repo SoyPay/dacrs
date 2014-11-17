@@ -40,6 +40,7 @@ struct TestingSetup {
 		if (!SelectParamsFromCommandLine()) {
 		       fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
 		}
+
 		Params().InitalConfig();
 	}
 //    CCoinsViewDB *pcoinsdbview;
