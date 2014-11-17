@@ -339,7 +339,7 @@ bool CScriptDBViewCache::HaveData(const vector<unsigned char> &vKey) {
 	}
 	return pBase->HaveData(vKey);
 }
-bool CScriptDBViewCache::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue) {
+bool CScriptDBViewCache::GetScript(const int nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue) {
 	return pBase->GetScript(nIndex, vScriptId, vValue);
 }
 bool CScriptDBViewCache::SetScript(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vValue) {
@@ -372,11 +372,8 @@ bool CScriptDBViewCache::GetScript(const vector<unsigned char> &vScriptId, vecto
 	scriptKey.insert(scriptKey.end(), vScriptId.begin(), vScriptId.end());
 	return GetData(scriptKey, vValue);
 }
-bool CScriptDBViewCache::GetScript(const CUserID &userId, vector<unsigned char> &vValue) {
-	if(userId.type() == typeid(CRegID)) {
-		return GetScript(boost::get<CRegID>(userId).GetRegID(), vValue);
-	}
-	return false;
+bool CScriptDBViewCache::GetScript(const CRegID &scriptId, vector<unsigned char> &vValue) {
+	return GetScript(scriptId.GetRegID(), vValue);
 }
 
 bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
@@ -627,4 +624,39 @@ bool CScriptDBViewCache::HaveScriptData(const vector<unsigned char> &vScriptId, 
 	scriptKey.push_back('_');
 	scriptKey.insert(scriptKey.end(), vScriptKey.begin(), vScriptKey.end());
 	return HaveData(scriptKey);
+}
+
+
+bool CScriptDBViewCache::GetScript(const int nIndex, CRegID &scriptId, vector<unsigned char> &vValue) {
+	return GetScript(nIndex, scriptId.GetRegID(), vValue);
+}
+bool CScriptDBViewCache::SetScript(const CRegID &scriptId, const vector<unsigned char> &vValue) {
+	return SetScript(scriptId.GetRegID(), vValue);
+}
+bool CScriptDBViewCache::HaveScript(const CRegID &scriptId) {
+	return HaveScript(scriptId.GetRegID());
+}
+bool CScriptDBViewCache::EraseScript(const CRegID &scriptId) {
+	return EraseScript(scriptId.GetRegID());
+}
+bool CScriptDBViewCache::GetScriptDataCount(const CRegID &scriptId, int &nCount) {
+	return GetScriptDataCount(scriptId.GetRegID(), nCount);
+}
+bool CScriptDBViewCache::EraseScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey, CScriptDBOperLog &operLog) {
+	return EraseScriptData(scriptId.GetRegID(), vScriptKey, operLog);
+}
+bool CScriptDBViewCache::HaveScriptData(const CRegID &scriptId, const vector<unsigned char > &vScriptKey) {
+	return HaveScriptData(scriptId.GetRegID(), vScriptKey);
+}
+bool CScriptDBViewCache::GetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
+			vector<unsigned char> &vScriptData, int &nHeight) {
+	return GetScriptData(scriptId.GetRegID() , vScriptKey, vScriptData, nHeight);
+}
+bool CScriptDBViewCache::GetScriptData(const CRegID &scriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData,
+		int &nHeight) {
+	return GetScriptData(scriptId.GetRegID(), nIndex, vScriptKey, vScriptData, nHeight);
+}
+bool CScriptDBViewCache::SetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
+			const vector<unsigned char> &vScriptData, const int nHeight, CScriptDBOperLog &operLog) {
+	return SetScriptData(scriptId.GetRegID(), vScriptKey, vScriptData, nHeight, operLog);
 }

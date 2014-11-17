@@ -182,8 +182,6 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: Account is already registered");
 		}
 		if (balance < fee) {
-			//cout<<"blance:"<<balance<<"fee:"<<fee<endl;
-			LogPrint("vm1","blance:%ld,fee:%ld",balance,fee);
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: Account balance is insufficient.");
 		}
 
@@ -471,7 +469,7 @@ Value signcontracttx(const Array& params, bool fHelp) {
 		}
 
 		vector<unsigned char> vscript;
-		if (!pScriptDBTip->GetScript(tx.scriptRegId, vscript)) {
+		if (!pScriptDBTip->GetScript(boost::get<CRegID>(tx.scriptRegId), vscript)) {
 			CID id(tx.scriptRegId);
 			throw runtime_error(
 					tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(id.GetID())));
@@ -689,10 +687,10 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		 if(fread(buffer, 1, lSize, file) != lSize) {
 				throw runtime_error("read script file error");
 		 }
-		 vmScript.Rom.insert(vmScript.Rom.end(), buffer, buffer+lSize);
+		 vmScript.Rom.insert(vscript.end(), buffer, buffer+lSize);
 		 CDataStream ds(SER_DISK, CLIENT_VERSION);
 		 ds << vmScript;
-		 vscript.assign(ds.begin(), ds.end());
+
 //		 FILE* file1 = fopen("d:\\script.txt", "a+");
 //		 if(!file1) {
 //			 throw runtime_error("open file script.txt error");
@@ -701,7 +699,6 @@ Value registerscripttx(const Array& params, bool fHelp) {
 //		 if(fwrite(strScript.c_str(), 1, strScript.length(), file1) != strScript.length())
 //			 throw runtime_error("write script to file error");
 //		 fclose(file1);
-		 if(file != NULL)
 		 fclose(file);
 
 	} else if (1 == flag) {
@@ -782,8 +779,9 @@ Value registerscripttx(const Array& params, bool fHelp) {
 
 		if (vscript.size() == SCRIPT_ID_SIZE) {
 			vector<unsigned char> vscriptcontent;
-			if (!pScriptDBTip->GetScript(vscript, vscriptcontent)) {
-				throw JSONRPCError(RPC_WALLET_ERROR, "Get Script id failed.");
+//			CRegID regid(vscript) ;
+			if (pScriptDBTip->GetScript(CRegID(vscript), vscriptcontent)) {
+				throw JSONRPCError(RPC_WALLET_ERROR, "in registerscripttx Error: Account balance is insufficient.");
 			}
 		}
 
@@ -1561,17 +1559,17 @@ Value listregscript(const Array& params, bool fHelp) {
 		int nCount(0);
 		if(!pScriptDBTip->GetScriptCount(nCount))
 			throw JSONRPCError(RPC_DATABASE_ERROR, "get script error: cannot get registered count.");
-		vector<unsigned char> vScriptId;
+		CRegID regId;
 		vector<unsigned char> vScript;
 		Object script;
-		if(!pScriptDBTip->GetScript(0, vScriptId, vScript))
+		if(!pScriptDBTip->GetScript(0, regId, vScript))
 			throw JSONRPCError(RPC_DATABASE_ERROR, "get script error: cannot get registered script.");
-		script.push_back(Pair("scriptId", HexStr(vScriptId)));
+		script.push_back(Pair("scriptId", HexStr(regId.GetRegID())));
 		script.push_back(Pair("scriptContent", HexStr(vScript.begin(), vScript.end())));
 		arrayScript.push_back(script);
-		while(pScriptDBTip->GetScript(1, vScriptId, vScript)) {
+		while(pScriptDBTip->GetScript(1, regId, vScript)) {
 			Object obj;
-			obj.push_back(Pair("scriptId", HexStr(vScriptId)));
+			obj.push_back(Pair("scriptId", HexStr(regId.GetRegID())));
 			obj.push_back(Pair("scriptContent", string(vScript.begin(), vScript.end())));
 			arrayScript.push_back(obj);
 		}
