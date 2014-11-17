@@ -687,9 +687,11 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		 if(fread(buffer, 1, lSize, file) != lSize) {
 				throw runtime_error("read script file error");
 		 }
-		 vmScript.Rom.insert(vscript.end(), buffer, buffer+lSize);
+		 vmScript.Rom.insert(vmScript.Rom.end(), buffer, buffer+lSize);
 		 CDataStream ds(SER_DISK, CLIENT_VERSION);
 		 ds << vmScript;
+
+		 vscript.assign(ds.begin(), ds.end());
 
 //		 FILE* file1 = fopen("d:\\script.txt", "a+");
 //		 if(!file1) {
@@ -699,7 +701,8 @@ Value registerscripttx(const Array& params, bool fHelp) {
 //		 if(fwrite(strScript.c_str(), 1, strScript.length(), file1) != strScript.length())
 //			 throw runtime_error("write script to file error");
 //		 fclose(file1);
-		 fclose(file);
+		 if(file)
+			 fclose(file);
 
 	} else if (1 == flag) {
 		vscript = ParseHex(params[2].get_str());
