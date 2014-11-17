@@ -11,6 +11,18 @@ void init() {
 	 pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
 }
 
+void closedb() {
+	if (pScriptDBTip != NULL) {
+		pScriptDBTip->Flush();
+		delete pScriptDBTip;
+		pScriptDBTip = NULL;
+	}
+
+	if (pScriptDB != NULL) {
+		delete pScriptDB;
+		pScriptDB = NULL;
+	}
+}
 void testscriptdb() {
 	vector<unsigned char> vScriptId = {0x01,0x00,0x00,0x00,0x01,0x00};
 	vector<unsigned char> vScriptId1 = {0x01,0x00,0x00,0x00,0x02,0x00};
@@ -126,5 +138,6 @@ BOOST_AUTO_TEST_CASE(test)
 	init();
 	testscriptdb();
 	testscriptdatadb();
+	closedb();
 }
 BOOST_AUTO_TEST_SUITE_END()
