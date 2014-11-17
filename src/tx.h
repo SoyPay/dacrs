@@ -396,7 +396,7 @@ public:
 class CRegisterAccountTx: public CBaseTransaction {
 
 public:
-	mutable CUserID userId;
+	mutable CUserID userId;      //pubkey
 	int64_t llFees;
 	int nValidHeight;
 	vector<unsigned char> signature;
@@ -471,10 +471,10 @@ public:
 class CTransaction: public CBaseTransaction {
 
 public:
-	mutable CUserID srcUserId;
+	mutable CUserID srcUserId;    //regid
 	uint64_t llFees;
 	uint64_t llValues;
-	mutable CUserID desUserId;
+	mutable CUserID desUserId;    //regid or keyid
 	int nValidHeight;
 	vector_unsigned_char signature;
 public:
@@ -555,7 +555,7 @@ public:
 
 class CContractTransaction : public CBaseTransaction {
 public:
-	mutable CUserID scriptRegId;
+	mutable CUserID scriptRegId;                    //regid
 	mutable vector<CUserID> vAccountRegId;
 	uint64_t llFees;
 	vector_unsigned_char vContract;
@@ -658,7 +658,7 @@ public:
 class CFreezeTransaction: public CBaseTransaction {
 
 public:
-	mutable CUserID regAccountId;
+	mutable CUserID regAccountId;      //regid
 	uint64_t llFees;
 	uint64_t llFreezeFunds;
 	int nValidHeight;
@@ -826,8 +826,8 @@ public:
 class CRegistScriptTx: public CBaseTransaction {
 
 public:
-	mutable CUserID regAccountId;
-	vector_unsigned_char script;
+	mutable CUserID regAccountId;         //regid
+	vector_unsigned_char script;          //regid or new script content
 	uint64_t llFees;
 	int nValidHeight;
 	CNetAuthorizate aAuthorizate;
