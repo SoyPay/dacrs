@@ -1088,7 +1088,7 @@ static RET_DEFINE ExGetAuthoritedDefineFunc(unsigned char * ipara,void * pVmScri
 		flag = false;
 	}
 
-	vector_unsigned_char scriptid = pVmScriptRun->GetScriptID();
+	vector_unsigned_char scriptid = pVmScriptRun->GetScriptRegID().GetRegID();
 	int height = pVmScriptRun->GetComfirHeight();
 
 	vector<unsigned char> vData;
