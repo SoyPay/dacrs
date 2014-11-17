@@ -882,7 +882,7 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
 	}
 
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
-	if(!scriptDB->GetScriptData(scriptid,index,vScriptKey,vValue,nHeight))
+	if(!(scriptDB->GetScriptData(scriptid,index,vScriptKey,vValue,nHeight)))
 	{
 		flag =  false;
 	}
