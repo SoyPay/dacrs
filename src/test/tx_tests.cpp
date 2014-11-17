@@ -103,10 +103,10 @@ struct CTxTest {
 	}
 
 	void InitFund() {
-		char buf[10];
+		char buf[12];
 		for (int j = 100000, i = 0; j < 100011; j++, i++) {
 			memset(buf, 0, sizeof(buf));
-			sprintf(buf, "%d", j);
+			sprintf(buf, "%012d", j);
 			v[i] = ParseHex(buf);
 		}
 
@@ -131,9 +131,10 @@ struct CTxTest {
 				0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01};
 
 		CRegID regId;
-		for(auto &item:v)
+		for(auto &item:v) {
 			regId.SetRegID(item);
 			BOOST_CHECK(pScriptDBTip->SetScript(regId, vScriptContent1));
+		}
 	}
 
 	void Init() {
@@ -145,7 +146,7 @@ struct CTxTest {
 
 		nRunTimeHeight = 0;
 
-		InitAuthorization("00112233");
+		InitAuthorization("001122334455");
 
 		InitFund();
 	}
