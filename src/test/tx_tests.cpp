@@ -94,6 +94,16 @@ struct CTxTest {
 		accOperate.mapAuthorizate[scriptID] = author;
 		accOperate.keyID = uint160(1);
 
+		if(pScriptDBTip !=NULL) {
+			pScriptDBTip->Flush();
+			delete pScriptDBTip;
+			pScriptDBTip = NULL;
+		}
+
+		if(pScriptDB != NULL) {
+			delete pScriptDB;
+			pScriptDB = NULL;
+		}
 		pScriptDB = new CScriptDB(1024 * 1024, false, false);
 		pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
 		vector<unsigned char> vScriptContent = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
