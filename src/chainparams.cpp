@@ -51,8 +51,8 @@ public:
 		vAlertPubKey =
 				ParseHex(
 						"04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
-		nDefaultPort = 8333;
-		nRPCPort = 8332;
+		nDefaultPort = 8555;
+		nRPCPort = 8552;
 		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 20);        //00 00 0f ff ff
 		nSubsidyHalvingInterval = 210000;
 
@@ -171,8 +171,8 @@ public:
 						"04302390343f91cc401d56d68b123028bf52e5fca1939df127f63c646"
 						"7cdf9c8e2c14b61104cf817d0b780da337893ecc4aaff1309e536162d"
 						"abbdb45200ca2b0a");
-		nDefaultPort = 18333;
-		nRPCPort = 18332;
+		nDefaultPort = 18555;
+		nRPCPort = 18552;
 		strDataDir = "testnet3";
 
 		// Modify the testnet genesis block so the timestamp is valid for a later start.
@@ -225,7 +225,7 @@ public:
 		genesis.nBits = 0x1f0000ff;
 		genesis.nNonce = 888;
 		hashGenesisBlock = genesis.GetHash();
-		nDefaultPort = 18444;
+		nDefaultPort = 18666;
 		strDataDir = "regtest";
 //		{
 //			CBigNum bnTarget;
