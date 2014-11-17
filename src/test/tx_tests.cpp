@@ -94,18 +94,29 @@ struct CTxTest {
 		accOperate.mapAuthorizate[scriptID] = author;
 		accOperate.keyID = uint160(1);
 
+		if(pScriptDBTip !=NULL) {
+			pScriptDBTip->Flush();
+			delete pScriptDBTip;
+			pScriptDBTip = NULL;
+		}
+
+		if(pScriptDB != NULL) {
+			delete pScriptDB;
+			pScriptDB = NULL;
+		}
 		pScriptDB = new CScriptDB(1024 * 1024, false, false);
 		pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
 		vector<unsigned char> vScriptContent = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
 				0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
-		BOOST_CHECK(pScriptDBTip->SetScript(scriptID, vScriptContent));
+		CRegID regScriptId(scriptID);
+		BOOST_CHECK(pScriptDBTip->SetScript(regScriptId, vScriptContent));
 	}
 
 	void InitFund() {
-		char buf[10];
+		char buf[12];
 		for (int j = 100000, i = 0; j < 100011; j++, i++) {
 			memset(buf, 0, sizeof(buf));
-			sprintf(buf, "%d", j);
+			sprintf(buf, "%012d", j);
 			v[i] = ParseHex(buf);
 		}
 
@@ -129,8 +140,11 @@ struct CTxTest {
 		vector<unsigned char> vScriptContent1 = {0x01,0x02,0x03,0x04,0x01,0x01,0x01,0x01,0x01,
 				0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01};
 
-		for(auto &item:v)
-			BOOST_CHECK(pScriptDBTip->SetScript(item, vScriptContent1));
+		CRegID regId;
+		for(auto &item:v) {
+			regId.SetRegID(item);
+			BOOST_CHECK(pScriptDBTip->SetScript(regId, vScriptContent1));
+		}
 	}
 
 	void Init() {
@@ -142,7 +156,7 @@ struct CTxTest {
 
 		nRunTimeHeight = 0;
 
-		InitAuthorization("00112233");
+		InitAuthorization("001122334455");
 
 		InitFund();
 	}

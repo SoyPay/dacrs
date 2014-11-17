@@ -624,7 +624,8 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 	}
 	if(script.size() == SCRIPT_ID_SIZE) {
 		vector<unsigned char> vScript;
-		if (!scriptCache.GetScript(script, vScript)) {
+		CRegID regId(script);
+		if (!scriptCache.GetScript(regId, vScript)) {
 			return state.DoS(100,
 					ERROR("UpdateAccounts() : Get script id=%s error", HexStr(script.begin(), script.end())),
 					UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
@@ -658,7 +659,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 								UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
 		//save new script content
-		if(!scriptCache.SetScript(scriptId.GetRegID(), script)){
+		if(!scriptCache.SetScript(scriptId, script)){
 			return state.DoS(100,
 					ERROR("UpdateAccounts() : save script id %s script info error", HexStr(scriptId.GetRegID())),
 					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
@@ -683,7 +684,7 @@ bool CRegistScriptTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CVa
 
 		CRegID scriptId(nHeight, nIndex);
 		//delete script content
-		if (!scriptCache.EraseScript(scriptId.GetRegID())) {
+		if (!scriptCache.EraseScript(scriptId)) {
 			return state.DoS(100, ERROR("UpdateAccounts() : erase script id %s error", HexStr(scriptId.GetRegID())),
 					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
@@ -740,7 +741,8 @@ bool CRegistScriptTx::CheckTransction(CValidationState &state, CAccountViewCache
 	}
 	if(script.size() == SCRIPT_ID_SIZE) {
 		vector<unsigned char> vScriptContent;
-		if(!pScriptDBTip->GetScript(script, vScriptContent)) {
+		CRegID retId(script);
+		if(!pScriptDBTip->GetScript(retId, vScriptContent)) {
 			return state.DoS(100,
 					ERROR("CheckTransaction() : register script tx get exit script content by script reg id:%s error",
 							HexStr(script.begin(), script.end())), REJECT_INVALID, "bad-read-script-info");
@@ -1358,7 +1360,8 @@ CFund& CAccount::FindFund(const vector<CFund>& vFund, const vector_unsigned_char
 
 bool CAccount::IsAuthorized(uint64_t nMoney, int nHeight, const vector_unsigned_char& scriptID) {
 	vector<unsigned char> vscript;
-	if (NULL == pScriptDBTip || !pScriptDBTip->GetScript(scriptID, vscript))
+	CRegID regId(scriptID);
+	if (NULL == pScriptDBTip || !pScriptDBTip->GetScript(regId, vscript))
 		return false;
 
 	auto it = mapAuthorizate.find(scriptID);
@@ -1415,7 +1418,8 @@ bool CAccount::IsFundValid(OperType type, const CFund &fund, int nHeight, const 
 	case MINUS_FREEZD: {
 		assert(pScriptDBTip);
 		vector<unsigned char> vscript;
-		if (!pScriptDBTip->GetScript(fund.scriptID, vscript))
+		CRegID regId(fund.scriptID);
+		if (!pScriptDBTip->GetScript(regId, vscript))
 			return false;
 		break;
 	}
@@ -1570,7 +1574,8 @@ void CAccount::UndoAuthorityOnDay(uint64_t nUndoMoney, const CAuthorizateLog& lo
 
 bool CAccount::GetUserData(const vector_unsigned_char& scriptID, vector<unsigned char> & vData) {
 	vector<unsigned char> vscript;
-	if (NULL == pScriptDBTip || !pScriptDBTip->GetScript(scriptID, vscript))
+	CRegID regId(scriptID);
+	if (NULL == pScriptDBTip || !pScriptDBTip->GetScript(regId, vscript))
 		return false;
 
 	auto it = mapAuthorizate.find(scriptID);
