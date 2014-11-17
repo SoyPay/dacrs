@@ -333,7 +333,10 @@ bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, v
 	string strPrefixTemp("def");
 	//ssKeySet.insert(ssKeySet.end(), 9);
 	ssKeySet.insert(ssKeySet.end(), &strPrefixTemp[0], &strPrefixTemp[3]);
-	if(!vScriptId.empty()) {
+	if(1 == nIndex ) {
+		if(vScriptId.empty()) {
+			return ERROR("GetScript() : nIndex is 1, and vScriptId is empty");
+		}
 		vector<char> vId(vScriptId.begin(), vScriptId.end());
 		ssKeySet.insert(ssKeySet.end(), vId.begin(), vId.end());
 	}
@@ -383,7 +386,10 @@ bool CScriptDB::GetScriptData(const vector<unsigned char> &vScriptId, const int 
 	vector<char> vId(vScriptId.begin(), vScriptId.end());
 	ssKeySet.insert(ssKeySet.end(), vId.begin(), vId.end());
 	ssKeySet.insert(ssKeySet.end(),'_');
-	if (1 == nIndex && !vScriptKey.empty()) {
+	if (1 == nIndex) {
+		if(vScriptKey.empty()) {
+			return ERROR("GetScriptData() : nIndex is 1, and vScriptKey is empty");
+		}
 		vector<char> vsKey(vScriptKey.begin(), vScriptKey.end());
 		ssKeySet.insert(ssKeySet.end(), vsKey.begin(), vsKey.end());
 	}
