@@ -94,6 +94,16 @@ struct CTxTest {
 		accOperate.mapAuthorizate[scriptID] = author;
 		accOperate.keyID = uint160(1);
 
+		if(pScriptDBTip !=NULL) {
+			pScriptDBTip->Flush();
+			delete pScriptDBTip;
+			pScriptDBTip = NULL;
+		}
+
+		if(pScriptDB != NULL) {
+			delete pScriptDB;
+			pScriptDB = NULL;
+		}
 		pScriptDB = new CScriptDB(1024 * 1024, false, false);
 		pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
 		vector<unsigned char> vScriptContent = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
@@ -103,10 +113,10 @@ struct CTxTest {
 	}
 
 	void InitFund() {
-		char buf[10];
+		char buf[12];
 		for (int j = 100000, i = 0; j < 100011; j++, i++) {
 			memset(buf, 0, sizeof(buf));
-			sprintf(buf, "%d", j);
+			sprintf(buf, "%012d", j);
 			v[i] = ParseHex(buf);
 		}
 
@@ -131,7 +141,7 @@ struct CTxTest {
 				0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01};
 
 		CRegID regId;
-		for(auto &item:v){
+		for(auto &item:v) {
 			regId.SetRegID(item);
 			BOOST_CHECK(pScriptDBTip->SetScript(regId, vScriptContent1));
 		}
@@ -146,7 +156,7 @@ struct CTxTest {
 
 		nRunTimeHeight = 0;
 
-		InitAuthorization("00112233");
+		InitAuthorization("001122334455");
 
 		InitFund();
 	}
