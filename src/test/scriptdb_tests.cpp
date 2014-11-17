@@ -70,7 +70,7 @@ void testscriptdatadb() {
 	//write script data to db
 	BOOST_CHECK(pScriptDBTip->SetScriptData(vScriptId, vScriptKey, vScriptData, 100, operlog));
 	//write all data in caches to db
-	BOOST_CHECK(pScriptDBTip->Flush());
+//	BOOST_CHECK(pScriptDBTip->Flush());
 	BOOST_CHECK(pScriptDBTip->SetScriptData(vScriptId, vScriptKey1, vScriptData1, 101, operlog));
 	//test if the script id is exist in db
 	BOOST_CHECK(pScriptDBTip->HaveScriptData(vScriptId, vScriptKey));
