@@ -783,8 +783,8 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		if (vscript.size() == SCRIPT_ID_SIZE) {
 			vector<unsigned char> vscriptcontent;
 //			CRegID regid(vscript) ;
-			if (pScriptDBTip->GetScript(CRegID(vscript), vscriptcontent)) {
-				throw JSONRPCError(RPC_WALLET_ERROR, "in registerscripttx Error: Account balance is insufficient.");
+			if (!pScriptDBTip->GetScript(CRegID(vscript), vscriptcontent)) {
+				throw JSONRPCError(RPC_WALLET_ERROR, "script id find failed");
 			}
 		}
 
