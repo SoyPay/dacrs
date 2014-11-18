@@ -209,7 +209,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		bool ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype,fund,height);
 
 		LogPrint("vm", "after muls account:%s\r\n", vmAccount.get()->ToString().c_str());
-		if (ret) {
+		if (!ret) {
 			return false;
 		}
 		NewAccont.push_back(vmAccount);
