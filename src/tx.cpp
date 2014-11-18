@@ -439,8 +439,9 @@ bool CContractTransaction::CheckTransction(CValidationState &state, CAccountView
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 
+	CScriptDBViewCache scriptDBCache(*pScriptDBTip);
 	uint64_t el = GetElementForBurn();
-	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, *pScriptDBTip, chainActive.Height() +1, el);
+	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptDBCache, chainActive.Height() +1, el);
 
 	if (!std::get<0>(ret))
 		return state.DoS(100,

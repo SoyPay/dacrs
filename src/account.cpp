@@ -525,7 +525,7 @@ bool CScriptDBViewCache::SetScriptData(const vector<unsigned char> &vScriptId, c
 	vKey.insert(vKey.end(), vScriptId.begin(), vScriptId.end());
 	vKey.push_back('_');
 	vKey.insert(vKey.end(), vScriptKey.begin(), vScriptKey.end());
-
+  //  LogPrint("vm","add data:%s",HexStr(vScriptKey).c_str());
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	ds << nHeight;
 	ds << vScriptData;
