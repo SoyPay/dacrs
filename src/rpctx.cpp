@@ -703,6 +703,8 @@ Value registerscripttx(const Array& params, bool fHelp) {
 //		 fclose(file1);
 		 if(file)
 			 fclose(file);
+		 if(buffer)
+			 free(buffer);
 
 	} else if (1 == flag) {
 		vscript = ParseHex(params[2].get_str());
