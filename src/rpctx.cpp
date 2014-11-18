@@ -928,7 +928,7 @@ Value listaddrtx(const Array& params, bool fHelp) {
 		for (auto&wtx : pwalletMain->mapWalletTx) {
 			CAccountTx &acctx = wtx.second;
 			for (auto&item : acctx.mapAccountTx) {
-				vector<CKeyID> vKey;
+				set<CKeyID> vKey;
 				item.second->GetAddress(vKey, *pAccountViewTip);
 				if (vKey.end() != find(vKey.begin(), vKey.end(), keyid)) {
 					array.push_back(item.first.ToString());
@@ -1546,7 +1546,7 @@ Value disconnectblock(const Array& params, bool fHelp) {
 					pindex->GetBlockHash().ToString());
 		pindex = pindex->pprev;
 		chainActive.SetTip(pindex);
-		assert(view.Flush());
+		assert(view.Flush() && contractScriptTemp.Flush());
 	}
 	return true;
 }

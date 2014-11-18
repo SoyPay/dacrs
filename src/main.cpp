@@ -1399,9 +1399,10 @@ bool static DisconnectTip(CValidationState &state) {
     int64_t nStart = GetTimeMicros();
     {
     	CAccountViewCache view(*pAccountViewTip, true);
-        if (!DisconnectBlock(block, state, view, pindexDelete, *pTxCacheTip, *pScriptDBTip, NULL))
+    	CScriptDBViewCache scriptDBView(*pScriptDBTip);
+        if (!DisconnectBlock(block, state, view, pindexDelete, *pTxCacheTip, scriptDBView, NULL))
             return ERROR("DisconnectTip() : DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
-        assert(view.Flush());
+        assert(view.Flush() && scriptDBView.Flush());
     }
     if (Params().IsBenchmark())
         LogPrint("INFO","- Disconnect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);

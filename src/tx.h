@@ -375,7 +375,7 @@ public:
 
 	virtual string ToString(CAccountViewCache &view) const = 0;
 
-	virtual bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) = 0;
+	virtual bool GetAddress(std::set<CKeyID> &vAddr, CAccountViewCache &view) = 0;
 
 	virtual bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const = 0;
 
@@ -453,7 +453,7 @@ public:
 		return make_shared<CRegisterAccountTx>(this);
 	}
 
-	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view);
+	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view);
 
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
 
@@ -538,7 +538,7 @@ public:
 		return make_shared<CTransaction>(this);
 	}
 
-	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view);
+	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view);
 
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
 
@@ -637,7 +637,7 @@ public:
 
 	string ToString(CAccountViewCache &view) const;
 
-	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view);
+	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view);
 
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
 
@@ -723,7 +723,7 @@ public:
 
 	string ToString(CAccountViewCache &view) const;
 
-	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view);
+	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view);
 
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
 
@@ -806,7 +806,7 @@ public:
 
 	string ToString(CAccountViewCache &view) const;
 
-	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view);
+	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view);
 
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const {
 		return true;
@@ -888,7 +888,7 @@ public:
 
 	string ToString(CAccountViewCache &view) const;
 
-	bool GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view);
+	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view);
 
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
 
