@@ -3558,8 +3558,8 @@ BOOST_AUTO_TEST_CASE(scriptfun)
 		nTemp->scriptRegId = scriptId;
 		nTemp.get()->llFees = 100000000000000000;
 
-		 pScriptDB = new CScriptDB(size_t(4<<20), false , Params().IsReindex());
-		 pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
+		pScriptDB = new CScriptDB(size_t(4<<20), false , Params().IsReindex());
+		pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
 		pScriptDBTip->SetScript(scriptId, vpscript);
 		CAccountViewCache view(*pAccountViewTip, true);
 		CVmScriptRun prun;
@@ -3569,5 +3569,13 @@ BOOST_AUTO_TEST_CASE(scriptfun)
 		std::shared_ptr<CBaseTransaction> Tx = static_cast<std::shared_ptr<CBaseTransaction> >(nTemp);
 		prun.run(Tx,view,*pScriptDBTip,nheight,nBurnFactor);
 
+		if (pScriptDBTip) {
+			delete pScriptDBTip;
+			pScriptDBTip = NULL;
+		}
+		if (pScriptDB) {
+			delete pScriptDB;
+			pScriptDB = NULL;
+		}
 }
 BOOST_AUTO_TEST_SUITE_END()
