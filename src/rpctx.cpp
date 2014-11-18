@@ -685,6 +685,8 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		 }
 
 		 if(fread(buffer, 1, lSize, file) != lSize) {
+			 	if(buffer)
+			 		free(buffer);
 				throw runtime_error("read script file error");
 		 }
 		 vmScript.Rom.insert(vmScript.Rom.end(), buffer, buffer+lSize);
@@ -703,6 +705,8 @@ Value registerscripttx(const Array& params, bool fHelp) {
 //		 fclose(file1);
 		 if(file)
 			 fclose(file);
+		 if(buffer)
+			 free(buffer);
 
 	} else if (1 == flag) {
 		vscript = ParseHex(params[2].get_str());
