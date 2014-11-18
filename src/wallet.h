@@ -248,7 +248,7 @@ public:
 
 	bool IsMine(CBaseTransaction*pTx) {
 
-		vector<CKeyID> vaddr;
+		set<CKeyID> vaddr;
 
 		if (!pTx->GetAddress(vaddr, *pAccountViewTip)) {
 			return false;

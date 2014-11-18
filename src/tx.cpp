@@ -131,11 +131,11 @@ bool CRegisterAccountTx::IsValidHeight(int nCurHeight, int nTxCacheHeight) const
 		return false;
 	return true;
 }
-bool CRegisterAccountTx::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) {
+bool CRegisterAccountTx::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	if (!boost::get<CPubKey>(userId).IsFullyValid()) {
 		return false;
 	}
-	vAddr.push_back(boost::get<CPubKey>(userId).GetID());
+	vAddr.insert(boost::get<CPubKey>(userId).GetID());
 	return true;
 }
 string CRegisterAccountTx::ToString(CAccountViewCache &view) const {
@@ -230,7 +230,7 @@ bool CTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValid
 				"bad-read-accountdb");
 	return true;
 }
-bool CTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) {
+bool CTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	CKeyID srcKeyId;
 	if (!view.GetKeyId(srcUserId, srcKeyId))
 		return false;
@@ -244,8 +244,8 @@ bool CTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) {
 	} else
 		return false;
 
-	vAddr.push_back(srcKeyId);
-	vAddr.push_back(desKeyId);
+	vAddr.insert(srcKeyId);
+	vAddr.insert(desKeyId);
 	return true;
 }
 bool CTransaction::IsValidHeight(int nCurHeight, int nTxCacheHeight) const {
@@ -371,12 +371,12 @@ bool CContractTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view
 	return true;
 }
 
-bool CContractTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) {
+bool CContractTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	CKeyID keyId;
 	for(auto & accountId : vAccountRegId) {
 		if(!view.GetKeyId(accountId, keyId))
 			return false;
-		vAddr.push_back(keyId);
+		vAddr.insert(keyId);
 	}
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
@@ -385,10 +385,16 @@ bool CContractTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &
 	if(!pTxCacheTip->IsContainTx(GetHash())) {
 		height += 1;
 	}
-	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, *pScriptDBTip, chainActive.Height() +1, el);
+	CScriptDBViewCache scriptDBView(*pScriptDBTip);
+	CAccountViewCache accountView(view);
+	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, accountView, scriptDBView, chainActive.Height() +1, el);
 	if (!std::get<0>(ret))
 		return ERROR("GetAddress()  : %s", std::get<2>(ret));
 
+	vector<shared_ptr<CAccount> > vpAccount = vmRun.GetNewAccont();
+	for(auto & item : vpAccount) {
+		vAddr.insert(item->keyID);
+	}
 	return true;
 }
 
@@ -493,11 +499,11 @@ bool CFreezeTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, 
 				"bad-read-accountdb");
 	return true;
 }
-bool CFreezeTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) {
+bool CFreezeTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	CKeyID keyId;
 	if (!view.GetKeyId(regAccountId, keyId))
 		return false;
-	vAddr.push_back(keyId);
+	vAddr.insert(keyId);
 	return true;
 }
 bool CFreezeTransaction::IsValidHeight(int nCurHeight, int nTxCacheHeight) const {
@@ -577,17 +583,17 @@ bool CRewardTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, 
 				"bad-read-accountdb");
 	return true;
 }
-bool CRewardTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) {
+bool CRewardTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	CKeyID keyId;
 	if (account.type() == typeid(CRegID)) {
 		if (!view.GetKeyId(account, keyId))
 			return false;
-		vAddr.push_back(keyId);
+		vAddr.insert(keyId);
 	} else if (account.type() == typeid(CPubKey)) {
 		CPubKey pubKey = boost::get<CPubKey>(account);
 		if (!pubKey.IsFullyValid())
 			return false;
-		vAddr.push_back(pubKey.GetID());
+		vAddr.insert(pubKey.GetID());
 	}
 	return true;
 }
@@ -712,11 +718,11 @@ bool CRegistScriptTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CVa
 				"bad-save-accountdb");
 	return true;
 }
-bool CRegistScriptTx::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &view) {
+bool CRegistScriptTx::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	CKeyID keyId;
 	if (!view.GetKeyId(regAccountId, keyId))
 		return false;
-	vAddr.push_back(keyId);
+	vAddr.insert(keyId);
 	return true;
 }
 bool CRegistScriptTx::IsValidHeight(int nCurHeight, int nTxCacheHeight) const {
