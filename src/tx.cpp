@@ -385,7 +385,8 @@ bool CContractTransaction::GetAddress(vector<CKeyID> &vAddr, CAccountViewCache &
 	if(!pTxCacheTip->IsContainTx(GetHash())) {
 		height += 1;
 	}
-	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, *pScriptDBTip, chainActive.Height() +1, el);
+	CScriptDBViewCache scriptDBView(*pScriptDBTip);
+	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptDBView, chainActive.Height() +1, el);
 	if (!std::get<0>(ret))
 		return ERROR("GetAddress()  : %s", std::get<2>(ret));
 
