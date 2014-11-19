@@ -77,7 +77,6 @@ public:
     void removeConflicts(CBaseTransaction *pBaseTx, list<std::shared_ptr<CBaseTransaction> >& removed);
     void clear();
     void queryHashes(vector<uint256>& vtxid);
-    void pruneSpent(const uint256& hash, CCoins &coins);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
 

@@ -37,7 +37,7 @@ Value getinfo(const Array& params, bool fHelp)
             "  \"version\": xxxxx,           (numeric) the server version\n"
             "  \"protocolversion\": xxxxx,   (numeric) the protocol version\n"
             "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
-            "  \"balance\": xxxxxxx,         (numeric) the total bitcoin balance of the wallet\n"
+            "  \"balance\": xxxxxxx,         (numeric) the total soypay balance of the wallet\n"
             "  \"blocks\": xxxxxx,           (numeric) the current number of blocks processed in the server\n"
             "  \"timeoffset\": xxxxx,        (numeric) the time offset\n"
             "  \"connections\": xxxxx,       (numeric) the number of connections\n"
@@ -104,25 +104,25 @@ public:
         return obj;
     }
 
-    Object operator()(const CScriptID &scriptID) const {
-        Object obj;
-        obj.push_back(Pair("isscript", true));
-        CScript subscript;
-        pwalletMain->GetCScript(scriptID, subscript);
-        vector<CTxDestination> addresses;
-        txnouttype whichType;
-        int nRequired;
-        ExtractDestinations(subscript, whichType, addresses, nRequired);
-        obj.push_back(Pair("script", GetTxnOutputType(whichType)));
-        obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
-        Array a;
-        for (const auto& addr : addresses)
-            a.push_back(CBitcoinAddress(addr).ToString());
-        obj.push_back(Pair("addresses", a));
-        if (whichType == TX_MULTISIG)
-            obj.push_back(Pair("sigsrequired", nRequired));
-        return obj;
-    }
+//    Object operator()(const CScriptID &scriptID) const {
+//        Object obj;
+//        obj.push_back(Pair("isscript", true));
+//        CScript subscript;
+//        pwalletMain->GetCScript(scriptID, subscript);
+//        vector<CTxDestination> addresses;
+//        txnouttype whichType;
+//        int nRequired;
+//        ExtractDestinations(subscript, whichType, addresses, nRequired);
+//        obj.push_back(Pair("script", GetTxnOutputType(whichType)));
+//        obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
+//        Array a;
+//        for (const auto& addr : addresses)
+//            a.push_back(CBitcoinAddress(addr).ToString());
+//        obj.push_back(Pair("addresses", a));
+//        if (whichType == TX_MULTISIG)
+//            obj.push_back(Pair("sigsrequired", nRequired));
+//        return obj;
+//    }
     Object operator()(const CAccountID &accID) const {
     	Object obj;
 		CPubKey vchPubKey;
@@ -140,14 +140,14 @@ Value validateaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "validateaddress \"bitcoinaddress\"\n"
-            "\nReturn information about the given bitcoin address.\n"
+            "validateaddress \"soypayaddress\"\n"
+            "\nReturn information about the given soypay address.\n"
             "\nArguments:\n"
-            "1. \"bitcoinaddress\"     (string, required) The bitcoin address to validate\n"
+            "1. \"soypayaddress\"     (string, required) The soypay address to validate\n"
             "\nResult:\n"
             "{\n"
             "  \"isvalid\" : true|false,         (boolean) If the address is valid or not. If not, this is the only property returned.\n"
-            "  \"address\" : \"bitcoinaddress\", (string) The bitcoin address validated\n"
+            "  \"address\" : \"soypayaddress\", (string) The soypay address validated\n"
             "  \"ismine\" : true|false,          (boolean) If the address is yours or not\n"
             "  \"isscript\" : true|false,        (boolean) If the key is a script\n"
             "  \"pubkey\" : \"publickeyhex\",    (string) The hex value of the raw public key\n"
@@ -170,14 +170,14 @@ Value validateaddress(const Array& params, bool fHelp)
         string currentAddress = address.ToString();
         ret.push_back(Pair("address", currentAddress));
 #ifdef ENABLE_WALLET
-        bool fMine = pwalletMain ? IsMine(*pwalletMain, dest) : false;
-        ret.push_back(Pair("ismine", fMine));
-        if (fMine) {
-            Object detail = boost::apply_visitor(DescribeAddressVisitor(), dest);
-            ret.insert(ret.end(), detail.begin(), detail.end());
-        }
-        if (pwalletMain && pwalletMain->mapAddressBook.count(dest))
-            ret.push_back(Pair("account", pwalletMain->mapAddressBook[dest].name));
+//        bool fMine = pwalletMain ? IsMine(*pwalletMain, dest) : false;
+//        ret.push_back(Pair("ismine", fMine));
+//        if (fMine) {
+//            Object detail = boost::apply_visitor(DescribeAddressVisitor(), dest);
+//            ret.insert(ret.end(), detail.begin(), detail.end());
+//        }
+//        if (pwalletMain && pwalletMain->mapAddressBook.count(dest))
+//            ret.push_back(Pair("account", pwalletMain->mapAddressBook[dest].name));
 #endif
     }
     return ret;
@@ -186,112 +186,112 @@ Value validateaddress(const Array& params, bool fHelp)
 //
 // Used by addmultisigaddress / createmultisig:
 //
-CScript _createmultisig(const Array& params)
-{
-    int nRequired = params[0].get_int();
-    const Array& keys = params[1].get_array();
+//CScript _createmultisig(const Array& params)
+//{
+//    int nRequired = params[0].get_int();
+//    const Array& keys = params[1].get_array();
+//
+//    // Gather public keys
+//    if (nRequired < 1)
+//        throw runtime_error("a multisignature address must require at least one key to redeem");
+//    if ((int)keys.size() < nRequired)
+//        throw runtime_error(
+//            strprintf("not enough keys supplied "
+//                      "(got %u keys, but need at least %d to redeem)", keys.size(), nRequired));
+//    vector<CPubKey> pubkeys;
+//    pubkeys.resize(keys.size());
+//    for (unsigned int i = 0; i < keys.size(); i++)
+//    {
+//        const string& ks = keys[i].get_str();
+//#ifdef ENABLE_WALLET
+//        // Case 1: Bitcoin address and we have full public key:
+//        CBitcoinAddress address(ks);
+//        if (pwalletMain && address.IsValid())
+//        {
+//            CKeyID keyID;
+//            if (!address.GetKeyID(keyID))
+//                throw runtime_error(
+//                    strprintf("%s does not refer to a key",ks));
+//            CPubKey vchPubKey;
+//            if (!pwalletMain->GetPubKey(keyID, vchPubKey))
+//                throw runtime_error(
+//                    strprintf("no full public key for address %s",ks));
+//            if (!vchPubKey.IsFullyValid())
+//                throw runtime_error(" Invalid public key: "+ks);
+//            pubkeys[i] = vchPubKey;
+//        }
+//
+//        // Case 2: hex public key
+//        else
+//#endif
+//        if (IsHex(ks))
+//        {
+//            CPubKey vchPubKey(ParseHex(ks));
+//            if (!vchPubKey.IsFullyValid())
+//                throw runtime_error(" Invalid public key: "+ks);
+//            pubkeys[i] = vchPubKey;
+//        }
+//        else
+//        {
+//            throw runtime_error(" Invalid public key: "+ks);
+//        }
+//    }
+////    CScript result;
+////    result.SetMultisig(nRequired, pubkeys);
+//    return result;
+//}
 
-    // Gather public keys
-    if (nRequired < 1)
-        throw runtime_error("a multisignature address must require at least one key to redeem");
-    if ((int)keys.size() < nRequired)
-        throw runtime_error(
-            strprintf("not enough keys supplied "
-                      "(got %u keys, but need at least %d to redeem)", keys.size(), nRequired));
-    vector<CPubKey> pubkeys;
-    pubkeys.resize(keys.size());
-    for (unsigned int i = 0; i < keys.size(); i++)
-    {
-        const string& ks = keys[i].get_str();
-#ifdef ENABLE_WALLET
-        // Case 1: Bitcoin address and we have full public key:
-        CBitcoinAddress address(ks);
-        if (pwalletMain && address.IsValid())
-        {
-            CKeyID keyID;
-            if (!address.GetKeyID(keyID))
-                throw runtime_error(
-                    strprintf("%s does not refer to a key",ks));
-            CPubKey vchPubKey;
-            if (!pwalletMain->GetPubKey(keyID, vchPubKey))
-                throw runtime_error(
-                    strprintf("no full public key for address %s",ks));
-            if (!vchPubKey.IsFullyValid())
-                throw runtime_error(" Invalid public key: "+ks);
-            pubkeys[i] = vchPubKey;
-        }
-
-        // Case 2: hex public key
-        else
-#endif
-        if (IsHex(ks))
-        {
-            CPubKey vchPubKey(ParseHex(ks));
-            if (!vchPubKey.IsFullyValid())
-                throw runtime_error(" Invalid public key: "+ks);
-            pubkeys[i] = vchPubKey;
-        }
-        else
-        {
-            throw runtime_error(" Invalid public key: "+ks);
-        }
-    }
-    CScript result;
-    result.SetMultisig(nRequired, pubkeys);
-    return result;
-}
-
-Value createmultisig(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() < 2 || params.size() > 2)
-    {
-        string msg = "createmultisig nrequired [\"key\",...]\n"
-            "\nCreates a multi-signature address with n signature of m keys required.\n"
-            "It returns a json object with the address and redeemScript.\n"
-
-            "\nArguments:\n"
-            "1. nrequired      (numeric, required) The number of required signatures out of the n keys or addresses.\n"
-            "2. \"keys\"       (string, required) A json array of keys which are bitcoin addresses or hex-encoded public keys\n"
-            "     [\n"
-            "       \"key\"    (string) bitcoin address or hex-encoded public key\n"
-            "       ,...\n"
-            "     ]\n"
-
-            "\nResult:\n"
-            "{\n"
-            "  \"address\":\"multisigaddress\",  (string) The value of the new multisig address.\n"
-            "  \"redeemScript\":\"script\"       (string) The string value of the hex-encoded redemption script.\n"
-            "}\n"
-
-            "\nExamples:\n"
-            "\nCreate a multisig address from 2 addresses\n"
-            + HelpExampleCli("createmultisig", "2 \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"") +
-            "\nAs a json rpc call\n"
-            + HelpExampleRpc("createmultisig", "2, \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"")
-        ;
-        throw runtime_error(msg);
-    }
-
-    // Construct using pay-to-script-hash:
-    CScript inner = _createmultisig(params);
-    CScriptID innerID = inner.GetID();
-    CBitcoinAddress address(innerID);
-
-    Object result;
-    result.push_back(Pair("address", address.ToString()));
-    result.push_back(Pair("redeemScript", HexStr(inner.begin(), inner.end())));
-
-    return result;
-}
+//Value createmultisig(const Array& params, bool fHelp)
+//{
+//    if (fHelp || params.size() < 2 || params.size() > 2)
+//    {
+//        string msg = "createmultisig nrequired [\"key\",...]\n"
+//            "\nCreates a multi-signature address with n signature of m keys required.\n"
+//            "It returns a json object with the address and redeemScript.\n"
+//
+//            "\nArguments:\n"
+//            "1. nrequired      (numeric, required) The number of required signatures out of the n keys or addresses.\n"
+//            "2. \"keys\"       (string, required) A json array of keys which are soypay addresses or hex-encoded public keys\n"
+//            "     [\n"
+//            "       \"key\"    (string) soypay address or hex-encoded public key\n"
+//            "       ,...\n"
+//            "     ]\n"
+//
+//            "\nResult:\n"
+//            "{\n"
+//            "  \"address\":\"multisigaddress\",  (string) The value of the new multisig address.\n"
+//            "  \"redeemScript\":\"script\"       (string) The string value of the hex-encoded redemption script.\n"
+//            "}\n"
+//
+//            "\nExamples:\n"
+//            "\nCreate a multisig address from 2 addresses\n"
+//            + HelpExampleCli("createmultisig", "2 \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"") +
+//            "\nAs a json rpc call\n"
+//            + HelpExampleRpc("createmultisig", "2, \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"")
+//        ;
+//        throw runtime_error(msg);
+//    }
+//
+//    // Construct using pay-to-script-hash:
+//    CScript inner = _createmultisig(params);
+//    CScriptID innerID = inner.GetID();
+//    CBitcoinAddress address(innerID);
+//
+//    Object result;
+//    result.push_back(Pair("address", address.ToString()));
+//    result.push_back(Pair("redeemScript", HexStr(inner.begin(), inner.end())));
+//
+//    return result;
+//}
 
 Value verifymessage(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
         throw runtime_error(
-            "verifymessage \"bitcoinaddress\" \"signature\" \"message\"\n"
+            "verifymessage \"soypayaddress\" \"signature\" \"message\"\n"
             "\nVerify a signed message\n"
             "\nArguments:\n"
-            "1. \"bitcoinaddress\"  (string, required) The bitcoin address to use for the signature.\n"
+            "1. \"soypayaddress\"  (string, required) The soypay address to use for the signature.\n"
             "2. \"signature\"       (string, required) The signature provided by the signer in base 64 encoding (see signmessage).\n"
             "3. \"message\"         (string, required) The message that was signed.\n"
             "\nResult:\n"

@@ -136,11 +136,11 @@ bool CWalletDB::WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey)
     return Write(make_pair(string("mkey"), nID), kMasterKey, true);
 }
 
-bool CWalletDB::WriteCScript(const uint160& hash, const CScript& redeemScript)
-{
-    nWalletDBUpdated++;
-    return Write(make_pair(string("cscript"), hash), redeemScript, false);
-}
+//bool CWalletDB::WriteCScript(const uint160& hash, const CScript& redeemScript)
+//{
+//    nWalletDBUpdated++;
+//    return true;//Write(make_pair(string("cscript"), hash), redeemScript, false);
+//}
 
 bool CWalletDB::WriteBestBlock(const CBlockLocator& locator)
 {
@@ -589,13 +589,13 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             uint160 hash;
             ssKey >> hash;
-            CScript script;
-            ssValue >> script;
-            if (!pwallet->LoadCScript(script))
-            {
-                strErr = "Error reading wallet database: LoadCScript failed";
-                return false;
-            }
+//            CScript script;
+//            ssValue >> script;
+//            if (!pwallet->LoadCScript(script))
+//            {
+//                strErr = "Error reading wallet database: LoadCScript failed";
+//                return false;
+//            }
         }
         else if (strType == "orderposnext")
         {
@@ -810,7 +810,7 @@ DBErrors CWalletDB::ZapWalletTx(CWallet* pwallet)
 void ThreadFlushWalletDB(const string& strFile)
 {
     // Make this thread recognisable as the wallet flushing thread
-    RenameThread("bitcoin-wallet");
+    RenameThread("soypay-wallet");
     static bool fOneThread;
     if (fOneThread)
         return;

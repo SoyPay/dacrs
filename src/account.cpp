@@ -669,3 +669,29 @@ bool CScriptDBViewCache::SetScriptData(const CRegID &scriptId, const vector<unsi
 			const vector<unsigned char> &vScriptData, const int nHeight, CScriptDBOperLog &operLog) {
 	return SetScriptData(scriptId.GetRegID(), vScriptKey, vScriptData, nHeight, operLog);
 }
+bool CScriptDBViewCache::SetTxRelAccout(const uint256 &txHash, const set<CKeyID> &relAccount) {
+	vector<unsigned char> vKey = {'t','x'};
+	vector<unsigned char> vValue;
+	CDataStream ds(SER_DISK, CLIENT_VERSION);
+	ds << txHash;
+	vKey.insert(vKey.end(), ds.begin(), ds.end());
+	ds.clear();
+	ds << relAccount;
+	vValue.assign(ds.begin(), ds.end());
+	return SetData(vKey, vValue);
+}
+bool CScriptDBViewCache::GetTxRelAccount(const uint256 &txHash, set<CKeyID> &relAccount) {
+	vector<unsigned char> vKey = {'t','x'};
+	vector<unsigned char> vValue;
+	CDataStream ds(SER_DISK, CLIENT_VERSION);
+	ds << txHash;
+	vKey.insert(vKey.end(), ds.begin(), ds.end());
+	if(!GetData(vKey, vValue))
+		return false;
+	ds.clear();
+	vector<char> temp;
+	temp.assign(vValue.begin(), vValue.end());
+	ds.insert(ds.end(), temp.begin(), temp.end());
+	ds >> relAccount;
+	return true;
+}

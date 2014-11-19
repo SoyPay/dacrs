@@ -34,20 +34,20 @@ public:
     virtual bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
 
     // Support for BIP 0013 : see https://github.com/bitcoin/bips/blob/master/bip-0013.mediawiki
-    virtual bool AddCScript(const CScript& redeemScript) =0;
-    virtual bool HaveCScript(const CScriptID &hash) const =0;
-    virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const =0;
+//    virtual bool AddCScript(const CScript& redeemScript) =0;
+//    virtual bool HaveCScript(const CScriptID &hash) const =0;
+//    virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const =0;
 };
 
 typedef map<CKeyID, CKey> KeyMap;
-typedef map<CScriptID, CScript > ScriptMap;
+//typedef map<CScriptID, CScript > ScriptMap;
 
 /** Basic key store, that keeps keys in an address->secret map */
 class CBasicKeyStore : public CKeyStore
 {
 protected:
     KeyMap mapKeys;
-    ScriptMap mapScripts;
+  //  ScriptMap mapScripts;
 
 public:
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
@@ -86,9 +86,9 @@ public:
         }
         return false;
     }
-    virtual bool AddCScript(const CScript& redeemScript);
-    virtual bool HaveCScript(const CScriptID &hash) const;
-    virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const;
+//    virtual bool AddCScript(const CScript& redeemScript);
+//    virtual bool HaveCScript(const CScriptID &hash) const;
+//    virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const;
 };
 
 typedef vector<unsigned char, secure_allocator<unsigned char> > CKeyingMaterial;
