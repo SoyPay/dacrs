@@ -5,7 +5,6 @@
 #include "key.h"
 
 #include "base58.h"
-#include "script.h"
 #include "uint256.h"
 #include "util.h"
 

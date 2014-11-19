@@ -150,6 +150,9 @@ public:
 	 * @return true if get succeed, otherwise false
 	 */
 	bool GetScriptCount(int &nCount);
+	bool SetTxRelAccout(const uint256 &txHash, const set<CKeyID> &relAccount);
+	bool GetTxRelAccount(const uint256 &txHash, set<CKeyID> &relAccount);
+
 	/**
 	 * @brief write all data in the caches to script db
 	 * @return

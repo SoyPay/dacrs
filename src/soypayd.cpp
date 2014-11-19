@@ -20,7 +20,7 @@
  *
  * \section intro_sec Introduction
  *
- * This is the developer documentation of the reference client for an experimental new digital currency called Bitcoin (http://www.bitcoin.org/),
+ * This is the developer documentation of the reference client for an experimental new digital currency called Bitcoin (http://www.soypay.org/),
  * which enables instant payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
  * with no central authority: managing transactions and issuing money are carried out collectively by the network.
  *
@@ -59,7 +59,7 @@ bool AppInit(int argc, char* argv[]) {
 		//
 		// Parameters
 		//
-		// If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
+		// If Qt is used, parameters/soypay.conf are parsed in qt/soypay.cpp's main()
 
 		ParseParameters(argc, argv);
 		if (!boost::filesystem::is_directory(GetDataDir(false))) {
@@ -82,13 +82,13 @@ bool AppInit(int argc, char* argv[]) {
 		Params().InitalConfig();
 
 		if (mapArgs.count("-?") || mapArgs.count("--help")) {
-			// First part of help message is specific to bitcoind / RPC client
+			// First part of help message is specific to soypayd / RPC client
 			std::string strUsage = _("Bitcoin Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n"
-					+ _("Usage:") + "\n" + "  bitcoind [options]                     " + _("Start Bitcoin Core Daemon")
-					+ "\n" + _("Usage (deprecated, use bitcoin-cli):") + "\n"
-					+ "  bitcoind [options] <command> [params]  " + _("Send command to Bitcoin Core") + "\n"
-					+ "  bitcoind [options] help                " + _("List commands") + "\n"
-					+ "  bitcoind [options] help <command>      " + _("Get help for a command") + "\n";
+					+ _("Usage:") + "\n" + "  soypayd [options]                     " + _("Start Bitcoin Core Daemon")
+					+ "\n" + _("Usage (deprecated, use soypay-cli):") + "\n"
+					+ "  soypayd [options] <command> [params]  " + _("Send command to Bitcoin Core") + "\n"
+					+ "  soypayd [options] help                " + _("List commands") + "\n"
+					+ "  soypayd [options] help <command>      " + _("Get help for a command") + "\n";
 
 			strUsage += "\n" + HelpMessage(HMM_BITCOIND);
 			strUsage += "\n" + HelpMessageCli(false);
@@ -100,7 +100,7 @@ bool AppInit(int argc, char* argv[]) {
 		// Command-line RPC
 		bool fCommandLine = false;
 		for (int i = 1; i < argc; i++)
-			if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "bitcoin:"))
+			if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "soypay:"))
 				fCommandLine = true;
 
 		if (fCommandLine) {
@@ -167,7 +167,7 @@ int main(int argc, char* argv[]) {
 
 	bool fRet = false;
 
-	// Connect bitcoind signal handlers
+	// Connect soypayd signal handlers
 	noui_connect();
 
 	fRet = AppInit(argc, argv);

@@ -198,10 +198,10 @@ public:
 	bool AddCryptedKey(const CPubKey &vchPubKey, const vector<unsigned char> &vchCryptedSecret);
 	// Adds an encrypted key to the store, without saving it to disk (used by LoadWallet)
 	bool LoadCryptedKey(const CPubKey &vchPubKey, const vector<unsigned char> &vchCryptedSecret);
-	bool AddCScript(const CScript& redeemScript);
-	bool LoadCScript(const CScript& redeemScript) {
-		return CCryptoKeyStore::AddCScript(redeemScript);
-	}
+//	bool AddCScript(const CScript& redeemScript);
+//	bool LoadCScript(const CScript& redeemScript) {
+//		return CCryptoKeyStore::AddCScript(redeemScript);
+//	}
 
 	/// Adds a destination data tuple to the store, and saves it to disk
 	bool AddDestData(const CTxDestination &dest, const string &key, const string &value);
@@ -259,6 +259,10 @@ public:
 			}
 		}
 		return false;
+	}
+
+	bool IsMine(const CTxDestination& address) {
+		return mapAddressBook.count(address) > 0;
 	}
 
 	bool GetRegID(const CKeyID &keyID, CRegID &regID) {

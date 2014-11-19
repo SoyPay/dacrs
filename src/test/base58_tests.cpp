@@ -9,7 +9,6 @@
 #include "data/base58_keys_valid.json.h"
 
 #include "key.h"
-#include "script.h"
 #include "uint256.h"
 #include "util.h"
 
@@ -233,7 +232,8 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
             }
             else if(exp_addrType == "script")
             {
-                dest = CScriptID(uint160(exp_payload));
+            	continue;
+            	dest = CScriptID(uint160(exp_payload));
             }
             else if(exp_addrType == "none")
             {
