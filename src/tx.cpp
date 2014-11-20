@@ -334,7 +334,7 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 	}
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
-	uint64_t el = GetElementForBurn();
+	uint64_t el = GetElementForBurn(chainActive.Tip());
 	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptCache, nHeight, el);
 	if (!std::get<0>(ret))
 		return state.DoS(100,
@@ -392,7 +392,7 @@ bool CContractTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &vie
 	}
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
-	uint64_t el = GetElementForBurn();
+	uint64_t el = GetElementForBurn(chainActive.Tip());
 	CScriptDBViewCache scriptDBView(*pScriptDBTip);
 	if(!pTxCacheTip->IsContainTx(GetHash())) {
 		CAccountViewCache accountView(view);
@@ -462,7 +462,7 @@ bool CContractTransaction::CheckTransction(CValidationState &state, CAccountView
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 
 	CScriptDBViewCache scriptDBCache(*pScriptDBTip);
-	uint64_t el = GetElementForBurn();
+	uint64_t el = GetElementForBurn(chainActive.Tip());
 	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptDBCache, chainActive.Height() +1, el);
 
 	if (!std::get<0>(ret))

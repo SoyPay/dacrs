@@ -1826,3 +1826,96 @@ Value reloadtxcache(const Array& params, bool fHelp) {
 	} while (NULL != pIndex);
 	return string("reload tx cache succeed");
 }
+Value getscriptdata(const Array& params, bool fHelp) {
+	if (fHelp || params.size() < 2) {
+		string msg = "getscriptdata nrequired \"scriptid\" \"\n"
+				"\ncreate contract\n"
+				"\nArguments:\n"
+				"1.\"scriptid\": (string)\n"
+				"2.[pagesize or key]: (pagesize int)\n"
+				"3.\"index\": (int )\n"
+				"\"contract tx str\": (string)\n";
+		throw runtime_error(msg);
+	}
+
+	//RPCTypeCheck(params, list_of(str_type)(int_type)(int_type));
+	vector<unsigned char> vscriptid = ParseHex(params[0].get_str());
+	CRegID regid(vscriptid);
+
+	if (vscriptid.size() != SCRIPT_ID_SIZE) {
+		throw runtime_error("in getscriptdata :vscriptid size is error!\n");
+	}
+
+	if (!pScriptDBTip->HaveScript(regid)) {
+		throw runtime_error("in getscriptdata :vscriptid id is exist!\n");
+	}
+	Object script;
+	Array retArray;
+	if (params.size() == 2) {
+		vector<unsigned char> key = ParseHex(params[1].get_str());
+		vector<unsigned char> value;
+		int nHeight = 0;
+
+		if (!pScriptDBTip->GetScriptData(regid, key, value, nHeight)) {
+			throw runtime_error("in getscriptdata :the key not exist!\n");
+		}
+		script.push_back(Pair("scritpid", params[0].get_str()));
+		script.push_back(Pair("key", params[1].get_str()));
+		script.push_back(Pair("value", HexStr(value)));
+		script.push_back(Pair("height", HexStr(value)));
+		return script;
+
+	} else {
+		int dbsize;
+		pScriptDBTip->GetScriptDataCount(regid, dbsize);
+		if (0 == dbsize) {
+			throw runtime_error("in getscriptdata :the scirptid database not data!\n");
+		}
+		int pagesize = params[1].get_int();
+		int index = params[2].get_int();
+		vector<unsigned char> value;
+		vector<unsigned char> vScriptKey;
+		int nHeight = 0;
+
+		if (!pScriptDBTip->GetScriptData(regid, 0, vScriptKey, value, nHeight)) {
+			throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
+		}
+		Object firt;
+		firt.push_back(Pair("key", params[1].get_int()));
+		firt.push_back(Pair("value", HexStr(value)));
+		firt.push_back(Pair("height", HexStr(value)));
+		retArray.push_back(firt);
+
+		int listcount = dbsize - 1;
+		int count = 0;
+		if (dbsize >= pagesize * index) {
+			count = pagesize * (index - 1) - 1;
+			listcount = dbsize - pagesize * (index - 1);
+		} else if (dbsize < pagesize * index && dbsize > pagesize) {
+			int preindex = dbsize / pagesize;
+			count = pagesize * (preindex - 1) - 1;
+			listcount = dbsize - pagesize * (index - 1);
+		}
+
+		while (count--) {
+			if (!pScriptDBTip->GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
+				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
+			}
+		}
+
+		while (listcount--) {
+			if (!pScriptDBTip->GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
+				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
+			}
+			Object firt;
+			firt.push_back(Pair("key", params[1].get_str()));
+			firt.push_back(Pair("value", HexStr(value)));
+			firt.push_back(Pair("height", HexStr(value)));
+			retArray.push_back(firt);
+		}
+
+		return retArray;
+	}
+
+	return script;
+}

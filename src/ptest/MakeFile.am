@@ -25,5 +25,6 @@ soypay_ptest_SOURCES = \
   main_tests.cpp \
   miner_tests.cpp \
   updateaccount_tests.cpp \
-  vmfun_tests.cpp  
+  vmfun_tests.cpp \
+  rollbackdb_ptest.cpp 
 

@@ -76,11 +76,11 @@ uint64_t nLastBlockTx = 0;
 uint64_t nLastBlockSize = 0;
 
 //base on the last 500 blocks
-uint64_t GetElementForBurn(void)
+uint64_t GetElementForBurn(CBlockIndex* pindex)
 {
 	uint64_t sumfee;
 	unsigned int nBlock = GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
-	CBlockIndex* pindex = chainActive.Tip();
+//	CBlockIndex* pindex = chainActive.Tip();
 	if (nBlock > pindex->nHeight) {
 		return 100000;
 	} else {
