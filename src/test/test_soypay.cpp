@@ -27,10 +27,12 @@ struct TestingSetup {
 	TestingSetup() {
 		{
 //			vmscript test init
-			if(pScriptDB)
+			if (pScriptDB)
 				delete pScriptDB;
-			if(pScriptDBTip)
+			pScriptDB = NULL;
+			if (pScriptDBTip)
 				delete pScriptDBTip;
+			pScriptDBTip = NULL;
 //
 //			pScriptDB = new CScriptDB(1024*1024, false , false);
 //			pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);

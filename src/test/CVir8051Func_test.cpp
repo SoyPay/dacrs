@@ -3563,7 +3563,8 @@ BOOST_AUTO_TEST_CASE(scriptfun)
 		std::shared_ptr<CContractTransaction> nTemp = std::make_shared < CContractTransaction > (CContractTransaction());
 		nTemp->scriptRegId = scriptId;
 		nTemp.get()->llFees = 100000000000000000;
-
+		BOOST_CHECK(pScriptDB == NULL);
+        BOOST_CHECK(pScriptDBTip ==NULL);
 		pScriptDB = new CScriptDB(size_t(4<<20), false , Params().IsReindex());
 		pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
 		pScriptDBTip->SetScript(scriptId, vpscript);
