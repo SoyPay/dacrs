@@ -16,7 +16,6 @@
 
 #include "chainparams.h"
 #include "key.h"
-#include "script.h"
 
 #include <string>
 #include <vector>
@@ -101,7 +100,6 @@ public:
 class CBitcoinAddress : public CBase58Data {
 public:
     bool Set(const CKeyID &id);
-    bool Set(const CScriptID &id);
     bool Set(const CAccountID &id);
     bool Set(const CTxDestination &dest);
     bool IsValid() const;

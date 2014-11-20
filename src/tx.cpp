@@ -76,23 +76,27 @@ void CRegID::SetRegIDByCompact(const vector<unsigned char> &vIn) {
 
 bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
-	CAccount sourceAccount;
+	CAccount account;
 	CRegID accountId(nHeight, nIndex);
 	CKeyID keyId = boost::get<CPubKey>(userId).GetID();
-	if (!view.GetAccount(userId, sourceAccount))
+	if (!view.GetAccount(userId, account))
 		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", accountId.ToString()),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 
-	sourceAccount.publicKey = boost::get<CPubKey>(userId);
+	if(account.publicKey.IsFullyValid() && account.publicKey.GetID() == keyId) {
+		return state.DoS(100, ERROR("UpdateAccounts() : read source keyId %s duplicate register", keyId.ToString()),
+					UPDATE_ACCOUNT_FAIL, "duplicate-register-account");
+	}
+	account.publicKey = boost::get<CPubKey>(userId);
 	if (llFees > 0) {
 		CFund fund(llFees);
-		sourceAccount.OperateAccount(MINUS_FREE, fund);
+		account.OperateAccount(MINUS_FREE, fund);
 	}
-	if (!view.SaveAccountInfo(accountId.GetRegID(), keyId, sourceAccount)) {
+	if (!view.SaveAccountInfo(accountId.GetRegID(), keyId, account)) {
 		return state.DoS(100, ERROR("UpdateAccounts() : write source addr %s account info error", accountId.ToString()),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	}
-	txundo.vAccountOperLog.push_back(sourceAccount.accountOperLog);
+	txundo.vAccountOperLog.push_back(account.accountOperLog);
 	return true;
 }
 bool CRegisterAccountTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
@@ -334,16 +338,21 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 		return state.DoS(100,
 				ERROR("UpdateAccounts() : ContractTransaction UpdateAccount txhash=%s run script error:%s",
 						GetHash().GetHex(), std::get<2>(ret)), UPDATE_ACCOUNT_FAIL, "run-script-error");
+
+	set<CKeyID> vAddress;
 	vector<std::shared_ptr<CAccount> > &vAccount = vmRun.GetNewAccont();
 	for (auto & itemAccount : vAccount) {
+		vAddress.insert(itemAccount->keyID);
 		userId = itemAccount->keyID;
 		if (!view.SetAccount(userId, *itemAccount))
 			return state.DoS(100,
-					ERROR("UpdateAccounts() : ContractTransaction Udateaccount write secure account info error"),
+					ERROR("UpdateAccounts() : ContractTransaction Updateaccount write account info error"),
 					UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 		txundo.vAccountOperLog.push_back((itemAccount->accountOperLog));
 	}
 	txundo.vScriptOperLog = *vmRun.GetDbLog();
+	if(!scriptCache.SetTxRelAccout(GetHash(), vAddress))
+		return ERROR("UpdateAccounts() : ContractTransaction Updateaccount save tx relate account info to script db error");
 	return true;
 }
 bool CContractTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
@@ -381,19 +390,24 @@ bool CContractTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &vie
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 	uint64_t el = GetElementForBurn();
-	int height = chainActive.Height();
-	if(!pTxCacheTip->IsContainTx(GetHash())) {
-		height += 1;
-	}
 	CScriptDBViewCache scriptDBView(*pScriptDBTip);
-	CAccountViewCache accountView(view);
-	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, accountView, scriptDBView, chainActive.Height() +1, el);
-	if (!std::get<0>(ret))
-		return ERROR("GetAddress()  : %s", std::get<2>(ret));
+	if(!pTxCacheTip->IsContainTx(GetHash())) {
+		CAccountViewCache accountView(view);
+		tuple<bool, uint64_t, string> ret = vmRun.run(pTx, accountView, scriptDBView, chainActive.Height() +1, el);
+		if (!std::get<0>(ret))
+			return ERROR("GetAddress()  : %s", std::get<2>(ret));
 
-	vector<shared_ptr<CAccount> > vpAccount = vmRun.GetNewAccont();
-	for(auto & item : vpAccount) {
-		vAddr.insert(item->keyID);
+		vector<shared_ptr<CAccount> > vpAccount = vmRun.GetNewAccont();
+
+		for(auto & item : vpAccount) {
+			vAddr.insert(item->keyID);
+		}
+	}
+	else {
+		set<CKeyID> vTxRelAccount;
+		if(!scriptDBView.GetTxRelAccount(GetHash(), vTxRelAccount))
+			return false;
+		vAddr.insert(vTxRelAccount.begin(), vTxRelAccount.end());
 	}
 	return true;
 }

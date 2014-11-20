@@ -129,11 +129,11 @@ void GetPriorityTx(vector<TxPriority> &vecPriority, map<uint256, vector<COrphan*
 	}
 }
 
-CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn) {
-//    // Create new block
-	auto_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
-	if (!pblocktemplate.get())
-		return NULL;
+//CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn) {
+////    // Create new block
+//	auto_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
+//	if (!pblocktemplate.get())
+//		return NULL;
 //    CBlock *pblock = &pblocktemplate->block; // pointer for convenience
 //
 //    // Create coinbase tx
@@ -312,8 +312,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn) {
 //            throw runtime_error("CreateNewBlock() : ConnectBlock failed");
 //    }
 
-	return pblocktemplate.release();
-}
+//	return pblocktemplate.release();
+//}
 
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce) {
 	// Update nExtraNonce
@@ -411,14 +411,14 @@ unsigned int static ScanHash_CryptoPP(char* pmidstate, char* pdata, char* phash1
 	}
 }
 
-CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey) {
-	CPubKey pubkey;
-	if (!reservekey.GetReservedKey(pubkey))
-		return NULL;
-
-	CScript scriptPubKey = CScript() << pubkey << OP_CHECKSIG;
-	return CreateNewBlock(scriptPubKey);
-}
+//CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey) {
+//	CPubKey pubkey;
+//	if (!reservekey.GetReservedKey(pubkey))
+//		return NULL;
+//
+//	CScript scriptPubKey = CScript() << pubkey << OP_CHECKSIG;
+//	return CreateNewBlock(scriptPubKey);
+//}
 
 struct CAccountComparator {
 	bool operator()(const CAccount &a, const CAccount&b) {
@@ -906,10 +906,10 @@ bool CheckWork(CBlock* pblock, CWallet& wallet) {
 	return true;
 }
 
-void static BitcoinMiner(CWallet *pwallet) {
-	LogPrint("INFO","BitcoinMiner started\n");
+void static SoypayMiner(CWallet *pwallet) {
+	LogPrint("INFO","Miner started\n");
 	SetThreadPriority(THREAD_PRIORITY_LOWEST);
-	RenameThread("bitcoin-miner");
+	RenameThread("soypay-miner");
 
 	// Each thread has its own key and counter
 	unsigned int nExtraNonce = 0;
@@ -1027,7 +1027,7 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads) {
 
 	minerThreads = new boost::thread_group();
 	for (int i = 0; i < nThreads; i++)
-		minerThreads->create_thread(boost::bind(&BitcoinMiner, pwallet));
+		minerThreads->create_thread(boost::bind(&SoypayMiner, pwallet));
 }
 
 #endif

@@ -7,7 +7,7 @@
 #define BITCOIN_UTIL_H
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "soypay-config.h"
 #endif
 
 #include "compat.h"
