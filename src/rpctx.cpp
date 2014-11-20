@@ -1535,18 +1535,35 @@ Value disconnectblock(const Array& params, bool fHelp) {
 	CValidationState state;
 	while (number--) {
 		// check level 0: read from disk
-		if (!ReadBlockFromDisk(block, pindex))
-			return ERROR("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
-					pindex->GetBlockHash().ToString());
-		bool fClean = true;
-		CTransactionCache txCacheTemp(*pTxCacheTip);
-		CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
-		if (!DisconnectBlock(block, state, view, pindex, txCacheTemp, contractScriptTemp, &fClean))
-			return ERROR("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
-					pindex->GetBlockHash().ToString());
-		pindex = pindex->pprev;
-		chainActive.SetTip(pindex);
-		assert(view.Flush() && contractScriptTemp.Flush());
+	      if (!DisconnectBlockFromTip(state))
+	    	  return false;
+//		if (!ReadBlockFromDisk(block, pindex))
+//			return ERROR("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
+//					pindex->GetBlockHash().ToString());
+//		bool fClean = true;
+//		CTransactionCache txCacheTemp(*pTxCacheTip);
+//		CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
+//		if (!DisconnectBlock(block, state, view, pindex, txCacheTemp, contractScriptTemp, &fClean))
+//			return ERROR("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
+//					pindex->GetBlockHash().ToString());
+//		CBlockIndex *pindexDelete = pindex;
+//		pindex = pindex->pprev;
+//		chainActive.SetTip(pindex);
+//	    if (!pTxCacheTip->DeleteBlockFromCache(block))
+//	    	return state.Abort(_("Disconnect tip block failed to delete tx from txcache"));
+//
+//	    //load a block tx into cache transaction
+//		CBlockIndex *pReLoadBlockIndex = pindexDelete;
+//		if(pindexDelete->nHeight - Params().GetTxCacheHeight()>0) {
+//			pReLoadBlockIndex = chainActive[pindexDelete->nHeight - Params().GetTxCacheHeight()];
+//			CBlock reLoadblock;
+//			if (!ReadBlockFromDisk(reLoadblock, pindexDelete))
+//				return state.Abort(_("Failed to read block"));
+//			if (!pTxCacheTip->AddBlockToCache(reLoadblock))
+//					return state.Abort(_("Disconnect tip block reload preblock tx to txcache"));
+//		}
+//
+//		assert(view.Flush() && contractScriptTemp.Flush());
 	}
 	return true;
 }
@@ -1809,4 +1826,3 @@ Value reloadtxcache(const Array& params, bool fHelp) {
 	} while (NULL != pIndex);
 	return string("reload tx cache succeed");
 }
-

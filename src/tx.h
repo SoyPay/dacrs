@@ -1249,10 +1249,12 @@ public:
 
 class CTxUndo {
 public:
+	uint256 txHash;
 	vector<CAccountOperLog> vAccountOperLog;
 	vector<CScriptDBOperLog> vScriptOperLog;
 	IMPLEMENT_SERIALIZE
 	(
+		READWRITE(txHash);
 		READWRITE(vAccountOperLog);
 		READWRITE(vScriptOperLog);
 	)

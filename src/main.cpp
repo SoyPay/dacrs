@@ -3948,4 +3948,39 @@ string CBlockUndo::ToString() const {
 	return str;
 }
 
+bool DisconnectBlockFromTip(CValidationState &state) {
+	return DisconnectTip(state);
+}
+bool GetTxOperLog(const uint256 &txHash, vector<CAccountOperLog> &vAccountOperLog) {
+if (Params().IsTxIndex()) {
+		CDiskTxPos postx;
+		if (pblocktree->ReadTxIndex(txHash, postx)) {
+			CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
+			CBlockHeader header;
+			try {
+				file >> header;
+			} catch (std::exception &e) {
+				return ERROR("%s : Deserialize or I/O error - %s", __func__, e.what());
+			}
+			uint256 blockHash = header.GetHash();
+			if (mapBlockIndex.count(blockHash) > 0) {
+				CBlockIndex *pIndex = mapBlockIndex[blockHash];
+				CBlockUndo	blockUndo;
+				CDiskBlockPos pos = pIndex->GetUndoPos();
+				if (pos.IsNull())
+					return ERROR("DisconnectBlock() : no undo data available");
+				if (!blockUndo.ReadFromDisk(pos, pIndex->pprev->GetBlockHash()))
+					return ERROR("DisconnectBlock() : failure reading undo data");
 
+				for(auto &txUndo : blockUndo.vtxundo) {
+					if(txUndo.txHash == txHash) {
+						vAccountOperLog = txUndo.vAccountOperLog;
+						return true;
+					}
+
+				}
+			}
+		}
+	}
+	return false;
+}
