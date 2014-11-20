@@ -252,23 +252,23 @@ BOOST_AUTO_TEST_CASE(test_fun)
 	GetAccountState1();
 	CreateRegScriptTx2();
 	GenerateMiner();
-	cout << "start first" << endl;
+//	cout << "start first" << endl;
 //	ListRegScript1();
 	CreateFirstTx();
 	GenerateMiner();
-	cout << "strat second:" << endl;
+	//cout << "strat second:" << endl;
 	CreateSecondTx();
 	GenerateMiner();
 
-	cout << "strat third:" << endl;
+//	cout << "strat third:" << endl;
 	CreateThirdTx();
 	GenerateMiner();
 
-	cout << "script reg:" << endl;
+//	cout << "script reg:" << endl;
 	CreateRegScriptTx3();
 	GenerateMiner();
 
-	cout << "five reg:" << endl;
+//	cout << "five reg:" << endl;
 	CreateFiveTx();
 	GenerateMiner();
 
