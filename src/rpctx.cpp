@@ -1811,7 +1811,7 @@ Value reloadtxcache(const Array& params, bool fHelp) {
 }
 Value getscriptdata(const Array& params, bool fHelp)
 {
-	if (fHelp || params.size() != 2 || params.size() != 3) {
+	if (fHelp || params.size() < 2) {
 		string msg = "getscriptdata nrequired \"scriptid\" \"\n"
 				"\ncreate contract\n"
 				"\nArguments:\n"
@@ -1823,7 +1823,7 @@ Value getscriptdata(const Array& params, bool fHelp)
 	}
 
 
-	RPCTypeCheck(params, list_of(str_type)(int_type)(int_type));
+	//RPCTypeCheck(params, list_of(str_type)(int_type)(int_type));
 	vector<unsigned char> vscriptid = ParseHex(params[0].get_str());
 	 CRegID regid(vscriptid);
 
@@ -1835,7 +1835,8 @@ Value getscriptdata(const Array& params, bool fHelp)
 	{
 		throw runtime_error("in getscriptdata :vscriptid id is exist!\n");
 	}
-	string retstr = "";
+	Object script;
+	Array retArray;
 	if(params.size() == 2){
 		vector<unsigned char> key =ParseHex(params[1].get_str());
 		vector<unsigned char> value;
@@ -1845,9 +1846,11 @@ Value getscriptdata(const Array& params, bool fHelp)
 		{
 			throw runtime_error("in getscriptdata :the key not exist!\n");
 		}
-		retstr ="scritpid            key        value      height\r\n";
-		retstr += params[0].get_str()+"            "+params[1].get_str()+"        "+HexStr(value)+ "      ";
-		retstr += itostr(nHeight);
+		script.push_back(Pair("scritpid", params[0].get_str()));
+		script.push_back(Pair("key", params[1].get_str()));
+		script.push_back(Pair("value", HexStr(value)));
+		script.push_back(Pair("height", HexStr(value)));
+		return script;
 
 	}else{
 		int dbsize;
@@ -1861,13 +1864,18 @@ Value getscriptdata(const Array& params, bool fHelp)
 		vector<unsigned char> value;
 		vector<unsigned char> vScriptKey;
 		 int nHeight = 0;
-		 retstr ="scritpid            key        value      height\r\n";
 
 		if(!pScriptDBTip->GetScriptData(regid,0,vScriptKey,value,nHeight))
 		{
 			throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 		}
-		int listcount = dbsize;
+		Object firt;
+		firt.push_back(Pair("key", params[1].get_int()));
+		firt.push_back(Pair("value", HexStr(value)));
+		firt.push_back(Pair("height", HexStr(value)));
+		retArray.push_back(firt);
+
+		int listcount = dbsize - 1;
 		int count = 0;
 		if(dbsize >= pagesize*index)
 		{
@@ -1894,11 +1902,15 @@ Value getscriptdata(const Array& params, bool fHelp)
 			{
 				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 			}
-
+			Object firt;
+			firt.push_back(Pair("key", params[1].get_str()));
+			firt.push_back(Pair("value", HexStr(value)));
+			firt.push_back(Pair("height", HexStr(value)));
+			retArray.push_back(firt);
 		}
-		retstr += params[0].get_str()+"            "+params[1].get_str()+"        "+HexStr(value)+ "      ";
-		retstr += itostr(nHeight);
+
+		return retArray;
 	}
 
-	return retstr;
+	return script;
 }
