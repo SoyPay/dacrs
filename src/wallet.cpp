@@ -118,13 +118,13 @@ bool CWallet::LoadCryptedKey(const CPubKey &vchPubKey, const vector<unsigned cha
 	return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret);
 }
 
-bool CWallet::AddCScript(const CScript& redeemScript) {
-	if (!CCryptoKeyStore::AddCScript(redeemScript))
-		return false;
-	if (!fFileBacked)
-		return true;
-	return CWalletDB(strWalletFile).WriteCScript(Hash160(redeemScript), redeemScript);
-}
+//bool CWallet::AddCScript(const CScript& redeemScript) {
+//	if (!CCryptoKeyStore::AddCScript(redeemScript))
+//		return false;
+//	if (!fFileBacked)
+//		return true;
+//	return CWalletDB(strWalletFile).WriteCScript(Hash160(redeemScript), redeemScript);
+//}
 
 bool CWallet::Unlock(const SecureString& strWalletPassphrase) {
 	CCrypter crypter;
@@ -686,7 +686,7 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const string& strNam
 		if (!strPurpose.empty()) /* update purpose only if requested */
 			mapAddressBook[address].purpose = strPurpose;
 	}
-	NotifyAddressBookChanged(this, address, strName, ::IsMine(*this, address), strPurpose,
+	NotifyAddressBookChanged(this, address, strName, IsMine(address), strPurpose,
 			(fUpdated ? CT_UPDATED : CT_NEW));
 	if (!fFileBacked)
 		return false;
@@ -709,7 +709,7 @@ bool CWallet::DelAddressBook(const CTxDestination& address) {
 		mapAddressBook.erase(address);
 	}
 
-	NotifyAddressBookChanged(this, address, "", ::IsMine(*this, address), "", CT_DELETED);
+	NotifyAddressBookChanged(this, address, "", IsMine(address), "", CT_DELETED);
 
 	if (!fFileBacked)
 		return false;

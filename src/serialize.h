@@ -29,7 +29,7 @@
 
 class CAutoFile;
 class CDataStream;
-class CScript;
+//class CScript;
 class CBaseTransaction;
 class CRegisterAccountTx;
 class CTransaction;
@@ -402,9 +402,9 @@ template<typename Stream, typename T, typename A> void Unserialize_impl(Stream& 
 template<typename Stream, typename T, typename A> inline void Unserialize(Stream& is, vector<T, A>& v, int nType, int nVersion);
 
 // others derived from vector
-extern inline unsigned int GetSerializeSize(const CScript& v, int nType, int nVersion);
-template<typename Stream> void Serialize(Stream& os, const CScript& v, int nType, int nVersion);
-template<typename Stream> void Unserialize(Stream& is, CScript& v, int nType, int nVersion);
+//extern inline unsigned int GetSerializeSize(const CScript& v, int nType, int nVersion);
+//template<typename Stream> void Serialize(Stream& os, const CScript& v, int nType, int nVersion);
+//template<typename Stream> void Unserialize(Stream& is, CScript& v, int nType, int nVersion);
 
 // pair
 template<typename K, typename T> unsigned int GetSerializeSize(const pair<K, T>& item, int nType, int nVersion);
@@ -605,22 +605,22 @@ inline void Unserialize(Stream& is, vector<T, A>& v, int nType, int nVersion)
 //
 // others derived from vector
 //
-inline unsigned int GetSerializeSize(const CScript& v, int nType, int nVersion)
-{
-    return GetSerializeSize((const vector<unsigned char>&)v, nType, nVersion);
-}
-
-template<typename Stream>
-void Serialize(Stream& os, const CScript& v, int nType, int nVersion)
-{
-    Serialize(os, (const vector<unsigned char>&)v, nType, nVersion);
-}
-
-template<typename Stream>
-void Unserialize(Stream& is, CScript& v, int nType, int nVersion)
-{
-    Unserialize(is, (vector<unsigned char>&)v, nType, nVersion);
-}
+//inline unsigned int GetSerializeSize(const CScript& v, int nType, int nVersion)
+//{
+//    return GetSerializeSize((const vector<unsigned char>&)v, nType, nVersion);
+//}
+//
+//template<typename Stream>
+//void Serialize(Stream& os, const CScript& v, int nType, int nVersion)
+//{
+//    Serialize(os, (const vector<unsigned char>&)v, nType, nVersion);
+//}
+//
+//template<typename Stream>
+//void Unserialize(Stream& is, CScript& v, int nType, int nVersion)
+//{
+//    Unserialize(is, (vector<unsigned char>&)v, nType, nVersion);
+//}
 
 
 

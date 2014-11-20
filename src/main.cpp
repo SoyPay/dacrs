@@ -67,7 +67,7 @@ map<uint256, set<uint256> > mapOrphanTransactionsByPrev;
 
 //map<string, CContractScript> mapScript;
 // Constant stuff for coinbase transactions we create:
-CScript COINBASE_FLAGS;
+//CScript COINBASE_FLAGS;
 
 const string strMessageMagic = "Bitcoin Signed Message:\n";
 
@@ -1203,7 +1203,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 //static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 
 void ThreadScriptCheck() {
-    RenameThread("bitcoin-scriptch");
+    RenameThread("soypay-scriptch");
 //    scriptcheckqueue.Thread();
 }
 
@@ -1457,8 +1457,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
             return ERROR("ConnectTip() : ConnectBlock %s failed", pindexNew->GetBlockHash().ToString());
         }
         mapBlockSource.erase(inv.hash);
-        assert(view.Flush());
-        assert(scriptDBView.Flush());
+        assert(view.Flush() && scriptDBView.Flush());
         CAccountViewCache viewtemp(*pAccountViewTip, true);
         uint256 uBestblockHash = viewtemp.GetBestBlock();
         LogPrint("INFO","uBestBlockHash: %s",uBestblockHash.GetHex() );
@@ -3487,7 +3486,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         // Nodes must NEVER send a data item > 520 bytes (the max size for a script data object,
         // and thus, the maximum size any matched object can have) in a filteradd message
-        if (vData.size() > MAX_SCRIPT_ELEMENT_SIZE)
+        if (vData.size() > 520)//MAX_SCRIPT_ELEMENT_SIZE)
         {
             Misbehaving(pfrom->GetId(), 100);
         } else {

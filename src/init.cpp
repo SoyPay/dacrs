@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "soypay-config.h"
 #endif
 
 #include "init.h"
@@ -116,7 +116,7 @@ void Shutdown()
     TRY_LOCK(cs_Shutdown, lockShutdown);
     if (!lockShutdown) return;
 
-    RenameThread("bitcoin-shutoff");
+    RenameThread("soypay-shutoff");
     mempool.AddTransactionsUpdated(1);
     StopRPCThreads();
     ShutdownRPCMining();
@@ -214,7 +214,7 @@ string HelpMessage(HelpMessageMode hmm)
     strUsage += "  -blocknotify=<cmd>     " + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n";
     strUsage += "  -checkblocks=<n>       " + _("How many blocks to check at startup (default: 288, 0 = all)") + "\n";
     strUsage += "  -checklevel=<n>        " + _("How thorough the block verification of -checkblocks is (0-4, default: 3)") + "\n";
-    strUsage += "  -conf=<file>           " + _("Specify configuration file (default: bitcoin.conf)") + "\n";
+    strUsage += "  -conf=<file>           " + _("Specify configuration file (default: soypay.conf)") + "\n";
     if (hmm == HMM_BITCOIND)
     {
 #if !defined(WIN32)
@@ -353,7 +353,7 @@ struct CImportingNow
 
 void ThreadImport(vector<boost::filesystem::path> vImportFiles)
 {
-    RenameThread("bitcoin-loadblk");
+    RenameThread("soypay-loadblk");
 
     // -reindex
     if (Params().IsReindex()) {
@@ -404,7 +404,7 @@ void ThreadImport(vector<boost::filesystem::path> vImportFiles)
 }
 
 
-/** Initialize bitcoin.
+/** Initialize soypay.
  *  @pre Parameters should be parsed and config file should be read.
  */
 bool AppInit2(boost::thread_group& threadGroup)
@@ -568,8 +568,8 @@ bool AppInit2(boost::thread_group& threadGroup)
     // Continue to put "/P2SH/" in the coinbase to monitor
     // BIP16 support.
     // This can be removed eventually...
-    const char* pszP2SH = "/P2SH/";
-    COINBASE_FLAGS << vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
+//    const char* pszP2SH = "/P2SH/";
+//    COINBASE_FLAGS << vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
 
     // Fee-per-kilobyte amount considered the same as "free"
     // If you are mining, be careful setting this:

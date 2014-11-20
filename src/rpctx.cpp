@@ -1201,7 +1201,7 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 		throw runtime_error(
 				"getaccountinfo \"address \" dspay address ( \"comment\" \"comment-to\" )\n"
 						"\nGet an account info with dspay address\n" + HelpRequiringPassphrase() + "\nArguments:\n"
-						"1. \"address \"  (string, required) The bitcoin address.\n"
+						"1. \"address \"  (string, required) The soypay address.\n"
 						"\nResult:\n"
 						"\"account info\"  (string) \n"
 						"\nExamples:\n" + HelpExampleCli("getaccountinfo", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\"")
@@ -1523,7 +1523,7 @@ Value disconnectblock(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
 		throw runtime_error("disconnectblock \"block numbers \n"
 				"\ndisconnect block\n" + HelpRequiringPassphrase() + "\nArguments:\n"
-				"1. \"numbers \"  (numeric, required) The bitcoin address.\n"
+				"1. \"numbers \"  (numeric, required) The soypay address.\n"
 				"\nResult:\n"
 				"\"disconnect result\"  (bool) \n"
 				"\nExamples:\n" + HelpExampleCli("disconnectblock", "\"1\""));
@@ -1733,7 +1733,7 @@ Value generateblock(const Array& params, bool fHelp) {
 Value getpublickey(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
 		throw runtime_error("getpublickey \"address \n" + HelpRequiringPassphrase() + "\nArguments:\n"
-				"1. \"address \"  (string, required) The bitcoin address.\n"
+				"1. \"address \"  (string, required) The soypay address.\n"
 				"\nResult:\n"
 				"\"publickey\"  (string) \n"
 				"\nExamples:\n" + HelpExampleCli("getpublickey", "mpif58ohTASDZNNXreFMFuNAHBfuDUXtjP"));

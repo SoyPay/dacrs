@@ -98,7 +98,7 @@ public:
     bool WriteCryptedKey(const CPubKey& vchPubKey, const vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);
     bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
 
-    bool WriteCScript(const uint160& hash, const CScript& redeemScript);
+//  bool WriteCScript(const uint160& hash, const CScript& redeemScript);
 
     bool WriteBestBlock(const CBlockLocator& locator);
     bool ReadBestBlock(CBlockLocator& locator);

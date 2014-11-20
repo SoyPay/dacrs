@@ -5,7 +5,6 @@
 #include "key.h"
 #include "keystore.h"
 #include "main.h"
-#include "script.h"
 #include "uint256.h"
 
 #include <boost/assign/std/vector.hpp>
@@ -21,22 +20,22 @@ extern uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo
 
 BOOST_AUTO_TEST_SUITE(multisig_tests)
 
-CScript
-sign_multisig(CScript scriptPubKey, vector<CKey> keys, CTransaction transaction, int whichIn)
-{
-    uint256 hash = SignatureHash(scriptPubKey, transaction, whichIn, SIGHASH_ALL);
-
-    CScript result;
-    result << OP_0; // CHECKMULTISIG bug workaround
-    for (const auto &key : keys)
-    {
-        vector<unsigned char> vchSig;
-        BOOST_CHECK(key.Sign(hash, vchSig));
-        vchSig.push_back((unsigned char)SIGHASH_ALL);
-        result << vchSig;
-    }
-    return result;
-}
+//CScript
+//sign_multisig(CScript scriptPubKey, vector<CKey> keys, CTransaction transaction, int whichIn)
+//{
+//    uint256 hash = SignatureHash(scriptPubKey, transaction, whichIn, SIGHASH_ALL);
+//
+//    CScript result;
+//    result << OP_0; // CHECKMULTISIG bug workaround
+//    for (const auto &key : keys)
+//    {
+//        vector<unsigned char> vchSig;
+//        BOOST_CHECK(key.Sign(hash, vchSig));
+//        vchSig.push_back((unsigned char)SIGHASH_ALL);
+//        result << vchSig;
+//    }
+//    return result;
+//}
 
 //BOOST_AUTO_TEST_CASE(multisig_verify)
 //{
@@ -127,38 +126,38 @@ sign_multisig(CScript scriptPubKey, vector<CKey> keys, CTransaction transaction,
 
 BOOST_AUTO_TEST_CASE(multisig_IsStandard)
 {
-    CKey key[4];
-    for (int i = 0; i < 4; i++)
-        key[i].MakeNewKey(true);
-
-    txnouttype whichType;
-
-    CScript a_and_b;
-    a_and_b << OP_2 << key[0].GetPubKey() << key[1].GetPubKey() << OP_2 << OP_CHECKMULTISIG;
-    BOOST_CHECK(::IsStandard(a_and_b, whichType));
-
-    CScript a_or_b;
-    a_or_b  << OP_1 << key[0].GetPubKey() << key[1].GetPubKey() << OP_2 << OP_CHECKMULTISIG;
-    BOOST_CHECK(::IsStandard(a_or_b, whichType));
-
-    CScript escrow;
-    escrow << OP_2 << key[0].GetPubKey() << key[1].GetPubKey() << key[2].GetPubKey() << OP_3 << OP_CHECKMULTISIG;
-    BOOST_CHECK(::IsStandard(escrow, whichType));
-
-    CScript one_of_four;
-    one_of_four << OP_1 << key[0].GetPubKey() << key[1].GetPubKey() << key[2].GetPubKey() << key[3].GetPubKey() << OP_4 << OP_CHECKMULTISIG;
-    BOOST_CHECK(!::IsStandard(one_of_four, whichType));
-
-    CScript malformed[6];
-    malformed[0] << OP_3 << key[0].GetPubKey() << key[1].GetPubKey() << OP_2 << OP_CHECKMULTISIG;
-    malformed[1] << OP_2 << key[0].GetPubKey() << key[1].GetPubKey() << OP_3 << OP_CHECKMULTISIG;
-    malformed[2] << OP_0 << key[0].GetPubKey() << key[1].GetPubKey() << OP_2 << OP_CHECKMULTISIG;
-    malformed[3] << OP_1 << key[0].GetPubKey() << key[1].GetPubKey() << OP_0 << OP_CHECKMULTISIG;
-    malformed[4] << OP_1 << key[0].GetPubKey() << key[1].GetPubKey() << OP_CHECKMULTISIG;
-    malformed[5] << OP_1 << key[0].GetPubKey() << key[1].GetPubKey();
-
-    for (int i = 0; i < 6; i++)
-        BOOST_CHECK(!::IsStandard(malformed[i], whichType));
+//    CKey key[4];
+//    for (int i = 0; i < 4; i++)
+//        key[i].MakeNewKey(true);
+//
+//    txnouttype whichType;
+//
+//    CScript a_and_b;
+//    a_and_b << OP_2 << key[0].GetPubKey() << key[1].GetPubKey() << OP_2 << OP_CHECKMULTISIG;
+//    BOOST_CHECK(::IsStandard(a_and_b, whichType));
+//
+//    CScript a_or_b;
+//    a_or_b  << OP_1 << key[0].GetPubKey() << key[1].GetPubKey() << OP_2 << OP_CHECKMULTISIG;
+//    BOOST_CHECK(::IsStandard(a_or_b, whichType));
+//
+//    CScript escrow;
+//    escrow << OP_2 << key[0].GetPubKey() << key[1].GetPubKey() << key[2].GetPubKey() << OP_3 << OP_CHECKMULTISIG;
+//    BOOST_CHECK(::IsStandard(escrow, whichType));
+//
+//    CScript one_of_four;
+//    one_of_four << OP_1 << key[0].GetPubKey() << key[1].GetPubKey() << key[2].GetPubKey() << key[3].GetPubKey() << OP_4 << OP_CHECKMULTISIG;
+//    BOOST_CHECK(!::IsStandard(one_of_four, whichType));
+//
+//    CScript malformed[6];
+//    malformed[0] << OP_3 << key[0].GetPubKey() << key[1].GetPubKey() << OP_2 << OP_CHECKMULTISIG;
+//    malformed[1] << OP_2 << key[0].GetPubKey() << key[1].GetPubKey() << OP_3 << OP_CHECKMULTISIG;
+//    malformed[2] << OP_0 << key[0].GetPubKey() << key[1].GetPubKey() << OP_2 << OP_CHECKMULTISIG;
+//    malformed[3] << OP_1 << key[0].GetPubKey() << key[1].GetPubKey() << OP_0 << OP_CHECKMULTISIG;
+//    malformed[4] << OP_1 << key[0].GetPubKey() << key[1].GetPubKey() << OP_CHECKMULTISIG;
+//    malformed[5] << OP_1 << key[0].GetPubKey() << key[1].GetPubKey();
+//
+//    for (int i = 0; i < 6; i++)
+//        BOOST_CHECK(!::IsStandard(malformed[i], whichType));
 }
 
 BOOST_AUTO_TEST_CASE(multisig_Solver1)
@@ -173,81 +172,81 @@ BOOST_AUTO_TEST_CASE(multisig_Solver1)
     // one key that would satisfy an (a|b) or 2-of-3 keys needed
     // to spend an escrow transaction.
     //
-    CBasicKeyStore keystore, emptykeystore, partialkeystore;
-    CKey key[3];
-    CTxDestination keyaddr[3];
-    for (int i = 0; i < 3; i++)
-    {
-        key[i].MakeNewKey(true);
-        keystore.AddKey(key[i]);
-        keyaddr[i] = key[i].GetPubKey().GetID();
-    }
-    partialkeystore.AddKey(key[0]);
-
-    {
-        vector<valtype> solutions;
-        txnouttype whichType;
-        CScript s;
-        s << key[0].GetPubKey() << OP_CHECKSIG;
-        BOOST_CHECK(Solver(s, whichType, solutions));
-        BOOST_CHECK(solutions.size() == 1);
-        CTxDestination addr;
-        BOOST_CHECK(ExtractDestination(s, addr));
-        BOOST_CHECK(addr == keyaddr[0]);
-        BOOST_CHECK(IsMine(keystore, s));
-        BOOST_CHECK(!IsMine(emptykeystore, s));
-    }
-    {
-        vector<valtype> solutions;
-        txnouttype whichType;
-        CScript s;
-        s << OP_DUP << OP_HASH160 << key[0].GetPubKey().GetID() << OP_EQUALVERIFY << OP_CHECKSIG;
-        BOOST_CHECK(Solver(s, whichType, solutions));
-        BOOST_CHECK(solutions.size() == 1);
-        CTxDestination addr;
-        BOOST_CHECK(ExtractDestination(s, addr));
-        BOOST_CHECK(addr == keyaddr[0]);
-        BOOST_CHECK(IsMine(keystore, s));
-        BOOST_CHECK(!IsMine(emptykeystore, s));
-    }
-    {
-        vector<valtype> solutions;
-        txnouttype whichType;
-        CScript s;
-        s << OP_2 << key[0].GetPubKey() << key[1].GetPubKey() << OP_2 << OP_CHECKMULTISIG;
-        BOOST_CHECK(Solver(s, whichType, solutions));
-        BOOST_CHECK_EQUAL(solutions.size(), 4U);
-        CTxDestination addr;
-        BOOST_CHECK(!ExtractDestination(s, addr));
-        BOOST_CHECK(IsMine(keystore, s));
-        BOOST_CHECK(!IsMine(emptykeystore, s));
-        BOOST_CHECK(!IsMine(partialkeystore, s));
-    }
-    {
-        vector<valtype> solutions;
-        txnouttype whichType;
-        CScript s;
-        s << OP_1 << key[0].GetPubKey() << key[1].GetPubKey() << OP_2 << OP_CHECKMULTISIG;
-        BOOST_CHECK(Solver(s, whichType, solutions));
-        BOOST_CHECK_EQUAL(solutions.size(), 4U);
-        vector<CTxDestination> addrs;
-        int nRequired;
-        BOOST_CHECK(ExtractDestinations(s, whichType, addrs, nRequired));
-        BOOST_CHECK(addrs[0] == keyaddr[0]);
-        BOOST_CHECK(addrs[1] == keyaddr[1]);
-        BOOST_CHECK(nRequired == 1);
-        BOOST_CHECK(IsMine(keystore, s));
-        BOOST_CHECK(!IsMine(emptykeystore, s));
-        BOOST_CHECK(!IsMine(partialkeystore, s));
-    }
-    {
-        vector<valtype> solutions;
-        txnouttype whichType;
-        CScript s;
-        s << OP_2 << key[0].GetPubKey() << key[1].GetPubKey() << key[2].GetPubKey() << OP_3 << OP_CHECKMULTISIG;
-        BOOST_CHECK(Solver(s, whichType, solutions));
-        BOOST_CHECK(solutions.size() == 5);
-    }
+//    CBasicKeyStore keystore, emptykeystore, partialkeystore;
+//    CKey key[3];
+//    CTxDestination keyaddr[3];
+//    for (int i = 0; i < 3; i++)
+//    {
+//        key[i].MakeNewKey(true);
+//        keystore.AddKey(key[i]);
+//        keyaddr[i] = key[i].GetPubKey().GetID();
+//    }
+//    partialkeystore.AddKey(key[0]);
+//
+//    {
+//        vector<valtype> solutions;
+//        txnouttype whichType;
+//        CScript s;
+//        s << key[0].GetPubKey() << OP_CHECKSIG;
+//        BOOST_CHECK(Solver(s, whichType, solutions));
+//        BOOST_CHECK(solutions.size() == 1);
+//        CTxDestination addr;
+//        BOOST_CHECK(ExtractDestination(s, addr));
+//        BOOST_CHECK(addr == keyaddr[0]);
+//        BOOST_CHECK(IsMine(keystore, s));
+//        BOOST_CHECK(!IsMine(emptykeystore, s));
+//    }
+//    {
+//        vector<valtype> solutions;
+//        txnouttype whichType;
+//        CScript s;
+//        s << OP_DUP << OP_HASH160 << key[0].GetPubKey().GetID() << OP_EQUALVERIFY << OP_CHECKSIG;
+//        BOOST_CHECK(Solver(s, whichType, solutions));
+//        BOOST_CHECK(solutions.size() == 1);
+//        CTxDestination addr;
+//        BOOST_CHECK(ExtractDestination(s, addr));
+//        BOOST_CHECK(addr == keyaddr[0]);
+//        BOOST_CHECK(IsMine(keystore, s));
+//        BOOST_CHECK(!IsMine(emptykeystore, s));
+//    }
+//    {
+//        vector<valtype> solutions;
+//        txnouttype whichType;
+//        CScript s;
+//        s << OP_2 << key[0].GetPubKey() << key[1].GetPubKey() << OP_2 << OP_CHECKMULTISIG;
+//        BOOST_CHECK(Solver(s, whichType, solutions));
+//        BOOST_CHECK_EQUAL(solutions.size(), 4U);
+//        CTxDestination addr;
+//        BOOST_CHECK(!ExtractDestination(s, addr));
+//        BOOST_CHECK(IsMine(keystore, s));
+//        BOOST_CHECK(!IsMine(emptykeystore, s));
+//        BOOST_CHECK(!IsMine(partialkeystore, s));
+//    }
+//    {
+//        vector<valtype> solutions;
+//        txnouttype whichType;
+//        CScript s;
+//        s << OP_1 << key[0].GetPubKey() << key[1].GetPubKey() << OP_2 << OP_CHECKMULTISIG;
+//        BOOST_CHECK(Solver(s, whichType, solutions));
+//        BOOST_CHECK_EQUAL(solutions.size(), 4U);
+//        vector<CTxDestination> addrs;
+//        int nRequired;
+//        BOOST_CHECK(ExtractDestinations(s, whichType, addrs, nRequired));
+//        BOOST_CHECK(addrs[0] == keyaddr[0]);
+//        BOOST_CHECK(addrs[1] == keyaddr[1]);
+//        BOOST_CHECK(nRequired == 1);
+//        BOOST_CHECK(IsMine(keystore, s));
+//        BOOST_CHECK(!IsMine(emptykeystore, s));
+//        BOOST_CHECK(!IsMine(partialkeystore, s));
+//    }
+//    {
+//        vector<valtype> solutions;
+//        txnouttype whichType;
+//        CScript s;
+//        s << OP_2 << key[0].GetPubKey() << key[1].GetPubKey() << key[2].GetPubKey() << OP_3 << OP_CHECKMULTISIG;
+//        BOOST_CHECK(Solver(s, whichType, solutions));
+//        BOOST_CHECK(solutions.size() == 5);
+//    }
 }
 
 //BOOST_AUTO_TEST_CASE(multisig_Sign)

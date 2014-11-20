@@ -298,7 +298,7 @@ string HelpMessageCli(bool mainProgram)
     {
         strUsage += _("Options:") + "\n";
         strUsage += "  -?                     " + _("This help message") + "\n";
-        strUsage += "  -conf=<file>           " + _("Specify configuration file (default: bitcoin.conf)") + "\n";
+        strUsage += "  -conf=<file>           " + _("Specify configuration file (default: soypay.conf)") + "\n";
         strUsage += "  -datadir=<dir>         " + _("Specify data directory") + "\n";
         strUsage += "  -testnet               " + _("Use the test network") + "\n";
         strUsage += "  -regtest               " + _("Enter regression test mode, which uses a special chain in which blocks can be "

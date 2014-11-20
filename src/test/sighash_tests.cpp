@@ -18,7 +18,7 @@
 using namespace json_spirit;
 extern Array read_json(const std::string& jsondata);
 
-extern uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
+//extern uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType);
 
 // Old script.cpp SignatureHash function
 //uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
@@ -82,13 +82,13 @@ extern uint256 SignatureHash(const CScript &scriptCode, const CTransaction& txTo
 //    return ss.GetHash();
 //}
 
-void static RandomScript(CScript &script) {
-    static const opcodetype oplist[] = {OP_FALSE, OP_1, OP_2, OP_3, OP_CHECKSIG, OP_IF, OP_VERIF, OP_RETURN, OP_CODESEPARATOR};
-    script = CScript();
-    int ops = (insecure_rand() % 10);
-    for (int i=0; i<ops; i++)
-        script << oplist[insecure_rand() % (sizeof(oplist)/sizeof(oplist[0]))];
-}
+//void static RandomScript(CScript &script) {
+//    static const opcodetype oplist[] = {OP_FALSE, OP_1, OP_2, OP_3, OP_CHECKSIG, OP_IF, OP_VERIF, OP_RETURN, OP_CODESEPARATOR};
+//    script = CScript();
+//    int ops = (insecure_rand() % 10);
+//    for (int i=0; i<ops; i++)
+//        script << oplist[insecure_rand() % (sizeof(oplist)/sizeof(oplist[0]))];
+//}
 
 //void static RandomTransaction(CTransaction &tx, bool fSingle) {
 //    tx.nVersion = insecure_rand();

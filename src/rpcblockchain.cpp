@@ -14,7 +14,7 @@
 using namespace json_spirit;
 using namespace std;
 
-void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeHex);
+//void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeHex);
 
 double GetDifficulty(const CBlockIndex* blockindex)
 {
@@ -346,8 +346,8 @@ Value gettxout(const Array& params, bool fHelp)
             "     \"hex\" : \"hex\",        (string) \n"
             "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
             "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
-            "     \"addresses\" : [          (array of string) array of bitcoin addresses\n"
-            "        \"bitcoinaddress\"     (string) bitcoin address\n"
+            "     \"addresses\" : [          (array of string) array of soypay addresses\n"
+            "        \"bitcoinaddress\"     (string) soypay address\n"
             "        ,...\n"
             "     ]\n"
             "  },\n"

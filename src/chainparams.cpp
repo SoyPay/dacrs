@@ -93,12 +93,12 @@ public:
 //		assert(hashGenesisBlock == uint256("0x0d48e88dca01697d10e0fe8f1981f94db1f5e525d5a0e0acf22919af23daed60"));
 //		assert(genesis.hashMerkleRoot == uint256("04b173fc873505d69f5f2a86aa8d7207abe7e0ffa63d786ff230f4a946f5a8255"));
 
-		vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be"));
-		vSeeds.push_back(CDNSSeedData("bluematt.me", "dnsseed.bluematt.me"));
-		vSeeds.push_back(CDNSSeedData("dashjr.org", "dnsseed.bitcoin.dashjr.org"));
-		vSeeds.push_back(CDNSSeedData("bitcoinstats.com", "seed.bitcoinstats.com"));
-		vSeeds.push_back(CDNSSeedData("bitnodes.io", "seed.bitnodes.io"));
-		vSeeds.push_back(CDNSSeedData("xf2.org", "bitseed.xf2.org"));
+//		vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be"));
+//		vSeeds.push_back(CDNSSeedData("bluematt.me", "dnsseed.bluematt.me"));
+//		vSeeds.push_back(CDNSSeedData("dashjr.org", "dnsseed.bitcoin.dashjr.org"));
+//		vSeeds.push_back(CDNSSeedData("bitcoinstats.com", "seed.bitcoinstats.com"));
+//		vSeeds.push_back(CDNSSeedData("bitnodes.io", "seed.bitnodes.io"));
+//		vSeeds.push_back(CDNSSeedData("xf2.org", "bitseed.xf2.org"));
 
 		base58Prefixes[PUBKEY_ADDRESS] = {0};
 		base58Prefixes[SCRIPT_ADDRESS] = {5};

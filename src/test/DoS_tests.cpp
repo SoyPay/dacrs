@@ -10,7 +10,7 @@
 #include "keystore.h"
 #include "main.h"
 #include "net.h"
-#include "script.h"
+#include "key.h"
 #include "serialize.h"
 
 #include <stdint.h>
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(DoS_checknbits)
 {
 	using namespace boost::assign; // for 'map_list_of()'
 
-	// Timestamps,nBits from the bitcoin block chain.
+	// Timestamps,nBits from the soypay block chain.
 	// These are the block-chain checkpoint blocks
 	typedef std::map<int64_t, unsigned int> BlockData;
 	BlockData chainData =

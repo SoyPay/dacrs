@@ -7,14 +7,14 @@
 #define BITCOIN_MAIN_H
 
 #if defined(HAVE_CONFIG_H)
-#include "bitcoin-config.h"
+#include "soypay-config.h"
 #endif
 
 #include "bignum.h"
 #include "chainparams.h"
 #include "core.h"
 #include "net.h"
-#include "script.h"
+//#include "script.h"
 #include "sync.h"
 #include "txmempool.h"
 #include "uint256.h"
@@ -88,7 +88,7 @@ static const unsigned char REJECT_INSUFFICIENTFEE = 0x42;
 static const unsigned char REJECT_CHECKPOINT = 0x43;
 static const unsigned char UPDATE_ACCOUNT_FAIL = 0X50;
 
-extern CScript COINBASE_FLAGS;
+//extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
 extern CTxMemPool mempool;
 extern map<uint256, CBlockIndex*> mapBlockIndex;
@@ -176,8 +176,7 @@ void UpdateTime(CBlockHeader& block, const CBlockIndex* pindexPrev);
 
 /** Create a new block index entry for a given block hash */
 CBlockIndex * InsertBlockIndex(uint256 hash);
-/** Verify a signature */
-bool VerifySignature(const CCoins& txFrom, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType);
+
 /** Abort with a message */
 bool AbortNode(const string &msg);
 /** Get statistics from node state */
