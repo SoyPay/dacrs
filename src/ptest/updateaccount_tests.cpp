@@ -379,5 +379,22 @@ BOOST_AUTO_TEST_CASE(disconnect_block_test)
 	GetAccountState();
 }
 
+BOOST_AUTO_TEST_CASE(test) {
+	CreateNormalTx();
+	GenerateMiner();
+//	cout<< "mine 1 block, expired height 1" << endl;
+	CreateNormalTx();
+	GenerateMiner();
+//	cout << "mine 1 block, expired height 2" << endl;
+	CreateNormalTx();
+	GenerateMiner();
+//	cout << "mine 1 block, expired height 3" << endl;
+	DisconnectBlock(1);
+//	cout << "disconnect 1 block, expired height 2" << endl;
+	DisconnectBlock(1);
+//	cout << "disconnect 1 block, expired height 1" << endl;
+	GenerateMiner();
+//	cout << "mine 1 block, expired height 4" << endl;
 
+}
 BOOST_AUTO_TEST_SUITE_END()
