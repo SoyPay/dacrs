@@ -644,6 +644,7 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 		return false;
 	}
 	CAccountViewCache view(accView);
+	CScriptDBViewCache scriptDBView(scriptCache);
 	CAccount secureAcc;
 	{
 		CRewardTransaction *prtx = (CRewardTransaction *) pBlock->vptx[0].get();
@@ -658,7 +659,7 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 				CTxUndo txundo;
 				CValidationState state;
 
-				if (!pBaseTx->UpdateAccount(i, view, state, txundo, pPrevIndex->nHeight + 1, txCache, scriptCache)) {
+				if (!pBaseTx->UpdateAccount(i, view, state, txundo, pPrevIndex->nHeight + 1, txCache, scriptDBView)) {
 					LogPrint("INFO","transaction UpdateAccount account error\n");
 					return false;
 				}
