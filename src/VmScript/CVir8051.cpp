@@ -1115,7 +1115,6 @@ enum CALL_API_FUN {
 	GETBLOCKHASH_FUNC,        //!< GETBLOCKHASH_FUNC
 	ISAUTHORIT_FUNC,          //!<ISAUTHORIT
 	GETAUTHORITDEFINE_FUNC,   //!GETAUTHORITDEFINE_FUNC
-	GETSCRIPTDATA_FUNC,		  //!<GETSCRIPTDATA_FUNC
 
 
 	//// tx api
@@ -1131,6 +1130,8 @@ enum CALL_API_FUN {
 	MODIFYDBTIME_FUNC,  //!< MODIFYDBTIME_FUNC
 	MODIFYDBVALUE_FUNC ,  //!< MODIFYDBVALUE_FUNC
 	WRITEOUTPUT_FUNC,     //!<WRITEOUTPUT_FUNC
+
+	GETSCRIPTDATA_FUNC,		  //!<GETSCRIPTDATA_FUNC
 };
 
 const static struct __MapExterFun FunMap[] = { //
@@ -1153,7 +1154,6 @@ const static struct __MapExterFun FunMap[] = { //
 		{GETBLOCKHASH_FUNC,ExGetBlockHashFunc},
 		{ISAUTHORIT_FUNC,ExIsAuthoritFunc},
 		{GETAUTHORITDEFINE_FUNC,ExGetAuthoritedDefineFunc},
-		{GETSCRIPTDATA_FUNC,ExGetScriptDataFunc},
 
 		{GETCTXCONFIRMH_FUNC,ExGetCurRunEnvHeightFunc},
 		{WRITEDB_FUNC,ExWriteDataDBFunc},
@@ -1167,6 +1167,7 @@ const static struct __MapExterFun FunMap[] = { //
 		{MODIFYDBTIME_FUNC,ExModifyDataDBTimeFunc},
 		{MODIFYDBVALUE_FUNC,ExModifyDataDBVavleFunc},
 		{WRITEOUTPUT_FUNC,ExWriteOutputFunc},
+		{GETSCRIPTDATA_FUNC,ExGetScriptDataFunc},
 		};
 
 RET_DEFINE CallExternalFunc(INT16U method, unsigned char *ipara,CVmScriptRun *pVmScriptRun) {
