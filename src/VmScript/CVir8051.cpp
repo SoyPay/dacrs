@@ -720,21 +720,17 @@ static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	const CRegID scriptid = pVmScriptRun->GetScriptRegID();
 	bool flag = true;
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
-	if(retdata.at(0).get()->size() > 8)
-	{
-		flag = false;
-	}
 
 //	vector<unsigned char> key =AddChar(*retdata.at(0));
 //	int size = key.size();
 	CScriptDBOperLog operlog;
-	if(scriptDB->SetScriptData(scriptid,*retdata.at(0),*retdata.at(1),height,operlog))
+	if(!scriptDB->SetScriptData(scriptid,*retdata.at(0),*retdata.at(1),height,operlog))
 	{
-		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
-		(*m_dblog.get()).push_back(operlog);
-		flag = true;
+		flag = false;
 	}
 
+	shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
+	(*m_dblog.get()).push_back(operlog);
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << flag;
@@ -750,22 +746,16 @@ static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 
 	CRegID scriptid = pVmScriptRun->GetScriptRegID();
 
-	bool flag = false;
+	bool flag = true;
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
-	if(retdata.at(0).get()->size() > 8)
+
+	CScriptDBOperLog operlog;
+	if(!scriptDB->EraseScriptData(scriptid,*retdata.at(0),operlog))
 	{
 		flag = false;
 	}
-
-	CScriptDBOperLog operlog;
-	//vector<unsigned char> key =AddChar(*retdata.at(0));
-	if(scriptDB->EraseScriptData(scriptid,*retdata.at(0),operlog))
-	{
-		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
-		m_dblog.get()->push_back(operlog);
-		flag = true;
-	}
-
+	shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
+	m_dblog.get()->push_back(operlog);
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << flag;
@@ -786,10 +776,6 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) 
 	int nHeight;
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
 	bool flag =true;
-	if(retdata.at(0).get()->size() > 8)
-	{
-		flag = false;
-	}
 
 	//vector<unsigned char> key =AddChar(*retdata.at(0));
 
@@ -815,10 +801,7 @@ static RET_DEFINE ExModifyDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	const CRegID scriptid = pVmScriptRun->GetScriptRegID();
 	bool flag = false;
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
-	if(retdata.at(0).get()->size() > 8)
-	{
-		flag =  false;
-	}
+
 	CScriptDBOperLog operlog;
 	//vector<unsigned char> key =AddChar(*retdata.at(0));
 	vector_unsigned_char vTemp;
@@ -947,10 +930,6 @@ static RET_DEFINE ExReadDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 	int nHeight;
 	bool flag = true;
 	CScriptDBViewCache *scriptDB = pVmScriptRun->GetScriptDB();
-	if(retdata.at(0).get()->size() > 8)
-	{
-		flag =  false;
-	}
 
 	//vector<unsigned char> key =AddChar(*retdata.at(0));
 	if(!scriptDB->GetScriptData(scriptid,*retdata.at(0),vValue,nHeight))
@@ -982,10 +961,6 @@ static RET_DEFINE ExModifyDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 	bool ret = true;
 	int temp = 0;
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
-	if(retdata.at(0).get()->size() > 8)
-	{
-		ret =  false;
-	}
 
 	CScriptDBOperLog operlog;
 	//vector<unsigned char> key =AddChar(*retdata.at(0));
@@ -1022,10 +997,6 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript
 	int temp = 0;
 	bool ret = true;
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
-	if(retdata.at(0).get()->size() > 8)
-	{
-		ret =  false;
-	}
 
 	CScriptDBOperLog operlog;
 //	vector<unsigned char> key =AddChar(*retdata.at(0));
@@ -1100,6 +1071,30 @@ static RET_DEFINE ExGetAuthoritedDefineFunc(unsigned char * ipara,void * pVmScri
 
 	return std::make_tuple (flag, tem);
 }
+static RET_DEFINE ExGetScriptDataFunc(unsigned char * ipara,void * pVmScript)
+{
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 2);
+
+	vector_unsigned_char vValue;
+	int nHeight;
+	bool flag =true;
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
+	CRegID scriptid(*retdata.at(0));
+
+	if(!scriptDB->GetScriptData(scriptid,*retdata.at(1),vValue,nHeight))
+	{
+		flag = false;
+	}
+
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+    (*tem.get()).push_back(vValue);
+
+	return std::make_tuple (flag, tem);
+
+}
 enum CALL_API_FUN {
 	COMP_FUNC = 0,            //!< COMP_FUNC
 	MULL_MONEY ,              //!< MULL_MONEY
@@ -1120,6 +1115,7 @@ enum CALL_API_FUN {
 	GETBLOCKHASH_FUNC,        //!< GETBLOCKHASH_FUNC
 	ISAUTHORIT_FUNC,          //!<ISAUTHORIT
 	GETAUTHORITDEFINE_FUNC,   //!GETAUTHORITDEFINE_FUNC
+	GETSCRIPTDATA_FUNC,		  //!<GETSCRIPTDATA_FUNC
 
 
 	//// tx api
@@ -1157,6 +1153,7 @@ const static struct __MapExterFun FunMap[] = { //
 		{GETBLOCKHASH_FUNC,ExGetBlockHashFunc},
 		{ISAUTHORIT_FUNC,ExIsAuthoritFunc},
 		{GETAUTHORITDEFINE_FUNC,ExGetAuthoritedDefineFunc},
+		{GETSCRIPTDATA_FUNC,ExGetScriptDataFunc},
 
 		{GETCTXCONFIRMH_FUNC,ExGetCurRunEnvHeightFunc},
 		{WRITEDB_FUNC,ExWriteDataDBFunc},
@@ -1203,6 +1200,8 @@ int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 				if (totalsize + 2 < MAX_SHARE_RAM) { //if data not over
 					for (auto& it : *tem.get()) {
 						int size = it.size();
+//						if(methodID == DELETEDB_FUNC)
+//							LogPrint("vm","size:%d",size);
 						if(size == 0)
 							continue;
 						memcpy(&ipara[pos], &size, 2);
@@ -1210,6 +1209,8 @@ int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 						pos += size + 2;
 					}
 				}
+//				if(methodID == DELETEDB_FUNC)
+//				LogPrint("vm","size:%s",HexStr(ipara,ipara+totalsize+2));
 			}
 		} else if (Sys.PC == 0x0008) {
 				INT8U result=GetExRam(0xEFFD);
