@@ -345,7 +345,7 @@ static const CRPCCommand vRPCCommands[] =
     { "getpublickey",           &getpublickey,           true,      false,      true },
     { "listtxcache",            &listtxcache,            true,      false,      true },
     { "reloadtxcache",          &reloadtxcache,          true,      false,      true },
-    { "GetScriptData",          &getscriptdata,          true,      false,      true },
+    { "getscriptdata",          &getscriptdata,          true,      false,      true },
 #endif // ENABLE_WALLET
 };
 

@@ -1200,7 +1200,7 @@ int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 				if (totalsize + 2 < MAX_SHARE_RAM) { //if data not over
 					for (auto& it : *tem.get()) {
 						int size = it.size();
-//						if(methodID == DELETEDB_FUNC)
+//						if(methodID == READDB_FUNC)
 //							LogPrint("vm","size:%d",size);
 						if(size == 0)
 							continue;
@@ -1209,7 +1209,7 @@ int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 						pos += size + 2;
 					}
 				}
-//				if(methodID == DELETEDB_FUNC)
+//				if(methodID == READDB_FUNC)
 //				LogPrint("vm","size:%s",HexStr(ipara,ipara+totalsize+2));
 			}
 		} else if (Sys.PC == 0x0008) {
