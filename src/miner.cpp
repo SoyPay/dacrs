@@ -494,12 +494,14 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
 				if (pTxCacheTip->IsContainTx(pBaseTx->GetHash())) {
 					LogPrint("INFO","CreatePosTx duplicate tx\n");
+					mempool.mapTx.erase(pBaseTx->GetHash());
 					return false;
 				}
 				CTxUndo txundo;
 				CValidationState state;
 				if (!pBaseTx->UpdateAccount(i, accView, state, txundo, pPrevIndex->nHeight + 1, txCacheTemp, contractScriptTemp)) {
-					LogPrint("INFO","CreatePosTx duplicate tx\n");
+					LogPrint("INFO","tx hash:%s transaction is invalid\n", pBaseTx->GetHash().GetHex());
+					mempool.mapTx.erase(pBaseTx->GetHash());
 					return false;
 				}
 			}
@@ -951,6 +953,8 @@ void static SoypayMiner(CWallet *pwallet) {
 					::MilliSleep(800);
 					break;
 				}
+				else
+					break;
 				::MilliSleep(800);
 
 				// Check for stop or if block needs to be rebuilt

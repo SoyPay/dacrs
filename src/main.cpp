@@ -1461,7 +1461,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
         assert(view.Flush() && scriptDBView.Flush());
         CAccountViewCache viewtemp(*pAccountViewTip, true);
         uint256 uBestblockHash = viewtemp.GetBestBlock();
-        LogPrint("INFO","uBestBlockHash: %s",uBestblockHash.GetHex() );
+        LogPrint("INFO","uBestBlockHash: %s\n",uBestblockHash.GetHex() );
     }
     if (Params().IsBenchmark())
         LogPrint("INFO","- Connect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);

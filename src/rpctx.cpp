@@ -1771,12 +1771,12 @@ Value getscriptdata(const Array& params, bool fHelp) {
 
 	//RPCTypeCheck(params, list_of(str_type)(int_type)(int_type));
 	vector<unsigned char> vscriptid = ParseHex(params[0].get_str());
-	CRegID regid(vscriptid);
+
 
 	if (vscriptid.size() != SCRIPT_ID_SIZE) {
 		throw runtime_error("in getscriptdata :vscriptid size is error!\n");
 	}
-
+	CRegID regid(vscriptid);
 	if (!pScriptDBTip->HaveScript(regid)) {
 		throw runtime_error("in getscriptdata :vscriptid id is exist!\n");
 	}
@@ -1791,9 +1791,9 @@ Value getscriptdata(const Array& params, bool fHelp) {
 			throw runtime_error("in getscriptdata :the key not exist!\n");
 		}
 		script.push_back(Pair("scritpid", params[0].get_str()));
-		script.push_back(Pair("key", params[1].get_str()));
+		script.push_back(Pair("key", HexStr(key)));
 		script.push_back(Pair("value", HexStr(value)));
-		script.push_back(Pair("height", HexStr(value)));
+		script.push_back(Pair("height", nHeight));
 		return script;
 
 	} else {
@@ -1812,9 +1812,9 @@ Value getscriptdata(const Array& params, bool fHelp) {
 			throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 		}
 		Object firt;
-		firt.push_back(Pair("key", params[1].get_int()));
+		firt.push_back(Pair("key", HexStr(vScriptKey)));
 		firt.push_back(Pair("value", HexStr(value)));
-		firt.push_back(Pair("height", HexStr(value)));
+		firt.push_back(Pair("height", nHeight));
 		retArray.push_back(firt);
 
 		int listcount = dbsize - 1;
@@ -1839,9 +1839,9 @@ Value getscriptdata(const Array& params, bool fHelp) {
 				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 			}
 			Object firt;
-			firt.push_back(Pair("key", params[1].get_str()));
+			firt.push_back(Pair("key", HexStr(vScriptKey)));
 			firt.push_back(Pair("value", HexStr(value)));
-			firt.push_back(Pair("height", HexStr(value)));
+			firt.push_back(Pair("height", nHeight));
 			retArray.push_back(firt);
 		}
 
