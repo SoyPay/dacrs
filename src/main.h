@@ -549,6 +549,12 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CValidationState& state
 // if dbp is provided, the file is known to already reside on disk
 bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp = NULL);
 
+//disconnect block for test
+bool DisconnectBlockFromTip(CValidationState &state);
+
+//get tx operate account log
+bool GetTxOperLog(const uint256 &txHash, vector<CAccountOperLog> &vAccountOperLog);
+
 class CBlockFileInfo
 {
 public:

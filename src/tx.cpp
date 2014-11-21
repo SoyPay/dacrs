@@ -97,6 +97,7 @@ bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	}
 	txundo.vAccountOperLog.push_back(account.accountOperLog);
+	txundo.txHash = GetHash();
 	return true;
 }
 bool CRegisterAccountTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
@@ -199,6 +200,7 @@ bool CTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidatio
 				"bad-read-accountdb");
 	txundo.vAccountOperLog.push_back(sourceAccount.accountOperLog);
 	txundo.vAccountOperLog.push_back(desAccount.accountOperLog);
+	txundo.txHash = GetHash();
 	return true;
 }
 bool CTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
@@ -351,6 +353,7 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 		txundo.vAccountOperLog.push_back((itemAccount->accountOperLog));
 	}
 	txundo.vScriptOperLog = *vmRun.GetDbLog();
+	txundo.txHash = GetHash();
 	if(!scriptCache.SetTxRelAccout(GetHash(), vAddress))
 		return ERROR("UpdateAccounts() : ContractTransaction Updateaccount save tx relate account info to script db error");
 	return true;
@@ -493,6 +496,7 @@ bool CFreezeTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 		return state.DoS(100, ERROR("UpdateAccounts() : batch write secure account info error"), UPDATE_ACCOUNT_FAIL,
 				"bad-read-accountdb");
 	txundo.vAccountOperLog.push_back(secureAccount.accountOperLog);
+	txundo.txHash = GetHash();
 	return true;
 }
 bool CFreezeTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
@@ -571,6 +575,7 @@ bool CRewardTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 		return state.DoS(100, ERROR("UpdateAccounts() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
 				"bad-save-accountdb");
 	txundo.vAccountOperLog.push_back(acctInfo.accountOperLog);
+	txundo.txHash = GetHash();
 	return true;
 }
 bool CRewardTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
@@ -643,6 +648,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 			return state.DoS(100, ERROR("UpdateAccounts() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
 					"bad-save-accountdb");
 	}
+	txundo.txHash = GetHash();
 	if(script.size() == SCRIPT_ID_SIZE) {
 		vector<unsigned char> vScript;
 		CRegID regId(script);
