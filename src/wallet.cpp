@@ -905,6 +905,89 @@ map<CTxDestination, int64_t> CWallet::GetAddressBalances() {
 	return balances;
 }
 
+/***********************************creat tx*********************************************/
+map<CKeyID , int64_t> CWallet::GetBalance() const
+{
+	map<CKeyID , int64_t> mbalance;
+
+	CAccountViewCache accView(*pAccountViewTip, true);
+	{
+		LOCK2(cs_main, cs_wallet);
+		for(map<CKeyID, CRegID>::const_iterator it = mapKeyRegID.begin(); it != mapKeyRegID.end(); ++it)
+		{
+			CUserID userId = it->first;
+			CAccount account;
+			if (accView.GetAccount(userId, account)) {
+				mbalance[it->first] = account.GetBalance(chainActive.Tip()->nHeight);
+			}
+		}
+
+	}
+
+    return mbalance;
+}
+
+std::string CWallet::SendMoney(CKeyID &send, CKeyID &rsv, int64_t nValue, CTransaction& txNew)
+{
+	if (IsLocked())
+	{
+		return _("Error: Wallet locked, unable to create transaction!");
+	}
+
+	CTransaction tx;
+	{
+		LOCK2(cs_main, cs_wallet);
+		tx.srcUserId = mapKeyRegID[send];
+		tx.desUserId = rsv;
+		tx.llValues = nValue;
+		tx.llFees = nTransactionFee;
+		tx.nValidHeight = chainActive.Tip()->nHeight;
+	}
+
+	CKey key;
+	GetKey(send, key);
+	if (!key.Sign(tx.SignatureHash(), tx.signature)) {
+		return _("Sign failed");
+	}
+
+	if (!CommitTransaction((CBaseTransaction *) &tx)) {
+		return _("CommitTransaction failed");
+	}
+
+	txNew = tx;
+	return "";
+}
+
+string CWallet::SendMoneyToDestination(const string& address, int64_t nValue, CTransaction& txNew)
+{
+	map<CKeyID , int64_t> mbalance;
+
+	mbalance = GetBalance();
+
+	CBitcoinAddress recvaddr(address);
+
+	CKeyID recvkeyid;
+	if (!recvaddr.GetKeyID(recvkeyid)) {
+		return _("recv address err");
+	}
+
+    if (nValue <= 0)
+        return _("Invalid amount");
+
+    for(map<CKeyID , int64_t>::const_iterator it = mbalance.begin(); it != mbalance.end(); ++it)
+    {
+    	if (nValue + nTransactionFee < it->second)
+    	{
+    		CKeyID sendid = it->first;
+			return SendMoney(sendid, recvkeyid, nValue, txNew);
+    	}
+    }
+
+    return _("no account balance found");
+}
+
+/****************************************************************************************/
+
 set<set<CTxDestination> > CWallet::GetAddressGroupings() {
 	AssertLockHeld(cs_wallet); // mapWallet
 	set<set<CTxDestination> > groupings;

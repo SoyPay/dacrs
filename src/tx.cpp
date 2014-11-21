@@ -823,7 +823,7 @@ bool CFund::IsMergeFund(const int & nCurHeight, int &nMergeType) const {
 
 string CFund::ToString() const {
 	string str;
-	string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "IN_FREEZD_FUND",
+	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "IN_FREEZD_FUND",
 			"OUT_FREEZD_FUND", "SELF_FREEZD_FUND" };
 	str += strprintf("            nType=%s, uTxHash=%d, value=%ld, nHeight=%d\n",
 	fundTypeArray[nFundType], HexStr(scriptID).c_str(), value, nHeight);
