@@ -509,7 +509,7 @@ string CTestMcu::JMP_A_DPTRTest(int space) {
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
+//		pCVir8051->InitalReg();
 		pCVir8051->Sys.PC = PC;
 		pCVir8051->Sys.dptr = dptr;
 		pCVir8051->Sys.a = a;
@@ -2835,7 +2835,7 @@ string CTestMcu::LCALL_Addr16Test(int space) {
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+//		pCVir8051->InitalReg();
 		pCVir8051->Sys.PC = PC;
 		pCVir8051->Sys.sp = SP;
 		pCVir8051->m_ExeFile[PC] = code;
