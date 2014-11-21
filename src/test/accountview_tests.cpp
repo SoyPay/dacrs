@@ -39,7 +39,7 @@ public:
 
 bool CAccountViewTest::EraseKeyID() {
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		pAccountViewTip->EraseKeyId(vRandomRegID.at(i));
+		pAccountViewTip->EraseId(vRandomRegID.at(i));
 	}
 
 	return true;

@@ -79,14 +79,21 @@ public:
 	bool SetBestBlock(const uint256 &hashBlock);
 	bool BatchWrite(const map<CKeyID, CAccount> &mapAccounts, const map<string, CKeyID> &mapKeyIds, const uint256 &hashBlock);
 	bool BatchWrite(const vector<CAccount> &vAccounts);
+	/**
+	 * @brief from use id to reg id
+	 * @param userId
+	 * @param regId
+	 * @return
+	 */
+	bool GetRegId(const CUserID &userId,CRegID &regId);
 	bool GetAccount(const CUserID &userId, CAccount &account);
 	bool SetAccount(const CUserID &userId, const CAccount &account);
 	bool GetKeyId(const CUserID &userId, CKeyID &keyId);
 	bool SetKeyId(const CUserID &userId, const CKeyID &keyId);
 	bool EraseAccount(const CUserID &userId);
-	bool EraseKeyId(const CUserID &userId);
+	bool EraseId(const CUserID &userId);
 	bool HaveAccount(const CUserID &userId);
-	bool SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &account);
+	bool SaveAccountInfo(const CRegID &accountId, const CKeyID &keyId, const CAccount &account);
 	bool Flush();
 	unsigned int GetCacheSize();
 
