@@ -295,7 +295,9 @@ bool CScriptDBViewBacked::GetScriptData(const vector<unsigned char> &vScriptId, 
 	return pBase->GetScriptData(vScriptId, nIndex, vScriptKey, vScriptData, nHeight);
 }
 
-CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScriptDBViewBacked(base) {}
+CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScriptDBViewBacked(base) {
+	LogPrint("SetScriptData","new a CScriptDBViewCache \r\n");
+}
 bool CScriptDBViewCache::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
 	if (mapDatas.count(vKey) > 0) {
 		vValue = mapDatas[vKey];
@@ -360,6 +362,8 @@ bool CScriptDBViewCache::Flush() {
 	if(ok) {
 		mapDatas.clear();
 	}
+	LogPrint("SetScriptData","Flush ret: %d %p\r\n",ok,this);
+
 	return ok;
 }
 unsigned int CScriptDBViewCache::GetCacheSize() {
@@ -652,7 +656,9 @@ bool CScriptDBViewCache::GetScriptDataCount(const CRegID &scriptId, int &nCount)
 	return GetScriptDataCount(scriptId.GetRegID(), nCount);
 }
 bool CScriptDBViewCache::EraseScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey, CScriptDBOperLog &operLog) {
-	return EraseScriptData(scriptId.GetRegID(), vScriptKey, operLog);
+	bool  temp = EraseScriptData(scriptId.GetRegID(), vScriptKey, operLog);
+	LogPrint("SetScriptData","EraseScriptData sriptid ID:%s key:%s ret:%d %p \r\n",scriptId.ToString(),HexStr(vScriptKey),temp,this);
+	return temp;
 }
 bool CScriptDBViewCache::HaveScriptData(const CRegID &scriptId, const vector<unsigned char > &vScriptKey) {
 	return HaveScriptData(scriptId.GetRegID(), vScriptKey);
@@ -667,7 +673,9 @@ bool CScriptDBViewCache::GetScriptData(const CRegID &scriptId, const int &nIndex
 }
 bool CScriptDBViewCache::SetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
 			const vector<unsigned char> &vScriptData, const int nHeight, CScriptDBOperLog &operLog) {
-	return SetScriptData(scriptId.GetRegID(), vScriptKey, vScriptData, nHeight, operLog);
+	bool  temp =SetScriptData(scriptId.GetRegID(), vScriptKey, vScriptData, nHeight, operLog);
+	LogPrint("SetScriptData","SetScriptData sriptid ID:%s key:%s value:%s ret: %d %p \r\n",scriptId.ToString(),HexStr(vScriptKey),HexStr(vScriptData),temp,this);
+	return temp;
 }
 bool CScriptDBViewCache::SetTxRelAccout(const uint256 &txHash, const set<CKeyID> &relAccount) {
 	vector<unsigned char> vKey = {'t','x'};

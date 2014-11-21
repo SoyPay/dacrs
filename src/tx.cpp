@@ -1622,15 +1622,15 @@ bool CTransactionCache::IsContainBlock(const CBlock &block) {
 }
 
 bool CTransactionCache::AddBlockToCache(const CBlock &block) {
-
+	vector<uint256> vTxHash;
+	vTxHash.clear();
+	for (auto &ptx : block.vptx) {
+		vTxHash.push_back(ptx->GetHash());
+	}
 	if (IsContainBlock(block)) {
-		LogPrint("INFO", "the block hash:%s isn't in TxCache\n", block.GetHash().GetHex());
+		LogPrint("INFO", "the block hash:%s is in TxCache\n", block.GetHash().GetHex());
+		mapTxHashByBlockHash[block.GetHash()] = vTxHash;
 	} else {
-		vector<uint256> vTxHash;
-		vTxHash.clear();
-		for (auto &ptx : block.vptx) {
-			vTxHash.push_back(ptx->GetHash());
-		}
 		mapTxHashByBlockHash.insert(make_pair(block.GetHash(), vTxHash));
 	}
 
