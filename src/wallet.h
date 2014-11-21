@@ -88,6 +88,16 @@ public:
 	StringMap destdata;
 };
 
+/** select a given account */
+class CAccControl
+{
+	CAccControl()
+	{}
+	~CAccControl()
+	{}
+};
+
+
 /** A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
  * and provides the ability to create new transactions.
  */
@@ -243,6 +253,17 @@ public:
 
 	set<set<CTxDestination> > GetAddressGroupings();
 	map<CTxDestination, int64_t> GetAddressBalances();
+
+/***********************************creat tx*********************************************/
+	map<CKeyID , int64_t> GetBalance() const;
+
+	std::string SendMoney(CKeyID &send, CKeyID &rsv, int64_t nValue, CTransaction& txNew);
+	std::string SendMoneyToDestination(const string& address, int64_t nValue, CTransaction& txNew);
+
+
+
+
+/****************************************************************************************/
 
 	set<CTxDestination> GetAccountAddresses(string strAccount) const;
 
