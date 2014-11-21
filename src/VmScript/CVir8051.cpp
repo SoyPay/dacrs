@@ -4781,7 +4781,7 @@ T2& CUPReg<T2>::GetRegRe(void) {
 	return *((T2*) (&pmcu->m_ChipRam[m_Addr]));
 }
 INT8U& CUPReg_a::GetRegRe(void) {
-	assert(m_Addr != 256);
+	assert(m_Addr != 255);
 	return pmcu->m_ChipSfr[m_Addr];
 }
 
