@@ -6,6 +6,8 @@
 #include "VmScript/TestMcu.h"
 #include <iostream>
 
+#include<time.h>
+
 #include <boost/foreach.hpp>
 
 using namespace std;
@@ -145,13 +147,15 @@ BOOST_AUTO_TEST_CASE(cvir8051_test2)
 		{	109, "JNC_RelTest", &CTestMcu::JNC_RelTest}, //
 		{	110, "XCH_A_RiTest", &CTestMcu::XCH_A_RiTest}}; //
 
-	int start = 0;int end = 0;int space = 25000;
+	srand((int)time(NULL));
+
+	int start = 0;int end = 0;int space = 30000 + rand()%20000;
 
 	end =  (sizeof(map) / sizeof(map[0]));
 
 	(test.*(map[101].fun))(space);
 	BOOST_MESSAGE("test ok:function->" + map[101].fname);
-	for (int index = start; index < end; index+=(rand()%10)) {
+	for (int index = start; index < end; index+=(rand()%40)) {
 		string ret = (test.*(map[index].fun))(space);
 		if (ret != "OK") {
 			char temp[512];
