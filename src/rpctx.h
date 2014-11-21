@@ -40,8 +40,6 @@ extern Value sign(const Array& params, bool fHelp);
 extern Value getaccountinfo(const Array& params, bool fHelp);
 
 
-extern Value testnormaltx(const Array& params, bool fHelp);
-extern Value testminer(const Array& params, bool fHelp);
 extern Value disconnectblock(const Array& params, bool fHelp);
 extern Value listregscript(const Array& params, bool fHelp);
 

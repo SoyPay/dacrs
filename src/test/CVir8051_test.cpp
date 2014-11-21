@@ -10,7 +10,6 @@
 
 using namespace std;
 
-CVir8051 *pgoble = NULL;
 
 typedef string (CTestMcu::*pfun)(int space);
 
@@ -22,37 +21,15 @@ struct __Map {
 
 BOOST_AUTO_TEST_SUITE(cvir8051_tests)
 
-#if 0
+#if 1
 
 BOOST_AUTO_TEST_CASE(cvir8051_test2)
 {
 	std::vector<unsigned char> m_ROM;
-	char *filepath = "D:\\C51\\Debug\\Exe\\CPLUS1.bin";
-	assert(filepath);
-	FILE *m_file = fopen(filepath, "rb");
-	if (m_file != NULL) {
-		fseek(m_file, 0, SEEK_SET);
-		fseek(m_file, 0, SEEK_END);
-		int len = ftell(m_file);
-		fseek(m_file, 0, SEEK_SET);
-		char *buffer = (char*) malloc(len);
-		memset(buffer, 0, len);
-		fread(buffer, 1, len + 1, m_file);
-		m_ROM.insert(m_ROM.begin(), buffer, buffer + len);
-		if (buffer != NULL) {
-			free(buffer);
-			buffer = NULL;
-		}
-		if (m_file != NULL) {
-			fclose(m_file);
-			m_file = NULL;
-		}
-	}
 
 	string reslut = "";
 	vector<unsigned char> InputData;
 	CVir8051 mcu(m_ROM,InputData);
-	pgoble = &mcu;
 	CTestMcu test(&mcu);
 
 	struct __Map map[] = {
@@ -168,40 +145,30 @@ BOOST_AUTO_TEST_CASE(cvir8051_test2)
 		{	109, "JNC_RelTest", &CTestMcu::JNC_RelTest}, //
 		{	110, "XCH_A_RiTest", &CTestMcu::XCH_A_RiTest}}; //
 
-	int start = 0;int end = 0;int space = 10000;
-//	if (argc < 2) {
-//		start = 0;
-//		end = 0;
-//	} else {
-//		start = atoi(argv[1]);
-//		end = atoi(argv[2]);
-//	}
-//
-//	if (argc == 4)
-//		space = atoi(argv[3]);
+	int start = 0;int end = 0;int space = 25000;
 
-	Assert(end < sizeof(map) / sizeof(map[0]));
-	end = (end) ? (end) : (sizeof(map) / sizeof(map[0]));
+	end =  (sizeof(map) / sizeof(map[0]));
 
-	for (int index = start; index < end; index++) {
+	(test.*(map[101].fun))(space);
+	BOOST_MESSAGE("test ok:function->" + map[101].fname);
+	for (int index = start; index < end; index+=(rand()%10)) {
 		string ret = (test.*(map[index].fun))(space);
-		BOOST_CHECK_EQUAL(ret,"OK");
 		if (ret != "OK") {
 			char temp[512];
 			sprintf(temp, "No.%d-", map[index].index);
-			reslut += (string(temp) + "ERROR:function->" + map[index].fname + " info:\r\n" + ret + "\r\n");
+			reslut +=  (string(temp) + "ERROR:function->" + map[index].fname + " info:\r\n" + ret + "\r\n");
 		}
-
+		BOOST_MESSAGE("test ok:function->" + map[index].fname);
 	}
 
-	if (reslut == "") {
-		BOOST_TEST_MESSAGE("No Error");
+	if (reslut != "") {
+		BOOST_ERROR(reslut);
 	}
 
 //	printf("test %d-%d result:\r\n%s", start, end, reslut.c_str());
 //
 //	printf("the untested cmd list:\r\n");
-	BOOST_CHECK_EQUAL(test.PrintCMDUntested(),"OK");
+//	BOOST_CHECK_EQUAL(test.PrintCMDUntested(),"OK");
 //	test.PrintCMDUntested();
 
 }

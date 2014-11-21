@@ -86,7 +86,7 @@ typedef CUPReg<INT16U> CUPReg_16;
 
 class CUPSfr: public CUPReg<INT8U> {
 public:
-	CUPSfr(CVir8051 *mcu) :
+	explicit CUPSfr(CVir8051 *mcu) :
 			CUPReg<INT8U>(mcu) {
 	}
 	virtual ~CUPSfr() {
@@ -103,7 +103,7 @@ public:
 };
 class CUPReg_a: public CUPReg<INT8U> {
 public:
-	CUPReg_a(CVir8051 *mcu) :
+	explicit CUPReg_a(CVir8051 *mcu) :
 			CUPReg<INT8U>(mcu) {
 	}
 	virtual ~CUPReg_a() {
@@ -149,8 +149,13 @@ public:
 	INT8U getValue() {
 		return GetRegRe();
 	}
-	CUPPSW_8(CVir8051 *mcu) :
+	explicit CUPPSW_8(CVir8051 *mcu) :
 			CUPSfr(mcu) {
+	}
+	template<class T>
+	INT8U operator=(T data) {
+		INT8U tep = (GetRegRe() = data);
+		return tep;
 	}
 	PSW& operator()(void); // {return *((PSW*)&(CUPReg_8::GetRegRe()))};
 };
@@ -180,7 +185,7 @@ public:
 
 class CSys {
 public:
-	CSys(CVir8051 *mcu) :
+	explicit CSys(CVir8051 *mcu) :
 			a(mcu), b(mcu), sp(mcu), psw(mcu), dptr(mcu), PC(0) {
 	}
 	CUPReg_a a;
