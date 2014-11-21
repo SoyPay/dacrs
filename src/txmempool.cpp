@@ -84,6 +84,7 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry)
 				txCacheTemp, contractScriptTemp))
 			return false;
 		mapTx[hash] = entry;
+		LogPrint("addtomempool", "add tx hash:%s time:%ld\n", hash.GetHex(), GetTime());
 		nTransactionsUpdated++;
 	}
 	return true;
