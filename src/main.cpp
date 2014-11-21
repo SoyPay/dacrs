@@ -1409,15 +1409,6 @@ bool static DisconnectTip(CValidationState &state) {
     // Write the chain state to disk, if necessary.
     if (!WriteChainState(state))
         return false;
-    // Resurrect mempool transactions from the disconnected block.
-	for (const auto &ptx : block.vptx) {
-		// ignore validation errors in resurrected transactions
-		list<std::shared_ptr<CBaseTransaction> > removed;
-		CValidationState stateDummy;
-		if (!ptx->IsCoinBase())
-			if (!AcceptToMemoryPool(mempool, stateDummy, ptx.get(), false, NULL))
-				mempool.remove(ptx.get(), removed, true);
-	}
 
     if (!pTxCacheTip->DeleteBlockFromCache(block))
     	return state.Abort(_("Disconnect tip block failed to delete tx from txcache"));
@@ -1431,6 +1422,16 @@ bool static DisconnectTip(CValidationState &state) {
 			return state.Abort(_("Failed to read block"));
 		if (!pTxCacheTip->AddBlockToCache(reLoadblock))
 				return state.Abort(_("Disconnect tip block reload preblock tx to txcache"));
+	}
+
+	// Resurrect mempool transactions from the disconnected block.
+	for (const auto &ptx : block.vptx) {
+		// ignore validation errors in resurrected transactions
+		list<std::shared_ptr<CBaseTransaction> > removed;
+		CValidationState stateDummy;
+		if (!ptx->IsCoinBase())
+			if (!AcceptToMemoryPool(mempool, stateDummy, ptx.get(), false, NULL))
+				mempool.remove(ptx.get(), removed, true);
 	}
 
 	// Update chainActive and related variables.

@@ -1210,8 +1210,8 @@ int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 						pos += size + 2;
 					}
 				}
-//				if(methodID == READDB_FUNC)
-//				LogPrint("vm","size:%s",HexStr(ipara,ipara+totalsize+2));
+				if(methodID == DELETEDB_FUNC)
+				LogPrint("vm","data1:%s",HexStr(ipara,ipara+totalsize+2));
 			}
 		} else if (Sys.PC == 0x0008) {
 				INT8U result=GetExRam(0xEFFD);
