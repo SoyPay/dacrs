@@ -311,6 +311,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "listtxcache",            &listtxcache,            true,      false,      true },
 	{ "getscriptdata",          &getscriptdata,          true,      false,      true },
 	{ "signmessage",            &signmessage,            false,     false,      true },
+	{ "sendtoaddress",          &sendtoaddress,          false,     false,      true },
     //invaild rpc cmd
 //    { "addmultisigaddress",     &addmultisigaddress,     false,     false,      true },
 //    { "getbalance",             &getbalance,             false,     false,      true },
