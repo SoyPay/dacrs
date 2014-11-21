@@ -1313,55 +1313,6 @@ void ThreadCreateNormalTx(const CKeyID keyid, const vector<unsigned char> vregid
 	}
 }
 
-Value testnormaltx(const Array& params, bool fHelp) {
-	if (fHelp || params.size() < 2 || params.size() > 3) {
-		string msg = "testnormaltx\n" + HelpExampleCli("testnormaltx", "") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("testnormaltx", "");
-		throw runtime_error(msg);
-	}
-
-	RPCTypeCheck(params, list_of(str_type)(str_type));
-	int times = 0;
-	//get addresss
-	CBitcoinAddress sendaddr(params[0].get_str());
-	CBitcoinAddress recvaddr(params[1].get_str());
-	if (params.size() > 2) {
-		times = params[2].get_int();
-		if (times == 0) {
-			sThreadGroup.interrupt_all();
-			sThreadGroup.join_all();
-			return string("test normaltx stop");
-		}
-	}
-
-	//get keyid
-	CKeyID keyid;
-	if (!sendaddr.GetKeyID(keyid)) {
-		throw runtime_error("in createnormaltx :send address err\n");
-	}
-	CKeyID recvkeyid;
-	if (!recvaddr.GetKeyID(recvkeyid)) {
-		throw runtime_error("in createnormaltx :recv address err\n");
-	}
-
-	CAccountViewCache view(*pAccountViewTip, true);
-	CAccount acctInfo;
-
-	vector<unsigned char> vregid;
-	if (recvaddr.GetRegID(vregid)) {
-		CRegID regId(vregid);
-		if (!view.GetAccount(regId, acctInfo)) {
-			vregid.clear();
-			vregid.insert(vregid.end(), recvkeyid.begin(), recvkeyid.end());
-		}
-	} else {
-		vregid.insert(vregid.end(), recvkeyid.begin(), recvkeyid.end());
-	}
-	//sThreadGroup.create_thread(boost::bind(&ThreadCreateNormalTx, keyid, vregid, times));
-
-	return NULL;
-}
-
 void ThreadTestMiner(int nTimes) {
 	// Make this thread recognisable as the wallet flushing thread
 	RenameThread("create-normaltx");
@@ -1498,26 +1449,6 @@ void ThreadTestMiner(int nTimes) {
 	}
 }
 
-Value testminer(const Array& params, bool fHelp) {
-	if (fHelp || params.size() > 1) {
-		string msg = "testminer\n" + HelpExampleCli("testminer", "") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("testminer", "");
-		throw runtime_error(msg);
-	}
-
-	int times = 0;
-	//get addresss
-	if (params.size() > 0) {
-		times = params[0].get_int();
-		if (times == 0) {
-			sThreadGroup.interrupt_all();
-			sThreadGroup.join_all();
-			return string("test testminer stop");
-		}
-	}
-	sThreadGroup.create_thread(boost::bind(&ThreadTestMiner, times));
-	return string("testminer start");
-}
 
 Value disconnectblock(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
