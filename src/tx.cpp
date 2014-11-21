@@ -823,7 +823,7 @@ bool CFund::IsMergeFund(const int & nCurHeight, int &nMergeType) const {
 
 string CFund::ToString() const {
 	string str;
-	string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "IN_FREEZD_FUND",
+	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "IN_FREEZD_FUND",
 			"OUT_FREEZD_FUND", "SELF_FREEZD_FUND" };
 	str += strprintf("            nType=%s, uTxHash=%d, value=%ld, nHeight=%d\n",
 	fundTypeArray[nFundType], HexStr(scriptID).c_str(), value, nHeight);
@@ -1622,15 +1622,15 @@ bool CTransactionCache::IsContainBlock(const CBlock &block) {
 }
 
 bool CTransactionCache::AddBlockToCache(const CBlock &block) {
-
+	vector<uint256> vTxHash;
+	vTxHash.clear();
+	for (auto &ptx : block.vptx) {
+		vTxHash.push_back(ptx->GetHash());
+	}
 	if (IsContainBlock(block)) {
-		LogPrint("INFO", "the block hash:%s isn't in TxCache\n", block.GetHash().GetHex());
+		LogPrint("INFO", "the block hash:%s is in TxCache\n", block.GetHash().GetHex());
+		mapTxHashByBlockHash[block.GetHash()] = vTxHash;
 	} else {
-		vector<uint256> vTxHash;
-		vTxHash.clear();
-		for (auto &ptx : block.vptx) {
-			vTxHash.push_back(ptx->GetHash());
-		}
 		mapTxHashByBlockHash.insert(make_pair(block.GetHash(), vTxHash));
 	}
 

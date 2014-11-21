@@ -520,7 +520,13 @@ static RET_DEFINE ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
 	CDataStream tep1(*retdata.at(0), SER_DISK, CLIENT_VERSION);
 	bool flag ;
 	tep1 >> flag;
+//	char *pCh = "testCheckDeleteRoolbackDB error";
+//	string errorMsg(pCh, pCh+32);
 	string pdata((*retdata[1]).begin(), (*retdata[1]).end());
+
+//	if (pdata == errorMsg) {
+//		LogPrint("vm", "error\r\n");
+//	}
 	if(flag)
 	{
 		LogPrint("vm","%s\r\n", HexStr(pdata).c_str());
@@ -528,6 +534,8 @@ static RET_DEFINE ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
 	{
 		LogPrint("vm","%s\r\n",pdata.c_str());
 	}
+
+
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	return std::make_tuple (true, tem);
 }
@@ -1210,8 +1218,8 @@ int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 						pos += size + 2;
 					}
 				}
-//				if(methodID == READDB_FUNC)
-//				LogPrint("vm","size:%s",HexStr(ipara,ipara+totalsize+2));
+				if(methodID == READDB_FUNC)
+				LogPrint("vm","data1:%s\r\n",HexStr(ipara,ipara+totalsize));
 			}
 		} else if (Sys.PC == 0x0008) {
 				INT8U result=GetExRam(0xEFFD);
