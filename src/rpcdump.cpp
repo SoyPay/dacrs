@@ -235,8 +235,8 @@ Value dumpprivkey(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "dumpprivkey \"bitcoinaddress\"\n"
-            "\nReveals the private key corresponding to 'bitcoinaddress'.\n"
+            "dumpprivkey \"soypayaddress\"\n"
+            "\nReveals the private key corresponding to 'soypayaddress'.\n"
             "Then the importprivkey can be used with this output\n"
             "\nArguments:\n"
             "1. \"soypayaddress\"   (string, required) The soypay address for the private key\n"
@@ -298,7 +298,7 @@ Value dumpwallet(const Array& params, bool fHelp)
     sort(vKeyBirth.begin(), vKeyBirth.end());
 
     // produce output
-    file << strprintf("# Wallet dump created by Bitcoin %s (%s)\n", CLIENT_BUILD, CLIENT_DATE);
+    file << strprintf("# Wallet dump created by Soypay %s (%s)\n", CLIENT_BUILD, CLIENT_DATE);
     file << strprintf("# * Created on %s\n", EncodeDumpTime(GetTime()));
     file << strprintf("# * Best block at time of backup was %i (%s),\n", chainActive.Height(), chainActive.Tip()->GetBlockHash().ToString());
     file << strprintf("#   mined on %s\n", EncodeDumpTime(chainActive.Tip()->nTime));
