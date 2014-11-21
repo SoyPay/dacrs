@@ -833,22 +833,16 @@ Value listaddr(const Array& params, bool fHelp) {
 				+ HelpExampleRpc("listaddr", "\n");
 		throw runtime_error(msg);
 	}
-
+	Array retArry;
 	assert(pwalletMain != NULL);
-	string str;
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
 
 		set<CKeyID> setKeyID;
-		str.clear();
-
-		char buf[128] = { 0 };
-		sprintf(buf, "%-45.45s%-25.25s%-10.10s\r\n", "addr", "balance", "register");
-		str += buf;
 
 		pwalletMain->GetKeys(setKeyID); //get addrs
 		if (setKeyID.empty()) {
-			return str;
+			return retArry;
 		}
 
 		CAccountViewCache accView(*pAccountViewTip, true);
@@ -859,6 +853,7 @@ Value listaddr(const Array& params, bool fHelp) {
 			CAccount account;
 			ostringstream ostr;
 			CUserID userId = keyid;
+			vector<unsigned char> vRegId;
 			if (accView.GetAccount(userId, account)) {
 				bReg = account.IsRegister();
 				dbalance = (double) account.GetBalance(chainActive.Tip()->nHeight + 100) / (double) COIN;
@@ -868,24 +863,22 @@ Value listaddr(const Array& params, bool fHelp) {
 				throw JSONRPCError(RPC_WALLET_ERROR, "listaddrinfo Error: WALLET file is not correct.");
 			}
 
-			ostr.str("");
-			ostr << boolalpha << bReg;
-
-			char buf[128] = { 0 };
-
 			CTxDestination destid;
 			if (bReg) {
-				vector<unsigned char> vRegId = pwalletMain->mapKeyRegID[keyid].GetRegID();
+				vRegId = pwalletMain->mapKeyRegID[keyid].GetRegID();
 				destid = CAccountID(keyid, vRegId);
 			} else {
 				destid = keyid;
 			}
-			sprintf(buf, "%-45.45s%-25.8lf%-10.10s\r\n", CBitcoinAddress(destid).ToString().c_str(), dbalance,
-					ostr.rdbuf()->str().c_str());
-			str += buf;
+			Object obj;
+			obj.push_back(Pair("addr",       CBitcoinAddress(destid).ToString().c_str()));
+			obj.push_back(Pair("balance",    dbalance));
+			obj.push_back(Pair("IsRegisted", bReg ? "TRUE":"FALSE"));
+			obj.push_back(Pair("RegID",      bReg ? HexStr(vRegId):" "));
+			retArry.push_back(obj);
 		}
 	}
-	return str;
+	return retArry;
 }
 
 Value listaddrtx(const Array& params, bool fHelp) {
