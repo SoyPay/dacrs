@@ -220,7 +220,7 @@ Value stop(const Array& params, bool fHelp)
 // Call Table
 //
 
-
+extern Value gettxoperationlog(const Array& params, bool fHelp);
 static const CRPCCommand vRPCCommands[] =
 { //  name                      actor (function)         okSafeMode threadSafe reqWallet
   //  ------------------------  -----------------------  ---------- ---------- ---------
@@ -342,6 +342,7 @@ static const CRPCCommand vRPCCommands[] =
 //	  { "getaccountaddress",      &getaccountaddress,      true,      false,      true },
 #endif // ENABLE_WALLET
 //for test code
+	{ "gettxoperationlog",        &gettxoperationlog,        false,      false,      false },
     { "disconnectblock",        &disconnectblock,        true,      false,      true },
     { "reloadtxcache",          &reloadtxcache,          true,      false,      true },
 };
@@ -917,7 +918,7 @@ json_spirit::Value CRPCTable::execute(const string &strMethod, const json_spirit
 }
 
 string HelpExampleCli(string methodname, string args){
-    return "> soypay-cli " + methodname + " " + args + "\n";
+    return "> soypayd " + methodname + " " + args + "\n";
 }
 
 string HelpExampleRpc(string methodname, string args){

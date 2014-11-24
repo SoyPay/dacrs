@@ -127,6 +127,7 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		break;
 	}
 	default:
+		assert(0);
 		break;
 	}
 	return result;
@@ -1414,7 +1415,6 @@ void ThreadTestMiner(int nTimes) {
 
 			{
 				int nHeightEnd = chainActive.Height();
-				;
 				int nHeight = chainActive.Height();
 				GenerateBitcoins(true, pwalletMain, 1);
 				while (nHeight == nHeightEnd) {
@@ -1442,6 +1442,74 @@ void ThreadTestMiner(int nTimes) {
 	}
 }
 
+static Value COperFundToJson(const COperFund &opfound)
+{
+	Object obj;
+	obj.push_back(Pair("operType",  opfound.operType == 1 ? "ADD_VALUE":"MINUS_VALUE"));
+	obj.push_back(Pair("IsAuthorizated",  opfound.bAuthorizated == 1 ? "TURE":"FLASE"));
+	Array array;
+
+	static const vector<string> strname=
+	{
+	" ",
+	"FREEDOM",
+	"REWARD_FUND",
+	"FREEDOM_FUND",
+	"FREEZD_FUND",
+	"SELF_FREEZD_FUND",
+	"NULL_FUNDTYPE",
+	};
+	for(auto const &te: opfound.vFund)
+	{
+      assert(te.nFundType>=1 &&te.nFundType < strname.size());
+      Object obj2;
+      obj2.push_back(Pair("FundType",  strname[te.nFundType]));
+      obj2.push_back(Pair("sriptID",  HexStr(te.scriptID)));
+      obj2.push_back(Pair("value",  te.value));
+      obj2.push_back(Pair("value",  te.nHeight));
+      array.push_back(obj2);
+	}
+	obj.push_back(Pair("vFund", array));
+	return obj;
+}
+
+Value gettxoperationlog(const Array& params, bool fHelp)
+{
+	if (fHelp || params.size() != 1) {
+		throw runtime_error(" todo ");
+	}
+
+	uint256 txHash(ParseHex(params[0].get_str()));
+	vector<CAccountOperLog> vLog;
+	Object retobj;
+	retobj.push_back(Pair("hash",  txHash.GetHex()));
+	if(GetTxOperLog(txHash, vLog))
+	{
+		Array arrayvLog;
+        for(auto const &te :vLog)
+        {
+
+			Object obj;
+			obj.push_back(Pair("addr",  CBitcoinAddress(te.keyID).ToString()));
+			Array array;
+			for(auto const &teOperFund: te.vOperFund)
+			{
+			  array.push_back(COperFundToJson(teOperFund));
+			}
+			obj.push_back(Pair("vOperFund",array));
+			obj.push_back(Pair("authorLog",te.authorLog.ToString()));
+			arrayvLog.push_back(obj);
+        }
+        retobj.push_back(Pair("AccountOperLog",  arrayvLog));
+
+	}
+	else
+	{
+		retobj.push_back(Pair("info",  "error hash"));
+	}
+	return retobj;
+
+}
 
 Value disconnectblock(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
@@ -1764,12 +1832,12 @@ Value getscriptdata(const Array& params, bool fHelp) {
 
 	//RPCTypeCheck(params, list_of(str_type)(int_type)(int_type));
 	vector<unsigned char> vscriptid = ParseHex(params[0].get_str());
-	CRegID regid(vscriptid);
+
 
 	if (vscriptid.size() != SCRIPT_ID_SIZE) {
 		throw runtime_error("in getscriptdata :vscriptid size is error!\n");
 	}
-
+	CRegID regid(vscriptid);
 	if (!pScriptDBTip->HaveScript(regid)) {
 		throw runtime_error("in getscriptdata :vscriptid id is exist!\n");
 	}
@@ -1784,9 +1852,9 @@ Value getscriptdata(const Array& params, bool fHelp) {
 			throw runtime_error("in getscriptdata :the key not exist!\n");
 		}
 		script.push_back(Pair("scritpid", params[0].get_str()));
-		script.push_back(Pair("key", params[1].get_str()));
+		script.push_back(Pair("key", HexStr(key)));
 		script.push_back(Pair("value", HexStr(value)));
-		script.push_back(Pair("height", HexStr(value)));
+		script.push_back(Pair("height", nHeight));
 		return script;
 
 	} else {
@@ -1805,9 +1873,9 @@ Value getscriptdata(const Array& params, bool fHelp) {
 			throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 		}
 		Object firt;
-		firt.push_back(Pair("key", params[1].get_int()));
+		firt.push_back(Pair("key", HexStr(vScriptKey)));
 		firt.push_back(Pair("value", HexStr(value)));
-		firt.push_back(Pair("height", HexStr(value)));
+		firt.push_back(Pair("height", nHeight));
 		retArray.push_back(firt);
 
 		int listcount = dbsize - 1;
@@ -1832,9 +1900,9 @@ Value getscriptdata(const Array& params, bool fHelp) {
 				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 			}
 			Object firt;
-			firt.push_back(Pair("key", params[1].get_str()));
+			firt.push_back(Pair("key", HexStr(vScriptKey)));
 			firt.push_back(Pair("value", HexStr(value)));
-			firt.push_back(Pair("height", HexStr(value)));
+			firt.push_back(Pair("height", nHeight));
 			retArray.push_back(firt);
 		}
 

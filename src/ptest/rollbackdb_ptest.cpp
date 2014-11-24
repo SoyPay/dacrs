@@ -47,7 +47,7 @@ void CreateContactTx(int param)
 	cout<<strReturn<<endl;
 	return ;
 }
-void CreatedisblockTx()
+void disblock1()
 {
 	int argc = 3;
 	char *argv[3] = { "rpctest", "disconnectblock", "1" };
@@ -71,21 +71,21 @@ BOOST_AUTO_TEST_CASE(db_fun)
 	CreateContactTx(3);
 	GenerateMiner();
 
-//	cout << "4" << endl;
-//	CreatedisblockTx();
-//	cout << "41" << endl;
-//	CreateContactTx(4);
-//	GenerateMiner();
-//
+	cout << "4" << endl;
+	disblock1();
+	cout << "41" << endl;
+	CreateContactTx(4);
+	GenerateMiner();
+
 //	cout << "5" << endl;
-//	CreatedisblockTx();
-//	CreatedisblockTx();
+//	disblock1();
+//	disblock1();
 //	CreateContactTx(5);
 //	GenerateMiner();
 //
 //	cout << "6" << endl;
-//	CreatedisblockTx();
-//	CreatedisblockTx();
+//	disblock1();
+//	disblock1();
 //	CreateContactTx(6);
 //	GenerateMiner();
 
