@@ -62,7 +62,7 @@ public:
 		ds >> nHeight;
 		ds >> nIndex;
 	}
-
+    bool IsEmpty()const{return (nHeight == 0 && nIndex == 0);};
 	CRegID(uint32_t nHeight = 0, uint16_t nIndex = 0);
 
 	string ToString() const;
@@ -1266,6 +1266,7 @@ public:
 
 class CAccount {
 public:
+	CRegID regID;
 	CKeyID keyID;											//!< private key of the account
 	CPubKey publicKey;										//!< public key of the account
 	uint64_t llValues;										//!< freedom money which coinage greater than 30 days
@@ -1332,8 +1333,11 @@ public:
 		return rest;
 	}
 	bool IsRegister() const {
+		//!todo  what this meaning
 		return (publicKey.IsFullyValid() && publicKey.GetID() == keyID);
 	}
+	bool SetRegId(const CRegID &regID){this->regID = regID;return true;};
+	bool GetRegId(CRegID &regID)const {regID = this->regID  ;return regID.IsEmpty();};
 	uint64_t GetMatureAmount(int nCurHeight);
 	uint64_t GetForzenAmount(int nCurHeight);
 	uint64_t GetBalance(int nCurHeight);
@@ -1354,6 +1358,7 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
+			READWRITE(regID);
 			READWRITE(keyID);
 			READWRITE(publicKey);
 			READWRITE(llValues);

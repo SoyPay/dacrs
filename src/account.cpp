@@ -198,19 +198,21 @@ bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAcco
 	}
 	return false;
 }
-bool CAccountViewCache::SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &account) {
-	cacheKeyIds[HexStr(accountId)] = keyId;
+bool CAccountViewCache::SaveAccountInfo(const CRegID &regid, const CKeyID &keyId, const CAccount &account) {
+	cacheKeyIds[HexStr(regid.GetRegID())] = keyId;
 	cacheAccounts[keyId] = account;
 	cacheAccounts[keyId].accountOperLog.SetNULL();
 	return true;
 }
 bool CAccountViewCache::GetAccount(const CUserID &userId, CAccount &account) {
-	if(userId.type() == typeid(CRegID)) {
+	if (userId.type() == typeid(CRegID)) {
 		return GetAccount(boost::get<CRegID>(userId).GetRegID(), account);
-	}else if(userId.type() == typeid(CKeyID)) {
+	} else if (userId.type() == typeid(CKeyID)) {
 		return GetAccount(boost::get<CKeyID>(userId), account);
-	}else if(userId.type() == typeid(CPubKey)) {
+	} else if (userId.type() == typeid(CPubKey)) {
 		return GetAccount(boost::get<CPubKey>(userId).GetID(), account);
+	} else {
+		assert(0);
 	}
 	return false;
 }
@@ -220,46 +222,54 @@ bool CAccountViewCache::GetKeyId(const CUserID &userId, CKeyID &keyId) {
 	} else if (userId.type() == typeid(CPubKey)) {
 		keyId = boost::get<CPubKey>(userId).GetID();
 		return true;
+	} else {
+		assert(0);
 	}
 	return false;
 }
 bool CAccountViewCache::SetAccount(const CUserID &userId, const CAccount &account) {
-	if(userId.type() == typeid(CRegID)) {
+	if (userId.type() == typeid(CRegID)) {
 		return SetAccount(boost::get<CRegID>(userId).GetRegID(), account);
-	}
-	else if(userId.type() == typeid(CKeyID)){
+	} else if (userId.type() == typeid(CKeyID)) {
 		return SetAccount(boost::get<CKeyID>(userId), account);
+	} else {
+		assert(0);
 	}
-	else
-		return false;
+	return false;
 }
 bool CAccountViewCache::SetKeyId(const CUserID &userId, const CKeyID &keyId) {
-	if(userId.type() == typeid(CRegID)) {
+	if (userId.type() == typeid(CRegID)) {
 		return SetKeyId(boost::get<CRegID>(userId).GetRegID(), keyId);
+	} else {
+		assert(0);
 	}
-	else {
-		return false;
-	}
+
+	return false;
+
 }
 bool CAccountViewCache::EraseAccount(const CUserID &userId) {
-	if(userId.type() == typeid(CKeyID)) {
+	if (userId.type() == typeid(CKeyID)) {
 		return EraseAccount(boost::get<CKeyID>(userId));
+	} else {
+		assert(0);
 	}
-	else
-		return false;
+	return false;
 }
 bool CAccountViewCache::HaveAccount(const CUserID &userId) {
-	if(userId.type() == typeid(CKeyID)) {
+	if (userId.type() == typeid(CKeyID)) {
 		return HaveAccount(boost::get<CKeyID>(userId));
+	} else {
+		assert(0);
 	}
-	else
-		return false;
+	return false;
 }
-bool CAccountViewCache::EraseKeyId(const CUserID &userId) {
+bool CAccountViewCache::EraseId(const CUserID &userId) {
 	if (userId.type() == typeid(CRegID)) {
 		return EraseKeyId(boost::get<CRegID>(userId).GetRegID());
-	} else
-		return false;
+	} else {
+		assert(0);
+	}
+	return false;
 }
 
 bool CAccountViewCache::Flush(){
@@ -270,6 +280,17 @@ bool CAccountViewCache::Flush(){
 	 }
 	 return fOk;
 }
+
+bool CAccountViewCache::GetRegId(const CUserID& userId, CRegID& regId) {
+	CAccount account;
+	if(GetAccount(userId,account))
+	{
+		regId =  account.regID;
+		return regId.IsEmpty();
+	}
+	return false;
+}
+
 unsigned int CAccountViewCache::GetCacheSize(){
 	return ::GetSerializeSize(cacheAccounts, SER_DISK, CLIENT_VERSION) + ::GetSerializeSize(cacheKeyIds, SER_DISK, CLIENT_VERSION);
 }
@@ -295,7 +316,9 @@ bool CScriptDBViewBacked::GetScriptData(const vector<unsigned char> &vScriptId, 
 	return pBase->GetScriptData(vScriptId, nIndex, vScriptKey, vScriptData, nHeight);
 }
 
-CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScriptDBViewBacked(base) {}
+CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScriptDBViewBacked(base) {
+	LogPrint("SetScriptData","new a CScriptDBViewCache \r\n");
+}
 bool CScriptDBViewCache::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
 	if (mapDatas.count(vKey) > 0) {
 		vValue = mapDatas[vKey];
@@ -360,6 +383,8 @@ bool CScriptDBViewCache::Flush() {
 	if(ok) {
 		mapDatas.clear();
 	}
+	LogPrint("SetScriptData","Flush ret: %d %p\r\n",ok,this);
+
 	return ok;
 }
 unsigned int CScriptDBViewCache::GetCacheSize() {
@@ -652,7 +677,9 @@ bool CScriptDBViewCache::GetScriptDataCount(const CRegID &scriptId, int &nCount)
 	return GetScriptDataCount(scriptId.GetRegID(), nCount);
 }
 bool CScriptDBViewCache::EraseScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey, CScriptDBOperLog &operLog) {
-	return EraseScriptData(scriptId.GetRegID(), vScriptKey, operLog);
+	bool  temp = EraseScriptData(scriptId.GetRegID(), vScriptKey, operLog);
+	LogPrint("SetScriptData","EraseScriptData sriptid ID:%s key:%s ret:%d %p \r\n",scriptId.ToString(),HexStr(vScriptKey),temp,this);
+	return temp;
 }
 bool CScriptDBViewCache::HaveScriptData(const CRegID &scriptId, const vector<unsigned char > &vScriptKey) {
 	return HaveScriptData(scriptId.GetRegID(), vScriptKey);
@@ -667,7 +694,9 @@ bool CScriptDBViewCache::GetScriptData(const CRegID &scriptId, const int &nIndex
 }
 bool CScriptDBViewCache::SetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
 			const vector<unsigned char> &vScriptData, const int nHeight, CScriptDBOperLog &operLog) {
-	return SetScriptData(scriptId.GetRegID(), vScriptKey, vScriptData, nHeight, operLog);
+	bool  temp =SetScriptData(scriptId.GetRegID(), vScriptKey, vScriptData, nHeight, operLog);
+	LogPrint("SetScriptData","SetScriptData sriptid ID:%s key:%s value:%s ret: %d %p \r\n",scriptId.ToString(),HexStr(vScriptKey),HexStr(vScriptData),temp,this);
+	return temp;
 }
 bool CScriptDBViewCache::SetTxRelAccout(const uint256 &txHash, const set<CKeyID> &relAccount) {
 	vector<unsigned char> vKey = {'t','x'};
