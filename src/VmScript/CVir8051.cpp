@@ -370,10 +370,10 @@ static RET_DEFINE ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 
 	vector<unsigned char> desdata;
 	vector<unsigned char> desout;
-	unsigned char datalen_rest = retdata.at(0).get()->size() % 8;
+	unsigned char datalen_rest = retdata.at(0).get()->size() % sizeof(DES_cblock);
 	desdata.assign(retdata.at(0).get()->begin(), retdata.at(0).get()->end());
 	if (datalen_rest) {
-		desdata.insert(desdata.end(), 8 - datalen_rest, 0);
+		desdata.insert(desdata.end(), sizeof(DES_cblock) - datalen_rest, 0);
 	}
 
 //	printf("the rest len:%d the full data:%s\r\n", datalen_rest, HexStr(desdata.begin(), desdata.end(), true).c_str());
@@ -386,53 +386,69 @@ static RET_DEFINE ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 	if (flag == 1) {
 		if (retdata.at(1).get()->size() == 8) {
 //			printf("the des encrypt\r\n");
-			memcpy(key, &retdata.at(1).get()->at(0), retdata.at(1).get()->size());
+			memcpy(key, &retdata.at(1).get()->at(0), sizeof(DES_cblock));
 			DES_set_key_unchecked(&key, &deskey1);
-			for (int ii = 0; ii < desdata.size() / 8; ii++) {
-				memcpy(&in, &desdata[ii * 8], sizeof(in));
+			for (int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
+				memcpy(&in, &desdata[ii * sizeof(DES_cblock)], sizeof(in));
 //				printf("in :%s\r\n", HexStr(in, in + 8, true).c_str());
 				DES_ecb_encrypt(&in, &out, &deskey1, DES_ENCRYPT);
 //				printf("out :%s\r\n", HexStr(out, out + 8, true).c_str());
-				memcpy(&desout[ii * 8], &out, sizeof(out));
+				memcpy(&desout[ii * sizeof(DES_cblock)], &out, sizeof(out));
 			}
-		} else {
+		}
+		else if(retdata.at(1).get()->size() == 16)
+		{
 //			printf("the 3 des encrypt\r\n");
-			memcpy(key, &retdata.at(1).get()->at(0), retdata.at(1).get()->size());
+			memcpy(key, &retdata.at(1).get()->at(0), sizeof(DES_cblock));
 			DES_set_key_unchecked(&key, &deskey1);
 			DES_set_key_unchecked(&key, &deskey3);
-			memcpy(key, &retdata.at(1).get()->at(0) + 8, retdata.at(1).get()->size());
+			memcpy(key, &retdata.at(1).get()->at(0) + sizeof(DES_cblock), sizeof(DES_cblock));
 			DES_set_key_unchecked(&key, &deskey2);
-			for (int ii = 0; ii < desdata.size() / 8; ii++) {
-				memcpy(&in, &desdata[ii * 8], sizeof(in));
+			for (int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
+				memcpy(&in, &desdata[ii * sizeof(DES_cblock)], sizeof(in));
 				DES_ecb3_encrypt(&in, &out, &deskey1, &deskey2, &deskey3, DES_ENCRYPT);
-				memcpy(&desout[ii * 8], &out, sizeof(out));
+				memcpy(&desout[ii * sizeof(DES_cblock)], &out, sizeof(out));
 			}
 
+		}
+		else
+		{
+			//error
+			auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+			return std::make_tuple (false, tem);
 		}
 	} else {
 		if (retdata.at(1).get()->size() == 8) {
 //			printf("the des decrypt\r\n");
-			memcpy(key, &retdata.at(1).get()->at(0), retdata.at(1).get()->size());
+			memcpy(key, &retdata.at(1).get()->at(0), sizeof(DES_cblock));
 			DES_set_key_unchecked(&key, &deskey1);
-			for (int ii = 0; ii < desdata.size() / 8; ii++) {
-				memcpy(&in, &desdata[ii * 8], sizeof(in));
+			for (int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
+				memcpy(&in, &desdata[ii * sizeof(DES_cblock)], sizeof(in));
 //				printf("in :%s\r\n", HexStr(in, in + 8, true).c_str());
 				DES_ecb_encrypt(&in, &out, &deskey1, DES_DECRYPT);
 //				printf("out :%s\r\n", HexStr(out, out + 8, true).c_str());
-				memcpy(&desout[ii * 8], &out, sizeof(out));
+				memcpy(&desout[ii * sizeof(DES_cblock)], &out, sizeof(out));
 			}
-		} else {
+		}
+		else if(retdata.at(1).get()->size() == 16)
+		{
 //			printf("the 3 des decrypt\r\n");
-			memcpy(key, &retdata.at(1).get()->at(0), retdata.at(1).get()->size());
+			memcpy(key, &retdata.at(1).get()->at(0), sizeof(DES_cblock));
 			DES_set_key_unchecked(&key, &deskey1);
 			DES_set_key_unchecked(&key, &deskey3);
-			memcpy(key, &retdata.at(1).get()->at(0) + 8, retdata.at(1).get()->size());
+			memcpy(key, &retdata.at(1).get()->at(0) + sizeof(DES_cblock), sizeof(DES_cblock));
 			DES_set_key_unchecked(&key, &deskey2);
-			for (int ii = 0; ii < desdata.size() / 8; ii++) {
-				memcpy(&in, &desdata[ii * 8], sizeof(in));
+			for (int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
+				memcpy(&in, &desdata[ii * sizeof(DES_cblock)], sizeof(in));
 				DES_ecb3_encrypt(&in, &out, &deskey1, &deskey2, &deskey3, DES_DECRYPT);
-				memcpy(&desout[ii * 8], &out, sizeof(out));
+				memcpy(&desout[ii * sizeof(DES_cblock)], &out, sizeof(out));
 			}
+		}
+		else
+		{
+			//error
+			auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+			return std::make_tuple (false, tem);
 		}
 	}
 
