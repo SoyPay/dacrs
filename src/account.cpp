@@ -68,7 +68,7 @@ bool CAccountViewBacked::SaveAccountInfo(const vector<unsigned char> &accountId,
 
 CAccountViewCache::CAccountViewCache(CAccountView &accountView, bool fDummy):CAccountViewBacked(accountView), hashBlock(0) {}
 bool CAccountViewCache::GetAccount(const CKeyID &keyId, CAccount &account) {
-	if (cacheAccounts.count(keyId)) {
+	if (cacheAccounts.count(keyId) && cacheAccounts[keyId].keyID != uint160(0)) {
 		account = cacheAccounts[keyId];
 		return true;
 	}
@@ -152,7 +152,7 @@ bool CAccountViewCache::SetKeyId(const vector<unsigned char> &accountId, const C
 	return true;
 }
 bool CAccountViewCache::GetKeyId(const vector<unsigned char> &accountId, CKeyID &keyId) {
-	if(cacheKeyIds.count(HexStr(accountId)))
+	if(cacheKeyIds.count(HexStr(accountId)) && cacheKeyIds[HexStr(accountId)] != uint160(0))
 	{
 		keyId = cacheKeyIds[HexStr(accountId)];
 		return true;
@@ -178,8 +178,8 @@ bool CAccountViewCache::EraseKeyId(const vector<unsigned char> &accountId) {
 	return true;
 }
 bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAccount &account) {
-	if(cacheKeyIds.count(HexStr(accountId))) {
-		if(cacheAccounts.count(cacheKeyIds[HexStr(accountId)])){
+	if(cacheKeyIds.count(HexStr(accountId)) && cacheKeyIds[HexStr(accountId)] !=uint160(0)) {
+		if(cacheAccounts.count(cacheKeyIds[HexStr(accountId)]) && cacheAccounts[cacheKeyIds[HexStr(accountId)]].keyID != uint160(0)){
 			account = cacheAccounts[cacheKeyIds[HexStr(accountId)]];
 			return true;
 		}else {
@@ -205,11 +205,11 @@ bool CAccountViewCache::SaveAccountInfo(const CRegID &regid, const CKeyID &keyId
 	return true;
 }
 bool CAccountViewCache::GetAccount(const CUserID &userId, CAccount &account) {
-	if (userId.type() == typeid(CRegID)) {
+	if(userId.type() == typeid(CRegID)) {
 		return GetAccount(boost::get<CRegID>(userId).GetRegID(), account);
-	} else if (userId.type() == typeid(CKeyID)) {
+	}else if(userId.type() == typeid(CKeyID)) {
 		return GetAccount(boost::get<CKeyID>(userId), account);
-	} else if (userId.type() == typeid(CPubKey)) {
+	}else if(userId.type() == typeid(CPubKey)) {
 		return GetAccount(boost::get<CPubKey>(userId).GetID(), account);
 	} else {
 		assert(0);
@@ -222,8 +222,6 @@ bool CAccountViewCache::GetKeyId(const CUserID &userId, CKeyID &keyId) {
 	} else if (userId.type() == typeid(CPubKey)) {
 		keyId = boost::get<CPubKey>(userId).GetID();
 		return true;
-	} else {
-		assert(0);
 	}
 	return false;
 }
@@ -320,7 +318,7 @@ CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScri
 	LogPrint("SetScriptData","new a CScriptDBViewCache \r\n");
 }
 bool CScriptDBViewCache::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
-	if (mapDatas.count(vKey) > 0) {
+	if (mapDatas.count(vKey) > 0 && !mapDatas[vKey].empty()) {
 		vValue = mapDatas[vKey];
 		return true;
 	}

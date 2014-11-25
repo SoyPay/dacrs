@@ -77,13 +77,14 @@ BOOST_AUTO_TEST_CASE(db_fun)
 	CreateContactTx(4);
 	GenerateMiner();
 
-//	cout << "5" << endl;
-//	disblock1();
-//	disblock1();
-//	CreateContactTx(5);
-//	GenerateMiner();
-//
+	cout << "5" << endl;
+	disblock1();
+	disblock1();
+	CreateContactTx(5);
+	GenerateMiner();
+
 //	cout << "6" << endl;
+//	disblock1();
 //	disblock1();
 //	disblock1();
 //	CreateContactTx(6);

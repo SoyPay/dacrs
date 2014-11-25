@@ -304,14 +304,29 @@ CScriptDB::CScriptDB(size_t nCacheSize, bool fMemory, bool fWipe) :
 
 }
 bool CScriptDB::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
+	vector<unsigned char> vTest= {'d', 'a', 't', 'a', 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, '_', 'k', 'e', 'y', 0x00};
+	if(vKey == vTest) {
+		LogPrint("INFO", "Get Value:%s\n", HexStr(vValue));
+	}
 	return db.Read(vKey, vValue);
 }
 bool CScriptDB::SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {
+	vector<unsigned char> vTest= {'d', 'a', 't', 'a', 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, '_', 'k', 'e', 'y', 0x00};
+	if(vKey == vTest) {
+		LogPrint("INFO", "Set Value:%s\n", HexStr(vValue));
+	}
 	return db.Write(vKey, vValue);
 }
 bool CScriptDB::BatchWrite(const map<vector<unsigned char>, vector<unsigned char> > &mapDatas) {
 	CLevelDBBatch batch;
 	for (auto & item : mapDatas) {
+//		string strKey(item.first.begin(), item.first.end());
+//		string strValue(item.second.begin(), item.second.end());
+		vector<unsigned char> vTest= {'d', 'a', 't', 'a', 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, '_', 'k', 'e', 'y', 0x00};
+		if(item.first == vTest) {
+			LogPrint("INFO", "Set Key:%s\nSet Value:%s\n",HexStr(item.first), HexStr(item.second));
+		}
+
 		if (item.second.empty()) {
 			batch.Erase(item.first);
 		} else {
