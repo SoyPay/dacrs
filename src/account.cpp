@@ -198,19 +198,21 @@ bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAcco
 	}
 	return false;
 }
-bool CAccountViewCache::SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &account) {
-	cacheKeyIds[HexStr(accountId)] = keyId;
+bool CAccountViewCache::SaveAccountInfo(const CRegID &regid, const CKeyID &keyId, const CAccount &account) {
+	cacheKeyIds[HexStr(regid.GetRegID())] = keyId;
 	cacheAccounts[keyId] = account;
 	cacheAccounts[keyId].accountOperLog.SetNULL();
 	return true;
 }
 bool CAccountViewCache::GetAccount(const CUserID &userId, CAccount &account) {
-	if(userId.type() == typeid(CRegID)) {
+	if (userId.type() == typeid(CRegID)) {
 		return GetAccount(boost::get<CRegID>(userId).GetRegID(), account);
-	}else if(userId.type() == typeid(CKeyID)) {
+	} else if (userId.type() == typeid(CKeyID)) {
 		return GetAccount(boost::get<CKeyID>(userId), account);
-	}else if(userId.type() == typeid(CPubKey)) {
+	} else if (userId.type() == typeid(CPubKey)) {
 		return GetAccount(boost::get<CPubKey>(userId).GetID(), account);
+	} else {
+		assert(0);
 	}
 	return false;
 }
@@ -220,46 +222,54 @@ bool CAccountViewCache::GetKeyId(const CUserID &userId, CKeyID &keyId) {
 	} else if (userId.type() == typeid(CPubKey)) {
 		keyId = boost::get<CPubKey>(userId).GetID();
 		return true;
+	} else {
+		assert(0);
 	}
 	return false;
 }
 bool CAccountViewCache::SetAccount(const CUserID &userId, const CAccount &account) {
-	if(userId.type() == typeid(CRegID)) {
+	if (userId.type() == typeid(CRegID)) {
 		return SetAccount(boost::get<CRegID>(userId).GetRegID(), account);
-	}
-	else if(userId.type() == typeid(CKeyID)){
+	} else if (userId.type() == typeid(CKeyID)) {
 		return SetAccount(boost::get<CKeyID>(userId), account);
+	} else {
+		assert(0);
 	}
-	else
-		return false;
+	return false;
 }
 bool CAccountViewCache::SetKeyId(const CUserID &userId, const CKeyID &keyId) {
-	if(userId.type() == typeid(CRegID)) {
+	if (userId.type() == typeid(CRegID)) {
 		return SetKeyId(boost::get<CRegID>(userId).GetRegID(), keyId);
+	} else {
+		assert(0);
 	}
-	else {
-		return false;
-	}
+
+	return false;
+
 }
 bool CAccountViewCache::EraseAccount(const CUserID &userId) {
-	if(userId.type() == typeid(CKeyID)) {
+	if (userId.type() == typeid(CKeyID)) {
 		return EraseAccount(boost::get<CKeyID>(userId));
+	} else {
+		assert(0);
 	}
-	else
-		return false;
+	return false;
 }
 bool CAccountViewCache::HaveAccount(const CUserID &userId) {
-	if(userId.type() == typeid(CKeyID)) {
+	if (userId.type() == typeid(CKeyID)) {
 		return HaveAccount(boost::get<CKeyID>(userId));
+	} else {
+		assert(0);
 	}
-	else
-		return false;
+	return false;
 }
-bool CAccountViewCache::EraseKeyId(const CUserID &userId) {
+bool CAccountViewCache::EraseId(const CUserID &userId) {
 	if (userId.type() == typeid(CRegID)) {
 		return EraseKeyId(boost::get<CRegID>(userId).GetRegID());
-	} else
-		return false;
+	} else {
+		assert(0);
+	}
+	return false;
 }
 
 bool CAccountViewCache::Flush(){
@@ -270,6 +280,17 @@ bool CAccountViewCache::Flush(){
 	 }
 	 return fOk;
 }
+
+bool CAccountViewCache::GetRegId(const CUserID& userId, CRegID& regId) {
+	CAccount account;
+	if(GetAccount(userId,account))
+	{
+		regId =  account.regID;
+		return regId.IsEmpty();
+	}
+	return false;
+}
+
 unsigned int CAccountViewCache::GetCacheSize(){
 	return ::GetSerializeSize(cacheAccounts, SER_DISK, CLIENT_VERSION) + ::GetSerializeSize(cacheKeyIds, SER_DISK, CLIENT_VERSION);
 }

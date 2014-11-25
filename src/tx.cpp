@@ -77,10 +77,10 @@ void CRegID::SetRegIDByCompact(const vector<unsigned char> &vIn) {
 bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
 	CAccount account;
-	CRegID accountId(nHeight, nIndex);
+	CRegID regId(nHeight, nIndex);
 	CKeyID keyId = boost::get<CPubKey>(userId).GetID();
 	if (!view.GetAccount(userId, account))
-		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", accountId.ToString()),
+		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", regId.ToString()),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 
 	if(account.publicKey.IsFullyValid() && account.publicKey.GetID() == keyId) {
@@ -92,8 +92,9 @@ bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 		CFund fund(llFees);
 		account.OperateAccount(MINUS_FREE, fund);
 	}
-	if (!view.SaveAccountInfo(accountId.GetRegID(), keyId, account)) {
-		return state.DoS(100, ERROR("UpdateAccounts() : write source addr %s account info error", accountId.ToString()),
+	account.regID = regId;
+	if (!view.SaveAccountInfo(regId, keyId, account)) {
+		return state.DoS(100, ERROR("UpdateAccounts() : write source addr %s account info error", regId.ToString()),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	}
 	txundo.vAccountOperLog.push_back(account.accountOperLog);
@@ -126,7 +127,7 @@ bool CRegisterAccountTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, 
 	} else {
 		view.EraseAccount(userId);
 	}
-	view.EraseKeyId(accountId);
+	view.EraseId(accountId);
 	return true;
 }
 bool CRegisterAccountTx::IsValidHeight(int nCurHeight, int nTxCacheHeight) const {
@@ -675,24 +676,25 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 		if (0 == nIndex)
 		return true;
 
-		CRegID scriptId(nHeight, nIndex);
+		CRegID regId(nHeight, nIndex);
 		//create script account
-		CKeyID keyId = Hash160(scriptId.GetRegID());
+		CKeyID keyId = Hash160(regId.GetRegID());
 		CAccount account;
 		account.keyID = keyId;
-		if(!view.SaveAccountInfo(scriptId.GetRegID(), keyId, account)) {
+		account.regID = regId;
+		if(!view.SaveAccountInfo(regId, keyId, account)) {
 			return state.DoS(100,
-								ERROR("UpdateAccounts() : create new account script id %s script info error", HexStr(scriptId.GetRegID())),
+								ERROR("UpdateAccounts() : create new account script id %s script info error", HexStr(regId.GetRegID())),
 								UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
 		//save new script content
-		if(!scriptCache.SetScript(scriptId, script)){
+		if(!scriptCache.SetScript(regId, script)){
 			return state.DoS(100,
-					ERROR("UpdateAccounts() : save script id %s script info error", HexStr(scriptId.GetRegID())),
+					ERROR("UpdateAccounts() : save script id %s script info error", HexStr(regId.GetRegID())),
 					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
 		if(!aAuthorizate.IsNull()) {
-			acctInfo.mapAuthorizate[scriptId.GetRegID()] = aAuthorizate;
+			acctInfo.mapAuthorizate[regId.GetRegID()] = aAuthorizate;
 		}
 	}
 	return true;
@@ -716,7 +718,7 @@ bool CRegistScriptTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CVa
 					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
 		//delete account
-		if(!view.EraseKeyId(scriptId)){
+		if(!view.EraseId(scriptId)){
 			return state.DoS(100, ERROR("UpdateAccounts() : erase script account %s error", HexStr(scriptId.GetRegID())),
 								UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
