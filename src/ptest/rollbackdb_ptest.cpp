@@ -61,33 +61,34 @@ BOOST_AUTO_TEST_CASE(db_fun)
 	CreateRegScriptdbTx();
 	GenerateMiner();
 	cout << "1" << endl;
-	CreateContactTx(1);
+	CreateContactTx(1);    //新增脚本数据
 	GenerateMiner();
 	cout << "2" << endl;
-	CreateContactTx(2);;
+	CreateContactTx(2);;   //修改脚本数据
 	GenerateMiner();
 
 	cout << "3" << endl;
-	CreateContactTx(3);
+	CreateContactTx(3);    //删除脚本数据
 	GenerateMiner();
 
 	cout << "4" << endl;
-	disblock1();
+	disblock1();           //删除1个block
 	cout << "41" << endl;
-	CreateContactTx(4);
+	CreateContactTx(4);    //check删除的脚本是否恢复
 	GenerateMiner();
 
-//	cout << "5" << endl;
-//	disblock1();
-//	disblock1();
-//	CreateContactTx(5);
-//	GenerateMiner();
-//
-//	cout << "6" << endl;
-//	disblock1();
-//	disblock1();
-//	CreateContactTx(6);
-//	GenerateMiner();
+	cout << "5" << endl;
+	disblock1();
+	disblock1();
+	CreateContactTx(5);    //check修改的脚本数据是否恢复
+	GenerateMiner();
+
+	cout << "6" << endl;
+	disblock1();
+	disblock1();
+	disblock1();
+	CreateContactTx(6);   //check新增的脚本数据是否恢复
+	GenerateMiner();
 
 }
 BOOST_AUTO_TEST_SUITE_END()

@@ -68,7 +68,7 @@ bool CAccountViewBacked::SaveAccountInfo(const vector<unsigned char> &accountId,
 
 CAccountViewCache::CAccountViewCache(CAccountView &accountView, bool fDummy):CAccountViewBacked(accountView), hashBlock(0) {}
 bool CAccountViewCache::GetAccount(const CKeyID &keyId, CAccount &account) {
-	if (cacheAccounts.count(keyId)) {
+	if (cacheAccounts.count(keyId) && cacheAccounts[keyId].keyID != uint160(0)) {
 		account = cacheAccounts[keyId];
 		return true;
 	}
@@ -152,7 +152,7 @@ bool CAccountViewCache::SetKeyId(const vector<unsigned char> &accountId, const C
 	return true;
 }
 bool CAccountViewCache::GetKeyId(const vector<unsigned char> &accountId, CKeyID &keyId) {
-	if(cacheKeyIds.count(HexStr(accountId)))
+	if(cacheKeyIds.count(HexStr(accountId)) && cacheKeyIds[HexStr(accountId)] != uint160(0))
 	{
 		keyId = cacheKeyIds[HexStr(accountId)];
 		return true;
@@ -178,8 +178,8 @@ bool CAccountViewCache::EraseKeyId(const vector<unsigned char> &accountId) {
 	return true;
 }
 bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAccount &account) {
-	if(cacheKeyIds.count(HexStr(accountId))) {
-		if(cacheAccounts.count(cacheKeyIds[HexStr(accountId)])){
+	if(cacheKeyIds.count(HexStr(accountId)) && cacheKeyIds[HexStr(accountId)] !=uint160(0)) {
+		if(cacheAccounts.count(cacheKeyIds[HexStr(accountId)]) && cacheAccounts[cacheKeyIds[HexStr(accountId)]].keyID != uint160(0)){
 			account = cacheAccounts[cacheKeyIds[HexStr(accountId)]];
 			return true;
 		}else {
@@ -296,25 +296,41 @@ bool CScriptDBViewBacked::GetScriptData(const vector<unsigned char> &vScriptId, 
 }
 
 CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScriptDBViewBacked(base) {
-	LogPrint("SetScriptData","new a CScriptDBViewCache \r\n");
+	mapDatas.clear();
+	LogPrint("INFO","new a CScriptDBViewCache mapDatas size:%d\r\n",mapDatas.size());
 }
+
+//vector<unsigned char> vTempTest = { 0x64, 0x61, 0x74, 0x61, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x5f, 0x6b, 0x65, 0x79,
+//			0x31, 0x00 };
+
+
 bool CScriptDBViewCache::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
-	if (mapDatas.count(vKey) > 0) {
+	if (mapDatas.count(vKey) > 0 && !mapDatas[vKey].empty()) {
 		vValue = mapDatas[vKey];
 		return true;
 	}
 	if (!pBase->GetData(vKey, vValue))
 		return false;
 	mapDatas[vKey] = vValue;
+//	if(vKey == vTempTest) {
+//		LogPrint("INFO", "set mapDatas key:%s, value:%s\n", HexStr(vKey), HexStr(vValue));
+//	}
 	return true;
 }
 bool CScriptDBViewCache::SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {
 	mapDatas[vKey] = vValue;
+//	if (vKey == vTempTest) {
+//		LogPrint("INFO", "set mapDatas key:%s, value:%s\n", HexStr(vKey), HexStr(vValue));
+//	}
 	return true;
 }
 bool CScriptDBViewCache::BatchWrite(const map<vector<unsigned char>, vector<unsigned char> > &mapData) {
-	for (auto &items : mapData)
+	for (auto &items : mapData) {
 		mapDatas[items.first] = items.second;
+//		if (items.first == vTempTest) {
+//			LogPrint("INFO", "set mapDatas key:%s, value:%s\n", HexStr(items.first), HexStr(mapDatas[items.first]));
+//		}
+	}
 	return true;
 }
 bool CScriptDBViewCache::EraseKey(const vector<unsigned char> &vKey) {
@@ -325,6 +341,9 @@ bool CScriptDBViewCache::EraseKey(const vector<unsigned char> &vKey) {
 		if (pBase->GetData(vKey, vValue)) {
 			vValue.clear();
 			mapDatas[vKey] = vValue;
+//			if (vKey == vTempTest) {
+//				LogPrint("INFO", "set mapDatas key:%s, value:%s\n", HexStr(vKey), HexStr(mapDatas[vKey]));
+//			}
 		}
 		else {
 			return false;

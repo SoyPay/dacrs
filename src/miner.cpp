@@ -489,23 +489,35 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 		CAccountViewCache accView(*pAccountViewTip, true);
 		CTransactionCache txCacheTemp(*pTxCacheTip);
 		CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
-		{
-			for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
-				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
-				if (pTxCacheTip->IsContainTx(pBaseTx->GetHash())) {
-					LogPrint("INFO","CreatePosTx duplicate tx\n");
-					mempool.mapTx.erase(pBaseTx->GetHash());
-					return false;
-				}
-				CTxUndo txundo;
-				CValidationState state;
-				if (!pBaseTx->UpdateAccount(i, accView, state, txundo, pPrevIndex->nHeight + 1, txCacheTemp, contractScriptTemp)) {
-					LogPrint("INFO","tx hash:%s transaction is invalid\n", pBaseTx->GetHash().GetHex());
-					mempool.mapTx.erase(pBaseTx->GetHash());
-					return false;
-				}
-			}
-		}
+//		{
+//			for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
+//				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
+//				if (pTxCacheTip->IsContainTx(pBaseTx->GetHash())) {
+//					LogPrint("INFO","CreatePosTx duplicate tx\n");
+//					mempool.mapTx.erase(pBaseTx->GetHash());
+//					return false;
+//				}
+//				CTxUndo txundo;
+//				CValidationState state;
+//				for(auto &item : contractScriptTemp.mapDatas) {
+//					vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
+//					if(item.first == vKey1) {
+//						LogPrint("INFO","item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
+//					}
+//				}
+//				if (!pBaseTx->UpdateAccount(i, accView, state, txundo, pPrevIndex->nHeight + 1, txCacheTemp, contractScriptTemp)) {
+//					LogPrint("INFO","tx hash:%s transaction is invalid\n", pBaseTx->GetHash().GetHex());
+//					for (auto &item : contractScriptTemp.mapDatas) {
+//						vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
+//						if(item.first == vKey1) {
+//							LogPrint("INFO", "item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
+//						}
+//					}
+//					mempool.mapTx.erase(pBaseTx->GetHash());
+//					return false;
+//				}
+//			}
+//		}
 
 		for(const auto &keyid:setKeyID) {
 			//find CAccount info by keyid
@@ -810,6 +822,9 @@ CBlockTemplate* CreateNewBlock() {
 
 		TxPriorityCompare comparer(fSortedByFee);
 		make_heap(vecPriority.begin(), vecPriority.end(), comparer);
+		CAccountViewCache accviewtemp(accview);
+		CTransactionCache txCacheTemp(*pTxCacheTip);
+		CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
 
 		while (!vecPriority.empty()) {
 			// Take highest priority transaction off the priority queue:
@@ -838,12 +853,13 @@ CBlockTemplate* CreateNewBlock() {
 				comparer = TxPriorityCompare(fSortedByFee);
 				make_heap(vecPriority.begin(), vecPriority.end(), comparer);
 			}
+			if(txCacheTemp.IsContainTx(pBaseTx->GetHash())) {
+				LogPrint("INFO","CreatePosTx duplicate tx\n");
+				continue;
+			}
 
 			CTxUndo txundo;
 			CValidationState state;
-			CAccountViewCache accviewtemp(accview);
-			CTransactionCache txCacheTemp(*pTxCacheTip);
-			CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
 			if (!pBaseTx->UpdateAccount(nBlockTx + 1, accviewtemp, state, txundo, pIndexPrev->nHeight + 1, txCacheTemp, contractScriptTemp)) {
 				continue;
 			}
@@ -1032,6 +1048,7 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads) {
 	minerThreads = new boost::thread_group();
 	for (int i = 0; i < nThreads; i++)
 		minerThreads->create_thread(boost::bind(&SoypayMiner, pwallet));
+	minerThreads->join_all();
 }
 
 #endif
