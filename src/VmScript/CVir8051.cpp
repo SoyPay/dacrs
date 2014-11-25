@@ -530,9 +530,11 @@ static RET_DEFINE ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
 	if(flag)
 	{
 		LogPrint("vm","%s\r\n", HexStr(pdata).c_str());
+		LogPrint("INFO","%s\r\n", HexStr(pdata).c_str());
 	}else
 	{
 		LogPrint("vm","%s\r\n",pdata.c_str());
+		LogPrint("INFO","%s\r\n",pdata.c_str());
 	}
 
 
@@ -1211,15 +1213,16 @@ int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 						int size = it.size();
 //						if(methodID == READDB_FUNC)
 //							LogPrint("vm","size:%d",size);
-						if(size == 0)
-							continue;
 						memcpy(&ipara[pos], &size, 2);
 						memcpy(&ipara[pos + 2], &it.at(0), size);
 						pos += size + 2;
 					}
 				}
 				if(methodID == READDB_FUNC)
-				LogPrint("vm","data1:%s\r\n",HexStr(ipara,ipara+totalsize));
+				{
+					LogPrint("vm","data1:%s\r\n",HexStr(ipara,ipara+totalsize));
+					LogPrint("INFO","data1:%s\r\n",HexStr(ipara,ipara+totalsize));
+				}
 			}
 		} else if (Sys.PC == 0x0008) {
 				INT8U result=GetExRam(0xEFFD);

@@ -126,7 +126,15 @@ shared_ptr<CAccount> CVmScriptRun::GetAccount(shared_ptr<CAccount>& Account) {
 	}
 	return NULL;
 }
-
+vector_unsigned_char CVmScriptRun::GetAccountID(CVmOperate value) {
+	vector_unsigned_char accountid;
+	//if (value.type == ACCOUNTID) {
+	//	accountid.assign(value.accountid, value.accountid + 6);
+	//} else if (value.type == KEYID) {
+		//accountid.assign(value.accountid, value.accountid + 20);
+	//}
+	return accountid;
+}
 bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 	// judge contract rulue
 	uint64_t addmoey, miusmoney;
@@ -138,6 +146,15 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 			addmoey += temp;
 		}
 		if (it.opeatortype == MINUS_FREE || it.opeatortype == MINUS_SELF_FREEZD || it.opeatortype == MINUS_FREEZD) {
+
+			vector<unsigned char > accountid(it.accountid,it.accountid+sizeof(it.accountid));
+			CRegID regId(accountid);
+			CContractTransaction* secure = static_cast<CContractTransaction*>(listTx.get());
+			/// current tx's script cant't mius other script's regid
+			if(m_ScriptDBTip->HaveScript(regId) && regId.GetRegID() != boost::get<CRegID>(secure->scriptRegId).GetRegID())
+			{
+				return false;
+			}
 			memcpy(&temp,it.money,sizeof(it.money));
 			miusmoney += temp;
 		}
@@ -147,15 +164,7 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 	}
 	return true;
 }
-vector_unsigned_char CVmScriptRun::GetAccountID(CVmOperate value) {
-	vector_unsigned_char accountid;
-	if (value.type == ACCOUNTID) {
-		accountid.assign(value.accountid, value.accountid + 6);
-	} else if (value.type == KEYID) {
-		accountid.assign(value.accountid, value.accountid + 20);
-	}
-	return accountid;
-}
+
 shared_ptr<vector<CVmOperate>> CVmScriptRun::GetOperate() const {
 	auto tem = make_shared<vector<CVmOperate>>();
 	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
@@ -177,12 +186,14 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		fund.scriptID = boost::get<CRegID>(tx->scriptRegId).GetRegID();
 
 		auto tem = make_shared<CAccount>();
-		vector_unsigned_char accountid = GetAccountID(it);
-		if (accountid.size() == 0) {
-			return false;
-		}
-		CRegID regId(accountid);
-		view.GetAccount(regId, *tem.get());
+//		vector_unsigned_char accountid = GetAccountID(it);
+//		if (accountid.size() == 0) {
+//			return false;
+//		}
+		vector_unsigned_char accountid(it.accountid,it.accountid+sizeof(it.accountid));
+		CRegID regid(accountid);
+		CUserID userid(regid);
+		view.GetAccount(userid, *tem.get());
 		shared_ptr<CAccount> vmAccount = GetAccount(tem);
 		if (vmAccount.get() == NULL) {
 			RawAccont.push_back(tem);

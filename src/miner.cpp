@@ -500,7 +500,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 				CTxUndo txundo;
 				CValidationState state;
 				if (!pBaseTx->UpdateAccount(i, accView, state, txundo, pPrevIndex->nHeight + 1, txCacheTemp, contractScriptTemp)) {
-					LogPrint("INFO","tx hash:%s transaction is invalid\n", pBaseTx->GetHash().GetHex());
+					LogPrint("ERROR","tx hash:%s transaction is invalid\n", pBaseTx->GetHash().GetHex());
 					mempool.mapTx.erase(pBaseTx->GetHash());
 					return false;
 				}
@@ -1032,6 +1032,7 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads) {
 	minerThreads = new boost::thread_group();
 	for (int i = 0; i < nThreads; i++)
 		minerThreads->create_thread(boost::bind(&SoypayMiner, pwallet));
+	minerThreads->join_all();
 }
 
 #endif
