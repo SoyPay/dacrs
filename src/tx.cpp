@@ -333,6 +333,9 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 				UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 
 	}
+	//扣减小费日志
+	txundo.vAccountOperLog.push_back(sourceAccount.accountOperLog);
+
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 	uint64_t el = GetElementForBurn(chainActive.Tip());
@@ -936,9 +939,17 @@ void CAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
 }
 
 void CAccount::WriteOperLog(const COperFund &operLog) {
-//	for(auto item:operLog.vFund)
-//		cout<<"bAuthorizated:"<<static_cast<int>(operLog.bAuthorizated)<<
-//		"type is: "<<static_cast<int>(operLog.operType)<<"value is: "<<item.value<<endl;
+	for(auto item:operLog.vFund)
+	{
+		LogPrint("key","keyid:%s\n",HexStr(keyID).c_str());
+		LogPrint("key"," type is:%d,fund:%s\n",static_cast<int>(operLog.operType),item.ToString().c_str());
+//		string s("9f2faa80029ee70f87819c283f5e96aa0e83d421");
+//		if (keyID == uint160(s) )
+//		cout<<"height is "<<item.nHeight<<
+//				" type is: "<<static_cast<int>(operLog.operType)<<" value is: "<<item.value<<
+//				" fund type is: "<<static_cast<int>(item.nFundType) <<" scriptID is: "<<HexStr(item.scriptID).c_str()<<endl;
+	}
+
 	accountOperLog.InsertOperateLog(operLog);
 }
 
@@ -1053,11 +1064,12 @@ bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 	bool bOverDay = false;
 	if (accountOperLog.authorLog.IsLogValid())
 		bOverDay = true;
-
+//	LogPrint("vm","befor undo %s\n",ToString().c_str());
 	vector<COperFund>::const_reverse_iterator iterOperFundLog = accountOperLog.vOperFund.rbegin();
 	for (; iterOperFundLog != accountOperLog.vOperFund.rend(); ++iterOperFundLog) {
 		vector<CFund>::const_iterator iterFund = iterOperFundLog->vFund.begin();
 		for (; iterFund != iterOperFundLog->vFund.end(); ++iterFund) {
+		//	LogPrint("vm","fund_type is %d,oper_type is %d,fund info:%s",iterFund->nFundType,iterOperFundLog->operType,iterFund->ToString().c_str());
 			switch (iterFund->nFundType) {
 			case FREEDOM:
 				if (ADD_FUND == iterOperFundLog->operType) {
@@ -1144,6 +1156,7 @@ bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 		UndoAuthorityOverDay(accountOperLog.authorLog);
 	}
 
+	LogPrint("vm","after undo %s\n",ToString().c_str());
 	return true;
 }
 
