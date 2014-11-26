@@ -137,7 +137,7 @@ vector_unsigned_char CVmScriptRun::GetAccountID(CVmOperate value) {
 }
 bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 	// judge contract rulue
-	uint64_t addmoey, miusmoney;
+	uint64_t addmoey = 0, miusmoney = 0;
 	uint64_t temp = 0;
 	for (auto& it : listoperate) {
 
@@ -158,9 +158,11 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 			memcpy(&temp,it.money,sizeof(it.money));
 			miusmoney += temp;
 		}
-		if (addmoey != miusmoney)
-			return false;
 
+	}
+	if (addmoey != miusmoney)
+	{
+		return false;
 	}
 	return true;
 }
@@ -197,6 +199,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		shared_ptr<CAccount> vmAccount = GetAccount(tem);
 		if (vmAccount.get() == NULL) {
 			RawAccont.push_back(tem);
+			vmAccount = tem;
 		}
 		shared_ptr<CAccount> vnewAccount = GetNewAccount(tem);
 		if (vnewAccount.get() != NULL) {
@@ -207,12 +210,16 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 			CFund vFind = vmAccount.get()->FindFund(vmAccount.get()->vFreeze, fund.scriptID);
 			fund.nHeight = vFind.nHeight;
 		}
+		if((OperType)it.opeatortype == ADD_FREE)
+		{
+			fund.nFundType = FREEDOM_FUND;
+		}
 
-		LogPrint("vm", "muls account:%s\r\n", vmAccount.get()->ToString().c_str());
-		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
+//		LogPrint("vm", "muls account:%s\r\n", vmAccount.get()->ToString().c_str());
+//		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
 		bool ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype,fund,height);
 
-		LogPrint("vm", "after muls account:%s\r\n", vmAccount.get()->ToString().c_str());
+	//	LogPrint("vm", "after muls account:%s\r\n", vmAccount.get()->ToString().c_str());
 		if (!ret) {
 			return false;
 		}

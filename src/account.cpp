@@ -315,8 +315,14 @@ bool CScriptDBViewBacked::GetScriptData(const vector<unsigned char> &vScriptId, 
 }
 
 CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScriptDBViewBacked(base) {
-	LogPrint("SetScriptData","new a CScriptDBViewCache \r\n");
+	mapDatas.clear();
+	LogPrint("INFO","new a CScriptDBViewCache mapDatas size:%d\r\n",mapDatas.size());
 }
+
+//vector<unsigned char> vTempTest = { 0x64, 0x61, 0x74, 0x61, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x5f, 0x6b, 0x65, 0x79,
+//			0x31, 0x00 };
+
+
 bool CScriptDBViewCache::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
 	if (mapDatas.count(vKey) > 0 && !mapDatas[vKey].empty()) {
 		vValue = mapDatas[vKey];
@@ -325,15 +331,25 @@ bool CScriptDBViewCache::GetData(const vector<unsigned char> &vKey, vector<unsig
 	if (!pBase->GetData(vKey, vValue))
 		return false;
 	mapDatas[vKey] = vValue;
+//	if(vKey == vTempTest) {
+//		LogPrint("INFO", "set mapDatas key:%s, value:%s\n", HexStr(vKey), HexStr(vValue));
+//	}
 	return true;
 }
 bool CScriptDBViewCache::SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {
 	mapDatas[vKey] = vValue;
+//	if (vKey == vTempTest) {
+//		LogPrint("INFO", "set mapDatas key:%s, value:%s\n", HexStr(vKey), HexStr(vValue));
+//	}
 	return true;
 }
 bool CScriptDBViewCache::BatchWrite(const map<vector<unsigned char>, vector<unsigned char> > &mapData) {
-	for (auto &items : mapData)
+	for (auto &items : mapData) {
 		mapDatas[items.first] = items.second;
+//		if (items.first == vTempTest) {
+//			LogPrint("INFO", "set mapDatas key:%s, value:%s\n", HexStr(items.first), HexStr(mapDatas[items.first]));
+//		}
+	}
 	return true;
 }
 bool CScriptDBViewCache::EraseKey(const vector<unsigned char> &vKey) {
@@ -344,6 +360,9 @@ bool CScriptDBViewCache::EraseKey(const vector<unsigned char> &vKey) {
 		if (pBase->GetData(vKey, vValue)) {
 			vValue.clear();
 			mapDatas[vKey] = vValue;
+//			if (vKey == vTempTest) {
+//				LogPrint("INFO", "set mapDatas key:%s, value:%s\n", HexStr(vKey), HexStr(mapDatas[vKey]));
+//			}
 		}
 		else {
 			return false;
