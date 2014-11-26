@@ -1249,7 +1249,8 @@ int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 				return 0;
 			}
 			if (maxstep != 0 && step > maxstep) {
-				return 0;		//force return
+				//// for test
+				return 1;		//force return
 			}
 	}
 
