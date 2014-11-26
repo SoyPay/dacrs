@@ -593,7 +593,7 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 	uint256 hash1(0);
 	tep1 >>hash1;
 	//cout<<"ExGetTxAccountsFunc:"<<hash1.GetHex()<<endl;
-	LogPrint("vm","ExGetTxAccountsFunc:%s",hash1.GetHex().c_str());
+//	LogPrint("vm","ExGetTxAccountsFunc:%s",hash1.GetHex().c_str());
 
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 
@@ -912,7 +912,7 @@ static RET_DEFINE ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
     //cout<<"ExGetCurTxHash:"<<HexStr(hash).c_str()<<endl;
-    LogPrint("vm","ExGetCurTxHash:%s",HexStr(hash).c_str());
+ //   LogPrint("vm","ExGetCurTxHash:%s",HexStr(hash).c_str());
 	return std::make_tuple (true, tem);
 }
 static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
