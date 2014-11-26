@@ -78,9 +78,12 @@ tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& T
 		return std::make_tuple (false, 0, string("VmScript inital Failed\n"));
 
 	}
-	uint64_t  step = pMcu.get()->run(maxstep,this);
+	int64_t  step = pMcu.get()->run(maxstep,this);
 	if (0 == step) {
 		mytuple = std::make_tuple (false, 0, string("VmScript run Failed\n"));
+		return mytuple;
+	}else if(-1 == step){
+		mytuple = std::make_tuple (false, 0, string("the fee not enough \n"));
 		return mytuple;
 	}
 

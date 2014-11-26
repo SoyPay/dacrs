@@ -1202,7 +1202,7 @@ RET_DEFINE CallExternalFunc(INT16U method, unsigned char *ipara,CVmScriptRun *pV
 
 }
 
-int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
+int64_t CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 	INT8U code = 0;
 	uint64_t step = 0;
 
@@ -1248,10 +1248,10 @@ int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 				}
 				return 0;
 			}
-		//// for test
+//		//// for test
 //			if (maxstep != 0 && step > maxstep) {
 //
-//				return 1;		//force return
+//				return -1;		//force return
 //			}
 	}
 
