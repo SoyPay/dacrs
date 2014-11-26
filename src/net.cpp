@@ -1857,10 +1857,14 @@ void RelayTransaction(CBaseTransaction *pBaseTx, const uint256& hash, const CDat
         LOCK(pnode->cs_filter);
         if (pnode->pfilter)
         {
-            if (pnode->pfilter->IsRelevantAndUpdate(pBaseTx, hash))
+            if (pnode->pfilter->IsRelevantAndUpdate(pBaseTx, hash)) {
                 pnode->PushInventory(inv);
-        } else
+                LogPrint("sendtx", "hash:%s time:%ld\n", inv.hash.GetHex(), GetTime());
+            }
+        } else{
             pnode->PushInventory(inv);
+            LogPrint("sendtx", "hash:%s time:%ld\n", inv.hash.GetHex(), GetTime());
+        }
     }
 }
 
