@@ -1149,14 +1149,14 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
     if (blockUndo.vtxundo.size() != block.vptx.size())
         return ERROR("DisconnectBlock() : block and undo data inconsistent");
 
-//    LogPrint("INFO","%s", blockUndo.ToString());
-//    CKeyID keyId = uint160("21d4830eaa965e3f289c81870fe79e0280aa2f9f");
-//    CUserID userId = keyId;
-//    CAccount account;
-//    if(view.GetAccount(userId, account))
-//    {
-//    	LogPrint("INFO", "Get account before undo: %s, height:%d", account.ToString(), pindex->nHeight);
-//    }
+    LogPrint("INFO","%s", blockUndo.ToString());
+    CKeyID keyId = uint160("21d4830eaa965e3f289c81870fe79e0280aa2f9f");
+    CUserID userId = keyId;
+    CAccount account;
+    if(view.GetAccount(userId, account))
+    {
+    	LogPrint("INFO", "Get account before undo: %s, height:%d", account.ToString(), pindex->nHeight);
+    }
     //undo reward tx
     std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[0];
 	CTxUndo txundo = blockUndo.vtxundo.back();
@@ -1170,10 +1170,10 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
         if(!pBaseTx->UndoUpdateAccount(i, view, state, txundo, pindex->nHeight, txCache, scriptCache))
         	return false;
     }
-//    if(view.GetAccount(userId, account))
-//    {
-//    	LogPrint("INFO", "Get account after undo: %s, height:%d", account.ToString(), pindex->nHeight);
-//    }
+    if(view.GetAccount(userId, account))
+    {
+    	LogPrint("INFO", "Get account after undo: %s, height:%d", account.ToString(), pindex->nHeight);
+    }
 
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
