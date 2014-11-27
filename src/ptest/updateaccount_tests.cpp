@@ -397,4 +397,14 @@ BOOST_AUTO_TEST_CASE(test) {
 //	cout << "mine 1 block, expired height 4" << endl;
 
 }
+/**
+ * 测试交易同步准确性与及时性
+ */
+BOOST_AUTO_TEST_CASE(test1) {
+	int nIndex = 10000;
+	while(nIndex--) {
+		CreateNormalTx();
+		::Sleep(500);
+	}
+}
 BOOST_AUTO_TEST_SUITE_END()

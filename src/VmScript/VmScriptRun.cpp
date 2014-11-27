@@ -78,9 +78,12 @@ tuple<bool, uint64_t, string> CVmScriptRun:: run(shared_ptr<CBaseTransaction>& T
 		return std::make_tuple (false, 0, string("VmScript inital Failed\n"));
 
 	}
-	uint64_t  step = pMcu.get()->run(maxstep,this);
+	int64_t  step = pMcu.get()->run(maxstep,this);
 	if (0 == step) {
 		mytuple = std::make_tuple (false, 0, string("VmScript run Failed\n"));
+		return mytuple;
+	}else if(-1 == step){
+		mytuple = std::make_tuple (false, 0, string("the fee not enough \n"));
 		return mytuple;
 	}
 
@@ -126,10 +129,18 @@ shared_ptr<CAccount> CVmScriptRun::GetAccount(shared_ptr<CAccount>& Account) {
 	}
 	return NULL;
 }
-
+vector_unsigned_char CVmScriptRun::GetAccountID(CVmOperate value) {
+	vector_unsigned_char accountid;
+	//if (value.type == ACCOUNTID) {
+	//	accountid.assign(value.accountid, value.accountid + 6);
+	//} else if (value.type == KEYID) {
+		//accountid.assign(value.accountid, value.accountid + 20);
+	//}
+	return accountid;
+}
 bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 	// judge contract rulue
-	uint64_t addmoey, miusmoney;
+	uint64_t addmoey = 0, miusmoney = 0;
 	uint64_t temp = 0;
 	for (auto& it : listoperate) {
 
@@ -138,24 +149,27 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 			addmoey += temp;
 		}
 		if (it.opeatortype == MINUS_FREE || it.opeatortype == MINUS_SELF_FREEZD || it.opeatortype == MINUS_FREEZD) {
+
+			vector<unsigned char > accountid(it.accountid,it.accountid+sizeof(it.accountid));
+			CRegID regId(accountid);
+			CContractTransaction* secure = static_cast<CContractTransaction*>(listTx.get());
+			/// current tx's script cant't mius other script's regid
+			if(m_ScriptDBTip->HaveScript(regId) && regId.GetRegID() != boost::get<CRegID>(secure->scriptRegId).GetRegID())
+			{
+				return false;
+			}
 			memcpy(&temp,it.money,sizeof(it.money));
 			miusmoney += temp;
 		}
-		if (addmoey != miusmoney)
-			return false;
 
+	}
+	if (addmoey != miusmoney)
+	{
+		return false;
 	}
 	return true;
 }
-vector_unsigned_char CVmScriptRun::GetAccountID(CVmOperate value) {
-	vector_unsigned_char accountid;
-	if (value.type == ACCOUNTID) {
-		accountid.assign(value.accountid, value.accountid + 6);
-	} else if (value.type == KEYID) {
-		accountid.assign(value.accountid, value.accountid + 20);
-	}
-	return accountid;
-}
+
 shared_ptr<vector<CVmOperate>> CVmScriptRun::GetOperate() const {
 	auto tem = make_shared<vector<CVmOperate>>();
 	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
@@ -177,15 +191,18 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		fund.scriptID = boost::get<CRegID>(tx->scriptRegId).GetRegID();
 
 		auto tem = make_shared<CAccount>();
-		vector_unsigned_char accountid = GetAccountID(it);
-		if (accountid.size() == 0) {
-			return false;
-		}
-		CRegID regId(accountid);
-		view.GetAccount(regId, *tem.get());
+//		vector_unsigned_char accountid = GetAccountID(it);
+//		if (accountid.size() == 0) {
+//			return false;
+//		}
+		vector_unsigned_char accountid(it.accountid,it.accountid+sizeof(it.accountid));
+		CRegID regid(accountid);
+		CUserID userid(regid);
+		view.GetAccount(userid, *tem.get());
 		shared_ptr<CAccount> vmAccount = GetAccount(tem);
 		if (vmAccount.get() == NULL) {
 			RawAccont.push_back(tem);
+			vmAccount = tem;
 		}
 		shared_ptr<CAccount> vnewAccount = GetNewAccount(tem);
 		if (vnewAccount.get() != NULL) {
@@ -196,12 +213,16 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 			CFund vFind = vmAccount.get()->FindFund(vmAccount.get()->vFreeze, fund.scriptID);
 			fund.nHeight = vFind.nHeight;
 		}
-
-		LogPrint("vm", "muls account:%s\r\n", vmAccount.get()->ToString().c_str());
-		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
+		if((OperType)it.opeatortype == ADD_FREE)
+		{
+			fund.nFundType = FREEDOM_FUND;
+		}
+//		LogPrint("vm", "account id:%s\r\n", HexStr(accountid).c_str());
+//		LogPrint("vm", "muls account:%s\r\n", vmAccount.get()->ToString().c_str());
+//		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
 		bool ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype,fund,height);
 
-		LogPrint("vm", "after muls account:%s\r\n", vmAccount.get()->ToString().c_str());
+//		LogPrint("vm", "after muls account:%s\r\n", vmAccount.get()->ToString().c_str());
 		if (!ret) {
 			return false;
 		}

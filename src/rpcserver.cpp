@@ -302,7 +302,7 @@ static const CRPCCommand vRPCCommands[] =
 //	{ "getwork",                &getwork,                true,      false,     true  },
 	{ "setgenerate",            &setgenerate,            true,      true,      false },
 //	{ "listregid",        		&listregid,        		 true,      false,      true },
-	{ "getaddramount",          &getaddramount,       	 true,      false,      true },
+	{ "getaddrinfo",           &getaddrinfo,       	 true,      false,      true },
 //	{ "getoneaddr",          	&getoneaddr,          	 true,      false,      true },
 	{ "listregscript",          &listregscript,          true,      false,      true },
 	{ "generateblock",          &generateblock, 		 true,      false,      true },

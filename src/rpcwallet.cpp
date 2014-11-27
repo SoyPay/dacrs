@@ -156,17 +156,12 @@ Value sendtoaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
-            "sendtoaddress \"bitcoinaddress\" amount ( \"comment\" \"comment-to\" )\n"
+            "sendtoaddress \"bitcoinaddress\" amount "
             "\nSent an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
             + HelpRequiringPassphrase() +
             "\nArguments:\n"
             "1. \"bitcoinaddress\"  (string, required) The bitcoin address to send to.\n"
-            "2. \"amount\"      (numeric, required) The amount in btc to send. eg 0.1\n"
-            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
-            "                             This is not part of the transaction, just kept in your wallet.\n"
-            "4. \"comment-to\"  (string, optional) A comment to store the name of the person or organization \n"
-            "                             to which you're sending the transaction. This is not part of the \n"
-            "                             transaction, just kept in your wallet.\n"
+
             "\nResult:\n"
             "\"transactionid\"  (string) The transaction id.\n"
             "\nExamples:\n"
@@ -175,23 +170,38 @@ Value sendtoaddress(const Array& params, bool fHelp)
             + HelpExampleRpc("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\"")
         );
 
+    //todo 完成从指定地址发到指定地址的
+
     CBitcoinAddress address(params[0].get_str());
-    if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+
+    EnsureWalletIsUnlocked();
+    CKeyID sendKeyId;
+    CKeyID RevKeyId;
+    address.GetKeyID(RevKeyId);
+
+    if (!address.IsValid() || !address.GetKeyID(RevKeyId) )
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 
     // Amount
     int64_t nAmount = AmountFromValue(params[1]);
+    if(!pwalletMain->GetMoreThanMoneyKeyId(sendKeyId,nAmount+nTransactionFee))
+    {
+    	 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "not enough moeny");
+    }
 
-    // Wallet comments
-    CTransaction wtx;
+    CRegID sendreg;
+    CRegID revreg;
+    if(!pwalletMain->GetRegId(sendKeyId,sendreg)||!pAccountViewTip->GetRegId(CUserID(RevKeyId),revreg))
+    {
+    	 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+    }
+    return  pwalletMain->SendMoney(sendreg,revreg,nAmount);
 
-    EnsureWalletIsUnlocked();
-
-    string strError = pwalletMain->SendMoneyToDestination(params[0].get_str(), nAmount, wtx);
-    if (strError != "")
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
-
-    return wtx.GetHash().GetHex();
+//    string strError = pwalletMain->SendMoneyToDestination(params[0].get_str(), nAmount, wtx);
+//    if (strError != "")
+//        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+//
+//    return wtx.GetHash().GetHex();
 }
 
 

@@ -138,15 +138,13 @@ enum ACCOUNT_TYPE {
  */
 class CVmOperate{
 public:
-	unsigned char type;				//!< the account type
-	unsigned char accountid[20];	//!< accountid
+	unsigned char accountid[6];	//!< accountid
 	unsigned char opeatortype;		//!OperType
 	unsigned int  outheight;		//!< the transacion Timeout height
 	unsigned char money[8];			//!<The transfer amount
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(type);
-			for(int i = 0;i < 20;i++)
+			for(int i = 0;i < 6;i++)
 			READWRITE(accountid[i]);
 			READWRITE(opeatortype);
 			READWRITE(outheight);
