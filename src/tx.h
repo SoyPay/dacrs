@@ -33,7 +33,6 @@ public:
 
 typedef boost::variant<CNullID, CRegID, CKeyID, CPubKey> CUserID;
 
-
 class CRegID {
 private:
 	uint32_t nHeight;
@@ -52,6 +51,9 @@ public:
 	}
 
 	CRegID(string strRegID);
+	bool operator ==(const CRegID& co) const {
+		return (this->nHeight == co.nHeight && this->nIndex == co.nIndex);
+	}
 
 	CRegID(const vector<unsigned char> &vIn) {
 		assert(vIn.size() == 6);
@@ -64,7 +66,13 @@ public:
 	}
     bool IsEmpty()const{return (nHeight == 0 && nIndex == 0);};
 	CRegID(uint32_t nHeight = 0, uint16_t nIndex = 0);
-
+    bool clean()
+    {
+    	nHeight = 0 ;
+    	nIndex = 0 ;
+    	vRegID.clear();
+    	return true;
+    }
 	string ToString() const;
 
 	IMPLEMENT_SERIALIZE
@@ -1267,7 +1275,7 @@ public:
 class CAccount {
 public:
 	CRegID regID;
-	CKeyID keyID;											//!< private key of the account
+	CKeyID keyID;											//!< keyID of the account
 	CPubKey publicKey;										//!< public key of the account
 	uint64_t llValues;										//!< freedom money which coinage greater than 30 days
 	vector<CFund> vRewardFund;								//!< reward money

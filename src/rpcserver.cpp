@@ -251,10 +251,10 @@ static const CRPCCommand vRPCCommands[] =
     { "verifychain",            &verifychain,            true,      false,      false },
 
     /* Mining */
-    { "getblocktemplate",       &getblocktemplate,       true,      false,      false },
+//    { "getblocktemplate",       &getblocktemplate,       true,      false,      false },
     { "getmininginfo",          &getmininginfo,          true,      false,      false },
     { "getnetworkhashps",       &getnetworkhashps,       true,      false,      false },
-    { "submitblock",            &submitblock,            false,     false,      false },
+//    { "submitblock",            &submitblock,            false,     false,      false },
 
     /* Raw transactions */
  //   { "createrawtransaction",   &createrawtransaction,   false,     false,      false },
@@ -276,8 +276,8 @@ static const CRPCCommand vRPCCommands[] =
     { "dumpprivkey",            &dumpprivkey,            true,      false,      true },
     { "dumpwallet",             &dumpwallet,             true,      false,      true },
     { "encryptwallet",          &encryptwallet,          false,     false,      true },
-    { "getaccount",             &getaccount,             false,     false,      true },
-    { "getaddressesbyaccount",  &getaddressesbyaccount,  true,      false,      true },
+//    { "getaccount",             &getaccount,             false,     false,      true },
+//    { "getaddressesbyaccount",  &getaddressesbyaccount,  true,      false,      true },
     { "getaccountinfo",         &getaccountinfo,         true,      false,      true },
     { "getnewaddress",          &getnewaddress,          true,      false,      true },
     { "gettxdetail",            &gettxdetail,       	 true,      false,      true },
@@ -299,11 +299,11 @@ static const CRPCCommand vRPCCommands[] =
 	{ "walletpassphrase",       &walletpassphrase,       true,      false,      true },
 	{ "getgenerate",            &getgenerate,            true,      false,     false },
 	{ "gethashespersec",        &gethashespersec,        true,      false,     false },
-	{ "getwork",                &getwork,                true,      false,     true  },
+//	{ "getwork",                &getwork,                true,      false,     true  },
 	{ "setgenerate",            &setgenerate,            true,      true,      false },
-	{ "listregid",        		&listregid,        		 true,      false,      true },
+//	{ "listregid",        		&listregid,        		 true,      false,      true },
 	{ "getaddramount",          &getaddramount,       	 true,      false,      true },
-	{ "getoneaddr",          	&getoneaddr,          	 true,      false,      true },
+//	{ "getoneaddr",          	&getoneaddr,          	 true,      false,      true },
 	{ "listregscript",          &listregscript,          true,      false,      true },
 	{ "generateblock",          &generateblock, 		 true,      false,      true },
 	{"getpublickey",            &getpublickey,           true,      false,      true },

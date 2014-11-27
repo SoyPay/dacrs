@@ -8,7 +8,7 @@
 #include <openssl/ecdsa.h>
 #include <openssl/obj_mac.h>
 #include <openssl/rand.h>
-
+#include "base58.h"
 // anonymous namespace with local implementation code (OpenSSL interaction)
 namespace {
 
@@ -363,6 +363,7 @@ void CKey::MakeNewKey(bool fCompressedIn) {
         RAND_bytes(vch, sizeof(vch));
     } while (!Check(vch));
     fValid = true;
+    assert(fCompressedIn == true);
     fCompressed = fCompressedIn;
 }
 
@@ -625,8 +626,11 @@ bool CExtPubKey::Derive(CExtPubKey &out, unsigned int nChild) const {
     return pubkey.Derive(out.pubkey, out.vchChainCode, nChild, vchChainCode);
 }
 
+string CPubKey::ToString() const {
+	return HexStr(begin(),end());
 
+}
 
-
-
-
+string CKeyID::ToAddress() const {
+	return CBitcoinAddress(*this).ToString();
+}

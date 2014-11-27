@@ -62,27 +62,24 @@ Value getinfo(const Array& params, bool fHelp)
     Object obj;
     obj.push_back(Pair("version",       (int)CLIENT_VERSION));
     obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
-#ifdef ENABLE_WALLET
+
     if (pwalletMain) {
         obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
  //       obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
     }
-#endif
+    static const string name[] = {"MAIN", "TESTNET", "REGTEST"};
+
     obj.push_back(Pair("blocks",        (int)chainActive.Height()));
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
     obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
-    obj.push_back(Pair("testnet",       TestNet()));
-#ifdef ENABLE_WALLET
-    if (pwalletMain) {
-        obj.push_back(Pair("keypoololdest", pwalletMain->GetOldestKeyPoolTime()));
-        obj.push_back(Pair("keypoolsize",   (int)pwalletMain->GetKeyPoolSize()));
-    }
+    obj.push_back(Pair("nettype",       name[Params().NetworkID()]));
+
     if (pwalletMain && pwalletMain->IsCrypted())
-        obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
-    obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
-#endif
+	 obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
+	 obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
+
     obj.push_back(Pair("relayfee",      ValueFromAmount(CTransaction::nMinRelayTxFee)));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
@@ -104,35 +101,7 @@ public:
         return obj;
     }
 
-//    Object operator()(const CScriptID &scriptID) const {
-//        Object obj;
-//        obj.push_back(Pair("isscript", true));
-//        CScript subscript;
-//        pwalletMain->GetCScript(scriptID, subscript);
-//        vector<CTxDestination> addresses;
-//        txnouttype whichType;
-//        int nRequired;
-//        ExtractDestinations(subscript, whichType, addresses, nRequired);
-//        obj.push_back(Pair("script", GetTxnOutputType(whichType)));
-//        obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
-//        Array a;
-//        for (const auto& addr : addresses)
-//            a.push_back(CBitcoinAddress(addr).ToString());
-//        obj.push_back(Pair("addresses", a));
-//        if (whichType == TX_MULTISIG)
-//            obj.push_back(Pair("sigsrequired", nRequired));
-//        return obj;
-//    }
-    Object operator()(const CAccountID &accID) const {
-    	Object obj;
-		CPubKey vchPubKey;
-		CKeyID keyid;
-		pwalletMain->GetPubKey(keyid, vchPubKey);
-		obj.push_back(Pair("isscript", false));
-		obj.push_back(Pair("pubkey", HexStr(vchPubKey)));
-		obj.push_back(Pair("iscompressed", vchPubKey.IsCompressed()));
-		return obj;
-        }
+
 };
 #endif
 
