@@ -201,9 +201,7 @@ public:
 	bool operator()(const CKeyID &id) const {
 		return addr->Set(id);
 	}
-	bool operator()(const CAccountID &id) const {
-		return addr->Set(id);
-	}
+
 	bool operator()(const CNoDestination &no) const {
 		return false;
 	}
@@ -216,12 +214,7 @@ bool CBitcoinAddress::Set(const CKeyID &id) {
 	return true;
 }
 
-bool CBitcoinAddress::Set(const CAccountID &id) {
-	vector<unsigned char> vid;
-	vid.push_back(CBaseParams::ACC_ADDRESS);
-	SetData(vid, &id, 26);
-	return true;
-}
+
 
 bool CBitcoinAddress::Set(const CTxDestination &dest) {
 	return boost::apply_visitor(CBitcoinAddressVisitor(this), dest);
@@ -256,16 +249,11 @@ CTxDestination CBitcoinAddress::Get() const {
 
 		if (vchVersion == Params().Base58Prefix(CBaseParams::PUBKEY_ADDRESS))
 			return CKeyID(id);
-		else if (vchVersion == Params().Base58Prefix(CBaseParams::SCRIPT_ADDRESS))
-			return CScriptID(id);
+//		else if (vchVersion == Params().Base58Prefix(CBaseParams::SCRIPT_ADDRESS))
+//			return CScriptID(id);
 		else
 			return CNoDestination();
-	} else {
-		CAccountID id;
-		memcpy(&id, &vchData[0], 26);
-		return id;
 	}
-
 }
 
 bool CBitcoinAddress::GetKeyID(CKeyID &keyID) const {
@@ -286,16 +274,16 @@ bool CBitcoinAddress::GetKeyID(CKeyID &keyID) const {
 	return false;
 }
 
-bool CBitcoinAddress::GetRegID(vector<unsigned char> &vRegid) const {
-
-	vector<unsigned char> vid;
-	vid.push_back(CBaseParams::ACC_ADDRESS);
-	if (vchData.size() == 26 && vchVersion == vid) {
-		vRegid.insert(vRegid.end(),vchData.end()-6,vchData.end());
-		return true;
-	}
-	return false;
-}
+//bool CBitcoinAddress::GetRegID(CRegID &Regid) const {
+//
+////	vector<unsigned char> vid;
+////	vid.push_back(CBaseParams::ACC_ADDRESS);
+//	if (vchData.size() == 26 && vchVersion == vector<unsigned char>(CBaseParams::ACC_ADDRESS)) {
+//		Regid.SetRegID(vector<unsigned char>(vchData.end()-6,vchData.end()));
+//		return true;
+//	}
+//	return false;
+//}
 
 bool CBitcoinAddress::IsScript() const {
 	return IsValid() && vchVersion == Params().Base58Prefix(CBaseParams::SCRIPT_ADDRESS);

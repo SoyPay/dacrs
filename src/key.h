@@ -27,6 +27,12 @@ public:
 	CKeyID(const uint160 &in) :
 			uint160(in) {
 	}
+	string ToString() const
+	{
+		return HexStr(begin(),end());
+	}
+	string ToAddress() const;
+
 };
 
 /** A reference to a CScript: the Hash160 of its serialization (see script.h) */
@@ -40,22 +46,7 @@ public:
 	}
 };
 
-typedef base_uint<224> base_uint224;
-class CAccountID: public base_uint224 {
-public:
-	CAccountID(CKeyID keyid, vector<unsigned char> &vRegid) {
-		unsigned char buf[32] = { 0 };
-		vRegid.resize(6);
-		memcpy(buf, keyid.begin(), keyid.size());
-		memcpy(&buf[keyid.size()], &vRegid[0], 6);
-		memcpy(begin(), buf, size());
-	}
-	;
-	CAccountID() {
-		for (int i = 0; i < WIDTH; i++)
-			pn[i] = 0;
-	}
-};
+
 
 /** An encapsulated public key. */
 class CPubKey {
@@ -68,8 +59,9 @@ private:
 	unsigned int static GetLen(unsigned char chHeader) {
 		if (chHeader == 2 || chHeader == 3)
 			return 33;
-		if (chHeader == 4 || chHeader == 6 || chHeader == 7)
-			return 65;
+//		assert(0); //only sorpurt 33
+//		if (chHeader == 4 || chHeader == 6 || chHeader == 7)
+//			return 65;
 		return 0;
 	}
 
@@ -79,6 +71,9 @@ private:
 	}
 
 public:
+	string ToString() const;
+
+
 	// Construct an invalid public key.
 	CPubKey() {
 		Invalidate();
@@ -268,10 +263,34 @@ private:
 	bool static Check(const unsigned char *vch);
 public:
 
+	IMPLEMENT_SERIALIZE
+	(
+			int len = 0;
+			while(len < sizeof(vch))
+			{
+				READWRITE(vch[len++]);
+			}
+			READWRITE(fCompressed);
+			READWRITE(fValid);
+	)
+
+   string ToString()
+	{
+		if(fValid)
+		return HexStr(begin(),end());
+		return " ";
+	}
+
 	// Construct an invalid private key.
 	CKey() :
 			fValid(false) {
 		LockObject(vch);
+		fCompressed = false;
+	}
+	bool Clear()
+	{
+		fValid = false;
+		memset(vch,0,sizeof(vch));
 	}
 
 	// Copy constructor. This is necessary because of memlocking.
@@ -331,7 +350,7 @@ public:
 	bool SetPrivKey(const CPrivKey &vchPrivKey, bool fCompressed);
 
 	// Generate a new private key using a cryptographic PRNG.
-	void MakeNewKey(bool fCompressed);
+	void MakeNewKey(bool fCompressed = true);
 
 	// Convert the private key to a CPrivKey (serialized OpenSSL private key data).
 	// This is expensive.
@@ -407,6 +426,11 @@ public:
  *  * CScriptID: TX_SCRIPTHASH destination
  *  A CTxDestination is the internal data type encoded in a CBitcoinAddress
  */
-typedef boost::variant<CNoDestination, CKeyID, CAccountID> CTxDestination;
+typedef boost::variant<CNoDestination, CKeyID> CTxDestination;
+
+
+
+
+
 
 #endif

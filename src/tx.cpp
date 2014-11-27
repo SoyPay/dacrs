@@ -67,7 +67,9 @@ CRegID::CRegID(uint32_t nHeightIn, uint16_t nIndexIn) {
 	vRegID.insert(vRegID.end(), BEGIN(nIndexIn), END(nIndexIn));
 }
 string CRegID::ToString() const {
+	if(!IsEmpty())
 	return ::HexStr(vRegID);
+	return string(" ");
 }
 void CRegID::SetRegIDByCompact(const vector<unsigned char> &vIn) {
 	CDataStream ds(vIn, SER_DISK, CLIENT_VERSION);
@@ -1270,8 +1272,8 @@ uint256 CAccount::BuildMerkleTree(int prevBlockHeight) const {
 
 string CAccount::ToString() const {
 	string str;
-	str += strprintf("keyID=%s, publicKey=%d, values=%ld\n",
-	HexStr(keyID).c_str(), HexStr(publicKey).c_str(), llValues);
+	str += strprintf("keyID=%s, regid:%s, publicKey=%s, values=%ld\n",
+	HexStr(keyID).c_str(),regID.ToString(),HexStr(publicKey).c_str(), llValues);
 	for (unsigned int i = 0; i < vRewardFund.size(); ++i) {
 		str += "    " + vRewardFund[i].ToString() + "\n";
 	}

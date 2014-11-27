@@ -153,13 +153,13 @@ void RegisterWallet(CWalletInterface* pwalletIn) {
     g_signals.EraseTransaction.connect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
     g_signals.UpdatedTransaction.connect(boost::bind(&CWalletInterface::UpdatedTransaction, pwalletIn, _1));
     g_signals.SetBestChain.connect(boost::bind(&CWalletInterface::SetBestChain, pwalletIn, _1));
-    g_signals.Inventory.connect(boost::bind(&CWalletInterface::Inventory, pwalletIn, _1));
+//    g_signals.Inventory.connect(boost::bind(&CWalletInterface::Inventory, pwalletIn, _1));
     g_signals.Broadcast.connect(boost::bind(&CWalletInterface::ResendWalletTransactions, pwalletIn));
 }
 
 void UnregisterWallet(CWalletInterface* pwalletIn) {
     g_signals.Broadcast.disconnect(boost::bind(&CWalletInterface::ResendWalletTransactions, pwalletIn));
-    g_signals.Inventory.disconnect(boost::bind(&CWalletInterface::Inventory, pwalletIn, _1));
+//    g_signals.Inventory.disconnect(boost::bind(&CWalletInterface::Inventory, pwalletIn, _1));
     g_signals.SetBestChain.disconnect(boost::bind(&CWalletInterface::SetBestChain, pwalletIn, _1));
     g_signals.UpdatedTransaction.disconnect(boost::bind(&CWalletInterface::UpdatedTransaction, pwalletIn, _1));
     g_signals.EraseTransaction.disconnect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
@@ -1202,10 +1202,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 
 //static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 
-void ThreadScriptCheck() {
-    RenameThread("soypay-scriptch");
-//    scriptcheckqueue.Thread();
-}
+
 
 bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &view, CBlockIndex* pindex, CTransactionCache &txCache, CScriptDBViewCache &scriptCache, bool fJustCheck)
 {
@@ -1229,6 +1226,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 			CPubKey pubKey = boost::get<CPubKey>(pRewardTx->account);
 			CKeyID keyId = pubKey.GetID();
 			sourceAccount.keyID = keyId;
+			sourceAccount.SetRegId(accountId);
 			sourceAccount.publicKey = pubKey;
 			sourceAccount.llValues = pRewardTx->rewardValue;
 			assert(view.SaveAccountInfo(accountId.GetRegID(), keyId, sourceAccount));
