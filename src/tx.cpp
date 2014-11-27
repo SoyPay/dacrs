@@ -1391,14 +1391,14 @@ uint64_t CAccount::GetVecMoney(const vector<CFund>& vFund){
 	return nTotal;
 }
 
-CFund& CAccount::FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID) {
-	CFund vret;
+bool CAccount::FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID,CFund&fund) {
 	for (vector<CFund>::const_iterator it = vFund.begin(); it != vFund.end(); it++) {
 		if (it->scriptID == scriptID) {
-			vret = *it;
+			fund = *it;
+			return true;
 		}
 	}
-	return vret;
+	return false;
 }
 
 bool CAccount::IsAuthorized(uint64_t nMoney, int nHeight, const vector_unsigned_char& scriptID) {

@@ -208,15 +208,20 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		if (vnewAccount.get() != NULL) {
 			vmAccount = vnewAccount;
 		}
+		if ((OperType) it.opeatortype == ADD_FREE) {
+			fund.nFundType = FREEDOM_FUND;
+		} else if ((OperType) it.opeatortype == ADD_FREEZD) {
+			fund.nFundType = FREEZD_FUND;
+		}
 
 		if (fund.nFundType == FREEZD_FUND) {
-			CFund vFind = vmAccount.get()->FindFund(vmAccount.get()->vFreeze, fund.scriptID);
-			fund.nHeight = vFind.nHeight;
+			CFund vFind;
+			if (vmAccount.get()->FindFund(vmAccount.get()->vFreeze, fund.scriptID, vFind)) {
+				fund.nHeight = vFind.nHeight;
+			}
+
 		}
-		if((OperType)it.opeatortype == ADD_FREE)
-		{
-			fund.nFundType = FREEDOM_FUND;
-		}
+
 //		LogPrint("vm", "account id:%s\r\n", HexStr(accountid).c_str());
 //		LogPrint("vm", "muls account:%s\r\n", vmAccount.get()->ToString().c_str());
 //		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
