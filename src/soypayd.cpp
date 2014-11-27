@@ -60,28 +60,10 @@ bool AppInit(int argc, char* argv[]) {
 		// Parameters
 		//
 		// If Qt is used, parameters/soypay.conf are parsed in qt/soypay.cpp's main()
-
-		ParseParameters(argc, argv);
-		if (!boost::filesystem::is_directory(GetDataDir(false))) {
-			fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", mapArgs["-datadir"].c_str());
-			return false;
-		}
-		try {
-			ReadConfigFile(mapArgs, mapMultiArgs);
-		} catch (std::exception &e) {
-			fprintf(stderr, "Error reading configuration file: %s\n", e.what());
-			return false;
-		}
-		// Check for -testnet or -regtest parameter (TestNet() calls are only valid after this clause)
-		if (!SelectParamsFromCommandLine()) {
-			fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
-			return false;
-		}
-
 		CBaseParams::IntialParams(argc, argv);
-		Params().InitalConfig();
+		SysParams().InitalConfig();
 
-		if (mapArgs.count("-?") || mapArgs.count("--help")) {
+		if (CBaseParams::IsArgCount("-?") || CBaseParams::IsArgCount("--help")) {
 			// First part of help message is specific to soypayd / RPC client
 			std::string strUsage = _("Bitcoin Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n"
 					+ _("Usage:") + "\n" + "  soypayd [options]                     " + _("Start Bitcoin Core Daemon")
@@ -108,7 +90,7 @@ bool AppInit(int argc, char* argv[]) {
 			exit(ret);
 		}
 #ifndef WIN32
-		fDaemon = GetBoolArg("-daemon", false);
+		fDaemon = CBaseParams::GetBoolArg("-daemon", false);
 		if (fDaemon)
 		{
 			fprintf(stdout, "Bitcoin server starting\n");
@@ -132,7 +114,7 @@ bool AppInit(int argc, char* argv[]) {
 			fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
 		}
 #endif
-		SoftSetBoolArg("-server", true);
+		CBaseParams::SoftSetBoolArg("-server", true);
 
 		detectShutdownThread = new boost::thread(boost::bind(&DetectShutdownThread, &threadGroup));
 		fRet = AppInit2(threadGroup);
