@@ -349,9 +349,9 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 		auto ConnectBlockProgress = [&]() {
 			CAccountTx newtx(this, blockhash);
 			for (const auto &sptx : pblock->vptx) {
+				uint256 hashtx = sptx->GetHash();
 				//confirm the tx is mine
 				if (IsMine(sptx.get())) {
-					uint256 hashtx = sptx->GetHash();
 					if (sptx->nTxType == REG_ACCT_TX) {
 						fIsNeedUpDataRegID = true;
 					} else if (sptx->nTxType == CONTRACT_TX) {
@@ -361,11 +361,16 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 						} else {
 							ERROR("GetTxOperLog  error %s", hashtx.GetHex());
 						}
-						bupdate = true;
 					}
+					newtx.AddTx(hashtx,sptx.get());
+					bupdate = true;
+				}
+				if(UnConfirmTx.count(hashtx)> 0){
+					UnConfirmTx.erase(hashtx);
+					bupdate = true;
 				}
 			}
-			if (bupdate) //write to disk
+			if (newtx.GetTxSize() > 0 ) //write to disk
 			{
 				mapInBlockTx[blockhash] = newtx; //add to map
 			}
@@ -416,16 +421,16 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 
 }
 
-void CWallet::EraseFromWallet(const uint256 &hash) {
-	if (!fFileBacked)
-		return;
-	{
-		LOCK(cs_wallet);
-		if (mapWalletTx.erase(hash))
-			CWalletDB(strWalletFile).EraseAccountTx(hash);
-	}
-	return;
-}
+//void CWallet::EraseFromWallet(const uint256 &hash) {
+//	if (!fFileBacked)
+//		return;
+//	{
+//		LOCK(cs_wallet);
+//		if (mapWalletTx.erase(hash))
+//			CWalletDB(strWalletFile).EraseAccountTx(hash);
+//	}
+//	return;
+//}
 // Scan the block chain (starting in pindexStart) for transactions
 // from or to us. If fUpdate is true, found transactions that already
 // exist in the wallet will be updated.
@@ -472,11 +477,11 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate) {
 	return true;
 }
 
-void CWallet::ReacceptWalletTransactions() {
-	LOCK2(cs_main, cs_wallet);
-
-	mapWalletTx[uint256(0)].AcceptToMemoryPool();
-}
+//void CWallet::ReacceptWalletTransactions() {
+//	LOCK2(cs_main, cs_wallet);
+//
+//	mapWalletTx[uint256(0)].AcceptToMemoryPool();
+//}
 
 void CWallet::ResendWalletTransactions() {
 	// Do this infrequently and randomly to avoid giving away
@@ -676,9 +681,9 @@ map<CTxDestination, int64_t> CWallet::GetAddressBalances() {
 }
 
 /***********************************creat tx*********************************************/
-map<CKeyID , int64_t> CWallet::GetBalance() const
+bool CWallet::GetMoreThanMoneyKeyId(CKeyID &keyId,int64_t money) const
 {
-	map<CKeyID , int64_t> mbalance;
+
 
 	CAccountViewCache accView(*pAccountViewTip, true);
 	{
@@ -688,16 +693,17 @@ map<CKeyID , int64_t> CWallet::GetBalance() const
 			CUserID userId = te.first;
 			CAccount account;
 			if (accView.GetAccount(userId, account)) {
-				mbalance[te.first] = account.GetBalance(chainActive.Tip()->nHeight);
+				if(account.GetBalance(chainActive.Tip()->nHeight)>=money)
+					keyId= te.first;
+				return true;
 			}
 		}
 
 	}
-
-    return mbalance;
+	return false;
 }
 
-std::string CWallet::SendMoney(CKeyID &send, CKeyID &rsv, int64_t nValue, CTransaction& txNew)
+std::string CWallet::SendMoney(CRegID &send, CRegID &rsv, int64_t nValue)
 {
 //	if (IsLocked())
 //	{
@@ -707,8 +713,7 @@ std::string CWallet::SendMoney(CKeyID &send, CKeyID &rsv, int64_t nValue, CTrans
 	CTransaction tx;
 	{
 		LOCK2(cs_main, cs_wallet);
-//		tx.srcUserId = mapKeyRegID[send];
-					 LogPrint("TODO"," ");
+		tx.srcUserId = send;
 		tx.desUserId = rsv;
 		tx.llValues = nValue;
 		tx.llFees = nTransactionFee;
@@ -716,7 +721,13 @@ std::string CWallet::SendMoney(CKeyID &send, CKeyID &rsv, int64_t nValue, CTrans
 	}
 
 	CKey key;
-	GetKey(send, key);
+	CKeyID keID;
+	if(!pAccountViewTip->GetKeyId(send,keID) ||
+			!GetKey(keID, key))
+	{
+		return _("key or keID failed");
+	}
+
 	if (!key.Sign(tx.SignatureHash(), tx.signature)) {
 		return _("Sign failed");
 	}
@@ -724,37 +735,8 @@ std::string CWallet::SendMoney(CKeyID &send, CKeyID &rsv, int64_t nValue, CTrans
 	if (!CommitTransaction((CBaseTransaction *) &tx)) {
 		return _("CommitTransaction failed");
 	}
+	return tx.GetHash().GetHex();
 
-	txNew = tx;
-	return "";
-}
-
-string CWallet::SendMoneyToDestination(const string& address, int64_t nValue, CTransaction& txNew)
-{
-	map<CKeyID , int64_t> mbalance;
-
-	mbalance = GetBalance();
-
-	CBitcoinAddress recvaddr(address);
-
-	CKeyID recvkeyid;
-	if (!recvaddr.GetKeyID(recvkeyid)) {
-		return _("recv address err");
-	}
-
-    if (nValue <= 0)
-        return _("Invalid amount");
-
-    for(map<CKeyID , int64_t>::const_iterator it = mbalance.begin(); it != mbalance.end(); ++it)
-    {
-    	if (nValue + nTransactionFee < it->second)
-    	{
-    		CKeyID sendid = it->first;
-			return SendMoney(sendid, recvkeyid, nValue, txNew);
-    	}
-    }
-
-    return _("no account balance found");
 }
 
 /****************************************************************************************/
@@ -845,4 +827,20 @@ CWallet* CWallet::getinstance() {
 	assert(0);
 	return NULL;
 
+}
+
+Object CAccountTx::ToJosnObj() const {
+
+	Object obj;
+	obj.push_back(Pair("blockHash",  blockHash.ToString()));
+
+	Array Tx;
+	CAccountViewCache view(*pAccountViewTip);
+	for(auto const &re:mapAccountTx)
+	{
+	  Tx.push_back(re.second.get()->ToString(view));
+	}
+	obj.push_back(Pair("Tx",  Tx));
+
+	return obj;
 }

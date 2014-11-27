@@ -803,11 +803,11 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		auto GetUserId = [&](CKeyID &mkeyId)
 		{
 			CAccount acct;
-			if (!view.GetAccount(CUserID(mkeyId), acct)) {
+			if (view.GetAccount(CUserID(mkeyId), acct)) {
 				return acct.regID;
 			}
 			throw runtime_error(
-							tinyformat::format("createcontracttx :account id %s is not exist\n", mkeyId.GetHex()));
+							tinyformat::format("createcontracttx :account id %s is not exist\n", mkeyId.ToAddress()));
 		};
 
 		tx.regAccountId = GetUserId(keyid);
@@ -909,52 +909,43 @@ Value listaddrtx(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 
-	//get addresss
-	CBitcoinAddress address(params[0].get_str());
+//	//get addresss
+//	CBitcoinAddress address(params[0].get_str());
+//
+//	//get keyid
+//	CKeyID keyid;
+//	if (!address.GetKeyID(keyid)) {
+//		throw runtime_error("in registeraccounttx :address err\n");
+//	}
+//
+//	bool bshowdetail = 0;
+//	if (params.size() > 1) {
+//		bshowdetail = params[1].get_bool();
+//	}
 
-	//get keyid
-	CKeyID keyid;
-	if (!address.GetKeyID(keyid)) {
-		throw runtime_error("in registeraccounttx :address err\n");
-	}
-
-	bool bshowdetail = 0;
-	if (params.size() > 1) {
-		bshowdetail = params[1].get_bool();
-	}
-
-	Array array;
+	Object retObj;
 	assert(pwalletMain != NULL);
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
-		assert(0);
-		 LogPrint("TODO","listaddrtx");
-//
-//		if (!pwalletMain->HaveKey(keyid)) {
-//			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: not find key.");
-//		}
-//
-//		for (auto&wtx : pwalletMain->mapWalletTx) {
-//			CAccountTx &acctx = wtx.second;
-//			for (auto&item : acctx.mapAccountTx) {
-//				set<CKeyID> vKey;
-//				item.second->GetAddress(vKey, *pAccountViewTip);
-//				if (vKey.end() != find(vKey.begin(), vKey.end(), keyid)) {
-//					array.push_back(item.first.ToString());
-//					if (bshowdetail) {
-//						Object obj;
-//						obj = TxToJSON(item.second.get());
-//						obj.push_back(Pair("confirm block", acctx.blockHash.GetHex()));
-//						array.push_back(obj);
-//					}
-//				}
-//			}
-//		}
+
+		Object Inblockobj;
+		for (auto const &wtx : pwalletMain->mapInBlockTx) {
+			Inblockobj.push_back(Pair("blockhase",  wtx.first.ToString()));
+			Inblockobj.push_back(Pair("tx",  wtx.second.ToJosnObj()));
+		}
+		retObj.push_back(Pair("Inblocktx" ,Inblockobj));
+
+		CAccountViewCache view(*pAccountViewTip);
+		Array UnConfirmTxArry;
+			for (auto const &wtx : pwalletMain->UnConfirmTx) {
+				UnConfirmTxArry.push_back(wtx.second.get()->ToString(view));
+			}
+	  retObj.push_back(Pair("UnConfirmTx" ,UnConfirmTxArry));
 	}
-	return array;
+	return retObj;
 }
 
-Value getaddramount(const Array& params, bool fHelp) {
+Value getaddrinfo(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
 		string msg = "getaddramount \"addr\"\n"
 				"\getaddramount\n"
@@ -964,6 +955,7 @@ Value getaddramount(const Array& params, bool fHelp) {
 				"\"mature amount\":\n"
 				"\"free amount\":\n"
 				"\"frozen amount\":\n"
+				"\"Account Info\":\n"
 				"\nExamples:\n" + HelpExampleCli("getaddramount", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n")
 				+ "\nAs json rpc call\n"
 				+ HelpExampleRpc("getaddramount", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n");
@@ -984,14 +976,7 @@ Value getaddramount(const Array& params, bool fHelp) {
 		CAccountViewCache accView(*pAccountViewTip, true);
 		CUserID userId = keyid;
 		if (accView.GetAccount(userId, account)) {
-			int curheight = chainActive.Tip()->nHeight;
-			double dbalance = (double) account.GetBalance(curheight) / (double) COIN;
-			double dmature = (double) account.GetMatureAmount(curheight) / (double) COIN;
-			double dfrozen = (double) account.GetForzenAmount(curheight) / (double) COIN;
-
-			obj.push_back(Pair("mature amount", dmature));
-			obj.push_back(Pair("free amount", dbalance));
-			obj.push_back(Pair("frozen amount", dfrozen));
+			return account.ToString();
 		}
 	}
 	return obj;
@@ -1052,22 +1037,16 @@ Value listunconfirmedtx(const Array& params, bool fHelp) {
 	if (params.size() > 0) {
 		bshowdetail = params[0].get_bool();
 	}
-
-	Array array;
-	{
-	//	assert(0);
-				 LogPrint("TODO"," ");
-//		LOCK2(cs_main, pwalletMain->cs_wallet);
-//		CAccountTx &acctx = pwalletMain->mapWalletTx[uint256(0)];
-//
-//		for (auto& item : acctx.mapAccountTx) {
-//			array.push_back(item.first.ToString());
-//			if (bshowdetail) {
-//				array.push_back(TxToJSON(item.second.get()));
-//			}
-//		}
+	LOCK2(cs_main, pwalletMain->cs_wallet);
+	Object retObj;
+	CAccountViewCache view(*pAccountViewTip);
+	Array UnConfirmTxArry;
+	for (auto const &wtx : pwalletMain->UnConfirmTx) {
+		UnConfirmTxArry.push_back(wtx.second.get()->ToString(view));
 	}
-	return array;
+	retObj.push_back(Pair("UnConfirmTx", UnConfirmTxArry));
+
+	return retObj;
 }
 
 Value gettxdetail(const Array& params, bool fHelp) {
@@ -1360,35 +1339,35 @@ Value disconnectblock(const Array& params, bool fHelp) {
 	CValidationState state;
 	while (number--) {
 		// check level 0: read from disk
-	      if (!DisconnectBlockFromTip(state))
-	    	  return false;
-//		if (!ReadBlockFromDisk(block, pindex))
-//			return ERROR("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
-//					pindex->GetBlockHash().ToString());
-//		bool fClean = true;
-//		CTransactionCache txCacheTemp(*pTxCacheTip);
-//		CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
-//		if (!DisconnectBlock(block, state, view, pindex, txCacheTemp, contractScriptTemp, &fClean))
-//			return ERROR("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
-//					pindex->GetBlockHash().ToString());
-//		CBlockIndex *pindexDelete = pindex;
-//		pindex = pindex->pprev;
-//		chainActive.SetTip(pindex);
-//	    if (!pTxCacheTip->DeleteBlockFromCache(block))
-//	    	return state.Abort(_("Disconnect tip block failed to delete tx from txcache"));
-//
-//	    //load a block tx into cache transaction
-//		CBlockIndex *pReLoadBlockIndex = pindexDelete;
-//		if(pindexDelete->nHeight - Params().GetTxCacheHeight()>0) {
-//			pReLoadBlockIndex = chainActive[pindexDelete->nHeight - Params().GetTxCacheHeight()];
-//			CBlock reLoadblock;
-//			if (!ReadBlockFromDisk(reLoadblock, pindexDelete))
-//				return state.Abort(_("Failed to read block"));
-//			if (!pTxCacheTip->AddBlockToCache(reLoadblock))
-//					return state.Abort(_("Disconnect tip block reload preblock tx to txcache"));
-//		}
-//
-//		assert(view.Flush() && contractScriptTemp.Flush());
+//	      if (!DisconnectBlockFromTip(state))
+//	    	  return false;
+		if (!ReadBlockFromDisk(block, pindex))
+			return ERROR("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
+					pindex->GetBlockHash().ToString());
+		bool fClean = true;
+		CTransactionCache txCacheTemp(*pTxCacheTip);
+		CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
+		if (!DisconnectBlock(block, state, view, pindex, txCacheTemp, contractScriptTemp, &fClean))
+			return ERROR("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
+					pindex->GetBlockHash().ToString());
+		CBlockIndex *pindexDelete = pindex;
+		pindex = pindex->pprev;
+		chainActive.SetTip(pindex);
+	    if (!pTxCacheTip->DeleteBlockFromCache(block))
+	    	return state.Abort(_("Disconnect tip block failed to delete tx from txcache"));
+
+	    //load a block tx into cache transaction
+		CBlockIndex *pReLoadBlockIndex = pindexDelete;
+		if(pindexDelete->nHeight - Params().GetTxCacheHeight()>0) {
+			pReLoadBlockIndex = chainActive[pindexDelete->nHeight - Params().GetTxCacheHeight()];
+			CBlock reLoadblock;
+			if (!ReadBlockFromDisk(reLoadblock, pindexDelete))
+				return state.Abort(_("Failed to read block"));
+			if (!pTxCacheTip->AddBlockToCache(reLoadblock))
+					return state.Abort(_("Disconnect tip block reload preblock tx to txcache"));
+		}
+
+		assert(view.Flush() && contractScriptTemp.Flush());
 	}
 	return true;
 }
@@ -1512,7 +1491,7 @@ Value getpublickey(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_MISC_ERROR,
 					tinyformat::format("Wallet do not contain address %s", params[0].get_str()));
 	}
-	return HexStr(pubkey.begin(), pubkey.end());
+	return pubkey.ToString();
 }
 
 Value listtxcache(const Array& params, bool fHelp) {
@@ -1535,15 +1514,7 @@ Value listtxcache(const Array& params, bool fHelp) {
 		blockObj.push_back(Pair("txcache", txHashArray));
 		retTxHashArray.push_back(blockObj);
 	}
-//	for(auto &item : mapTxHashCacheByPrev) {
-//		Object blockObj;
-//		Array txHashPreArray;
-//		blockObj.push_back(Pair("prehash", item.first.GetHex()));
-//		for(auto &relayTx : item.second)
-//			txHashPreArray.push_back(relayTx.GetHex());
-//		blockObj.push_back(Pair("relayhash", txHashPreArray));
-//		retTxHashArray.push_back(blockObj);
-//	}
+
 	return retTxHashArray;
 }
 

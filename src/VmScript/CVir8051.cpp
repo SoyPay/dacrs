@@ -370,10 +370,10 @@ static RET_DEFINE ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 
 	vector<unsigned char> desdata;
 	vector<unsigned char> desout;
-	unsigned char datalen_rest = retdata.at(0).get()->size() % 8;
+	unsigned char datalen_rest = retdata.at(0).get()->size() % sizeof(DES_cblock);
 	desdata.assign(retdata.at(0).get()->begin(), retdata.at(0).get()->end());
 	if (datalen_rest) {
-		desdata.insert(desdata.end(), 8 - datalen_rest, 0);
+		desdata.insert(desdata.end(), sizeof(DES_cblock) - datalen_rest, 0);
 	}
 
 //	printf("the rest len:%d the full data:%s\r\n", datalen_rest, HexStr(desdata.begin(), desdata.end(), true).c_str());
@@ -386,53 +386,69 @@ static RET_DEFINE ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 	if (flag == 1) {
 		if (retdata.at(1).get()->size() == 8) {
 //			printf("the des encrypt\r\n");
-			memcpy(key, &retdata.at(1).get()->at(0), retdata.at(1).get()->size());
+			memcpy(key, &retdata.at(1).get()->at(0), sizeof(DES_cblock));
 			DES_set_key_unchecked(&key, &deskey1);
-			for (int ii = 0; ii < desdata.size() / 8; ii++) {
-				memcpy(&in, &desdata[ii * 8], sizeof(in));
+			for (int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
+				memcpy(&in, &desdata[ii * sizeof(DES_cblock)], sizeof(in));
 //				printf("in :%s\r\n", HexStr(in, in + 8, true).c_str());
 				DES_ecb_encrypt(&in, &out, &deskey1, DES_ENCRYPT);
 //				printf("out :%s\r\n", HexStr(out, out + 8, true).c_str());
-				memcpy(&desout[ii * 8], &out, sizeof(out));
+				memcpy(&desout[ii * sizeof(DES_cblock)], &out, sizeof(out));
 			}
-		} else {
+		}
+		else if(retdata.at(1).get()->size() == 16)
+		{
 //			printf("the 3 des encrypt\r\n");
-			memcpy(key, &retdata.at(1).get()->at(0), retdata.at(1).get()->size());
+			memcpy(key, &retdata.at(1).get()->at(0), sizeof(DES_cblock));
 			DES_set_key_unchecked(&key, &deskey1);
 			DES_set_key_unchecked(&key, &deskey3);
-			memcpy(key, &retdata.at(1).get()->at(0) + 8, retdata.at(1).get()->size());
+			memcpy(key, &retdata.at(1).get()->at(0) + sizeof(DES_cblock), sizeof(DES_cblock));
 			DES_set_key_unchecked(&key, &deskey2);
-			for (int ii = 0; ii < desdata.size() / 8; ii++) {
-				memcpy(&in, &desdata[ii * 8], sizeof(in));
+			for (int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
+				memcpy(&in, &desdata[ii * sizeof(DES_cblock)], sizeof(in));
 				DES_ecb3_encrypt(&in, &out, &deskey1, &deskey2, &deskey3, DES_ENCRYPT);
-				memcpy(&desout[ii * 8], &out, sizeof(out));
+				memcpy(&desout[ii * sizeof(DES_cblock)], &out, sizeof(out));
 			}
 
+		}
+		else
+		{
+			//error
+			auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+			return std::make_tuple (false, tem);
 		}
 	} else {
 		if (retdata.at(1).get()->size() == 8) {
 //			printf("the des decrypt\r\n");
-			memcpy(key, &retdata.at(1).get()->at(0), retdata.at(1).get()->size());
+			memcpy(key, &retdata.at(1).get()->at(0), sizeof(DES_cblock));
 			DES_set_key_unchecked(&key, &deskey1);
-			for (int ii = 0; ii < desdata.size() / 8; ii++) {
-				memcpy(&in, &desdata[ii * 8], sizeof(in));
+			for (int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
+				memcpy(&in, &desdata[ii * sizeof(DES_cblock)], sizeof(in));
 //				printf("in :%s\r\n", HexStr(in, in + 8, true).c_str());
 				DES_ecb_encrypt(&in, &out, &deskey1, DES_DECRYPT);
 //				printf("out :%s\r\n", HexStr(out, out + 8, true).c_str());
-				memcpy(&desout[ii * 8], &out, sizeof(out));
+				memcpy(&desout[ii * sizeof(DES_cblock)], &out, sizeof(out));
 			}
-		} else {
+		}
+		else if(retdata.at(1).get()->size() == 16)
+		{
 //			printf("the 3 des decrypt\r\n");
-			memcpy(key, &retdata.at(1).get()->at(0), retdata.at(1).get()->size());
+			memcpy(key, &retdata.at(1).get()->at(0), sizeof(DES_cblock));
 			DES_set_key_unchecked(&key, &deskey1);
 			DES_set_key_unchecked(&key, &deskey3);
-			memcpy(key, &retdata.at(1).get()->at(0) + 8, retdata.at(1).get()->size());
+			memcpy(key, &retdata.at(1).get()->at(0) + sizeof(DES_cblock), sizeof(DES_cblock));
 			DES_set_key_unchecked(&key, &deskey2);
-			for (int ii = 0; ii < desdata.size() / 8; ii++) {
-				memcpy(&in, &desdata[ii * 8], sizeof(in));
+			for (int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
+				memcpy(&in, &desdata[ii * sizeof(DES_cblock)], sizeof(in));
 				DES_ecb3_encrypt(&in, &out, &deskey1, &deskey2, &deskey3, DES_DECRYPT);
-				memcpy(&desout[ii * 8], &out, sizeof(out));
+				memcpy(&desout[ii * sizeof(DES_cblock)], &out, sizeof(out));
 			}
+		}
+		else
+		{
+			//error
+			auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+			return std::make_tuple (false, tem);
 		}
 	}
 
@@ -530,9 +546,11 @@ static RET_DEFINE ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
 	if(flag)
 	{
 		LogPrint("vm","%s\r\n", HexStr(pdata).c_str());
+		LogPrint("INFO","%s\r\n", HexStr(pdata).c_str());
 	}else
 	{
 		LogPrint("vm","%s\r\n",pdata.c_str());
+		LogPrint("INFO","%s\r\n",pdata.c_str());
 	}
 
 
@@ -575,7 +593,7 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 	uint256 hash1(0);
 	tep1 >>hash1;
 	//cout<<"ExGetTxAccountsFunc:"<<hash1.GetHex()<<endl;
-	LogPrint("vm","ExGetTxAccountsFunc:%s",hash1.GetHex().c_str());
+//	LogPrint("vm","ExGetTxAccountsFunc:%s",hash1.GetHex().c_str());
 
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 
@@ -786,11 +804,12 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) 
 	bool flag =true;
 
 	//vector<unsigned char> key =AddChar(*retdata.at(0));
-
+	LogPrint("INFO", "script run read data:%s", HexStr(*retdata.at(0)));
 	if(!scriptDB->GetScriptData(scriptid,*retdata.at(0),vValue,nHeight))
 	{
 		flag = false;
 	}
+
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     (*tem.get()).push_back(vValue);
@@ -893,7 +912,7 @@ static RET_DEFINE ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
     //cout<<"ExGetCurTxHash:"<<HexStr(hash).c_str()<<endl;
-    LogPrint("vm","ExGetCurTxHash:%s",HexStr(hash).c_str());
+ //   LogPrint("vm","ExGetCurTxHash:%s",HexStr(hash).c_str());
 	return std::make_tuple (true, tem);
 }
 static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
@@ -1183,7 +1202,7 @@ RET_DEFINE CallExternalFunc(INT16U method, unsigned char *ipara,CVmScriptRun *pV
 
 }
 
-int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
+int64_t CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 	INT8U code = 0;
 	uint64_t step = 0;
 
@@ -1211,15 +1230,15 @@ int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 						int size = it.size();
 //						if(methodID == READDB_FUNC)
 //							LogPrint("vm","size:%d",size);
-						if(size == 0)
-							continue;
 						memcpy(&ipara[pos], &size, 2);
 						memcpy(&ipara[pos + 2], &it.at(0), size);
 						pos += size + 2;
 					}
 				}
-				if(methodID == READDB_FUNC)
-				LogPrint("vm","data1:%s\r\n",HexStr(ipara,ipara+totalsize));
+				if(methodID == READDB_FUNC) {
+					LogPrint("vm","data1:%s\r\n",HexStr(ipara,ipara+totalsize));
+					LogPrint("INFO","data1:%s\r\n",HexStr(ipara,ipara+totalsize));
+				}
 			}
 		} else if (Sys.PC == 0x0008) {
 				INT8U result=GetExRam(0xEFFD);
@@ -1229,9 +1248,11 @@ int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 				}
 				return 0;
 			}
-			if (maxstep != 0 && step > maxstep) {
-				return 0;		//force return
-			}
+//		//// for test
+//			if (maxstep != 0 && step > maxstep) {
+//
+//				return -1;		//force return
+//			}
 	}
 
 	return 1;

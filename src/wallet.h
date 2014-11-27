@@ -176,16 +176,13 @@ private:
 	CMasterKey MasterKey;
 
 	map<CKeyID, CKeyStoreValue> mKeyPool;
+	int nWalletVersion;
+	CBlockLocator  bestBlock;
 
+public:
 	map<uint256, CAccountTx> mapInBlockTx;
 	map<uint256, std::shared_ptr<CBaseTransaction> > UnConfirmTx;
 
-	int nWalletVersion;
-
-	CBlockLocator  bestBlock;
-public:
-
-	map<uint256, CAccountTx> mapWalletTx;
 	map<CKeyID, CKeyStoreValue> GetKeyPool() const
 		{
 		  AssertLockHeld(cs_wallet);
@@ -203,6 +200,7 @@ public:
 				READWRITE(mapInBlockTx);
 			}
 	)
+	bool GetMoreThanMoneyKeyId(CKeyID &keyId,int64_t money) const;
 	bool FushToDisk()const;
     bool UpdataRegId(const CKeyID &keyid,const CAccountViewCache &inview)
 	{
@@ -249,6 +247,40 @@ public:
 			if(tep != mKeyPool.end())
 			return tep->second.getCKey(keyOut);
 		}
+		return false;
+	}
+	bool GetKey(const CUserID &address, CKey& keyOut) const {
+		AssertLockHeld(cs_wallet);
+		if (address.type() == typeid(CKeyID)) {
+			return GetKey(boost::get<CRegID>(address),keyOut);
+		}
+		else
+		{
+			assert(0 && "to fixme");
+		}
+
+		return false;
+	}
+	bool GetRegId(const CUserID &address, CRegID& IdOut) const {
+		AssertLockHeld(cs_wallet);
+		if (address.type() == typeid(CRegID)) {
+			IdOut = boost::get<CRegID>(address);
+			return true;
+		} else if (address.type() == typeid(CKeyID)) {
+			CKeyID te = boost::get<CKeyID>(address);
+			if (count(te)) {
+				auto tep = mKeyPool.find(te);
+				if (tep != mKeyPool.end()) {
+					IdOut = tep->second.GetRegID();
+					return true;
+				}
+
+			}
+
+		} else {
+			assert(0 && "to fixme");
+		}
+
 		return false;
 	}
 
@@ -302,9 +334,9 @@ public:
 
 
 	void SyncTransaction(const uint256 &hash, CBaseTransaction *pTx, const CBlock* pblock);
-	void EraseFromWallet(const uint256 &hash);
+//	void EraseFromWallet(const uint256 &hash);
 	int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
-	void ReacceptWalletTransactions();
+//	void ReacceptWalletTransactions();
 	void ResendWalletTransactions();
 
 
@@ -313,10 +345,8 @@ public:
 	map<CTxDestination, int64_t> GetAddressBalances();
 
 	/***********************************creat tx*********************************************/
-	map<CKeyID, int64_t> GetBalance() const;
 
-	std::string SendMoney(CKeyID &send, CKeyID &rsv, int64_t nValue, CTransaction& txNew);
-	std::string SendMoneyToDestination(const string& address, int64_t nValue, CTransaction& txNew);
+	std::string SendMoney(CRegID &send, CRegID &rsv, int64_t nValue);
 
 	/****************************************************************************************/
 
@@ -627,6 +657,9 @@ public:
 	bool WriteToDisk() {
 		return CWalletDB(pWallet->strWalletFile).WriteAccountTx(blockHash, *this);
 	}
+
+	Object ToJosnObj() const;
+
 
 	IMPLEMENT_SERIALIZE
 	(

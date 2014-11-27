@@ -85,7 +85,7 @@ public:
 	 * @param regId
 	 * @return
 	 */
-	bool GetRegId(const CUserID &userId,CRegID &regId);
+	bool GetRegId(const CUserID &userId,CRegID &regId)const;
 	bool GetAccount(const CUserID &userId, CAccount &account);
 	bool SetAccount(const CUserID &userId, const CAccount &account);
 	bool GetKeyId(const CUserID &userId, CKeyID &keyId);

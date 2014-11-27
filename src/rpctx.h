@@ -31,7 +31,7 @@ extern Value registerscripttx(const Array& params, bool fHelp);
 extern Value listaddr(const Array& params, bool fHelp);
 extern Value listaddrtx(const Array& params, bool fHelp);
 
-extern Value getaddramount(const Array& params, bool fHelp);
+extern Value getaddrinfo(const Array& params, bool fHelp);
 extern Value listunconfirmedtx(const Array& params, bool fHelp);
 extern Value gettxdetail(const Array& params, bool fHelp);
 extern Value listscriptregid(const Array& params, bool fHelp);

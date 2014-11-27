@@ -10,6 +10,9 @@
 #include <string>
 #include <boost/variant.hpp>
 #include "tx.h"
+#include "json/json_spirit_utils.h"
+#include "json/json_spirit_value.h"
+using namespace json_spirit;
 
 using namespace std;
 
@@ -973,7 +976,7 @@ public:
 	}
 	~CFund() {
 	}
-
+	Object ToJosnObj() const;
 	bool IsMergeFund(const int & nCurHeight, int &mergeType) const;
 
 	friend bool operator <(const CFund &fa, const CFund &fb) {
@@ -1004,6 +1007,8 @@ public:
 			return false;
 		return true;
 	}
+
+
 
 	IMPLEMENT_SERIALIZE
 	(
@@ -1353,6 +1358,7 @@ public:
 	void ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos);
 	uint64_t GetSecureAccPos(int prevBlockHeight) const;
 	string ToString() const;
+	Object ToJosnObj() const;
 	bool IsEmptyValue() const {
 		return !(llValues > 0 || !vFreedomFund.empty() || !vFreeze.empty() || !vSelfFreeze.empty());
 	}
