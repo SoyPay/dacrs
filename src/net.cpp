@@ -94,7 +94,7 @@ void AddOneShot(string strDest)
 
 unsigned short GetListenPort()
 {
-    return (unsigned short)(GetArg("-port", Params().GetDefaultPort()));
+    return (unsigned short)(CBaseParams::GetArg("-port", SysParams().GetDefaultPort()));
 }
 
 // find 'best' local address for a particular peer
@@ -490,7 +490,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
 
     // Connect
     SOCKET hSocket;
-    if (pszDest ? ConnectSocketByName(addrConnect, hSocket, pszDest, Params().GetDefaultPort()) : ConnectSocket(addrConnect, hSocket))
+    if (pszDest ? ConnectSocketByName(addrConnect, hSocket, pszDest, SysParams().GetDefaultPort()) : ConnectSocket(addrConnect, hSocket))
     {
         addrman.Attempt(addrConnect);
 
@@ -592,7 +592,7 @@ bool CNode::IsBanned(CNetAddr ip)
 }
 
 bool CNode::Ban(const CNetAddr &addr) {
-    int64_t banTime = GetTime()+GetArg("-bantime", 60*60*24);  // Default 24-hour ban
+    int64_t banTime = GetTime() + CBaseParams::GetArg("-bantime", 60*60*24);  // Default 24-hour ban
     {
         LOCK(cs_setBanned);
         if (setBanned[addr] < banTime)
@@ -1196,7 +1196,7 @@ void MapPort(bool)
 
 void ThreadDNSAddressSeed()
 {
-    const vector<CDNSSeedData> &vSeeds = Params().DNSSeeds();
+    const vector<CDNSSeedData> &vSeeds = SysParams().DNSSeeds();
     int found = 0;
 
     LogPrint("INFO","Loading addresses from DNS seeds (could take a while)\n");
@@ -1212,7 +1212,7 @@ void ThreadDNSAddressSeed()
                 for (auto & ip : vIPs)
                 {
                     int nOneDay = 24*3600;
-                    CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()));
+                    CAddress addr = CAddress(CService(ip, SysParams().GetDefaultPort()));
                     addr.nTime = GetTime() - 3*nOneDay - GetRand(4*nOneDay); // use a random age between 3 and 7 days old
                     vAdd.push_back(addr);
                     found++;
@@ -1268,12 +1268,13 @@ void static ProcessOneShot()
 void ThreadOpenConnections()
 {
     // Connect to specific addresses
-    if (mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0)
+    if (CBaseParams::IsArgCount("-connect") && CBaseParams::GetMultiArgs("-connect").size() > 0)
     {
         for (int64_t nLoop = 0;; nLoop++)
         {
             ProcessOneShot();
-            for (auto strAddr : mapMultiArgs["-connect"])
+            vector<string>tmp = CBaseParams::GetMultiArgs("-connect");
+            for (auto strAddr : tmp)
             {
                 CAddress addr;
                 OpenNetworkConnection(addr, NULL, strAddr.c_str());
@@ -1302,7 +1303,7 @@ void ThreadOpenConnections()
             static bool done = false;
             if (!done) {
                 LogPrint("INFO","Adding fixed seed nodes as DNS doesn't seem to be available.\n");
-                addrman.Add(Params().FixedSeeds(), CNetAddr("127.0.0.1"));
+                addrman.Add(SysParams().FixedSeeds(), CNetAddr("127.0.0.1"));
                 done = true;
             }
         }
@@ -1353,7 +1354,7 @@ void ThreadOpenConnections()
                 continue;
 
             // do not allow non-default ports, unless after 50 invalid addresses selected already
-            if (addr.GetPort() != Params().GetDefaultPort() && nTries < 50)
+            if (addr.GetPort() != SysParams().GetDefaultPort() && nTries < 50)
                 continue;
 
             addrConnect = addr;
@@ -1369,7 +1370,7 @@ void ThreadOpenAddedConnections()
 {
     {
         LOCK(cs_vAddedNodes);
-        vAddedNodes = mapMultiArgs["-addnode"];
+        vAddedNodes = CBaseParams::GetMultiArgs("-addnode");
     }
 
     if (HaveNameProxy()) {
@@ -1403,7 +1404,7 @@ void ThreadOpenAddedConnections()
         for (auto& strAddNode : lAddresses)
         {
             vector<CService> vservNode(0);
-            if(Lookup(strAddNode.c_str(), vservNode, Params().GetDefaultPort(), fNameLookup, 0))
+            if(Lookup(strAddNode.c_str(), vservNode, SysParams().GetDefaultPort(), fNameLookup, 0))
             {
                 lservAddressesToAdd.push_back(vservNode);
                 {
@@ -1742,14 +1743,14 @@ void StartNode(boost::thread_group& threadGroup)
     // Start threads
     //
 
-    if (!GetBoolArg("-dnsseed", true))
+    if (!CBaseParams::GetBoolArg("-dnsseed", true))
         LogPrint("INFO","DNS seeding disabled\n");
     else
         threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "dnsseed", &ThreadDNSAddressSeed));
 
 #ifdef USE_UPNP
     // Map ports with UPnP
-    MapPort(GetBoolArg("-upnp", USE_UPNP));
+    MapPort(CBaseParams::GetBoolArg("-upnp", USE_UPNP));
 #endif
 
     // Send and receive from sockets, accept connections
@@ -1945,7 +1946,7 @@ bool CAddrDB::Write(const CAddrMan& addr)
 
     // serialize addresses, checksum data up to that point, then append csum
     CDataStream ssPeers(SER_DISK, CLIENT_VERSION);
-    ssPeers << FLATDATA(Params().MessageStart());
+    ssPeers << FLATDATA(SysParams().MessageStart());
     ssPeers << addr;
     uint256 hash = Hash(ssPeers.begin(), ssPeers.end());
     ssPeers << hash;
@@ -2015,7 +2016,7 @@ bool CAddrDB::Read(CAddrMan& addr)
         ssPeers >> FLATDATA(pchMsgTmp);
 
         // ... verify the network matches ours
-        if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
+        if (memcmp(pchMsgTmp, SysParams().MessageStart(), sizeof(pchMsgTmp)))
             return ERROR("%s : Invalid network magic number", __func__);
 
         // de-serialize address data into one CAddrMan object

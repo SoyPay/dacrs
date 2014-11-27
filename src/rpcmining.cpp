@@ -131,7 +131,7 @@ Value getgenerate(const Array& params, bool fHelp)
     if (!pMiningKey)
         return false;
 
-    return GetBoolArg("-gen", false);
+    return CBaseParams::GetBoolArg("-gen", false);
 }
 
 
@@ -174,7 +174,7 @@ Value setgenerate(const Array& params, bool fHelp)
     }
 
     // -regtest mode: don't return until nGenProcLimit blocks are generated
-    if (fGenerate && Params().NetworkID() == CBaseParams::REGTEST)
+    if (fGenerate && SysParams().NetworkID() == CBaseParams::REGTEST)
     {
         int nHeightStart = 0;
         int nHeightEnd = 0;
@@ -204,8 +204,8 @@ Value setgenerate(const Array& params, bool fHelp)
     }
     else // Not -regtest: start generate thread, return immediately
     {
-        mapArgs["-gen"] = (fGenerate ? "1" : "0");
-        mapArgs ["-genproclimit"] = itostr(nGenProcLimit);
+        CBaseParams::SoftSetArgCover("-gen", fGenerate ? "1" : "0");
+        CBaseParams::SoftSetArgCover("-genproclimit", itostr(nGenProcLimit));
         GenerateBitcoins(fGenerate, pwalletMain, nGenProcLimit);
     }
 
@@ -263,7 +263,7 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("currentblocktx",   (uint64_t)nLastBlockTx));
     obj.push_back(Pair("difficulty",       (double)GetDifficulty()));
     obj.push_back(Pair("errors",           GetWarnings("statusbar")));
-    obj.push_back(Pair("genproclimit",     (int)GetArg("-genproclimit", -1)));
+    obj.push_back(Pair("genproclimit",     (int)CBaseParams::GetArg("-genproclimit", -1)));
     obj.push_back(Pair("networkhashps",    getnetworkhashps(params, false)));
     obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
     obj.push_back(Pair("testnet",          TestNet()));

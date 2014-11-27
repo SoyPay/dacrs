@@ -350,7 +350,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 
 		uint256 blockhash = pblock->GetHash();
 
-		if (Params().HashGenesisBlock() == blockhash) {
+		if (SysParams().HashGenesisBlock() == blockhash) {
 			unsigned short i = 0;
 			for (const auto &sptx : pblock->vptx) {
 				//confirm the tx is mine
@@ -524,7 +524,7 @@ void CWallet::ResendWalletTransactions() {
 		return;
 
 	// Only do it if there's been a new block since last time
-	if (Params().GetBestRecvTime() < nLastResend)
+	if (SysParams().GetBestRecvTime() < nLastResend)
 		return;
 	nLastResend = GetTime();
 
@@ -741,7 +741,7 @@ bool CWallet::NewKeyPool() {
 		if (IsLocked())
 			return false;
 
-		int64_t nKeys = max(GetArg("-keypool", 100), (int64_t) 0);
+		int64_t nKeys = max(CBaseParams::GetArg("-keypool", 100), (int64_t) 0);
 		for (int i = 0; i < nKeys; i++) {
 			int64_t nIndex = i + 1;
 			walletdb.WritePool(nIndex, CKeyPool(GenerateNewKey()));
@@ -767,7 +767,7 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize) {
 		if (kpSize > 0)
 			nTargetSize = kpSize;
 		else
-			nTargetSize = max(GetArg("-keypool", 100), (int64_t) 0);
+			nTargetSize = max(CBaseParams::GetArg("-keypool", 100), (int64_t) 0);
 
 		while (setKeyPool.size() < (nTargetSize + 1)) {
 			int64_t nEnd = 1;
