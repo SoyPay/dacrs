@@ -179,9 +179,13 @@ bool CAccountViewCache::EraseKeyId(const vector<unsigned char> &accountId) {
 }
 bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAccount &account) {
 	if(cacheKeyIds.count(HexStr(accountId)) && cacheKeyIds[HexStr(accountId)] !=uint160(0)) {
-		if(cacheAccounts.count(cacheKeyIds[HexStr(accountId)]) && cacheAccounts[cacheKeyIds[HexStr(accountId)]].keyID != uint160(0)){
-			account = cacheAccounts[cacheKeyIds[HexStr(accountId)]];
-			return true;
+		if(cacheAccounts.count(cacheKeyIds[HexStr(accountId)])){
+			if(cacheAccounts[cacheKeyIds[HexStr(accountId)]].keyID != uint160(0)) {  // 判断此帐户是否被删除了
+				account = cacheAccounts[cacheKeyIds[HexStr(accountId)]];
+				return true;
+			}else {
+				return false;   //已删除返回false
+			}
 		}else {
 			return pBase->GetAccount(cacheKeyIds[HexStr(accountId)], account);
 		}
@@ -189,6 +193,14 @@ bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAcco
 		CKeyID keyId;
 		if(pBase->GetKeyId(accountId, keyId)) {
 			cacheKeyIds[HexStr(accountId)] = keyId;
+			if (cacheAccounts.count(keyId) > 0 ) {
+				if (cacheAccounts[cacheKeyIds[HexStr(accountId)]].keyID != uint160(0)) { // 判断此帐户是否被删除了
+					account = cacheAccounts[keyId];
+					return true;
+				} else {
+					return false;   //已删除返回false
+				}
+			}
 			bool ret = pBase->GetAccount(keyId, account);
 			if(ret) {
 				cacheAccounts[keyId] = account;
