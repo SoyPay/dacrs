@@ -423,7 +423,7 @@ unsigned int static ScanHash_CryptoPP(char* pmidstate, char* pdata, char* phash1
 struct CAccountComparator {
 	bool operator()(const CAccount &a, const CAccount&b) {
 		// First sort by acc over 30days
-		if (a.GetSecureAccPos(chainActive.Tip()->nHeight) < b.GetSecureAccPos(chainActive.Tip()->nHeight)) {
+		if (a.GetAccountPos(chainActive.Tip()->nHeight) < b.GetAccountPos(chainActive.Tip()->nHeight)) {
 			return false;
 		}
 
@@ -489,35 +489,35 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 		CAccountViewCache accView(*pAccountViewTip, true);
 		CTransactionCache txCacheTemp(*pTxCacheTip);
 		CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
-//		{
-//			for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
-//				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
-//				if (pTxCacheTip->IsContainTx(pBaseTx->GetHash())) {
-//					LogPrint("INFO","CreatePosTx duplicate tx\n");
-//					mempool.mapTx.erase(pBaseTx->GetHash());
-//					return false;
-//				}
-//				CTxUndo txundo;
-//				CValidationState state;
-//				for(auto &item : contractScriptTemp.mapDatas) {
-//					vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
-//					if(item.first == vKey1) {
-//						LogPrint("INFO","item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
-//					}
-//				}
-//				if (!pBaseTx->UpdateAccount(i, accView, state, txundo, pPrevIndex->nHeight + 1, txCacheTemp, contractScriptTemp)) {
-//					LogPrint("INFO","tx hash:%s transaction is invalid\n", pBaseTx->GetHash().GetHex());
-//					for (auto &item : contractScriptTemp.mapDatas) {
-//						vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
-//						if(item.first == vKey1) {
-//							LogPrint("INFO", "item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
-//						}
-//					}
-//					mempool.mapTx.erase(pBaseTx->GetHash());
-//					return false;
-//				}
-//			}
-//		}
+		{
+			for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
+				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
+				if (pTxCacheTip->IsContainTx(pBaseTx->GetHash())) {
+					LogPrint("INFO","CreatePosTx duplicate tx\n");
+					mempool.mapTx.erase(pBaseTx->GetHash());
+					return false;
+				}
+				CTxUndo txundo;
+				CValidationState state;
+				for(auto &item : contractScriptTemp.mapDatas) {
+					vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
+					if(item.first == vKey1) {
+						LogPrint("INFO","item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
+					}
+				}
+				if (!pBaseTx->UpdateAccount(i, accView, state, txundo, pPrevIndex->nHeight + 1, txCacheTemp, contractScriptTemp)) {
+					LogPrint("INFO","tx hash:%s transaction is invalid\n", pBaseTx->GetHash().GetHex());
+					for (auto &item : contractScriptTemp.mapDatas) {
+						vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
+						if(item.first == vKey1) {
+							LogPrint("INFO", "item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
+						}
+					}
+					mempool.mapTx.erase(pBaseTx->GetHash());
+					return false;
+				}
+			}
+		}
 
 		for(const auto &keyid:setKeyID) {
 			//find CAccount info by keyid
@@ -536,7 +536,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 			CUserID userId = keyid;
 			if (accView.GetAccount(userId, acctInfo)) {
 				//available
-				if (acctInfo.IsRegister() && acctInfo.GetSecureAccPos(pPrevIndex->nHeight) > 0) {
+				if (acctInfo.IsRegister() && acctInfo.GetAccountPos(pPrevIndex->nHeight) > 0) {
 					setAcctInfo.insert(acctInfo);
 				}
 			}
@@ -556,7 +556,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 
 	for(const auto &item: setAcctInfo) {
 
-		uint64_t posacc = item.GetSecureAccPos(pPrevIndex->nHeight);
+		uint64_t posacc = item.GetAccountPos(pPrevIndex->nHeight);
 		if (posacc == 0) //have no pos
 				{
 			LogPrint("INFO","CreatePosTx posacc zero\n");
@@ -649,17 +649,17 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 	uint64_t maxNonce = CBaseParams::GetArg("-blockmaxnonce", 10000); //cacul times
 
 	if (pBlock->nNonce > maxNonce) {
-		LogPrint("postx", "Nonce is larger than maxNonce\r\n");
+		LogPrint("ERROR", "Nonce is larger than maxNonce\r\n");
 		return false;
 	}
 
 	if (pBlock->hashMerkleRoot != pBlock->BuildMerkleTree()) {
-		LogPrint("postx", "hashMerkleRoot is error\r\n");
+		LogPrint("ERROR", "hashMerkleRoot is error\r\n");
 		return false;
 	}
 	CAccountViewCache view(accView);
 	CScriptDBViewCache scriptDBView(scriptCache);
-	CAccount secureAcc;
+	CAccount account;
 	{
 		CRewardTransaction *prtx = (CRewardTransaction *) pBlock->vptx[0].get();
 
@@ -667,34 +667,35 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 			for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
 				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
 				if (pTxCacheTip->IsContainTx(pBaseTx->GetHash())) {
-					LogPrint("INFO","VerifyPosTx duplicate tx\n");
+					LogPrint("ERROR","VerifyPosTx duplicate tx\n");
 					return false;
 				}
 				CTxUndo txundo;
 				CValidationState state;
 
 				if (!pBaseTx->UpdateAccount(i, view, state, txundo, pPrevIndex->nHeight + 1, txCache, scriptDBView)) {
-					LogPrint("INFO","transaction UpdateAccount account error\n");
+					LogPrint("ERROR","transaction UpdateAccount account error\n");
 					return false;
 				}
 			}
 		}
 
-		if (view.GetAccount(prtx->account, secureAcc)) {
+		if (view.GetAccount(prtx->account, account)) {
 			//available acc
 //			cout << "check block hash:" << pBlock->SignatureHash().GetHex() << endl;
 //			cout << "check signature:" << HexStr(pBlock->vSignature) << endl;
 //			cout << "check pubkey:" << HexStr(secureAcc.publicKey.begin(), secureAcc.publicKey.end()) << endl;
-			if (!secureAcc.publicKey.Verify(pBlock->SignatureHash(), pBlock->vSignature)) {
+			if (!account.publicKey.Verify(pBlock->SignatureHash(), pBlock->vSignature)) {
 //				LogPrint("postx", "publickey:%s, keyid:%s\n", secureAcc.publicKey.GetHash().GetHex(), secureAcc.keyID.GetHex());
 //				LogPrint("postx", "block verify fail\r\n");
 //				LogPrint("postx", "block hash:%s\n", pBlock->GetHash().GetHex());
 //				LogPrint("postx", "signature block:%s\n", HexStr(pBlock->vSignature.begin(), pBlock->vSignature.end()));
+				LogPrint("ERROR", "Verify signature error");
 				return false;
 			}
 
 		} else {
-			LogPrint("postx", "AccountView have no the accountid\r\n");
+			LogPrint("ERROR", "AccountView have no the accountid\r\n");
 			return false;
 		}
 	}
@@ -702,13 +703,13 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 	if (bJustCheckSign)
 		return true;
 
-	nInterest = secureAcc.GetInterest();
+	nInterest = account.GetInterest();
 	uint256 prevblockhash = pPrevIndex->GetBlockHash();
 	const uint256 targetHash = CBigNum().SetCompact(pBlock->nBits).getuint256(); //target hash difficult
 
-	uint64_t posacc = secureAcc.GetSecureAccPos(pPrevIndex->nHeight);
+	uint64_t posacc = account.GetAccountPos(pPrevIndex->nHeight);
 	if (posacc == 0) {
-		LogPrint("postx", "Account have no pos\r\n");
+		LogPrint("ERROR", "Account have no pos\r\n");
 		return false;
 	}
 
@@ -718,8 +719,8 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 	struct PosTxInfo postxinfo;
 	postxinfo.nVersion = pPrevIndex->nVersion;
 	postxinfo.hashPrevBlock = prevblockhash;
-	postxinfo.hashMerkleRoot = secureAcc.BuildMerkleTree(pPrevIndex->nHeight);
-	postxinfo.nValues = secureAcc.llValues;
+	postxinfo.hashMerkleRoot = account.BuildMerkleTree(pPrevIndex->nHeight);
+	postxinfo.nValues = account.llValues;
 	postxinfo.nTime = pBlock->nTime;
 	postxinfo.nNonce = pBlock->nNonce;
 	uint256 curhash = postxinfo.GetHash();
@@ -757,11 +758,11 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 //	}
 //	LogPrint("Hash", "nNonce:%s\n", str.c_str());
 
-	LogPrint("postx", "nVersion=%d, hashPreBlock=%s, hashMerkleRoot=%s, nValue=%ld, nTime=%ld, nNonce=%ld\n",
+	LogPrint("INFO", "nVersion=%d, hashPreBlock=%s, hashMerkleRoot=%s, nValue=%ld, nTime=%ld, nNonce=%ld, blockHash=%s\n",
 			postxinfo.nVersion, postxinfo.hashPrevBlock.GetHex(), postxinfo.hashMerkleRoot.GetHex(), postxinfo.nValues,
-			postxinfo.nTime, postxinfo.nNonce);
+			postxinfo.nTime, postxinfo.nNonce, pBlock->GetHash().GetHex());
 	if (curhash > adjusthash) {
-		LogPrint("postx", "Account ProofOfWorkLimit error: \n"
+		LogPrint("INFO", "Account ProofOfWorkLimit error: \n"
 				           "   pos hash:%s \n"
 				           "adjust hash:%s\r\n", curhash.GetHex(), adjusthash.GetHex());
 		return false;

@@ -299,14 +299,20 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 				"bad-signscript-check");
 	}
 
-	CAccount acctDesInfo;
-	if (desUserId.type() == typeid(CKeyID)) {
-		if (view.GetAccount(desUserId, acctDesInfo) && acctDesInfo.IsRegister()) {
-			return state.DoS(100,
-					ERROR(
-							"CheckTransaction() : normal tx des account have regested, destination addr must be account id"),
-					REJECT_INVALID, "bad-normal-desaddr error");
-		}
+	//若在交易索引数据库中存在交易hash，此交易已经被确认过，无须检查
+	CDiskTxPos postx;
+	if (!pblocktree->ReadTxIndex(GetHash(), postx)) {
+		//如果是交易被确认进入block中时，若目的地址为keyId时必须是未注册账户
+			CAccount acctDesInfo;
+			if (desUserId.type() == typeid(CKeyID)) {
+				if (view.GetAccount(desUserId, acctDesInfo) && acctDesInfo.IsRegister()) {
+					return state.DoS(100,
+							ERROR(
+									"CheckTransaction() : normal tx des account have regested, destination addr must be account id"),
+							REJECT_INVALID, "bad-normal-desaddr error");
+				}
+			}
+
 	}
 
 	return true;
@@ -566,11 +572,11 @@ bool CRewardTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(id.GetID())),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	}
-	LogPrint("INFO", "before rewardtx confirm account:%s\n", acctInfo.ToString());
+//	LogPrint("INFO", "before rewardtx confirm account:%s\n", acctInfo.ToString());
 	acctInfo.ClearAccPos(GetHash(), nHeight - 1, Params().GetIntervalPos());
 	CFund fund(REWARD_FUND,rewardValue, nHeight);
 	acctInfo.OperateAccount(ADD_FREE, fund);
-	LogPrint("INFO", "after rewardtx confirm account:%s\n", acctInfo.ToString());
+//	LogPrint("INFO", "after rewardtx confirm account:%s\n", acctInfo.ToString());
 	CUserID userId = acctInfo.keyID;
 	if (!view.SetAccount(userId, acctInfo))
 		return state.DoS(100, ERROR("UpdateAccounts() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
@@ -1189,7 +1195,7 @@ void CAccount::ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos) 
 }
 
 //caculate pos
-uint64_t CAccount::GetSecureAccPos(int prevBlockHeight) const {
+uint64_t CAccount::GetAccountPos(int prevBlockHeight) const {
 	uint64_t accpos = 0;
 	int days = 0;
 
@@ -1639,8 +1645,8 @@ bool CTransactionCache::AddBlockToCache(const CBlock &block) {
 	LogPrint("INFO", "mapTxHashByBlockHash size:%d\n", mapTxHashByBlockHash.size());
 	for (auto &item : mapTxHashByBlockHash) {
 		LogPrint("INFO", "blockhash:%s\n", item.first.GetHex());
-		for (auto &txHash : item.second)
-			LogPrint("INFO", "txhash:%s\n", txHash.GetHex());
+//		for (auto &txHash : item.second)
+//			LogPrint("INFO", "txhash:%s\n", txHash.GetHex());
 	}
 //	for(auto &item : mapTxHashCacheByPrev) {
 //		LogPrint("INFO", "prehash:%s\n", item.first.GetHex());

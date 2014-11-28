@@ -1343,7 +1343,7 @@ public:
 	uint64_t GetBalance(int nCurHeight);
 	uint256 BuildMerkleTree(int prevBlockHeight) const;
 	void ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos);
-	uint64_t GetSecureAccPos(int prevBlockHeight) const;
+	uint64_t GetAccountPos(int prevBlockHeight) const;
 	string ToString() const;
 	bool IsEmptyValue() const {
 		return !(llValues > 0 || !vFreedomFund.empty() || !vFreeze.empty() || !vSelfFreeze.empty());
