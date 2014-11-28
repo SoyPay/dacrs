@@ -151,7 +151,7 @@ protected:
 	CBlock genesis;
 	vector<CAddress> vFixedSeeds;
 };
-static CMainParams mainParams;
+//static CMainParams mainParams;
 
 //
 // Testnet (v3)
@@ -207,7 +207,7 @@ public:
 		return true;
 	}
 };
-static CTestNetParams testNetParams;
+//static CTestNetParams testNetParams;
 
 //
 // Regression test
@@ -251,48 +251,48 @@ public:
 		return true;
 	}
 };
-static CRegTestParams regTestParams;
+//static CRegTestParams regTestParams;
 
-static CBaseParams *pCurrentParams = &mainParams;
+//static CBaseParams *pCurrentParams = &mainParams;
 
-CBaseParams &Params() {
-	return *pCurrentParams;
-}
+//CBaseParams &Params() {
+//	return *pCurrentParams;
+//}
 
-void SelectParams(CBaseParams::Network network) {
-	switch (network) {
-	case CBaseParams::MAIN:
-		pCurrentParams = &mainParams;
-		break;
-	case CBaseParams::TESTNET:
-		pCurrentParams = &testNetParams;
-		break;
-	case CBaseParams::REGTEST:
-		pCurrentParams = &regTestParams;
-		break;
-	default:
-		assert(false && "Unimplemented network");
-		return;
-	}
-}
+//void SelectParams(CBaseParams::Network network) {
+//	switch (network) {
+//	case CBaseParams::MAIN:
+//		pCurrentParams = &mainParams;
+//		break;
+//	case CBaseParams::TESTNET:
+//		pCurrentParams = &testNetParams;
+//		break;
+//	case CBaseParams::REGTEST:
+//		pCurrentParams = &regTestParams;
+//		break;
+//	default:
+//		assert(false && "Unimplemented network");
+//		return;
+//	}
+//}
 
-bool SelectParamsFromCommandLine() {
-	bool fRegTest = GetBoolArg("-regtest", false);
-	bool fTestNet = GetBoolArg("-testnet", false);
-
-	if (fTestNet && fRegTest) {
-		return false;
-	}
-
-	if (fRegTest) {
-		SelectParams(CBaseParams::REGTEST);
-	} else if (fTestNet) {
-		SelectParams(CBaseParams::TESTNET);
-	} else {
-		SelectParams(CBaseParams::MAIN);
-	}
-	return true;
-}
+//bool SelectParamsFromCommandLine() {
+//	bool fRegTest = GetBoolArg("-regtest", false);
+//	bool fTestNet = GetBoolArg("-testnet", false);
+//
+//	if (fTestNet && fRegTest) {
+//		return false;
+//	}
+//
+//	if (fRegTest) {
+//		SelectParams(CBaseParams::REGTEST);
+//	} else if (fTestNet) {
+//		SelectParams(CBaseParams::TESTNET);
+//	} else {
+//		SelectParams(CBaseParams::MAIN);
+//	}
+//	return true;
+//}
 
 /********************************************************************************/
 const vector<string> &CBaseParams::GetMultiArgs(const string& strArg) {
@@ -327,6 +327,11 @@ bool CBaseParams::SoftSetArg(const string& strArg, const string& strValue) {
 	return true;
 }
 
+bool CBaseParams::SoftSetArgCover(const string& strArg, const string& strValue) {
+	m_mapArgs[strArg] = strValue;
+	return true;
+}
+
 bool CBaseParams::SoftSetBoolArg(const string& strArg, bool fValue) {
 	if (fValue)
 		return SoftSetArg(strArg, string("1"));
@@ -353,13 +358,13 @@ const CBaseParams &SysParams() {
 		}
 
 		if (fRegTest) {
-			LogPrint("spark", "In Reg Test Net\n");
+			//LogPrint("spark", "In Reg Test Net\n");
 			pParams = make_shared<CRegTestParams>();
 		} else if (fTestNet) {
-			LogPrint("spark", "In Test Net\n");
+			//LogPrint("spark", "In Test Net\n");
 			pParams = make_shared<CTestNetParams>();
 		} else {
-			LogPrint("spark", "In Main Net\n");
+			//LogPrint("spark", "In Main Net\n");
 			pParams = make_shared<CMainParams>();
 		}
 		assert(pParams != NULL);
@@ -453,7 +458,7 @@ void CBaseParams::ParseParameters(int argc, const char* const argv[]) {
 bool CBaseParams::IntialParams(int argc, const char* const argv[]) {
 	ParseParameters(argc, argv);
 	if (!boost::filesystem::is_directory(GetDataDir(false))) {
-		fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", mapArgs["-datadir"].c_str());
+		fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", CBaseParams::m_mapArgs["-datadir"].c_str());
 		return false;
 	}
 	try {

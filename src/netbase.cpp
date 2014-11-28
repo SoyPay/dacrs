@@ -471,7 +471,7 @@ bool IsProxy(const CNetAddr &addr) {
 
 int GetConnectTime()
 {
-	return Params().getConnectTimeOut();
+	return SysParams().getConnectTimeOut();
 }
 
 bool ConnectSocket(const CService &addrDest, SOCKET& hSocketRet, int nTimeout)

@@ -308,8 +308,8 @@ Value verifychain(const Array& params, bool fHelp)
             + HelpExampleRpc("verifychain", "")
         );
 
-    int nCheckLevel = GetArg("-checklevel", 3);
-    int nCheckDepth = GetArg("-checkblocks", 288);
+    int nCheckLevel = CBaseParams::GetArg("-checklevel", 3);
+    int nCheckDepth = CBaseParams::GetArg("-checkblocks", 288);
     if (params.size() > 0)
         nCheckLevel = params[0].get_int();
     if (params.size() > 1)
@@ -342,7 +342,7 @@ Value getblockchaininfo(const Array& params, bool fHelp)
     GetProxy(NET_IPV4, proxy);
 
     Object obj;
-    std::string chain = Params().DataDir();
+    std::string chain = SysParams().DataDir();
     if(chain.empty())
         chain = "main";
     obj.push_back(Pair("chain",         chain));
