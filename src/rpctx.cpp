@@ -133,6 +133,33 @@ Object TxToJSON(CBaseTransaction *pTx) {
 	return result;
 }
 
+
+Value gettxdetail(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 1) {
+		string msg =
+				"gettxdetail \"txhash\"\n\gettxdetail\n\nArguments:\n1.\"txhash\":\nResult:\n\"txhash\"\n\nExamples:\n"
+						+ HelpExampleCli("gettxdetail",
+								"c5287324b89793fdf7fa97b6203dfd814b8358cfa31114078ea5981916d7a8ac\n")
+						+ "\nAs json rpc call\n"
+						+ HelpExampleRpc("gettxdetail",
+								"c5287324b89793fdf7fa97b6203dfd814b8358cfa31114078ea5981916d7a8ac\n");
+		throw runtime_error(msg);
+	}
+	uint256 txhash(params[0].get_str());
+
+	Object obj;
+
+	std::shared_ptr<CBaseTransaction> Tx;
+	if (GetTransaction(Tx, txhash)) {
+		obj = TxToJSON(Tx.get());
+		return obj;
+	}
+	throw runtime_error("can not find the :"+txhash.ToString() +" tx");
+}
+
+
+
+
 //create a register account tx
 Value registeraccounttx(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 3) {
@@ -854,11 +881,9 @@ Value listaddr(const Array& params, bool fHelp) {
 	Array retArry;
 	assert(pwalletMain != NULL);
 	{
-		LOCK2(cs_main, pwalletMain->cs_wallet);
 
 		map<CKeyID, CKeyStoreValue> pool =  pwalletMain->GetKeyPool();
 		set<CKeyID> setKeyID;
-
 
 		if (pool.size() == 0) {
 			return retArry;
@@ -877,14 +902,13 @@ Value listaddr(const Array& params, bool fHelp) {
 				Object obj;
 				CAccount Lambaacc ;
 				accView.GetAccount(userId, Lambaacc);
-				obj.push_back(Pair("mature amount", (double)Lambaacc.GetBalance(curheight)/ (double) COIN));
-				obj.push_back(Pair("free amount", (double)Lambaacc.GetMatureAmount(curheight)/ (double) COIN));
-				obj.push_back(Pair("frozen amount", (double)Lambaacc.GetForzenAmount(curheight)/ (double) COIN));
+				obj.push_back(Pair("free  amount", (double)Lambaacc.GetBalance(curheight)/ (double) COIN));
+				obj.push_back(Pair("Reward amount", (double)Lambaacc.GetRewardAmount(curheight)/ (double) COIN));
+				obj.push_back(Pair("freeze amount", (double)Lambaacc.GetSripteFreezeAmount(curheight)/ (double) COIN));
+				obj.push_back(Pair("self freeze amount", (double)Lambaacc.GetSelfFreezeAmount(curheight)/ (double) COIN));
 				return obj;
 			};
 
-//			CAccount acc ;
-//			accView.GetAccount(userId, acc);
 			Object obj;
 			obj.push_back(Pair("addr",       tem.first.ToAddress()));
 			obj.push_back(Pair("balance",    GetDetailInfo(curheight)));
@@ -980,42 +1004,6 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 	return obj;
 }
 
-Value getaddrfrozendetail(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 1) {
-		string msg = "registersecuretx nrequired [\"key\",...] ( \"account\" )\n"
-				"\nAdd a nrequired-to-sign multisignature address to the wallet.\n"
-				"Each key is a Bitcoin address or hex-encoded public key.\n" + HelpExampleCli("registersecuretx", "")
-				+ "\nAs json rpc call\n" + HelpExampleRpc("registersecuretx", "");
-		throw runtime_error(msg);
-	}
-
-	CBitcoinAddress address(params[0].get_str());
-
-	CKeyID keyid;
-	if (!address.GetKeyID(keyid))
-		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
-
-	LOCK(cs_main);
-
-	Array array;
-
-	CAccount acctInfo;
-	CAccountViewCache accView(*pAccountViewTip, true);
-	CUserID userId = keyid;
-	if (accView.GetAccount(userId, acctInfo)) {
-		acctInfo.vFreeze.insert(acctInfo.vFreeze.end(), acctInfo.vSelfFreeze.begin(), acctInfo.vSelfFreeze.end());
-
-		for (auto &item : acctInfo.vFreeze) {
-			Object obj;
-			obj.clear();
-			obj.push_back(Pair("tx hash:", HexStr(item.scriptID).c_str()));
-			obj.push_back(Pair("frozen amount:", item.value));
-			obj.push_back(Pair("height of timeout:", item.nHeight));
-			array.push_back(obj);
-		}
-	}
-	return array;
-}
 
 //list unconfirmed transaction of mine
 Value listunconfirmedtx(const Array& params, bool fHelp) {
@@ -1045,40 +1033,6 @@ Value listunconfirmedtx(const Array& params, bool fHelp) {
 	retObj.push_back(Pair("UnConfirmTx", UnConfirmTxArry));
 
 	return retObj;
-}
-
-Value gettxdetail(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 1) {
-		string msg = "gettxdetail \"txhash\"\n"
-				"\gettxdetail\n"
-				"\nArguments:\n"
-				"1.\"txhash\":"
-				"\nResult:\n"
-				"\"txhash\"\n"
-				"\nExamples:\n"
-				+ HelpExampleCli("gettxdetail", "c5287324b89793fdf7fa97b6203dfd814b8358cfa31114078ea5981916d7a8ac\n")
-				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("gettxdetail", "c5287324b89793fdf7fa97b6203dfd814b8358cfa31114078ea5981916d7a8ac\n");
-		throw runtime_error(msg);
-	}
-
-	uint256 txhash(params[0].get_str());
-
-	LOCK(pwalletMain->cs_wallet);
-	Object obj;
-					 LogPrint("TODO"," ");
-//
-//	for (auto& wtx : pwalletMain->mapWalletTx) {
-//		CAccountTx &acctx = wtx.second;
-//		for (auto&item : acctx.mapAccountTx) {
-//			if (item.first == txhash) {
-//				obj = TxToJSON(item.second.get());
-//				return obj;
-//			}
-//		}
-//	}
-
-	return NULL;
 }
 
 //list unconfirmed transaction of mine
@@ -1411,7 +1365,7 @@ Value getaddrbalance(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
 		string msg = "getaddrbalance nrequired [\"key\",...] ( \"account\" )\n"
 				"\nAdd a nrequired-to-sign multisignature address to the wallet.\n"
-				"Each key is a Bitcoin address or hex-encoded public key.\n" + HelpExampleCli("getaddrbalance", "")
+				"Each key is a  address or hex-encoded public key.\n" + HelpExampleCli("getaddrbalance", "")
 				+ "\nAs json rpc call\n" + HelpExampleRpc("getaddrbalance", "");
 		throw runtime_error(msg);
 	}
@@ -1421,7 +1375,7 @@ Value getaddrbalance(const Array& params, bool fHelp) {
 
 	CKeyID keyid;
 	if (!addr.GetKeyID(keyid))
-		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 
 	double dbalance = 0.0;
 	{
