@@ -56,7 +56,7 @@ Value getnewaddress(const Array& params, bool fHelp)
             "getnewaddress \n"
             "\nReturns a new soypay address for receiving payments.\n"
            "\nExamples:\n"
-            + HelpExampleCli("getnewaddress", "")
+            + HelpExampleCli("getnewaddress", "")+HelpExampleRpc("getnewaddress", "")
         );
 
     // Parse the account first so we don't generate a key if there's an error
@@ -76,7 +76,8 @@ Value getnewaddress(const Array& params, bool fHelp)
     {
     	return CBitcoinAddress(keyID).ToString();
     }
-    throw runtime_error("add key failed ");
+  //  throw runtime_error("add key failed ");
+    return string("add key failed ");
 }
 
 Value signmessage(const Array& params, bool fHelp)
