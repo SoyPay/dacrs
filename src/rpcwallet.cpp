@@ -72,12 +72,12 @@ Value getnewaddress(const Array& params, bool fHelp)
 //        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
     CKeyID keyID = newKey.GetID();
 
-    if(pwalletMain->AddKey(mCkey))
+    if(!pwalletMain->AddKey(mCkey))
     {
-    	return CBitcoinAddress(keyID).ToString();
+    	throw runtime_error(string("add key failed "));
     }
   //  throw runtime_error("add key failed ");
-    return string("add key failed ");
+    	return CBitcoinAddress(keyID).ToString();
 }
 
 Value signmessage(const Array& params, bool fHelp)
