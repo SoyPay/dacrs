@@ -35,33 +35,11 @@ string HelpRequiringPassphrase()
 
 void EnsureWalletIsUnlocked()
 {
-//    if (pwalletMain->IsLocked())
-//        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+    if (pwalletMain->IsCrypted())
+        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 }
 
-void AccountTxToJSON(const CAccountTx& acctx, Object& entry)
-{
-//    int confirms = wtx.GetDepthInMainChain();
-//    entry.push_back(Pair("confirmations", confirms));
-//    if (wtx.IsCoinBase())
-//        entry.push_back(Pair("generated", true));
-//    if (confirms > 0)
-//    {
-//        entry.push_back(Pair("blockhash", wtx.hashBlock.GetHex()));
-//        entry.push_back(Pair("blockindex", wtx.nIndex));
-//        entry.push_back(Pair("blocktime", (int64_t)(mapBlockIndex[wtx.hashBlock]->nTime)));
-//    }
-//    uint256 hash = wtx.GetHash();
-//    entry.push_back(Pair("txid", hash.GetHex()));
-//    Array conflicts;
-//    BOOST_FOREACH(const uint256& conflict, wtx.GetConflicts())
-//        conflicts.push_back(conflict.GetHex());
-//    entry.push_back(Pair("walletconflicts", conflicts));
-//    entry.push_back(Pair("time", wtx.GetTxTime()));
-//    entry.push_back(Pair("timereceived", (int64_t)wtx.nTimeReceived));
-//    BOOST_FOREACH(const PAIRTYPE(string,string)& item, wtx.mapValue)
-//        entry.push_back(Pair(item.first, item.second));
-}
+
 
 string AccountFromValue(const Value& value)
 {
@@ -184,7 +162,15 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
     // Amount
     int64_t nAmount = AmountFromValue(params[1]);
-    if(!pwalletMain->GetMoreThanMoneyKeyId(sendKeyId,nAmount+nTransactionFee))
+    set<CKeyID> sKeyid;
+	for (auto &te : sKeyid) {
+		if (pAccountViewTip->GetBalance(te, chainActive.Tip()->nHeight) >= nAmount + nTransactionFee) {
+			sendKeyId =te;
+			break;
+		}
+	}
+
+    if(sendKeyId == 0)
     {
     	 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "not enough moeny");
     }
@@ -197,11 +183,6 @@ Value sendtoaddress(const Array& params, bool fHelp)
     }
     return  pwalletMain->SendMoney(sendreg,revreg,nAmount);
 
-//    string strError = pwalletMain->SendMoneyToDestination(params[0].get_str(), nAmount, wtx);
-//    if (strError != "")
-//        throw JSONRPCError(RPC_WALLET_ERROR, strError);
-//
-//    return wtx.GetHash().GetHex();
 }
 
 
@@ -505,11 +486,10 @@ Value getwalletinfo(const Array& params, bool fHelp)
 
     Object obj;
     obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
-//    obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance())));
-//    obj.push_back(Pair("txcount",       (int)pwalletMain->mapWallet.size()));
-//    obj.push_back(Pair("keypoololdest", pwalletMain->GetOldestKeyPoolTime()));
-//    obj.push_back(Pair("keypoolsize",   (int)pwalletMain->GetKeyPoolSize()));
-//    if (pwalletMain->IsCrypted())
-//        obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
+    obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance(chainActive.Tip()->nHeight))));
+    obj.push_back(Pair("Inblocktx",       (int)pwalletMain->mapInBlockTx.size()));
+    obj.push_back(Pair("uncomfirmedtx", (int)pwalletMain->UnConfirmTx.size()));
+    if (pwalletMain->IsCrypted())
+        obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     return obj;
 }
