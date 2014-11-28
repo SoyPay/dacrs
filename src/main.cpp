@@ -150,19 +150,19 @@ struct CMainSignals {
 
 void RegisterWallet(CWalletInterface* pwalletIn) {
     g_signals.SyncTransaction.connect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3));
-    g_signals.EraseTransaction.connect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
+//    g_signals.EraseTransaction.connect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
     g_signals.UpdatedTransaction.connect(boost::bind(&CWalletInterface::UpdatedTransaction, pwalletIn, _1));
     g_signals.SetBestChain.connect(boost::bind(&CWalletInterface::SetBestChain, pwalletIn, _1));
-    g_signals.Inventory.connect(boost::bind(&CWalletInterface::Inventory, pwalletIn, _1));
+//    g_signals.Inventory.connect(boost::bind(&CWalletInterface::Inventory, pwalletIn, _1));
     g_signals.Broadcast.connect(boost::bind(&CWalletInterface::ResendWalletTransactions, pwalletIn));
 }
 
 void UnregisterWallet(CWalletInterface* pwalletIn) {
     g_signals.Broadcast.disconnect(boost::bind(&CWalletInterface::ResendWalletTransactions, pwalletIn));
-    g_signals.Inventory.disconnect(boost::bind(&CWalletInterface::Inventory, pwalletIn, _1));
+//    g_signals.Inventory.disconnect(boost::bind(&CWalletInterface::Inventory, pwalletIn, _1));
     g_signals.SetBestChain.disconnect(boost::bind(&CWalletInterface::SetBestChain, pwalletIn, _1));
     g_signals.UpdatedTransaction.disconnect(boost::bind(&CWalletInterface::UpdatedTransaction, pwalletIn, _1));
-    g_signals.EraseTransaction.disconnect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
+//    g_signals.EraseTransaction.disconnect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
     g_signals.SyncTransaction.disconnect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3));
 }
 
@@ -1149,14 +1149,14 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
     if (blockUndo.vtxundo.size() != block.vptx.size())
         return ERROR("DisconnectBlock() : block and undo data inconsistent");
 
-//    LogPrint("INFO","%s", blockUndo.ToString());
-//    CKeyID keyId = uint160("21d4830eaa965e3f289c81870fe79e0280aa2f9f");
-//    CUserID userId = keyId;
-//    CAccount account;
-//    if(view.GetAccount(userId, account))
-//    {
-//    	LogPrint("INFO", "Get account before undo: %s, height:%d", account.ToString(), pindex->nHeight);
-//    }
+    LogPrint("INFO","%s", blockUndo.ToString());
+    CKeyID keyId = uint160("21d4830eaa965e3f289c81870fe79e0280aa2f9f");
+    CUserID userId = keyId;
+    CAccount account;
+    if(view.GetAccount(userId, account))
+    {
+    	LogPrint("INFO", "Get account before undo: %s, height:%d", account.ToString(), pindex->nHeight);
+    }
     //undo reward tx
     std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[0];
 	CTxUndo txundo = blockUndo.vtxundo.back();
@@ -1170,10 +1170,10 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
         if(!pBaseTx->UndoUpdateAccount(i, view, state, txundo, pindex->nHeight, txCache, scriptCache))
         	return false;
     }
-//    if(view.GetAccount(userId, account))
-//    {
-//    	LogPrint("INFO", "Get account after undo: %s, height:%d", account.ToString(), pindex->nHeight);
-//    }
+    if(view.GetAccount(userId, account))
+    {
+    	LogPrint("INFO", "Get account after undo: %s, height:%d", account.ToString(), pindex->nHeight);
+    }
 
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
@@ -1213,10 +1213,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 
 //static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 
-void ThreadScriptCheck() {
-    RenameThread("soypay-scriptch");
-//    scriptcheckqueue.Thread();
-}
+
 
 bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &view, CBlockIndex* pindex, CTransactionCache &txCache, CScriptDBViewCache &scriptCache, bool fJustCheck)
 {
@@ -1240,6 +1237,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 			CPubKey pubKey = boost::get<CPubKey>(pRewardTx->account);
 			CKeyID keyId = pubKey.GetID();
 			sourceAccount.keyID = keyId;
+			sourceAccount.SetRegId(accountId);
 			sourceAccount.publicKey = pubKey;
 			sourceAccount.llValues = pRewardTx->rewardValue;
 			assert(view.SaveAccountInfo(accountId.GetRegID(), keyId, sourceAccount));

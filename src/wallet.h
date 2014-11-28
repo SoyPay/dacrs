@@ -36,18 +36,13 @@ static const int nHighTransactionFeeWarning = 0.01 * COIN;
 
 class CAccountingEntry;
 //class CCoinControl;
-class CReserveKey;
-class CScript;
+//class CReserveKey;
+//class CScript;
 //class CRegID;
 
 /** (client) version numbers for particular wallet features */
 enum WalletFeature {
-	FEATURE_BASE = 10500, // the earliest version new wallets supports (only useful for getinfo's clientversion output)
-
-	FEATURE_WALLETCRYPT = 40000, // wallet encryption
-	FEATURE_COMPRPUBKEY = 60000, // compressed public keys
-
-	FEATURE_LATEST = 60000
+	FEATURE_BASE = 10000, // the earliest version new wallets supports (only useful for getinfo's clientversion output)
 };
 
 /** A key pool entry */
@@ -74,65 +69,240 @@ public:
 	)
 };
 
-/** Address book data */
-class CAddressBookData {
-public:
-	string name;
-	string purpose;
 
-	CAddressBookData() {
-		purpose = "unknown";
+
+class CKeyStoreValue {
+private:
+	CRegID mregId;
+	CPubKey mPKey;
+	CKey  mCkey;
+	INT64 nCreationTime;
+public:
+
+	string ToString()
+	{
+		return strprintf("CRegID:%s CPubKey:%s CKey:%s :CreationTime:%d \n",mregId.ToString(),mPKey.ToString(),mCkey.ToString(),nCreationTime);
+	}
+	INT64 getBirthDay()const
+	{
+		return nCreationTime;
+	}
+	bool getCKey(CKey& keyOut) const
+	{
+		 keyOut = mCkey;
+		 return true;
 	}
 
-	typedef map<string, string> StringMap;
-	StringMap destdata;
-};
+	bool CreateANewKey()
+	{
+		mCkey.MakeNewKey();
+		mPKey = mCkey.GetPubKey();
+		nCreationTime = GetTime();
+		return true;
+	}
+	bool GetPubKey(CPubKey &mOutKey) const
+	{
+		mOutKey =mPKey;
+		assert(mCkey.GetPubKey() == mPKey);
+		return  true;
+	}
+	bool UpdataRegID(const CAccountViewCache &view)
+	{
+		CAccountViewCache temview(view);
+		if(!temview.GetRegId(CUserID(mPKey.GetID()),mregId))
+		{
+			mregId.clean();
+			return false;
+		}
+		LogPrint("wallet","%s \r\n",this->ToString());
+		return true;
+	}
 
-/** select a given account */
-class CAccControl
-{
-	CAccControl()
-	{}
-	~CAccControl()
-	{}
-};
+	CKeyStoreValue(const CPubKey &pubkey) {
+		assert(mCkey.IsValid() == false); //the ckey mustbe unvalid
+		nCreationTime = GetTime();
+		mPKey = pubkey;
+	}
 
+
+
+	CKeyStoreValue(CKey const &inkey)
+	{
+		assert(inkey.IsValid());
+		mCkey = inkey ;
+		nCreationTime = GetTime();
+		mPKey = mCkey.GetPubKey();
+	}
+
+	CKeyStoreValue()
+	{
+		nCreationTime = 0 ;
+	}
+	bool IsCrypted() {
+		return mCkey.size() == 0;
+	}
+
+	CKeyID GetCKeyID() const {
+		return (mPKey.GetID());
+	}
+	CRegID GetRegID() const {
+		return mregId;
+	}
+	IMPLEMENT_SERIALIZE
+	(
+
+			READWRITE(mregId);
+			READWRITE(mPKey);
+			READWRITE(mCkey);
+			READWRITE(nCreationTime);
+	)
+
+};
 
 /** A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
  * and provides the ability to create new transactions.
  */
-class CWallet: public CCryptoKeyStore, public CWalletInterface {
+class CWallet : public CWalletInterface{
 private:
+	static bool StartUp();
 
 	CWalletDB *pwalletdbEncryption;
-	// the current wallet version: clients below this version are not able to load the wallet
+
+	CMasterKey MasterKey;
+
+	map<CKeyID, CKeyStoreValue> mKeyPool;
 	int nWalletVersion;
-
-	// the maximum wallet format version: memory-only variable that specifies to what version this wallet may be upgraded
-	int nWalletMaxVersion;
-
-	int64_t nNextResend;
-	int64_t nLastResend;
+	CBlockLocator  bestBlock;
 
 public:
+	map<uint256, CAccountTx> mapInBlockTx;
+	map<uint256, std::shared_ptr<CBaseTransaction> > UnConfirmTx;
+
+	map<CKeyID, CKeyStoreValue> GetKeyPool() const
+		{
+		  AssertLockHeld(cs_wallet);
+		  return mKeyPool;
+		}
+
+	IMPLEMENT_SERIALIZE
+	(
+			LOCK(cs_wallet);
+			{
+				READWRITE(nWalletVersion);
+				READWRITE(bestBlock);
+				READWRITE(MasterKey);
+				READWRITE(mKeyPool);
+				READWRITE(mapInBlockTx);
+			}
+	)
+	bool FushToDisk()const;
+	bool getKeyId(set<CKeyID> &vkey) const {
+		for (auto &te : mKeyPool) {
+			vkey.insert(te.first);
+		}
+		return true;
+	}
+	int64_t GetBalance(int ncurhigh)const;
+    bool UpdataRegId(const CKeyID &keyid,const CAccountViewCache &inview)
+	{
+		CAccountViewCache view(inview);
+		if(count(keyid)> 0)
+		{
+			return mKeyPool[keyid].UpdataRegID(view);
+		}
+		return false;
+	}
+	bool UpdataAllRegID(const CAccountViewCache &inview) {
+		CAccountViewCache view(inview);
+		for (auto &te : mKeyPool) {
+			te.second.UpdataRegID(view);
+		}
+		return true;
+	}
+	static string defaultFilename ;
+
+	static CWallet* getinstance();
 	/// Main wallet lock.
 	/// This lock protects all the fields added by CWallet
 	///   except for:
 	///      fFileBacked (immutable after instantiation)
 	///      strWalletFile (immutable after instantiation)
 	mutable CCriticalSection cs_wallet;
+	bool IsCrypted() const
+	{
+		return false;
+	}
+	bool GetPubKey(const CKeyID &address, CPubKey& keyOut)
+	{
+		AssertLockHeld(cs_wallet);
+		if (mKeyPool.count(address)) {
+			return mKeyPool[address].GetPubKey(keyOut);
+		}
+		return false;
 
+	}
+	bool GetKey(const CKeyID &address, CKey& keyOut) const {
+		AssertLockHeld(cs_wallet);
+		if (mKeyPool.count(address)) {
+			auto tep = mKeyPool.find(address);
+			if(tep != mKeyPool.end())
+			return tep->second.getCKey(keyOut);
+		}
+		return false;
+	}
+	bool GetKey(const CUserID &address, CKey& keyOut) const {
+		AssertLockHeld(cs_wallet);
+		if (address.type() == typeid(CKeyID)) {
+			return GetKey(boost::get<CRegID>(address),keyOut);
+		}
+		else
+		{
+			assert(0 && "to fixme");
+		}
+
+		return false;
+	}
+	bool GetRegId(const CUserID &address, CRegID& IdOut) const {
+		AssertLockHeld(cs_wallet);
+		if (address.type() == typeid(CRegID)) {
+			IdOut = boost::get<CRegID>(address);
+			return true;
+		} else if (address.type() == typeid(CKeyID)) {
+			CKeyID te = boost::get<CKeyID>(address);
+			if (count(te)) {
+				auto tep = mKeyPool.find(te);
+				if (tep != mKeyPool.end()) {
+					IdOut = tep->second.GetRegID();
+					return true;
+				}
+
+			}
+
+		} else {
+			assert(0 && "to fixme");
+		}
+
+		return false;
+	}
+
+	bool GetKeys(set<CKeyID> &setKeyID) {
+		AssertLockHeld(cs_wallet);
+		for (auto & tem : mKeyPool) {
+			setKeyID.insert(tem.first);
+		}
+		return true;
+	}
 	bool fFileBacked;
 	string strWalletFile;
+	bool AddPubKey(const CPubKey& pk);
 
-	set<int64_t> setKeyPool;
-	map<CKeyID, CKeyMetadata> mapKeyMetadata;
-	map<CKeyID, CRegID> mapKeyRegID;
-	map<uint256, CRegID> mapScriptRegID;
 
-	typedef map<unsigned int, CMasterKey> MasterKeyMap;
-	MasterKeyMap mapMasterKeys;
-	unsigned int nMasterKeyMaxID;
+    bool count(const CKeyID &address) const
+    {
+    	AssertLockHeld(cs_wallet);
+    	return mKeyPool.count(address) > 0;
+    }
+
 
 	CWallet() {
 		SetNull();
@@ -145,127 +315,39 @@ public:
 	}
 	void SetNull() {
 		nWalletVersion = FEATURE_BASE;
-		nWalletMaxVersion = FEATURE_BASE;
 		fFileBacked = false;
-		nMasterKeyMaxID = 0;
 		pwalletdbEncryption = NULL;
-		nOrderPosNext = 0;
-		nNextResend = 0;
-		nLastResend = 0;
-		nTimeFirstKey = 0;
+
 	}
 
-	map<uint256, CAccountTx> mapWalletTx;
 
-	int64_t nOrderPosNext;
-	map<uint256, int> mapRequestCount;
 
-	map<CTxDestination, CAddressBookData> mapAddressBook;
-
-	CPubKey vchDefaultKey;
-
-	int64_t nTimeFirstKey;
-
-	const CAccountTx* GetAccountTx(const uint256& hash) const;
-	bool GetTx(const uint256& hash, std::shared_ptr<CBaseTransaction> &tx) const;
-
-	bool IsHaveAccount(const vector<unsigned char>& accountid) {
-		for (auto item : mapKeyRegID) {
-			if (item.second.GetRegID() == accountid) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	// check whether we are allowed to upgrade (or already support) to the named feature
-	bool CanSupportFeature(enum WalletFeature wf) {
-		AssertLockHeld(cs_wallet);
-		return nWalletMaxVersion >= wf;
-	}
-
-	// keystore implementation
-	// Generate a new key
-	CPubKey GenerateNewKey();
 	// Adds a key to the store, and saves it to disk.
-	bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
-	// Adds a key to the store, without saving it to disk (used by LoadWallet)
-	bool LoadKey(const CKey& key, const CPubKey &pubkey) {
-		return CCryptoKeyStore::AddKeyPubKey(key, pubkey);
-	}
-	// Load metadata (used by LoadWallet)
-	bool LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &metadata);
+	bool AddKey(const CKey& key);
+
 
 	bool LoadMinVersion(int nVersion) {
 		AssertLockHeld(cs_wallet);
 		nWalletVersion = nVersion;
-		nWalletMaxVersion = max(nWalletMaxVersion, nVersion);
+
 		return true;
 	}
 
-	// Adds an encrypted key to the store, and saves it to disk.
-	bool AddCryptedKey(const CPubKey &vchPubKey, const vector<unsigned char> &vchCryptedSecret);
-	// Adds an encrypted key to the store, without saving it to disk (used by LoadWallet)
-	bool LoadCryptedKey(const CPubKey &vchPubKey, const vector<unsigned char> &vchCryptedSecret);
-//	bool AddCScript(const CScript& redeemScript);
-//	bool LoadCScript(const CScript& redeemScript) {
-//		return CCryptoKeyStore::AddCScript(redeemScript);
-//	}
 
-	/// Adds a destination data tuple to the store, and saves it to disk
-	bool AddDestData(const CTxDestination &dest, const string &key, const string &value);
-	/// Erases a destination data tuple in the store and on disk
-	bool EraseDestData(const CTxDestination &dest, const string &key);
-	/// Adds a destination data tuple to the store, without saving it to disk
-	bool LoadDestData(const CTxDestination &dest, const string &key, const string &value);
-	/// Look up a destination data tuple in the store, return true if found false otherwise
-	bool GetDestData(const CTxDestination &dest, const string &key, string *value) const;
-
-	bool Unlock(const SecureString& strWalletPassphrase);
-	bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
-	bool EncryptWallet(const SecureString& strWalletPassphrase);
-
-	void GetKeyBirthTimes(map<CKeyID, int64_t> &mapKeyBirth) const;
-
-	/** Increment the next transaction order id
-	 @return next transaction order id
-	 */
-	int64_t IncOrderPosNext(CWalletDB *pwalletdb = NULL);
-
-	bool AddToWallet(const CAccountTx& accTx);
-	//  void SyncTransaction(const CBaseTransaction *pTx, const CBlock* pblock, const bool bConnect = true);
 	void SyncTransaction(const uint256 &hash, CBaseTransaction *pTx, const CBlock* pblock);
-	void EraseFromWallet(const uint256 &hash);
+//	void EraseFromWallet(const uint256 &hash);
 	int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
-	void ReacceptWalletTransactions();
+//	void ReacceptWalletTransactions();
 	void ResendWalletTransactions();
 
-	bool NewKeyPool();
-	bool TopUpKeyPool(unsigned int kpSize = 0);
-	int64_t AddReserveKey(const CKeyPool& keypool);
-	void ReserveKeyFromKeyPool(int64_t& nIndex, CKeyPool& keypool);
-	void KeepKey(int64_t nIndex);
-	void ReturnKey(int64_t nIndex);
-	bool GetKeyFromPool(CPubKey &key);
-	int64_t GetOldestKeyPoolTime();
-	void GetAllReserveKeys(set<CKeyID>& setAddress) const;
 
-	set<set<CTxDestination> > GetAddressGroupings();
-	map<CTxDestination, int64_t> GetAddressBalances();
+	/***********************************creat tx*********************************************/
 
-/***********************************creat tx*********************************************/
-	map<CKeyID , int64_t> GetBalance() const;
+	std::string SendMoney(CRegID &send, CRegID &rsv, int64_t nValue);
 
-	std::string SendMoney(CKeyID &send, CKeyID &rsv, int64_t nValue, CTransaction& txNew);
-	std::string SendMoneyToDestination(const string& address, int64_t nValue, CTransaction& txNew);
+	/****************************************************************************************/
 
-
-
-
-/****************************************************************************************/
-
-	set<CTxDestination> GetAccountAddresses(string strAccount) const;
+//	set<CTxDestination> GetAccountAddresses(string strAccount) const;
 
 	bool IsMine(CBaseTransaction*pTx) {
 
@@ -275,59 +357,28 @@ public:
 			return false;
 		}
 		for (auto &keyid : vaddr) {
-			if (HaveKey(keyid)) {
+			if (count(keyid) > 0) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	bool IsMine(const CTxDestination& address) {
-		return mapAddressBook.count(address) > 0;
-	}
 
-	bool GetRegID(const CKeyID &keyID, CRegID &regID) {
-		if (mapKeyRegID.count(keyID)) {
-			regID = mapKeyRegID[keyID];
-			return true;
-		}
-		return false;
-	}
 
 	void SetBestChain(const CBlockLocator& loc);
 
-	void DelInvalidRegID();
 
-	DBErrors LoadWallet(bool& fFirstRunRet);
+	DBErrors LoadWallet(bool fFirstRunRet);
 	DBErrors ZapWalletTx();
 
-	bool SetAddressBook(const CTxDestination& address, const string& strName, const string& purpose);
-
-	bool DelAddressBook(const CTxDestination& address);
 
 	void UpdatedTransaction(const uint256 &hashTx);
 
-	void Inventory(const uint256 &hash) {
-		{
-			LOCK(cs_wallet);
-			map<uint256, int>::iterator mi = mapRequestCount.find(hash);
-			if (mi != mapRequestCount.end())
-				(*mi).second++;
-		}
-	}
 
-	unsigned int GetKeyPoolSize() {
-		AssertLockHeld(cs_wallet); // setKeyPool
-		return setKeyPool.size();
-	}
 
-	bool SetDefaultKey(const CPubKey &vchPubKey);
 
-	// signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
-	bool SetMinVersion(enum WalletFeature, CWalletDB* pwalletdbIn = NULL, bool fExplicit = false);
 
-	// change which version we're allowed to upgrade to (note that this does not immediately imply upgrading to that format)
-	bool SetMaxVersion(int nVersion);
 
 	// get the current wallet format (the oldest client version guaranteed to understand this wallet)
 	int GetVersion() {
@@ -353,26 +404,7 @@ public:
 	boost::signals2::signal<void(const string &title, int nProgress)> ShowProgress;
 };
 
-/** A key allocated from the key pool. */
-class CReserveKey {
-protected:
-	CWallet* pwallet;
-	int64_t nIndex;
-	CPubKey vchPubKey;
-public:
-	CReserveKey(CWallet* pwalletIn) {
-		nIndex = -1;
-		pwallet = pwalletIn;
-	}
 
-	~CReserveKey() {
-		ReturnKey();
-	}
-
-	void ReturnKey();
-	bool GetReservedKey(CPubKey &pubkey);
-	void KeepKey();
-};
 
 typedef map<string, string> mapValue_t;
 
@@ -520,6 +552,10 @@ private:
 
 public:
 	uint256 blockHash;
+//	set<uint256> Txhash;
+
+	map<uint256, vector<CAccountOperLog> > mapOperLog;
+
 	map<uint256, std::shared_ptr<CBaseTransaction> > mapAccountTx;
 public:
 	CAccountTx(CWallet* pwallet = NULL, uint256 hash = uint256(0)) {
@@ -538,7 +574,12 @@ public:
 			pWallet = pwallet;
 		}
 	}
-
+	bool AddOperLog(const uint256 &hash, const vector<CAccountOperLog> &log)
+	{
+		assert(mapOperLog.count(hash) == 0 );
+		mapOperLog[hash] = log;
+		return true;
+	}
 	bool AddTx(const uint256 &hash, const CBaseTransaction*pTx) {
 		switch (pTx->nTxType) {
 		case NORMAL_TX:
@@ -560,6 +601,7 @@ public:
 			mapAccountTx[hash] = make_shared<CRegistScriptTx>(pTx);
 			break;
 		default:
+			assert(0);
 			return false;
 			break;
 		}
@@ -612,6 +654,9 @@ public:
 	bool WriteToDisk() {
 		return CWalletDB(pWallet->strWalletFile).WriteAccountTx(blockHash, *this);
 	}
+
+	Object ToJosnObj() const;
+
 
 	IMPLEMENT_SERIALIZE
 	(

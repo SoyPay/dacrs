@@ -246,15 +246,12 @@ static const CRPCCommand vRPCCommands[] =
     { "getblockhash",           &getblockhash,           false,     false,      false },
     { "getdifficulty",          &getdifficulty,          true,      false,      false },
     { "getrawmempool",          &getrawmempool,          true,      false,      false },
-    { "gettxout",               &gettxout,               true,      false,      false },
-    { "gettxoutsetinfo",        &gettxoutsetinfo,        true,      false,      false },
+
     { "verifychain",            &verifychain,            true,      false,      false },
 
     /* Mining */
-    { "getblocktemplate",       &getblocktemplate,       true,      false,      false },
     { "getmininginfo",          &getmininginfo,          true,      false,      false },
     { "getnetworkhashps",       &getnetworkhashps,       true,      false,      false },
-    { "submitblock",            &submitblock,            false,     false,      false },
 
     /* Raw transactions */
  //   { "createrawtransaction",   &createrawtransaction,   false,     false,      false },
@@ -264,20 +261,15 @@ static const CRPCCommand vRPCCommands[] =
  //   { "sendrawtransaction",     &sendrawtransaction,     false,     false,      false },
  //   { "signrawtransaction",     &signrawtransaction,     false,     false,      false }, /* uses wallet if enabled */
 
-    /* Utility functions */
-//    { "createmultisig",         &createmultisig,         true,      true ,      false },
-    { "validateaddress",        &validateaddress,        true,      false,      false }, /* uses wallet if enabled */
+
     { "verifymessage",          &verifymessage,          false,     false,      false },
 
-#ifdef ENABLE_WALLET
     /* Wallet */
     //vaild rpc cmd
     { "backupwallet",           &backupwallet,           true,      false,      true },
     { "dumpprivkey",            &dumpprivkey,            true,      false,      true },
     { "dumpwallet",             &dumpwallet,             true,      false,      true },
     { "encryptwallet",          &encryptwallet,          false,     false,      true },
-    { "getaccount",             &getaccount,             false,     false,      true },
-    { "getaddressesbyaccount",  &getaddressesbyaccount,  true,      false,      true },
     { "getaccountinfo",         &getaccountinfo,         true,      false,      true },
     { "getnewaddress",          &getnewaddress,          true,      false,      true },
     { "gettxdetail",            &gettxdetail,       	 true,      false,      true },
@@ -286,10 +278,10 @@ static const CRPCCommand vRPCCommands[] =
     { "importprivkey",          &importprivkey,          false,     false,      true },
     { "importwallet",           &importwallet,           false,     false,      true },
     { "listaddr",               &listaddr,       	     true,      false,      true },
-    { "listaddrtx",             &listaddrtx,       	     true,      false,      true },
-    { "registeraccounttx",      &registeraccounttx,       true,      false,      true },
+    { "listtx",                 &listtx,       	         true,      false,      true },
+    { "registeraccounttx",      &registeraccounttx,      true,      false,      true },
 	{ "createnormaltx",         &createnormaltx,       	 true,      false,      true },
-	{ "createcontracttx",       &createcontracttx,       	 true,      false,      true },
+	{ "createcontracttx",       &createcontracttx,        true,      false,      true },
 	{ "signcontracttx",         &signcontracttx,       	 true,      false,      true },
 	{ "createfreezetx",         &createfreezetx,       	 true,      false,      true },
 	{ "registerscripttx",       &registerscripttx,       true,      false,      true },
@@ -299,11 +291,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "walletpassphrase",       &walletpassphrase,       true,      false,      true },
 	{ "getgenerate",            &getgenerate,            true,      false,     false },
 	{ "gethashespersec",        &gethashespersec,        true,      false,     false },
-	{ "getwork",                &getwork,                true,      false,     true  },
 	{ "setgenerate",            &setgenerate,            true,      true,      false },
-	{ "listregid",        		&listregid,        		 true,      false,      true },
-	{ "getaddramount",          &getaddramount,       	 true,      false,      true },
-	{ "getoneaddr",          	&getoneaddr,          	 true,      false,      true },
 	{ "listregscript",          &listregscript,          true,      false,      true },
 	{ "generateblock",          &generateblock, 		 true,      false,      true },
 	{"getpublickey",            &getpublickey,           true,      false,      true },
@@ -312,37 +300,11 @@ static const CRPCCommand vRPCCommands[] =
 	{ "getscriptdata",          &getscriptdata,          true,      false,      true },
 	{ "signmessage",            &signmessage,            false,     false,      true },
 	{ "sendtoaddress",          &sendtoaddress,          false,     false,      true },
-    //invaild rpc cmd
-//    { "addmultisigaddress",     &addmultisigaddress,     false,     false,      true },
-//    { "getbalance",             &getbalance,             false,     false,      true },
-//    { "getrawchangeaddress",    &getrawchangeaddress,    true,      false,      true },
-//    { "getreceivedbyaccount",   &getreceivedbyaccount,   false,     false,      true },
-//    { "getreceivedbyaddress",   &getreceivedbyaddress,   false,     false,      true },
-//    { "gettransaction",         &gettransaction,         false,     false,      true },
-//    { "getunconfirmedbalance",  &getunconfirmedbalance,  false,     false,      true },
-//    { "keypoolrefill",          &keypoolrefill,          true,      false,      true },
-//    { "listaccounts",           &listaccounts,           false,     false,      true },
-//    { "listaddressgroupings",   &listaddressgroupings,   false,     false,      true },
-//    { "listlockunspent",        &listlockunspent,        false,     false,      true },
-//    { "listreceivedbyaccount",  &listreceivedbyaccount,  false,     false,      true },
-//    { "listreceivedbyaddress",  &listreceivedbyaddress,  false,     false,      true },
-//    { "listsinceblock",         &listsinceblock,         false,     false,      true },
-//    { "listtransactions",       &listtransactions,       false,     false,      true },
-//    { "listunspent",            &listunspent,            false,     false,      true },
-//    { "lockunspent",            &lockunspent,            false,     false,      true },
-//    { "move",                   &movecmd,                false,     false,      true },
-//    { "sendfrom",               &sendfrom,               false,     false,      true },
-//    { "sendmany",               &sendmany,               false,     false,      true },
-//    { "sendtoaddress",          &sendtoaddress,          false,     false,      true },
-//	  { "setaccount",             &setaccount,             true,      false,      true },
-//    { "createsecuretx",         &createsecuretx,       	 true,      false,      true },
-//    { "signsecuretx",           &signsecuretx,       	 true,      false,      true },
-//	  { "testnormaltx",         	&testnormaltx,         	 true,      false,      true },
-//	  { "testminer",         		&testminer,         	 true,      false,      true },
-//	  { "getaccountaddress",      &getaccountaddress,      true,      false,      true },
-#endif // ENABLE_WALLET
+    { "getbalance",             &getbalance,             false,     false,      true },
+
+
 //for test code
-	{ "gettxoperationlog",        &gettxoperationlog,        false,      false,      false },
+	{ "gettxoperationlog",      &gettxoperationlog,        false,      false,      false },
     { "disconnectblock",        &disconnectblock,        true,      false,      true },
     { "reloadtxcache",          &reloadtxcache,          true,      false,      true },
 };
@@ -895,7 +857,7 @@ json_spirit::Value CRPCTable::execute(const string &strMethod, const json_spirit
         {
             if (pcmd->threadSafe)
                 result = pcmd->actor(params, false);
-#ifdef ENABLE_WALLET
+
             else if (!pwalletMain) {
                 LOCK(cs_main);
                 result = pcmd->actor(params, false);
@@ -903,12 +865,6 @@ json_spirit::Value CRPCTable::execute(const string &strMethod, const json_spirit
                 LOCK2(cs_main, pwalletMain->cs_wallet);
                 result = pcmd->actor(params, false);
             }
-#else // ENABLE_WALLET
-            else {
-                LOCK(cs_main);
-                result = pcmd->actor(params, false);
-            }
-#endif // !ENABLE_WALLET
         }
         return result;
     }

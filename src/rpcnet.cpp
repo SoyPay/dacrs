@@ -372,7 +372,7 @@ Value getnetworkinfo(const Array& params, bool fHelp)
     Array localAddresses;
     {
         LOCK(cs_mapLocalHost);
-        BOOST_FOREACH(const PAIRTYPE(CNetAddr, LocalServiceInfo) &item, mapLocalHost)
+        for(const auto &item: mapLocalHost)
         {
             Object rec;
             rec.push_back(Pair("address", item.first.ToString()));

@@ -94,4 +94,6 @@ public:
 typedef vector<unsigned char, secure_allocator<unsigned char> > CKeyingMaterial;
 typedef map<CKeyID, pair<CPubKey, vector<unsigned char> > > CryptedKeyMap;
 
+
+
 #endif

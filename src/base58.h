@@ -100,7 +100,6 @@ public:
 class CBitcoinAddress : public CBase58Data {
 public:
     bool Set(const CKeyID &id);
-    bool Set(const CAccountID &id);
     bool Set(const CTxDestination &dest);
     bool IsValid() const;
 
@@ -111,7 +110,7 @@ public:
 
     CTxDestination Get() const;
     bool GetKeyID(CKeyID &keyID) const;
-    bool GetRegID(vector<unsigned char> &vRegid) const ;
+//    bool GetRegID(CRegID &Regid) const ;
     bool IsScript() const;
 };
 

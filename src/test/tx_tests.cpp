@@ -36,7 +36,7 @@ void GenerateRandomHash(vector<uint256>& vHash, uint64_t nSize = TEST_SIZE) {
 	//generate key hash
 	for (int i = 1; i <= nSize; i++) {
 		CKey key;
-		key.MakeNewKey(false);
+		key.MakeNewKey();
 		string str(key.begin(), key.end());
 		vRandom.clear();
 		vRandom.insert(vRandom.begin(), key.begin(), key.end());

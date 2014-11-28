@@ -19,7 +19,7 @@ class CAccountingEntry;
 struct CBlockLocator;
 class CKeyPool;
 class CMasterKey;
-class CScript;
+//class CScript;
 class CWallet;
 class uint160;
 class uint256;
@@ -37,7 +37,7 @@ enum DBErrors
     DB_NEED_REWRITE
 };
 
-class CKeyMetadata
+/*class CKeyMetadata
 {
 public:
     static const int CURRENT_VERSION=1;
@@ -66,7 +66,7 @@ public:
         nVersion = CKeyMetadata::CURRENT_VERSION;
         nCreateTime = 0;
     }
-};
+};*/
 
 /** Access to the wallet database (wallet.dat) */
 class CWalletDB : public CDB
@@ -79,6 +79,11 @@ private:
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
 public:
+
+    bool WriteCWallet(const CWallet &pwallet);
+
+    bool ReadCWallet(CWallet &pwallet);
+
     bool WriteName(const string& strAddress, const string& strName);
     bool EraseName(const string& strAddress);
 
@@ -94,8 +99,8 @@ public:
     bool WriteScriptRegID(uint256 hash,const CRegID &regID);
     bool EraseScriptRegID(uint256 hash);
 
-    bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);
-    bool WriteCryptedKey(const CPubKey& vchPubKey, const vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);
+//    bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);
+//    bool WriteCryptedKey(const CPubKey& vchPubKey, const vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);
     bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
 
 //  bool WriteCScript(const uint160& hash, const CScript& redeemScript);
@@ -128,7 +133,7 @@ public:
     void ListAccountCreditDebit(const string& strAccount, list<CAccountingEntry>& acentries);
 
     DBErrors ReorderTransactions(CWallet*);
-    DBErrors LoadWallet(CWallet* pwallet);
+    DBErrors LoadWallet(CWallet& pwallet);
     DBErrors FindWalletTx(CWallet* pwallet, vector<uint256>& vBlockHash);
     DBErrors ZapWalletTx(CWallet* pwallet);
     static bool Recover(CDBEnv& dbenv, string filename, bool fOnlyKeys);
