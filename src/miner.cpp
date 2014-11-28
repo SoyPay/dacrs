@@ -79,7 +79,7 @@ uint64_t nLastBlockSize = 0;
 uint64_t GetElementForBurn(CBlockIndex* pindex)
 {
 	uint64_t sumfee;
-	unsigned int nBlock = GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
+	unsigned int nBlock = CBaseParams::GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
 //	CBlockIndex* pindex = chainActive.Tip();
 	if (nBlock > pindex->nHeight) {
 		return 100000;
@@ -459,7 +459,7 @@ uint256 GetAdjustHash(const uint256 TargetHash, const uint64_t nPos) {
 	posacc = posacc / 100;
 	posacc = max(posacc, (uint64_t) 1);
 	uint256 adjusthash = TargetHash; //adjust nbits
-	uint256 minhash = Params().ProofOfWorkLimit().getuint256();
+	uint256 minhash = SysParams().ProofOfWorkLimit().getuint256();
 
 	while (posacc) {
 		adjusthash = adjusthash << 1;
@@ -793,18 +793,18 @@ CBlockTemplate* CreateNewBlock() {
 	pblocktemplate->vTxSigOps.push_back(-1); // updated at end
 
 	// Largest block you're willing to create:
-	unsigned int nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
+	unsigned int nBlockMaxSize = CBaseParams::GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
 	// Limit to betweeen 1K and MAX_BLOCK_SIZE-1K for sanity:
 	nBlockMaxSize = max((unsigned int) 1000, min((unsigned int) (MAX_BLOCK_SIZE - 1000), nBlockMaxSize));
 
 	// How much of the block should be dedicated to high-priority transactions,
 	// included regardless of the fees they pay
-	unsigned int nBlockPrioritySize = GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE);
+	unsigned int nBlockPrioritySize = CBaseParams::GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE);
 	nBlockPrioritySize = min(nBlockMaxSize, nBlockPrioritySize);
 
 	// Minimum block size you want to create; block will be filled with free transactions
 	// until there are no more or the block reaches this size:
-	unsigned int nBlockMinSize = GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE);
+	unsigned int nBlockMinSize = CBaseParams::GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE);
 	nBlockMinSize = min(nBlockMaxSize, nBlockMinSize);
 
 	// Collect memory pool transactions into the block
@@ -814,7 +814,7 @@ CBlockTemplate* CreateNewBlock() {
 		CBlockIndex* pIndexPrev = chainActive.Tip();
 		CAccountViewCache accview(*pAccountViewTip, true);
 
-		bool fPrintPriority = GetBoolArg("-printpriority", false);
+		bool fPrintPriority = CBaseParams::GetBoolArg("-printpriority", false);
 
 		// This vector will be sorted into a priority queue:
 		vector<TxPriority> vecPriority;
@@ -941,7 +941,7 @@ void static SoypayMiner(CWallet *pwallet) {
 
 	try {
 		while (true) {
-			if (Params().NetworkID() != CBaseParams::REGTEST) {
+			if (SysParams().NetworkID() != CBaseParams::REGTEST) {
 				// Busy-wait for the network to come online so we don't waste time mining
 				// on an obsolete chain. In regtest mode we expect to fly solo.
 				while (vNodes.empty())
@@ -971,7 +971,7 @@ void static SoypayMiner(CWallet *pwallet) {
 					CheckWork(pblock, *pwallet);
 					SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
-					if (Params().NetworkID() == CBaseParams::REGTEST)
+					if (SysParams().NetworkID() == CBaseParams::REGTEST)
 						throw boost::thread_interrupted();
 					::MilliSleep(800);
 					break;
@@ -982,7 +982,7 @@ void static SoypayMiner(CWallet *pwallet) {
 
 				// Check for stop or if block needs to be rebuilt
 				boost::this_thread::interruption_point();
-				if (vNodes.empty() && Params().NetworkID() != CBaseParams::REGTEST)
+				if (vNodes.empty() && SysParams().NetworkID() != CBaseParams::REGTEST)
 					break;
 				if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
 					break;
@@ -998,7 +998,7 @@ void static SoypayMiner(CWallet *pwallet) {
 
 bool CreateBlockWithAppointedAddr(CKeyID &keyID)
 {
-	if (Params().NetworkID() == CBaseParams::REGTEST)
+	if (SysParams().NetworkID() == CBaseParams::REGTEST)
 	{
 		unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
 		CBlockIndex* pindexPrev = chainActive.Tip();
@@ -1037,7 +1037,7 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads) {
 	static boost::thread_group* minerThreads = NULL;
 
 	if (nThreads < 0) {
-		if (Params().NetworkID() == CBaseParams::REGTEST)
+		if (SysParams().NetworkID() == CBaseParams::REGTEST)
 			nThreads = 1;
 		else
 			nThreads = boost::thread::hardware_concurrency();

@@ -68,16 +68,9 @@
 
 using namespace std;
 
-map<string, string> mapArgs;
-map<string, vector<string> > mapMultiArgs;
-//bool fDebug = false;
-//bool fPrintToConsole = false;
-//bool fPrintToDebugLog = true;
 bool fDaemon = false;
-//bool fServer = false;
 string strMiscWarning;
 bool fNoListen = false;
-//bool fLogTimestamps = false;
 volatile bool fReopenDebugLog = false;
 CClientUIInterface uiInterface;
 
@@ -213,28 +206,17 @@ boost::mutex* m_mutexDebugLog;
 static map<string,
 DebugLogFile> g_DebugLogs;
 
-//static void DebugPrintInit()
-//{
-//    assert(fileout == NULL);
-//    assert(mutexDebugLog == NULL);
-//
-//    boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
-//    fileout = fopen(pathDebug.string().c_str(), "a");
-//    if (fileout) setbuf(fileout, NULL); // unbuffered
-//
-//    mutexDebugLog = new boost::mutex();
-//}
 
 static void DebugPrintInit() {
-	shared_ptr<vector<string>> te = Params().GetMultiArgsMap("-debug");
+	shared_ptr<vector<string>> te = SysParams().GetMultiArgsMap("-debug");
 	const vector<string>& categories = *(te.get());
 	set<string> logfiles(categories.begin(), categories.end());
 
-	shared_ptr<vector<string>> tmp = Params().GetMultiArgsMap("-nodebug");
+	shared_ptr<vector<string>> tmp = SysParams().GetMultiArgsMap("-nodebug");
 	const vector<string>& nocategories = *(tmp.get());
 	set<string> nologfiles(nocategories.begin(), nocategories.end());
 
-	if (Params().IsDebugAll()) {
+	if (SysParams().IsDebugAll()) {
 		logfiles.clear();
 		logfiles = nologfiles;
 		logfiles.insert("debug");
@@ -279,82 +261,14 @@ static void DebugPrintInit() {
 	}
 }
 
-//bool LogAcceptCategory(const char* category)
-//{
-//    if (category != NULL)
-//    {
-//        if (!fDebug)
-//            return false;
-//
-//        // Give each thread quick access to -debug settings.
-//        // This helps prevent issues debugging global destructors,
-//        // where mapMultiArgs might be deleted before another
-//        // global destructor calls LogPrint()
-//        static boost::thread_specific_ptr<set<string> > ptrCategory;
-//        if (ptrCategory.get() == NULL)
-//        {
-//            const vector<string>& categories = mapMultiArgs["-debug"];
-//            ptrCategory.reset(new set<string>(categories.begin(), categories.end()));
-//            // thread_specific_ptr automatically deletes the set when the thread ends.
-//        }
-//        const set<string>& setCategories = *ptrCategory.get();
-//
-//        // if not debugging everything and not debugging specific category, LogPrint does nothing.
-//        if (setCategories.count(string("")) == 0 &&
-//            setCategories.count(string(category)) == 0)
-//            return false;
-//    }
-//    return true;
-//}
-
 int LogPrintStr(const string &str) {
 	return LogPrintStr(NULL, str);
 }
 
-//int LogPrintStr(const string &str)
-//{
-//    int ret = 0; // Returns total number of characters written
-//    if (fPrintToConsole)
-//    {
-//        // print to console
-//        ret = fwrite(str.data(), 1, str.size(), stdout);
-//    }
-//    else if (fPrintToDebugLog)
-//    {
-//        static bool fStartedNewLine = true;
-//        boost::call_once(&DebugPrintInit, debugPrintInitFlag);
-//
-//        if (fileout == NULL)
-//            return ret;
-//
-//        boost::mutex::scoped_lock scoped_lock(*mutexDebugLog);
-//
-//        // reopen the log file, if requested
-//        if (fReopenDebugLog) {
-//            fReopenDebugLog = false;
-//            boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
-//            if (freopen(pathDebug.string().c_str(),"a",fileout) != NULL)
-//                setbuf(fileout, NULL); // unbuffered
-//        }
-//
-//        // Debug print useful for profiling
-//        if (fLogTimestamps && fStartedNewLine)
-//            ret += fprintf(fileout, "%s ", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
-//        if (!str.empty() && str[str.size()-1] == '\n')
-//            fStartedNewLine = true;
-//        else
-//            fStartedNewLine = false;
-//
-//        ret = fwrite(str.data(), 1, str.size(), fileout);
-//    }
-//
-//    return ret;
-//}
-
 string GetLogHead(int line, const char* file, const char* category) {
 	string te(category != NULL ? category : "");
-	if (Params().IsDebug()) {
-		if (Params().IsLogPrintLine())
+	if (SysParams().IsDebug()) {
+		if (SysParams().IsLogPrintLine())
 			return tfm::format("[%s:%d]%s: ", file, line, te);
 	}
 	return string("");
@@ -362,7 +276,7 @@ string GetLogHead(int line, const char* file, const char* category) {
 
 int LogPrintStr(const char* category, const string &str) {
 
-	if (!Params().IsDebug())
+	if (!SysParams().IsDebug())
 		return 0;
 
 	int ret = 0; // Returns total number of characters written
@@ -371,7 +285,7 @@ int LogPrintStr(const char* category, const string &str) {
 
 	map<string, DebugLogFile>::iterator it;
 
-	if (Params().IsDebugAll()) {
+	if (SysParams().IsDebugAll()) {
 		if (NULL != category) {
 			it = g_DebugLogs.find(category);
 			if (it != g_DebugLogs.end()) {
@@ -386,15 +300,15 @@ int LogPrintStr(const char* category, const string &str) {
 		}
 	}
 
-	if (Params().IsPrint2Console()) {
+	if (SysParams().IsPrint2Console()) {
 		// print to console
 		ret = fwrite(str.data(), 1, str.size(), stdout);
 	}
-	if (Params().IsPrintToFile()) {
+	if (SysParams().IsPrintToFile()) {
 		DebugLogFile& log = it->second;
 		boost::mutex::scoped_lock scoped_lock(*log.m_mutexDebugLog);
 		// Debug print useful for profiling
-		if (Params().IsLogTimestamps() && log.m_newLine) {
+		if (SysParams().IsLogTimestamps() && log.m_newLine) {
 			ret += fprintf(log.m_fileout, "%s ", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
 		}
 		if (!str.empty() && str[str.size() - 1] == '\n') {
@@ -529,85 +443,10 @@ static void InterpretNegativeSetting(string name, map<string, string>& mapSettin
 		string positive("-");
 		positive.append(name.begin() + 3, name.end());
 		if (mapSettingsRet.count(positive) == 0) {
-			bool value = !GetBoolArg(name, false);
+			bool value = !CBaseParams::GetBoolArg(name, false);
 			mapSettingsRet[positive] = (value ? "1" : "0");
 		}
 	}
-}
-
-void ParseParameters(int argc, const char* const argv[]) {
-	mapArgs.clear();
-	mapMultiArgs.clear();
-	for (int i = 1; i < argc; i++) {
-		string str(argv[i]);
-		string strValue;
-		size_t is_index = str.find('=');
-		if (is_index != string::npos) {
-			strValue = str.substr(is_index + 1);
-			str = str.substr(0, is_index);
-		}
-#ifdef WIN32
-		boost::to_lower(str);
-		if (boost::algorithm::starts_with(str, "/"))
-			str = "-" + str.substr(1);
-#endif
-		if (str[0] != '-')
-			break;
-
-		mapArgs[str] = strValue;
-		mapMultiArgs[str].push_back(strValue);
-	}
-
-	// New 0.6 features:
-	for (auto const & entry : mapArgs) {
-		string name = entry.first;
-
-		//  interpret --foo as -foo (as long as both are not set)
-		if (name.find("--") == 0) {
-			string singleDash(name.begin() + 1, name.end());
-			if (mapArgs.count(singleDash) == 0)
-				mapArgs[singleDash] = entry.second;
-			name = singleDash;
-		}
-
-		// interpret -nofoo as -foo=0 (and -nofoo=0 as -foo=1) as long as -foo not set
-		InterpretNegativeSetting(name, mapArgs);
-	}
-}
-
-string GetArg(const string& strArg, const string& strDefault) {
-	if (mapArgs.count(strArg))
-		return mapArgs[strArg];
-	return strDefault;
-}
-
-int64_t GetArg(const string& strArg, int64_t nDefault) {
-	if (mapArgs.count(strArg))
-		return atoi64(mapArgs[strArg]);
-	return nDefault;
-}
-
-bool GetBoolArg(const string& strArg, bool fDefault) {
-	if (mapArgs.count(strArg)) {
-		if (mapArgs[strArg].empty())
-			return true;
-		return (atoi(mapArgs[strArg]) != 0);
-	}
-	return fDefault;
-}
-
-bool SoftSetArg(const string& strArg, const string& strValue) {
-	if (mapArgs.count(strArg))
-		return false;
-	mapArgs[strArg] = strValue;
-	return true;
-}
-
-bool SoftSetBoolArg(const string& strArg, bool fValue) {
-	if (fValue)
-		return SoftSetArg(strArg, string("1"));
-	else
-		return SoftSetArg(strArg, string("0"));
 }
 
 string EncodeBase64(const unsigned char* pch, size_t len) {
@@ -1000,7 +839,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific) {
 
 	int nNet = CBaseParams::MAX_NETWORK_TYPES;
 	if (fNetSpecific)
-		nNet = Params().NetworkID();
+		nNet = SysParams().NetworkID();
 
 	fs::path &path = pathCached[nNet];
 
@@ -1009,8 +848,8 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific) {
 	if (!path.empty())
 		return path;
 
-	if (mapArgs.count("-datadir")) {
-		path = fs::system_complete(mapArgs["-datadir"]);
+	if (CBaseParams::IsArgCount("-datadir")) {
+		path = fs::system_complete(CBaseParams::GetArg("-datadir", ""));
 		if (!fs::is_directory(path)) {
 			path = "";
 			return path;
@@ -1019,7 +858,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific) {
 		path = GetDefaultDataDir();
 	}
 	if (fNetSpecific)
-		path /= Params().DataDir();
+		path /= SysParams().DataDir();
 
 	fs::create_directories(path);
 
@@ -1031,7 +870,7 @@ void ClearDatadirCache() {
 }
 
 boost::filesystem::path GetConfigFile() {
-	boost::filesystem::path pathConfigFile(GetArg("-conf", "soypay.conf"));
+	boost::filesystem::path pathConfigFile(CBaseParams::GetArg("-conf", "soypay.conf"));
 	if (!pathConfigFile.is_complete())
 		pathConfigFile = GetDataDir(false) / pathConfigFile;
 	return pathConfigFile;
@@ -1061,7 +900,7 @@ void ReadConfigFile(map<string, string>& mapSettingsRet, map<string, vector<stri
 }
 
 boost::filesystem::path GetPidFile() {
-	boost::filesystem::path pathPidFile(GetArg("-pid", "bitcoind.pid"));
+	boost::filesystem::path pathPidFile(CBaseParams::GetArg("-pid", "bitcoind.pid"));
 	if (!pathPidFile.is_complete())
 		pathPidFile = GetDataDir() / pathPidFile;
 	return pathPidFile;
@@ -1285,7 +1124,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nTime) {
 				}
 			}
 		}
-		if (Params().IsDebug()) {
+		if (SysParams().IsDebug()) {
 			for (int64_t n : vSorted)
 				LogPrint("INFO", "%+d  ", n);
 			LogPrint("INFO", "|  ");

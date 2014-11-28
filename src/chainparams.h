@@ -36,36 +36,36 @@ struct CDNSSeedData {
  */
 class CBaseParams {
 protected:
-	bool fDebugAll;
-	bool fDebug;
-	bool fPrintToConsole;
-	bool fPrintToToFile;
-	bool fLogTimestamps;
-	bool fLogPrintFileLine;
-	bool fServer;
-	bool fImporting;
-	bool fReindex;
-	bool fBenchmark;
-	bool fTxIndex;
-	int64_t nTimeBestReceived;
+	mutable bool fDebugAll;
+	mutable bool fDebug;
+	mutable bool fPrintToConsole;
+	mutable bool fPrintToToFile;
+	mutable bool fLogTimestamps;
+	mutable bool fLogPrintFileLine;
+	mutable bool fServer;
+	mutable bool fImporting;
+	mutable bool fReindex;
+	mutable bool fBenchmark;
+	mutable bool fTxIndex;
+	mutable int64_t nTimeBestReceived;
 	int64_t nTargetSpacing;
 	int64_t nTargetTimespan;
 	int64_t nInterval;
 	int64_t nMaxCoinDay;
-	unsigned int nScriptCheckThreads;
-	int64_t nCoinCacheSize;
-	int nTxCacheHeight;
-	int nIntervalPos;
+	mutable unsigned int nScriptCheckThreads;
+	mutable int64_t nCoinCacheSize;
+	mutable int nTxCacheHeight;
+	mutable int nIntervalPos;
 
 public:
 
-	std::shared_ptr<vector<string> > GetMultiArgsMap(string str) {
+	std::shared_ptr<vector<string> > GetMultiArgsMap(string str) const{
 		std::shared_ptr<vector<string> > temp = make_shared<vector<string> >();
 		vector<string> te = m_mapMultiArgs[str];
 		temp.get()->assign(te.begin(), te.end());
 		return temp;
 	}
-	virtual bool InitalConfig() {
+	virtual bool InitalConfig() const{
 		fServer = GetBoolArg("-server", false);
 		fDebug = !m_mapMultiArgs["-debug"].empty();
 		if (fDebug) {
@@ -100,7 +100,7 @@ public:
 	}
 
 public:
-	int getConnectTimeOut() {
+	int getConnectTimeOut()const {
 		int nConnectTimeout = 5000;
 		if (m_mapArgs.count("-timeout")) {
 			int nNewTimeout = GetArg("-timeout", 5000);
@@ -170,32 +170,32 @@ public:
 	int GetIntervalPos() const {
 		return nIntervalPos;
 	}
-	void SetImporting(bool flag) {
+	void SetImporting(bool flag)const {
 		fImporting = flag;
 	}
 
-	void SetReIndex(bool flag) {
+	void SetReIndex(bool flag)const {
 		fReindex = flag;
 	}
-	void SetBenchMark(bool flag) {
+	void SetBenchMark(bool flag)const {
 		fBenchmark = flag;
 	}
-	void SetTxIndex(bool flag) {
+	void SetTxIndex(bool flag)const {
 		fTxIndex = flag;
 	}
-	void SetBestRecvTime(int64_t nTime) {
+	void SetBestRecvTime(int64_t nTime)const {
 		nTimeBestReceived = nTime;
 	}
-	void SetScriptCheckThreads(int64_t nNum) {
+	void SetScriptCheckThreads(int64_t nNum)const {
 		nScriptCheckThreads = nNum;
 	}
-	void SetCoinCacheSize(unsigned int nSize) {
+	void SetCoinCacheSize(unsigned int nSize)const {
 		nCoinCacheSize = nSize;
 	}
-	void SetTxCacheHeight(int nHeight) {
+	void SetTxCacheHeight(int nHeight)const {
 		nTxCacheHeight = nHeight;
 	}
-	void SetIntervalPos(int nPos) {
+	void SetIntervalPos(int nPos)const {
 		nIntervalPos = nPos;
 	}
 
@@ -258,6 +258,8 @@ public:
 	static bool SoftSetArg(const string& strArg, const string& strValue);
 	static bool SoftSetBoolArg(const string& strArg, bool fValue);
 	static bool IsArgCount(const string& strArg);
+	static bool SoftSetArgCover(const string& strArg, const string& strValue);
+
 
 	virtual ~CBaseParams() {
 	}
@@ -302,31 +304,31 @@ protected:
 	vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
 };
 
+extern const CBaseParams &SysParams();
+
 /**
  * Return the currently selected parameters. This won't change after app startup
  * outside of the unit tests.
  */
-CBaseParams &Params();
+//CBaseParams &Params();
 
 /** Sets the params returned by Params() to those for the given network. */
-void SelectParams(CBaseParams::Network network);
+//void SelectParams(CBaseParams::Network network);
 
 /**
  * Looks for -regtest or -testnet and then calls SelectParams as appropriate.
  * Returns false if an invalid combination is given.
  */
-bool SelectParamsFromCommandLine();
+//bool SelectParamsFromCommandLine();
 
 inline bool TestNet() {
 	// Note: it's deliberate that this returns "false" for regression test mode.
-	return Params().NetworkID() == CBaseParams::TESTNET;
+	return SysParams().NetworkID() == CBaseParams::TESTNET;
 }
 
 inline bool RegTest() {
-	return Params().NetworkID() == CBaseParams::REGTEST;
+	return SysParams().NetworkID() == CBaseParams::REGTEST;
 }
-
-extern const CBaseParams &SysParams();
 
 //write for test code
 extern const CBaseParams &SysParamsMain();

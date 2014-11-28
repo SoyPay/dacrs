@@ -77,7 +77,7 @@ bool CDBEnv::Open(const boost::filesystem::path& pathIn)
     LogPrint("INFO","CDBEnv::Open : LogDir=%s ErrorFile=%s\n", pathLogDir.string(), pathErrorFile.string());
 
     unsigned int nEnvFlags = 0;
-    if (GetBoolArg("-privdb", true))
+    if (CBaseParams::GetBoolArg("-privdb", true))
         nEnvFlags |= DB_PRIVATE;
 
     dbenv.set_lg_dir(pathLogDir.string().c_str());
@@ -294,7 +294,7 @@ void CDB::Flush()
     if (fReadOnly)
         nMinutes = 1;
 
-    bitdb.dbenv.txn_checkpoint(nMinutes ? GetArg("-dblogsize", 100)*1024 : 0, nMinutes, 0);
+    bitdb.dbenv.txn_checkpoint(nMinutes ? CBaseParams::GetArg("-dblogsize", 100)*1024 : 0, nMinutes, 0);
 }
 
 void CDB::Close()
