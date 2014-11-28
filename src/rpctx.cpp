@@ -403,7 +403,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		CAccount secureAcc;
 
 		vector<unsigned char> vscript;
-		if(!pScriptDBTip->HaveScript(vscriptid))
+		if(!pScriptDBTip->HaveScript(CRegID(vscriptid)))
 		{
 			throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(vscriptid)));
 		}
@@ -1059,12 +1059,12 @@ Value listscriptregid(const Array& params, bool fHelp) {
 //		LOCK2(cs_main, pwalletMain->cs_wallet);
 	///			 LogPrint("TODO"," ");
 
-		for (auto& item : pwalletMain->mKeyPool) {
-			obj.push_back(Pair(item.first.ToString(), item.second.ToString()));
-			if (bshowdetail) {
-				//array.push_back(TxToJSON(item.second.get()));
-			}
-		}
+//		for (auto& item : pwalletMain->mKeyPool) {
+//			obj.push_back(Pair(item.first.ToString(), item.second.ToString()));
+//			if (bshowdetail) {
+//				//array.push_back(TxToJSON(item.second.get()));
+//			}
+//		}
 	}
 	return obj;
 }
