@@ -358,13 +358,13 @@ const CBaseParams &SysParams() {
 		}
 
 		if (fRegTest) {
-			LogPrint("spark", "In Reg Test Net\n");
+			//LogPrint("spark", "In Reg Test Net\n");
 			pParams = make_shared<CRegTestParams>();
 		} else if (fTestNet) {
-			LogPrint("spark", "In Test Net\n");
+			//LogPrint("spark", "In Test Net\n");
 			pParams = make_shared<CTestNetParams>();
 		} else {
-			LogPrint("spark", "In Main Net\n");
+			//LogPrint("spark", "In Main Net\n");
 			pParams = make_shared<CMainParams>();
 		}
 		assert(pParams != NULL);
