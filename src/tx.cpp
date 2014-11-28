@@ -1306,7 +1306,7 @@ Object CAccount::ToJosnObj() const
 	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "IN_FREEZD_FUND",
 			"OUT_FREEZD_FUND", "SELF_FREEZD_FUND" };
 	obj.push_back(Pair("Address",     keyID.ToAddress()));
-	obj.push_back(Pair("KeYID",     keyID.ToString()));
+	obj.push_back(Pair("KeyID",     keyID.ToString()));
 	obj.push_back(Pair("RegID",     regID.ToString()));
 	obj.push_back(Pair("publicKey",  publicKey.ToString()));
 	obj.push_back(Pair("FreeValues",     llValues));
