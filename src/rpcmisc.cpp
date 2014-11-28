@@ -31,7 +31,8 @@ Value getbalance(const Array& params, bool fHelp)
 	if (fHelp || params.size() != 0)
 		throw runtime_error("getinfo\n"
 				"Returns an object containing various state info.\n"
-				"\nResult:\n");
+				"\nResult:\n"    + HelpExampleCli("getbalance", "")
+	            + HelpExampleRpc("getbalance", ""));
 	 Object obj;
     obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance(chainActive.Tip()->nHeight))));
     return obj;

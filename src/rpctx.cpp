@@ -408,15 +408,15 @@ Value createcontracttx(const Array& params, bool fHelp) {
 			throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(vscriptid)));
 		}
 
-//		auto GetUserId = [&](CKeyID &keyId)
-//		{
-//			CAccount acct;
-//			if (!view.GetAccount(keyId, acct)) {
-//				return acct.regID;
-//			}
-//			throw runtime_error(
-//							tinyformat::format("createcontracttx :account id %s is not exist\n", keyId.GetHex()));
-//		};
+		auto GetUserId = [&](CKeyID &keyId)
+		{
+			CAccount acct;
+			if (view.GetAccount(CUserID(keyId), acct)) {
+				return acct.regID;
+			}
+			throw runtime_error(
+							tinyformat::format("createcontracttx :account id %s is not exist\n", keyId.GetHex()));
+		};
 
 		vector<CUserID > vaccountid;
 
@@ -426,7 +426,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 			if (!tmpaddr.GetKeyID(keyid)) {
 				throw runtime_error("in createcontracttx :address err\n");
 			}
-//			vaccountid.push_back(CUserID(GetUserId()));
+			vaccountid.push_back(CUserID(GetUserId(keyid)));
 		}
 
 		tx.scriptRegId = CRegID(vscriptid);
@@ -984,17 +984,24 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 				"\"free amount\":\n"
 				"\"frozen amount\":\n"
 				"\"Account Info\":\n"
-				"\nExamples:\n" + HelpExampleCli("getaddramount", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n")
+				"\nExamples:\n" + HelpExampleCli("getaccountinfo", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n")
+				+HelpExampleCli("getaccountinfo", "000000000500\n")
 				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("getaddramount", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n");
+				+ HelpExampleRpc("getaccountinfo", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n");
 		throw runtime_error(msg);
 	}
-
-	CBitcoinAddress address(params[0].get_str());
-
-	CKeyID keyid;
-	if (!address.GetKeyID(keyid))
-		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+	RPCTypeCheck(params, list_of(str_type));
+	CUserID userId;
+	if (params[0].get_str().size() == 12) {
+		vector<unsigned char> vscript = ParseHex(params[0].get_str());
+		userId = CRegID(vscript);
+	} else {
+		CBitcoinAddress address(params[0].get_str());
+		CKeyID keyid;
+		if (!address.GetKeyID(keyid))
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+		userId = keyid;
+	}
 
 	Object obj;
 	{
@@ -1002,7 +1009,6 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 
 		CAccount account;
 		CAccountViewCache accView(*pAccountViewTip, true);
-		CUserID userId = keyid;
 		if (accView.GetAccount(userId, account)) {
 			return account.ToString();
 		}
@@ -1241,9 +1247,24 @@ static Value COperFundToJson(const COperFund &opfound)
 Value gettxoperationlog(const Array& params, bool fHelp)
 {
 	if (fHelp || params.size() != 1) {
-		throw runtime_error(" todo ");
+		if (fHelp || params.size() != 2) {
+			string msg = "sign nrequired \"str\"\n"
+					"\nsign \"str\"\n"
+					"\nArguments:\n"
+					"1.\"txhash\": (string required) \n"
+					"\nResult:\n"
+					"\"vOperFund\": (string)\n"
+					"\"authorLog\": (string)\n"
+					"\nExamples:\n"
+					+ HelpExampleCli("gettxoperationlog",
+							"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000")
+					+ "\nAs json rpc call\n"
+					+ HelpExampleRpc("gettxoperationlog",
+							"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000");
+			throw runtime_error(msg);
+		}
 	}
-
+	RPCTypeCheck(params, list_of(str_type));
 	uint256 txHash(ParseHex(params[0].get_str()));
 	vector<CAccountOperLog> vLog;
 	Object retobj;
