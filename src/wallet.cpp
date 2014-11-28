@@ -121,7 +121,26 @@ bool CWallet::AddKey(const CKey& secret) {
 	}
 	return true;
 }
+bool CWallet::AddKey(const CKey& secret,const CKey& minerKey) {
+	AssertLockHeld(cs_wallet);
 
+	CKeyStoreValue tem(secret,minerKey);
+	if(mKeyPool.count(tem.GetCKeyID()) > 0)
+		{
+		  LogPrint("CWallet","this key is in the CWallet");
+		 return false;
+		}
+
+	if (!IsCrypted()) {
+		mKeyPool[tem.GetCKeyID()] = tem;
+        return FushToDisk();
+	}
+	else
+	{
+		assert(0);//to add code
+	}
+	return true;
+}
 
 
 
@@ -312,7 +331,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 				//confirm the tx GenesisBlock
 				CRewardTransaction* prtx = (CRewardTransaction*) sptx.get();
 				CPubKey pubkey = boost::get<CPubKey>(prtx->account);
-				CKeyID keyid = pubkey.GetID();
+				CKeyID keyid = pubkey.GetKeyID();
 				CRegID regid(0, i);
 				CAccount account;
 //				pAccountViewTip->GetAccount(CUserID(keyid),account);
@@ -398,7 +417,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
     }
 
 	if (fIsNeedUpDataRegID == true) {
-		UpdataAllRegID(*pAccountViewTip);
+		SynchronizSys(*pAccountViewTip);
 	}
 
 	if (bupdate == true || fIsNeedUpDataRegID == true)

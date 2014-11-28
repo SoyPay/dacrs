@@ -102,7 +102,10 @@ public:
 
 	// Simple read-only vector-like interface to the pubkey data.
 	unsigned int size() const {
-		return GetLen(vch[0]);
+		unsigned int len = GetLen(vch[0]);
+		 if(len != 33) //only use 33 for soypay sys
+			 return 0;
+		return len;
 	}
 	const unsigned char *begin() const {
 		return vch;
@@ -195,16 +198,13 @@ public:
 		if (len <= 65) {
 			s.read((char*) vch, len);
 		} else {
-			// invalid pubkey, skip available data
-			char dummy;
-			while (len--)
-				s.read(&dummy, 1);
+	         assert(0); //never come here
 			Invalidate();
 		}
 	}
 
 	// Get the KeyID of this public key (hash of its serialization)
-	CKeyID GetID() const;
+	CKeyID GetKeyID() const;
 
 	// Get the 256-bit hash of this public key.
 	uint256 GetHash() const;

@@ -164,5 +164,5 @@ Value verifymessage(const Array& params, bool fHelp)
     if (!pubkey.RecoverCompact(ss.GetHash(), vchSig))
         return false;
 
-    return (pubkey.GetID() == keyID);
+    return (pubkey.GetKeyID() == keyID);
 }
