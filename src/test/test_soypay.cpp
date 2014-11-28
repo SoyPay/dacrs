@@ -37,13 +37,10 @@ struct TestingSetup {
 //			pScriptDB = new CScriptDB(1024*1024, false , false);
 //			pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
 		}
-		mapArgs["-datadir"] = "D:\\bitcoin";
-		ReadConfigFile(mapArgs, mapMultiArgs);
-		if (!SelectParamsFromCommandLine()) {
-		       fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
-		}
-		CBaseParams::IntialParams(0, NULL);
-		Params().InitalConfig();
+		char *argv[] = {"progname", "-datadir=D:\\bitcoin"};
+		int argc = sizeof(argv) / sizeof(char*);
+		CBaseParams::IntialParams(argc, argv);
+		SysParams().InitalConfig();
 	}
 //    CCoinsViewDB *pcoinsdbview;
 //    boost::filesystem::path pathTemp;
