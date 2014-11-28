@@ -24,11 +24,9 @@ extern void noui_connect();
 
 struct TestingSetup {
 	TestingSetup() {
-		mapArgs["-datadir"] = "D:\\bitcoin";
-		ReadConfigFile(mapArgs, mapMultiArgs);
-		if (!SelectParamsFromCommandLine()) {
-		       fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
-		}
+		char *argv[] = {"progname", "-datadir=D:\\bitcoin"};
+		int argc = sizeof(argv) / sizeof(char*);
+		CBaseParams::IntialParams(argc, argv);
 	}
     ~TestingSetup()
     {

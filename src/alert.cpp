@@ -146,7 +146,7 @@ bool CAlert::RelayTo(CNode* pnode) const
 
 bool CAlert::CheckSignature() const
 {
-    CPubKey key(Params().AlertKey());
+    CPubKey key(SysParams().AlertKey());
     if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
         return ERROR("CAlert::CheckSignature() : verify signature failed");
 
@@ -234,7 +234,7 @@ bool CAlert::ProcessAlert(bool fThread)
         if(AppliesToMe())
         {
             uiInterface.NotifyAlertChanged(GetHash(), CT_NEW);
-            string strCmd = GetArg("-alertnotify", "");
+            string strCmd = CBaseParams::GetArg("-alertnotify", "");
             if (!strCmd.empty())
             {
                 // Alert text should be plain ascii coming from a trusted source, but to

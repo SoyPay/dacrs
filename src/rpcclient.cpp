@@ -28,14 +28,14 @@ using namespace json_spirit;
 
 Object CallRPC(const string& strMethod, const Array& params)
 {
-    if (mapArgs["-rpcuser"] == "" && mapArgs["-rpcpassword"] == "")
+    if (CBaseParams::GetArg("-rpcuser", "") == "" && CBaseParams::GetArg("-rpcpassword", "") == "")
         throw runtime_error(strprintf(
             _("You must set rpcpassword=<password> in the configuration file:\n%s\n"
               "If the file does not exist, create it with owner-readable-only file permissions."),
                 GetConfigFile().string().c_str()));
 
     // Connect to localhost
-    bool fUseSSL = GetBoolArg("-rpcssl", false);
+    bool fUseSSL = CBaseParams::GetBoolArg("-rpcssl", false);
     asio::io_service io_service;
     ssl::context context(io_service, ssl::context::sslv23);
     context.set_options(ssl::context::no_sslv2);
@@ -43,9 +43,9 @@ Object CallRPC(const string& strMethod, const Array& params)
     SSLIOStreamDevice<asio::ip::tcp> d(sslStream, fUseSSL);
     iostreams::stream< SSLIOStreamDevice<asio::ip::tcp> > stream(d);
 
-    bool fWait = GetBoolArg("-rpcwait", false); // -rpcwait means try until server has started
+    bool fWait = CBaseParams::GetBoolArg("-rpcwait", false); // -rpcwait means try until server has started
     do {
-        bool fConnected = d.connect(GetArg("-rpcconnect", "127.0.0.1"), GetArg("-rpcport", itostr(Params().RPCPort())));
+        bool fConnected = d.connect(CBaseParams::GetArg("-rpcconnect", "127.0.0.1"), CBaseParams::GetArg("-rpcport", itostr(SysParams().RPCPort())));
         if (fConnected) break;
         if (fWait)
             MilliSleep(1000);
@@ -54,7 +54,7 @@ Object CallRPC(const string& strMethod, const Array& params)
     } while (fWait);
 
     // HTTP basic authentication
-    string strUserPass64 = EncodeBase64(mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"]);
+    string strUserPass64 = EncodeBase64(CBaseParams::GetArg("-rpcuser", "") + ":" + CBaseParams::GetArg("-rpcpassword", ""));
     map<string, string> mapRequestHeaders;
     mapRequestHeaders["Authorization"] = string("Basic ") + strUserPass64;
 

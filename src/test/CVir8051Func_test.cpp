@@ -2793,7 +2793,7 @@ BOOST_AUTO_TEST_CASE(scriptfun)
 		nTemp.get()->llFees = 100000000000000000;
 		BOOST_CHECK(pScriptDB == NULL);
         BOOST_CHECK(pScriptDBTip ==NULL);
-		pScriptDB = new CScriptDB(size_t(4<<20), false , Params().IsReindex());
+		pScriptDB = new CScriptDB(size_t(4<<20), false , SysParams().IsReindex());
 		pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
 		pScriptDBTip->SetScript(scriptId, vpscript);
 		CAccountViewCache view(*pAccountViewTip, true);

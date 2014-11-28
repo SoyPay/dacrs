@@ -546,13 +546,13 @@ bool CheckTransaction(CBaseTransaction *ptx, CValidationState &state, CAccountVi
 		return true;
 
 	if (0 == blockHeight) {
-		if (!ptx->IsValidHeight(chainActive.Tip()->nHeight, Params().GetTxCacheHeight())) {
+		if (!ptx->IsValidHeight(chainActive.Tip()->nHeight, SysParams().GetTxCacheHeight())) {
 			return state.DoS(100, ERROR("CheckTransaction() : txhash=%s beyond the scope of valid height ", ptx->GetHash().GetHex()), REJECT_INVALID,
 					"bad-txns-oversize");
 		}
 	}
 	else {
-		if (!ptx->IsValidHeight(blockHeight, Params().GetTxCacheHeight())) {
+		if (!ptx->IsValidHeight(blockHeight, SysParams().GetTxCacheHeight())) {
 					return state.DoS(100, ERROR("CheckTransaction() : txhash=%s beyond the scope of valid height ", ptx->GetHash().GetHex()), REJECT_INVALID,
 							"bad-txns-oversize");
 		}
@@ -617,7 +617,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     string reason;
-    if (Params().NetworkID() == CBaseParams::MAIN && !IsStandardTx(pBaseTx, reason))
+    if (SysParams().NetworkID() == CBaseParams::MAIN && !IsStandardTx(pBaseTx, reason))
         return state.DoS(0,
                          ERROR("AcceptToMemoryPool : nonstandard transaction: %s", reason),
                          REJECT_NONSTANDARD, reason);
@@ -657,17 +657,17 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
             nLastTime = nNow;
             // -limitfreerelay unit is thousand-bytes-per-minute
             // At default rate it would take over a month to fill 1GB
-            if (dFreeCount >= GetArg("-limitfreerelay", 15)*10*1000)
+            if (dFreeCount >= CBaseParams::GetArg("-limitfreerelay", 15)*10*1000)
                 return state.DoS(0, ERROR("AcceptToMemoryPool : free transaction rejected by rate limiter"),
                                  REJECT_INSUFFICIENTFEE, "insufficient priority");
             LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
             dFreeCount += nSize;
         }
 
-        if (fRejectInsaneFee && nFees > Params().GetMaxFee())
+        if (fRejectInsaneFee && nFees > SysParams().GetMaxFee())
             return ERROR("AcceptToMemoryPool: : insane fees %s, %d > %d",
                          hash.ToString(),
-                         nFees, Params().GetMaxFee());
+                         nFees, SysParams().GetMaxFee());
 
         // Store transaction in memory
          if(!pool.addUnchecked(hash, entry))
@@ -744,7 +744,7 @@ bool GetTransaction(std::shared_ptr<CBaseTransaction> &pBaseTx, const uint256 &h
             }
         }
 
-        if (Params().IsTxIndex()) {
+        if (SysParams().IsTxIndex()) {
             CDiskTxPos postx;
             if (pblocktree->ReadTxIndex(hash, postx)) {
                 CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
@@ -782,7 +782,7 @@ bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos)
 
     // Write index header
     unsigned int nSize = fileout.GetSerializeSize(block);
-    fileout << FLATDATA(Params().MessageStart()) << nSize;
+    fileout << FLATDATA(SysParams().MessageStart()) << nSize;
 
     // Write block
     long fileOutPos = ftell(fileout);
@@ -875,7 +875,7 @@ void static PruneOrphanBlocks()
 int64_t GetBlockValue(int nHeight, int64_t nFees)
 {
     int64_t nSubsidy = 50 * COIN;
-    int halvings = nHeight / Params().SubsidyHalvingInterval();
+    int halvings = nHeight / SysParams().SubsidyHalvingInterval();
 
     // Force block reward to zero when right shift is undefined.
     if (halvings >= 64)
@@ -894,7 +894,7 @@ int64_t GetBlockValue(int nHeight, int64_t nFees)
 //
 unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
 {
-	const CBigNum &bnLimit = Params().ProofOfWorkLimit();
+	const CBigNum &bnLimit = SysParams().ProofOfWorkLimit();
 
 		CBigNum bnResult;
 		bnResult.SetCompact(nBase);
@@ -912,17 +912,17 @@ unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
 	if (pindexLast == NULL) {
-			return Params().ProofOfWorkLimit().GetCompact(); // genesis block
+			return SysParams().ProofOfWorkLimit().GetCompact(); // genesis block
 		}
 
 		const CBlockIndex* pindexPrev = pindexLast;
 		if (pindexPrev->pprev == NULL) {
-			return Params().ProofOfWorkLimit().GetCompact(); // first block
+			return SysParams().ProofOfWorkLimit().GetCompact(); // first block
 		}
 
 		const CBlockIndex* pindexPrevPrev = pindexPrev->pprev;
 		if (pindexPrevPrev->pprev == NULL) {
-			return Params().ProofOfWorkLimit().GetCompact(); // second block
+			return SysParams().ProofOfWorkLimit().GetCompact(); // second block
 		}
 
 		int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
@@ -930,12 +930,12 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 		CBigNum bnNew;
 		bnNew.SetCompact(pindexPrev->nBits);
 		int64_t nTargetSpacing = nStakeTargetSpacing;
-		int64_t nInterval = Params().GetTargetTimespan() / nTargetSpacing;
+		int64_t nInterval = SysParams().GetTargetTimespan() / nTargetSpacing;
 		bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
 		bnNew /= ((nInterval + 1) * nTargetSpacing);
 
-		if (bnNew > Params().ProofOfWorkLimit())
-			bnNew = Params().ProofOfWorkLimit();
+		if (bnNew > SysParams().ProofOfWorkLimit())
+			bnNew = SysParams().ProofOfWorkLimit();
 
 		return bnNew.GetCompact();
 }
@@ -946,7 +946,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
     bnTarget.SetCompact(nBits);
     return true; // modify for test
     // Check range
-    if (bnTarget <= 0 || bnTarget > Params().ProofOfWorkLimit())
+    if (bnTarget <= 0 || bnTarget > SysParams().ProofOfWorkLimit())
         return ERROR("CheckProofOfWork() : nBits below minimum work");
 
     // Check proof of work matches claimed amount
@@ -965,7 +965,7 @@ int GetNumBlocksOfPeers()
 bool IsInitialBlockDownload()
 {
     LOCK(cs_main);
-    if (Params().IsImporting() || Params().IsReindex() || chainActive.Height() < Checkpoints::GetTotalBlocksEstimate())
+    if (SysParams().IsImporting() || SysParams().IsReindex() || chainActive.Height() < Checkpoints::GetTotalBlocksEstimate())
         return true;
     static int64_t nLastUpdate;
     static CBlockIndex* pindexLastBest;
@@ -999,7 +999,7 @@ void CheckForkWarningConditions()
     {
         if (!fLargeWorkForkFound)
         {
-            string strCmd = GetArg("-alertnotify", "");
+            string strCmd = CBaseParams::GetArg("-alertnotify", "");
             if (!strCmd.empty())
             {
                 string warning = string("'Warning: Large-work fork detected, forking after block ") +
@@ -1072,7 +1072,7 @@ void Misbehaving(NodeId pnode, int howmuch)
         return;
 
     state->nMisbehavior += howmuch;
-    if (state->nMisbehavior >= GetArg("-banscore", 100))
+    if (state->nMisbehavior >= CBaseParams::GetArg("-banscore", 100))
     {
         LogPrint("INFO","Misbehaving: %s (%d -> %d) BAN THRESHOLD EXCEEDED\n", state->name, state->nMisbehavior-howmuch, state->nMisbehavior);
         state->fShouldBan = true;
@@ -1228,7 +1228,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
-	if (block.GetHash() == Params().HashGenesisBlock()) {
+	if (block.GetHash() == SysParams().HashGenesisBlock()) {
 		view.SetBestBlock(pindex->GetBlockHash());
 		for (unsigned int i = 0; i < block.vptx.size(); i++) {
 			std::shared_ptr<CRewardTransaction> pRewardTx = dynamic_pointer_cast<CRewardTransaction>(block.vptx[i]);
@@ -1293,7 +1293,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 	blockundo.vtxundo.push_back(txundo);
 
     int64_t nTime = GetTimeMicros() - nStart;
-    if (Params().IsBenchmark())
+    if (SysParams().IsBenchmark())
         LogPrint("INFO","- Connect %u transactions: %.2fms (%.3fms/tx)\n", (unsigned)block.vptx.size(), 0.001 * nTime, 0.001 * nTime / block.vptx.size());
 
     if (fJustCheck)
@@ -1321,7 +1321,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
             return state.Abort(_("Failed to write block index"));
     }
 
-    if (Params().IsTxIndex())
+    if (SysParams().IsTxIndex())
         if (!pblocktree->WriteTxIndex(vPos))
             return state.Abort(_("Failed to write transaction index"));
 
@@ -1336,7 +1336,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 // Update the on-disk chain state.
 bool static WriteChainState(CValidationState &state) {
     static int64_t nLastWrite = 0;
-    if (!IsInitialBlockDownload() || pAccountViewTip->GetCacheSize() > Params().GetCoinCacheSize() || GetTimeMicros() > nLastWrite + 600*1000000) {
+    if (!IsInitialBlockDownload() || pAccountViewTip->GetCacheSize() > SysParams().GetCoinCacheSize() || GetTimeMicros() > nLastWrite + 600*1000000) {
         // Typical CCoins structures on disk are around 100 bytes in size.
         // Pushing a new one to the database can cause it to be written
         // twice (once in the log, and once in the tables). This is already
@@ -1370,13 +1370,16 @@ void static UpdateTip(CBlockIndex *pindexNew, const CBlock &block) {
         g_signals.SetBestChain(chainActive.GetLocator());
 
     // New best block
-    Params().SetBestRecvTime(GetTime());
+    SysParams().SetBestRecvTime(GetTime());
     mempool.AddTransactionsUpdated(1);
     LogPrint("INFO","UpdateTip: new best=%s  height=%d  log2_work=%.8g  tx=%lu  date=%s progress=%f\n",
       chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), log(chainActive.Tip()->nChainWork.getdouble())/log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
       DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
       Checkpoints::GuessVerificationProgress(chainActive.Tip()));
-
+    LogPrint("updatetip","UpdateTip: new best=%s  height=%d  log2_work=%.8g  tx=%lu  date=%s progress=%f\n",
+        chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), log(chainActive.Tip()->nChainWork.getdouble())/log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
+        DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
+        Checkpoints::GuessVerificationProgress(chainActive.Tip()));
     // Check the version of the last 100 blocks to see if we need to upgrade:
     if (!fIsInitialDownload)
     {
@@ -1413,7 +1416,7 @@ bool static DisconnectTip(CValidationState &state) {
             return ERROR("DisconnectTip() : DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
         assert(view.Flush() && scriptDBView.Flush());
     }
-    if (Params().IsBenchmark())
+    if (SysParams().IsBenchmark())
         LogPrint("INFO","- Disconnect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
     // Write the chain state to disk, if necessary.
     if (!WriteChainState(state))
@@ -1424,8 +1427,8 @@ bool static DisconnectTip(CValidationState &state) {
 
     //load a block tx into cache transaction
 	CBlockIndex *pReLoadBlockIndex = pindexDelete;
-	if(pindexDelete->nHeight - Params().GetTxCacheHeight()>0) {
-		pReLoadBlockIndex = chainActive[pindexDelete->nHeight - Params().GetTxCacheHeight()];
+	if(pindexDelete->nHeight - SysParams().GetTxCacheHeight()>0) {
+		pReLoadBlockIndex = chainActive[pindexDelete->nHeight - SysParams().GetTxCacheHeight()];
 		CBlock reLoadblock;
 		if (!ReadBlockFromDisk(reLoadblock, pindexDelete))
 			return state.Abort(_("Failed to read block"));
@@ -1472,7 +1475,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
         uint256 uBestblockHash = viewtemp.GetBestBlock();
         LogPrint("INFO","uBestBlockHash: %s\n",uBestblockHash.GetHex() );
     }
-    if (Params().IsBenchmark())
+    if (SysParams().IsBenchmark())
         LogPrint("INFO","- Connect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
     // Write the chain state to disk, if necessary.
     if (!WriteChainState(state))
@@ -1485,8 +1488,8 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
 	}
     if (!pTxCacheTip->AddBlockToCache(block))
     		return state.Abort(_("Connect tip block failed add block tx to txcache"));
-    if(pindexNew->nHeight-Params().GetTxCacheHeight() > 0) {
-    	CBlockIndex *pDeleteBlockIndex = chainActive[pindexNew->nHeight - Params().GetTxCacheHeight()];
+    if(pindexNew->nHeight-SysParams().GetTxCacheHeight() > 0) {
+    	CBlockIndex *pDeleteBlockIndex = chainActive[pindexNew->nHeight - SysParams().GetTxCacheHeight()];
 		CBlock deleteBlock;
 		if (!ReadBlockFromDisk(deleteBlock, pDeleteBlockIndex))
 			return state.Abort(_("Failed to read block"));
@@ -1590,7 +1593,7 @@ bool ActivateBestChain(CValidationState &state) {
     }
 
     if (chainActive.Tip() != pindexOldTip) {
-        string strCmd = GetArg("-blocknotify", "");
+        string strCmd = CBaseParams::GetArg("-blocknotify", "");
         if (!IsInitialBlockDownload() && !strCmd.empty())
         {
             boost::replace_all(strCmd, "%s", chainActive.Tip()->GetBlockHash().GetHex());
@@ -1759,16 +1762,40 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 	CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
 	vector<CBlock> vPreBlocks;
 	if (pPreBlockIndex->GetBlockHash() != chainActive.Tip()->GetBlockHash()) {
-		do {
+		while (!chainActive.Contains(pPreBlockIndex)){
 			CBlock block;
 			if (!ReadBlockFromDisk(block, pPreBlockIndex))
 				return state.Abort(_("Failed to read block"));
-			vPreBlocks.insert(vPreBlocks.begin(), block);
+			vPreBlocks.insert(vPreBlocks.begin(), block);   //将支链的block保存起来
 			pPreBlockIndex = pPreBlockIndex->pprev;
 			map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(pPreBlockIndex->GetBlockHash());
 			if (mi == mapBlockIndex.end())
 				return state.DoS(10, ERROR("AcceptBlock() : prev block not found"), 0, "bad-prevblk");
-		} while (!chainActive.Contains(pPreBlockIndex));
+		}//如果进来的preblock hash不为tip的hash,找到主链中分叉处
+
+		CBlockIndex *pBlockIndex = chainActive.Tip();
+		while (pPreBlockIndex != pBlockIndex) {       //数据库状态回滚到主链分叉处
+			CBlock block;
+			if (!ReadBlockFromDisk(block, pBlockIndex))
+				return state.Abort(_("Failed to read block"));
+			bool bfClean = true;
+			if (!DisconnectBlock(block, state, view, pBlockIndex, txCacheTemp, contractScriptTemp, &bfClean)) {
+				return ERROR("DisconnectTip() : DisconnectBlock %s failed", pBlockIndex->GetBlockHash().ToString());
+			}
+			pBlockIndex = pBlockIndex->pprev;
+		}
+
+		for (auto &item : vPreBlocks) {
+			if (!ConnectBlock(item, state, view, mapBlockIndex[item.GetHash()], txCacheTemp, contractScriptTemp, false))
+				return ERROR("ConnectTip() : ConnectBlock %s failed", item.GetHash().ToString());
+		}
+
+		uint64_t nInterest = 0;
+		if (!VerifyPosTx(mapBlockIndex[block.hashPrevBlock], view, &block, nInterest, txCacheTemp, contractScriptTemp, false)) {
+			return state.DoS(100,
+					ERROR("ConnectBlock() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
+					REJECT_INVALID, "bad-pos-tx");
+		}
 	} else {
 		uint64_t nInterest = 0;
 		if (!VerifyPosTx(pPreBlockIndex, view, &block, nInterest, txCacheTemp, contractScriptTemp, false)) {
@@ -1777,29 +1804,6 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 					REJECT_INVALID, "bad-pos-tx");
 		}
 		return true;
-	}
-
-	CBlockIndex *pBlockIndex = chainActive.Tip();
-	while (pPreBlockIndex != pBlockIndex) {
-		CBlock block;
-		if (!ReadBlockFromDisk(block, pBlockIndex))
-			return state.Abort(_("Failed to read block"));
-		bool bfClean = true;
-		if (!DisconnectBlock(block, state, view, pBlockIndex, txCacheTemp, contractScriptTemp, &bfClean)) {
-			return ERROR("DisconnectTip() : DisconnectBlock %s failed", pBlockIndex->GetBlockHash().ToString());
-		}
-		pBlockIndex = pBlockIndex->pprev;
-	}
-
-	for (auto &item : vPreBlocks) {
-		if (!ConnectBlock(item, state, view, mapBlockIndex[item.GetHash()], txCacheTemp, contractScriptTemp, false))
-			return ERROR("ConnectTip() : ConnectBlock %s failed", item.GetHash().ToString());
-	}
-
-	uint64_t nInterest = 0;
-	if (!VerifyPosTx(pPreBlockIndex, view, &block, nInterest, txCacheTemp, contractScriptTemp, false)) {
-		return state.DoS(100, ERROR("ConnectBlock() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
-				REJECT_INVALID, "bad-pos-tx");
 	}
 	return true;
 
@@ -1830,7 +1834,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         return state.DoS(100, ERROR("CheckBlock() : first tx is not coinbase"),
                          REJECT_INVALID, "bad-cb-missing");
 
-	if (block.GetHash() != Params().HashGenesisBlock()) {
+	if (block.GetHash() != SysParams().HashGenesisBlock()) {
 		for (unsigned int i = 1; i < block.vptx.size(); i++)
 			if (block.vptx[i]->IsCoinBase())
 				return state.DoS(100, ERROR("CheckBlock() : more than one coinbase"), REJECT_INVALID, "bad-cb-multiple");
@@ -1868,13 +1872,15 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 	AssertLockHeld(cs_main);
 	// Check for duplicate
 	uint256 hash = block.GetHash();
+	LogPrint("INFO", "AcceptBlcok hash:%s\n", hash.GetHex());
+	LogPrint("AcceptBlock", "AcceptBlcok hash:%s\n", hash.GetHex());
 	if (mapBlockIndex.count(hash))
 		return state.Invalid(ERROR("AcceptBlock() : block already in mapBlockIndex"), 0, "duplicate");
 
 	// Get prev block index
 	CBlockIndex* pindexPrev = NULL;
 	int nHeight = 0;
-	if (hash != Params().HashGenesisBlock()) {
+	if (hash != SysParams().HashGenesisBlock()) {
 		map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
 		if (mi == mapBlockIndex.end())
 			return state.DoS(10, ERROR("AcceptBlock() : prev block not found"), 0, "bad-prevblk");
@@ -2342,13 +2348,13 @@ bool static LoadBlockIndexDB()
     bool fReindexing = false;
     pblocktree->ReadReindexing(fReindexing);
 
-    bool fcurReinx = Params().IsReindex();
-    Params().SetReIndex(fcurReinx|=fReindexing);
+    bool fcurReinx = SysParams().IsReindex();
+    SysParams().SetReIndex(fcurReinx|=fReindexing);
 
     // Check whether we have a transaction index
-    bool bTxIndex = Params().IsTxIndex();
+    bool bTxIndex = SysParams().IsTxIndex();
     pblocktree->ReadFlag("txindex", bTxIndex);
-    Params().SetTxIndex(bTxIndex);
+    SysParams().SetTxIndex(bTxIndex);
     LogPrint("INFO","LoadBlockIndexDB(): transaction index %s\n", bTxIndex ? "enabled" : "disabled");
 
     // Load pointer to end of best chain
@@ -2455,7 +2461,7 @@ void UnloadBlockIndex()
 bool LoadBlockIndex()
 {
     // Load block index from databases
-    if (!Params().IsReindex() && !LoadBlockIndexDB())
+    if (!SysParams().IsReindex() && !LoadBlockIndexDB())
         return false;
     return true;
 }
@@ -2468,14 +2474,14 @@ bool InitBlockIndex() {
         return true;
 
     // Use the provided setting for -txindex in the new database
-    Params().SetTxIndex(GetBoolArg("-txindex", true));
-    pblocktree->WriteFlag("txindex", Params().IsTxIndex());
+    SysParams().SetTxIndex(CBaseParams::GetBoolArg("-txindex", true));
+    pblocktree->WriteFlag("txindex", SysParams().IsTxIndex());
     LogPrint("INFO","Initializing databases...\n");
 
     // Only add the genesis block if not reindexing (in which case we reuse the one already on disk)
-    if (!Params().IsReindex()) {
+    if (!SysParams().IsReindex()) {
         try {
-            CBlock &block = const_cast<CBlock&>(Params().GenesisBlock());
+            CBlock &block = const_cast<CBlock&>(SysParams().GenesisBlock());
             // Start new block file
             unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
             CDiskBlockPos blockPos;
@@ -2595,10 +2601,10 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
             try {
                 // locate a header
                 unsigned char buf[MESSAGE_START_SIZE];
-                blkdat.FindByte(Params().MessageStart()[0]);
+                blkdat.FindByte(SysParams().MessageStart()[0]);
                 nRewind = blkdat.GetPos()+1;
                 blkdat >> FLATDATA(buf);
-                if (memcmp(buf, Params().MessageStart(), MESSAGE_START_SIZE))
+                if (memcmp(buf, SysParams().MessageStart(), MESSAGE_START_SIZE))
                     continue;
                 // read size
                 blkdat >> nSize;
@@ -2660,7 +2666,7 @@ string GetWarnings(string strFor)
     string strStatusBar;
     string strRPC;
 
-    if (GetBoolArg("-testsafemode", false))
+    if (CBaseParams::GetBoolArg("-testsafemode", false))
         strRPC = "test";
 
     if (!CLIENT_VERSION_IS_RELEASE)
@@ -2881,7 +2887,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
     RandAddSeedPerfmon();
     LogPrint("net", "received: %s (%u bytes)\n", strCommand, vRecv.size());
-    if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
+    if (GetRand(atoi(CBaseParams::GetArg("-dropmessagestest", "0"))) == 0)
     {
         LogPrint("INFO","dropmessagestest DROPPING RECV MESSAGE\n");
         return true;
@@ -3106,7 +3112,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             LogPrint("net", "  got inventory: %s  %s\n", inv.ToString(), fAlreadyHave ? "have" : "new");
 
             if (!fAlreadyHave) {
-                if (!Params().IsImporting() && !Params().IsReindex()) {
+                if (!SysParams().IsImporting() && !SysParams().IsReindex()) {
                     if (inv.type == MSG_BLOCK)
                         AddBlockToQueue(pfrom->GetId(), inv.hash);
                     else
@@ -3302,7 +3308,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 	}
 
 
-    else if (strCommand == "block" && !Params().IsImporting() && !Params().IsReindex()) // Ignore blocks received while importing
+    else if (strCommand == "block" && !SysParams().IsImporting() && !SysParams().IsReindex()) // Ignore blocks received while importing
     {
         CBlock block;
         vRecv >> block;
@@ -3520,7 +3526,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "reject")
     {
-    	if (Params().IsDebug())
+    	if (SysParams().IsDebug())
         {
             string strMsg; unsigned char ccode; string strReason;
             vRecv >> strMsg >> ccode >> strReason;
@@ -3600,7 +3606,7 @@ bool ProcessMessages(CNode* pfrom)
         it++;
 
         // Scan for message start
-        if (memcmp(msg.hdr.pchMessageStart, Params().MessageStart(), MESSAGE_START_SIZE) != 0) {
+        if (memcmp(msg.hdr.pchMessageStart, SysParams().MessageStart(), MESSAGE_START_SIZE) != 0) {
             LogPrint("INFO","\n\nPROCESSMESSAGE: INVALID MESSAGESTART\n\n");
             fOk = false;
             break;
@@ -3785,7 +3791,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         state.rejects.clear();
 
         // Start block sync
-        if (pto->fStartSync && !Params().IsImporting() && !Params().IsReindex()) {
+        if (pto->fStartSync && !SysParams().IsImporting() && !SysParams().IsReindex()) {
             pto->fStartSync = false;
             PushGetBlocks(pto, chainActive.Tip(), uint256(0));
         }
@@ -3793,7 +3799,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // Resend wallet transactions that haven't gotten in a block yet
         // Except during reindex, importing and IBD, when old wallet
         // transactions become unconfirmed and spams other nodes.
-        if (!Params().IsReindex() && !Params().IsImporting() && !IsInitialBlockDownload())
+        if (!SysParams().IsReindex() && !SysParams().IsImporting() && !IsInitialBlockDownload())
         {
             g_signals.Broadcast();
         }
@@ -3962,7 +3968,7 @@ bool DisconnectBlockFromTip(CValidationState &state) {
 	return DisconnectTip(state);
 }
 bool GetTxOperLog(const uint256 &txHash, vector<CAccountOperLog> &vAccountOperLog) {
-if (Params().IsTxIndex()) {
+if (SysParams().IsTxIndex()) {
 		CDiskTxPos postx;
 		if (pblocktree->ReadTxIndex(txHash, postx)) {
 			CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
