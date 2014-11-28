@@ -21,25 +21,10 @@ static bool AppInitRPC(int argc, char* argv[])
     //
     // Parameters
     //
-    ParseParameters(argc, argv);
-    if (!boost::filesystem::is_directory(GetDataDir(false)))
-    {
-        fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", mapArgs["-datadir"].c_str());
-        return false;
-    }
-    try {
-        ReadConfigFile(mapArgs, mapMultiArgs);
-    } catch(exception &e) {
-        fprintf(stderr,"Error reading configuration file: %s\n", e.what());
-        return false;
-    }
-    // Check for -testnet or -regtest parameter (TestNet() calls are only valid after this clause)
-    if (!SelectParamsFromCommandLine()) {
-        fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
-        return false;
-    }
+	CBaseParams::IntialParams(argc, argv);
+	SysParams().InitalConfig();
 
-    if (argc<2 || mapArgs.count("-?") || mapArgs.count("--help"))
+    if (argc<2 || CBaseParams::IsArgCount("-?") || CBaseParams::IsArgCount("--help"))
     {
         // First part of help message is specific to RPC client
         string strUsage = _("Bitcoin Core RPC client version") + " " + FormatFullVersion() + "\n\n" +

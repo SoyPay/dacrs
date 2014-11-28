@@ -86,7 +86,6 @@ BOOST_AUTO_TEST_CASE(db_fun)
 	cout << "6" << endl;
 	disblock1();
 	disblock1();
-	disblock1();
 	CreateContactTx(6);   //check新增的脚本数据是否恢复
 	GenerateMiner();
 

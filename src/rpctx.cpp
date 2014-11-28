@@ -1311,8 +1311,8 @@ Value disconnectblock(const Array& params, bool fHelp) {
 
 	    //load a block tx into cache transaction
 		CBlockIndex *pReLoadBlockIndex = pindexDelete;
-		if(pindexDelete->nHeight - Params().GetTxCacheHeight()>0) {
-			pReLoadBlockIndex = chainActive[pindexDelete->nHeight - Params().GetTxCacheHeight()];
+		if(pindexDelete->nHeight - SysParams().GetTxCacheHeight()>0) {
+			pReLoadBlockIndex = chainActive[pindexDelete->nHeight - SysParams().GetTxCacheHeight()];
 			CBlock reLoadblock;
 			if (!ReadBlockFromDisk(reLoadblock, pindexDelete))
 				return state.Abort(_("Failed to read block"));
@@ -1483,8 +1483,8 @@ Value reloadtxcache(const Array& params, bool fHelp) {
 	}
 	pTxCacheTip->Clear();
 	CBlockIndex *pIndex = chainActive.Tip();
-	if ((chainActive.Tip()->nHeight - Params().GetTxCacheHeight()) >= 0) {
-		pIndex = chainActive[(chainActive.Tip()->nHeight - Params().GetTxCacheHeight())];
+	if ((chainActive.Tip()->nHeight - SysParams().GetTxCacheHeight()) >= 0) {
+		pIndex = chainActive[(chainActive.Tip()->nHeight - SysParams().GetTxCacheHeight())];
 	} else {
 		pIndex = chainActive.Genesis();
 	}

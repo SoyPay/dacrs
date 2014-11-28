@@ -88,22 +88,16 @@ inline void MilliSleep(int64_t n) {
 #endif
 }
 
-extern map<string, string> mapArgs;
-extern map<string, vector<string> > mapMultiArgs;
-//extern bool fDebug;
-//extern bool fPrintToConsole;
-//extern bool fPrintToDebugLog;
 extern bool fServer;
 extern string strMiscWarning;
 extern bool fNoListen;
-//extern bool fLogTimestamps;
 extern volatile bool fReopenDebugLog;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
 void SetupEnvironment();
 
-bool GetBoolArg(const string& strArg, bool fDefault);
+//bool GetBoolArg(const string& strArg, bool fDefault);
 
 /* Return true if log accepts specified category */
 bool LogAcceptCategory(const char* category);
@@ -175,7 +169,6 @@ vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid = NULL);
 string DecodeBase32(const string& str);
 string EncodeBase32(const unsigned char* pch, size_t len);
 string EncodeBase32(const string& str);
-void ParseParameters(int argc, const char* const argv[]);
 bool WildcardMatch(const char* psz, const char* mask);
 bool WildcardMatch(const string& str, const string& mask);
 void FileCommit(FILE *fileout);
@@ -317,51 +310,6 @@ inline bool IsSwitchChar(char c) {
 	return c == '-';
 #endif
 }
-
-/**
- * Return string argument or default value
- *
- * @param strArg Argument to get (e.g. "-foo")
- * @param default (e.g. "1")
- * @return command-line argument or default value
- */
-string GetArg(const string& strArg, const string& strDefault);
-
-/**
- * Return integer argument or default value
- *
- * @param strArg Argument to get (e.g. "-foo")
- * @param default (e.g. 1)
- * @return command-line argument (0 if invalid number) or default value
- */
-int64_t GetArg(const string& strArg, int64_t nDefault);
-
-/**
- * Return boolean argument or default value
- *
- * @param strArg Argument to get (e.g. "-foo")
- * @param default (true or false)
- * @return command-line argument or default value
- */
-bool GetBoolArg(const string& strArg, bool fDefault);
-
-/**
- * Set an argument if it doesn't already have a value
- *
- * @param strArg Argument to set (e.g. "-foo")
- * @param strValue Value (e.g. "1")
- * @return true if argument gets set, false if it already had a value
- */
-bool SoftSetArg(const string& strArg, const string& strValue);
-
-/**
- * Set a boolean argument if it doesn't already have a value
- *
- * @param strArg Argument to set (e.g. "-foo")
- * @param fValue Value (e.g. false)
- * @return true if argument gets set, false if it already had a value
- */
-bool SoftSetBoolArg(const string& strArg, bool fValue);
 
 /**
  * MWC RNG of George Marsaglia
