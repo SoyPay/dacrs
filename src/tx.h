@@ -1351,8 +1351,9 @@ public:
 	}
 	bool SetRegId(const CRegID &regID){this->regID = regID;return true;};
 	bool GetRegId(CRegID &regID)const {regID = this->regID  ;return regID.IsEmpty();};
-	uint64_t GetMatureAmount(int nCurHeight);
-	uint64_t GetForzenAmount(int nCurHeight);
+	uint64_t GetRewardAmount(int nCurHeight);
+	uint64_t GetSripteFreezeAmount(int nCurHeight);
+	uint64_t GetSelfFreezeAmount(int nCurHeight);
 	uint64_t GetBalance(int nCurHeight);
 	uint256 BuildMerkleTree(int prevBlockHeight) const;
 	void ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos);
