@@ -607,18 +607,18 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 //					str += strprintf("%02X", *(unsigned char*)pCh);
 //				}
 //				LogPrint("Hash", "nNonce:%s\n", str.c_str());
-				printf("curhash smaller then adjusthash\r\n");
+//				printf("curhash smaller then adjusthash\r\n");
 				CRegID regid;
 				CKey key;
-				if (pwalletMain->GetKey(item.keyID, key) && pwalletMain->GetRegID(item.keyID, regid)) {
+
+				if (pwalletMain->GetKey(item.keyID, key) && pAccountViewTip->GetRegId(item.keyID, regid)) {
 					CRewardTransaction *prtx = (CRewardTransaction *) pBlock->vptx[0].get();
 					prtx->rewardValue += item.GetInterest();
 					prtx->account = regid;
 					prtx->nHeight = pPrevIndex->nHeight+1;
 					pBlock->hashMerkleRoot = pBlock->BuildMerkleTree();
-					vector<unsigned char> vRegId = pwalletMain->mapKeyRegID[item.keyID].GetRegID();
-					CTxDestination minerId = CAccountID(item.keyID, vRegId);
-					printf("CreatePosTx addr = %s\r\n",CBitcoinAddress(minerId).ToString().c_str());
+					vector<unsigned char> vRegId = regid.GetRegID();
+					printf("CreatePosTx addr = %s\r\n",item.keyID.ToAddress().c_str());
 					LogPrint("postx", "find pos tx hash succeed: \n"
 									  "   pos hash:%s \n"
 									  "adjust hash:%s \r\n", curhash.GetHex(), adjusthash.GetHex());
@@ -627,7 +627,12 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 							postxinfo.nVersion, postxinfo.hashPrevBlock.GetHex(), postxinfo.hashMerkleRoot.GetHex(),
 							postxinfo.nValues, postxinfo.nTime, postxinfo.nNonce);
 //					cout << "miner block hash:" << pBlock->SignatureHash().GetHex() << endl;
-//					cout << "miner keyid's pubkey:" << HexStr(key.GetPubKey().begin(), key.GetPubKey().end()) << endl;
+//					cout << "miner regId :" << regid.ToString() << endl;
+					CPubKey tep = key.GetPubKey();
+					assert(tep == item.publicKey);
+//					cout << "miner keyid's pubkey:" << HexStr(tep.begin(),tep.end()) << endl;
+//					cout << "miner item's accont:" << item.ToString() << endl;
+
 					if (key.Sign(pBlock->SignatureHash(), pBlock->vSignature)) {
 //						cout << "miner signature:" << HexStr(pBlock->vSignature) << endl;
 						return true;
@@ -684,9 +689,11 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 			//available acc
 //			cout << "check block hash:" << pBlock->SignatureHash().GetHex() << endl;
 //			cout << "check signature:" << HexStr(pBlock->vSignature) << endl;
-//			cout << "check pubkey:" << HexStr(secureAcc.publicKey.begin(), secureAcc.publicKey.end()) << endl;
+//			cout << "check secureAcc " << secureAcc.ToString() << endl;
+//			cout << "miner regId :" << secureAcc.regID.ToString() << endl;
+
 			if (!secureAcc.publicKey.Verify(pBlock->SignatureHash(), pBlock->vSignature)) {
-//				LogPrint("postx", "publickey:%s, keyid:%s\n", secureAcc.publicKey.GetHash().GetHex(), secureAcc.keyID.GetHex());
+			LogPrint("postx", "publickey:%s, keyid:%s\n", secureAcc.publicKey.GetHash().GetHex(), secureAcc.keyID.GetHex());
 //				LogPrint("postx", "block verify fail\r\n");
 //				LogPrint("postx", "block hash:%s\n", pBlock->GetHash().GetHex());
 //				LogPrint("postx", "signature block:%s\n", HexStr(pBlock->vSignature.begin(), pBlock->vSignature.end()));
@@ -910,10 +917,10 @@ bool CheckWork(CBlock* pblock, CWallet& wallet) {
 	//	reservekey.KeepKey();
 
 		// Track how many getdata requests this block gets
-		{
-			LOCK(wallet.cs_wallet);
-			wallet.mapRequestCount[pblock->GetHash()] = 0;
-		}
+//		{
+//			LOCK(wallet.cs_wallet);
+//			wallet.mapRequestCount[pblock->GetHash()] = 0;
+//		}
 
 		// Process this block the same as if we had received it from another node
 		CValidationState state;

@@ -9,7 +9,10 @@
 #include "VmScript/VmScriptRun.h"
 #include "core.h"
 #include "miner.h"
-
+#include "json/json_spirit_utils.h"
+#include "json/json_spirit_value.h"
+#include "json/json_spirit_writer_template.h"
+using namespace json_spirit;
 static string txTypeArray[] = { "NULL_TXTYPE", "REG_ACCT_TX", "NORMAL_TX", "CONTRACT_TX", "FREEZE_TX",
 		"REWARD_TX", "REG_SCRIPT_TX" };
 
@@ -67,7 +70,9 @@ CRegID::CRegID(uint32_t nHeightIn, uint16_t nIndexIn) {
 	vRegID.insert(vRegID.end(), BEGIN(nIndexIn), END(nIndexIn));
 }
 string CRegID::ToString() const {
+	if(!IsEmpty())
 	return ::HexStr(vRegID);
+	return string(" ");
 }
 void CRegID::SetRegIDByCompact(const vector<unsigned char> &vIn) {
 	CDataStream ds(vIn, SER_DISK, CLIENT_VERSION);
@@ -826,14 +831,25 @@ bool CFund::IsMergeFund(const int & nCurHeight, int &nMergeType) const {
 	return false;
 }
 
-string CFund::ToString() const {
-	string str;
+
+
+
+
+Object CFund::ToJosnObj() const
+{
+	Object obj;
 	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "IN_FREEZD_FUND",
 			"OUT_FREEZD_FUND", "SELF_FREEZD_FUND" };
-	str += strprintf("            nType=%s, uTxHash=%d, value=%ld, nHeight=%d\n",
-	fundTypeArray[nFundType], HexStr(scriptID).c_str(), value, nHeight);
-	//LogPrint("INFO", "%s", str.c_str());
-	return str;
+	obj.push_back(Pair("nType",     fundTypeArray[nFundType]));
+	obj.push_back(Pair("scriptID",  (scriptID.size()==6 ? CRegID(scriptID).ToString() : string(" "))));
+	obj.push_back(Pair("value",     value));
+	obj.push_back(Pair("timeout hight",     nHeight));
+	return obj;
+}
+
+string CFund::ToString() const {
+
+	return  write_string(Value(ToJosnObj()),true);
 }
 
 string COperFund::ToString() const {
@@ -1067,6 +1083,7 @@ bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 //	LogPrint("vm","befor undo %s\n",ToString().c_str());
 	vector<COperFund>::const_reverse_iterator iterOperFundLog = accountOperLog.vOperFund.rbegin();
 	for (; iterOperFundLog != accountOperLog.vOperFund.rend(); ++iterOperFundLog) {
+		LogPrint("INFO", "undo account:%s\n" ,iterOperFundLog->ToString());
 		vector<CFund>::const_iterator iterFund = iterOperFundLog->vFund.begin();
 		for (; iterFund != iterOperFundLog->vFund.end(); ++iterFund) {
 		//	LogPrint("vm","fund_type is %d,oper_type is %d,fund info:%s",iterFund->nFundType,iterOperFundLog->operType,iterFund->ToString().c_str());
@@ -1222,7 +1239,7 @@ uint64_t CAccount::GetSecureAccPos(int prevBlockHeight) const {
 }
 
 
-uint64_t CAccount::GetMatureAmount(int nCurHeight) {
+uint64_t CAccount::GetRewardAmount(int nCurHeight) {
 	CompactAccount(nCurHeight);
 	uint64_t balance = 0;
 
@@ -1232,13 +1249,20 @@ uint64_t CAccount::GetMatureAmount(int nCurHeight) {
 	return balance;
 }
 
-uint64_t CAccount::GetForzenAmount(int nCurHeight) {
+uint64_t CAccount::GetSripteFreezeAmount(int nCurHeight) {
 	CompactAccount(nCurHeight);
 	uint64_t balance = 0;
 
 	for (auto &fund : vFreeze) {
 		balance += fund.value;
 	}
+
+	return balance;
+}
+uint64_t CAccount::GetSelfFreezeAmount(int nCurHeight) {
+	CompactAccount(nCurHeight);
+	uint64_t balance = 0;
+
 
 	for (auto &fund : vSelfFreeze) {
 		balance += fund.value;
@@ -1281,23 +1305,66 @@ uint256 CAccount::BuildMerkleTree(int prevBlockHeight) const {
 	return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
 }
 
+Object CAccount::ToJosnObj() const
+{
+
+	using namespace json_spirit;
+	Object obj;
+	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "IN_FREEZD_FUND",
+			"OUT_FREEZD_FUND", "SELF_FREEZD_FUND" };
+	obj.push_back(Pair("Address",     keyID.ToAddress()));
+	obj.push_back(Pair("KeYID",     keyID.ToString()));
+	obj.push_back(Pair("RegID",     regID.ToString()));
+	obj.push_back(Pair("publicKey",  publicKey.ToString()));
+	obj.push_back(Pair("FreeValues",     llValues));
+
+	Array RewardFund;
+	for (auto& rew:vRewardFund) {
+		RewardFund.push_back(rew.ToJosnObj());
+	}
+	obj.push_back(Pair("RewardFund",     RewardFund));
+
+
+	Array FreedomFund;
+	for (auto& rew:vFreedomFund) {
+		FreedomFund.push_back(rew.ToJosnObj());
+	}
+	obj.push_back(Pair("FreedomFund",     FreedomFund));
+
+	Array Freeze;
+	for (auto& rew:vFreeze) {
+		Freeze.push_back(rew.ToJosnObj());
+	}
+	obj.push_back(Pair("Freeze",     Freeze));
+
+	Array SelfFreeze;
+	for (auto& rew:vSelfFreeze) {
+		SelfFreeze.push_back(rew.ToJosnObj());
+	}
+	obj.push_back(Pair("SelfFreeze",     SelfFreeze));
+	return obj;
+}
+
 string CAccount::ToString() const {
-	string str;
-	str += strprintf("keyID=%s, publicKey=%d, values=%ld\n",
-	HexStr(keyID).c_str(), HexStr(publicKey).c_str(), llValues);
-	for (unsigned int i = 0; i < vRewardFund.size(); ++i) {
-		str += "    " + vRewardFund[i].ToString() + "\n";
-	}
-	for (unsigned int i = 0; i < vFreedomFund.size(); ++i) {
-		str += "    " + vFreedomFund[i].ToString() + "\n";
-	}
-	for (unsigned int i = 0; i < vFreeze.size(); ++i) {
-		str += "    " + vFreeze[i].ToString() + "\n";
-	}
-	for (unsigned int i = 0; i < vSelfFreeze.size(); ++i) {
-		str += "    " + vSelfFreeze[i].ToString() + "\n";
-	}
-	return str;
+	return  write_string(Value(ToJosnObj()),true);
+
+//
+//	string str;
+//	str += strprintf("keyID=%s, regid:%s, publicKey=%s, values=%ld\n",
+//	HexStr(keyID).c_str(),regID.ToString(),HexStr(publicKey).c_str(), llValues);
+//	for (unsigned int i = 0; i < vRewardFund.size(); ++i) {
+//		str += "    " + vRewardFund[i].ToString() + "\n";
+//	}
+//	for (unsigned int i = 0; i < vFreedomFund.size(); ++i) {
+//		str += "    " + vFreedomFund[i].ToString() + "\n";
+//	}
+//	for (unsigned int i = 0; i < vFreeze.size(); ++i) {
+//		str += "    " + vFreeze[i].ToString() + "\n";
+//	}
+//	for (unsigned int i = 0; i < vSelfFreeze.size(); ++i) {
+//		str += "    " + vSelfFreeze[i].ToString() + "\n";
+//	}
+//	return str;
 }
 
 void CAccount::WriteOperLog(AccountOper emOperType, const CFund &fund, bool bAuthorizated) {
@@ -1390,14 +1457,14 @@ uint64_t CAccount::GetVecMoney(const vector<CFund>& vFund){
 	return nTotal;
 }
 
-CFund& CAccount::FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID) {
-	CFund vret;
+bool CAccount::FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID,CFund&fund) {
 	for (vector<CFund>::const_iterator it = vFund.begin(); it != vFund.end(); it++) {
 		if (it->scriptID == scriptID) {
-			vret = *it;
+			fund = *it;
+			return true;
 		}
 	}
-	return vret;
+	return false;
 }
 
 bool CAccount::IsAuthorized(uint64_t nMoney, int nHeight, const vector_unsigned_char& scriptID) {

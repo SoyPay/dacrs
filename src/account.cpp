@@ -179,9 +179,13 @@ bool CAccountViewCache::EraseKeyId(const vector<unsigned char> &accountId) {
 }
 bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAccount &account) {
 	if(cacheKeyIds.count(HexStr(accountId)) && cacheKeyIds[HexStr(accountId)] !=uint160(0)) {
-		if(cacheAccounts.count(cacheKeyIds[HexStr(accountId)]) && cacheAccounts[cacheKeyIds[HexStr(accountId)]].keyID != uint160(0)){
-			account = cacheAccounts[cacheKeyIds[HexStr(accountId)]];
-			return true;
+		if(cacheAccounts.count(cacheKeyIds[HexStr(accountId)])){
+			if(cacheAccounts[cacheKeyIds[HexStr(accountId)]].keyID != uint160(0)) {  // 判断此帐户是否被删除了
+				account = cacheAccounts[cacheKeyIds[HexStr(accountId)]];
+				return true;
+			}else {
+				return false;   //已删除返回false
+			}
 		}else {
 			return pBase->GetAccount(cacheKeyIds[HexStr(accountId)], account);
 		}
@@ -189,6 +193,14 @@ bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAcco
 		CKeyID keyId;
 		if(pBase->GetKeyId(accountId, keyId)) {
 			cacheKeyIds[HexStr(accountId)] = keyId;
+			if (cacheAccounts.count(keyId) > 0 ) {
+				if (cacheAccounts[cacheKeyIds[HexStr(accountId)]].keyID != uint160(0)) { // 判断此帐户是否被删除了
+					account = cacheAccounts[keyId];
+					return true;
+				} else {
+					return false;   //已删除返回false
+				}
+			}
 			bool ret = pBase->GetAccount(keyId, account);
 			if(ret) {
 				cacheAccounts[keyId] = account;
@@ -205,16 +217,20 @@ bool CAccountViewCache::SaveAccountInfo(const CRegID &regid, const CKeyID &keyId
 	return true;
 }
 bool CAccountViewCache::GetAccount(const CUserID &userId, CAccount &account) {
-	if(userId.type() == typeid(CRegID)) {
-		return GetAccount(boost::get<CRegID>(userId).GetRegID(), account);
-	}else if(userId.type() == typeid(CKeyID)) {
-		return GetAccount(boost::get<CKeyID>(userId), account);
-	}else if(userId.type() == typeid(CPubKey)) {
-		return GetAccount(boost::get<CPubKey>(userId).GetID(), account);
+	bool ret = false;
+	if (userId.type() == typeid(CRegID)) {
+		ret = GetAccount(boost::get<CRegID>(userId).GetRegID(), account);
+		if(ret) assert(boost::get<CRegID>(userId) == account.regID);
+	} else if (userId.type() == typeid(CKeyID)) {
+		ret = GetAccount(boost::get<CKeyID>(userId), account);
+		if(ret) assert(boost::get<CKeyID>(userId) == account.keyID);
+	} else if (userId.type() == typeid(CPubKey)) {
+		ret = GetAccount(boost::get<CPubKey>(userId).GetID(), account);
+		if(ret) assert((boost::get<CPubKey>(userId)).GetID() == account.keyID);
 	} else {
 		assert(0);
 	}
-	return false;
+	return ret;
 }
 bool CAccountViewCache::GetKeyId(const CUserID &userId, CKeyID &keyId) {
 	if (userId.type() == typeid(CRegID)) {
@@ -222,6 +238,8 @@ bool CAccountViewCache::GetKeyId(const CUserID &userId, CKeyID &keyId) {
 	} else if (userId.type() == typeid(CPubKey)) {
 		keyId = boost::get<CPubKey>(userId).GetID();
 		return true;
+	} else {
+		assert(0);
 	}
 	return false;
 }
@@ -279,14 +297,26 @@ bool CAccountViewCache::Flush(){
 	 return fOk;
 }
 
-bool CAccountViewCache::GetRegId(const CUserID& userId, CRegID& regId) {
+bool CAccountViewCache::GetRegId(const CUserID& userId, CRegID& regId) const{
+
+	CAccountViewCache tempView(*this);
 	CAccount account;
-	if(GetAccount(userId,account))
+	if(tempView.GetAccount(userId,account))
 	{
 		regId =  account.regID;
-		return regId.IsEmpty();
+		return !regId.IsEmpty();
 	}
 	return false;
+}
+
+int64_t CAccountViewCache::GetBalance(const CUserID& userId,int curhigh) const {
+	CAccountViewCache tempvew(*this);
+	CAccount account;
+	if(tempvew.GetAccount(userId,account))
+	{
+		return  account.GetBalance(curhigh);
+	}
+	return 0;
 }
 
 unsigned int CAccountViewCache::GetCacheSize(){

@@ -10,6 +10,9 @@
 #include <string>
 #include <boost/variant.hpp>
 #include "tx.h"
+#include "json/json_spirit_utils.h"
+#include "json/json_spirit_value.h"
+using namespace json_spirit;
 
 using namespace std;
 
@@ -33,7 +36,6 @@ public:
 
 typedef boost::variant<CNullID, CRegID, CKeyID, CPubKey> CUserID;
 
-
 class CRegID {
 private:
 	uint32_t nHeight;
@@ -52,6 +54,9 @@ public:
 	}
 
 	CRegID(string strRegID);
+	bool operator ==(const CRegID& co) const {
+		return (this->nHeight == co.nHeight && this->nIndex == co.nIndex);
+	}
 
 	CRegID(const vector<unsigned char> &vIn) {
 		assert(vIn.size() == 6);
@@ -64,7 +69,13 @@ public:
 	}
     bool IsEmpty()const{return (nHeight == 0 && nIndex == 0);};
 	CRegID(uint32_t nHeight = 0, uint16_t nIndex = 0);
-
+    bool clean()
+    {
+    	nHeight = 0 ;
+    	nIndex = 0 ;
+    	vRegID.clear();
+    	return true;
+    }
 	string ToString() const;
 
 	IMPLEMENT_SERIALIZE
@@ -965,7 +976,7 @@ public:
 	}
 	~CFund() {
 	}
-
+	Object ToJosnObj() const;
 	bool IsMergeFund(const int & nCurHeight, int &mergeType) const;
 
 	friend bool operator <(const CFund &fa, const CFund &fb) {
@@ -996,6 +1007,8 @@ public:
 			return false;
 		return true;
 	}
+
+
 
 	IMPLEMENT_SERIALIZE
 	(
@@ -1267,7 +1280,7 @@ public:
 class CAccount {
 public:
 	CRegID regID;
-	CKeyID keyID;											//!< private key of the account
+	CKeyID keyID;											//!< keyID of the account
 	CPubKey publicKey;										//!< public key of the account
 	uint64_t llValues;										//!< freedom money which coinage greater than 30 days
 	vector<CFund> vRewardFund;								//!< reward money
@@ -1338,13 +1351,15 @@ public:
 	}
 	bool SetRegId(const CRegID &regID){this->regID = regID;return true;};
 	bool GetRegId(CRegID &regID)const {regID = this->regID  ;return regID.IsEmpty();};
-	uint64_t GetMatureAmount(int nCurHeight);
-	uint64_t GetForzenAmount(int nCurHeight);
+	uint64_t GetRewardAmount(int nCurHeight);
+	uint64_t GetSripteFreezeAmount(int nCurHeight);
+	uint64_t GetSelfFreezeAmount(int nCurHeight);
 	uint64_t GetBalance(int nCurHeight);
 	uint256 BuildMerkleTree(int prevBlockHeight) const;
 	void ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos);
 	uint64_t GetSecureAccPos(int prevBlockHeight) const;
 	string ToString() const;
+	Object ToJosnObj() const;
 	bool IsEmptyValue() const {
 		return !(llValues > 0 || !vFreedomFund.empty() || !vFreeze.empty() || !vSelfFreeze.empty());
 	}
@@ -1354,7 +1369,7 @@ public:
 	void AddToSelfFreeze(const CFund &fund,bool bWriteLog = true);
 
 	bool UndoOperateAccount(const CAccountOperLog & accountOperLog);
-	CFund& FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID);
+	bool FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID,CFund&fund);
 
 	IMPLEMENT_SERIALIZE
 	(

@@ -103,7 +103,7 @@ void CAccountViewTest::Init() {
 
 	for (int i = 0; i < VECTOR_SIZE; i++) {
 		CKey key;
-		key.MakeNewKey(false);
+		key.MakeNewKey();
 		CPubKey pubkey = key.GetPubKey();
 		CKeyID keyID = pubkey.GetID();
 		vRandomKeyID.push_back(keyID);
