@@ -499,20 +499,20 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 				}
 				CTxUndo txundo;
 				CValidationState state;
-				for(auto &item : contractScriptTemp.mapDatas) {
-					vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
-					if(item.first == vKey1) {
-						LogPrint("INFO","item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
-					}
-				}
+//				for(auto &item : contractScriptTemp.mapDatas) {
+//					vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
+//					if(item.first == vKey1) {
+//						LogPrint("INFO","item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
+//					}
+//				}
 				if (!pBaseTx->UpdateAccount(i, accView, state, txundo, pPrevIndex->nHeight + 1, txCacheTemp, contractScriptTemp)) {
 					LogPrint("INFO","tx hash:%s transaction is invalid\n", pBaseTx->GetHash().GetHex());
-					for (auto &item : contractScriptTemp.mapDatas) {
-						vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
-						if(item.first == vKey1) {
-							LogPrint("INFO", "item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
-						}
-					}
+//					for (auto &item : contractScriptTemp.mapDatas) {
+//						vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
+//						if(item.first == vKey1) {
+//							LogPrint("INFO", "item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
+//						}
+//					}
 					mempool.mapTx.erase(pBaseTx->GetHash());
 					return false;
 				}

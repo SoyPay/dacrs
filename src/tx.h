@@ -1346,7 +1346,6 @@ public:
 		return rest;
 	}
 	bool IsRegister() const {
-		//!todo  what this meaning
 		return (publicKey.IsFullyValid() && publicKey.GetID() == keyID);
 	}
 	bool SetRegId(const CRegID &regID){this->regID = regID;return true;};
