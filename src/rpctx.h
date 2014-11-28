@@ -25,8 +25,6 @@ extern Value createcontracttx(const Array& params, bool fHelp);
 extern Value signcontracttx(const Array& params, bool fHelp);
 extern Value createfreezetx(const Array& params, bool fHelp);
 extern Value registerscripttx(const Array& params, bool fHelp);
-//extern Value createsecuretx(const Array& params, bool fHelp);
-//extern Value signsecuretx(const Array& params, bool fHelp);
 
 extern Value listaddr(const Array& params, bool fHelp);
 extern Value listtx(const Array& params, bool fHelp);
@@ -43,7 +41,7 @@ extern Value getaccountinfo(const Array& params, bool fHelp);
 extern Value disconnectblock(const Array& params, bool fHelp);
 extern Value listregscript(const Array& params, bool fHelp);
 
-extern Value getoneaddr(const Array& params, bool fHelp);
+
 extern Value getaddrbalance(const Array& params, bool fHelp);
 extern Value generateblock(const Array& params, bool fHelp);
 extern Value getpublickey(const Array& params, bool fHelp);

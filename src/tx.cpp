@@ -1239,7 +1239,7 @@ uint64_t CAccount::GetSecureAccPos(int prevBlockHeight) const {
 }
 
 
-uint64_t CAccount::GetMatureAmount(int nCurHeight) {
+uint64_t CAccount::GetRewardAmount(int nCurHeight) {
 	CompactAccount(nCurHeight);
 	uint64_t balance = 0;
 
@@ -1249,13 +1249,20 @@ uint64_t CAccount::GetMatureAmount(int nCurHeight) {
 	return balance;
 }
 
-uint64_t CAccount::GetForzenAmount(int nCurHeight) {
+uint64_t CAccount::GetSripteFreezeAmount(int nCurHeight) {
 	CompactAccount(nCurHeight);
 	uint64_t balance = 0;
 
 	for (auto &fund : vFreeze) {
 		balance += fund.value;
 	}
+
+	return balance;
+}
+uint64_t CAccount::GetSelfFreezeAmount(int nCurHeight) {
+	CompactAccount(nCurHeight);
+	uint64_t balance = 0;
+
 
 	for (auto &fund : vSelfFreeze) {
 		balance += fund.value;
