@@ -802,7 +802,7 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) 
 	bool flag =true;
 
 	//vector<unsigned char> key =AddChar(*retdata.at(0));
-	LogPrint("INFO", "script run read data:%s", HexStr(*retdata.at(0)));
+//	LogPrint("INFO", "script run read data:%s\n", HexStr(*retdata.at(0)));
 	if(!scriptDB->GetScriptData(scriptid,*retdata.at(0),vValue,nHeight))
 	{
 		flag = false;
