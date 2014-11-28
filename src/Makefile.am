@@ -153,6 +153,9 @@ libsoypay_common_a_SOURCES = \
   sync.cpp \
   util.cpp \
   version.cpp \
+  json/json_spirit_reader.cpp \
+  json/json_spirit_value.cpp \
+  json/json_spirit_writer.cpp \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT

@@ -179,9 +179,13 @@ bool CAccountViewCache::EraseKeyId(const vector<unsigned char> &accountId) {
 }
 bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAccount &account) {
 	if(cacheKeyIds.count(HexStr(accountId)) && cacheKeyIds[HexStr(accountId)] !=uint160(0)) {
-		if(cacheAccounts.count(cacheKeyIds[HexStr(accountId)]) && cacheAccounts[cacheKeyIds[HexStr(accountId)]].keyID != uint160(0)){
-			account = cacheAccounts[cacheKeyIds[HexStr(accountId)]];
-			return true;
+		if(cacheAccounts.count(cacheKeyIds[HexStr(accountId)])){
+			if(cacheAccounts[cacheKeyIds[HexStr(accountId)]].keyID != uint160(0)) {  // 判断此帐户是否被删除了
+				account = cacheAccounts[cacheKeyIds[HexStr(accountId)]];
+				return true;
+			}else {
+				return false;   //已删除返回false
+			}
 		}else {
 			return pBase->GetAccount(cacheKeyIds[HexStr(accountId)], account);
 		}
@@ -189,6 +193,14 @@ bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAcco
 		CKeyID keyId;
 		if(pBase->GetKeyId(accountId, keyId)) {
 			cacheKeyIds[HexStr(accountId)] = keyId;
+			if (cacheAccounts.count(keyId) > 0 ) {
+				if (cacheAccounts[cacheKeyIds[HexStr(accountId)]].keyID != uint160(0)) { // 判断此帐户是否被删除了
+					account = cacheAccounts[keyId];
+					return true;
+				} else {
+					return false;   //已删除返回false
+				}
+			}
 			bool ret = pBase->GetAccount(keyId, account);
 			if(ret) {
 				cacheAccounts[keyId] = account;
@@ -205,11 +217,11 @@ bool CAccountViewCache::SaveAccountInfo(const CRegID &regid, const CKeyID &keyId
 	return true;
 }
 bool CAccountViewCache::GetAccount(const CUserID &userId, CAccount &account) {
-	if (userId.type() == typeid(CRegID)) {
+	if(userId.type() == typeid(CRegID)) {
 		return GetAccount(boost::get<CRegID>(userId).GetRegID(), account);
-	} else if (userId.type() == typeid(CKeyID)) {
+	}else if(userId.type() == typeid(CKeyID)) {
 		return GetAccount(boost::get<CKeyID>(userId), account);
-	} else if (userId.type() == typeid(CPubKey)) {
+	}else if(userId.type() == typeid(CPubKey)) {
 		return GetAccount(boost::get<CPubKey>(userId).GetID(), account);
 	} else {
 		assert(0);
@@ -222,8 +234,6 @@ bool CAccountViewCache::GetKeyId(const CUserID &userId, CKeyID &keyId) {
 	} else if (userId.type() == typeid(CPubKey)) {
 		keyId = boost::get<CPubKey>(userId).GetID();
 		return true;
-	} else {
-		assert(0);
 	}
 	return false;
 }
