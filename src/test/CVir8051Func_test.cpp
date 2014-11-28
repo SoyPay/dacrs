@@ -1876,7 +1876,7 @@ BOOST_AUTO_TEST_CASE(scriptfun)
 {
 	std::vector<unsigned char> m_ROM;
 		vector<unsigned char> InputData;
-		/*----The Length of This Array is 13199 Byte.----*/
+		/*----The Length of This Array is 14071 Byte.----*/
 
 		unsigned char Array[]={
 				/*00000000H:*/0x02,0x00,0x53,0x00,0x00,0x00,0x00,0x00,0x22,0x22,0x00,0x00,0x00,0x00,0x00,0x00,

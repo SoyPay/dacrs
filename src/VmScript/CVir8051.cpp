@@ -546,9 +546,11 @@ static RET_DEFINE ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
 	if(flag)
 	{
 		LogPrint("vm","%s\r\n", HexStr(pdata).c_str());
+		LogPrint("INFO","%s\r\n", HexStr(pdata).c_str());
 	}else
 	{
 		LogPrint("vm","%s\r\n",pdata.c_str());
+		LogPrint("INFO","%s\r\n",pdata.c_str());
 	}
 
 
@@ -591,7 +593,7 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 	uint256 hash1(0);
 	tep1 >>hash1;
 	//cout<<"ExGetTxAccountsFunc:"<<hash1.GetHex()<<endl;
-	LogPrint("vm","ExGetTxAccountsFunc:%s",hash1.GetHex().c_str());
+//	LogPrint("vm","ExGetTxAccountsFunc:%s",hash1.GetHex().c_str());
 
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 
@@ -910,7 +912,7 @@ static RET_DEFINE ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
     //cout<<"ExGetCurTxHash:"<<HexStr(hash).c_str()<<endl;
-    LogPrint("vm","ExGetCurTxHash:%s",HexStr(hash).c_str());
+ //   LogPrint("vm","ExGetCurTxHash:%s",HexStr(hash).c_str());
 	return std::make_tuple (true, tem);
 }
 static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
@@ -1200,7 +1202,7 @@ RET_DEFINE CallExternalFunc(INT16U method, unsigned char *ipara,CVmScriptRun *pV
 
 }
 
-int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
+int64_t CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 	INT8U code = 0;
 	uint64_t step = 0;
 
@@ -1228,8 +1230,6 @@ int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 						int size = it.size();
 //						if(methodID == READDB_FUNC)
 //							LogPrint("vm","size:%d",size);
-						if(size == 0)
-							continue;
 						memcpy(&ipara[pos], &size, 2);
 						memcpy(&ipara[pos + 2], &it.at(0), size);
 						pos += size + 2;
@@ -1248,9 +1248,11 @@ int CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 				}
 				return 0;
 			}
-			if (maxstep != 0 && step > maxstep) {
-				return 0;		//force return
-			}
+//		//// for test
+//			if (maxstep != 0 && step > maxstep) {
+//
+//				return -1;		//force return
+//			}
 	}
 
 	return 1;
