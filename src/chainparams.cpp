@@ -367,9 +367,9 @@ const CBaseParams &SysParams() {
 			//LogPrint("spark", "In Main Net\n");
 			pParams = make_shared<CMainParams>();
 		}
-		assert(pParams != NULL);
-	}
 
+	}
+	assert(pParams != NULL);
 	return *pParams.get();
 }
 

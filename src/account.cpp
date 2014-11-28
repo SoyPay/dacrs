@@ -225,8 +225,8 @@ bool CAccountViewCache::GetAccount(const CUserID &userId, CAccount &account) {
 		ret = GetAccount(boost::get<CKeyID>(userId), account);
 		if(ret) assert(boost::get<CKeyID>(userId) == account.keyID);
 	} else if (userId.type() == typeid(CPubKey)) {
-		ret = GetAccount(boost::get<CPubKey>(userId).GetID(), account);
-		if(ret) assert((boost::get<CPubKey>(userId)).GetID() == account.keyID);
+		ret = GetAccount(boost::get<CPubKey>(userId).GetKeyID(), account);
+		if(ret) assert((boost::get<CPubKey>(userId)).GetKeyID() == account.keyID);
 	} else {
 		assert(0);
 	}
@@ -236,7 +236,7 @@ bool CAccountViewCache::GetKeyId(const CUserID &userId, CKeyID &keyId) {
 	if (userId.type() == typeid(CRegID)) {
 		return GetKeyId(boost::get<CRegID>(userId).GetRegID(), keyId);
 	} else if (userId.type() == typeid(CPubKey)) {
-		keyId = boost::get<CPubKey>(userId).GetID();
+		keyId = boost::get<CPubKey>(userId).GetKeyID();
 		return true;
 	} else {
 		assert(0);

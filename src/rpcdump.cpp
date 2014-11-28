@@ -109,7 +109,7 @@ Value importprivkey(const Array& params, bool fHelp)
     if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
 
     CPubKey pubkey = key.GetPubKey();
-    CKeyID vchAddress = pubkey.GetID();
+    CKeyID vchAddress = pubkey.GetKeyID();
     {
         LOCK2(cs_main, pwalletMain->cs_wallet);
 
@@ -128,7 +128,7 @@ Value importprivkey(const Array& params, bool fHelp)
         // whenever a key is imported, we need to scan the whole chain
 //        pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
 
-        pwalletMain->UpdataRegId(vchAddress,*pAccountViewTip);
+        pwalletMain->SynchronizRegId(vchAddress,*pAccountViewTip);
         if (fRescan) {
             pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
         }

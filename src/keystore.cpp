@@ -26,7 +26,7 @@ bool CKeyStore::AddKey(const CKey &key) {
 bool CBasicKeyStore::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
 {
     LOCK(cs_KeyStore);
-    mapKeys[pubkey.GetID()] = key;
+    mapKeys[pubkey.GetKeyID()] = key;
     return true;
 }
 

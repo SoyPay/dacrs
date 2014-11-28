@@ -165,16 +165,7 @@ bool CWalletDB::WriteDefaultKey(const CPubKey& vchPubKey)
     return Write(string("defaultkey"), vchPubKey);
 }
 
-bool CWalletDB::ReadPool(int64_t nPool, CKeyPool& keypool)
-{
-    return Read(make_pair(string("pool"), nPool), keypool);
-}
 
-bool CWalletDB::WritePool(int64_t nPool, const CKeyPool& keypool)
-{
-    nWalletDBUpdated++;
-    return Write(make_pair(string("pool"), nPool), keypool);
-}
 
 bool CWalletDB::ErasePool(int64_t nPool)
 {
@@ -880,8 +871,7 @@ void ThreadFlushWalletDB(const string& strFile)
 
 bool BackupWallet(const CWallet& wallet, const string& strDest)
 {
-    if (!wallet.fFileBacked)
-        return false;
+
     while (true)
     {
         {

@@ -51,7 +51,7 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		CRegisterAccountTx *prtx = (CRegisterAccountTx *) pTx;
 		result.push_back(Pair("txtype", "RegisterAccTx"));
 		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("addr", CBitcoinAddress(boost::get<CPubKey>(prtx->userId).GetID()).ToString()));
+		result.push_back(Pair("addr", CBitcoinAddress(boost::get<CPubKey>(prtx->userId).GetKeyID()).ToString()));
 		CID id(prtx->userId);
 		result.push_back(Pair("pubkey", HexStr(id.GetID())));
 		result.push_back(Pair("fees", prtx->llFees));
@@ -168,21 +168,20 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 				"\nArguments:\n"
 				"1.\"addr\": (string)\n"
 				"2.fee: (numeric) pay to miner\n"
-				"3.height: (numeric)create height\n"
+				"3.IsMinerID: (bool)create height\n"
 				"\nResult:\n"
 				"\"txhash\": (string)\n"
-				"\nExamples:\n" + HelpExampleCli("registeraccounttx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 1")
+				"\nExamples:\n" + HelpExampleCli("registeraccounttx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 true")
 				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("registeraccounttx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 1");
+				+ HelpExampleRpc("registeraccounttx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 false");
 		throw runtime_error(msg);
 	}
 
-	RPCTypeCheck(params, list_of(str_type)(int_type)(int_type));
 
-	//get addresss
+
 	CBitcoinAddress address(params[0].get_str());
 	uint64_t fee = params[1].get_uint64();
-	uint32_t nvalidheight = params[2].get_int();
+	bool IsMiner = params[2].get_bool();
 
 	//get keyid
 	CKeyID keyid;
@@ -219,9 +218,16 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: not find key.");
 		}
 
+		//pubkey
+		CPubKey MinerPKey;
+		if (!pwalletMain->GetPubKey(keyid, MinerPKey,true)) {
+			throw JSONRPCError(RPC_WALLET_ERROR, " not find Miner key.");
+		}
+
 		rtx.userId = pubkey;
+		rtx.MinerId=MinerPKey;
 		rtx.llFees = fee;
-		rtx.nValidHeight = nvalidheight;
+		rtx.nValidHeight = chainActive.Tip()->nHeight;
 
 		//sign
 		CKey key;
@@ -535,7 +541,7 @@ Value signcontracttx(const Array& params, bool fHelp) {
 						string("unregister RegID: ") + HexStr(id.GetID()));
 			}
 
-			if (!account.publicKey.Verify(tx.SignatureHash(), tx.vSignature.at(ii))) {
+			if (!account.PublicKey.Verify(tx.SignatureHash(), tx.vSignature.at(ii))) {
 				throw runtime_error("in signsecuretx :tx data sign err\n");
 			}
 		}
