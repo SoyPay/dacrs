@@ -964,7 +964,7 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 
 	CKeyID keyid;
 	if (!address.GetKeyID(keyid))
-		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
 
 	Object obj;
 	{
