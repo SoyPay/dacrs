@@ -200,8 +200,14 @@ public:
 				READWRITE(mapInBlockTx);
 			}
 	)
-	bool GetMoreThanMoneyKeyId(CKeyID &keyId,int64_t money) const;
 	bool FushToDisk()const;
+	bool getKeyId(set<CKeyID> &vkey) const {
+		for (auto &te : mKeyPool) {
+			vkey.insert(te.first);
+		}
+		return true;
+	}
+	int64_t GetBalance(int ncurhigh)const;
     bool UpdataRegId(const CKeyID &keyid,const CAccountViewCache &inview)
 	{
 		CAccountViewCache view(inview);
@@ -339,10 +345,6 @@ public:
 //	void ReacceptWalletTransactions();
 	void ResendWalletTransactions();
 
-
-
-
-	map<CTxDestination, int64_t> GetAddressBalances();
 
 	/***********************************creat tx*********************************************/
 

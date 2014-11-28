@@ -93,6 +93,8 @@ public:
 	bool EraseAccount(const CUserID &userId);
 	bool EraseId(const CUserID &userId);
 	bool HaveAccount(const CUserID &userId);
+	int64_t GetBalance(const CUserID &userId,int curhigh)const;
+
 	bool SaveAccountInfo(const CRegID &accountId, const CKeyID &keyId, const CAccount &account);
 	bool Flush();
 	unsigned int GetCacheSize();

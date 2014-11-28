@@ -294,7 +294,6 @@ Value dumpwallet(const Array& params, bool fHelp) {
 	reply.push_back(Pair("Best block index hight ", chainActive.Height()));
 	reply.push_back(Pair("Best block hash ", chainActive.Tip()->GetBlockHash().ToString()));
 
-	LOCK2(cs_main, pwalletMain->cs_wallet);
 	map<CKeyID, CKeyStoreValue> tepmKeyPool = pwalletMain->GetKeyPool();
 	int index = 0;
 	for (auto &te : tepmKeyPool) {

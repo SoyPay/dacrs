@@ -29,7 +29,7 @@ extern Value registerscripttx(const Array& params, bool fHelp);
 //extern Value signsecuretx(const Array& params, bool fHelp);
 
 extern Value listaddr(const Array& params, bool fHelp);
-extern Value listaddrtx(const Array& params, bool fHelp);
+extern Value listtx(const Array& params, bool fHelp);
 
 extern Value getaddrinfo(const Array& params, bool fHelp);
 extern Value listunconfirmedtx(const Array& params, bool fHelp);

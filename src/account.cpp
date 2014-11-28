@@ -309,6 +309,16 @@ bool CAccountViewCache::GetRegId(const CUserID& userId, CRegID& regId) const{
 	return false;
 }
 
+int64_t CAccountViewCache::GetBalance(const CUserID& userId,int curhigh) const {
+	CAccountViewCache tempvew(*this);
+	CAccount account;
+	if(tempvew.GetAccount(userId,account))
+	{
+		return  account.GetBalance(curhigh);
+	}
+	return 0;
+}
+
 unsigned int CAccountViewCache::GetCacheSize(){
 	return ::GetSerializeSize(cacheAccounts, SER_DISK, CLIENT_VERSION) + ::GetSerializeSize(cacheKeyIds, SER_DISK, CLIENT_VERSION);
 }

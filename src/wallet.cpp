@@ -77,8 +77,10 @@ bool CWallet::AddPubKey(const CPubKey& pk)
 
 bool CWallet::FushToDisk() const {
 	AssertLockHeld(cs_wallet);
+	 filesystem::path blocksDir = GetDataDir() / strWalletFile;
+//    FILE* fp = fopen(blocksDir.string().c_str(), "wb");
 
-	   FILE* fp = fopen(strWalletFile.c_str(), "wb");
+    FILE* fp = fopen(blocksDir.string().c_str(), "wb");
 	   if (!fp) throw "Cannot open wallet  file";
 
 
@@ -120,26 +122,9 @@ bool CWallet::AddKey(const CKey& secret) {
 	return true;
 }
 
-//
-//bool CWallet::LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &meta) {
-//	AssertLockHeld(cs_wallet); // mapKeyMetadata
-//	if (meta.nCreateTime && (!nTimeFirstKey || meta.nCreateTime < nTimeFirstKey))
-//		nTimeFirstKey = meta.nCreateTime;
-//
-//	mapKeyMetadata[pubkey.GetID()] = meta;
-//	return true;
-//}
 
 
 
-//bool CWallet::AddCScript(const CScript& redeemScript) {
-//	if (!CCryptoKeyStore::AddCScript(redeemScript))
-//		return false;
-//	if (!fFileBacked)
-//		return true;
-//	return CWalletDB(strWalletFile).WriteCScript(Hash160(redeemScript), redeemScript);
-//}
-//
 //bool CWallet::Unlock(const SecureString& strWalletPassphrase) {
 ////	CCrypter crypter;
 ////	CKeyingMaterial vMasterKey;
@@ -575,9 +560,12 @@ DBErrors CWallet::LoadWallet(bool fFirstRunRet) {
 //	}
 
 //	LOCK2(cs_main, pwalletMain->cs_wallet);
-
-	   FILE* fp = fopen(strWalletFile.c_str(), "rb");
+	   filesystem::path blocksDir = GetDataDir() / strWalletFile;
+//	   FILE* fp = fopen(blocksDir.string().c_str(), "wb+");
+	   FILE* fp = fopen(blocksDir.string().c_str(), "rb");
+	 
 	   if (!fp) throw "Cannot open wallet dump file";
+
 
 
     CAutoFile filein = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
@@ -585,17 +573,13 @@ DBErrors CWallet::LoadWallet(bool fFirstRunRet) {
     	throw "Cannot open wallet dump file";
 
 
-	bool readOk = true;
 	try {
 		  filein >>  *this;
 	} catch (...) {
-		readOk = false;
+		cout<< "sesail failed !"<< endl;
 	}
 
-	if(!readOk)
-	{
-		filein << *this;
-	}
+
 	filein.fclose();
 //
 ////	fFirstRunRet = false;
@@ -643,65 +627,25 @@ DBErrors CWallet::ZapWalletTx() {
 	return DB_LOAD_OK;
 }
 
-map<CTxDestination, int64_t> CWallet::GetAddressBalances() {
-	map<CTxDestination, int64_t> balances;
-
-	{
-		LOCK(cs_wallet);
-//		BOOST_FOREACH(PAIRTYPE(uint256, CWalletTx) walletEntry, mapWallet) {
-//			CWalletTx *pcoin = &walletEntry.second;
-//
-//			if (!IsFinalTx(*pcoin) || !pcoin->IsTrusted())
-//				continue;
-//
-//			if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
-//				continue;
-//
-//			int nDepth = pcoin->GetDepthInMainChain();
-//			if (nDepth < (pcoin->IsFromMe() ? 0 : 1))
-//				continue;
-//
-//			for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
-//				CTxDestination addr;
-//				if (!IsMine(pcoin->vout[i]))
-//					continue;
-//				if (!ExtractDestination(pcoin->vout[i].scriptPubKey, addr))
-//					continue;
-//
-//				int64_t n = IsSpent(walletEntry.first, i) ? 0 : pcoin->vout[i].nValue;
-//
-//				if (!balances.count(addr))
-//					balances[addr] = 0;
-//				balances[addr] += n;
-//			}
-//		}
-	}
-
-	return balances;
-}
 
 /***********************************creat tx*********************************************/
-bool CWallet::GetMoreThanMoneyKeyId(CKeyID &keyId,int64_t money) const
+
+
+int64_t CWallet::GetBalance(int ncurhigh) const
 {
-
-
+	int64_t ret = 0;
 	CAccountViewCache accView(*pAccountViewTip, true);
 	{
 		LOCK2(cs_main, cs_wallet);
 		for(auto &te :mKeyPool)
 		{
-			CUserID userId = te.first;
-			CAccount account;
-			if (accView.GetAccount(userId, account)) {
-				if(account.GetBalance(chainActive.Tip()->nHeight)>=money)
-					keyId= te.first;
-				return true;
-			}
+			ret +=accView.GetBalance(te.first,ncurhigh);
 		}
 
 	}
-	return false;
+	return ret;
 }
+
 
 std::string CWallet::SendMoney(CRegID &send, CRegID &rsv, int64_t nValue)
 {
