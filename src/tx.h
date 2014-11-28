@@ -1368,7 +1368,7 @@ public:
 	void AddToSelfFreeze(const CFund &fund,bool bWriteLog = true);
 
 	bool UndoOperateAccount(const CAccountOperLog & accountOperLog);
-	CFund& FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID);
+	bool FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID,CFund&fund);
 
 	IMPLEMENT_SERIALIZE
 	(
