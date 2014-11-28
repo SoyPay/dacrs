@@ -29,7 +29,7 @@ void CreateScriptTx1()
 {
 	int argc = 7;
 	char *argv[7] =
-			{ "rpctest", "registerscripttx", "5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG","0",
+			{ "rpctest", "registerscripttx", "mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","0",
 					"D:\\cppwork\\vmsdk\\testscriptid\\Debug\\Exe\\testscriptid.bin",
 					"1000000", "2" };
 	CommandLineRPC(argc, argv);
@@ -38,7 +38,7 @@ void CreateScriptTx2()
 {
 	int argc = 7;
 	char *argv[7] =
-			{ "rpctest", "registerscripttx", "5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG","0",
+			{ "rpctest", "registerscripttx", "mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","0",
 					"D:\\cppwork\\vmsdk\\sendsriptid\\Debug\\Exe\\scripttest.bin",
 					"1000000", "2" };
 	CommandLineRPC(argc, argv);
@@ -137,7 +137,7 @@ void CreateOperateSelfScriptTx(int param)
 	vInputParams.clear();
 	vInputParams.push_back("010000000100");
 	vInputParams.push_back(
-			"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]");
+			"[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\"]");
 
 	string temp = "";
 	temp += tinyformat::format("%02x%s",param,accountid);
@@ -158,7 +158,7 @@ void CreateOperateOtherScriptTx(int param)
 	vInputParams.clear();
 	vInputParams.push_back("020000000100");
 	vInputParams.push_back(
-			"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]");
+			"[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\"]");
 
 	string temp = "";
 	temp += tinyformat::format("%02x%s",param,accountid);
@@ -178,22 +178,22 @@ BOOST_AUTO_TEST_CASE(script_account){
 	CreateOperateSelfScriptTx(1);
 	GenerateMiner();
 	GetAccountInfo("010000000100");
-	GetAccountInfo("5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d");
+	GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
 	cout<<"2"<<endl;
 	CreateOperateSelfScriptTx(2);
 	GenerateMiner();
 	GetAccountInfo("010000000100");
-	GetAccountInfo("5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d");
+	GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
 	cout<<"3"<<endl;
 	CreateOperateOtherScriptTx(1);
 	GenerateMiner();
 	GetAccountInfo("010000000100");
-	GetAccountInfo("5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d");
+	GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
 	cout<<"4"<<endl;
 	CreateOperateOtherScriptTx(2);
 	GenerateMiner();
 	GetAccountInfo("010000000100");
-	GetAccountInfo("5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d");
+	GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
 
 }
 BOOST_AUTO_TEST_SUITE_END()

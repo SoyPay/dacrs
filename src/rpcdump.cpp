@@ -156,6 +156,7 @@ Value importwallet(const Array& params, bool fHelp)
 
     throw JSONRPCError(RPC_INVALID_PARAMETER, "todo work list");
 
+    ///todo work list
 //    EnsureWalletIsUnlocked();
 //
 //    ifstream file;

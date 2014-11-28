@@ -1376,7 +1376,10 @@ void static UpdateTip(CBlockIndex *pindexNew, const CBlock &block) {
       chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), log(chainActive.Tip()->nChainWork.getdouble())/log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
       DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
       Checkpoints::GuessVerificationProgress(chainActive.Tip()));
-
+    LogPrint("updatetip","UpdateTip: new best=%s  height=%d  log2_work=%.8g  tx=%lu  date=%s progress=%f\n",
+        chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), log(chainActive.Tip()->nChainWork.getdouble())/log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
+        DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
+        Checkpoints::GuessVerificationProgress(chainActive.Tip()));
     // Check the version of the last 100 blocks to see if we need to upgrade:
     if (!fIsInitialDownload)
     {
@@ -1759,16 +1762,40 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 	CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
 	vector<CBlock> vPreBlocks;
 	if (pPreBlockIndex->GetBlockHash() != chainActive.Tip()->GetBlockHash()) {
-		do {
+		while (!chainActive.Contains(pPreBlockIndex)){
 			CBlock block;
 			if (!ReadBlockFromDisk(block, pPreBlockIndex))
 				return state.Abort(_("Failed to read block"));
-			vPreBlocks.insert(vPreBlocks.begin(), block);
+			vPreBlocks.insert(vPreBlocks.begin(), block);   //将支链的block保存起来
 			pPreBlockIndex = pPreBlockIndex->pprev;
 			map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(pPreBlockIndex->GetBlockHash());
 			if (mi == mapBlockIndex.end())
 				return state.DoS(10, ERROR("AcceptBlock() : prev block not found"), 0, "bad-prevblk");
-		} while (!chainActive.Contains(pPreBlockIndex));
+		}//如果进来的preblock hash不为tip的hash,找到主链中分叉处
+
+		CBlockIndex *pBlockIndex = chainActive.Tip();
+		while (pPreBlockIndex != pBlockIndex) {       //数据库状态回滚到主链分叉处
+			CBlock block;
+			if (!ReadBlockFromDisk(block, pBlockIndex))
+				return state.Abort(_("Failed to read block"));
+			bool bfClean = true;
+			if (!DisconnectBlock(block, state, view, pBlockIndex, txCacheTemp, contractScriptTemp, &bfClean)) {
+				return ERROR("DisconnectTip() : DisconnectBlock %s failed", pBlockIndex->GetBlockHash().ToString());
+			}
+			pBlockIndex = pBlockIndex->pprev;
+		}
+
+		for (auto &item : vPreBlocks) {
+			if (!ConnectBlock(item, state, view, mapBlockIndex[item.GetHash()], txCacheTemp, contractScriptTemp, false))
+				return ERROR("ConnectTip() : ConnectBlock %s failed", item.GetHash().ToString());
+		}
+
+		uint64_t nInterest = 0;
+		if (!VerifyPosTx(mapBlockIndex[block.hashPrevBlock], view, &block, nInterest, txCacheTemp, contractScriptTemp, false)) {
+			return state.DoS(100,
+					ERROR("ConnectBlock() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
+					REJECT_INVALID, "bad-pos-tx");
+		}
 	} else {
 		uint64_t nInterest = 0;
 		if (!VerifyPosTx(pPreBlockIndex, view, &block, nInterest, txCacheTemp, contractScriptTemp, false)) {
@@ -1777,29 +1804,6 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 					REJECT_INVALID, "bad-pos-tx");
 		}
 		return true;
-	}
-
-	CBlockIndex *pBlockIndex = chainActive.Tip();
-	while (pPreBlockIndex != pBlockIndex) {
-		CBlock block;
-		if (!ReadBlockFromDisk(block, pBlockIndex))
-			return state.Abort(_("Failed to read block"));
-		bool bfClean = true;
-		if (!DisconnectBlock(block, state, view, pBlockIndex, txCacheTemp, contractScriptTemp, &bfClean)) {
-			return ERROR("DisconnectTip() : DisconnectBlock %s failed", pBlockIndex->GetBlockHash().ToString());
-		}
-		pBlockIndex = pBlockIndex->pprev;
-	}
-
-	for (auto &item : vPreBlocks) {
-		if (!ConnectBlock(item, state, view, mapBlockIndex[item.GetHash()], txCacheTemp, contractScriptTemp, false))
-			return ERROR("ConnectTip() : ConnectBlock %s failed", item.GetHash().ToString());
-	}
-
-	uint64_t nInterest = 0;
-	if (!VerifyPosTx(pPreBlockIndex, view, &block, nInterest, txCacheTemp, contractScriptTemp, false)) {
-		return state.DoS(100, ERROR("ConnectBlock() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
-				REJECT_INVALID, "bad-pos-tx");
 	}
 	return true;
 
@@ -1868,6 +1872,8 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 	AssertLockHeld(cs_main);
 	// Check for duplicate
 	uint256 hash = block.GetHash();
+	LogPrint("INFO", "AcceptBlcok hash:%s\n", hash.GetHex());
+	LogPrint("AcceptBlock", "AcceptBlcok hash:%s\n", hash.GetHex());
 	if (mapBlockIndex.count(hash))
 		return state.Invalid(ERROR("AcceptBlock() : block already in mapBlockIndex"), 0, "duplicate");
 
