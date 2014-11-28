@@ -26,6 +26,16 @@ using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
 
+Value getbalance(const Array& params, bool fHelp)
+{
+	if (fHelp || params.size() != 0)
+		throw runtime_error("getinfo\n"
+				"Returns an object containing various state info.\n"
+				"\nResult:\n");
+	 Object obj;
+    obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance(chainActive.Tip()->nHeight))));
+    return obj;
+}
 Value getinfo(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
