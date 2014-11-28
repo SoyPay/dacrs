@@ -289,120 +289,8 @@ Value getblock(const Array& params, bool fHelp)
     return blockToJSON(block, pblockindex);
 }
 
-Value gettxoutsetinfo(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 0)
-        throw runtime_error(
-            "gettxoutsetinfo\n"
-            "\nReturns statistics about the unspent transaction output set.\n"
-            "Note this call may take some time.\n"
-            "\nResult:\n"
-            "{\n"
-            "  \"height\":n,     (numeric) The current block height (index)\n"
-            "  \"bestblock\": \"hex\",   (string) the best block hash hex\n"
-            "  \"transactions\": n,      (numeric) The number of transactions\n"
-            "  \"txouts\": n,            (numeric) The number of output transactions\n"
-            "  \"bytes_serialized\": n,  (numeric) The serialized size\n"
-            "  \"hash_serialized\": \"hash\",   (string) The serialized hash\n"
-            "  \"total_amount\": x.xxx          (numeric) The total amount\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("gettxoutsetinfo", "")
-            + HelpExampleRpc("gettxoutsetinfo", "")
-        );
 
-    Object ret;
 
-//    CCoinsStats stats;
-//    if (pcoinsTip->GetStats(stats)) {
-//        ret.push_back(Pair("height", (int64_t)stats.nHeight));
-//        ret.push_back(Pair("bestblock", stats.hashBlock.GetHex()));
-//        ret.push_back(Pair("transactions", (int64_t)stats.nTransactions));
-//        ret.push_back(Pair("txouts", (int64_t)stats.nTransactionOutputs));
-//        ret.push_back(Pair("bytes_serialized", (int64_t)stats.nSerializedSize));
-//        ret.push_back(Pair("hash_serialized", stats.hashSerialized.GetHex()));
-//        ret.push_back(Pair("total_amount", ValueFromAmount(stats.nTotalAmount)));
-//    }
-    return ret;
-}
-
-Value gettxout(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() < 2 || params.size() > 3)
-        throw runtime_error(
-            "gettxout \"txid\" n ( includemempool )\n"
-            "\nReturns details about an unspent transaction output.\n"
-            "\nArguments:\n"
-            "1. \"txid\"       (string, required) The transaction id\n"
-            "2. n              (numeric, required) vout value\n"
-            "3. includemempool  (boolean, optional) Whether to included the mem pool\n"
-            "\nResult:\n"
-            "{\n"
-            "  \"bestblock\" : \"hash\",    (string) the block hash\n"
-            "  \"confirmations\" : n,       (numeric) The number of confirmations\n"
-            "  \"value\" : x.xxx,           (numeric) The transaction value in btc\n"
-            "  \"scriptPubKey\" : {         (json object)\n"
-            "     \"asm\" : \"code\",       (string) \n"
-            "     \"hex\" : \"hex\",        (string) \n"
-            "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
-            "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
-            "     \"addresses\" : [          (array of string) array of soypay addresses\n"
-            "        \"bitcoinaddress\"     (string) soypay address\n"
-            "        ,...\n"
-            "     ]\n"
-            "  },\n"
-            "  \"version\" : n,            (numeric) The version\n"
-            "  \"coinbase\" : true|false   (boolean) Coinbase or not\n"
-            "}\n"
-
-            "\nExamples:\n"
-            "\nGet unspent transactions\n"
-            + HelpExampleCli("listunspent", "") +
-            "\nView the details\n"
-            + HelpExampleCli("gettxout", "\"txid\" 1") +
-            "\nAs a json rpc call\n"
-            + HelpExampleRpc("gettxout", "\"txid\", 1")
-        );
-
-    Object ret;
-
-    std::string strHash = params[0].get_str();
-    uint256 hash(strHash);
-    int n = params[1].get_int();
-    bool fMempool = true;
-    if (params.size() > 2)
-        fMempool = params[2].get_bool();
-
-//    CCoins coins;
-//    if (fMempool) {
-//        LOCK(mempool.cs);
-//        CCoinsViewMemPool view(*pcoinsTip, mempool);
-//        if (!view.GetCoins(hash, coins))
-//            return Value::null;
-//        mempool.pruneSpent(hash, coins); // TODO: this should be done by the CCoinsViewMemPool
-//    } else {
-//        if (!pcoinsTip->GetCoins(hash, coins))
-//            return Value::null;
-//    }
-//    if (n<0 || (unsigned int)n>=coins.vout.size() || coins.vout[n].IsNull())
-//        return Value::null;
-
-//    std::map<uint256, CBlockIndex*>::iterator it = mapBlockIndex.find(pcoinsTip->GetBestBlock());
-//    CBlockIndex *pindex = it->second;
-//    ret.push_back(Pair("bestblock", pindex->GetBlockHash().GetHex()));
-//    if ((unsigned int)coins.nHeight == MEMPOOL_HEIGHT)
-//        ret.push_back(Pair("confirmations", 0));
-//    else
-//        ret.push_back(Pair("confirmations", pindex->nHeight - coins.nHeight + 1));
-//    ret.push_back(Pair("value", ValueFromAmount(coins.vout[n].nValue)));
-//    Object o;
-//    ScriptPubKeyToJSON(coins.vout[n].scriptPubKey, o, true);
-//    ret.push_back(Pair("scriptPubKey", o));
-//    ret.push_back(Pair("version", coins.nVersion));
-//    ret.push_back(Pair("coinbase", coins.fCoinBase));
-
-    return ret;
-}
 
 Value verifychain(const Array& params, bool fHelp)
 {
@@ -420,8 +308,8 @@ Value verifychain(const Array& params, bool fHelp)
             + HelpExampleRpc("verifychain", "")
         );
 
-    int nCheckLevel = GetArg("-checklevel", 3);
-    int nCheckDepth = GetArg("-checkblocks", 288);
+    int nCheckLevel = CBaseParams::GetArg("-checklevel", 3);
+    int nCheckDepth = CBaseParams::GetArg("-checkblocks", 288);
     if (params.size() > 0)
         nCheckLevel = params[0].get_int();
     if (params.size() > 1)
@@ -454,7 +342,7 @@ Value getblockchaininfo(const Array& params, bool fHelp)
     GetProxy(NET_IPV4, proxy);
 
     Object obj;
-    std::string chain = Params().DataDir();
+    std::string chain = SysParams().DataDir();
     if(chain.empty())
         chain = "main";
     obj.push_back(Pair("chain",         chain));

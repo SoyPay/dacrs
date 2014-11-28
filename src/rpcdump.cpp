@@ -15,6 +15,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "json/json_spirit_value.h"
+#include "json/json_spirit_writer_template.h"
+
+
 
 using namespace json_spirit;
 using namespace std;
@@ -111,26 +114,27 @@ Value importprivkey(const Array& params, bool fHelp)
         LOCK2(cs_main, pwalletMain->cs_wallet);
 
 //        pwalletMain->MarkDirty();
-        pwalletMain->SetAddressBook(vchAddress, strLabel, "receive");
+
 
         // Don't throw error in case a key is already there
-        if (pwalletMain->HaveKey(vchAddress))
-            return Value::null;
+        if (pwalletMain->count(vchAddress))
+        	throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key is in the wallet");;
 
-        pwalletMain->mapKeyMetadata[vchAddress].nCreateTime = 1;
+//        pwalletMain->mapKeyMetadata[vchAddress].nCreateTime = 1;
 
-        if (!pwalletMain->AddKeyPubKey(key, pubkey))
+        if (!pwalletMain->AddKey(key))
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
 
         // whenever a key is imported, we need to scan the whole chain
-        pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
+//        pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
 
+        pwalletMain->UpdataRegId(vchAddress,*pAccountViewTip);
         if (fRescan) {
             pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
         }
     }
 
-    return Value::null;
+    return "OK";
 }
 
 Value importwallet(const Array& params, bool fHelp)
@@ -150,85 +154,89 @@ Value importwallet(const Array& params, bool fHelp)
             + HelpExampleRpc("importwallet", "\"test\"")
         );
 
-    EnsureWalletIsUnlocked();
+    throw JSONRPCError(RPC_INVALID_PARAMETER, "todo work list");
 
-    ifstream file;
-    file.open(params[0].get_str().c_str(), ios::in | ios::ate);
-    if (!file.is_open())
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
-
-    int64_t nTimeBegin = chainActive.Tip()->nTime;
-
-    bool fGood = true;
-
-    int64_t nFilesize = max((int64_t)1, (int64_t)file.tellg());
-    file.seekg(0, file.beg);
-
-    pwalletMain->ShowProgress(_("Importing..."), 0); // show progress dialog in GUI
-    while (file.good()) {
-        pwalletMain->ShowProgress("", max(1, min(99, (int)(((double)file.tellg() / (double)nFilesize) * 100))));
-        string line;
-        getline(file, line);
-        if (line.empty() || line[0] == '#')
-            continue;
-
-        vector<string> vstr;
-        boost::split(vstr, line, boost::is_any_of(" "));
-        if (vstr.size() < 2)
-            continue;
-        CBitcoinSecret vchSecret;
-        if (!vchSecret.SetString(vstr[0]))
-            continue;
-        CKey key = vchSecret.GetKey();
-        CPubKey pubkey = key.GetPubKey();
-        CKeyID keyid = pubkey.GetID();
-        if (pwalletMain->HaveKey(keyid)) {
-            LogPrint("INFO","Skipping import of %s (key already present)\n", CBitcoinAddress(keyid).ToString());
-            continue;
-        }
-        int64_t nTime = DecodeDumpTime(vstr[1]);
-        string strLabel;
-        bool fLabel = true;
-        for (unsigned int nStr = 2; nStr < vstr.size(); nStr++) {
-            if (boost::algorithm::starts_with(vstr[nStr], "#"))
-                break;
-            if (vstr[nStr] == "change=1")
-                fLabel = false;
-            if (vstr[nStr] == "reserve=1")
-                fLabel = false;
-            if (boost::algorithm::starts_with(vstr[nStr], "label=")) {
-                strLabel = DecodeDumpString(vstr[nStr].substr(6));
-                fLabel = true;
-            }
-        }
-        LogPrint("INFO","Importing %s...\n", CBitcoinAddress(keyid).ToString());
-        if (!pwalletMain->AddKeyPubKey(key, pubkey)) {
-            fGood = false;
-            continue;
-        }
-        pwalletMain->mapKeyMetadata[keyid].nCreateTime = nTime;
-        if (fLabel)
-            pwalletMain->SetAddressBook(keyid, strLabel, "receive");
-        nTimeBegin = min(nTimeBegin, nTime);
-    }
-    file.close();
-    pwalletMain->ShowProgress("", 100); // hide progress dialog in GUI
-
-    CBlockIndex *pindex = chainActive.Tip();
-    while (pindex && pindex->pprev && pindex->nTime > nTimeBegin - 7200)
-        pindex = pindex->pprev;
-
-    if (!pwalletMain->nTimeFirstKey || nTimeBegin < pwalletMain->nTimeFirstKey)
-        pwalletMain->nTimeFirstKey = nTimeBegin;
-
-    LogPrint("INFO","Rescanning last %i blocks\n", chainActive.Height() - pindex->nHeight + 1);
-    pwalletMain->ScanForWalletTransactions(pindex);
-//    pwalletMain->MarkDirty();
-
-    if (!fGood)
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys to wallet");
-
-    return Value::null;
+//    EnsureWalletIsUnlocked();
+//
+//    ifstream file;
+//    file.open(params[0].get_str().c_str(), ios::in | ios::ate);
+//    if (!file.is_open())
+//        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
+//
+//    int64_t nTimeBegin = chainActive.Tip()->nTime;
+//
+//    bool fGood = true;
+//
+//    int64_t nFilesize = max((int64_t)1, (int64_t)file.tellg());
+//    file.seekg(0, file.beg);
+//
+//    pwalletMain->ShowProgress(_("Importing..."), 0); // show progress dialog in GUI
+//    while (file.good()) {
+//        pwalletMain->ShowProgress("", max(1, min(99, (int)(((double)file.tellg() / (double)nFilesize) * 100))));
+//        string line;
+//        getline(file, line);
+//        if (line.empty() || line[0] == '#')
+//            continue;
+//
+//        vector<string> vstr;
+//        boost::split(vstr, line, boost::is_any_of(" "));
+//        if (vstr.size() < 2)
+//            continue;
+//        CBitcoinSecret vchSecret;
+//        if (!vchSecret.SetString(vstr[0]))
+//            continue;
+//        CKey key = vchSecret.GetKey();
+//        CPubKey pubkey = key.GetPubKey();
+//        CKeyID keyid = pubkey.GetID();
+////        if (pwalletMain->HaveKey(keyid)) {
+////            LogPrint("INFO","Skipping import of %s (key already present)\n", CBitcoinAddress(keyid).ToString());
+////            continue;
+////        }
+//        assert(0);
+//        int64_t nTime = DecodeDumpTime(vstr[1]);
+//        string strLabel;
+//        bool fLabel = true;
+//        for (unsigned int nStr = 2; nStr < vstr.size(); nStr++) {
+//            if (boost::algorithm::starts_with(vstr[nStr], "#"))
+//                break;
+//            if (vstr[nStr] == "change=1")
+//                fLabel = false;
+//            if (vstr[nStr] == "reserve=1")
+//                fLabel = false;
+//            if (boost::algorithm::starts_with(vstr[nStr], "label=")) {
+//                strLabel = DecodeDumpString(vstr[nStr].substr(6));
+//                fLabel = true;
+//            }
+//        }
+//        LogPrint("INFO","Importing %s...\n", CBitcoinAddress(keyid).ToString());
+//        if (!pwalletMain->AddKey(key)) {
+//            fGood = false;
+//            continue;
+//        }
+////        pwalletMain->mapKeyMetadata[keyid].nCreateTime = nTime;
+////        if (fLabel)
+////            pwalletMain->SetAddressBook(keyid, strLabel, "receive");
+////        nTimeBegin = min(nTimeBegin, nTime);
+//    }
+//    file.close();
+//    pwalletMain->ShowProgress("", 100); // hide progress dialog in GUI
+//
+//    CBlockIndex *pindex = chainActive.Tip();
+//    while (pindex && pindex->pprev && pindex->nTime > nTimeBegin - 7200)
+//        pindex = pindex->pprev;
+//
+////    if (!pwalletMain->nTimeFirstKey || nTimeBegin < pwalletMain->nTimeFirstKey)
+////        pwalletMain->nTimeFirstKey = nTimeBegin;
+//
+//    LogPrint("INFO","Rescanning last %i blocks\n", chainActive.Height() - pindex->nHeight + 1);
+//    pwalletMain->ScanForWalletTransactions(pindex);
+//
+////    pwalletMain->MarkDirty();
+//
+//    if (!fGood)
+//        throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys to wallet");
+//
+//    return Value::null;
 }
 
 Value dumpprivkey(const Array& params, bool fHelp)
@@ -264,62 +272,35 @@ Value dumpprivkey(const Array& params, bool fHelp)
 }
 
 
-Value dumpwallet(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 1)
-        throw runtime_error(
-            "dumpwallet \"filename\"\n"
-            "\nDumps all wallet keys in a human-readable format.\n"
-            "\nArguments:\n"
-            "1. \"filename\"    (string, required) The filename\n"
-            "\nExamples:\n"
-            + HelpExampleCli("dumpwallet", "\"test\"")
-            + HelpExampleRpc("dumpwallet", "\"test\"")
-        );
 
-    EnsureWalletIsUnlocked();
+Value dumpwallet(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 1)
+		throw runtime_error("dumpwallet \"filename\"\n"
+				"\nDumps all wallet keys in a human-readable format.\n"
+				"\nArguments:\n"
+				"1. \"filename\"    (string, required) The filename\n"
+				"\nExamples:\n" + HelpExampleCli("dumpwallet", "\"test\"") + HelpExampleRpc("dumpwallet", "\"test\""));
 
-    ofstream file;
-    file.open(params[0].get_str().c_str());
-    if (!file.is_open())
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
+	EnsureWalletIsUnlocked();
 
-    map<CKeyID, int64_t> mapKeyBirth;
-    set<CKeyID> setKeyPool;
-    pwalletMain->GetKeyBirthTimes(mapKeyBirth);
-    pwalletMain->GetAllReserveKeys(setKeyPool);
+	ofstream file;
+	file.open(params[0].get_str().c_str());
+	if (!file.is_open())
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 
-    // sort time/key pairs
-    vector<pair<int64_t, CKeyID> > vKeyBirth;
-    for (map<CKeyID, int64_t>::const_iterator it = mapKeyBirth.begin(); it != mapKeyBirth.end(); it++) {
-        vKeyBirth.push_back(make_pair(it->second, it->first));
-    }
-    mapKeyBirth.clear();
-    sort(vKeyBirth.begin(), vKeyBirth.end());
+	Object reply;
+	reply.push_back(Pair("created by Soypay", CLIENT_BUILD + CLIENT_DATE));
+	reply.push_back(Pair("Created Time ", EncodeDumpTime(GetTime())));
+	reply.push_back(Pair("Best block index hight ", chainActive.Height()));
+	reply.push_back(Pair("Best block hash ", chainActive.Tip()->GetBlockHash().ToString()));
 
-    // produce output
-    file << strprintf("# Wallet dump created by Soypay %s (%s)\n", CLIENT_BUILD, CLIENT_DATE);
-    file << strprintf("# * Created on %s\n", EncodeDumpTime(GetTime()));
-    file << strprintf("# * Best block at time of backup was %i (%s),\n", chainActive.Height(), chainActive.Tip()->GetBlockHash().ToString());
-    file << strprintf("#   mined on %s\n", EncodeDumpTime(chainActive.Tip()->nTime));
-    file << "\n";
-    for (vector<pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
-        const CKeyID &keyid = it->second;
-        string strTime = EncodeDumpTime(it->first);
-        string strAddr = CBitcoinAddress(keyid).ToString();
-        CKey key;
-        if (pwalletMain->GetKey(keyid, key)) {
-            if (pwalletMain->mapAddressBook.count(keyid)) {
-                file << strprintf("%s %s label=%s # addr=%s\n", CBitcoinSecret(key).ToString(), strTime, EncodeDumpString(pwalletMain->mapAddressBook[keyid].name), strAddr);
-            } else if (setKeyPool.count(keyid)) {
-                file << strprintf("%s %s reserve=1 # addr=%s\n", CBitcoinSecret(key).ToString(), strTime, strAddr);
-            } else {
-                file << strprintf("%s %s change=1 # addr=%s\n", CBitcoinSecret(key).ToString(), strTime, strAddr);
-            }
-        }
-    }
-    file << "\n";
-    file << "# End of dump\n";
-    file.close();
-    return Value::null;
+	map<CKeyID, CKeyStoreValue> tepmKeyPool = pwalletMain->GetKeyPool();
+	int index = 0;
+	for (auto &te : tepmKeyPool) {
+		reply.push_back(Pair(strprintf("index%d",index++), te.second.ToString()));
+	}
+	file <<  write_string(Value(reply), true);
+
+	file.close();
+	return "dump OK";
 }

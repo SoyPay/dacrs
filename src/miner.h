@@ -19,8 +19,8 @@
 class CBlock;
 class CBlockIndex;
 struct CBlockTemplate;
-class CReserveKey;
-class CScript;
+//class CReserveKey;
+//class CScript;
 class CWallet;
 class CBaseTransaction;
 class COrphan;

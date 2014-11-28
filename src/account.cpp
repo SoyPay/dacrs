@@ -217,16 +217,20 @@ bool CAccountViewCache::SaveAccountInfo(const CRegID &regid, const CKeyID &keyId
 	return true;
 }
 bool CAccountViewCache::GetAccount(const CUserID &userId, CAccount &account) {
-	if(userId.type() == typeid(CRegID)) {
-		return GetAccount(boost::get<CRegID>(userId).GetRegID(), account);
-	}else if(userId.type() == typeid(CKeyID)) {
-		return GetAccount(boost::get<CKeyID>(userId), account);
-	}else if(userId.type() == typeid(CPubKey)) {
-		return GetAccount(boost::get<CPubKey>(userId).GetID(), account);
+	bool ret = false;
+	if (userId.type() == typeid(CRegID)) {
+		ret = GetAccount(boost::get<CRegID>(userId).GetRegID(), account);
+		if(ret) assert(boost::get<CRegID>(userId) == account.regID);
+	} else if (userId.type() == typeid(CKeyID)) {
+		ret = GetAccount(boost::get<CKeyID>(userId), account);
+		if(ret) assert(boost::get<CKeyID>(userId) == account.keyID);
+	} else if (userId.type() == typeid(CPubKey)) {
+		ret = GetAccount(boost::get<CPubKey>(userId).GetID(), account);
+		if(ret) assert((boost::get<CPubKey>(userId)).GetID() == account.keyID);
 	} else {
 		assert(0);
 	}
-	return false;
+	return ret;
 }
 bool CAccountViewCache::GetKeyId(const CUserID &userId, CKeyID &keyId) {
 	if (userId.type() == typeid(CRegID)) {
@@ -234,6 +238,8 @@ bool CAccountViewCache::GetKeyId(const CUserID &userId, CKeyID &keyId) {
 	} else if (userId.type() == typeid(CPubKey)) {
 		keyId = boost::get<CPubKey>(userId).GetID();
 		return true;
+	} else {
+		assert(0);
 	}
 	return false;
 }
@@ -291,14 +297,26 @@ bool CAccountViewCache::Flush(){
 	 return fOk;
 }
 
-bool CAccountViewCache::GetRegId(const CUserID& userId, CRegID& regId) {
+bool CAccountViewCache::GetRegId(const CUserID& userId, CRegID& regId) const{
+
+	CAccountViewCache tempView(*this);
 	CAccount account;
-	if(GetAccount(userId,account))
+	if(tempView.GetAccount(userId,account))
 	{
 		regId =  account.regID;
-		return regId.IsEmpty();
+		return !regId.IsEmpty();
 	}
 	return false;
+}
+
+int64_t CAccountViewCache::GetBalance(const CUserID& userId,int curhigh) const {
+	CAccountViewCache tempvew(*this);
+	CAccount account;
+	if(tempvew.GetAccount(userId,account))
+	{
+		return  account.GetBalance(curhigh);
+	}
+	return 0;
 }
 
 unsigned int CAccountViewCache::GetCacheSize(){
