@@ -264,7 +264,7 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
     for (auto& strAddNode : laddedNodes)
     {
         vector<CService> vservNode(0);
-        if(Lookup(strAddNode.c_str(), vservNode, Params().GetDefaultPort(), fNameLookup, 0))
+        if(Lookup(strAddNode.c_str(), vservNode, SysParams().GetDefaultPort(), fNameLookup, 0))
             laddedAddreses.push_back(make_pair(strAddNode, vservNode));
         else
         {
@@ -372,7 +372,7 @@ Value getnetworkinfo(const Array& params, bool fHelp)
     Array localAddresses;
     {
         LOCK(cs_mapLocalHost);
-        BOOST_FOREACH(const PAIRTYPE(CNetAddr, LocalServiceInfo) &item, mapLocalHost)
+        for(const auto &item: mapLocalHost)
         {
             Object rec;
             rec.push_back(Pair("address", item.first.ToString()));

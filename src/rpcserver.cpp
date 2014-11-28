@@ -246,15 +246,12 @@ static const CRPCCommand vRPCCommands[] =
     { "getblockhash",           &getblockhash,           false,     false,      false },
     { "getdifficulty",          &getdifficulty,          true,      false,      false },
     { "getrawmempool",          &getrawmempool,          true,      false,      false },
-    { "gettxout",               &gettxout,               true,      false,      false },
-    { "gettxoutsetinfo",        &gettxoutsetinfo,        true,      false,      false },
+
     { "verifychain",            &verifychain,            true,      false,      false },
 
     /* Mining */
-    { "getblocktemplate",       &getblocktemplate,       true,      false,      false },
     { "getmininginfo",          &getmininginfo,          true,      false,      false },
     { "getnetworkhashps",       &getnetworkhashps,       true,      false,      false },
-    { "submitblock",            &submitblock,            false,     false,      false },
 
     /* Raw transactions */
  //   { "createrawtransaction",   &createrawtransaction,   false,     false,      false },
@@ -264,20 +261,15 @@ static const CRPCCommand vRPCCommands[] =
  //   { "sendrawtransaction",     &sendrawtransaction,     false,     false,      false },
  //   { "signrawtransaction",     &signrawtransaction,     false,     false,      false }, /* uses wallet if enabled */
 
-    /* Utility functions */
-//    { "createmultisig",         &createmultisig,         true,      true ,      false },
-    { "validateaddress",        &validateaddress,        true,      false,      false }, /* uses wallet if enabled */
+
     { "verifymessage",          &verifymessage,          false,     false,      false },
 
-#ifdef ENABLE_WALLET
     /* Wallet */
     //vaild rpc cmd
     { "backupwallet",           &backupwallet,           true,      false,      true },
     { "dumpprivkey",            &dumpprivkey,            true,      false,      true },
     { "dumpwallet",             &dumpwallet,             true,      false,      true },
     { "encryptwallet",          &encryptwallet,          false,     false,      true },
-    { "getaccount",             &getaccount,             false,     false,      true },
-    { "getaddressesbyaccount",  &getaddressesbyaccount,  true,      false,      true },
     { "getaccountinfo",         &getaccountinfo,         true,      false,      true },
     { "getnewaddress",          &getnewaddress,          true,      false,      true },
     { "gettxdetail",            &gettxdetail,       	 true,      false,      true },
@@ -286,10 +278,10 @@ static const CRPCCommand vRPCCommands[] =
     { "importprivkey",          &importprivkey,          false,     false,      true },
     { "importwallet",           &importwallet,           false,     false,      true },
     { "listaddr",               &listaddr,       	     true,      false,      true },
-    { "listaddrtx",             &listaddrtx,       	     true,      false,      true },
-    { "registeraccounttx",      &registeraccounttx,       true,      false,      true },
+    { "listtx",                 &listtx,       	         true,      false,      true },
+    { "registeraccounttx",      &registeraccounttx,      true,      false,      true },
 	{ "createnormaltx",         &createnormaltx,       	 true,      false,      true },
-	{ "createcontracttx",       &createcontracttx,       	 true,      false,      true },
+	{ "createcontracttx",       &createcontracttx,        true,      false,      true },
 	{ "signcontracttx",         &signcontracttx,       	 true,      false,      true },
 	{ "createfreezetx",         &createfreezetx,       	 true,      false,      true },
 	{ "registerscripttx",       &registerscripttx,       true,      false,      true },
@@ -299,11 +291,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "walletpassphrase",       &walletpassphrase,       true,      false,      true },
 	{ "getgenerate",            &getgenerate,            true,      false,     false },
 	{ "gethashespersec",        &gethashespersec,        true,      false,     false },
-	{ "getwork",                &getwork,                true,      false,     true  },
 	{ "setgenerate",            &setgenerate,            true,      true,      false },
-	{ "listregid",        		&listregid,        		 true,      false,      true },
-	{ "getaddramount",          &getaddramount,       	 true,      false,      true },
-	{ "getoneaddr",          	&getoneaddr,          	 true,      false,      true },
 	{ "listregscript",          &listregscript,          true,      false,      true },
 	{ "generateblock",          &generateblock, 		 true,      false,      true },
 	{"getpublickey",            &getpublickey,           true,      false,      true },
@@ -312,37 +300,11 @@ static const CRPCCommand vRPCCommands[] =
 	{ "getscriptdata",          &getscriptdata,          true,      false,      true },
 	{ "signmessage",            &signmessage,            false,     false,      true },
 	{ "sendtoaddress",          &sendtoaddress,          false,     false,      true },
-    //invaild rpc cmd
-//    { "addmultisigaddress",     &addmultisigaddress,     false,     false,      true },
-//    { "getbalance",             &getbalance,             false,     false,      true },
-//    { "getrawchangeaddress",    &getrawchangeaddress,    true,      false,      true },
-//    { "getreceivedbyaccount",   &getreceivedbyaccount,   false,     false,      true },
-//    { "getreceivedbyaddress",   &getreceivedbyaddress,   false,     false,      true },
-//    { "gettransaction",         &gettransaction,         false,     false,      true },
-//    { "getunconfirmedbalance",  &getunconfirmedbalance,  false,     false,      true },
-//    { "keypoolrefill",          &keypoolrefill,          true,      false,      true },
-//    { "listaccounts",           &listaccounts,           false,     false,      true },
-//    { "listaddressgroupings",   &listaddressgroupings,   false,     false,      true },
-//    { "listlockunspent",        &listlockunspent,        false,     false,      true },
-//    { "listreceivedbyaccount",  &listreceivedbyaccount,  false,     false,      true },
-//    { "listreceivedbyaddress",  &listreceivedbyaddress,  false,     false,      true },
-//    { "listsinceblock",         &listsinceblock,         false,     false,      true },
-//    { "listtransactions",       &listtransactions,       false,     false,      true },
-//    { "listunspent",            &listunspent,            false,     false,      true },
-//    { "lockunspent",            &lockunspent,            false,     false,      true },
-//    { "move",                   &movecmd,                false,     false,      true },
-//    { "sendfrom",               &sendfrom,               false,     false,      true },
-//    { "sendmany",               &sendmany,               false,     false,      true },
-//    { "sendtoaddress",          &sendtoaddress,          false,     false,      true },
-//	  { "setaccount",             &setaccount,             true,      false,      true },
-//    { "createsecuretx",         &createsecuretx,       	 true,      false,      true },
-//    { "signsecuretx",           &signsecuretx,       	 true,      false,      true },
-//	  { "testnormaltx",         	&testnormaltx,         	 true,      false,      true },
-//	  { "testminer",         		&testminer,         	 true,      false,      true },
-//	  { "getaccountaddress",      &getaccountaddress,      true,      false,      true },
-#endif // ENABLE_WALLET
+    { "getbalance",             &getbalance,             false,     false,      true },
+
+
 //for test code
-	{ "gettxoperationlog",        &gettxoperationlog,        false,      false,      false },
+	{ "gettxoperationlog",      &gettxoperationlog,        false,      false,      false },
     { "disconnectblock",        &disconnectblock,        true,      false,      true },
     { "reloadtxcache",          &reloadtxcache,          true,      false,      true },
 };
@@ -405,7 +367,7 @@ bool ClientAllowed(const boost::asio::ip::address& address)
         return true;
 
     const string strAddress = address.to_string();
-    const vector<string>& vAllow = mapMultiArgs["-rpcallowip"];
+    const vector<string>& vAllow = CBaseParams::GetMultiArgs("-rpcallowip");
     for (auto strAllow : vAllow)
         if (WildcardMatch(strAddress, strAllow))
             return true;
@@ -531,16 +493,16 @@ static void RPCAcceptHandler(std::shared_ptr< basic_socket_acceptor<Protocol, So
 
 void StartRPCThreads()
 {
-    strRPCUserColonPass = mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"];
-    if (((mapArgs["-rpcpassword"] == "") ||
-         (mapArgs["-rpcuser"] == mapArgs["-rpcpassword"])) && Params().RequireRPCPassword())
+    strRPCUserColonPass = CBaseParams::GetArg("-rpcuser", "") + ":" + CBaseParams::GetArg("-rpcpassword", "");
+    if (((CBaseParams::GetArg("-rpcpassword", "") == "") ||
+         (CBaseParams::GetArg("-rpcuser", "") == CBaseParams::GetArg("-rpcpassword", ""))) && SysParams().RequireRPCPassword())
     {
         unsigned char rand_pwd[32];
         RAND_bytes(rand_pwd, 32);
         string strWhatAmI = "To use bitcoind";
-        if (mapArgs.count("-server"))
+        if (CBaseParams::IsArgCount("-server"))
             strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
-        else if (mapArgs.count("-daemon"))
+        else if (CBaseParams::IsArgCount("-daemon"))
             strWhatAmI = strprintf(_("To use the %s option"), "\"-daemon\"");
         uiInterface.ThreadSafeMessageBox(strprintf(
             _("%s, you must set a rpcpassword in the configuration file:\n"
@@ -565,30 +527,30 @@ void StartRPCThreads()
     rpc_io_service = new asio::io_service();
     rpc_ssl_context = new ssl::context(*rpc_io_service, ssl::context::sslv23);
 
-    const bool fUseSSL = GetBoolArg("-rpcssl", false);
+    const bool fUseSSL = CBaseParams::GetBoolArg("-rpcssl", false);
 
     if (fUseSSL)
     {
         rpc_ssl_context->set_options(ssl::context::no_sslv2);
 
-        filesystem::path pathCertFile(GetArg("-rpcsslcertificatechainfile", "server.cert"));
+        filesystem::path pathCertFile(CBaseParams::GetArg("-rpcsslcertificatechainfile", "server.cert"));
         if (!pathCertFile.is_complete()) pathCertFile = filesystem::path(GetDataDir()) / pathCertFile;
         if (filesystem::exists(pathCertFile)) rpc_ssl_context->use_certificate_chain_file(pathCertFile.string());
         else LogPrint("INFO","ThreadRPCServer ERROR: missing server certificate file %s\n", pathCertFile.string());
 
-        filesystem::path pathPKFile(GetArg("-rpcsslprivatekeyfile", "server.pem"));
+        filesystem::path pathPKFile(CBaseParams::GetArg("-rpcsslprivatekeyfile", "server.pem"));
         if (!pathPKFile.is_complete()) pathPKFile = filesystem::path(GetDataDir()) / pathPKFile;
         if (filesystem::exists(pathPKFile)) rpc_ssl_context->use_private_key_file(pathPKFile.string(), ssl::context::pem);
         else LogPrint("INFO","ThreadRPCServer ERROR: missing server private key file %s\n", pathPKFile.string());
 
-        string strCiphers = GetArg("-rpcsslciphers", "TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH");
+        string strCiphers = CBaseParams::GetArg("-rpcsslciphers", "TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH");
         SSL_CTX_set_cipher_list(rpc_ssl_context->impl(), strCiphers.c_str());
     }
 
     // Try a dual IPv6/IPv4 socket, falling back to separate IPv4 and IPv6 sockets
-    const bool loopback = !mapArgs.count("-rpcallowip");
+    const bool loopback = !CBaseParams::IsArgCount("-rpcallowip");
     asio::ip::address bindAddress = loopback ? asio::ip::address_v6::loopback() : asio::ip::address_v6::any();
-    ip::tcp::endpoint endpoint(bindAddress, GetArg("-rpcport", Params().RPCPort()));
+    ip::tcp::endpoint endpoint(bindAddress, CBaseParams::GetArg("-rpcport", SysParams().RPCPort()));
     boost::system::error_code v6_only_error;
 
     bool fListening = false;
@@ -645,7 +607,8 @@ void StartRPCThreads()
     }
 
     rpc_worker_group = new boost::thread_group();
-    for (int i = 0; i < GetArg("-rpcthreads", 4); i++)
+    int total = CBaseParams::GetArg("-rpcthreads", 4);
+    for (int i = 0; i < total; i++)
         rpc_worker_group->create_thread(boost::bind(&asio::io_service::run, rpc_io_service));
 }
 
@@ -821,7 +784,7 @@ void ServiceConnection(AcceptedConnection *conn)
             /* Deter brute-forcing short passwords.
                If this results in a DoS the user really
                shouldn't have their RPC port exposed. */
-            if (mapArgs["-rpcpassword"].size() < 20)
+            if (CBaseParams::GetArg("-rpcpassword", "").size() < 20)
                 MilliSleep(250);
 
             conn->stream() << HTTPReply(HTTP_UNAUTHORIZED, "", false) << flush;
@@ -883,7 +846,7 @@ json_spirit::Value CRPCTable::execute(const string &strMethod, const json_spirit
 
     // Observe safe mode
     string strWarning = GetWarnings("rpc");
-    if (strWarning != "" && !GetBoolArg("-disablesafemode", false) &&
+    if (strWarning != "" && !CBaseParams::GetBoolArg("-disablesafemode", false) &&
         !pcmd->okSafeMode)
         throw JSONRPCError(RPC_FORBIDDEN_BY_SAFE_MODE, string("Safe mode: ") + strWarning);
 
@@ -894,7 +857,7 @@ json_spirit::Value CRPCTable::execute(const string &strMethod, const json_spirit
         {
             if (pcmd->threadSafe)
                 result = pcmd->actor(params, false);
-#ifdef ENABLE_WALLET
+
             else if (!pwalletMain) {
                 LOCK(cs_main);
                 result = pcmd->actor(params, false);
@@ -902,12 +865,6 @@ json_spirit::Value CRPCTable::execute(const string &strMethod, const json_spirit
                 LOCK2(cs_main, pwalletMain->cs_wallet);
                 result = pcmd->actor(params, false);
             }
-#else // ENABLE_WALLET
-            else {
-                LOCK(cs_main);
-                result = pcmd->actor(params, false);
-            }
-#endif // !ENABLE_WALLET
         }
         return result;
     }
