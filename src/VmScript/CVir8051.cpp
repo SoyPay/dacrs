@@ -663,18 +663,30 @@ static RET_DEFINE ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScri
 	return std::make_tuple (flag , tem);
 }
 static RET_DEFINE ExGetTxConFirmHeightFunc(unsigned char * ipara,void * pVmScriptRun) {
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 1);
 
-	unsigned char *txhash = NULL;
-	GetParaData(pbuffer, txhash, length);
-	vector<unsigned char> hash(txhash, txhash + length);
-	uint256 phash(hash);
+	uint256 hash1(*retdata.at(0));
+	//cout<<"ExGetTxContractsFunc1:"<<hash1.GetHex()<<endl;
+	LogPrint("vm","ExGetTxContractsFunc1:%s",hash1.GetHex().c_str());
+
+
+	std::shared_ptr<CBaseTransaction> pBaseTx;
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+	int nHeight = GetTxComfirmHigh(hash1);
+	if(-1 == nHeight)
+	{
+		std::make_tuple (false, tem);
+	}
 
-	return std::make_tuple (true , tem);
+   CDataStream tep(SER_DISK, CLIENT_VERSION);
+	tep << nHeight;
+	vector<unsigned char> tep1(tep.begin(),tep.end());
+	(*tem.get()).push_back(tep1);
+
+	return std::make_tuple (true, tem);
 
 }
 static RET_DEFINE ExGetTipHeightFunc(unsigned char * ipara,void * pVmScriptRun) {
