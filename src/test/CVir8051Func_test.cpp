@@ -2780,7 +2780,7 @@ BOOST_AUTO_TEST_CASE(scriptfun)
 		CKeyID keyId1 = (CKeyID) hash;
 		sourceAccount.keyID = keyId1;
 		sourceAccount.llValues = 100;
-		account.push_back(accountId.GetRegID());
+		account.push_back(accountId.GetVec6());
 
 
 		vector<vector_unsigned_char> strContract;

@@ -154,7 +154,7 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 			CRegID regId(accountid);
 			CContractTransaction* secure = static_cast<CContractTransaction*>(listTx.get());
 			/// current tx's script cant't mius other script's regid
-			if(m_ScriptDBTip->HaveScript(regId) && regId.GetRegID() != boost::get<CRegID>(secure->scriptRegId).GetRegID())
+			if(m_ScriptDBTip->HaveScript(regId) && regId.GetVec6() != boost::get<CRegID>(secure->scriptRegId).GetVec6())
 			{
 				return false;
 			}
@@ -188,7 +188,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		CFund fund;
 		memcpy(&fund.value,it.money,sizeof(it.money));
 		fund.nHeight = it.outheight + height;
-		fund.scriptID = boost::get<CRegID>(tx->scriptRegId).GetRegID();
+		fund.scriptID = boost::get<CRegID>(tx->scriptRegId).GetVec6();
 
 		auto tem = make_shared<CAccount>();
 //		vector_unsigned_char accountid = GetAccountID(it);
