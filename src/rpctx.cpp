@@ -40,7 +40,7 @@ string RegIDToAddress(CUserID &userId) {
 		CID id(userId);
 		return HexStr(id.GetID());
 	}
-	return CBitcoinAddress(acct.keyID).ToString();
+	return CSoyPayAddress(acct.keyID).ToString();
 }
 
 Object TxToJSON(CBaseTransaction *pTx) {
@@ -51,7 +51,7 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		CRegisterAccountTx *prtx = (CRegisterAccountTx *) pTx;
 		result.push_back(Pair("txtype", "RegisterAccTx"));
 		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("addr", CBitcoinAddress(boost::get<CPubKey>(prtx->userId).GetKeyID()).ToString()));
+		result.push_back(Pair("addr", CSoyPayAddress(boost::get<CPubKey>(prtx->userId).GetKeyID()).ToString()));
 		CID id(prtx->userId);
 		result.push_back(Pair("pubkey", HexStr(id.GetID())));
 		result.push_back(Pair("fees", prtx->llFees));
@@ -181,7 +181,7 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 
 
 
-	CBitcoinAddress address(params[0].get_str());
+	CSoyPayAddress address(params[0].get_str());
 	uint64_t fee = params[1].get_uint64();
 	bool IsMiner = params[2].get_bool();
 
@@ -222,8 +222,10 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 
 		//pubkey
 		CPubKey MinerPKey;
-		if (!pwalletMain->GetPubKey(keyid, MinerPKey,true)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, " not find Miner key.");
+		if (IsMiner == true) {
+			if (!pwalletMain->GetPubKey(keyid, MinerPKey, true)) {
+				throw JSONRPCError(RPC_WALLET_ERROR, " not find Miner key.");
+			}
 		}
 
 		rtx.userId = pubkey;
@@ -241,7 +243,9 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "registeraccounttx Error: CommitTransaction failed.");
 		}
 	}
-	return rtx.GetHash().ToString();
+	Object obj;
+	obj.push_back(Pair("txhash",rtx.GetHash().ToString()));
+	return obj;
 }
 
 //create a normal tx
@@ -270,8 +274,8 @@ Value createnormaltx(const Array& params, bool fHelp) {
 	RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(int_type)(int_type));
 
 	//get addresss
-	CBitcoinAddress sendaddr(params[0].get_str());
-	CBitcoinAddress recvaddr(params[1].get_str());
+	CSoyPayAddress sendaddr(params[0].get_str());
+	CSoyPayAddress recvaddr(params[1].get_str());
 	uint64_t money = params[2].get_uint64();
 	uint64_t fee = params[3].get_uint64();
 	uint32_t nvalidheight = params[4].get_int();
@@ -417,7 +421,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		auto GetUserId = [&](CKeyID &keyId)
 		{
 			CAccount acct;
-			if (!view.GetAccount(keyId, acct)) {
+			if (view.GetAccount(CUserID(keyId), acct)) {
 				return acct.regID;
 			}
 			throw runtime_error(
@@ -427,7 +431,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		vector<CUserID > vaccountid;
 
 		for (auto& item : addr) {
-			CBitcoinAddress tmpaddr(item.get_str());
+			CSoyPayAddress tmpaddr(item.get_str());
 			CKeyID keyid;
 			if (!tmpaddr.GetKeyID(keyid)) {
 				throw runtime_error("in createcontracttx :address err\n");
@@ -527,12 +531,11 @@ Value signcontracttx(const Array& params, bool fHelp) {
 			}
 		}
 
-		vector<unsigned char> accountid = boost::get<CRegID>(tx.vAccountRegId.at(tx.vSignature.size())).GetRegID();
+		CRegID accountid = boost::get<CRegID>(tx.vAccountRegId.at(tx.vSignature.size()));
 
-//		if (!pwalletMain->IsHaveAccount(accountid)) {
-//			LogPrint("INFO", "signcontracttx error: Not to my time!\r\n");
-//			return string("");
-//		}
+		if (!pwalletMain->count(accountid.getKeyID(*pAccountViewTip))) {
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,"signcontracttx error: Not to my time!\r\n");
+		}
 
 		//verify sig
 		for (int ii = 0; ii < tx.vSignature.size(); ii++) {
@@ -552,7 +555,7 @@ Value signcontracttx(const Array& params, bool fHelp) {
 		//get keyid by accountid
 		CKeyID keyid;
 		if (!view.GetKeyId(tx.vAccountRegId.at(tx.vSignature.size()), keyid)) {
-			LogPrint("INFO", "vaccountid:%s have no key id\r\n", HexStr(accountid).c_str());
+			LogPrint("INFO", "vaccountid:%s have no key id\r\n", accountid.ToString());
 			assert(0);
 		}
 
@@ -608,7 +611,7 @@ Value createfreezetx(const Array& params, bool fHelp) {
 	RPCTypeCheck(params, list_of(str_type)(int_type)(int_type)(int_type)(int_type));
 
 	//get addresss
-	CBitcoinAddress addr(params[0].get_str());
+	CSoyPayAddress addr(params[0].get_str());
 	uint64_t frozenmoney = params[1].get_uint64();
 	uint64_t fee = params[2].get_uint64();
 	uint32_t height = params[3].get_int();
@@ -711,7 +714,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type));
 	CVmScript vmScript;
 	//get addresss
-	CBitcoinAddress addr(params[0].get_str());
+	CSoyPayAddress addr(params[0].get_str());
 	vector<unsigned char> vscript;
 	int flag = params[1].get_int();
 	if (0 == flag) {
@@ -743,14 +746,6 @@ Value registerscripttx(const Array& params, bool fHelp) {
 
 		 vscript.assign(ds.begin(), ds.end());
 
-//		 FILE* file1 = fopen("d:\\script.txt", "a+");
-//		 if(!file1) {
-//			 throw runtime_error("open file script.txt error");
-//		 }
-//		 string strScript= HexStr(ds);
-//		 if(fwrite(strScript.c_str(), 1, strScript.length(), file1) != strScript.length())
-//			 throw runtime_error("write script to file error");
-//		 fclose(file1);
 		 if(file)
 			 fclose(file);
 		 if(buffer)
@@ -945,19 +940,6 @@ Value listtx(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 
-//	//get addresss
-//	CBitcoinAddress address(params[0].get_str());
-//
-//	//get keyid
-//	CKeyID keyid;
-//	if (!address.GetKeyID(keyid)) {
-//		throw runtime_error("in registeraccounttx :address err\n");
-//	}
-//
-//	bool bshowdetail = 0;
-//	if (params.size() > 1) {
-//		bshowdetail = params[1].get_bool();
-//	}
 
 	Object retObj;
 	assert(pwalletMain != NULL);
@@ -990,17 +972,24 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 				"\"free amount\":\n"
 				"\"frozen amount\":\n"
 				"\"Account Info\":\n"
-				"\nExamples:\n" + HelpExampleCli("getaddramount", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n")
+				"\nExamples:\n" + HelpExampleCli("getaccountinfo", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n")
+				+HelpExampleCli("getaccountinfo", "000000000500\n")
 				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("getaddramount", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n");
+				+ HelpExampleRpc("getaccountinfo", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n");
 		throw runtime_error(msg);
 	}
-
-	CBitcoinAddress address(params[0].get_str());
-
-	CKeyID keyid;
-	if (!address.GetKeyID(keyid))
-		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+	RPCTypeCheck(params, list_of(str_type));
+	CUserID userId;
+	if (params[0].get_str().size() == 12) {
+		vector<unsigned char> vscript = ParseHex(params[0].get_str());
+		userId = CRegID(vscript);
+	} else {
+		CSoyPayAddress address(params[0].get_str());
+		CKeyID keyid;
+		if (!address.GetKeyID(keyid))
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+		userId = keyid;
+	}
 
 	Object obj;
 	{
@@ -1008,7 +997,6 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 
 		CAccount account;
 		CAccountViewCache accView(*pAccountViewTip, true);
-		CUserID userId = keyid;
 		if (accView.GetAccount(userId, account)) {
 			return account.ToString();
 		}
@@ -1094,10 +1082,10 @@ Value listscriptregid(const Array& params, bool fHelp) {
 //
 //		for (auto& item : pwalletMain->mapKeyRegID) {
 //			vector<unsigned char> vRegId = item.second.GetRegID();
-//			array.push_back(CBitcoinAddress(CAccountID(item.first, vRegId)).ToString());
+//			array.push_back(CSoyPayAddress(CAccountID(item.first, vRegId)).ToString());
 //			Object obj;
 //			obj.clear();
-//			obj.push_back(Pair(CBitcoinAddress(item.first).ToString(), item.second.ToString()));
+//			obj.push_back(Pair(CSoyPayAddress(item.first).ToString(), item.second.ToString()));
 //			array.push_back(obj);
 //		}
 //	}
@@ -1122,7 +1110,7 @@ Value sign(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 
-	CBitcoinAddress addr(params[0].get_str());
+	CSoyPayAddress addr(params[0].get_str());
 	vector<unsigned char> vch(ParseHex(params[1].get_str()));
 
 	//get keyid
@@ -1164,7 +1152,7 @@ Value sign(const Array& params, bool fHelp) {
 //	string strParam = params[0].get_str();
 //	CAccount aAccount;
 //	if (strParam.length() != 12) {
-//		CBitcoinAddress address(params[0].get_str());
+//		CSoyPayAddress address(params[0].get_str());
 //		CKeyID keyid;
 //		if (!address.GetKeyID(keyid))
 //			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
@@ -1247,9 +1235,24 @@ static Value COperFundToJson(const COperFund &opfound)
 Value gettxoperationlog(const Array& params, bool fHelp)
 {
 	if (fHelp || params.size() != 1) {
-		throw runtime_error(" todo ");
+		if (fHelp || params.size() != 2) {
+			string msg = "sign nrequired \"str\"\n"
+					"\nsign \"str\"\n"
+					"\nArguments:\n"
+					"1.\"txhash\": (string required) \n"
+					"\nResult:\n"
+					"\"vOperFund\": (string)\n"
+					"\"authorLog\": (string)\n"
+					"\nExamples:\n"
+					+ HelpExampleCli("gettxoperationlog",
+							"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000")
+					+ "\nAs json rpc call\n"
+					+ HelpExampleRpc("gettxoperationlog",
+							"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000");
+			throw runtime_error(msg);
+		}
 	}
-
+	RPCTypeCheck(params, list_of(str_type));
 	uint256 txHash(ParseHex(params[0].get_str()));
 	vector<CAccountOperLog> vLog;
 	Object retobj;
@@ -1382,7 +1385,7 @@ Value getaddrbalance(const Array& params, bool fHelp) {
 	}
 
 	assert(pwalletMain != NULL);
-	CBitcoinAddress addr(params[0].get_str());
+	CSoyPayAddress addr(params[0].get_str());
 
 	CKeyID keyid;
 	if (!addr.GetKeyID(keyid))
@@ -1415,7 +1418,7 @@ Value generateblock(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 
-	CBitcoinAddress addr(params[0].get_str());
+	CSoyPayAddress addr(params[0].get_str());
 
 	//get keyid
 	CKeyID keyid;
@@ -1441,7 +1444,7 @@ Value getpublickey(const Array& params, bool fHelp) {
 				"\"publickey\"  (string) \n"
 				"\nExamples:\n" + HelpExampleCli("getpublickey", "mpif58ohTASDZNNXreFMFuNAHBfuDUXtjP"));
 	}
-	CBitcoinAddress address(params[0].get_str());
+	CSoyPayAddress address(params[0].get_str());
 
 	CKeyID keyid;
 	if (!address.GetKeyID(keyid))

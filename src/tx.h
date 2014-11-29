@@ -52,7 +52,7 @@ public:
 		ds >> nHeight;
 		ds >> nIndex;
 	}
-
+    CKeyID getKeyID(const CAccountViewCache &view)const;
 	CRegID(string strRegID);
 	bool operator ==(const CRegID& co) const {
 		return (this->nHeight == co.nHeight && this->nIndex == co.nIndex);

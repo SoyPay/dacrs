@@ -74,6 +74,14 @@ string CRegID::ToString() const {
 	return ::HexStr(vRegID);
 	return string(" ");
 }
+CKeyID CRegID::getKeyID(const CAccountViewCache &view)const
+{
+	CKeyID ret;
+	CAccountViewCache(view).GetKeyId(*this,ret);
+	return ret;
+}
+
+
 void CRegID::SetRegIDByCompact(const vector<unsigned char> &vIn) {
 	CDataStream ds(vIn, SER_DISK, CLIENT_VERSION);
 	ds >> *this;

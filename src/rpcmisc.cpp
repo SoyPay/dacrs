@@ -31,7 +31,8 @@ Value getbalance(const Array& params, bool fHelp)
 	if (fHelp || params.size() != 0)
 		throw runtime_error("getinfo\n"
 				"Returns an object containing various state info.\n"
-				"\nResult:\n");
+				"\nResult:\n"    + HelpExampleCli("getbalance", "")
+	            + HelpExampleRpc("getbalance", ""));
 	 Object obj;
     obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance(chainActive.Tip()->nHeight))));
     return obj;
@@ -142,7 +143,7 @@ Value verifymessage(const Array& params, bool fHelp)
     string strSign     = params[1].get_str();
     string strMessage  = params[2].get_str();
 
-    CBitcoinAddress addr(strAddress);
+    CSoyPayAddress addr(strAddress);
     if (!addr.IsValid())
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 

@@ -121,7 +121,7 @@ Value signmessage(const Array& params, bool fHelp)
     string strAddress = params[0].get_str();
     string strMessage = params[1].get_str();
 
-    CBitcoinAddress addr(strAddress);
+    CSoyPayAddress addr(strAddress);
     if (!addr.IsValid())
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
@@ -164,7 +164,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
     //todo 完成从指定地址发到指定地址的
 
-    CBitcoinAddress address(params[0].get_str());
+    CSoyPayAddress address(params[0].get_str());
 
     EnsureWalletIsUnlocked();
     CKeyID sendKeyId;
@@ -218,7 +218,7 @@ struct tallyitem
 
 //static void MaybePushAddress(Object & entry, const CTxDestination &dest)
 //{
-//    CBitcoinAddress addr;
+//    CSoyPayAddress addr;
 //    if (addr.Set(dest))
 //        entry.push_back(Pair("address", addr.ToString()));
 //}
