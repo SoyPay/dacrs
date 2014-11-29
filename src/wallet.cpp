@@ -393,7 +393,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 				return mapBlockIndex.count(blockhash) && chainActive.Contains(mapBlockIndex[blockhash]);
 			};
 		// GenesisBlock progress
-		if (SysParams().HashGenesisBlock() == blockhash) {
+		if (SysCfg().HashGenesisBlock() == blockhash) {
 			GenesisBlockProgress();
 		} else if (IsConnect()) {
 			//connect block
@@ -715,8 +715,8 @@ bool CWallet::StartUp() {
 	    return true;
 	};
 
-	 defaultFilename = CBaseParams::GetArg("-wallet", "wallet.dat");
-	  bool fDisableWallet = CBaseParams::GetBoolArg("-disablewallet", false);
+	 defaultFilename = SysCfg().GetArg("-wallet", "wallet.dat");
+	  bool fDisableWallet = SysCfg().GetBoolArg("-disablewallet", false);
     string strDataDir = GetDataDir().string();
 
 	    // Wallet file must be a plain filename without a directory
