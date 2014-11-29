@@ -24,6 +24,7 @@ public:
 private:
 	CUIServer() :m_acceptor(m_iosev, tcp::endpoint(tcp::v4(), PORT)) {
 		m_bConnect = false;
+		m_bRunFlag = true;
 	}
 	static CUIServer* getInstance();
 	static void RunThreadPorc(CUIServer* pThis);
@@ -43,4 +44,5 @@ private:
 	bool m_bConnect;
 	enum { max_length = 1024 };
 	char data_[max_length];
+	bool m_bRunFlag;
 };
