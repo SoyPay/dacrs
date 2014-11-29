@@ -167,6 +167,9 @@ bool IsInitialBlockDownload();
 string GetWarnings(string strFor);
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
 bool GetTransaction(std::shared_ptr<CBaseTransaction> &pBaseTx, const uint256 &hash);
+/** Retrieve a transaction high comfirmed in block*/
+int GetTxComfirmHigh(const uint256 &hash);
+
 /** Find the best known block, and make it the tip of the block chain */
 bool ActivateBestChain(CValidationState &state);
 int64_t GetBlockValue(int nHeight, int64_t nFees);
@@ -184,7 +187,7 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Increase a node's misbehavior score. */
 void Misbehaving(NodeId nodeid, int howmuch);
 
-bool CheckSignScript(const vector<unsigned char> &accountId, const uint256& sighash,
+bool CheckSignScript(const CRegID &regId, const uint256& sighash,
 		const vector_unsigned_char &signatrue, CValidationState &state, CAccountViewCache &view);
 
 /** (try to) add transaction to memory pool **/

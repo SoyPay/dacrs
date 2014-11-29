@@ -349,8 +349,10 @@ Value createnormaltx(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "createnormaltx Error: CommitTransaction failed.");
 		}
 	}
-
-	return tx.GetHash().ToString();
+	Object obj;
+	obj.push_back(Pair("txhash",tx.GetHash().ToString()));
+	return obj;
+//	return tx.GetHash().ToString();
 }
 
 //create a contract tx
@@ -468,14 +470,17 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: CommitTransaction failed.");
 		}
-		return tx.GetHash().ToString();
+		Object obj;
+		obj.push_back(Pair("txhash",tx.GetHash().ToString()));
+		return obj;
 	}
 	else
 	{
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
 		ds << tx;
-		LogPrint("INFO", "createcontracttx ok!\r\n");
-		return HexStr(ds.begin(), ds.end());
+		Object obj;
+		obj.push_back(Pair("RawTx",HexStr(ds.begin(),ds.end())));
+		return obj;
 	}
 }
 
@@ -575,14 +580,17 @@ Value signcontracttx(const Array& params, bool fHelp) {
 			if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
 						throw JSONRPCError(RPC_WALLET_ERROR, "signcontracttx Error: CommitTransaction failed.");
 					}
-			return tx.GetHash().ToString();
+			Object obj;
+			obj.push_back(Pair("txhash",tx.GetHash().ToString()));
+			return obj;
 		}
 		else
 		{
 			CDataStream ds(SER_DISK, CLIENT_VERSION);
 			ds << tx;
-			LogPrint("INFO", "signcontracttx ok!\r\n");
-			return HexStr(ds.begin(), ds.end());
+			Object obj;
+			obj.push_back(Pair("RawTx",HexStr(ds.begin(),ds.end())));
+			return obj;
 		}
 	}
 }
@@ -681,7 +689,9 @@ Value createfreezetx(const Array& params, bool fHelp) {
 		}
 	}
 
-	return tx.GetHash().ToString();
+	Object obj;
+	obj.push_back(Pair("txhash",tx.GetHash().ToString()));
+	return obj;
 }
 
 //create a register script tx
@@ -871,7 +881,9 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		}
 	}
 
-	return tx.GetHash().ToString();
+	Object obj;
+	obj.push_back(Pair("txhash",tx.GetHash().ToString()));
+	return obj;
 }
 
 Value listaddr(const Array& params, bool fHelp) {
@@ -1029,68 +1041,6 @@ Value listunconfirmedtx(const Array& params, bool fHelp) {
 
 	return retObj;
 }
-
-//list unconfirmed transaction of mine
-Value listscriptregid(const Array& params, bool fHelp) {
-	if (fHelp || params.size() > 1) {
-		string msg = "listscriptregid \n"
-				"\listscriptregid\n"
-				"\nArguments:\n"
-				"\nResult:\n"
-				"\"txhash\":\"scriptid\"\n"
-				"\nExamples:\n" + HelpExampleCli("listscriptregid", "\n") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("listscriptregid", "\n");
-		throw runtime_error(msg);
-	}
-
-	bool bshowdetail = 0;
-	if (params.size() > 0) {
-		bshowdetail = params[0].get_bool();
-	}
-
-	Object obj;
-	{
-//		LOCK2(cs_main, pwalletMain->cs_wallet);
-	///			 LogPrint("TODO"," ");
-
-//		for (auto& item : pwalletMain->mKeyPool) {
-//			obj.push_back(Pair(item.first.ToString(), item.second.ToString()));
-//			if (bshowdetail) {
-//				//array.push_back(TxToJSON(item.second.get()));
-//			}
-//		}
-	}
-	return obj;
-}
-
-//list regid
-//Value listregid(const Array& params, bool fHelp) {
-//	if (fHelp || params.size() > 0) {
-//		string msg = "listregid \n"
-//				"\listregid\n"
-//				"\nArguments:\n"
-//				"\nResult:\n"
-//				"\"addr\":\"regid\"\n"
-//				"\nExamples:\n" + HelpExampleCli("listregid", "\n") + "\nAs json rpc call\n"
-//				+ HelpExampleRpc("listregid", "\n");
-//		throw runtime_error(msg);
-//	}
-//
-//	Array array;
-//	{
-//		LOCK2(cs_main, pwalletMain->cs_wallet);
-//
-//		for (auto& item : pwalletMain->mapKeyRegID) {
-//			vector<unsigned char> vRegId = item.second.GetRegID();
-//			array.push_back(CSoyPayAddress(CAccountID(item.first, vRegId)).ToString());
-//			Object obj;
-//			obj.clear();
-//			obj.push_back(Pair(CSoyPayAddress(item.first).ToString(), item.second.ToString()));
-//			array.push_back(obj);
-//		}
-//	}
-//	return array;
-//}
 
 //sign
 Value sign(const Array& params, bool fHelp) {
@@ -1331,7 +1281,10 @@ Value disconnectblock(const Array& params, bool fHelp) {
 
 		assert(view.Flush() && contractScriptTemp.Flush());
 	}
-	return true;
+	Object obj;
+	obj.push_back(Pair("info", "disconnect ok"));
+	return obj;
+
 }
 
 Value listregscript(const Array& params, bool fHelp) {
@@ -1356,20 +1309,20 @@ Value listregscript(const Array& params, bool fHelp) {
 		Object script;
 		if(!pScriptDBTip->GetScript(0, regId, vScript))
 			throw JSONRPCError(RPC_DATABASE_ERROR, "get script error: cannot get registered script.");
-		script.push_back(Pair("scriptId", HexStr(regId.GetRegID())));
+		script.push_back(Pair("scriptId", HexStr(regId.GetVec6())));
 		if(showDetail)
 		script.push_back(Pair("scriptContent", HexStr(vScript.begin(), vScript.end())));
 		arrayScript.push_back(script);
 		while(pScriptDBTip->GetScript(1, regId, vScript)) {
 			Object obj;
-			obj.push_back(Pair("scriptId", HexStr(regId.GetRegID())));
+			obj.push_back(Pair("scriptId", HexStr(regId.GetVec6())));
 			if(showDetail)
 			obj.push_back(Pair("scriptContent", string(vScript.begin(), vScript.end())));
 			arrayScript.push_back(obj);
 		}
 	}
 
-	obj.push_back(Pair("ListRegisterScript", arrayScript));
+	obj.push_back(Pair("listregedscript", arrayScript));
 	return obj;
 }
 
@@ -1426,14 +1379,13 @@ Value generateblock(const Array& params, bool fHelp) {
 		throw runtime_error("in generateblock :address err \n");
 	}
 
-	{
-	//	LOCK2(cs_main, pwalletMain->cs_wallet);
-		if (!CreateBlockWithAppointedAddr(keyid)) {
-			throw runtime_error("in generateblock :cannot generate block\n");
-		}
-
+	uint256 hash = CreateBlockWithAppointedAddr(keyid);
+	if (hash == 0) {
+		throw runtime_error("in generateblock :cannot generate block\n");
 	}
-	return NULL;
+	Object obj;
+	obj.push_back(Pair("blockhase",hash.GetHex()));
+	return obj;
 }
 
 Value getpublickey(const Array& params, bool fHelp) {
@@ -1457,7 +1409,10 @@ Value getpublickey(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_MISC_ERROR,
 					tinyformat::format("Wallet do not contain address %s", params[0].get_str()));
 	}
-	return pubkey.ToString();
+//	return pubkey.ToString();
+	Object obj;
+	obj.push_back(Pair("pubkey",pubkey.ToString()));
+	return obj;
 }
 
 Value listtxcache(const Array& params, bool fHelp) {
@@ -1505,7 +1460,11 @@ Value reloadtxcache(const Array& params, bool fHelp) {
 		pTxCacheTip->AddBlockToCache(block);
 		pIndex = chainActive.Next(pIndex);
 	} while (NULL != pIndex);
-	return string("reload tx cache succeed");
+
+	Object obj;
+	obj.push_back(Pair("info","reload tx cache succeed"));
+	return obj;
+//	return string("reload tx cache succeed");
 }
 Value getscriptdata(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 2) {

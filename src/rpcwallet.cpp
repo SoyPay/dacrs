@@ -41,13 +41,6 @@ void EnsureWalletIsUnlocked()
 
 
 
-string AccountFromValue(const Value& value)
-{
-    string strAccount = value.get_str();
-    if (strAccount == "*")
-        throw JSONRPCError(RPC_WALLET_INVALID_ACCOUNT_NAME, "Invalid account name");
-    return strAccount;
-}
 
 Value getnewaddress(const Array& params, bool fHelp)
 {

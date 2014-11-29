@@ -605,7 +605,7 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 
 		for (auto& it : tx->vAccountRegId) {
 //			CID id(it);
-			vector<unsigned char> id = boost::get<CRegID>(it).GetRegID();
+			vector<unsigned char> id = boost::get<CRegID>(it).GetVec6();
 			item.insert(item.end(), id.begin(), id.end());
 		}
 
@@ -934,7 +934,7 @@ static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 
 	CRegID scriptid = pVmScriptRun->GetScriptRegID();
 	int height = pVmScriptRun->GetComfirHeight();
-	bool ret = aAccount.IsAuthorized(money,height,scriptid.GetRegID());
+	bool ret = aAccount.IsAuthorized(money,height,scriptid.GetVec6());
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -1083,7 +1083,7 @@ static RET_DEFINE ExGetAuthoritedDefineFunc(unsigned char * ipara,void * pVmScri
 		flag = false;
 	}
 
-	vector_unsigned_char scriptid = pVmScriptRun->GetScriptRegID().GetRegID();
+	vector_unsigned_char scriptid = pVmScriptRun->GetScriptRegID().GetVec6();
 	int height = pVmScriptRun->GetComfirHeight();
 
 	vector<unsigned char> vData;

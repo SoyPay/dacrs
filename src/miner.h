@@ -77,6 +77,6 @@ void GetPriorityTx(vector<TxPriority> &vecPriority, map<uint256, vector<COrphan*
 extern double dHashesPerSec;
 extern int64_t nHPSTimerStart;
 
-extern bool CreateBlockWithAppointedAddr(CKeyID &keyID);
+extern uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID);
 
 #endif // BITCOIN_MINER_H
