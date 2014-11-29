@@ -203,7 +203,7 @@ bool CCryptoKeyStore::AddCryptedKey(const CPubKey &vchPubKey, const vector<unsig
         if (!SetCrypted())
             return false;
 
-        mapCryptedKeys[vchPubKey.GetID()] = make_pair(vchPubKey, vchCryptedSecret);
+        mapCryptedKeys[vchPubKey.GetKeyID()] = make_pair(vchPubKey, vchCryptedSecret);
     }
     return true;
 }

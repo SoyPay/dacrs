@@ -20,11 +20,10 @@
 #include "util.h"
 #include "cuiserve.h"
 #include "tx.h"
-#ifdef ENABLE_WALLET
 #include "db.h"
 #include "wallet.h"
 #include "walletdb.h"
-#endif
+
 
 #include <stdint.h>
 #include <stdio.h>

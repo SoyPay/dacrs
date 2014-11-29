@@ -52,7 +52,7 @@ public:
 		ds >> nHeight;
 		ds >> nIndex;
 	}
-
+    CKeyID getKeyID(const CAccountViewCache &view)const;
 	CRegID(string strRegID);
 	bool operator ==(const CRegID& co) const {
 		return (this->nHeight == co.nHeight && this->nIndex == co.nIndex);
@@ -408,6 +408,7 @@ class CRegisterAccountTx: public CBaseTransaction {
 
 public:
 	mutable CUserID userId;      //pubkey
+	mutable CUserID MinerId;    //Miner pubkey
 	int64_t llFees;
 	int nValidHeight;
 	vector<unsigned char> signature;
@@ -433,8 +434,11 @@ public:
 		nVersion = this->nVersion;
 		CID id(userId);
 		READWRITE(id);
+		CID mMinerid(MinerId);
+		READWRITE(mMinerid);
 		if(fRead) {
 			userId = id.GetUserId();
+			MinerId = mMinerid.GetUserId();
 		}
 		READWRITE(VARINT(llFees));
 		READWRITE(VARINT(nValidHeight));
@@ -1281,7 +1285,8 @@ class CAccount {
 public:
 	CRegID regID;
 	CKeyID keyID;											//!< keyID of the account
-	CPubKey publicKey;										//!< public key of the account
+	CPubKey PublicKey;										//!< public key of the account
+	CPubKey MinerPKey;									//!< public key of the account for miner
 	uint64_t llValues;										//!< freedom money which coinage greater than 30 days
 	vector<CFund> vRewardFund;								//!< reward money
 	vector<CFund> vFreedomFund;								//!< freedom money
@@ -1321,7 +1326,7 @@ public :
 	bool GetUserData(const vector_unsigned_char& scriptID,vector<unsigned char> & vData);
 public:
 	CAccount(CKeyID &keyId, CPubKey &pubKey) :
-			keyID(keyId), publicKey(pubKey) {
+			keyID(keyId), PublicKey(pubKey) {
 		llValues = 0;
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
@@ -1329,7 +1334,7 @@ public:
 	}
 	CAccount() :
 			keyID(uint160(0)), llValues(0) {
-		publicKey = CPubKey();
+		PublicKey = CPubKey();
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
 		vSelfFreeze.clear();
@@ -1346,8 +1351,7 @@ public:
 		return rest;
 	}
 	bool IsRegister() const {
-		//!todo  what this meaning
-		return (publicKey.IsFullyValid() && publicKey.GetID() == keyID);
+		return (PublicKey.IsFullyValid() && PublicKey.GetKeyID() == keyID);
 	}
 	bool SetRegId(const CRegID &regID){this->regID = regID;return true;};
 	bool GetRegId(CRegID &regID)const {regID = this->regID  ;return regID.IsEmpty();};
@@ -1375,7 +1379,8 @@ public:
 	(
 			READWRITE(regID);
 			READWRITE(keyID);
-			READWRITE(publicKey);
+			READWRITE(PublicKey);
+			READWRITE(MinerPKey);
 			READWRITE(llValues);
 			READWRITE(vRewardFund);
 			READWRITE(vFreedomFund);

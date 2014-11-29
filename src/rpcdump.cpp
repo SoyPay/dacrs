@@ -100,7 +100,7 @@ Value importprivkey(const Array& params, bool fHelp)
     if (params.size() > 2)
         fRescan = params[2].get_bool();
 
-    CBitcoinSecret vchSecret;
+    CSoyPaySecret vchSecret;
     bool fGood = vchSecret.SetString(strSecret);
 
     if (!fGood) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
@@ -109,7 +109,7 @@ Value importprivkey(const Array& params, bool fHelp)
     if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
 
     CPubKey pubkey = key.GetPubKey();
-    CKeyID vchAddress = pubkey.GetID();
+    CKeyID vchAddress = pubkey.GetKeyID();
     {
         LOCK2(cs_main, pwalletMain->cs_wallet);
 
@@ -128,7 +128,7 @@ Value importprivkey(const Array& params, bool fHelp)
         // whenever a key is imported, we need to scan the whole chain
 //        pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
 
-        pwalletMain->UpdataRegId(vchAddress,*pAccountViewTip);
+        pwalletMain->SynchronizRegId(vchAddress,*pAccountViewTip);
         if (fRescan) {
             pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
         }
@@ -156,6 +156,7 @@ Value importwallet(const Array& params, bool fHelp)
 
     throw JSONRPCError(RPC_INVALID_PARAMETER, "todo work list");
 
+    ///todo work list
 //    EnsureWalletIsUnlocked();
 //
 //    ifstream file;
@@ -182,14 +183,14 @@ Value importwallet(const Array& params, bool fHelp)
 //        boost::split(vstr, line, boost::is_any_of(" "));
 //        if (vstr.size() < 2)
 //            continue;
-//        CBitcoinSecret vchSecret;
+//        CSoyPaySecret vchSecret;
 //        if (!vchSecret.SetString(vstr[0]))
 //            continue;
 //        CKey key = vchSecret.GetKey();
 //        CPubKey pubkey = key.GetPubKey();
 //        CKeyID keyid = pubkey.GetID();
 ////        if (pwalletMain->HaveKey(keyid)) {
-////            LogPrint("INFO","Skipping import of %s (key already present)\n", CBitcoinAddress(keyid).ToString());
+////            LogPrint("INFO","Skipping import of %s (key already present)\n", CSoyPayAddress(keyid).ToString());
 ////            continue;
 ////        }
 //        assert(0);
@@ -208,7 +209,7 @@ Value importwallet(const Array& params, bool fHelp)
 //                fLabel = true;
 //            }
 //        }
-//        LogPrint("INFO","Importing %s...\n", CBitcoinAddress(keyid).ToString());
+//        LogPrint("INFO","Importing %s...\n", CSoyPayAddress(keyid).ToString());
 //        if (!pwalletMain->AddKey(key)) {
 //            fGood = false;
 //            continue;
@@ -259,7 +260,7 @@ Value dumpprivkey(const Array& params, bool fHelp)
     EnsureWalletIsUnlocked();
 
     string strAddress = params[0].get_str();
-    CBitcoinAddress address;
+    CSoyPayAddress address;
     if (!address.SetString(strAddress))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
     CKeyID keyID;
@@ -268,7 +269,7 @@ Value dumpprivkey(const Array& params, bool fHelp)
     CKey vchSecret;
     if (!pwalletMain->GetKey(keyID, vchSecret))
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
-    return CBitcoinSecret(vchSecret).ToString();
+    return CSoyPaySecret(vchSecret).ToString();
 }
 
 

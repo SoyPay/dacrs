@@ -632,7 +632,7 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     vector<char> te;
-    tep << aAccount.publicKey;
+    tep << aAccount.PublicKey;
     tep >>te;
     vector<unsigned char> tep1(te.begin(),te.end());
     (*tem.get()).push_back(tep1);

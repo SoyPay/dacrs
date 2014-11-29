@@ -165,16 +165,7 @@ bool CWalletDB::WriteDefaultKey(const CPubKey& vchPubKey)
     return Write(string("defaultkey"), vchPubKey);
 }
 
-bool CWalletDB::ReadPool(int64_t nPool, CKeyPool& keypool)
-{
-    return Read(make_pair(string("pool"), nPool), keypool);
-}
 
-bool CWalletDB::WritePool(int64_t nPool, const CKeyPool& keypool)
-{
-    nWalletDBUpdated++;
-    return Write(make_pair(string("pool"), nPool), keypool);
-}
 
 bool CWalletDB::ErasePool(int64_t nPool)
 {
@@ -366,13 +357,13 @@ bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 //        {
 ////            string strAddress;
 ////            ssKey >> strAddress;
-////            ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()].name;
+////            ssValue >> pwallet->mapAddressBook[CSoyPayAddress(strAddress).Get()].name;
 //        }
 //        else if (strType == "purpose")
 //        {
 ////            string strAddress;
 ////            ssKey >> strAddress;
-////            ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()].purpose;
+////            ssValue >> pwallet->mapAddressBook[CSoyPayAddress(strAddress).Get()].purpose;
 //        }
 //        else if(strType == "regid")
 //        {
@@ -606,7 +597,7 @@ bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 ////            ssKey >> strAddress;
 ////            ssKey >> strKey;
 ////            ssValue >> strValue;
-////            if (!pwallet->LoadDestData(CBitcoinAddress(strAddress).Get(), strKey, strValue))
+////            if (!pwallet->LoadDestData(CSoyPayAddress(strAddress).Get(), strKey, strValue))
 ////            {
 ////                strErr = "Error reading wallet database: LoadDestData failed";
 ////                return false;
@@ -880,8 +871,7 @@ void ThreadFlushWalletDB(const string& strFile)
 
 bool BackupWallet(const CWallet& wallet, const string& strDest)
 {
-    if (!wallet.fFileBacked)
-        return false;
+
     while (true)
     {
         {

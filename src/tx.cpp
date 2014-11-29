@@ -74,6 +74,14 @@ string CRegID::ToString() const {
 	return ::HexStr(vRegID);
 	return string(" ");
 }
+CKeyID CRegID::getKeyID(const CAccountViewCache &view)const
+{
+	CKeyID ret;
+	CAccountViewCache(view).GetKeyId(*this,ret);
+	return ret;
+}
+
+
 void CRegID::SetRegIDByCompact(const vector<unsigned char> &vIn) {
 	CDataStream ds(vIn, SER_DISK, CLIENT_VERSION);
 	ds >> *this;
@@ -83,21 +91,30 @@ bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
 	CAccount account;
 	CRegID regId(nHeight, nIndex);
-	CKeyID keyId = boost::get<CPubKey>(userId).GetID();
+	CKeyID keyId = boost::get<CPubKey>(userId).GetKeyID();
 	if (!view.GetAccount(userId, account))
 		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", regId.ToString()),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 
-	if(account.publicKey.IsFullyValid() && account.publicKey.GetID() == keyId) {
+	if(account.PublicKey.IsFullyValid() && account.PublicKey.GetKeyID() == keyId) {
 		return state.DoS(100, ERROR("UpdateAccounts() : read source keyId %s duplicate register", keyId.ToString()),
 					UPDATE_ACCOUNT_FAIL, "duplicate-register-account");
 	}
-	account.publicKey = boost::get<CPubKey>(userId);
+	account.PublicKey = boost::get<CPubKey>(userId);
 	if (llFees > 0) {
 		CFund fund(llFees);
 		account.OperateAccount(MINUS_FREE, fund);
 	}
+
+	account.PublicKey = boost::get<CPubKey>(userId);
 	account.regID = regId;
+	account.MinerPKey = boost::get<CPubKey>(MinerId);
+
+	if (!account.MinerPKey.IsFullyValid()) {
+		return state.DoS(100, ERROR("UpdateAccounts() : MinerPKey Is Invalid", account.MinerPKey.ToString()),
+				UPDATE_ACCOUNT_FAIL, "MinerPKey Is Invalid");
+	}
+
 	if (!view.SaveAccountInfo(regId, keyId, account)) {
 		return state.DoS(100, ERROR("UpdateAccounts() : write source addr %s account info error", regId.ToString()),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
@@ -119,7 +136,7 @@ bool CRegisterAccountTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, 
 	view.GetKeyId(accountId, keyId);
 	if (!oldAccount.IsEmptyValue()) {
 		CPubKey empPubKey;
-		oldAccount.publicKey = empPubKey;
+		oldAccount.PublicKey = empPubKey;
 		if (llFees > 0) {
 			CAccountOperLog accountOperLog;
 			if (!txundo.GetAccountOperLog(keyId, accountOperLog))
@@ -146,13 +163,13 @@ bool CRegisterAccountTx::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view)
 	if (!boost::get<CPubKey>(userId).IsFullyValid()) {
 		return false;
 	}
-	vAddr.insert(boost::get<CPubKey>(userId).GetID());
+	vAddr.insert(boost::get<CPubKey>(userId).GetKeyID());
 	return true;
 }
 string CRegisterAccountTx::ToString(CAccountViewCache &view) const {
 	string str;
 	str += strprintf("txType=%s, hash=%s, ver=%d, pubkey=%s, llFees=%ld, keyid=%s, nValidHeight=%d\n",
-	txTypeArray[nTxType],GetHash().ToString().c_str(), nVersion, HexStr(boost::get<CPubKey>(userId).begin(), boost::get<CPubKey>(userId).end()).c_str(), llFees, boost::get<CPubKey>(userId).GetID().GetHex(), nValidHeight);
+	txTypeArray[nTxType],GetHash().ToString().c_str(), nVersion, HexStr(boost::get<CPubKey>(userId).begin(), boost::get<CPubKey>(userId).end()).c_str(), llFees, boost::get<CPubKey>(userId).GetKeyID().ToAddress(), nValidHeight);
 	return str;
 }
 bool CRegisterAccountTx::CheckTransction(CValidationState &state, CAccountViewCache &view) {
@@ -627,7 +644,7 @@ bool CRewardTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view)
 		CPubKey pubKey = boost::get<CPubKey>(account);
 		if (!pubKey.IsFullyValid())
 			return false;
-		vAddr.insert(pubKey.GetID());
+		vAddr.insert(pubKey.GetKeyID());
 	}
 	return true;
 }
@@ -1319,9 +1336,10 @@ Object CAccount::ToJosnObj() const
 	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "IN_FREEZD_FUND",
 			"OUT_FREEZD_FUND", "SELF_FREEZD_FUND" };
 	obj.push_back(Pair("Address",     keyID.ToAddress()));
-	obj.push_back(Pair("KeYID",     keyID.ToString()));
+	obj.push_back(Pair("KeyID",     keyID.ToString()));
 	obj.push_back(Pair("RegID",     regID.ToString()));
-	obj.push_back(Pair("publicKey",  publicKey.ToString()));
+	obj.push_back(Pair("PublicKey",  PublicKey.ToString()));
+	obj.push_back(Pair("MinerPKey",  MinerPKey.ToString()));
 	obj.push_back(Pair("FreeValues",     llValues));
 
 	Array RewardFund;
