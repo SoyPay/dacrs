@@ -121,7 +121,26 @@ bool CWallet::AddKey(const CKey& secret) {
 	}
 	return true;
 }
+bool CWallet::AddKey(const CKey& secret,const CKey& minerKey) {
+	AssertLockHeld(cs_wallet);
 
+	CKeyStoreValue tem(secret,minerKey);
+	if(mKeyPool.count(tem.GetCKeyID()) > 0)
+		{
+		  LogPrint("CWallet","this key is in the CWallet");
+		 return false;
+		}
+
+	if (!IsCrypted()) {
+		mKeyPool[tem.GetCKeyID()] = tem;
+        return FushToDisk();
+	}
+	else
+	{
+		assert(0);//to add code
+	}
+	return true;
+}
 
 
 
@@ -312,27 +331,19 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 				//confirm the tx GenesisBlock
 				CRewardTransaction* prtx = (CRewardTransaction*) sptx.get();
 				CPubKey pubkey = boost::get<CPubKey>(prtx->account);
-				CKeyID keyid = pubkey.GetID();
+				CKeyID keyid = pubkey.GetKeyID();
 				CRegID regid(0, i);
 				CAccount account;
-//				pAccountViewTip->GetAccount(CUserID(keyid),account);
-//				cout << account.ToString() << endl;
-//				account.SetRegId(regid);
-//				pAccountViewTip->SetAccount(CUserID(keyid),account);
-//				pAccountViewTip->GetAccount(CUserID(keyid),account);
-//				cout << account.ToString() << endl;
-
 				if (IsMine(sptx.get())) {
 					AddPubKey(pubkey);
 					fIsNeedUpDataRegID = true;
 				}
 				i++;
 			}
-//			assert(pAccountViewTip->Flush());
 		};
 
 		auto ConnectBlockProgress = [&]() {
-			CAccountTx newtx(this, blockhash);
+			CAccountTx newtx(this, blockhash,pblock->nHeight);
 			for (const auto &sptx : pblock->vptx) {
 				uint256 hashtx = sptx->GetHash();
 				//confirm the tx is mine
@@ -398,7 +409,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
     }
 
 	if (fIsNeedUpDataRegID == true) {
-		UpdataAllRegID(*pAccountViewTip);
+		SynchronizSys(*pAccountViewTip);
 	}
 
 	if (bupdate == true || fIsNeedUpDataRegID == true)
@@ -777,7 +788,7 @@ Object CAccountTx::ToJosnObj() const {
 
 	Object obj;
 	obj.push_back(Pair("blockHash",  blockHash.ToString()));
-
+	obj.push_back(Pair("blockhigh",  blockhigh));
 	Array Tx;
 	CAccountViewCache view(*pAccountViewTip);
 	for(auto const &re:mapAccountTx)
@@ -787,4 +798,12 @@ Object CAccountTx::ToJosnObj() const {
 	obj.push_back(Pair("Tx",  Tx));
 
 	return obj;
+}
+
+uint256 CWallet::GetCheckSum() const {
+	{
+			CHashWriter ss(SER_GETHASH, CLIENT_VERSION);
+			ss << nWalletVersion << bestBlock << MasterKey << mKeyPool << mapInBlockTx;
+			return ss.GetHash();
+		}
 }

@@ -530,7 +530,7 @@ bool CheckSignScript(const vector<unsigned char> &accountId,const uint256& sigha
 	}
 
 	if (acctInfo.IsRegister()) {
-		if (!acctInfo.publicKey.Verify(sighash, signatrue))
+		if (!acctInfo.PublicKey.Verify(sighash, signatrue))
 			return state.DoS(100, ERROR("CheckSignScript() : tx signature error"), REJECT_INVALID, "bad-signature");
 	} else {
 		return state.DoS(100, ERROR("CheckSignScript(): account have not registed public key"), REJECT_INVALID,
@@ -1235,10 +1235,10 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 			CAccount sourceAccount;
 			CRegID accountId(pindex->nHeight, i);
 			CPubKey pubKey = boost::get<CPubKey>(pRewardTx->account);
-			CKeyID keyId = pubKey.GetID();
+			CKeyID keyId = pubKey.GetKeyID();
 			sourceAccount.keyID = keyId;
 			sourceAccount.SetRegId(accountId);
-			sourceAccount.publicKey = pubKey;
+			sourceAccount.PublicKey = pubKey;
 			sourceAccount.llValues = pRewardTx->rewardValue;
 			assert(view.SaveAccountInfo(accountId.GetRegID(), keyId, sourceAccount));
 		}

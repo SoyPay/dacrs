@@ -45,29 +45,7 @@ enum WalletFeature {
 	FEATURE_BASE = 10000, // the earliest version new wallets supports (only useful for getinfo's clientversion output)
 };
 
-/** A key pool entry */
-class CKeyPool {
-public:
-	int64_t nTime;
-	CPubKey vchPubKey;
 
-	CKeyPool() {
-		nTime = GetTime();
-	}
-
-	CKeyPool(const CPubKey& vchPubKeyIn) {
-		nTime = GetTime();
-		vchPubKey = vchPubKeyIn;
-	}
-
-	IMPLEMENT_SERIALIZE
-	(
-			if (!(nType & SER_GETHASH))
-			READWRITE(nVersion);
-			READWRITE(nTime);
-			READWRITE(vchPubKey);
-	)
-};
 
 
 
@@ -76,21 +54,25 @@ private:
 	CRegID mregId;
 	CPubKey mPKey;
 	CKey  mCkey;
+	CKey  mMinerCkey; //only used for miner
 	INT64 nCreationTime;
 public:
 
 	string ToString()
 	{
-		return strprintf("CRegID:%s CPubKey:%s CKey:%s :CreationTime:%d \n",mregId.ToString(),mPKey.ToString(),mCkey.ToString(),nCreationTime);
+		return strprintf("CRegID:%s CPubKey:%s CKey:%s mMinerCkey:%s CreationTime:%d \n",mregId.ToString(),mPKey.ToString(),mCkey.ToString(),mMinerCkey.ToString(),nCreationTime);
 	}
 	INT64 getBirthDay()const
 	{
 		return nCreationTime;
 	}
-	bool getCKey(CKey& keyOut) const
-	{
-		 keyOut = mCkey;
-		 return true;
+	bool getCKey(CKey& keyOut,bool IsMiner = false) const {
+		if(IsMiner == true && mMinerCkey.IsValid()) {
+			keyOut = mMinerCkey;
+		} else {
+			keyOut = mCkey;
+		}
+		return keyOut.IsValid();
 	}
 
 	bool CreateANewKey()
@@ -100,31 +82,56 @@ public:
 		nCreationTime = GetTime();
 		return true;
 	}
-	bool GetPubKey(CPubKey &mOutKey) const
+	bool GetPubKey(CPubKey &mOutKey,bool IsMiner = false) const
 	{
+		if(IsMiner == true){
+			if(mMinerCkey.IsValid()){
+				mOutKey = mMinerCkey.GetPubKey();
+				return true;
+			}
+			return false;
+		}
+
+		assert(mCkey.IsValid());
 		mOutKey =mPKey;
 		assert(mCkey.GetPubKey() == mPKey);
 		return  true;
 	}
-	bool UpdataRegID(const CAccountViewCache &view)
+	bool SynchronizSys(CAccountViewCache &view)
 	{
-		CAccountViewCache temview(view);
-		if(!temview.GetRegId(CUserID(mPKey.GetID()),mregId))
+		 CAccount account;
+		if(!view.GetAccount(CUserID(mPKey.GetKeyID()),account))
 		{
 			mregId.clean();
-			return false;
+			mMinerCkey.Clear();
 		}
+		else
+		{
+			mregId = account.regID;
+			assert(account.PublicKey == mPKey);
+			if(account.MinerPKey.IsValid())
+			assert(account.MinerPKey == mMinerCkey.GetPubKey());
+		}
+
 		LogPrint("wallet","%s \r\n",this->ToString());
 		return true;
 	}
 
 	CKeyStoreValue(const CPubKey &pubkey) {
-		assert(mCkey.IsValid() == false); //the ckey mustbe unvalid
+		assert(mCkey.IsValid() == false && pubkey.IsFullyValid()); //the ckey mustbe unvalid
 		nCreationTime = GetTime();
 		mPKey = pubkey;
 	}
 
-
+	CKeyStoreValue(CKey const &inkey,CKey const &minerKey)
+	{
+		assert(inkey.IsValid());
+		assert(minerKey.IsValid());
+		mMinerCkey = minerKey;
+		mCkey = inkey ;
+		nCreationTime = GetTime();
+		mPKey = mCkey.GetPubKey();
+	}
 
 	CKeyStoreValue(CKey const &inkey)
 	{
@@ -143,7 +150,7 @@ public:
 	}
 
 	CKeyID GetCKeyID() const {
-		return (mPKey.GetID());
+		return (mPKey.GetKeyID());
 	}
 	CRegID GetRegID() const {
 		return mregId;
@@ -154,6 +161,7 @@ public:
 			READWRITE(mregId);
 			READWRITE(mPKey);
 			READWRITE(mCkey);
+			READWRITE(mMinerCkey);
 			READWRITE(nCreationTime);
 	)
 
@@ -173,8 +181,12 @@ private:
 	map<CKeyID, CKeyStoreValue> mKeyPool;
 	int nWalletVersion;
 	CBlockLocator  bestBlock;
+	uint256 GetCheckSum()const;
 
 public:
+	bool fFileBacked;
+	string strWalletFile;
+
 	map<uint256, CAccountTx> mapInBlockTx;
 	map<uint256, std::shared_ptr<CBaseTransaction> > UnConfirmTx;
 
@@ -188,72 +200,75 @@ public:
 	(
 			LOCK(cs_wallet);
 			{
+
 				READWRITE(nWalletVersion);
 				READWRITE(bestBlock);
 				READWRITE(MasterKey);
 				READWRITE(mKeyPool);
 				READWRITE(mapInBlockTx);
+				uint256 sun(0);
+				if(fWrite){
+				 sun = GetCheckSum();
+				}
+				READWRITE(sun);
+				if(fRead) {
+					if(sun != GetCheckSum()) {
+						throw "wallet file Invalid";
+					}
+				}
 			}
 	)
 	bool FushToDisk()const;
-	bool getKeyId(set<CKeyID> &vkey) const {
-		for (auto &te : mKeyPool) {
-			vkey.insert(te.first);
-		}
-		return true;
-	}
+
 	int64_t GetBalance(int ncurhigh)const;
-    bool UpdataRegId(const CKeyID &keyid,const CAccountViewCache &inview)
+    bool SynchronizRegId(const CKeyID &keyid,const CAccountViewCache &inview)
 	{
 		CAccountViewCache view(inview);
 		if(count(keyid)> 0)
 		{
-			return mKeyPool[keyid].UpdataRegID(view);
+			return mKeyPool[keyid].SynchronizSys(view);
 		}
 		return false;
 	}
-	bool UpdataAllRegID(const CAccountViewCache &inview) {
+    bool AddKey(const CKey& secret,const CKey& minerKey);
+	bool SynchronizSys(const CAccountViewCache &inview) {
 		CAccountViewCache view(inview);
 		for (auto &te : mKeyPool) {
-			te.second.UpdataRegID(view);
+			te.second.SynchronizSys(view);
 		}
 		return true;
 	}
 	static string defaultFilename ;
 
 	static CWallet* getinstance();
-	/// Main wallet lock.
-	/// This lock protects all the fields added by CWallet
-	///   except for:
-	///      fFileBacked (immutable after instantiation)
-	///      strWalletFile (immutable after instantiation)
+
 	mutable CCriticalSection cs_wallet;
 	bool IsCrypted() const
 	{
 		return false;
 	}
-	bool GetPubKey(const CKeyID &address, CPubKey& keyOut)
+	bool GetPubKey(const CKeyID &address, CPubKey& keyOut,bool IsMiner = false)
 	{
 		AssertLockHeld(cs_wallet);
 		if (mKeyPool.count(address)) {
-			return mKeyPool[address].GetPubKey(keyOut);
+			return mKeyPool[address].GetPubKey(keyOut,IsMiner);
 		}
 		return false;
 
 	}
-	bool GetKey(const CKeyID &address, CKey& keyOut) const {
+	bool GetKey(const CKeyID &address, CKey& keyOut, bool IsMiner = false) const {
 		AssertLockHeld(cs_wallet);
 		if (mKeyPool.count(address)) {
 			auto tep = mKeyPool.find(address);
 			if(tep != mKeyPool.end())
-			return tep->second.getCKey(keyOut);
+			return tep->second.getCKey(keyOut,IsMiner);
 		}
 		return false;
 	}
 	bool GetKey(const CUserID &address, CKey& keyOut) const {
 		AssertLockHeld(cs_wallet);
 		if (address.type() == typeid(CKeyID)) {
-			return GetKey(boost::get<CRegID>(address),keyOut);
+			return GetKey(boost::get<CKeyID>(address),keyOut);
 		}
 		else
 		{
@@ -275,7 +290,6 @@ public:
 					IdOut = tep->second.GetRegID();
 					return true;
 				}
-
 			}
 
 		} else {
@@ -285,15 +299,14 @@ public:
 		return false;
 	}
 
-	bool GetKeys(set<CKeyID> &setKeyID) {
+	bool GetKeyIds(set<CKeyID> &setKeyID) {
 		AssertLockHeld(cs_wallet);
 		for (auto & tem : mKeyPool) {
 			setKeyID.insert(tem.first);
 		}
 		return true;
 	}
-	bool fFileBacked;
-	string strWalletFile;
+
 	bool AddPubKey(const CPubKey& pk);
 
 
@@ -552,16 +565,18 @@ private:
 
 public:
 	uint256 blockHash;
+	int blockhigh;
 //	set<uint256> Txhash;
 
 	map<uint256, vector<CAccountOperLog> > mapOperLog;
 
 	map<uint256, std::shared_ptr<CBaseTransaction> > mapAccountTx;
 public:
-	CAccountTx(CWallet* pwallet = NULL, uint256 hash = uint256(0)) {
+	CAccountTx(CWallet* pwallet = NULL, uint256 hash = uint256(0),int high = 0) {
 		pWallet = pwallet;
 		blockHash = hash;
 		mapAccountTx.clear();
+		blockhigh = high;
 	}
 
 	~CAccountTx() {
@@ -661,6 +676,7 @@ public:
 	IMPLEMENT_SERIALIZE
 	(
 			READWRITE(blockHash);
+			READWRITE(blockhigh);
 			READWRITE(mapAccountTx);
 	)
 

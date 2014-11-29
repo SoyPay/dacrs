@@ -51,10 +51,11 @@ string AccountFromValue(const Value& value)
 
 Value getnewaddress(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 0)
+    if (fHelp || params.size() > 1)
         throw runtime_error(
             "getnewaddress \n"
-            "\nReturns a new soypay address for receiving payments.\n"
+            "\nArguments:\n"
+        	"1. \"IsMiner\"  (bool)  private key Is used for miner if true will create tow key ,another for miner.\n"
            "\nExamples:\n"
             + HelpExampleCli("getnewaddress", "")
         );
@@ -66,17 +67,30 @@ Value getnewaddress(const Array& params, bool fHelp)
     CKey  mCkey;
     mCkey.MakeNewKey();
 
-    // Generate a new key that is added to wallet
-    CPubKey newKey = mCkey.GetPubKey();
-//    if (!pwalletMain->GetKeyFromPool(newKey))
-//        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
-    CKeyID keyID = newKey.GetID();
+    CKey  Minter;
+    bool IsForMiner = false;
+	if (params.size() == 1) {
+		RPCTypeCheck(params, list_of(bool_type));
+		Minter.MakeNewKey();
+		IsForMiner = params[0].get_bool();
+	}
 
-    if(pwalletMain->AddKey(mCkey))
-    {
-    	return CBitcoinAddress(keyID).ToString();
-    }
-    throw runtime_error("add key failed ");
+
+    CPubKey newKey = mCkey.GetPubKey();
+
+    CKeyID keyID = newKey.GetKeyID();
+
+	if (IsForMiner) {
+		if (!pwalletMain->AddKey(mCkey, Minter))
+			throw runtime_error("add key failed ");
+	}
+	else if (!pwalletMain->AddKey(mCkey)) {
+		throw runtime_error("add key failed ");
+	}
+	Object obj;
+	obj.push_back(Pair("addr", keyID.ToAddress()));
+	obj.push_back(Pair("minerpubkey", IsForMiner?Minter.GetPubKey().ToString(): "no" ));
+	return obj;
 }
 
 Value signmessage(const Array& params, bool fHelp)
@@ -87,7 +101,7 @@ Value signmessage(const Array& params, bool fHelp)
             "\nSign a message with the private key of an address"
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
-            "1. \"bitcoinaddress\"  (string, required) The bitcoin address to use for the private key.\n"
+            "1. \"soypayaddress\"  (string, required) The soypay address to use for the private key.\n"
             "2. \"message\"         (string, required) The message to create a signature of.\n"
             "\nResult:\n"
             "\"signature\"          (string) The signature of the message encoded in base 64\n"
@@ -107,7 +121,7 @@ Value signmessage(const Array& params, bool fHelp)
     string strAddress = params[0].get_str();
     string strMessage = params[1].get_str();
 
-    CBitcoinAddress addr(strAddress);
+    CSoyPayAddress addr(strAddress);
     if (!addr.IsValid())
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
@@ -150,7 +164,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
     //todo 完成从指定地址发到指定地址的
 
-    CBitcoinAddress address(params[0].get_str());
+    CSoyPayAddress address(params[0].get_str());
 
     EnsureWalletIsUnlocked();
     CKeyID sendKeyId;
@@ -204,7 +218,7 @@ struct tallyitem
 
 //static void MaybePushAddress(Object & entry, const CTxDestination &dest)
 //{
-//    CBitcoinAddress addr;
+//    CSoyPayAddress addr;
 //    if (addr.Set(dest))
 //        entry.push_back(Pair("address", addr.ToString()));
 //}

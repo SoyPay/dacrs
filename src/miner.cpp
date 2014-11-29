@@ -480,7 +480,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
-		pwalletMain->GetKeys(setKeyID); //get addrs
+		pwalletMain->GetKeyIds(setKeyID); //get addrs
 		if (setKeyID.empty()) {
 			LogPrint("INFO","CreatePosTx setKeyID empty\n");
 			return false;
@@ -499,20 +499,20 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 				}
 				CTxUndo txundo;
 				CValidationState state;
-				for(auto &item : contractScriptTemp.mapDatas) {
-					vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
-					if(item.first == vKey1) {
-						LogPrint("INFO","item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
-					}
-				}
+//				for(auto &item : contractScriptTemp.mapDatas) {
+//					vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
+//					if(item.first == vKey1) {
+//						LogPrint("INFO","item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
+//					}
+//				}
 				if (!pBaseTx->UpdateAccount(i, accView, state, txundo, pPrevIndex->nHeight + 1, txCacheTemp, contractScriptTemp)) {
 					LogPrint("INFO","tx hash:%s transaction is invalid\n", pBaseTx->GetHash().GetHex());
-					for (auto &item : contractScriptTemp.mapDatas) {
-						vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
-						if(item.first == vKey1) {
-							LogPrint("INFO", "item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
-						}
-					}
+//					for (auto &item : contractScriptTemp.mapDatas) {
+//						vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
+//						if(item.first == vKey1) {
+//							LogPrint("INFO", "item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
+//						}
+//					}
 					mempool.mapTx.erase(pBaseTx->GetHash());
 					return false;
 				}
@@ -611,7 +611,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 				CRegID regid;
 				CKey key;
 
-				if (pwalletMain->GetKey(item.keyID, key) && pAccountViewTip->GetRegId(item.keyID, regid)) {
+				if (pwalletMain->GetKey(item.keyID, key,true) && pAccountViewTip->GetRegId(item.keyID, regid)) {
 					CRewardTransaction *prtx = (CRewardTransaction *) pBlock->vptx[0].get();
 					prtx->rewardValue += item.GetInterest();
 					prtx->account = regid;
@@ -629,7 +629,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 //					cout << "miner block hash:" << pBlock->SignatureHash().GetHex() << endl;
 //					cout << "miner regId :" << regid.ToString() << endl;
 					CPubKey tep = key.GetPubKey();
-					assert(tep == item.publicKey);
+					assert(tep == item.PublicKey);
 //					cout << "miner keyid's pubkey:" << HexStr(tep.begin(),tep.end()) << endl;
 //					cout << "miner item's accont:" << item.ToString() << endl;
 
@@ -692,13 +692,17 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 //			cout << "check secureAcc " << secureAcc.ToString() << endl;
 //			cout << "miner regId :" << secureAcc.regID.ToString() << endl;
 
-			if (!account.publicKey.Verify(pBlock->SignatureHash(), pBlock->vSignature)) {
-//				LogPrint("postx", "publickey:%s, keyid:%s\n", secureAcc.publicKey.GetHash().GetHex(), secureAcc.keyID.GetHex());
-//				LogPrint("postx", "block verify fail\r\n");
-//				LogPrint("postx", "block hash:%s\n", pBlock->GetHash().GetHex());
-//				LogPrint("postx", "signature block:%s\n", HexStr(pBlock->vSignature.begin(), pBlock->vSignature.end()));
+			if (!account.PublicKey.Verify(pBlock->SignatureHash(), pBlock->vSignature)) {
+				if (!account.MinerPKey.Verify(pBlock->SignatureHash(), pBlock->vSignature)) {
+//					LogPrint("postx", "publickey:%s, keyid:%s\n", secureAcc.PublicKey.GetHash().GetHex(),
+	//						secureAcc.keyID.GetHex());
+//					LogPrint("postx", "block verify fail\r\n");
+//					LogPrint("postx", "block hash:%s\n", pBlock->GetHash().GetHex());
+//					LogPrint("postx", "signature block:%s\n",
+//							HexStr(pBlock->vSignature.begin(), pBlock->vSignature.end()));
 				LogPrint("ERROR", "Verify signature error");
-				return false;
+					return false;
+				}
 			}
 
 		} else {
@@ -1021,7 +1025,7 @@ bool CreateBlockWithAppointedAddr(CKeyID &keyID)
 			}
 			if(setCreateKey.empty())
 			{
-				LogPrint("postx", "%s is not exist in the wallet\r\n",CBitcoinAddress(keyID).ToString().c_str());
+				LogPrint("postx", "%s is not exist in the wallet\r\n",CSoyPayAddress(keyID).ToString().c_str());
 				break;
 			}
 			::MilliSleep(1);
