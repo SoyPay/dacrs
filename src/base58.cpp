@@ -190,11 +190,11 @@ int CBase58Data::CompareTo(const CBase58Data& b58) const {
 }
 
 namespace {
-class CBitcoinAddressVisitor: public boost::static_visitor<bool> {
+class CSoyPayAddressVisitor: public boost::static_visitor<bool> {
 private:
-	CBitcoinAddress *addr;
+	CSoyPayAddress *addr;
 public:
-	CBitcoinAddressVisitor(CBitcoinAddress *addrIn) :
+	CSoyPayAddressVisitor(CSoyPayAddress *addrIn) :
 			addr(addrIn) {
 	}
 
@@ -209,18 +209,18 @@ public:
 }
 ;
 
-bool CBitcoinAddress::Set(const CKeyID &id) {
+bool CSoyPayAddress::Set(const CKeyID &id) {
 	SetData(SysParams().Base58Prefix(CBaseParams::PUBKEY_ADDRESS), &id, 20);
 	return true;
 }
 
 
 
-bool CBitcoinAddress::Set(const CTxDestination &dest) {
-	return boost::apply_visitor(CBitcoinAddressVisitor(this), dest);
+bool CSoyPayAddress::Set(const CTxDestination &dest) {
+	return boost::apply_visitor(CSoyPayAddressVisitor(this), dest);
 }
 
-bool CBitcoinAddress::IsValid() const {
+bool CSoyPayAddress::IsValid() const {
 
 	bool bvalid = false;
 	{
@@ -239,7 +239,7 @@ bool CBitcoinAddress::IsValid() const {
 	return bvalid;
 }
 
-CTxDestination CBitcoinAddress::Get() const {
+CTxDestination CSoyPayAddress::Get() const {
 	if (!IsValid())
 		return CNoDestination();
 
@@ -256,7 +256,7 @@ CTxDestination CBitcoinAddress::Get() const {
 	}
 }
 
-bool CBitcoinAddress::GetKeyID(CKeyID &keyID) const {
+bool CSoyPayAddress::GetKeyID(CKeyID &keyID) const {
 	uint160 id;
 
 	if (vchVersion == SysParams().Base58Prefix(CBaseParams::PUBKEY_ADDRESS) && vchData.size() == 20) {
@@ -274,7 +274,7 @@ bool CBitcoinAddress::GetKeyID(CKeyID &keyID) const {
 	return false;
 }
 
-//bool CBitcoinAddress::GetRegID(CRegID &Regid) const {
+//bool CSoyPayAddress::GetRegID(CRegID &Regid) const {
 //
 ////	vector<unsigned char> vid;
 ////	vid.push_back(CBaseParams::ACC_ADDRESS);
@@ -285,33 +285,33 @@ bool CBitcoinAddress::GetKeyID(CKeyID &keyID) const {
 //	return false;
 //}
 
-bool CBitcoinAddress::IsScript() const {
+bool CSoyPayAddress::IsScript() const {
 	return IsValid() && vchVersion == SysParams().Base58Prefix(CBaseParams::SCRIPT_ADDRESS);
 }
 
-void CBitcoinSecret::SetKey(const CKey& vchSecret) {
+void CSoyPaySecret::SetKey(const CKey& vchSecret) {
 	assert(vchSecret.IsValid());
 	SetData(SysParams().Base58Prefix(CBaseParams::SECRET_KEY), vchSecret.begin(), vchSecret.size());
 	if (vchSecret.IsCompressed())
 		vchData.push_back(1);
 }
 
-CKey CBitcoinSecret::GetKey() {
+CKey CSoyPaySecret::GetKey() {
 	CKey ret;
 	ret.Set(&vchData[0], &vchData[32], vchData.size() > 32 && vchData[32] == 1);
 	return ret;
 }
 
-bool CBitcoinSecret::IsValid() const {
+bool CSoyPaySecret::IsValid() const {
 	bool fExpectedFormat = vchData.size() == 32 || (vchData.size() == 33 && vchData[32] == 1);
 	bool fCorrectVersion = vchVersion == SysParams().Base58Prefix(CBaseParams::SECRET_KEY);
 	return fExpectedFormat && fCorrectVersion;
 }
 
-bool CBitcoinSecret::SetString(const char* pszSecret) {
+bool CSoyPaySecret::SetString(const char* pszSecret) {
 	return CBase58Data::SetString(pszSecret) && IsValid();
 }
 
-bool CBitcoinSecret::SetString(const string& strSecret) {
+bool CSoyPaySecret::SetString(const string& strSecret) {
 	return SetString(strSecret.c_str());
 }

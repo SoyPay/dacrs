@@ -146,7 +146,7 @@ void CreateOperateSelfScriptTx(int param)
 	vInputParams.push_back("10");
 	std::string strReturn("");
 	TestCallRPC("createcontracttx", vInputParams, strReturn);
-//	cout<<strReturn<<endl;
+	cout<<strReturn<<endl;
 	return ;
 }
 
@@ -167,7 +167,7 @@ void CreateOperateOtherScriptTx(int param)
 	vInputParams.push_back("10");
 	std::string strReturn("");
 	TestCallRPC("createcontracttx", vInputParams, strReturn);
-//	cout<<strReturn<<endl;
+	cout<<strReturn<<endl;
 	return ;
 }
 BOOST_AUTO_TEST_SUITE(test_script)

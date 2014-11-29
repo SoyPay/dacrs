@@ -1025,7 +1025,7 @@ bool CreateBlockWithAppointedAddr(CKeyID &keyID)
 			}
 			if(setCreateKey.empty())
 			{
-				LogPrint("postx", "%s is not exist in the wallet\r\n",CBitcoinAddress(keyID).ToString().c_str());
+				LogPrint("postx", "%s is not exist in the wallet\r\n",CSoyPayAddress(keyID).ToString().c_str());
 				break;
 			}
 			::MilliSleep(1);

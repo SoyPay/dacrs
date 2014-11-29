@@ -181,6 +181,7 @@ private:
 	map<CKeyID, CKeyStoreValue> mKeyPool;
 	int nWalletVersion;
 	CBlockLocator  bestBlock;
+	uint256 GetCheckSum()const;
 
 public:
 	bool fFileBacked;
@@ -199,11 +200,22 @@ public:
 	(
 			LOCK(cs_wallet);
 			{
+
 				READWRITE(nWalletVersion);
 				READWRITE(bestBlock);
 				READWRITE(MasterKey);
 				READWRITE(mKeyPool);
 				READWRITE(mapInBlockTx);
+				uint256 sun(0);
+				if(fWrite){
+				 sun = GetCheckSum();
+				}
+				READWRITE(sun);
+				if(fRead) {
+					if(sun != GetCheckSum()) {
+						throw "wallet file Invalid";
+					}
+				}
 			}
 	)
 	bool FushToDisk()const;
@@ -553,16 +565,18 @@ private:
 
 public:
 	uint256 blockHash;
+	int blockhigh;
 //	set<uint256> Txhash;
 
 	map<uint256, vector<CAccountOperLog> > mapOperLog;
 
 	map<uint256, std::shared_ptr<CBaseTransaction> > mapAccountTx;
 public:
-	CAccountTx(CWallet* pwallet = NULL, uint256 hash = uint256(0)) {
+	CAccountTx(CWallet* pwallet = NULL, uint256 hash = uint256(0),int high = 0) {
 		pWallet = pwallet;
 		blockHash = hash;
 		mapAccountTx.clear();
+		blockhigh = high;
 	}
 
 	~CAccountTx() {
@@ -662,6 +676,7 @@ public:
 	IMPLEMENT_SERIALIZE
 	(
 			READWRITE(blockHash);
+			READWRITE(blockhigh);
 			READWRITE(mapAccountTx);
 	)
 

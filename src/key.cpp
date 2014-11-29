@@ -632,5 +632,5 @@ string CPubKey::ToString() const {
 }
 
 string CKeyID::ToAddress() const {
-	return CBitcoinAddress(*this).ToString();
+	return CSoyPayAddress(*this).ToString();
 }

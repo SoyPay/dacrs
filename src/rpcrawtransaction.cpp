@@ -47,7 +47,7 @@ using namespace json_spirit;
 //
 //    Array a;
 //    for (const auto& addr : addresses)
-//        a.push_back(CBitcoinAddress(addr).ToString());
+//        a.push_back(CSoyPayAddress(addr).ToString());
 //    out.push_back(Pair("addresses", a));
 //}
 
@@ -244,13 +244,13 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
 //    if (params.size() > 1)
 //        nMaxDepth = params[1].get_int();
 //
-//    set<CBitcoinAddress> setAddress;
+//    set<CSoyPayAddress> setAddress;
 //    if (params.size() > 2)
 //    {
 //        Array inputs = params[2].get_array();
 //        for (auto& input : inputs)
 //        {
-//            CBitcoinAddress address(input.get_str());
+//            CSoyPayAddress address(input.get_str());
 //            if (!address.IsValid())
 //                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Bitcoin address: ")+input.get_str());
 //            if (setAddress.count(address))
@@ -286,7 +286,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
 ////        CTxDestination address;
 ////        if (ExtractDestination(out.tx->vout[out.i].scriptPubKey, address))
 ////        {
-////            entry.push_back(Pair("address", CBitcoinAddress(address).ToString()));
+////            entry.push_back(Pair("address", CSoyPayAddress(address).ToString()));
 ////            if (pwalletMain->mapAddressBook.count(address))
 ////                entry.push_back(Pair("account", pwalletMain->mapAddressBook[address].name));
 ////        }
@@ -368,10 +368,10 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
 ////        rawTx.vin.push_back(in);
 //    }
 //
-//    set<CBitcoinAddress> setAddress;
+//    set<CSoyPayAddress> setAddress;
 //    for(const auto& s : sendTo)
 //    {
-////        CBitcoinAddress address(s.name_);
+////        CSoyPayAddress address(s.name_);
 ////        if (!address.IsValid())
 ////            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Bitcoin address: ")+s.name_);
 ////
@@ -496,7 +496,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
 ////    }
 ////    ScriptPubKeyToJSON(script, r, false);
 ////
-////    r.push_back(Pair("p2sh", CBitcoinAddress(script.GetID()).ToString()));
+////    r.push_back(Pair("p2sh", CSoyPayAddress(script.GetID()).ToString()));
 //    return r;
 //}
 
@@ -601,7 +601,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
 //        Array keys = params[2].get_array();
 //        for (auto k : keys)
 //        {
-//            CBitcoinSecret vchSecret;
+//            CSoyPaySecret vchSecret;
 //            bool fGood = vchSecret.SetString(k.get_str());
 //            if (!fGood)
 //                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
