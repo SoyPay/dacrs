@@ -521,10 +521,10 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
     return chainActive.Height() - pindex->nHeight + 1;
 }
 
-bool CheckSignScript(const vector<unsigned char> &accountId,const uint256& sighash,
+bool CheckSignScript(const CRegID &regId,const uint256& sighash,
 		const vector_unsigned_char &signatrue, CValidationState &state, CAccountViewCache &view) {
 	CAccount acctInfo;
-	CRegID regId(accountId);
+//	CRegID regId(accountId);
 	if (!view.GetAccount(regId, acctInfo)) {
 		return state.DoS(100, ERROR("CheckSignScript() :tx GetAccount falied"), REJECT_INVALID, "bad-getaccount");
 	}
@@ -730,6 +730,24 @@ bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree)
     return ::AcceptToMemoryPool(mempool, state, pTx.get(), fLimitFree, NULL);
 }
 
+int GetTxComfirmHigh(const uint256 &hash) {
+	if (SysParams().IsTxIndex()) {
+		CDiskTxPos postx;
+		if (pblocktree->ReadTxIndex(hash, postx)) {
+			CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
+			CBlockHeader header;
+			try {
+				file >> header;
+
+			} catch (std::exception &e) {
+				ERROR("%s : Deserialize or I/O error - %s", __func__, e.what());
+				return -1;
+			}
+			return header.nHeight;
+		}
+	}
+	return -1;
+}
 
 // Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock
 bool GetTransaction(std::shared_ptr<CBaseTransaction> &pBaseTx, const uint256 &hash)
@@ -1240,7 +1258,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 			sourceAccount.SetRegId(accountId);
 			sourceAccount.PublicKey = pubKey;
 			sourceAccount.llValues = pRewardTx->rewardValue;
-			assert(view.SaveAccountInfo(accountId.GetRegID(), keyId, sourceAccount));
+			assert(view.SaveAccountInfo(accountId.GetVec6(), keyId, sourceAccount));
 		}
 		return true;
 	}

@@ -499,20 +499,10 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 				}
 				CTxUndo txundo;
 				CValidationState state;
-//				for(auto &item : contractScriptTemp.mapDatas) {
-//					vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
-//					if(item.first == vKey1) {
-//						LogPrint("INFO","item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
-//					}
-//				}
+
 				if (!pBaseTx->UpdateAccount(i, accView, state, txundo, pPrevIndex->nHeight + 1, txCacheTemp, contractScriptTemp)) {
 					LogPrint("INFO","tx hash:%s transaction is invalid\n", pBaseTx->GetHash().GetHex());
-//					for (auto &item : contractScriptTemp.mapDatas) {
-//						vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
-//						if(item.first == vKey1) {
-//							LogPrint("INFO", "item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
-//						}
-//					}
+
 					mempool.mapTx.erase(pBaseTx->GetHash());
 					return false;
 				}
@@ -617,8 +607,8 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 					prtx->account = regid;
 					prtx->nHeight = pPrevIndex->nHeight+1;
 					pBlock->hashMerkleRoot = pBlock->BuildMerkleTree();
-					vector<unsigned char> vRegId = regid.GetRegID();
-					printf("CreatePosTx addr = %s\r\n",item.keyID.ToAddress().c_str());
+					vector<unsigned char> vRegId = regid.GetVec6();
+					printf("CreatePosTx addr = %s time:%s\r\n",item.keyID.ToAddress().c_str(),DateTimeStrFormat("%a, %d %b %Y %H:%M:%S +0000", GetTime()).c_str());
 					LogPrint("postx", "find pos tx hash succeed: \n"
 									  "   pos hash:%s \n"
 									  "adjust hash:%s \r\n", curhash.GetHex(), adjusthash.GetHex());
@@ -637,10 +627,10 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 //						cout << "miner signature:" << HexStr(pBlock->vSignature) << endl;
 						return true;
 					} else {
-						LogPrint("postx", "sign fail\r\n");
+						LogPrint("ERROR", "sign fail\r\n");
 					}
 				} else {
-					LogPrint("postx", "GetKey fail or GetRegID fail\r\n");
+					LogPrint("ERROR", "GetKey fail or GetVec6 fail\r\n");
 				}
 			}
 		}
@@ -1001,7 +991,7 @@ void static SoypayMiner(CWallet *pwallet) {
 	}
 }
 
-bool CreateBlockWithAppointedAddr(CKeyID &keyID)
+uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 {
 	if (SysParams().NetworkID() == CBaseParams::REGTEST)
 	{
@@ -1031,11 +1021,11 @@ bool CreateBlockWithAppointedAddr(CKeyID &keyID)
 			::MilliSleep(1);
 			if (pindexPrev != chainActive.Tip())
 			{
-				return true;
+				return chainActive.Tip()->GetBlockHash() ;
 			}
 		}
 	}
-	return false;
+	return uint256(0);
 }
 
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads) {
