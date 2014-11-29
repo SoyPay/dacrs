@@ -15,8 +15,7 @@ void CUIServer::StopServer(){
 	if(NULL == instance)
 		return ;
 	instance->m_iosev.stop();
-	delete instance;
-	instance = NULL;
+	instance->m_bRunFlag = false;
 }
 
 void CUIServer::RunThreadPorc(CUIServer* pThis) {
@@ -80,6 +79,10 @@ void CUIServer::read_handler(const system::error_code& ec, char* pstr, sock_pt s
 void CUIServer::RunServer(){
 	Accept();
 	m_iosev.run();
+	if(instance != NULL && !instance->m_bRunFlag) {
+		delete instance;
+			instance = NULL;
+	}
 }
 
 CUIServer* CUIServer::instance = NULL;
