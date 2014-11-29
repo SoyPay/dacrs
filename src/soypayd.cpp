@@ -61,9 +61,9 @@ bool AppInit(int argc, char* argv[]) {
 		//
 		// If Qt is used, parameters/soypay.conf are parsed in qt/soypay.cpp's main()
 		CBaseParams::IntialParams(argc, argv);
-		SysParams().InitalConfig();
+		SysCfg().InitalConfig();
 
-		if (CBaseParams::IsArgCount("-?") || CBaseParams::IsArgCount("--help")) {
+		if (SysCfg().IsArgCount("-?") || SysCfg().IsArgCount("--help")) {
 			// First part of help message is specific to soypayd / RPC client
 			std::string strUsage = _("Bitcoin Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n"
 					+ _("Usage:") + "\n" + "  soypayd [options]                     " + _("Start Bitcoin Core Daemon")
@@ -90,7 +90,7 @@ bool AppInit(int argc, char* argv[]) {
 			exit(ret);
 		}
 #ifndef WIN32
-		fDaemon = CBaseParams::GetBoolArg("-daemon", false);
+		fDaemon = SysCfg().GetBoolArg("-daemon", false);
 		if (fDaemon)
 		{
 			fprintf(stdout, "Bitcoin server starting\n");
@@ -114,7 +114,7 @@ bool AppInit(int argc, char* argv[]) {
 			fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
 		}
 #endif
-		CBaseParams::SoftSetBoolArg("-server", true);
+		SysCfg().SoftSetBoolArg("-server", true);
 
 		detectShutdownThread = new boost::thread(boost::bind(&DetectShutdownThread, &threadGroup));
 		fRet = AppInit2(threadGroup);

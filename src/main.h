@@ -311,7 +311,7 @@ public:
 
         // Write index header
         unsigned int nSize = fileout.GetSerializeSize(*this);
-        fileout << FLATDATA(SysParams().MessageStart()) << nSize;
+        fileout << FLATDATA(SysCfg().MessageStart()) << nSize;
 
         // Write undo data
         long fileOutPos = ftell(fileout);

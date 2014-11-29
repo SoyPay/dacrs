@@ -208,15 +208,15 @@ DebugLogFile> g_DebugLogs;
 
 
 static void DebugPrintInit() {
-	shared_ptr<vector<string>> te = SysParams().GetMultiArgsMap("-debug");
+	shared_ptr<vector<string>> te = SysCfg().GetMultiArgsMap("-debug");
 	const vector<string>& categories = *(te.get());
 	set<string> logfiles(categories.begin(), categories.end());
 
-	shared_ptr<vector<string>> tmp = SysParams().GetMultiArgsMap("-nodebug");
+	shared_ptr<vector<string>> tmp = SysCfg().GetMultiArgsMap("-nodebug");
 	const vector<string>& nocategories = *(tmp.get());
 	set<string> nologfiles(nocategories.begin(), nocategories.end());
 
-	if (SysParams().IsDebugAll()) {
+	if (SysCfg().IsDebugAll()) {
 		logfiles.clear();
 		logfiles = nologfiles;
 		logfiles.insert("debug");
@@ -267,8 +267,8 @@ int LogPrintStr(const string &str) {
 
 string GetLogHead(int line, const char* file, const char* category) {
 	string te(category != NULL ? category : "");
-	if (SysParams().IsDebug()) {
-		if (SysParams().IsLogPrintLine())
+	if (SysCfg().IsDebug()) {
+		if (SysCfg().IsLogPrintLine())
 			return tfm::format("[%s:%d]%s: ", file, line, te);
 	}
 	return string("");
@@ -276,7 +276,7 @@ string GetLogHead(int line, const char* file, const char* category) {
 
 int LogPrintStr(const char* category, const string &str) {
 
-	if (!SysParams().IsDebug())
+	if (!SysCfg().IsDebug())
 		return 0;
 
 	int ret = 0; // Returns total number of characters written
@@ -285,7 +285,7 @@ int LogPrintStr(const char* category, const string &str) {
 
 	map<string, DebugLogFile>::iterator it;
 
-	if (SysParams().IsDebugAll()) {
+	if (SysCfg().IsDebugAll()) {
 		if (NULL != category) {
 			it = g_DebugLogs.find(category);
 			if (it != g_DebugLogs.end()) {
@@ -300,15 +300,15 @@ int LogPrintStr(const char* category, const string &str) {
 		}
 	}
 
-	if (SysParams().IsPrint2Console()) {
+	if (SysCfg().IsPrint2Console()) {
 		// print to console
 		ret = fwrite(str.data(), 1, str.size(), stdout);
 	}
-	if (SysParams().IsPrintToFile()) {
+	if (SysCfg().IsPrintToFile()) {
 		DebugLogFile& log = it->second;
 		boost::mutex::scoped_lock scoped_lock(*log.m_mutexDebugLog);
 		// Debug print useful for profiling
-		if (SysParams().IsLogTimestamps() && log.m_newLine) {
+		if (SysCfg().IsLogTimestamps() && log.m_newLine) {
 			ret += fprintf(log.m_fileout, "%s ", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
 		}
 		if (!str.empty() && str[str.size() - 1] == '\n') {
@@ -443,7 +443,7 @@ static void InterpretNegativeSetting(string name, map<string, string>& mapSettin
 		string positive("-");
 		positive.append(name.begin() + 3, name.end());
 		if (mapSettingsRet.count(positive) == 0) {
-			bool value = !CBaseParams::GetBoolArg(name, false);
+			bool value = !SysCfg().GetBoolArg(name, false);
 			mapSettingsRet[positive] = (value ? "1" : "0");
 		}
 	}
@@ -839,7 +839,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific) {
 
 	int nNet = CBaseParams::MAX_NETWORK_TYPES;
 	if (fNetSpecific)
-		nNet = SysParams().NetworkID();
+		nNet = SysCfg().NetworkID();
 
 	fs::path &path = pathCached[nNet];
 
@@ -848,8 +848,8 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific) {
 	if (!path.empty())
 		return path;
 
-	if (CBaseParams::IsArgCount("-datadir")) {
-		path = fs::system_complete(CBaseParams::GetArg("-datadir", ""));
+	if (SysCfg().IsArgCount("-datadir")) {
+		path = fs::system_complete(SysCfg().GetArg("-datadir", ""));
 		if (!fs::is_directory(path)) {
 			path = "";
 			return path;
@@ -858,7 +858,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific) {
 		path = GetDefaultDataDir();
 	}
 	if (fNetSpecific)
-		path /= SysParams().DataDir();
+		path /= SysCfg().DataDir();
 
 	fs::create_directories(path);
 
@@ -870,7 +870,7 @@ void ClearDatadirCache() {
 }
 
 boost::filesystem::path GetConfigFile() {
-	boost::filesystem::path pathConfigFile(CBaseParams::GetArg("-conf", "soypay.conf"));
+	boost::filesystem::path pathConfigFile(SysCfg().GetArg("-conf", "soypay.conf"));
 	if (!pathConfigFile.is_complete())
 		pathConfigFile = GetDataDir(false) / pathConfigFile;
 	return pathConfigFile;
@@ -900,7 +900,7 @@ void ReadConfigFile(map<string, string>& mapSettingsRet, map<string, vector<stri
 }
 
 boost::filesystem::path GetPidFile() {
-	boost::filesystem::path pathPidFile(CBaseParams::GetArg("-pid", "bitcoind.pid"));
+	boost::filesystem::path pathPidFile(SysCfg().GetArg("-pid", "bitcoind.pid"));
 	if (!pathPidFile.is_complete())
 		pathPidFile = GetDataDir() / pathPidFile;
 	return pathPidFile;
@@ -1124,7 +1124,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nTime) {
 				}
 			}
 		}
-		if (SysParams().IsDebug()) {
+		if (SysCfg().IsDebug()) {
 			for (int64_t n : vSorted)
 				LogPrint("INFO", "%+d  ", n);
 			LogPrint("INFO", "|  ");

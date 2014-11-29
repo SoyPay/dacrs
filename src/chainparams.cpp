@@ -346,12 +346,12 @@ bool CBaseParams::IsArgCount(const string& strArg) {
 	return false;
 }
 
-const CBaseParams &SysParams() {
+const CBaseParams &SysCfg() {
 	static shared_ptr<CBaseParams> pParams;
 
 	if (pParams.get() == NULL) {
-		bool fRegTest = CBaseParams::GetBoolArg("-regtest", false);
-		bool fTestNet = CBaseParams::GetBoolArg("-testnet", false);
+		bool fRegTest = SysCfg().GetBoolArg("-regtest", false);
+		bool fTestNet = SysCfg().GetBoolArg("-testnet", false);
 		if (fTestNet && fRegTest) {
 			fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
 			assert(0);
@@ -403,7 +403,7 @@ static void InterpretNegativeSetting(string name, map<string, string>& mapSettin
 		string positive("-");
 		positive.append(name.begin() + 3, name.end());
 		if (mapSettingsRet.count(positive) == 0) {
-			bool value = !CBaseParams::GetBoolArg(name, false);
+			bool value = !SysCfg().GetBoolArg(name, false);
 			mapSettingsRet[positive] = (value ? "1" : "0");
 		}
 	}

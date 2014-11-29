@@ -367,7 +367,7 @@ bool ClientAllowed(const boost::asio::ip::address& address)
         return true;
 
     const string strAddress = address.to_string();
-    const vector<string>& vAllow = CBaseParams::GetMultiArgs("-rpcallowip");
+    const vector<string>& vAllow = SysCfg().GetMultiArgs("-rpcallowip");
     for (auto strAllow : vAllow)
         if (WildcardMatch(strAddress, strAllow))
             return true;
@@ -493,16 +493,16 @@ static void RPCAcceptHandler(std::shared_ptr< basic_socket_acceptor<Protocol, So
 
 void StartRPCThreads()
 {
-    strRPCUserColonPass = CBaseParams::GetArg("-rpcuser", "") + ":" + CBaseParams::GetArg("-rpcpassword", "");
-    if (((CBaseParams::GetArg("-rpcpassword", "") == "") ||
-         (CBaseParams::GetArg("-rpcuser", "") == CBaseParams::GetArg("-rpcpassword", ""))) && SysParams().RequireRPCPassword())
+    strRPCUserColonPass = SysCfg().GetArg("-rpcuser", "") + ":" + SysCfg().GetArg("-rpcpassword", "");
+    if (((SysCfg().GetArg("-rpcpassword", "") == "") ||
+         (SysCfg().GetArg("-rpcuser", "") == SysCfg().GetArg("-rpcpassword", ""))) && SysCfg().RequireRPCPassword())
     {
         unsigned char rand_pwd[32];
         RAND_bytes(rand_pwd, 32);
         string strWhatAmI = "To use bitcoind";
-        if (CBaseParams::IsArgCount("-server"))
+        if (SysCfg().IsArgCount("-server"))
             strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
-        else if (CBaseParams::IsArgCount("-daemon"))
+        else if (SysCfg().IsArgCount("-daemon"))
             strWhatAmI = strprintf(_("To use the %s option"), "\"-daemon\"");
         uiInterface.ThreadSafeMessageBox(strprintf(
             _("%s, you must set a rpcpassword in the configuration file:\n"
@@ -527,30 +527,30 @@ void StartRPCThreads()
     rpc_io_service = new asio::io_service();
     rpc_ssl_context = new ssl::context(*rpc_io_service, ssl::context::sslv23);
 
-    const bool fUseSSL = CBaseParams::GetBoolArg("-rpcssl", false);
+    const bool fUseSSL = SysCfg().GetBoolArg("-rpcssl", false);
 
     if (fUseSSL)
     {
         rpc_ssl_context->set_options(ssl::context::no_sslv2);
 
-        filesystem::path pathCertFile(CBaseParams::GetArg("-rpcsslcertificatechainfile", "server.cert"));
+        filesystem::path pathCertFile(SysCfg().GetArg("-rpcsslcertificatechainfile", "server.cert"));
         if (!pathCertFile.is_complete()) pathCertFile = filesystem::path(GetDataDir()) / pathCertFile;
         if (filesystem::exists(pathCertFile)) rpc_ssl_context->use_certificate_chain_file(pathCertFile.string());
         else LogPrint("INFO","ThreadRPCServer ERROR: missing server certificate file %s\n", pathCertFile.string());
 
-        filesystem::path pathPKFile(CBaseParams::GetArg("-rpcsslprivatekeyfile", "server.pem"));
+        filesystem::path pathPKFile(SysCfg().GetArg("-rpcsslprivatekeyfile", "server.pem"));
         if (!pathPKFile.is_complete()) pathPKFile = filesystem::path(GetDataDir()) / pathPKFile;
         if (filesystem::exists(pathPKFile)) rpc_ssl_context->use_private_key_file(pathPKFile.string(), ssl::context::pem);
         else LogPrint("INFO","ThreadRPCServer ERROR: missing server private key file %s\n", pathPKFile.string());
 
-        string strCiphers = CBaseParams::GetArg("-rpcsslciphers", "TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH");
+        string strCiphers = SysCfg().GetArg("-rpcsslciphers", "TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH");
         SSL_CTX_set_cipher_list(rpc_ssl_context->impl(), strCiphers.c_str());
     }
 
     // Try a dual IPv6/IPv4 socket, falling back to separate IPv4 and IPv6 sockets
-    const bool loopback = !CBaseParams::IsArgCount("-rpcallowip");
+    const bool loopback = !SysCfg().IsArgCount("-rpcallowip");
     asio::ip::address bindAddress = loopback ? asio::ip::address_v6::loopback() : asio::ip::address_v6::any();
-    ip::tcp::endpoint endpoint(bindAddress, CBaseParams::GetArg("-rpcport", SysParams().RPCPort()));
+    ip::tcp::endpoint endpoint(bindAddress, SysCfg().GetArg("-rpcport", SysCfg().RPCPort()));
     boost::system::error_code v6_only_error;
 
     bool fListening = false;
@@ -607,7 +607,7 @@ void StartRPCThreads()
     }
 
     rpc_worker_group = new boost::thread_group();
-    int total = CBaseParams::GetArg("-rpcthreads", 4);
+    int total = SysCfg().GetArg("-rpcthreads", 4);
     for (int i = 0; i < total; i++)
         rpc_worker_group->create_thread(boost::bind(&asio::io_service::run, rpc_io_service));
 }
@@ -784,7 +784,7 @@ void ServiceConnection(AcceptedConnection *conn)
             /* Deter brute-forcing short passwords.
                If this results in a DoS the user really
                shouldn't have their RPC port exposed. */
-            if (CBaseParams::GetArg("-rpcpassword", "").size() < 20)
+            if (SysCfg().GetArg("-rpcpassword", "").size() < 20)
                 MilliSleep(250);
 
             conn->stream() << HTTPReply(HTTP_UNAUTHORIZED, "", false) << flush;
@@ -846,7 +846,7 @@ json_spirit::Value CRPCTable::execute(const string &strMethod, const json_spirit
 
     // Observe safe mode
     string strWarning = GetWarnings("rpc");
-    if (strWarning != "" && !CBaseParams::GetBoolArg("-disablesafemode", false) &&
+    if (strWarning != "" && !SysCfg().GetBoolArg("-disablesafemode", false) &&
         !pcmd->okSafeMode)
         throw JSONRPCError(RPC_FORBIDDEN_BY_SAFE_MODE, string("Safe mode: ") + strWarning);
 
