@@ -162,32 +162,52 @@ Value sendtoaddress(const Array& params, bool fHelp)
             + HelpExampleRpc("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\"")
         );
 
-    //todo 完成从指定地址发到指定地址的
-
-    CSoyPayAddress address(params[0].get_str());
-
     EnsureWalletIsUnlocked();
     CKeyID sendKeyId;
     CKeyID RevKeyId;
-    address.GetKeyID(RevKeyId);
-
-    if (!address.IsValid() || !address.GetKeyID(RevKeyId) )
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 
     // Amount
-    int64_t nAmount = AmountFromValue(params[1]);
-    set<CKeyID> sKeyid;
-	for (auto &te : sKeyid) {
-		if (pAccountViewTip->GetBalance(te, chainActive.Tip()->nHeight) >= nAmount + nTransactionFee) {
-			sendKeyId =te;
-			break;
-		}
-	}
-
-    if(sendKeyId == 0)
+    int64_t nAmount = 0;
+    //// from address to addreww
+    if(params.size() == 3)
     {
-    	 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "not enough moeny");
+    	CSoyPayAddress fromaddress(params[0].get_str());
+    	CSoyPayAddress tomaddress(params[1].get_str());
+    	nAmount = AmountFromValue(params[2]);
+
+    	fromaddress.GetKeyID(sendKeyId);
+    	tomaddress.GetKeyID(RevKeyId);
+
+		if (!fromaddress.IsValid() || !fromaddress.GetKeyID(sendKeyId) )
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid  address");
+		if (!tomaddress.IsValid() || !tomaddress.GetKeyID(RevKeyId) )
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid  address");
+
+		if (pAccountViewTip->GetBalance(sendKeyId, chainActive.Tip()->nHeight) >= nAmount + nTransactionFee) {
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM address not enough");
+					}
+    }else{
+    	CSoyPayAddress address(params[0].get_str());
+    	 address.GetKeyID(RevKeyId);
+
+		if (!address.IsValid() || !address.GetKeyID(RevKeyId) )
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+
+		set<CKeyID> sKeyid;
+		for (auto &te : sKeyid) {
+			if (pAccountViewTip->GetBalance(te, chainActive.Tip()->nHeight) >= nAmount + nTransactionFee) {
+				sendKeyId =te;
+				break;
+			}
+		}
+
+	    if(sendKeyId == 0)
+	    {
+	    	 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "not enough moeny");
+	    }
     }
+
+
 
     CRegID sendreg;
     CRegID revreg;
