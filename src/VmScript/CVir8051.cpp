@@ -605,7 +605,7 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 
 		for (auto& it : tx->vAccountRegId) {
 //			CID id(it);
-			vector<unsigned char> id = boost::get<CRegID>(it).GetRegID();
+			vector<unsigned char> id = boost::get<CRegID>(it).GetVec6();
 			item.insert(item.end(), id.begin(), id.end());
 		}
 
@@ -663,18 +663,30 @@ static RET_DEFINE ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScri
 	return std::make_tuple (flag , tem);
 }
 static RET_DEFINE ExGetTxConFirmHeightFunc(unsigned char * ipara,void * pVmScriptRun) {
-	unsigned char *pbuffer = ipara;
-	GetParaLen(pbuffer);
-	unsigned short length = GetParaLen(pbuffer);
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 1);
 
-	unsigned char *txhash = NULL;
-	GetParaData(pbuffer, txhash, length);
-	vector<unsigned char> hash(txhash, txhash + length);
-	uint256 phash(hash);
+	uint256 hash1(*retdata.at(0));
+	//cout<<"ExGetTxContractsFunc1:"<<hash1.GetHex()<<endl;
+	LogPrint("vm","ExGetTxContractsFunc1:%s",hash1.GetHex().c_str());
+
+
+	std::shared_ptr<CBaseTransaction> pBaseTx;
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+	int nHeight = GetTxComfirmHigh(hash1);
+	if(-1 == nHeight)
+	{
+		std::make_tuple (false, tem);
+	}
 
-	return std::make_tuple (true , tem);
+   CDataStream tep(SER_DISK, CLIENT_VERSION);
+	tep << nHeight;
+	vector<unsigned char> tep1(tep.begin(),tep.end());
+	(*tem.get()).push_back(tep1);
+
+	return std::make_tuple (true, tem);
 
 }
 static RET_DEFINE ExGetTipHeightFunc(unsigned char * ipara,void * pVmScriptRun) {
@@ -934,7 +946,7 @@ static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 
 	CRegID scriptid = pVmScriptRun->GetScriptRegID();
 	int height = pVmScriptRun->GetComfirHeight();
-	bool ret = aAccount.IsAuthorized(money,height,scriptid.GetRegID());
+	bool ret = aAccount.IsAuthorized(money,height,scriptid.GetVec6());
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -1083,7 +1095,7 @@ static RET_DEFINE ExGetAuthoritedDefineFunc(unsigned char * ipara,void * pVmScri
 		flag = false;
 	}
 
-	vector_unsigned_char scriptid = pVmScriptRun->GetScriptRegID().GetRegID();
+	vector_unsigned_char scriptid = pVmScriptRun->GetScriptRegID().GetVec6();
 	int height = pVmScriptRun->GetComfirHeight();
 
 	vector<unsigned char> vData;
