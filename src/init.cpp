@@ -164,6 +164,7 @@ void Shutdown()
         delete pwalletMain;
 #endif
     LogPrint("INFO","Shutdown : done\n");
+    printf("Shutdown : done\n");
 }
 
 //
@@ -621,7 +622,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     LogPrint("INFO","Default data directory %s\n", GetDefaultDataDir().string());
     printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
     LogPrint("INFO","Using data directory %s\n", strDataDir);
-    printf("Default data directory %s\n", strDataDir.c_str());
+    printf("Using data directory %s\n", strDataDir.c_str());
     LogPrint("INFO","Using at most %i connections (%i file descriptors available)\n", nMaxConnections, nFD);
     printf("Using at most %i connections (		%i file descriptors available)\n", nMaxConnections, nFD);
     ostringstream strErrors;
