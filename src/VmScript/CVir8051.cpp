@@ -1134,6 +1134,20 @@ static RET_DEFINE ExGetScriptDataFunc(unsigned char * ipara,void * pVmScript)
 	return std::make_tuple (flag, tem);
 
 }
+static RET_DEFINE ExGetScriptIDFunc(unsigned char * ipara,void * pVmScript)
+{
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	GetData(ipara,retdata);
+	assert(retdata.size() == 1);
+
+	vector_unsigned_char scriptid = pVmScriptRun->GetScriptRegID().GetVec6();
+
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+   (*tem.get()).push_back(scriptid);
+
+	return std::make_tuple (true, tem);
+}
 enum CALL_API_FUN {
 	COMP_FUNC = 0,            //!< COMP_FUNC
 	MULL_MONEY ,              //!< MULL_MONEY
@@ -1171,6 +1185,7 @@ enum CALL_API_FUN {
 	WRITEOUTPUT_FUNC,     //!<WRITEOUTPUT_FUNC
 
 	GETSCRIPTDATA_FUNC,		  //!<GETSCRIPTDATA_FUNC
+	GETSCRIPTID_FUNC,		//!<GETSCRIPTID_FUNC
 };
 
 const static struct __MapExterFun FunMap[] = { //
@@ -1207,6 +1222,8 @@ const static struct __MapExterFun FunMap[] = { //
 		{MODIFYDBVALUE_FUNC,ExModifyDataDBVavleFunc},
 		{WRITEOUTPUT_FUNC,ExWriteOutputFunc},
 		{GETSCRIPTDATA_FUNC,ExGetScriptDataFunc},
+		{GETSCRIPTID_FUNC,ExGetScriptIDFunc},
+
 		};
 
 RET_DEFINE CallExternalFunc(INT16U method, unsigned char *ipara,CVmScriptRun *pVmScriptRun) {
