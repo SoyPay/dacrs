@@ -311,7 +311,7 @@ public:
 
         // Write index header
         unsigned int nSize = fileout.GetSerializeSize(*this);
-        fileout << FLATDATA(SysParams().MessageStart()) << nSize;
+        fileout << FLATDATA(SysCfg().MessageStart()) << nSize;
 
         // Write undo data
         long fileOutPos = ftell(fileout);
@@ -1044,6 +1044,8 @@ extern CTransactionCache *pTxCacheTip;
 
 /** contract script data cache */
 extern CScriptDBViewCache *pScriptDBTip;
+
+extern std::tuple<bool, boost::thread*> RunSoyPay(int argc, char* argv[]);
 
 //extern set<uint256> setTxHashCache;
 //extern map<uint256, set<uint256> > mapTxHashCacheByPrev;

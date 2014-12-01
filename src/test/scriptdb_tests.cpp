@@ -7,7 +7,7 @@
 using namespace std;
 
 void init() {
-	 pScriptDB = new CScriptDB(size_t(4<<20), false , SysParams().IsReindex());
+	 pScriptDB = new CScriptDB(size_t(4<<20), false , SysCfg().IsReindex());
 	 pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
 }
 

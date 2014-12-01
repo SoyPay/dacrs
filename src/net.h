@@ -39,8 +39,8 @@ namespace boost {
 /** The maximum number of entries in an 'inv' protocol message */
 static const unsigned int MAX_INV_SZ = 50000;
 
-inline unsigned int ReceiveFloodSize() { return 1000*CBaseParams::GetArg("-maxreceivebuffer", 5*1000); }
-inline unsigned int SendBufferSize() { return 1000*CBaseParams::GetArg("-maxsendbuffer", 1*1000); }
+inline unsigned int ReceiveFloodSize() { return 1000*SysCfg().GetArg("-maxreceivebuffer", 5*1000); }
+inline unsigned int SendBufferSize() { return 1000*SysCfg().GetArg("-maxsendbuffer", 1*1000); }
 
 void AddOneShot(string strDest);
 bool RecvLine(SOCKET hSocket, string& strLine);
@@ -475,14 +475,14 @@ public:
         // The -*messagestest options are intentionally not documented in the help message,
         // since they are only used during development to debug the networking code and are
         // not intended for end-users.
-        if (CBaseParams::IsArgCount("-dropmessagestest") && GetRand(CBaseParams::GetArg("-dropmessagestest", 2)) == 0)
+        if (SysCfg().IsArgCount("-dropmessagestest") && GetRand(SysCfg().GetArg("-dropmessagestest", 2)) == 0)
         {
             LogPrint("net", "dropmessages DROPPING SEND MESSAGE\n");
             AbortMessage();
             return;
         }
-        if (CBaseParams::IsArgCount("-fuzzmessagestest"))
-            Fuzz(CBaseParams::GetArg("-fuzzmessagestest", 10));
+        if (SysCfg().IsArgCount("-fuzzmessagestest"))
+            Fuzz(SysCfg().GetArg("-fuzzmessagestest", 10));
 
         if (ssSend.size() == 0)
             return;

@@ -665,7 +665,7 @@ bool CRewardTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	}
 //	LogPrint("INFO", "before rewardtx confirm account:%s\n", acctInfo.ToString());
-	acctInfo.ClearAccPos(GetHash(), nHeight - 1, SysParams().GetIntervalPos());
+	acctInfo.ClearAccPos(GetHash(), nHeight - 1, SysCfg().GetIntervalPos());
 	CFund fund(REWARD_FUND,rewardValue, nHeight);
 	acctInfo.OperateAccount(ADD_FREE, fund);
 //	LogPrint("INFO", "after rewardtx confirm account:%s\n", acctInfo.ToString());
@@ -894,7 +894,7 @@ bool CRegistScriptTx::CheckTransction(CValidationState &state, CAccountViewCache
 }
 
 bool CFund::IsMergeFund(const int & nCurHeight, int &nMergeType) const {
-	if (nCurHeight - nHeight > SysParams().GetMaxCoinDay() / SysParams().GetTargetSpacing()) {
+	if (nCurHeight - nHeight > SysCfg().GetMaxCoinDay() / SysCfg().GetTargetSpacing()) {
 		nMergeType = FREEDOM;
 		return true;
 	}
@@ -1094,7 +1094,7 @@ void CAccount::AddToFreeze(const CFund &fund, bool bWriteLog) {
 }
 
 void CAccount::AddToFreedom(const CFund &fund, bool bWriteLog) {
-	int nTenDayBlocks = 10 * ((24 * 60 * 60) / SysParams().GetTargetSpacing());
+	int nTenDayBlocks = 10 * ((24 * 60 * 60) / SysCfg().GetTargetSpacing());
 	int nHeightPoint = fund.nHeight - fund.nHeight % nTenDayBlocks;
 	vector<CFund>::iterator it = find_if(vFreedomFund.begin(), vFreedomFund.end(), [&](const CFund& fundInVector)
 	{	return fundInVector.nHeight == nHeightPoint;});
@@ -1316,7 +1316,7 @@ uint64_t CAccount::GetAccountPos(int prevBlockHeight) const {
 	accpos = llValues * 30;
 	for (const auto &freeFund :vFreedomFund) {
 
-		int nIntervalPos = SysParams().GetIntervalPos();
+		int nIntervalPos = SysCfg().GetIntervalPos();
 		assert(nIntervalPos);
 		days = (prevBlockHeight - freeFund.nHeight) / nIntervalPos;
 		days = min(days, 30);
@@ -1555,7 +1555,7 @@ bool CAccount::IsAuthorized(uint64_t nMoney, int nHeight, const vector_unsigned_
 		return false;
 
 	//amount of blocks that connected into chain per day
-	const uint64_t nBlocksPerDay = 24 * 60 * 60 / SysParams().GetTargetSpacing();
+	const uint64_t nBlocksPerDay = 24 * 60 * 60 / SysCfg().GetTargetSpacing();
 	if (authorizate.GetLastOperHeight() / nBlocksPerDay == nHeight / nBlocksPerDay) {
 		if (authorizate.GetCurMaxMoneyPerDay() < nMoney)
 			return false;
@@ -1707,7 +1707,7 @@ void CAccount::UpdateAuthority(int nHeight, uint64_t nMoney, const vector_unsign
 	}
 
 	//update authority after current operate
-	const uint64_t nBlocksPerDay = 24 * 60 * 60 / SysParams().GetTargetSpacing();
+	const uint64_t nBlocksPerDay = 24 * 60 * 60 / SysCfg().GetTargetSpacing();
 	if (authorizate.GetLastOperHeight() / nBlocksPerDay < nHeight / nBlocksPerDay) {
 		CAuthorizateLog log(authorizate.GetLastOperHeight(), authorizate.GetCurMaxMoneyPerDay(),
 				authorizate.GetMaxMoneyTotal(), true, scriptID);

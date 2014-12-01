@@ -85,13 +85,16 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("connections",   (int)vNodes.size()));
     obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
-    obj.push_back(Pair("nettype",       name[SysParams().NetworkID()]));
+    obj.push_back(Pair("nettype",       name[SysCfg().NetworkID()]));
 
     if (pwalletMain && pwalletMain->IsCrypted())
 	 obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
 	 obj.push_back(Pair("paytxfee",      ValueFromAmount(nTransactionFee)));
 
     obj.push_back(Pair("relayfee",      ValueFromAmount(CTransaction::nMinRelayTxFee)));
+    obj.push_back(Pair("data directory",GetDataDir().string().c_str()));
+    obj.push_back(Pair("block high",    chainActive.Tip()->nHeight));
+    obj.push_back(Pair("tip block hash",chainActive.Tip()->GetBlockHash().ToString()));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
 }
