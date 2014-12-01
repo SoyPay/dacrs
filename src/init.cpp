@@ -609,16 +609,21 @@ bool AppInit2(boost::thread_group& threadGroup)
 //        ShrinkDebugFile();
 
     LogPrint("INFO","\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    LogPrint("INFO","DSPay version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
+    LogPrint("INFO","SoyPay version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE);
+    printf("SoyPay version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
     LogPrint("INFO","Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
-
+    printf("Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
     LogPrint("INFO","Using BerkeleyDB version %s\n", DbEnv::version(0, 0, 0));
-
+    printf("Using BerkeleyDB version %s\n", DbEnv::version(0, 0, 0));
 //    if (!fLogTimestamps)
     LogPrint("INFO","Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
+    printf("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
     LogPrint("INFO","Default data directory %s\n", GetDefaultDataDir().string());
+    printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
     LogPrint("INFO","Using data directory %s\n", strDataDir);
+    printf("Default data directory %s\n", strDataDir.c_str());
     LogPrint("INFO","Using at most %i connections (%i file descriptors available)\n", nMaxConnections, nFD);
+    printf("Using at most %i connections (		%i file descriptors available)\n", nMaxConnections, nFD);
     ostringstream strErrors;
 
 
