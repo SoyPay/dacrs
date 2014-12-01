@@ -27,6 +27,12 @@ public:
 	CKeyID(const uint160 &in) :
 			uint160(in) {
 	}
+	CKeyID(const string &strAddress);
+	bool IsEmpty()const
+	{
+		return  *this== 0;
+	}
+
 	string ToString() const
 	{
 		return HexStr(begin(),end());

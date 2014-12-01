@@ -114,13 +114,10 @@ Value signmessage(const Array& params, bool fHelp)
     string strAddress = params[0].get_str();
     string strMessage = params[1].get_str();
 
-    CSoyPayAddress addr(strAddress);
-    if (!addr.IsValid())
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
-    CKeyID keyID;
-    if (!addr.GetKeyID(keyID))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
+    CKeyID keyID(strAddress);
+    if (keyID.IsEmpty())
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
     CKey key;
     if (!pwalletMain->GetKey(keyID, key))
@@ -168,35 +165,31 @@ Value sendtoaddress(const Array& params, bool fHelp)
     // Amount
     int64_t nAmount = 0;
     //// from address to addreww
-    if(params.size() == 3)
-    {
-    	string addr1 = params[0].get_str();
-    	string addr2 = params[1].get_str();
+	if (params.size() == 3) {
+		string addr1 = params[0].get_str();
+		string addr2 = params[1].get_str();
 
-    	if(!CRegID::GetKeyID(addr1,sendKeyId))
-    	{
-       		CSoyPayAddress fromaddress(addr1);
-			if (!fromaddress.IsValid() || !fromaddress.GetKeyID(sendKeyId) )
+		if (!CRegID::GetKeyID(addr1, sendKeyId)) {
+			sendKeyId=CKeyID(addr1);
+			if (sendKeyId.IsEmpty())
 				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid  address");
-    	}
+		}
 
-    	if(!CRegID::GetKeyID(addr2,RevKeyId))
-    	{
-    		CSoyPayAddress tomaddress(addr2);
-      		if (!tomaddress.IsValid() || !tomaddress.GetKeyID(RevKeyId) )
-        			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid  address");
-    	}
+		if (!CRegID::GetKeyID(addr2, RevKeyId)) {
+			RevKeyId=CKeyID(addr2);
+			if (RevKeyId.IsEmpty())
+				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid  address");
+		}
 
-    	nAmount = AmountFromValue(params[2]);
+		nAmount = AmountFromValue(params[2]);
 		if (pAccountViewTip->GetBalance(sendKeyId, chainActive.Tip()->nHeight) <= nAmount + nTransactionFee) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM address not enough");
-					}
-    }else{
+		}
+	} else {
 		if (!CRegID::GetKeyID(params[0].get_str(), RevKeyId)) {
-			CSoyPayAddress address(params[0].get_str());
-			address.GetKeyID(RevKeyId);
 
-			if (!address.IsValid() || !address.GetKeyID(RevKeyId))
+			RevKeyId=CKeyID(params[0].get_str());
+			if (RevKeyId.IsEmpty())
 				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 		}
 
@@ -204,33 +197,29 @@ Value sendtoaddress(const Array& params, bool fHelp)
 		set<CKeyID> sKeyid;
 		pwalletMain->GetKeyIds(sKeyid); //get addrs
 		if (sKeyid.empty()) {
-			LogPrint("RPC_INVALID_ADDRESS_OR_KEY","setKeyID empty\n");
-			return false;
+//			LogPrint("RPC_INVALID_ADDRESS_OR_KEY", "setKeyID empty\n");
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "setKeyID empty\n");
 		}
 		for (auto &te : sKeyid) {
 			if (pAccountViewTip->GetBalance(te, chainActive.Tip()->nHeight) >= nAmount + nTransactionFee) {
-				sendKeyId =te;
+				sendKeyId = te;
 				break;
 			}
 		}
 
-	    if(sendKeyId == uint160(0))
-	    {
-	    	 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "not enough moeny");
-	    }
-    }
+		if (sendKeyId == uint160(0)) {
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "not enough moeny");
+		}
+	}
 
-
-
-    CRegID sendreg;
-    CRegID revreg;
-    if(!pwalletMain->GetRegId(sendKeyId,sendreg)||!pAccountViewTip->GetRegId(CUserID(RevKeyId),revreg))
-    {
-    	 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
-    }
-    string hash=  pwalletMain->SendMoney(sendreg,revreg,nAmount);
+	CRegID sendreg;
+	CRegID revreg;
+	if (!pwalletMain->GetRegId(sendKeyId, sendreg) || !pAccountViewTip->GetRegId(CUserID(RevKeyId), revreg)) {
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+	}
+	string hash = pwalletMain->SendMoney(sendreg, revreg, nAmount);
 	Object obj;
-	obj.push_back(Pair("txhash",hash));
+	obj.push_back(Pair("txhash", hash));
 	return obj;
 }
 

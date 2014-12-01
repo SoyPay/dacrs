@@ -634,3 +634,9 @@ string CPubKey::ToString() const {
 string CKeyID::ToAddress() const {
 	return CSoyPayAddress(*this).ToString();
 }
+
+CKeyID::CKeyID(const string& strAddress) :
+		uint160(0) {
+	CSoyPayAddress addr(strAddress);
+	addr.GetKeyID(*this);
+}
