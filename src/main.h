@@ -1045,6 +1045,8 @@ extern CTransactionCache *pTxCacheTip;
 /** contract script data cache */
 extern CScriptDBViewCache *pScriptDBTip;
 
+extern std::tuple<bool, boost::thread*> RunSoyPay(int argc, char* argv[]);
+
 //extern set<uint256> setTxHashCache;
 //extern map<uint256, set<uint256> > mapTxHashCacheByPrev;
 

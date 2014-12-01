@@ -66,11 +66,10 @@ bool CWallet::AddPubKey(const CPubKey& pk)
 {
 	AssertLockHeld(cs_wallet);
 	CKeyStoreValue tem(pk);
-	if(mKeyPool.count(tem.GetCKeyID()) > 0)
-		{
-		  LogPrint("CWallet","this key is in the CWallet");
-		 return false;
-		}
+	if (mKeyPool.count(tem.GetCKeyID()) > 0) {
+		LogPrint("CWallet", "this key is in the CWallet");
+		return false;
+	}
 	mKeyPool[tem.GetCKeyID()] = tem;
 	return FushToDisk();
 }
