@@ -19,7 +19,7 @@
 #include <boost/test/unit_test.hpp>
 #include "chainparams.h"
 
-extern bool fPrintToConsole;
+
 extern void noui_connect();
 
 struct TestingSetup {
