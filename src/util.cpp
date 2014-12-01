@@ -848,8 +848,8 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific) {
 	if (!path.empty())
 		return path;
 
-	if (SysCfg().IsArgCount("-datadir")) {
-		path = fs::system_complete(SysCfg().GetArg("-datadir", ""));
+	if (CBaseParams::IsArgCount("-datadir")) {
+		path = fs::system_complete(CBaseParams::GetArg("-datadir", ""));
 		if (!fs::is_directory(path)) {
 			path = "";
 			return path;
@@ -870,7 +870,7 @@ void ClearDatadirCache() {
 }
 
 boost::filesystem::path GetConfigFile() {
-	boost::filesystem::path pathConfigFile(SysCfg().GetArg("-conf", "soypay.conf"));
+	boost::filesystem::path pathConfigFile(CBaseParams::GetArg("-conf", "soypay.conf"));
 	if (!pathConfigFile.is_complete())
 		pathConfigFile = GetDataDir(false) / pathConfigFile;
 	return pathConfigFile;

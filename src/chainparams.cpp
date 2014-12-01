@@ -350,8 +350,8 @@ const CBaseParams &SysCfg() {
 	static shared_ptr<CBaseParams> pParams;
 
 	if (pParams.get() == NULL) {
-		bool fRegTest = SysCfg().GetBoolArg("-regtest", false);
-		bool fTestNet = SysCfg().GetBoolArg("-testnet", false);
+		bool fRegTest = CBaseParams::GetBoolArg("-regtest", false);
+		bool fTestNet = CBaseParams::GetBoolArg("-testnet", false);
 		if (fTestNet && fRegTest) {
 			fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
 			assert(0);
@@ -467,11 +467,6 @@ bool CBaseParams::IntialParams(int argc, const char* const argv[]) {
 		fprintf(stderr, "Error reading configuration file: %s\n", e.what());
 		return false;
 	}
-	// Check for -testnet or -regtest parameter (TestNet() calls are only valid after this clause)
-//	if (!SelectParamsFromCommandLine()) {
-//		fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
-//		return false;
-//	}
 	return true;
 }
 
