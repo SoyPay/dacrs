@@ -46,12 +46,15 @@ public:
 	friend class CID;
 	vector<unsigned char> &GetVec6() const {return vRegID;}
 	void SetRegID(const vector<unsigned char> &vIn) ;
+	void SetRegID(string strRegID);
     CKeyID getKeyID(const CAccountViewCache &view)const;
 	CRegID(string strRegID);
 	bool operator ==(const CRegID& co) const {
 		return (this->nHeight == co.nHeight && this->nIndex == co.nIndex);
 	}
+	static bool IsSimpleRegIdStr(const string & str);
 	static bool IsRegIdStr(const string & str);
+	static bool GetKeyID(const string & str,CKeyID &keyId);
 	CRegID(const vector<unsigned char> &vIn) ;
     bool IsEmpty()const{return (nHeight == 0 && nIndex == 0);};
 	CRegID(uint32_t nHeight = 0, uint16_t nIndex = 0);

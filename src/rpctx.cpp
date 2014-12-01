@@ -181,14 +181,18 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 
 
 
-	CSoyPayAddress address(params[0].get_str());
+	string addr = params[0].get_str();
 	uint64_t fee = params[1].get_uint64();
 	bool IsMiner = params[2].get_bool();
 
 	//get keyid
 	CKeyID keyid;
-	if (!address.GetKeyID(keyid)) {
-		throw runtime_error("in registeraccounttx :address err\n");
+   	if(!CRegID::GetKeyID(addr,keyid))
+	{
+		CSoyPayAddress address(addr);
+		if (!address.IsValid() || !address.GetKeyID(keyid) ){
+		    			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "in registeraccounttx :address err");
+		    	}
 	}
 
 	CRegisterAccountTx rtx;
@@ -388,7 +392,8 @@ Value createcontracttx(const Array& params, bool fHelp) {
 	RPCTypeCheck(params, list_of(str_type)(array_type)(str_type)(int_type)(int_type));
 
 	//get addresss
-	vector<unsigned char> vscriptid = ParseHex(params[0].get_str());
+//	vector<unsigned char> vscriptid = ParseHex(params[0].get_str());
+	CRegID vscriptid(params[0].get_str()) ;
 	Array addr = params[1].get_array();
 	vector<unsigned char> vcontract = ParseHex(params[2].get_str());
 	uint64_t fee = params[3].get_uint64();
@@ -398,10 +403,9 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		throw runtime_error("in createcontracttx :fee is smaller than nMinTxFee\n");
 	}
 
-	if (vscriptid.size() != SCRIPT_ID_SIZE) {
+	if (vscriptid.GetVec6().size()!= SCRIPT_ID_SIZE) {
 		throw runtime_error("in createcontracttx :vscriptid size is error!\n");
 	}
-
 
 	assert(pwalletMain != NULL);
 
@@ -414,10 +418,9 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		CAccountViewCache view(*pAccountViewTip, true);
 		CAccount secureAcc;
 
-		vector<unsigned char> vscript;
-		if(!pScriptDBTip->HaveScript(CRegID(vscriptid)))
+		if(!pScriptDBTip->HaveScript(vscriptid))
 		{
-			throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(vscriptid)));
+			throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(vscriptid.GetVec6())));
 		}
 
 		auto GetUserId = [&](CKeyID &keyId)
@@ -441,7 +444,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 			vaccountid.push_back(CUserID(GetUserId(keyid)));
 		}
 
-		tx.scriptRegId = CRegID(vscriptid);
+		tx.scriptRegId = vscriptid;
 		tx.vAccountRegId = vaccountid;
 		tx.llFees = fee;
 		tx.vContract = vcontract;
@@ -612,14 +615,18 @@ Value createfreezetx(const Array& params, bool fHelp) {
 				+ HelpExampleCli("createfreezetx",
 						"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 20000000000 100000 1 101") + "\nAs json rpc call\n"
 				+ HelpExampleRpc("createfreezetx",
-						"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 20000000000 100000 1 101");
+						"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 20000000000 100000 1 101")
+				+ HelpExampleCli("createfreezetx",
+				"0-6 20000000000 100000 1 101")
+				+ HelpExampleCli("createfreezetx",
+										"00000000000000000005 20000000000 100000 1 101");
 		throw runtime_error(msg);
 	}
 
 	RPCTypeCheck(params, list_of(str_type)(int_type)(int_type)(int_type)(int_type));
 
 	//get addresss
-	CSoyPayAddress addr(params[0].get_str());
+	string addr = params[0].get_str();
 	uint64_t frozenmoney = params[1].get_uint64();
 	uint64_t fee = params[2].get_uint64();
 	uint32_t height = params[3].get_int();
@@ -634,8 +641,12 @@ Value createfreezetx(const Array& params, bool fHelp) {
 	}
 	//get keyid
 	CKeyID keyid;
-	if (!addr.GetKeyID(keyid)) {
-		throw runtime_error("in createfreezetx :send address err\n");
+   	if(!CRegID::GetKeyID(addr,keyid))
+	{
+		CSoyPayAddress address(addr);
+		if (!address.IsValid() || !address.GetKeyID(keyid) ){
+		    			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+		    	}
 	}
 
 	CKey key;
@@ -837,9 +848,17 @@ Value registerscripttx(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registerscripttx Error: Account balance is insufficient.");
 		}
 
-		if (vscript.size() == SCRIPT_ID_SIZE) {
-			vector<unsigned char> vscriptcontent;
+//		if (vscript.size() == SCRIPT_ID_SIZE) {
+//			vector<unsigned char> vscriptcontent;
 //			CRegID regid(vscript) ;
+//			if (!pScriptDBTip->GetScript(CRegID(vscript), vscriptcontent)) {
+//				throw JSONRPCError(RPC_WALLET_ERROR, "script id find failed");
+//			}
+//		}
+		if(flag)
+		{
+			vector<unsigned char> vscriptcontent;
+			CRegID regid(params[2].get_str()) ;
 			if (!pScriptDBTip->GetScript(CRegID(vscript), vscriptcontent)) {
 				throw JSONRPCError(RPC_WALLET_ERROR, "script id find failed");
 			}
@@ -991,18 +1010,28 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 	RPCTypeCheck(params, list_of(str_type));
+//	CUserID userId;
+//	if (params[0].get_str().size() == 12) {
+//		vector<unsigned char> vscript = ParseHex(params[0].get_str());
+//		userId = CRegID(vscript);
+//	} else {
+//		CSoyPayAddress address(params[0].get_str());
+//		CKeyID keyid;
+//		if (!address.GetKeyID(keyid))
+//			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+//		userId = keyid;
+//	}
+	CKeyID keyid;
 	CUserID userId;
-	if (params[0].get_str().size() == 12) {
-		vector<unsigned char> vscript = ParseHex(params[0].get_str());
-		userId = CRegID(vscript);
-	} else {
-		CSoyPayAddress address(params[0].get_str());
-		CKeyID keyid;
-		if (!address.GetKeyID(keyid))
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
-		userId = keyid;
+	string addr = params[0].get_str();
+   	if(!CRegID::GetKeyID(addr,keyid))
+	{
+		CSoyPayAddress address(addr);
+		if (!address.IsValid() || !address.GetKeyID(keyid) ){
+		    			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+		    	}
 	}
-
+   	userId = keyid;
 	Object obj;
 	{
 		LOCK(cs_main);
@@ -1371,14 +1400,17 @@ Value generateblock(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 
-	CSoyPayAddress addr(params[0].get_str());
+	string addr = params[0].get_str();
 
 	//get keyid
 	CKeyID keyid;
-	if (!addr.GetKeyID(keyid)) {
-		throw runtime_error("in generateblock :address err \n");
+   	if(!CRegID::GetKeyID(addr,keyid))
+	{
+		CSoyPayAddress address(addr);
+		if (!address.IsValid() || !address.GetKeyID(keyid) ){
+		    			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "in generateblock :address err");
+		    	}
 	}
-
 	uint256 hash = CreateBlockWithAppointedAddr(keyid);
 	if (hash == 0) {
 		throw runtime_error("in generateblock :cannot generate block\n");
@@ -1394,13 +1426,19 @@ Value getpublickey(const Array& params, bool fHelp) {
 				"1. \"address \"  (string, required) The soypay address.\n"
 				"\nResult:\n"
 				"\"publickey\"  (string) \n"
-				"\nExamples:\n" + HelpExampleCli("getpublickey", "mpif58ohTASDZNNXreFMFuNAHBfuDUXtjP"));
+				"\nExamples:\n" + HelpExampleCli("getpublickey", "mpif58ohTASDZNNXreFMFuNAHBfuDUXtjP")
+				+HelpExampleCli("getpublickey", "0-6")
+				+HelpExampleCli("getpublickey", "00000000000000000005"));
 	}
-	CSoyPayAddress address(params[0].get_str());
 
+	string address = params[0].get_str();
 	CKeyID keyid;
-	if (!address.GetKeyID(keyid))
-		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+	if (!CRegID::GetKeyID(address, keyid)) {
+		CSoyPayAddress address(address);
+		if (!address.GetKeyID(keyid))
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid SoyPay address");
+	}
+
 
 	CPubKey pubkey;
 	{
