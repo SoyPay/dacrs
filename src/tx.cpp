@@ -55,8 +55,8 @@ CUserID CID::GetUserId() {
 	}
 	return CNullID();
 }
-bool CRegID::IsRegIdStr(const string & str)
- {
+bool CRegID::IsSimpleRegIdStr(const string & str)
+{
 	int len = str.length();
 	if (len >= 3) {
 		int pos = str.find('-');
@@ -83,25 +83,49 @@ bool CRegID::IsRegIdStr(const string & str)
 	}
 	return true;
 }
+bool CRegID::GetKeyID(const string & str,CKeyID &keyId)
+{
+	CRegID te(str);
+	if(te.IsEmpty())
+		return false;
+	keyId = te.getKeyID(*pAccountViewTip);
+	return true;
+}
+bool CRegID::IsRegIdStr(const string & str)
+ {
+	if(IsSimpleRegIdStr(str)){
+		return true;
+	}
+	else if(str.length()==12){
+		return true;
+	}
+	return false;
+}
+void CRegID::SetRegID(string strRegID){
+	nHeight = 0;
+	nIndex = 0;
+	vRegID.clear();
 
-CRegID::CRegID(string strRegID) {
-	if(IsRegIdStr(strRegID))
+	if(IsSimpleRegIdStr(strRegID))
 	{
 		int pos = strRegID.find('-');
 		nHeight = atoi(strRegID.substr(0, pos).c_str());
 		nIndex = atoi(strRegID.substr(pos+1).c_str());
+		vRegID.insert(vRegID.end(), BEGIN(nHeight), END(nHeight));
+		vRegID.insert(vRegID.end(), BEGIN(nIndex), END(nIndex));
+//		memcpy(&vRegID.at(0),&nHeight,sizeof(nHeight));
+//		memcpy(&vRegID[sizeof(nHeight)],&nIndex,sizeof(nIndex));
 	}
 	else if(strRegID.length()==12)
 	{
-	nHeight = 0;
-	nIndex = 0;
-	vRegID.clear();
 	vRegID = ::ParseHex(strRegID);
 	memcpy(&nHeight,&vRegID[0],sizeof(nHeight));
 	memcpy(&nIndex,&vRegID[sizeof(nHeight)],sizeof(nIndex));
 	}
-	else
-		assert(0);
+
+}
+CRegID::CRegID(string strRegID) {
+	SetRegID(strRegID);
 }
 CRegID::CRegID(uint32_t nHeightIn, uint16_t nIndexIn) {
 	nHeight = nHeightIn;
@@ -364,10 +388,10 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 				"bad-signscript-check");
 	}
 
-	//若在交易索引数据库中存在交易hash，此交易已经被确认过，无须检查
+	//鑻ュ湪浜ゆ槗绱㈠紩鏁版嵁搴撲腑瀛樺湪浜ゆ槗hash锛屾浜ゆ槗宸茬粡琚‘璁よ繃锛屾棤椤绘鏌�
 	CDiskTxPos postx;
 	if (!pblocktree->ReadTxIndex(GetHash(), postx)) {
-		//如果是交易被确认进入block中时，若目的地址为keyId时必须是未注册账户
+		//濡傛灉鏄氦鏄撹纭杩涘叆block涓椂锛岃嫢鐩殑鍦板潃涓簁eyId鏃跺繀椤绘槸鏈敞鍐岃处鎴�
 			CAccount acctDesInfo;
 			if (desUserId.type() == typeid(CKeyID)) {
 				if (view.GetAccount(desUserId, acctDesInfo) && acctDesInfo.IsRegister()) {
@@ -404,7 +428,7 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 				UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 
 	}
-	//扣减小费日志
+	//鎵ｅ噺灏忚垂鏃ュ織
 	txundo.vAccountOperLog.push_back(sourceAccount.accountOperLog);
 
 	CVmScriptRun vmRun;

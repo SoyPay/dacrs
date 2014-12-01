@@ -137,6 +137,7 @@ Value signmessage(const Array& params, bool fHelp)
     return EncodeBase64(&vchSig[0], vchSig.size());
 }
 
+
 Value sendtoaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
@@ -152,7 +153,12 @@ Value sendtoaddress(const Array& params, bool fHelp)
             "\nExamples:\n"
             + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
             + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
-            + HelpExampleRpc("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\"")
+            + HelpExampleRpc("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\""
+			+HelpExampleCli("sendtoaddress", "\"0-6\" 10 ")
+			+HelpExampleCli("sendtoaddress", "\"00000000000000000005\" 10 ")
+			+HelpExampleCli("sendtoaddress", "\"0-6\" \"0-5\" 10 ")
+			+HelpExampleCli("sendtoaddress", "\"00000000000000000005\" \"0-6\"10 ")
+			)
         );
 
     EnsureWalletIsUnlocked();
@@ -164,29 +170,43 @@ Value sendtoaddress(const Array& params, bool fHelp)
     //// from address to addreww
     if(params.size() == 3)
     {
-    	CSoyPayAddress fromaddress(params[0].get_str());
-    	CSoyPayAddress tomaddress(params[1].get_str());
+    	string addr1 = params[0].get_str();
+    	string addr2 = params[1].get_str();
+
+    	if(!CRegID::GetKeyID(addr1,sendKeyId))
+    	{
+       		CSoyPayAddress fromaddress(addr1);
+			if (!fromaddress.IsValid() || !fromaddress.GetKeyID(sendKeyId) )
+				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid  address");
+    	}
+
+    	if(!CRegID::GetKeyID(addr2,RevKeyId))
+    	{
+    		CSoyPayAddress tomaddress(addr2);
+      		if (!tomaddress.IsValid() || !tomaddress.GetKeyID(RevKeyId) )
+        			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid  address");
+    	}
+
     	nAmount = AmountFromValue(params[2]);
-
-    	fromaddress.GetKeyID(sendKeyId);
-    	tomaddress.GetKeyID(RevKeyId);
-
-		if (!fromaddress.IsValid() || !fromaddress.GetKeyID(sendKeyId) )
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid  address");
-		if (!tomaddress.IsValid() || !tomaddress.GetKeyID(RevKeyId) )
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid  address");
-
-		if (pAccountViewTip->GetBalance(sendKeyId, chainActive.Tip()->nHeight) >= nAmount + nTransactionFee) {
+		if (pAccountViewTip->GetBalance(sendKeyId, chainActive.Tip()->nHeight) <= nAmount + nTransactionFee) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM address not enough");
 					}
     }else{
-    	CSoyPayAddress address(params[0].get_str());
-    	 address.GetKeyID(RevKeyId);
+		if (!CRegID::GetKeyID(params[0].get_str(), RevKeyId)) {
+			CSoyPayAddress address(params[0].get_str());
+			address.GetKeyID(RevKeyId);
 
-		if (!address.IsValid() || !address.GetKeyID(RevKeyId) )
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+			if (!address.IsValid() || !address.GetKeyID(RevKeyId))
+				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+		}
 
+		nAmount = AmountFromValue(params[1]);
 		set<CKeyID> sKeyid;
+		pwalletMain->GetKeyIds(sKeyid); //get addrs
+		if (sKeyid.empty()) {
+			LogPrint("RPC_INVALID_ADDRESS_OR_KEY","setKeyID empty\n");
+			return false;
+		}
 		for (auto &te : sKeyid) {
 			if (pAccountViewTip->GetBalance(te, chainActive.Tip()->nHeight) >= nAmount + nTransactionFee) {
 				sendKeyId =te;
@@ -194,7 +214,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 			}
 		}
 
-	    if(sendKeyId == 0)
+	    if(sendKeyId == uint160(0))
 	    {
 	    	 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "not enough moeny");
 	    }
@@ -208,8 +228,10 @@ Value sendtoaddress(const Array& params, bool fHelp)
     {
     	 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
     }
-    return  pwalletMain->SendMoney(sendreg,revreg,nAmount);
-
+    string hash=  pwalletMain->SendMoney(sendreg,revreg,nAmount);
+	Object obj;
+	obj.push_back(Pair("txhash",hash));
+	return obj;
 }
 
 
