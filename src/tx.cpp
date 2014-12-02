@@ -787,7 +787,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
 		if(!aAuthorizate.IsNull()) {
-			acctInfo.mapAuthorizate[regId.GetVec6()] = aAuthorizate;
+			account.mapAuthorizate[regId.GetVec6()] = aAuthorizate;
 		}
 
 		if (!view.SaveAccountInfo(regId, keyId, account)) {
