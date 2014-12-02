@@ -481,6 +481,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 	{
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
 		ds << tx;
+		cout<<"createcontracttx:"<<HexStr(ds)<<endl;
 		Object obj;
 		obj.push_back(Pair("RawTx",HexStr(ds.begin(),ds.end())));
 		return obj;
@@ -507,10 +508,14 @@ Value signcontracttx(const Array& params, bool fHelp) {
 	}
 	LogPrint("INFO", "signcontracttx enter\r\n");
 	vector<unsigned char> vch(ParseHex(params[0].get_str()));
+	cout<<"sig:"<<HexStr(vch)<<endl;
 	CDataStream stream(vch, SER_DISK, CLIENT_VERSION);
+	cout<<"signcontracttx:"<<HexStr(stream)<<endl;
 
-	CContractTransaction tx;
-	stream >> tx;
+	std::shared_ptr<CBaseTransaction> pBaseTx = make_shared<CContractTransaction>();
+	stream >> pBaseTx;
+	CContractTransaction tx = *static_cast<CContractTransaction*>(pBaseTx.get());
+	//stream >> tx;
 
 	assert(pwalletMain != NULL);
 	{
