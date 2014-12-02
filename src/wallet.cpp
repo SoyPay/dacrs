@@ -657,7 +657,7 @@ int64_t CWallet::GetBalance(int ncurhigh) const
 }
 
 
-std::string CWallet::SendMoney(CRegID &send, CRegID &rsv, int64_t nValue)
+std::string CWallet::SendMoney(const CRegID &send, const CUserID &rsv, int64_t nValue)
 {
 //	if (IsLocked())
 //	{

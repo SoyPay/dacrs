@@ -356,7 +356,7 @@ public:
 
 	/***********************************creat tx*********************************************/
 
-	std::string SendMoney(CRegID &send, CRegID &rsv, int64_t nValue);
+	std::string SendMoney(const CRegID &send,const CUserID &rsv, int64_t nValue);
 
 	/****************************************************************************************/
 
