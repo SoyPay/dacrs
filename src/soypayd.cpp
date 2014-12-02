@@ -30,7 +30,7 @@
  * Use the buttons <code>Namespaces</code>, <code>Classes</code> or <code>Files</code> at the top of the page to start navigating the code.
  */
 
-static bool fDaemon;
+static bool fDaemon =false;
 
 void DetectShutdownThread(boost::thread_group* threadGroup) {
 	bool fShutdown = ShutdownRequested();
@@ -50,9 +50,8 @@ void DetectShutdownThread(boost::thread_group* threadGroup) {
 //
 // Start
 //
-bool AppInit(int argc, char* argv[]) {
-	boost::thread_group threadGroup;
-	boost::thread* detectShutdownThread = NULL;
+bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {
+//	boost::thread* detectShutdownThread = NULL;
 
 	bool fRet = false;
 	try {
@@ -61,9 +60,9 @@ bool AppInit(int argc, char* argv[]) {
 		//
 		// If Qt is used, parameters/soypay.conf are parsed in qt/soypay.cpp's main()
 		CBaseParams::IntialParams(argc, argv);
-		SysParams().InitalConfig();
+		SysCfg().InitalConfig();
 
-		if (CBaseParams::IsArgCount("-?") || CBaseParams::IsArgCount("--help")) {
+		if (SysCfg().IsArgCount("-?") || SysCfg().IsArgCount("--help")) {
 			// First part of help message is specific to soypayd / RPC client
 			std::string strUsage = _("Bitcoin Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n"
 					+ _("Usage:") + "\n" + "  soypayd [options]                     " + _("Start Bitcoin Core Daemon")
@@ -90,7 +89,7 @@ bool AppInit(int argc, char* argv[]) {
 			exit(ret);
 		}
 #ifndef WIN32
-		fDaemon = CBaseParams::GetBoolArg("-daemon", false);
+		fDaemon = SysCfg().GetBoolArg("-daemon", false);
 		if (fDaemon)
 		{
 			fprintf(stdout, "Bitcoin server starting\n");
@@ -114,9 +113,9 @@ bool AppInit(int argc, char* argv[]) {
 			fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
 		}
 #endif
-		CBaseParams::SoftSetBoolArg("-server", true);
+		SysCfg().SoftSetBoolArg("-server", true);
 
-		detectShutdownThread = new boost::thread(boost::bind(&DetectShutdownThread, &threadGroup));
+
 		fRet = AppInit2(threadGroup);
 	} catch (std::exception& e) {
 		PrintExceptionContinue(&e, "AppInit()");
@@ -124,27 +123,14 @@ bool AppInit(int argc, char* argv[]) {
 		PrintExceptionContinue(NULL, "AppInit()");
 	}
 
-	if (!fRet) {
-		if (detectShutdownThread)
-			detectShutdownThread->interrupt();
 
-		threadGroup.interrupt_all();
-		// threadGroup.join_all(); was left out intentionally here, because we didn't re-test all of
-		// the startup-failure cases to make sure they don't result in a hang due to some
-		// thread-blocking-waiting-for-another-thread-during-startup case
-	}
-
-	if (detectShutdownThread) {
-		detectShutdownThread->join();
-		delete detectShutdownThread;
-		detectShutdownThread = NULL;
-	}
-	Shutdown();
 
 	return fRet;
 }
-
-int main(int argc, char* argv[]) {
+std::tuple<bool, boost::thread*> RunSoyPay(int argc, char* argv[])
+{
+	boost::thread* detectShutdownThread = NULL;
+	static boost::thread_group threadGroup;
 	SetupEnvironment();
 
 	bool fRet = false;
@@ -152,7 +138,42 @@ int main(int argc, char* argv[]) {
 	// Connect soypayd signal handlers
 	noui_connect();
 
-	fRet = AppInit(argc, argv);
+	fRet = AppInit(argc, argv,threadGroup);
+
+	detectShutdownThread = new boost::thread(boost::bind(&DetectShutdownThread, &threadGroup));
+
+	if (!fRet) {
+		if (detectShutdownThread)
+			detectShutdownThread->interrupt();
+
+		threadGroup.interrupt_all();
+
+		// threadGroup.join_all(); was left out intentionally here, because we didn't re-test all of
+		// the startup-failure cases to make sure they don't result in a hang due to some
+		// thread-blocking-waiting-for-another-thread-during-startup case
+	}
+  return std::make_tuple (fRet,detectShutdownThread);
+}
+
+int main(int argc, char* argv[]) {
+
+	std::tuple<bool, boost::thread*> ret = RunSoyPay(argc,argv);
+
+	boost::thread* detectShutdownThread  = std::get<1>(ret);
+
+	bool fRet = std::get<0>(ret);
+
+	if (detectShutdownThread) {
+		detectShutdownThread->join();
+		delete detectShutdownThread;
+		detectShutdownThread = NULL;
+	}
+
+	Shutdown();
+
+#ifndef WIN32
+		fDaemon = SysCfg().GetBoolArg("-daemon", false);
+#endif
 
 	if (fRet && fDaemon)
 		return 0;

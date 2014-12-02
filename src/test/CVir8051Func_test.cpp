@@ -2780,7 +2780,7 @@ BOOST_AUTO_TEST_CASE(scriptfun)
 		CKeyID keyId1 = (CKeyID) hash;
 		sourceAccount.keyID = keyId1;
 		sourceAccount.llValues = 100;
-		account.push_back(accountId.GetRegID());
+		account.push_back(accountId.GetVec6());
 
 
 		vector<vector_unsigned_char> strContract;
@@ -2793,7 +2793,7 @@ BOOST_AUTO_TEST_CASE(scriptfun)
 		nTemp.get()->llFees = 100000000000000000;
 		BOOST_CHECK(pScriptDB == NULL);
         BOOST_CHECK(pScriptDBTip ==NULL);
-		pScriptDB = new CScriptDB(size_t(4<<20), false , SysParams().IsReindex());
+		pScriptDB = new CScriptDB(size_t(4<<20), false , SysCfg().IsReindex());
 		pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
 		pScriptDBTip->SetScript(scriptId, vpscript);
 		CAccountViewCache view(*pAccountViewTip, true);

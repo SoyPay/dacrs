@@ -181,14 +181,18 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 
 
 
-	CSoyPayAddress address(params[0].get_str());
+	string addr = params[0].get_str();
 	uint64_t fee = params[1].get_uint64();
 	bool IsMiner = params[2].get_bool();
 
 	//get keyid
 	CKeyID keyid;
-	if (!address.GetKeyID(keyid)) {
-		throw runtime_error("in registeraccounttx :address err\n");
+   	if(!CRegID::GetKeyID(addr,keyid))
+	{
+		CSoyPayAddress address(addr);
+		if (!address.IsValid() || !address.GetKeyID(keyid) ){
+		    			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "in registeraccounttx :address err");
+		    	}
 	}
 
 	CRegisterAccountTx rtx;
@@ -350,8 +354,10 @@ Value createnormaltx(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "createnormaltx Error: CommitTransaction failed.");
 		}
 	}
-
-	return tx.GetHash().ToString();
+	Object obj;
+	obj.push_back(Pair("txhash",tx.GetHash().ToString()));
+	return obj;
+//	return tx.GetHash().ToString();
 }
 
 //create a contract tx
@@ -387,7 +393,8 @@ Value createcontracttx(const Array& params, bool fHelp) {
 	RPCTypeCheck(params, list_of(str_type)(array_type)(str_type)(int_type)(int_type));
 
 	//get addresss
-	vector<unsigned char> vscriptid = ParseHex(params[0].get_str());
+//	vector<unsigned char> vscriptid = ParseHex(params[0].get_str());
+	CRegID vscriptid(params[0].get_str()) ;
 	Array addr = params[1].get_array();
 	vector<unsigned char> vcontract = ParseHex(params[2].get_str());
 	uint64_t fee = params[3].get_uint64();
@@ -397,10 +404,9 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		throw runtime_error("in createcontracttx :fee is smaller than nMinTxFee\n");
 	}
 
-	if (vscriptid.size() != SCRIPT_ID_SIZE) {
+	if (vscriptid.GetVec6().size()!= SCRIPT_ID_SIZE) {
 		throw runtime_error("in createcontracttx :vscriptid size is error!\n");
 	}
-
 
 	assert(pwalletMain != NULL);
 
@@ -413,10 +419,9 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		CAccountViewCache view(*pAccountViewTip, true);
 		CAccount secureAcc;
 
-		vector<unsigned char> vscript;
-		if(!pScriptDBTip->HaveScript(CRegID(vscriptid)))
+		if(!pScriptDBTip->HaveScript(vscriptid))
 		{
-			throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(vscriptid)));
+			throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(vscriptid.GetVec6())));
 		}
 
 		auto GetUserId = [&](CKeyID &keyId)
@@ -440,7 +445,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 			vaccountid.push_back(CUserID(GetUserId(keyid)));
 		}
 
-		tx.scriptRegId = CRegID(vscriptid);
+		tx.scriptRegId = vscriptid;
 		tx.vAccountRegId = vaccountid;
 		tx.llFees = fee;
 		tx.vContract = vcontract;
@@ -470,14 +475,17 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: CommitTransaction failed.");
 		}
-		return tx.GetHash().ToString();
+		Object obj;
+		obj.push_back(Pair("txhash",tx.GetHash().ToString()));
+		return obj;
 	}
 	else
 	{
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
 		ds << tx;
-		LogPrint("INFO", "createcontracttx ok!\r\n");
-		return HexStr(ds.begin(), ds.end());
+		Object obj;
+		obj.push_back(Pair("RawTx",HexStr(ds.begin(),ds.end())));
+		return obj;
 	}
 }
 
@@ -577,14 +585,17 @@ Value signcontracttx(const Array& params, bool fHelp) {
 			if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
 						throw JSONRPCError(RPC_WALLET_ERROR, "signcontracttx Error: CommitTransaction failed.");
 					}
-			return tx.GetHash().ToString();
+			Object obj;
+			obj.push_back(Pair("txhash",tx.GetHash().ToString()));
+			return obj;
 		}
 		else
 		{
 			CDataStream ds(SER_DISK, CLIENT_VERSION);
 			ds << tx;
-			LogPrint("INFO", "signcontracttx ok!\r\n");
-			return HexStr(ds.begin(), ds.end());
+			Object obj;
+			obj.push_back(Pair("RawTx",HexStr(ds.begin(),ds.end())));
+			return obj;
 		}
 	}
 }
@@ -606,14 +617,18 @@ Value createfreezetx(const Array& params, bool fHelp) {
 				+ HelpExampleCli("createfreezetx",
 						"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 20000000000 100000 1 101") + "\nAs json rpc call\n"
 				+ HelpExampleRpc("createfreezetx",
-						"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 20000000000 100000 1 101");
+						"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 20000000000 100000 1 101")
+				+ HelpExampleCli("createfreezetx",
+				"0-6 20000000000 100000 1 101")
+				+ HelpExampleCli("createfreezetx",
+										"00000000000000000005 20000000000 100000 1 101");
 		throw runtime_error(msg);
 	}
 
 	RPCTypeCheck(params, list_of(str_type)(int_type)(int_type)(int_type)(int_type));
 
 	//get addresss
-	CSoyPayAddress addr(params[0].get_str());
+	string addr = params[0].get_str();
 	uint64_t frozenmoney = params[1].get_uint64();
 	uint64_t fee = params[2].get_uint64();
 	uint32_t height = params[3].get_int();
@@ -628,8 +643,12 @@ Value createfreezetx(const Array& params, bool fHelp) {
 	}
 	//get keyid
 	CKeyID keyid;
-	if (!addr.GetKeyID(keyid)) {
-		throw runtime_error("in createfreezetx :send address err\n");
+   	if(!CRegID::GetKeyID(addr,keyid))
+	{
+		CSoyPayAddress address(addr);
+		if (!address.IsValid() || !address.GetKeyID(keyid) ){
+		    			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+		    	}
 	}
 
 	CKey key;
@@ -683,7 +702,9 @@ Value createfreezetx(const Array& params, bool fHelp) {
 		}
 	}
 
-	return tx.GetHash().ToString();
+	Object obj;
+	obj.push_back(Pair("txhash",tx.GetHash().ToString()));
+	return obj;
 }
 
 //create a register script tx
@@ -829,9 +850,17 @@ Value registerscripttx(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registerscripttx Error: Account balance is insufficient.");
 		}
 
-		if (vscript.size() == SCRIPT_ID_SIZE) {
-			vector<unsigned char> vscriptcontent;
+//		if (vscript.size() == SCRIPT_ID_SIZE) {
+//			vector<unsigned char> vscriptcontent;
 //			CRegID regid(vscript) ;
+//			if (!pScriptDBTip->GetScript(CRegID(vscript), vscriptcontent)) {
+//				throw JSONRPCError(RPC_WALLET_ERROR, "script id find failed");
+//			}
+//		}
+		if(flag)
+		{
+			vector<unsigned char> vscriptcontent;
+			CRegID regid(params[2].get_str()) ;
 			if (!pScriptDBTip->GetScript(CRegID(vscript), vscriptcontent)) {
 				throw JSONRPCError(RPC_WALLET_ERROR, "script id find failed");
 			}
@@ -873,7 +902,9 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		}
 	}
 
-	return tx.GetHash().ToString();
+	Object obj;
+	obj.push_back(Pair("txhash",tx.GetHash().ToString()));
+	return obj;
 }
 
 Value listaddr(const Array& params, bool fHelp) {
@@ -981,18 +1012,28 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 	RPCTypeCheck(params, list_of(str_type));
+//	CUserID userId;
+//	if (params[0].get_str().size() == 12) {
+//		vector<unsigned char> vscript = ParseHex(params[0].get_str());
+//		userId = CRegID(vscript);
+//	} else {
+//		CSoyPayAddress address(params[0].get_str());
+//		CKeyID keyid;
+//		if (!address.GetKeyID(keyid))
+//			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+//		userId = keyid;
+//	}
+	CKeyID keyid;
 	CUserID userId;
-	if (params[0].get_str().size() == 12) {
-		vector<unsigned char> vscript = ParseHex(params[0].get_str());
-		userId = CRegID(vscript);
-	} else {
-		CSoyPayAddress address(params[0].get_str());
-		CKeyID keyid;
-		if (!address.GetKeyID(keyid))
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
-		userId = keyid;
+	string addr = params[0].get_str();
+   	if(!CRegID::GetKeyID(addr,keyid))
+	{
+		CSoyPayAddress address(addr);
+		if (!address.IsValid() || !address.GetKeyID(keyid) ){
+		    			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+		    	}
 	}
-
+   	userId = keyid;
 	Object obj;
 	{
 		LOCK(cs_main);
@@ -1031,68 +1072,6 @@ Value listunconfirmedtx(const Array& params, bool fHelp) {
 
 	return retObj;
 }
-
-//list unconfirmed transaction of mine
-Value listscriptregid(const Array& params, bool fHelp) {
-	if (fHelp || params.size() > 1) {
-		string msg = "listscriptregid \n"
-				"\listscriptregid\n"
-				"\nArguments:\n"
-				"\nResult:\n"
-				"\"txhash\":\"scriptid\"\n"
-				"\nExamples:\n" + HelpExampleCli("listscriptregid", "\n") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("listscriptregid", "\n");
-		throw runtime_error(msg);
-	}
-
-	bool bshowdetail = 0;
-	if (params.size() > 0) {
-		bshowdetail = params[0].get_bool();
-	}
-
-	Object obj;
-	{
-//		LOCK2(cs_main, pwalletMain->cs_wallet);
-	///			 LogPrint("TODO"," ");
-
-//		for (auto& item : pwalletMain->mKeyPool) {
-//			obj.push_back(Pair(item.first.ToString(), item.second.ToString()));
-//			if (bshowdetail) {
-//				//array.push_back(TxToJSON(item.second.get()));
-//			}
-//		}
-	}
-	return obj;
-}
-
-//list regid
-//Value listregid(const Array& params, bool fHelp) {
-//	if (fHelp || params.size() > 0) {
-//		string msg = "listregid \n"
-//				"\listregid\n"
-//				"\nArguments:\n"
-//				"\nResult:\n"
-//				"\"addr\":\"regid\"\n"
-//				"\nExamples:\n" + HelpExampleCli("listregid", "\n") + "\nAs json rpc call\n"
-//				+ HelpExampleRpc("listregid", "\n");
-//		throw runtime_error(msg);
-//	}
-//
-//	Array array;
-//	{
-//		LOCK2(cs_main, pwalletMain->cs_wallet);
-//
-//		for (auto& item : pwalletMain->mapKeyRegID) {
-//			vector<unsigned char> vRegId = item.second.GetRegID();
-//			array.push_back(CSoyPayAddress(CAccountID(item.first, vRegId)).ToString());
-//			Object obj;
-//			obj.clear();
-//			obj.push_back(Pair(CSoyPayAddress(item.first).ToString(), item.second.ToString()));
-//			array.push_back(obj);
-//		}
-//	}
-//	return array;
-//}
 
 //sign
 Value sign(const Array& params, bool fHelp) {
@@ -1322,8 +1301,8 @@ Value disconnectblock(const Array& params, bool fHelp) {
 
 	    //load a block tx into cache transaction
 		CBlockIndex *pReLoadBlockIndex = pindexDelete;
-		if(pindexDelete->nHeight - SysParams().GetTxCacheHeight()>0) {
-			pReLoadBlockIndex = chainActive[pindexDelete->nHeight - SysParams().GetTxCacheHeight()];
+		if(pindexDelete->nHeight - SysCfg().GetTxCacheHeight()>0) {
+			pReLoadBlockIndex = chainActive[pindexDelete->nHeight - SysCfg().GetTxCacheHeight()];
 			CBlock reLoadblock;
 			if (!ReadBlockFromDisk(reLoadblock, pindexDelete))
 				return state.Abort(_("Failed to read block"));
@@ -1333,7 +1312,10 @@ Value disconnectblock(const Array& params, bool fHelp) {
 
 		assert(view.Flush() && contractScriptTemp.Flush());
 	}
-	return true;
+	Object obj;
+	obj.push_back(Pair("info", "disconnect ok"));
+	return obj;
+
 }
 
 Value listregscript(const Array& params, bool fHelp) {
@@ -1358,20 +1340,20 @@ Value listregscript(const Array& params, bool fHelp) {
 		Object script;
 		if(!pScriptDBTip->GetScript(0, regId, vScript))
 			throw JSONRPCError(RPC_DATABASE_ERROR, "get script error: cannot get registered script.");
-		script.push_back(Pair("scriptId", HexStr(regId.GetRegID())));
+		script.push_back(Pair("scriptId", HexStr(regId.GetVec6())));
 		if(showDetail)
 		script.push_back(Pair("scriptContent", HexStr(vScript.begin(), vScript.end())));
 		arrayScript.push_back(script);
 		while(pScriptDBTip->GetScript(1, regId, vScript)) {
 			Object obj;
-			obj.push_back(Pair("scriptId", HexStr(regId.GetRegID())));
+			obj.push_back(Pair("scriptId", HexStr(regId.GetVec6())));
 			if(showDetail)
 			obj.push_back(Pair("scriptContent", string(vScript.begin(), vScript.end())));
 			arrayScript.push_back(obj);
 		}
 	}
 
-	obj.push_back(Pair("ListRegisterScript", arrayScript));
+	obj.push_back(Pair("listregedscript", arrayScript));
 	return obj;
 }
 
@@ -1420,22 +1402,24 @@ Value generateblock(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 
-	CSoyPayAddress addr(params[0].get_str());
+	string addr = params[0].get_str();
 
 	//get keyid
 	CKeyID keyid;
-	if (!addr.GetKeyID(keyid)) {
-		throw runtime_error("in generateblock :address err \n");
-	}
-
+   	if(!CRegID::GetKeyID(addr,keyid))
 	{
-	//	LOCK2(cs_main, pwalletMain->cs_wallet);
-		if (!CreateBlockWithAppointedAddr(keyid)) {
-			throw runtime_error("in generateblock :cannot generate block\n");
-		}
-
+		CSoyPayAddress address(addr);
+		if (!address.IsValid() || !address.GetKeyID(keyid) ){
+		    			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "in generateblock :address err");
+		    	}
 	}
-	return NULL;
+	uint256 hash = CreateBlockWithAppointedAddr(keyid);
+	if (hash == 0) {
+		throw runtime_error("in generateblock :cannot generate block\n");
+	}
+	Object obj;
+	obj.push_back(Pair("blockhase",hash.GetHex()));
+	return obj;
 }
 
 Value getpublickey(const Array& params, bool fHelp) {
@@ -1444,13 +1428,19 @@ Value getpublickey(const Array& params, bool fHelp) {
 				"1. \"address \"  (string, required) The soypay address.\n"
 				"\nResult:\n"
 				"\"publickey\"  (string) \n"
-				"\nExamples:\n" + HelpExampleCli("getpublickey", "mpif58ohTASDZNNXreFMFuNAHBfuDUXtjP"));
+				"\nExamples:\n" + HelpExampleCli("getpublickey", "mpif58ohTASDZNNXreFMFuNAHBfuDUXtjP")
+				+HelpExampleCli("getpublickey", "0-6")
+				+HelpExampleCli("getpublickey", "00000000000000000005"));
 	}
-	CSoyPayAddress address(params[0].get_str());
 
+	string address = params[0].get_str();
 	CKeyID keyid;
-	if (!address.GetKeyID(keyid))
-		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+	if (!CRegID::GetKeyID(address, keyid)) {
+		CSoyPayAddress address(address);
+		if (!address.GetKeyID(keyid))
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid SoyPay address");
+	}
+
 
 	CPubKey pubkey;
 	{
@@ -1459,7 +1449,10 @@ Value getpublickey(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_MISC_ERROR,
 					tinyformat::format("Wallet do not contain address %s", params[0].get_str()));
 	}
-	return pubkey.ToString();
+//	return pubkey.ToString();
+	Object obj;
+	obj.push_back(Pair("pubkey",pubkey.ToString()));
+	return obj;
 }
 
 Value listtxcache(const Array& params, bool fHelp) {
@@ -1494,8 +1487,8 @@ Value reloadtxcache(const Array& params, bool fHelp) {
 	}
 	pTxCacheTip->Clear();
 	CBlockIndex *pIndex = chainActive.Tip();
-	if ((chainActive.Tip()->nHeight - SysParams().GetTxCacheHeight()) >= 0) {
-		pIndex = chainActive[(chainActive.Tip()->nHeight - SysParams().GetTxCacheHeight())];
+	if ((chainActive.Tip()->nHeight - SysCfg().GetTxCacheHeight()) >= 0) {
+		pIndex = chainActive[(chainActive.Tip()->nHeight - SysCfg().GetTxCacheHeight())];
 	} else {
 		pIndex = chainActive.Genesis();
 	}
@@ -1507,7 +1500,11 @@ Value reloadtxcache(const Array& params, bool fHelp) {
 		pTxCacheTip->AddBlockToCache(block);
 		pIndex = chainActive.Next(pIndex);
 	} while (NULL != pIndex);
-	return string("reload tx cache succeed");
+
+	Object obj;
+	obj.push_back(Pair("info","reload tx cache succeed"));
+	return obj;
+//	return string("reload tx cache succeed");
 }
 Value getscriptdata(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 2) {

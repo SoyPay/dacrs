@@ -154,14 +154,19 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 			CRegID regId(accountid);
 			CContractTransaction* secure = static_cast<CContractTransaction*>(listTx.get());
 			/// current tx's script cant't mius other script's regid
-			if(m_ScriptDBTip->HaveScript(regId) && regId.GetRegID() != boost::get<CRegID>(secure->scriptRegId).GetRegID())
+			if(m_ScriptDBTip->HaveScript(regId) && regId.GetVec6() != boost::get<CRegID>(secure->scriptRegId).GetVec6())
 			{
 				return false;
 			}
 			memcpy(&temp,it.money,sizeof(it.money));
 			miusmoney += temp;
 		}
-
+		vector<unsigned char> accountid(it.accountid, it.accountid + sizeof(it.accountid));
+		CRegID regId(accountid);
+		/// if account script id ,the it.opeatortype must be ADD_FREE or MINUS_FREE
+		if (m_ScriptDBTip->HaveScript(regId) && it.opeatortype != ADD_FREE && it.opeatortype != MINUS_FREE) {
+			return false;
+		}
 	}
 	if (addmoey != miusmoney)
 	{
@@ -187,8 +192,8 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
 		CFund fund;
 		memcpy(&fund.value,it.money,sizeof(it.money));
-		fund.nHeight = it.outheight + height;
-		fund.scriptID = boost::get<CRegID>(tx->scriptRegId).GetRegID();
+		fund.nHeight = it.outheight;
+		fund.scriptID = boost::get<CRegID>(tx->scriptRegId).GetVec6();
 
 		auto tem = make_shared<CAccount>();
 //		vector_unsigned_char accountid = GetAccountID(it);
@@ -210,17 +215,23 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		}
 		if ((OperType) it.opeatortype == ADD_FREE) {
 			fund.nFundType = FREEDOM_FUND;
-		} else if ((OperType) it.opeatortype == ADD_FREEZD) {
+		} else if ((OperType) it.opeatortype == ADD_FREEZD || (OperType) it.opeatortype == MINUS_FREEZD) {
 			fund.nFundType = FREEZD_FUND;
+		} else if ((OperType) it.opeatortype == ADD_SELF_FREEZD) {
+			fund.nFundType = SELF_FREEZD_FUND;
 		}
+		//// the script account if ADD_FREE must merge
+		if (m_ScriptDBTip->HaveScript(vmAccount.get()->regID)
+				&& vmAccount.get()->regID.GetVec6() != fund.scriptID) {
+			if (fund.nFundType == ADD_FREE) {
+				CFund vFind;
+				if (vmAccount.get()->FindFund(vmAccount.get()->vFreeze, fund.scriptID, vFind)) {
+					fund.nHeight = vFind.nHeight;
+				}
 
-		if (fund.nFundType == FREEZD_FUND) {
-			CFund vFind;
-			if (vmAccount.get()->FindFund(vmAccount.get()->vFreeze, fund.scriptID, vFind)) {
-				fund.nHeight = vFind.nHeight;
 			}
-
 		}
+
 
 //		LogPrint("vm", "account id:%s\r\n", HexStr(accountid).c_str());
 //		LogPrint("vm", "muls account:%s\r\n", vmAccount.get()->ToString().c_str());

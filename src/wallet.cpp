@@ -66,11 +66,10 @@ bool CWallet::AddPubKey(const CPubKey& pk)
 {
 	AssertLockHeld(cs_wallet);
 	CKeyStoreValue tem(pk);
-	if(mKeyPool.count(tem.GetCKeyID()) > 0)
-		{
-		  LogPrint("CWallet","this key is in the CWallet");
-		 return false;
-		}
+	if (mKeyPool.count(tem.GetCKeyID()) > 0) {
+		LogPrint("CWallet", "this key is in the CWallet");
+		return false;
+	}
 	mKeyPool[tem.GetCKeyID()] = tem;
 	return FushToDisk();
 }
@@ -393,7 +392,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 				return mapBlockIndex.count(blockhash) && chainActive.Contains(mapBlockIndex[blockhash]);
 			};
 		// GenesisBlock progress
-		if (SysParams().HashGenesisBlock() == blockhash) {
+		if (SysCfg().HashGenesisBlock() == blockhash) {
 			GenesisBlockProgress();
 		} else if (IsConnect()) {
 			//connect block
@@ -715,8 +714,8 @@ bool CWallet::StartUp() {
 	    return true;
 	};
 
-	 defaultFilename = CBaseParams::GetArg("-wallet", "wallet.dat");
-	  bool fDisableWallet = CBaseParams::GetBoolArg("-disablewallet", false);
+	 defaultFilename = SysCfg().GetArg("-wallet", "wallet.dat");
+	  bool fDisableWallet = SysCfg().GetBoolArg("-disablewallet", false);
     string strDataDir = GetDataDir().string();
 
 	    // Wallet file must be a plain filename without a directory

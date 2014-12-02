@@ -85,7 +85,7 @@ bool CheckScriptid(string str,string scriptid)
 		else if(str_name =="keyID:")
 		{
 			CRegID regId(scriptid);
-			CKeyID keyId = Hash160(regId.GetRegID());
+			CKeyID keyId = Hash160(regId.GetVec6());
 			string key = HexStr(keyId.begin(), keyId.end()).c_str();
 			if(val_val.get_str() != key)
 			{

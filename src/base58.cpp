@@ -210,7 +210,7 @@ public:
 ;
 
 bool CSoyPayAddress::Set(const CKeyID &id) {
-	SetData(SysParams().Base58Prefix(CBaseParams::PUBKEY_ADDRESS), &id, 20);
+	SetData(SysCfg().Base58Prefix(CBaseParams::PUBKEY_ADDRESS), &id, 20);
 	return true;
 }
 
@@ -225,8 +225,8 @@ bool CSoyPayAddress::IsValid() const {
 	bool bvalid = false;
 	{
 		bool fCorrectSize = vchData.size() == 20;
-		bool fKnownVersion = vchVersion == SysParams().Base58Prefix(CBaseParams::PUBKEY_ADDRESS)
-				|| vchVersion == SysParams().Base58Prefix(CBaseParams::SCRIPT_ADDRESS);
+		bool fKnownVersion = vchVersion == SysCfg().Base58Prefix(CBaseParams::PUBKEY_ADDRESS)
+				|| vchVersion == SysCfg().Base58Prefix(CBaseParams::SCRIPT_ADDRESS);
 		bvalid = fCorrectSize && fKnownVersion;
 	}
 	if (!bvalid) {
@@ -247,7 +247,7 @@ CTxDestination CSoyPayAddress::Get() const {
 		uint160 id;
 		memcpy(&id, &vchData[0], 20);
 
-		if (vchVersion == SysParams().Base58Prefix(CBaseParams::PUBKEY_ADDRESS))
+		if (vchVersion == SysCfg().Base58Prefix(CBaseParams::PUBKEY_ADDRESS))
 			return CKeyID(id);
 //		else if (vchVersion == Params().Base58Prefix(CBaseParams::SCRIPT_ADDRESS))
 //			return CScriptID(id);
@@ -259,7 +259,7 @@ CTxDestination CSoyPayAddress::Get() const {
 bool CSoyPayAddress::GetKeyID(CKeyID &keyID) const {
 	uint160 id;
 
-	if (vchVersion == SysParams().Base58Prefix(CBaseParams::PUBKEY_ADDRESS) && vchData.size() == 20) {
+	if (vchVersion == SysCfg().Base58Prefix(CBaseParams::PUBKEY_ADDRESS) && vchData.size() == 20) {
 		memcpy(&id, &vchData[0], 20);
 		keyID = CKeyID(id);
 		return true;
@@ -286,12 +286,12 @@ bool CSoyPayAddress::GetKeyID(CKeyID &keyID) const {
 //}
 
 bool CSoyPayAddress::IsScript() const {
-	return IsValid() && vchVersion == SysParams().Base58Prefix(CBaseParams::SCRIPT_ADDRESS);
+	return IsValid() && vchVersion == SysCfg().Base58Prefix(CBaseParams::SCRIPT_ADDRESS);
 }
 
 void CSoyPaySecret::SetKey(const CKey& vchSecret) {
 	assert(vchSecret.IsValid());
-	SetData(SysParams().Base58Prefix(CBaseParams::SECRET_KEY), vchSecret.begin(), vchSecret.size());
+	SetData(SysCfg().Base58Prefix(CBaseParams::SECRET_KEY), vchSecret.begin(), vchSecret.size());
 	if (vchSecret.IsCompressed())
 		vchData.push_back(1);
 }
@@ -304,7 +304,7 @@ CKey CSoyPaySecret::GetKey() {
 
 bool CSoyPaySecret::IsValid() const {
 	bool fExpectedFormat = vchData.size() == 32 || (vchData.size() == 33 && vchData[32] == 1);
-	bool fCorrectVersion = vchVersion == SysParams().Base58Prefix(CBaseParams::SECRET_KEY);
+	bool fCorrectVersion = vchVersion == SysCfg().Base58Prefix(CBaseParams::SECRET_KEY);
 	return fExpectedFormat && fCorrectVersion;
 }
 

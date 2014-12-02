@@ -79,7 +79,7 @@ uint64_t nLastBlockSize = 0;
 uint64_t GetElementForBurn(CBlockIndex* pindex)
 {
 	uint64_t sumfee;
-	unsigned int nBlock = CBaseParams::GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
+	unsigned int nBlock = SysCfg().GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
 //	CBlockIndex* pindex = chainActive.Tip();
 	if (nBlock > pindex->nHeight) {
 		return 100000;
@@ -459,7 +459,7 @@ uint256 GetAdjustHash(const uint256 TargetHash, const uint64_t nPos) {
 	posacc = posacc / 100;
 	posacc = max(posacc, (uint64_t) 1);
 	uint256 adjusthash = TargetHash; //adjust nbits
-	uint256 minhash = SysParams().ProofOfWorkLimit().getuint256();
+	uint256 minhash = SysCfg().ProofOfWorkLimit().getuint256();
 
 	while (posacc) {
 		adjusthash = adjusthash << 1;
@@ -499,20 +499,10 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 				}
 				CTxUndo txundo;
 				CValidationState state;
-//				for(auto &item : contractScriptTemp.mapDatas) {
-//					vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
-//					if(item.first == vKey1) {
-//						LogPrint("INFO","item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
-//					}
-//				}
+
 				if (!pBaseTx->UpdateAccount(i, accView, state, txundo, pPrevIndex->nHeight + 1, txCacheTemp, contractScriptTemp)) {
 					LogPrint("INFO","tx hash:%s transaction is invalid\n", pBaseTx->GetHash().GetHex());
-//					for (auto &item : contractScriptTemp.mapDatas) {
-//						vector<unsigned char> vKey1 = {0x64,0x61,0x74,0x61,0x01,0x00,0x00,0x00,0x01,0x00 ,0x5f,0x6b,0x65,0x79,0x31,0x00};
-//						if(item.first == vKey1) {
-//							LogPrint("INFO", "item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
-//						}
-//					}
+
 					mempool.mapTx.erase(pBaseTx->GetHash());
 					return false;
 				}
@@ -549,7 +539,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 		return false;
 	}
 
-	uint64_t maxNonce = CBaseParams::GetArg("-blockmaxnonce", 10000); //cacul times
+	uint64_t maxNonce = SysCfg().GetArg("-blockmaxnonce", 10000); //cacul times
 
 	uint256 prevblockhash = pPrevIndex->GetBlockHash();
 	const uint256 targetHash = CBigNum().SetCompact(pBlock->nBits).getuint256(); //target hash difficult
@@ -617,8 +607,8 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 					prtx->account = regid;
 					prtx->nHeight = pPrevIndex->nHeight+1;
 					pBlock->hashMerkleRoot = pBlock->BuildMerkleTree();
-					vector<unsigned char> vRegId = regid.GetRegID();
-					printf("CreatePosTx addr = %s\r\n",item.keyID.ToAddress().c_str());
+					vector<unsigned char> vRegId = regid.GetVec6();
+					printf("CreatePosTx addr = %s \nhight:%d time:%s\r\n\n",item.keyID.ToAddress().c_str(),prtx->nHeight,DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
 					LogPrint("postx", "find pos tx hash succeed: \n"
 									  "   pos hash:%s \n"
 									  "adjust hash:%s \r\n", curhash.GetHex(), adjusthash.GetHex());
@@ -637,10 +627,10 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 //						cout << "miner signature:" << HexStr(pBlock->vSignature) << endl;
 						return true;
 					} else {
-						LogPrint("postx", "sign fail\r\n");
+						LogPrint("ERROR", "sign fail\r\n");
 					}
 				} else {
-					LogPrint("postx", "GetKey fail or GetRegID fail\r\n");
+					LogPrint("ERROR", "GetKey fail or GetVec6 fail\r\n");
 				}
 			}
 		}
@@ -651,7 +641,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 
 bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionCache &txCache, CScriptDBViewCache &scriptCache, bool bJustCheckSign) {
 
-	uint64_t maxNonce = CBaseParams::GetArg("-blockmaxnonce", 10000); //cacul times
+	uint64_t maxNonce = SysCfg().GetArg("-blockmaxnonce", 10000); //cacul times
 
 	if (pBlock->nNonce > maxNonce) {
 		LogPrint("ERROR", "Nonce is larger than maxNonce\r\n");
@@ -798,18 +788,18 @@ CBlockTemplate* CreateNewBlock() {
 	pblocktemplate->vTxSigOps.push_back(-1); // updated at end
 
 	// Largest block you're willing to create:
-	unsigned int nBlockMaxSize = CBaseParams::GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
+	unsigned int nBlockMaxSize = SysCfg().GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
 	// Limit to betweeen 1K and MAX_BLOCK_SIZE-1K for sanity:
 	nBlockMaxSize = max((unsigned int) 1000, min((unsigned int) (MAX_BLOCK_SIZE - 1000), nBlockMaxSize));
 
 	// How much of the block should be dedicated to high-priority transactions,
 	// included regardless of the fees they pay
-	unsigned int nBlockPrioritySize = CBaseParams::GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE);
+	unsigned int nBlockPrioritySize = SysCfg().GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE);
 	nBlockPrioritySize = min(nBlockMaxSize, nBlockPrioritySize);
 
 	// Minimum block size you want to create; block will be filled with free transactions
 	// until there are no more or the block reaches this size:
-	unsigned int nBlockMinSize = CBaseParams::GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE);
+	unsigned int nBlockMinSize = SysCfg().GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE);
 	nBlockMinSize = min(nBlockMaxSize, nBlockMinSize);
 
 	// Collect memory pool transactions into the block
@@ -819,7 +809,7 @@ CBlockTemplate* CreateNewBlock() {
 		CBlockIndex* pIndexPrev = chainActive.Tip();
 		CAccountViewCache accview(*pAccountViewTip, true);
 
-		bool fPrintPriority = CBaseParams::GetBoolArg("-printpriority", false);
+		bool fPrintPriority = SysCfg().GetBoolArg("-printpriority", false);
 
 		// This vector will be sorted into a priority queue:
 		vector<TxPriority> vecPriority;
@@ -946,7 +936,7 @@ void static SoypayMiner(CWallet *pwallet) {
 
 	try {
 		while (true) {
-			if (SysParams().NetworkID() != CBaseParams::REGTEST) {
+			if (SysCfg().NetworkID() != CBaseParams::REGTEST) {
 				// Busy-wait for the network to come online so we don't waste time mining
 				// on an obsolete chain. In regtest mode we expect to fly solo.
 				while (vNodes.empty())
@@ -976,8 +966,8 @@ void static SoypayMiner(CWallet *pwallet) {
 					CheckWork(pblock, *pwallet);
 					SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
-//					if (SysParams().NetworkID() == CBaseParams::REGTEST)
-//						throw boost::thread_interrupted();
+					if (SysCfg().NetworkID() == CBaseParams::REGTEST)
+						throw boost::thread_interrupted();
 					::MilliSleep(800);
 					break;
 				}
@@ -987,7 +977,7 @@ void static SoypayMiner(CWallet *pwallet) {
 
 				// Check for stop or if block needs to be rebuilt
 				boost::this_thread::interruption_point();
-				if (vNodes.empty() && SysParams().NetworkID() != CBaseParams::REGTEST)
+				if (vNodes.empty() && SysCfg().NetworkID() != CBaseParams::REGTEST)
 					break;
 				if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
 					break;
@@ -1001,9 +991,9 @@ void static SoypayMiner(CWallet *pwallet) {
 	}
 }
 
-bool CreateBlockWithAppointedAddr(CKeyID &keyID)
+uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 {
-	if (SysParams().NetworkID() == CBaseParams::REGTEST)
+	if (SysCfg().NetworkID() == CBaseParams::REGTEST)
 	{
 		unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
 		CBlockIndex* pindexPrev = chainActive.Tip();
@@ -1031,18 +1021,18 @@ bool CreateBlockWithAppointedAddr(CKeyID &keyID)
 			::MilliSleep(1);
 			if (pindexPrev != chainActive.Tip())
 			{
-				return true;
+				return chainActive.Tip()->GetBlockHash() ;
 			}
 		}
 	}
-	return false;
+	return uint256(0);
 }
 
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads) {
 	static boost::thread_group* minerThreads = NULL;
 
 	if (nThreads < 0) {
-		if (SysParams().NetworkID() == CBaseParams::REGTEST)
+		if (SysCfg().NetworkID() == CBaseParams::REGTEST)
 			nThreads = 1;
 		else
 			nThreads = boost::thread::hardware_concurrency();

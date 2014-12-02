@@ -65,8 +65,8 @@ BOOST_AUTO_TEST_CASE(key_test1)
     CSoyPaySecret bsecret1, bsecret2, bsecret1C, bsecret2C, baddress1;
     string strSecret1C, strSecret2C;
 
-    bool fRegTest = CBaseParams::GetBoolArg("-regtest", false);
-	bool fTestNet = CBaseParams::GetBoolArg("-testnet", false);
+    bool fRegTest = SysCfg().GetBoolArg("-regtest", false);
+	bool fTestNet = SysCfg().GetBoolArg("-testnet", false);
 	if (fTestNet && fRegTest) {
 		fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
 		assert(0);

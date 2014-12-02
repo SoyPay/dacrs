@@ -264,7 +264,7 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
     for (auto& strAddNode : laddedNodes)
     {
         vector<CService> vservNode(0);
-        if(Lookup(strAddNode.c_str(), vservNode, SysParams().GetDefaultPort(), fNameLookup, 0))
+        if(Lookup(strAddNode.c_str(), vservNode, SysCfg().GetDefaultPort(), fNameLookup, 0))
             laddedAddreses.push_back(make_pair(strAddNode, vservNode));
         else
         {

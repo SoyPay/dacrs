@@ -816,7 +816,7 @@ void ThreadFlushWalletDB(const string& strFile)
     if (fOneThread)
         return;
     fOneThread = true;
-    if (!CBaseParams::GetBoolArg("-flushwallet", true))
+    if (!SysCfg().GetBoolArg("-flushwallet", true))
         return;
 
     unsigned int nLastSeen = nWalletDBUpdated;
