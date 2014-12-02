@@ -34,7 +34,7 @@ Value getbalance(const Array& params, bool fHelp)
 				"\nResult:\n"    + HelpExampleCli("getbalance", "")
 	            + HelpExampleRpc("getbalance", ""));
 	 Object obj;
-    obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance(chainActive.Tip()->nHeight))));
+    obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetRawBalance(chainActive.Tip()->nHeight))));
     return obj;
 }
 Value getinfo(const Array& params, bool fHelp)
@@ -76,7 +76,7 @@ Value getinfo(const Array& params, bool fHelp)
 
     if (pwalletMain) {
         obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
-        obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetBalance(chainActive.Tip()->nHeight))));
+        obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetRawBalance(chainActive.Tip()->nHeight))));
     }
     static const string name[] = {"MAIN", "TESTNET", "REGTEST"};
 

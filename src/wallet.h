@@ -220,24 +220,11 @@ public:
 	)
 	bool FushToDisk()const;
 
-	int64_t GetBalance(int ncurhigh)const;
-    bool SynchronizRegId(const CKeyID &keyid,const CAccountViewCache &inview)
-	{
-		CAccountViewCache view(inview);
-		if(count(keyid)> 0)
-		{
-			return mKeyPool[keyid].SynchronizSys(view);
-		}
-		return false;
-	}
+	int64_t GetRawBalance(int ncurhigh)const;
+    bool SynchronizRegId(const CKeyID &keyid,const CAccountViewCache &inview);
+
     bool AddKey(const CKey& secret,const CKey& minerKey);
-	bool SynchronizSys(const CAccountViewCache &inview) {
-		CAccountViewCache view(inview);
-		for (auto &te : mKeyPool) {
-			te.second.SynchronizSys(view);
-		}
-		return true;
-	}
+	bool SynchronizSys(const CAccountViewCache &inview) ;
 	static string defaultFilename ;
 
 	static CWallet* getinstance();
@@ -247,66 +234,13 @@ public:
 	{
 		return false;
 	}
-	bool GetPubKey(const CKeyID &address, CPubKey& keyOut,bool IsMiner = false)
-	{
-		AssertLockHeld(cs_wallet);
-		if (mKeyPool.count(address)) {
-			return mKeyPool[address].GetPubKey(keyOut,IsMiner);
-		}
-		return false;
+	bool GetPubKey(const CKeyID &address, CPubKey& keyOut,bool IsMiner = false);
 
-	}
-	bool GetKey(const CKeyID &address, CKey& keyOut, bool IsMiner = false) const {
-		AssertLockHeld(cs_wallet);
-		if (mKeyPool.count(address)) {
-			auto tep = mKeyPool.find(address);
-			if(tep != mKeyPool.end())
-			return tep->second.getCKey(keyOut,IsMiner);
-		}
-		return false;
-	}
-	bool GetKey(const CUserID &address, CKey& keyOut) const {
-		AssertLockHeld(cs_wallet);
-		if (address.type() == typeid(CKeyID)) {
-			return GetKey(boost::get<CKeyID>(address),keyOut);
-		}
-		else
-		{
-			assert(0 && "to fixme");
-		}
+	bool GetKey(const CKeyID &address, CKey& keyOut, bool IsMiner = false) const ;
+	bool GetKey(const CUserID &address, CKey& keyOut) const ;
+	bool GetRegId(const CUserID &address, CRegID& IdOut) const;
 
-		return false;
-	}
-	bool GetRegId(const CUserID &address, CRegID& IdOut) const {
-		AssertLockHeld(cs_wallet);
-		if (address.type() == typeid(CRegID)) {
-			IdOut = boost::get<CRegID>(address);
-			return true;
-		} else if (address.type() == typeid(CKeyID)) {
-			CKeyID te = boost::get<CKeyID>(address);
-			if (count(te)) {
-				auto tep = mKeyPool.find(te);
-				if (tep != mKeyPool.end()) {
-					IdOut = tep->second.GetRegID();
-					return true;
-				}
-			}
-
-		} else {
-			assert(0 && "to fixme");
-		}
-
-		return false;
-	}
-
-	bool GetKeyIds(set<CKeyID> &setKeyID) {
-		AssertLockHeld(cs_wallet);
-		for (auto & tem : mKeyPool) {
-			setKeyID.insert(tem.first);
-		}
-		return true;
-	}
-
+	bool GetKeyIds(set<CKeyID> &setKeyID)const ;
 	bool AddPubKey(const CPubKey& pk);
 
 
@@ -351,33 +285,11 @@ public:
 //	void EraseFromWallet(const uint256 &hash);
 	int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
 //	void ReacceptWalletTransactions();
-	void ResendWalletTransactions();
+		void ResendWalletTransactions();
 
+	std::string SendMoney(const CRegID &send,const CUserID &rsv, int64_t nValue);
 
-	/***********************************creat tx*********************************************/
-
-	std::string SendMoney(CRegID &send, CRegID &rsv, int64_t nValue);
-
-	/****************************************************************************************/
-
-//	set<CTxDestination> GetAccountAddresses(string strAccount) const;
-
-	bool IsMine(CBaseTransaction*pTx) {
-
-		set<CKeyID> vaddr;
-
-		if (!pTx->GetAddress(vaddr, *pAccountViewTip)) {
-			return false;
-		}
-		for (auto &keyid : vaddr) {
-			if (count(keyid) > 0) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-
+	bool IsMine(CBaseTransaction*pTx)const;
 
 	void SetBestChain(const CBlockLocator& loc);
 

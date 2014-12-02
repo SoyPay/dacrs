@@ -208,7 +208,7 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 		uint64_t balance = 0;
 		CUserID userId = keyid;
 		if (view.GetAccount(userId, account)) {
-			balance = account.GetBalance(chainActive.Tip()->nHeight);
+			balance = account.GetRawBalance(chainActive.Tip()->nHeight);
 		}
 
 		if (account.IsRegister()) {
@@ -310,7 +310,7 @@ Value createnormaltx(const Array& params, bool fHelp) {
 		uint64_t balance = 0;
 		CUserID userId = Sendkeyid;
 		if (view.GetAccount(userId, acct)) {
-			balance = acct.GetBalance(chainActive.Tip()->nHeight);
+			balance = acct.GetRawBalance(chainActive.Tip()->nHeight);
 		}
 
 		if (!acct.IsRegister()) {
@@ -342,7 +342,8 @@ Value createnormaltx(const Array& params, bool fHelp) {
 		tx.desUserId = GetUserId(recvkeyid);
 		tx.llValues = money;
 		tx.llFees = fee;
-		tx.nValidHeight = nvalidheight;
+		tx.nValidHeight = chainActive.Tip()->nHeight; //for test
+//		tx.nValidHeight = nvalidheight;
 
 		CKey key;
 		pwalletMain->GetKey(Sendkeyid, key);
@@ -448,7 +449,8 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		tx.vAccountRegId = vaccountid;
 		tx.llFees = fee;
 		tx.vContract = vcontract;
-		tx.nValidHeight = height;
+		tx.nValidHeight = chainActive.Tip()->nHeight;
+//		tx.nValidHeight = height;
 
 
 		//get keyid by accountid
@@ -675,7 +677,7 @@ Value createfreezetx(const Array& params, bool fHelp) {
 		uint64_t balance = 0;
 		CUserID userId = keyid;
 		if (view.GetAccount(userId, account)) {
-			balance = account.GetBalance(chainActive.Tip()->nHeight);
+			balance = account.GetRawBalance(chainActive.Tip()->nHeight);
 		}
 
 		if (!account.IsRegister()) {
@@ -838,7 +840,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		uint64_t balance = 0;
 		CUserID userId = keyid;
 		if (view.GetAccount(userId, account)) {
-			balance = account.GetBalance(chainActive.Tip()->nHeight);
+			balance = account.GetRawBalance(chainActive.Tip()->nHeight);
 		}
 
 		if (!account.IsRegister()) {
@@ -945,7 +947,7 @@ Value listaddr(const Array& params, bool fHelp) {
 				Object obj;
 				CAccount Lambaacc ;
 				accView.GetAccount(userId, Lambaacc);
-				obj.push_back(Pair("free  amount", (double)Lambaacc.GetBalance(curheight)/ (double) COIN));
+				obj.push_back(Pair("free  amount", (double)Lambaacc.GetRawBalance(curheight)/ (double) COIN));
 				obj.push_back(Pair("Reward amount", (double)Lambaacc.GetRewardAmount(curheight)/ (double) COIN));
 				obj.push_back(Pair("freeze amount", (double)Lambaacc.GetSripteFreezeAmount(curheight)/ (double) COIN));
 				obj.push_back(Pair("self freeze amount", (double)Lambaacc.GetSelfFreezeAmount(curheight)/ (double) COIN));
@@ -1385,7 +1387,7 @@ Value getaddrbalance(const Array& params, bool fHelp) {
 		CAccount secureAcc;
 		CUserID userId = keyid;
 		if (accView.GetAccount(userId, secureAcc)) {
-			dbalance = (double) secureAcc.GetBalance(chainActive.Tip()->nHeight + 100) / (double) COIN;
+			dbalance = (double) secureAcc.GetRawBalance(chainActive.Tip()->nHeight + 100) / (double) COIN;
 		}
 	}
 	return dbalance;
