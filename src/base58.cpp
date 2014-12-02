@@ -225,8 +225,7 @@ bool CSoyPayAddress::IsValid() const {
 	bool bvalid = false;
 	{
 		bool fCorrectSize = vchData.size() == 20;
-		bool fKnownVersion = vchVersion == SysCfg().Base58Prefix(CBaseParams::PUBKEY_ADDRESS)
-				|| vchVersion == SysCfg().Base58Prefix(CBaseParams::SCRIPT_ADDRESS);
+		bool fKnownVersion = vchVersion == SysCfg().Base58Prefix(CBaseParams::PUBKEY_ADDRESS);
 		bvalid = fCorrectSize && fKnownVersion;
 	}
 	if (!bvalid) {

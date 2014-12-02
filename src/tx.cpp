@@ -89,7 +89,7 @@ bool CRegID::GetKeyID(const string & str,CKeyID &keyId)
 	if(te.IsEmpty())
 		return false;
 	keyId = te.getKeyID(*pAccountViewTip);
-	return true;
+	return !keyId.IsEmpty();
 }
 bool CRegID::IsRegIdStr(const string & str)
  {
@@ -356,7 +356,7 @@ string CTransaction::ToString(CAccountViewCache &view) const {
 	CKeyID srcKeyId, desKeyId;
 	view.GetKeyId(srcUserId, srcKeyId);
 	if (desUserId.type() == typeid(CKeyID)) {
-		str += strprintf("txType=%s, hash=%s, nVersion=%d, srcAccountId=%s, llFees=%ld, llValues=%ld, desKeyId=%s, nValidHeight=%d\n",
+		str += strprintf("txType=%s, hash=	%s, nVersion=%d, srcAccountId=%s, llFees=%ld, llValues=%ld, desKeyId=%s, nValidHeight=%d\n",
 		txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, (boost::get<CRegID>(srcUserId).ToString()), llFees, llValues, boost::get<CKeyID>(desUserId).GetHex(), nValidHeight);
 	} else if(desUserId.type() == typeid(CRegID)) {
 		view.GetKeyId(desUserId, desKeyId);
@@ -742,10 +742,6 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 		CFund fund(minusValue);
 		acctInfo.OperateAccount(MINUS_FREE, fund);
 		txundo.vAccountOperLog.push_back(acctInfo.accountOperLog);
-		CUserID userId = acctInfo.keyID;
-		if (!view.SetAccount(userId, acctInfo))
-			return state.DoS(100, ERROR("UpdateAccounts() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
-					"bad-save-accountdb");
 	}
 	txundo.txHash = GetHash();
 	if(script.size() == SCRIPT_ID_SIZE) {
@@ -759,6 +755,10 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 		if(!aAuthorizate.IsNull()) {
 			acctInfo.mapAuthorizate[script] = aAuthorizate;
 		}
+		CUserID userId = acctInfo.keyID;
+		if (!view.SetAccount(userId, acctInfo))
+					return state.DoS(100, ERROR("UpdateAccounts() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
+							"bad-save-accountdb");
 	}
 	else {
 		CVmScript vmScript;
@@ -780,11 +780,6 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 		CAccount account;
 		account.keyID = keyId;
 		account.regID = regId;
-		if(!view.SaveAccountInfo(regId, keyId, account)) {
-			return state.DoS(100,
-								ERROR("UpdateAccounts() : create new account script id %s script info error", regId.ToString()),
-								UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
-		}
 		//save new script content
 		if(!scriptCache.SetScript(regId, script)){
 			return state.DoS(100,
@@ -792,7 +787,13 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
 		if(!aAuthorizate.IsNull()) {
-			acctInfo.mapAuthorizate[regId.GetVec6()] = aAuthorizate;
+			account.mapAuthorizate[regId.GetVec6()] = aAuthorizate;
+		}
+
+		if (!view.SaveAccountInfo(regId, keyId, account)) {
+			return state.DoS(100,
+					ERROR("UpdateAccounts() : create new account script id %s script info error",
+							regId.ToString()), UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
 	}
 	return true;
@@ -1360,7 +1361,7 @@ uint64_t CAccount::GetSelfFreezeAmount(int nCurHeight) {
 	return balance;
 }
 
-uint64_t CAccount::GetBalance(int nCurHeight) {
+uint64_t CAccount::GetRawBalance(int nCurHeight) {
 	CompactAccount(nCurHeight);
 	uint64_t balance = llValues;
 
