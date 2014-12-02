@@ -1238,7 +1238,9 @@ Value gettxoperationlog(const Array& params, bool fHelp)
 	vector<CAccountOperLog> vLog;
 	Object retobj;
 	retobj.push_back(Pair("hash",  txHash.GetHex()));
-	if(GetTxOperLog(txHash, vLog))
+	if(!GetTxOperLog(txHash, vLog))
+	   throw JSONRPCError(RPC_INVALID_PARAMS, "error hash");
+
 	{
 		Array arrayvLog;
         for(auto const &te :vLog)
@@ -1258,10 +1260,7 @@ Value gettxoperationlog(const Array& params, bool fHelp)
         retobj.push_back(Pair("AccountOperLog",  arrayvLog));
 
 	}
-	else
-	{
-		retobj.push_back(Pair("info",  "error hash"));
-	}
+
 	return retobj;
 
 }
@@ -1285,19 +1284,19 @@ Value disconnectblock(const Array& params, bool fHelp) {
 //	      if (!DisconnectBlockFromTip(state))
 //	    	  return false;
 		if (!ReadBlockFromDisk(block, pindex))
-			return ERROR("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
+			throw ERROR("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
 					pindex->GetBlockHash().ToString());
 		bool fClean = true;
 		CTransactionCache txCacheTemp(*pTxCacheTip);
 		CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
 		if (!DisconnectBlock(block, state, view, pindex, txCacheTemp, contractScriptTemp, &fClean))
-			return ERROR("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
+			throw ERROR("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
 					pindex->GetBlockHash().ToString());
 		CBlockIndex *pindexDelete = pindex;
 		pindex = pindex->pprev;
 		chainActive.SetTip(pindex);
 	    if (!pTxCacheTip->DeleteBlockFromCache(block))
-	    	return state.Abort(_("Disconnect tip block failed to delete tx from txcache"));
+	    	throw runtime_error(_("Disconnect tip block failed to delete tx from txcache"));
 
 	    //load a block tx into cache transaction
 		CBlockIndex *pReLoadBlockIndex = pindexDelete;
@@ -1305,15 +1304,15 @@ Value disconnectblock(const Array& params, bool fHelp) {
 			pReLoadBlockIndex = chainActive[pindexDelete->nHeight - SysCfg().GetTxCacheHeight()];
 			CBlock reLoadblock;
 			if (!ReadBlockFromDisk(reLoadblock, pindexDelete))
-				return state.Abort(_("Failed to read block"));
+				throw runtime_error(_("Failed to read block"));
 			if (!pTxCacheTip->AddBlockToCache(reLoadblock))
-					return state.Abort(_("Disconnect tip block reload preblock tx to txcache"));
+				throw  runtime_error(_("Disconnect tip block reload preblock tx to txcache"));
 		}
 
 		assert(view.Flush() && contractScriptTemp.Flush());
 	}
 	Object obj;
-	obj.push_back(Pair("info", "disconnect ok"));
+	obj.push_back(Pair("info", strprintf("disconnect block hash%s hight:%s",block.GetHash().ToString(),block.nHeight)));
 	return obj;
 
 }

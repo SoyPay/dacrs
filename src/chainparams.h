@@ -200,16 +200,26 @@ public:
 	}
 
 public:
+	/**
+	 *
+	 */
 	enum Network {
-		MAIN, TESTNET, REGTEST,
-
-		MAX_NETWORK_TYPES
+		MAIN,            //!< MAIN
+		TESTNET,         //!< TESTNET
+		REGTEST,         //!< REGTEST
+		MAX_NETWORK_TYPES//!< MAX_NETWORK_TYPES
 	};
-
+/**
+ *
+ */
 	enum Base58Type {
-		PUBKEY_ADDRESS, SCRIPT_ADDRESS, SECRET_KEY, EXT_PUBLIC_KEY, EXT_SECRET_KEY, ACC_ADDRESS,
-
-		MAX_BASE58_TYPES
+		PUBKEY_ADDRESS, //!< PUBKEY_ADDRESS
+		SCRIPT_ADDRESS, //!< SCRIPT_ADDRESS
+		SECRET_KEY,     //!< SECRET_KEY
+		EXT_PUBLIC_KEY, //!< EXT_PUBLIC_KEY
+		EXT_SECRET_KEY, //!< EXT_SECRET_KEY
+		ACC_ADDRESS,    //!< ACC_ADDRESS
+		MAX_BASE58_TYPES//!< MAX_BASE58_TYPES
 	};
 
 	const uint256& HashGenesisBlock() const {
@@ -289,6 +299,7 @@ protected:
 		nTargetTimespan = 30 * 60;
 		nInterval = nTargetTimespan / nTargetSpacing;
 		nMaxCoinDay = 30 * 24 * 60 * 60;
+		nSubsidyHalvingInterval = 0;
 	}
 
 	uint256 hashGenesisBlock;
