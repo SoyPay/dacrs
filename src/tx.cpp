@@ -742,10 +742,6 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 		CFund fund(minusValue);
 		acctInfo.OperateAccount(MINUS_FREE, fund);
 		txundo.vAccountOperLog.push_back(acctInfo.accountOperLog);
-		CUserID userId = acctInfo.keyID;
-		if (!view.SetAccount(userId, acctInfo))
-			return state.DoS(100, ERROR("UpdateAccounts() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
-					"bad-save-accountdb");
 	}
 	txundo.txHash = GetHash();
 	if(script.size() == SCRIPT_ID_SIZE) {
@@ -759,6 +755,10 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 		if(!aAuthorizate.IsNull()) {
 			acctInfo.mapAuthorizate[script] = aAuthorizate;
 		}
+		CUserID userId = acctInfo.keyID;
+		if (!view.SetAccount(userId, acctInfo))
+					return state.DoS(100, ERROR("UpdateAccounts() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
+							"bad-save-accountdb");
 	}
 	else {
 		CVmScript vmScript;
@@ -780,11 +780,6 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 		CAccount account;
 		account.keyID = keyId;
 		account.regID = regId;
-		if(!view.SaveAccountInfo(regId, keyId, account)) {
-			return state.DoS(100,
-								ERROR("UpdateAccounts() : create new account script id %s script info error", regId.ToString()),
-								UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
-		}
 		//save new script content
 		if(!scriptCache.SetScript(regId, script)){
 			return state.DoS(100,
@@ -793,6 +788,12 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 		}
 		if(!aAuthorizate.IsNull()) {
 			acctInfo.mapAuthorizate[regId.GetVec6()] = aAuthorizate;
+		}
+
+		if (!view.SaveAccountInfo(regId, keyId, account)) {
+			return state.DoS(100,
+					ERROR("UpdateAccounts() : create new account script id %s script info error",
+							regId.ToString()), UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
 	}
 	return true;
