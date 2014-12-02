@@ -785,9 +785,14 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     SysCfg().SetCoinCacheSize(nTotalCache / 300); // coins in memory require around 300 bytes
 
-    pwalletMain = CWallet::getinstance();
-    RegisterWallet(pwalletMain);
-    DBErrors nLoadWalletRet = pwalletMain->LoadWallet(false);
+    try {
+        pwalletMain = CWallet::getinstance();
+        RegisterWallet(pwalletMain);
+        DBErrors nLoadWalletRet = pwalletMain->LoadWallet(false);
+    	} catch (...) {
+    		cout<< "pwalletMain error!"<< endl;
+    	}
+
 
 
 

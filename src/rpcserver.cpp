@@ -81,7 +81,8 @@ void RPCTypeCheck(const Object& o,
     }
 }
 
-int64_t AmountFromValue(const Value& value)
+
+int64_t AmountToRawValue(const Value& value)
 {
     double dAmount = value.get_real();
     if (dAmount <= 0.0 || dAmount > 21000000.0)
@@ -281,7 +282,7 @@ static const CRPCCommand vRPCCommands[] =
     { "listtx",                 &listtx,       	         true,      false,      true },
     { "registeraccounttx",      &registeraccounttx,      true,      false,      true },
 	{ "createnormaltx",         &createnormaltx,       	 true,      false,      true },
-	{ "createcontracttx",       &createcontracttx,        true,      false,      true },
+//	{ "createcontracttx",       &createcontracttx,       true,      false,      true },
 	{ "signcontracttx",         &signcontracttx,       	 true,      false,      true },
 	{ "createfreezetx",         &createfreezetx,       	 true,      false,      true },
 	{ "registerscripttx",       &registerscripttx,       true,      false,      true },

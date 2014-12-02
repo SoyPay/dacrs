@@ -556,31 +556,18 @@ DBErrors CWallet::LoadWallet(bool fFirstRunRet) {
 	if (!fFileBacked)
 		return DB_LOAD_OK;
 
-//	Object reply;
-//	reply.push_back(Pair("created by Soypay", CLIENT_BUILD + CLIENT_DATE));
-//	reply.push_back(Pair("Created Time ", EncodeDumpTime(GetTime())));
-//	reply.push_back(Pair("Best block index hight ", chainActive.Height()));
-//	reply.push_back(Pair("Best block hash ", chainActive.Tip()->GetBlockHash().ToString()));
-//
-//	LOCK2(cs_main, pwalletMain->cs_wallet);
-//	map<CKeyID, CKeyStoreValue> tepmKeyPool = pwalletMain->GetKeyPool();
-//	int index = 0;
-//	for (auto &te : tepmKeyPool) {
-//		reply.push_back(Pair(strprintf("index%d",index++), te.second.ToString()));
-//	}
-
-//	LOCK2(cs_main, pwalletMain->cs_wallet);
 	   filesystem::path blocksDir = GetDataDir() / strWalletFile;
-//	   FILE* fp = fopen(blocksDir.string().c_str(), "wb+");
-	   FILE* fp = fopen(blocksDir.string().c_str(), "rb");
-	 
-	   if (!fp) throw "Cannot open wallet dump file";
-
+	if (!exists(blocksDir)) {
+		FushToDisk();
+		return DB_LOAD_OK;
+	}
+	FILE* fp = fopen(blocksDir.string().c_str(), "rb");
 
 
     CAutoFile filein = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
     if (!filein)
     	throw "Cannot open wallet dump file";
+
 
 
 	try {
@@ -641,7 +628,7 @@ DBErrors CWallet::ZapWalletTx() {
 /***********************************creat tx*********************************************/
 
 
-int64_t CWallet::GetBalance(int ncurhigh) const
+int64_t CWallet::GetRawBalance(int ncurhigh) const
 {
 	int64_t ret = 0;
 	CAccountViewCache accView(*pAccountViewTip, true);
@@ -649,7 +636,7 @@ int64_t CWallet::GetBalance(int ncurhigh) const
 		LOCK2(cs_main, cs_wallet);
 		for(auto &te :mKeyPool)
 		{
-			ret +=accView.GetBalance(te.first,ncurhigh);
+			ret +=accView.GetRawBalance(te.first,ncurhigh);
 		}
 
 	}
@@ -663,6 +650,7 @@ std::string CWallet::SendMoney(const CRegID &send, const CUserID &rsv, int64_t n
 //	{
 //		return _("Error: Wallet locked, unable to create transaction!");
 //	}
+
 
 	CTransaction tx;
 	{
@@ -805,4 +793,99 @@ uint256 CWallet::GetCheckSum() const {
 			ss << nWalletVersion << bestBlock << MasterKey << mKeyPool << mapInBlockTx;
 			return ss.GetHash();
 		}
+}
+
+bool CWallet::GetRegId(const CUserID& address, CRegID& IdOut) const  {
+	AssertLockHeld(cs_wallet);
+	if (address.type() == typeid(CRegID)) {
+		IdOut = boost::get<CRegID>(address);
+		return true;
+	} else if (address.type() == typeid(CKeyID)) {
+		CKeyID te = boost::get<CKeyID>(address);
+		if (count(te)) {
+			auto tep = mKeyPool.find(te);
+			if (tep != mKeyPool.end()) {
+				IdOut = tep->second.GetRegID();
+				return true;
+			}
+		}
+
+	} else {
+		assert(0 && "to fixme");
+	}
+
+	return false;
+}
+
+bool CWallet::GetKey(const CUserID& address, CKey& keyOut) const{
+	AssertLockHeld(cs_wallet);
+	if (address.type() == typeid(CKeyID)) {
+		return GetKey(boost::get<CKeyID>(address),keyOut);
+	}
+	else
+	{
+		assert(0 && "to fixme");
+	}
+
+	return false;
+}
+
+bool CWallet::GetKey(const CKeyID& address, CKey& keyOut, bool IsMiner) const {
+	AssertLockHeld(cs_wallet);
+	if (mKeyPool.count(address)) {
+		auto tep = mKeyPool.find(address);
+		if(tep != mKeyPool.end())
+		return tep->second.getCKey(keyOut,IsMiner);
+	}
+	return false;
+}
+
+bool CWallet::GetPubKey(const CKeyID& address, CPubKey& keyOut, bool IsMiner) {
+	AssertLockHeld(cs_wallet);
+	if (mKeyPool.count(address)) {
+		return mKeyPool[address].GetPubKey(keyOut,IsMiner);
+	}
+	return false;
+
+}
+
+bool CWallet::SynchronizRegId(const CKeyID& keyid, const CAccountViewCache& inview) {
+	CAccountViewCache view(inview);
+	if(count(keyid)> 0)
+	{
+		return mKeyPool[keyid].SynchronizSys(view);
+	}
+	return false;
+}
+
+bool CWallet::IsMine(CBaseTransaction* pTx) const{
+
+	set<CKeyID> vaddr;
+	CAccountViewCache view(*pAccountViewTip);
+	if (!pTx->GetAddress(vaddr, view)) {
+		return false;
+	}
+	for (auto &keyid : vaddr) {
+		if (count(keyid) > 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool CWallet::SynchronizSys(const CAccountViewCache& inview) {
+	CAccountViewCache view(inview);
+	for (auto &te : mKeyPool) {
+		te.second.SynchronizSys(view);
+	}
+	return true;
+}
+
+bool CWallet::GetKeyIds(set<CKeyID>& setKeyID) const {
+	AssertLockHeld(cs_wallet);
+	setKeyID.clear();
+	for (auto const & tem : mKeyPool) {
+		setKeyID.insert(tem.first);
+	}
+	return setKeyID.size() > 0;
 }

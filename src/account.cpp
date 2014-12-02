@@ -309,12 +309,12 @@ bool CAccountViewCache::GetRegId(const CUserID& userId, CRegID& regId) const{
 	return false;
 }
 
-int64_t CAccountViewCache::GetBalance(const CUserID& userId,int curhigh) const {
+int64_t CAccountViewCache::GetRawBalance(const CUserID& userId,int curhigh) const {
 	CAccountViewCache tempvew(*this);
 	CAccount account;
 	if(tempvew.GetAccount(userId,account))
 	{
-		return  account.GetBalance(curhigh);
+		return  account.GetRawBalance(curhigh);
 	}
 	return 0;
 }
