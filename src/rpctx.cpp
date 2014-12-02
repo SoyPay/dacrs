@@ -338,7 +338,8 @@ Value createnormaltx(const Array& params, bool fHelp) {
 		tx.desUserId = GetUserId(recvkeyid);
 		tx.llValues = money;
 		tx.llFees = fee;
-		tx.nValidHeight = nvalidheight;
+		tx.nValidHeight = chainActive.Tip()->nHeight; //for test
+//		tx.nValidHeight = nvalidheight;
 
 		CKey key;
 		pwalletMain->GetKey(Sendkeyid, key);
@@ -443,7 +444,8 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		tx.vAccountRegId = vaccountid;
 		tx.llFees = fee;
 		tx.vContract = vcontract;
-		tx.nValidHeight = height;
+		tx.nValidHeight = chainActive.Tip()->nHeight;
+//		tx.nValidHeight = height;
 
 
 		//get keyid by accountid

@@ -976,8 +976,8 @@ void static SoypayMiner(CWallet *pwallet) {
 					CheckWork(pblock, *pwallet);
 					SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
-					if (SysParams().NetworkID() == CBaseParams::REGTEST)
-						throw boost::thread_interrupted();
+//					if (SysParams().NetworkID() == CBaseParams::REGTEST)
+//						throw boost::thread_interrupted();
 					::MilliSleep(800);
 					break;
 				}
