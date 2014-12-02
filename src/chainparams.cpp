@@ -346,7 +346,7 @@ bool CBaseParams::IsArgCount(const string& strArg) {
 	return false;
 }
 
-const CBaseParams &SysParams() {
+const CBaseParams &SysCfg() {
 	static shared_ptr<CBaseParams> pParams;
 
 	if (pParams.get() == NULL) {
@@ -403,7 +403,7 @@ static void InterpretNegativeSetting(string name, map<string, string>& mapSettin
 		string positive("-");
 		positive.append(name.begin() + 3, name.end());
 		if (mapSettingsRet.count(positive) == 0) {
-			bool value = !CBaseParams::GetBoolArg(name, false);
+			bool value = !SysCfg().GetBoolArg(name, false);
 			mapSettingsRet[positive] = (value ? "1" : "0");
 		}
 	}
@@ -467,11 +467,6 @@ bool CBaseParams::IntialParams(int argc, const char* const argv[]) {
 		fprintf(stderr, "Error reading configuration file: %s\n", e.what());
 		return false;
 	}
-	// Check for -testnet or -regtest parameter (TestNet() calls are only valid after this clause)
-//	if (!SelectParamsFromCommandLine()) {
-//		fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
-//		return false;
-//	}
 	return true;
 }
 

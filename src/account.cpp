@@ -211,7 +211,7 @@ bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAcco
 	return false;
 }
 bool CAccountViewCache::SaveAccountInfo(const CRegID &regid, const CKeyID &keyId, const CAccount &account) {
-	cacheKeyIds[HexStr(regid.GetRegID())] = keyId;
+	cacheKeyIds[HexStr(regid.GetVec6())] = keyId;
 	cacheAccounts[keyId] = account;
 	cacheAccounts[keyId].accountOperLog.SetNULL();
 	return true;
@@ -219,7 +219,7 @@ bool CAccountViewCache::SaveAccountInfo(const CRegID &regid, const CKeyID &keyId
 bool CAccountViewCache::GetAccount(const CUserID &userId, CAccount &account) {
 	bool ret = false;
 	if (userId.type() == typeid(CRegID)) {
-		ret = GetAccount(boost::get<CRegID>(userId).GetRegID(), account);
+		ret = GetAccount(boost::get<CRegID>(userId).GetVec6(), account);
 		if(ret) assert(boost::get<CRegID>(userId) == account.regID);
 	} else if (userId.type() == typeid(CKeyID)) {
 		ret = GetAccount(boost::get<CKeyID>(userId), account);
@@ -234,7 +234,7 @@ bool CAccountViewCache::GetAccount(const CUserID &userId, CAccount &account) {
 }
 bool CAccountViewCache::GetKeyId(const CUserID &userId, CKeyID &keyId) {
 	if (userId.type() == typeid(CRegID)) {
-		return GetKeyId(boost::get<CRegID>(userId).GetRegID(), keyId);
+		return GetKeyId(boost::get<CRegID>(userId).GetVec6(), keyId);
 	} else if (userId.type() == typeid(CPubKey)) {
 		keyId = boost::get<CPubKey>(userId).GetKeyID();
 		return true;
@@ -245,7 +245,7 @@ bool CAccountViewCache::GetKeyId(const CUserID &userId, CKeyID &keyId) {
 }
 bool CAccountViewCache::SetAccount(const CUserID &userId, const CAccount &account) {
 	if (userId.type() == typeid(CRegID)) {
-		return SetAccount(boost::get<CRegID>(userId).GetRegID(), account);
+		return SetAccount(boost::get<CRegID>(userId).GetVec6(), account);
 	} else if (userId.type() == typeid(CKeyID)) {
 		return SetAccount(boost::get<CKeyID>(userId), account);
 	} else {
@@ -255,7 +255,7 @@ bool CAccountViewCache::SetAccount(const CUserID &userId, const CAccount &accoun
 }
 bool CAccountViewCache::SetKeyId(const CUserID &userId, const CKeyID &keyId) {
 	if (userId.type() == typeid(CRegID)) {
-		return SetKeyId(boost::get<CRegID>(userId).GetRegID(), keyId);
+		return SetKeyId(boost::get<CRegID>(userId).GetVec6(), keyId);
 	} else {
 		assert(0);
 	}
@@ -281,7 +281,7 @@ bool CAccountViewCache::HaveAccount(const CUserID &userId) {
 }
 bool CAccountViewCache::EraseId(const CUserID &userId) {
 	if (userId.type() == typeid(CRegID)) {
-		return EraseKeyId(boost::get<CRegID>(userId).GetRegID());
+		return EraseKeyId(boost::get<CRegID>(userId).GetVec6());
 	} else {
 		assert(0);
 	}
@@ -348,10 +348,6 @@ CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScri
 	mapDatas.clear();
 	LogPrint("INFO","new a CScriptDBViewCache mapDatas size:%d\r\n",mapDatas.size());
 }
-
-//vector<unsigned char> vTempTest = { 0x64, 0x61, 0x74, 0x61, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x5f, 0x6b, 0x65, 0x79,
-//			0x31, 0x00 };
-
 
 bool CScriptDBViewCache::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
 	if (mapDatas.count(vKey) > 0 && !mapDatas[vKey].empty()) {
@@ -445,7 +441,7 @@ bool CScriptDBViewCache::GetScript(const vector<unsigned char> &vScriptId, vecto
 	return GetData(scriptKey, vValue);
 }
 bool CScriptDBViewCache::GetScript(const CRegID &scriptId, vector<unsigned char> &vValue) {
-	return GetScript(scriptId.GetRegID(), vValue);
+	return GetScript(scriptId.GetVec6(), vValue);
 }
 
 bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
@@ -709,39 +705,39 @@ bool CScriptDBViewCache::HaveScriptData(const vector<unsigned char> &vScriptId, 
 
 
 bool CScriptDBViewCache::GetScript(const int nIndex, CRegID &scriptId, vector<unsigned char> &vValue) {
-	return GetScript(nIndex, scriptId.GetRegID(), vValue);
+	return GetScript(nIndex, scriptId.GetVec6(), vValue);
 }
 bool CScriptDBViewCache::SetScript(const CRegID &scriptId, const vector<unsigned char> &vValue) {
-	return SetScript(scriptId.GetRegID(), vValue);
+	return SetScript(scriptId.GetVec6(), vValue);
 }
 bool CScriptDBViewCache::HaveScript(const CRegID &scriptId) {
-	return HaveScript(scriptId.GetRegID());
+	return HaveScript(scriptId.GetVec6());
 }
 bool CScriptDBViewCache::EraseScript(const CRegID &scriptId) {
-	return EraseScript(scriptId.GetRegID());
+	return EraseScript(scriptId.GetVec6());
 }
 bool CScriptDBViewCache::GetScriptDataCount(const CRegID &scriptId, int &nCount) {
-	return GetScriptDataCount(scriptId.GetRegID(), nCount);
+	return GetScriptDataCount(scriptId.GetVec6(), nCount);
 }
 bool CScriptDBViewCache::EraseScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey, CScriptDBOperLog &operLog) {
-	bool  temp = EraseScriptData(scriptId.GetRegID(), vScriptKey, operLog);
+	bool  temp = EraseScriptData(scriptId.GetVec6(), vScriptKey, operLog);
 	LogPrint("SetScriptData","EraseScriptData sriptid ID:%s key:%s ret:%d %p \r\n",scriptId.ToString(),HexStr(vScriptKey),temp,this);
 	return temp;
 }
 bool CScriptDBViewCache::HaveScriptData(const CRegID &scriptId, const vector<unsigned char > &vScriptKey) {
-	return HaveScriptData(scriptId.GetRegID(), vScriptKey);
+	return HaveScriptData(scriptId.GetVec6(), vScriptKey);
 }
 bool CScriptDBViewCache::GetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
 			vector<unsigned char> &vScriptData, int &nHeight) {
-	return GetScriptData(scriptId.GetRegID() , vScriptKey, vScriptData, nHeight);
+	return GetScriptData(scriptId.GetVec6() , vScriptKey, vScriptData, nHeight);
 }
 bool CScriptDBViewCache::GetScriptData(const CRegID &scriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData,
 		int &nHeight) {
-	return GetScriptData(scriptId.GetRegID(), nIndex, vScriptKey, vScriptData, nHeight);
+	return GetScriptData(scriptId.GetVec6(), nIndex, vScriptKey, vScriptData, nHeight);
 }
 bool CScriptDBViewCache::SetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
 			const vector<unsigned char> &vScriptData, const int nHeight, CScriptDBOperLog &operLog) {
-	bool  temp =SetScriptData(scriptId.GetRegID(), vScriptKey, vScriptData, nHeight, operLog);
+	bool  temp =SetScriptData(scriptId.GetVec6(), vScriptKey, vScriptData, nHeight, operLog);
 	LogPrint("SetScriptData","SetScriptData sriptid ID:%s key:%s value:%s ret: %d %p \r\n",scriptId.ToString(),HexStr(vScriptKey),HexStr(vScriptData),temp,this);
 	return temp;
 }

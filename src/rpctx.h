@@ -32,7 +32,6 @@ extern Value listtx(const Array& params, bool fHelp);
 extern Value getaddrinfo(const Array& params, bool fHelp);
 extern Value listunconfirmedtx(const Array& params, bool fHelp);
 extern Value gettxdetail(const Array& params, bool fHelp);
-extern Value listscriptregid(const Array& params, bool fHelp);
 extern Value listregid(const Array& params, bool fHelp);
 extern Value sign(const Array& params, bool fHelp);
 extern Value getaccountinfo(const Array& params, bool fHelp);

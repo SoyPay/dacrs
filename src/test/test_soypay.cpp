@@ -40,7 +40,7 @@ struct TestingSetup {
 		char *argv[] = {"progname", "-datadir=D:\\bitcoin"};
 		int argc = sizeof(argv) / sizeof(char*);
 		CBaseParams::IntialParams(argc, argv);
-		SysParams().InitalConfig();
+		SysCfg().InitalConfig();
 	}
 //    CCoinsViewDB *pcoinsdbview;
 //    boost::filesystem::path pathTemp;

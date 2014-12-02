@@ -44,38 +44,22 @@ private:
 	void SetRegIDByCompact(const vector<unsigned char> &vIn);
 public:
 	friend class CID;
-	vector<unsigned char> &GetRegID() const {return vRegID;}
-	void SetRegID(const vector<unsigned char> &vIn) {
-		assert(vIn.size() == 6);
-		vRegID = vIn;
-		CDataStream ds(vIn, SER_DISK, CLIENT_VERSION);
-		ds >> nHeight;
-		ds >> nIndex;
-	}
+	vector<unsigned char> &GetVec6() const {return vRegID;}
+	void SetRegID(const vector<unsigned char> &vIn) ;
+	void SetRegID(string strRegID);
     CKeyID getKeyID(const CAccountViewCache &view)const;
 	CRegID(string strRegID);
 	bool operator ==(const CRegID& co) const {
 		return (this->nHeight == co.nHeight && this->nIndex == co.nIndex);
 	}
-
-	CRegID(const vector<unsigned char> &vIn) {
-		assert(vIn.size() == 6);
-		vRegID = vIn;
-		nHeight = 0;
-		nIndex = 0;
-		CDataStream ds(vIn, SER_DISK, CLIENT_VERSION);
-		ds >> nHeight;
-		ds >> nIndex;
-	}
+	static bool IsSimpleRegIdStr(const string & str);
+	static bool IsRegIdStr(const string & str);
+	static bool GetKeyID(const string & str,CKeyID &keyId);
+	CRegID(const vector<unsigned char> &vIn) ;
     bool IsEmpty()const{return (nHeight == 0 && nIndex == 0);};
 	CRegID(uint32_t nHeight = 0, uint16_t nIndex = 0);
-    bool clean()
-    {
-    	nHeight = 0 ;
-    	nIndex = 0 ;
-    	vRegID.clear();
-    	return true;
-    }
+    bool clean();
+
 	string ToString() const;
 
 	IMPLEMENT_SERIALIZE
@@ -165,13 +149,7 @@ public:
 	}
 
 	CNetAuthorizate(uint32_t nauthorizetime, vector<unsigned char> nuserdefine, uint64_t nmaxmoneypertime, uint64_t nmaxmoneytotal,
-			uint64_t nmaxmoneyperday) {
-		nAuthorizeTime = nauthorizetime;
-		nUserDefine = nuserdefine;
-		nMaxMoneyPerTime = nmaxmoneypertime;
-		nMaxMoneyTotal = nmaxmoneytotal;
-		nMaxMoneyPerDay = nmaxmoneyperday;
-	}
+			uint64_t nmaxmoneyperday);
 
 	uint32_t GetAuthorizeTime() const {
 		return nAuthorizeTime;
@@ -235,15 +213,7 @@ protected:
 
 class CAuthorizate :public CNetAuthorizate{
 public:
-	CAuthorizate(CNetAuthorizate te) {
-		nAuthorizeTime = te.GetAuthorizeTime();
-		nUserDefine = te.GetUserData();
-		nMaxMoneyPerTime = te.GetMaxMoneyPerTime();
-		nMaxMoneyTotal = te.GetMaxMoneyTotal();
-		nMaxMoneyPerDay = te.GetMaxMoneyPerDay();
-		nLastOperHeight = 0;
-		nCurMaxMoneyPerDay = 0;
-	}
+	CAuthorizate(CNetAuthorizate te) ;
 	CAuthorizate() {
 		nLastOperHeight = 0;
 		nCurMaxMoneyPerDay = 0;
@@ -262,31 +232,8 @@ public:
 	void SetLastOperHeight(uint32_t nHeight) {
 		nLastOperHeight = nHeight;
 	}
+	unsigned int GetSerializeSize(int nType, int nVersion) const;
 
-	unsigned int GetSerializeSize(int nType, int nVersion) const {
-		CSerActionGetSerializeSize ser_action;
-		unsigned int nSerSize = 0;
-		ser_streamplaceholder s;
-		s.nType = nType;
-		vector<unsigned char> vData;
-		vData.clear();
-		if (nAuthorizeTime > 0) {
-			CDataStream ds(SER_DISK, CLIENT_VERSION);
-			ds << VARINT(nAuthorizeTime);
-			ds << nUserDefine;
-			ds << VARINT(nMaxMoneyPerTime);
-			ds << VARINT(nMaxMoneyTotal);
-			ds << VARINT(nMaxMoneyPerDay);
-			ds << VARINT(nLastOperHeight);
-			ds << VARINT(nCurMaxMoneyPerDay);
-			vData.insert(vData.end(), ds.begin(), ds.end());
-		}
-		s.nVersion = nVersion;
-		{
-			(nSerSize += ::SerReadWrite(s, (vData), nType, nVersion, ser_action));
-		}
-		return nSerSize;
-	}
 	template<typename Stream>
 	void Serialize(Stream& s, int nType, int nVersion) const {
 		CSerActionSerialize ser_action;
@@ -328,12 +275,6 @@ public:
 			ds >> VARINT(nCurMaxMoneyPerDay);
 		}
 	}
-//	IMPLEMENT_SERIALIZE
-//	(
-//		READWRITE(*(CNetAuthorizate*)this);
-//		READWRITE(VARINT(nLastOperHeight));
-//		READWRITE(VARINT(nCurMaxMoneyPerDay));
-//	)
 
 private:
 	uint32_t nLastOperHeight;
@@ -634,17 +575,7 @@ public:
 		return llFees / GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
 	}
 
-	uint256 SignatureHash() const {
-		CHashWriter ss(SER_GETHASH, 0);
-		CID scriptId(scriptRegId);
-		ss << scriptId;
-		for(auto & acctRegId : vAccountRegId) {
-			CID acctId(acctRegId);
-			ss << acctId;
-		}
-		ss << VARINT(llFees) << vContract << VARINT(nValidHeight) ;
-		return ss.GetHash();
-	}
+	uint256 SignatureHash() const;
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
 		return make_shared<CContractTransaction>(this);
@@ -1199,13 +1130,6 @@ public:
 		}
 	}
 
-//	IMPLEMENT_SERIALIZE
-//	(
-//		READWRITE(bValid);
-//		READWRITE(nLastOperHeight);
-//		READWRITE(nLastCurMaxMoneyPerDay);
-//		READWRITE(scriptID);
-//	)
 private:
 	bool bValid;
 	int nLastOperHeight;
@@ -1394,7 +1318,7 @@ private:
 	void WriteOperLog(const COperFund &operLog);
 	bool IsFundValid(OperType type, const CFund &fund, int nHeight, const vector_unsigned_char* pscriptID = NULL,
 			bool bCheckAuthorized = false);
-	bool CheckAddFund(OperType type, const CFund& fund);
+
 	bool MinusFreezed(const CFund& fund);
 	bool MinusFree(const CFund &fund,bool bAuthorizated);
 	bool MinusSelf(const CFund &fund,bool bAuthorizated);
@@ -1409,20 +1333,14 @@ class CTransactionCache {
 private:
 	CTransactionCacheDB *base;
 	map<uint256, vector<uint256> > mapTxHashByBlockHash;  // key:block hash  value:tx hash
-//	map<uint256, vector<uint256> > mapTxHashCacheByPrev;  // key:pre tx hash  value:relay tx hash
 	bool IsContainBlock(const CBlock &block);
 public:
 	CTransactionCache(CTransactionCacheDB *pTxCacheDB);
-//	void SetTxCacheSize(int nSize);
-//	int GetTxCacheSize(void) const;
 	bool AddBlockToCache(const CBlock &block);
 	bool DeleteBlockFromCache(const CBlock &block);
 	bool IsContainTx(const uint256 & txHash);
-//	vector<uint256> GetRelayTx(const uint256 & txHash);
-//	const map<uint256, vector<uint256> > &GetRelayTx(void) const;
 	const map<uint256, vector<uint256> > &GetTxHashCache(void) const;
 	void AddTxHashCache(const uint256 & blockHash, const vector<uint256> &vTxHash);
-//	void AddRelayTx(const uint256 preTxHash, const vector<uint256> &vTxHash);
 	bool Flush();
 	bool LoadTransaction();
 	void Clear();

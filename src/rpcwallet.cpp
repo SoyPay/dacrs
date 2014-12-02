@@ -41,13 +41,6 @@ void EnsureWalletIsUnlocked()
 
 
 
-string AccountFromValue(const Value& value)
-{
-    string strAccount = value.get_str();
-    if (strAccount == "*")
-        throw JSONRPCError(RPC_WALLET_INVALID_ACCOUNT_NAME, "Invalid account name");
-    return strAccount;
-}
 
 Value getnewaddress(const Array& params, bool fHelp)
 {
@@ -121,13 +114,10 @@ Value signmessage(const Array& params, bool fHelp)
     string strAddress = params[0].get_str();
     string strMessage = params[1].get_str();
 
-    CSoyPayAddress addr(strAddress);
-    if (!addr.IsValid())
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
-    CKeyID keyID;
-    if (!addr.GetKeyID(keyID))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
+    CKeyID keyID(strAddress);
+    if (keyID.IsEmpty())
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
     CKey key;
     if (!pwalletMain->GetKey(keyID, key))
@@ -144,6 +134,7 @@ Value signmessage(const Array& params, bool fHelp)
     return EncodeBase64(&vchSig[0], vchSig.size());
 }
 
+
 Value sendtoaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
@@ -159,44 +150,77 @@ Value sendtoaddress(const Array& params, bool fHelp)
             "\nExamples:\n"
             + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
             + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
-            + HelpExampleRpc("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\"")
+            + HelpExampleRpc("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\""
+			+HelpExampleCli("sendtoaddress", "\"0-6\" 10 ")
+			+HelpExampleCli("sendtoaddress", "\"00000000000000000005\" 10 ")
+			+HelpExampleCli("sendtoaddress", "\"0-6\" \"0-5\" 10 ")
+			+HelpExampleCli("sendtoaddress", "\"00000000000000000005\" \"0-6\"10 ")
+			)
         );
-
-    //todo 完成从指定地址发到指定地址的
-
-    CSoyPayAddress address(params[0].get_str());
 
     EnsureWalletIsUnlocked();
     CKeyID sendKeyId;
     CKeyID RevKeyId;
-    address.GetKeyID(RevKeyId);
-
-    if (!address.IsValid() || !address.GetKeyID(RevKeyId) )
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 
     // Amount
-    int64_t nAmount = AmountFromValue(params[1]);
-    set<CKeyID> sKeyid;
-	for (auto &te : sKeyid) {
-		if (pAccountViewTip->GetBalance(te, chainActive.Tip()->nHeight) >= nAmount + nTransactionFee) {
-			sendKeyId =te;
-			break;
+    int64_t nAmount = 0;
+    //// from address to addreww
+	if (params.size() == 3) {
+		string addr1 = params[0].get_str();
+		string addr2 = params[1].get_str();
+
+		if (!CRegID::GetKeyID(addr1, sendKeyId)) {
+			sendKeyId=CKeyID(addr1);
+			if (sendKeyId.IsEmpty())
+				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid  address");
+		}
+
+		if (!CRegID::GetKeyID(addr2, RevKeyId)) {
+			RevKeyId=CKeyID(addr2);
+			if (RevKeyId.IsEmpty())
+				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid  address");
+		}
+
+		nAmount = AmountFromValue(params[2]);
+		if (pAccountViewTip->GetBalance(sendKeyId, chainActive.Tip()->nHeight) <= nAmount + nTransactionFee) {
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM address not enough");
+		}
+	} else {
+		if (!CRegID::GetKeyID(params[0].get_str(), RevKeyId)) {
+
+			RevKeyId=CKeyID(params[0].get_str());
+			if (RevKeyId.IsEmpty())
+				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+		}
+
+		nAmount = AmountFromValue(params[1]);
+		set<CKeyID> sKeyid;
+		pwalletMain->GetKeyIds(sKeyid); //get addrs
+		if (sKeyid.empty()) {
+//			LogPrint("RPC_INVALID_ADDRESS_OR_KEY", "setKeyID empty\n");
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "setKeyID empty\n");
+		}
+		for (auto &te : sKeyid) {
+			if (pAccountViewTip->GetBalance(te, chainActive.Tip()->nHeight) >= nAmount + nTransactionFee) {
+				sendKeyId = te;
+				break;
+			}
+		}
+
+		if (sendKeyId == uint160(0)) {
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "not enough moeny");
 		}
 	}
 
-    if(sendKeyId == 0)
-    {
-    	 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "not enough moeny");
-    }
-
-    CRegID sendreg;
-    CRegID revreg;
-    if(!pwalletMain->GetRegId(sendKeyId,sendreg)||!pAccountViewTip->GetRegId(CUserID(RevKeyId),revreg))
-    {
-    	 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
-    }
-    return  pwalletMain->SendMoney(sendreg,revreg,nAmount);
-
+	CRegID sendreg;
+	CRegID revreg;
+	if (!pwalletMain->GetRegId(sendKeyId, sendreg) || !pAccountViewTip->GetRegId(CUserID(RevKeyId), revreg)) {
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+	}
+	string hash = pwalletMain->SendMoney(sendreg, revreg, nAmount);
+	Object obj;
+	obj.push_back(Pair("txhash", hash));
+	return obj;
 }
 
 

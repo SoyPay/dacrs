@@ -304,7 +304,7 @@ protected:
 	vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
 };
 
-extern const CBaseParams &SysParams();
+extern const CBaseParams &SysCfg();
 
 /**
  * Return the currently selected parameters. This won't change after app startup
@@ -323,11 +323,11 @@ extern const CBaseParams &SysParams();
 
 inline bool TestNet() {
 	// Note: it's deliberate that this returns "false" for regression test mode.
-	return SysParams().NetworkID() == CBaseParams::TESTNET;
+	return SysCfg().NetworkID() == CBaseParams::TESTNET;
 }
 
 inline bool RegTest() {
-	return SysParams().NetworkID() == CBaseParams::REGTEST;
+	return SysCfg().NetworkID() == CBaseParams::REGTEST;
 }
 
 //write for test code
