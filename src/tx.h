@@ -1282,7 +1282,7 @@ public:
 	uint64_t GetRewardAmount(int nCurHeight);
 	uint64_t GetSripteFreezeAmount(int nCurHeight);
 	uint64_t GetSelfFreezeAmount(int nCurHeight);
-	uint64_t GetBalance(int nCurHeight);
+	uint64_t GetRawBalance(int nCurHeight);
 	uint256 BuildMerkleTree(int prevBlockHeight) const;
 	void ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos);
 	uint64_t GetAccountPos(int prevBlockHeight) const;

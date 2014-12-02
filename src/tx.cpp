@@ -89,7 +89,7 @@ bool CRegID::GetKeyID(const string & str,CKeyID &keyId)
 	if(te.IsEmpty())
 		return false;
 	keyId = te.getKeyID(*pAccountViewTip);
-	return true;
+	return !keyId.IsEmpty();
 }
 bool CRegID::IsRegIdStr(const string & str)
  {
@@ -356,7 +356,7 @@ string CTransaction::ToString(CAccountViewCache &view) const {
 	CKeyID srcKeyId, desKeyId;
 	view.GetKeyId(srcUserId, srcKeyId);
 	if (desUserId.type() == typeid(CKeyID)) {
-		str += strprintf("txType=%s, hash=%s, nVersion=%d, srcAccountId=%s, llFees=%ld, llValues=%ld, desKeyId=%s, nValidHeight=%d\n",
+		str += strprintf("txType=%s, hash=	%s, nVersion=%d, srcAccountId=%s, llFees=%ld, llValues=%ld, desKeyId=%s, nValidHeight=%d\n",
 		txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, (boost::get<CRegID>(srcUserId).ToString()), llFees, llValues, boost::get<CKeyID>(desUserId).GetHex(), nValidHeight);
 	} else if(desUserId.type() == typeid(CRegID)) {
 		view.GetKeyId(desUserId, desKeyId);
@@ -787,7 +787,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
 		if(!aAuthorizate.IsNull()) {
-			acctInfo.mapAuthorizate[regId.GetVec6()] = aAuthorizate;
+			account.mapAuthorizate[regId.GetVec6()] = aAuthorizate;
 		}
 
 		if (!view.SaveAccountInfo(regId, keyId, account)) {
@@ -1361,7 +1361,7 @@ uint64_t CAccount::GetSelfFreezeAmount(int nCurHeight) {
 	return balance;
 }
 
-uint64_t CAccount::GetBalance(int nCurHeight) {
+uint64_t CAccount::GetRawBalance(int nCurHeight) {
 	CompactAccount(nCurHeight);
 	uint64_t balance = llValues;
 
