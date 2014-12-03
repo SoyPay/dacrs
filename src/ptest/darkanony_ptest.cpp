@@ -34,15 +34,16 @@ void CreateScript(char * vmpath)
 					"1000000", "2" };
 	CommandLineRPC(argc, argv);
 }
+#pragma pack(1)
 typedef struct  {
-	unsigned char nType;					//!<类型
+	unsigned char dnType;					//!<类型
 	char buyer[6];						//!<买家ID（采用6字节的账户ID）
 	char seller[6];						//!<卖家ID（采用6字节的账户ID）
 	int nHeight;							//!<超时绝对高度
 	uint64_t nPayMoney;						//!<买家向卖家支付的金额
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(nType);
+			READWRITE(dnType);
 			for(int i = 0;i < 6;i++)
 			READWRITE(buyer[i]);
 			for(int i = 0;i < 6;i++)
@@ -53,12 +54,12 @@ typedef struct  {
 } FIRST_CONTRACT;
 
 typedef struct {
-	unsigned char nType;				//!<交易类型
-	unsigned char hash[32];		//!<上一个交易包的哈希
+	unsigned char dnType;				//!<交易类型
+	char hash[32];		//!<上一个交易包的哈希
 	IMPLEMENT_SERIALIZE
 	(
 			READWRITE(nType);
-			for(int i = 0;i < 32;i++)
+	for(int i = 0;i < 32;i++)
 			READWRITE(hash[i]);
 	)
 } NEXT_CONTRACT;
@@ -103,39 +104,32 @@ string CreateDarkTx()
 			"[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\",\"mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y\"]");
 
 	FIRST_CONTRACT contact;
-	contact.nType = 1;
+	contact.dnType = 0x01;
 	contact.nHeight = 10;
 	contact.nPayMoney = 100;
 	CRegID regIdb("0-5");
 	CRegID regIds("0-3");
 	memcpy(contact.buyer,&regIdb.GetVec6().at(0),sizeof(contact.buyer));
 	memcpy(contact.seller,&regIds.GetVec6().at(0),sizeof(contact.seller));
+
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << contact;
 	string temp = HexStr(scriptData);
+	cout<<"first:"<<temp<<endl;
 	vInputParams.push_back(temp);
 	vInputParams.push_back("1000000");
 	vInputParams.push_back("10");
 	std::string strReturn("");
 	if(TestCallRPC("createcontracttx", vInputParams, strReturn)){
-		cout<<strReturn<<endl;
 			strReturn= Parsejson(strReturn);
 			cout<<strReturn<<endl;
 			vInputParams.clear();
 			vInputParams.push_back(strReturn);
 			if (TestCallRPC("signcontracttx", vInputParams, strReturn) > 0) {
-				 strReturn= Parsejson(strReturn);
-				cout<<strReturn<<endl;
-				vInputParams.clear();
-				vInputParams.push_back(strReturn);
-				//cout <<"sign securte tx succeed" << endl;
-				if (TestCallRPC("signcontracttx", vInputParams, strReturn) > 0) {
-					cout<<"sucess:"<<strReturn<<endl;
-					return strReturn;
-				}
+				strReturn= Parsejson(strReturn);
+				cout <<strReturn << endl;
 			}
 		}
-	cout<<strReturn<<endl;
 	return strReturn;
 }
 void CreateSecondDarkTx(string hash)
@@ -149,13 +143,19 @@ void CreateSecondDarkTx(string hash)
 			"[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\"]");
 
 	NEXT_CONTRACT contact;
-	contact.nType = 2;
-	uint160 tx(hash);
+	contact.dnType = 0x02;
+	uint256 tx(hash.c_str());
+	cout<<"hash:"<<hash<<endl;
+	//contact.hash = tx;
 	memcpy(contact.hash,tx.begin(),sizeof(contact.hash));
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << contact;
 	string temp = HexStr(scriptData);
-	vInputParams.push_back(temp);
+	uint256 hash1(hash.c_str());
+	string param ="02";
+	param += HexStr(hash1);
+	cout<<"second:"<<param<<endl;
+	vInputParams.push_back(param);
 	vInputParams.push_back("1000000");
 	vInputParams.push_back("10");
 	std::string strReturn("");
@@ -246,15 +246,15 @@ BOOST_AUTO_TEST_CASE(test_dark){
 	cout<<"1"<<endl;
 	string temp = CreateDarkTx();
 	GenerateMiner();
-//	GetAccountInfo("010000000100");
-//	GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
-//	GetAccountInfo("mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y");
-//	cout<<"2"<<endl;
-//	CreateSecondDarkTx(temp);
-//	GenerateMiner();
-//	GetAccountInfo("010000000100");
-//	GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
-//	GetAccountInfo("mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y");
+	GetAccountInfo("010000000100");
+	GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
+	GetAccountInfo("mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y");
+	cout<<"2"<<endl;
+	CreateSecondDarkTx(temp);
+	GenerateMiner();
+	GetAccountInfo("010000000100");
+	GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
+	GetAccountInfo("mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y");
 }
 
 BOOST_AUTO_TEST_CASE(test_anony){

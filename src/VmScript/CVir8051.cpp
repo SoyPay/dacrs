@@ -1137,9 +1137,9 @@ static RET_DEFINE ExGetScriptDataFunc(unsigned char * ipara,void * pVmScript)
 static RET_DEFINE ExGetScriptIDFunc(unsigned char * ipara,void * pVmScript)
 {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-	GetData(ipara,retdata);
-	assert(retdata.size() == 1);
+//	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+//	GetData(ipara,retdata);
+//	assert(retdata.size() == 1);
 
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptRegID().GetVec6();
 
@@ -1147,6 +1147,21 @@ static RET_DEFINE ExGetScriptIDFunc(unsigned char * ipara,void * pVmScript)
    (*tem.get()).push_back(scriptid);
 
 	return std::make_tuple (true, tem);
+}
+static RET_DEFINE ExGetCurTxAccountFunc(unsigned char * ipara,void * pVmScript)
+{
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	vector<CUserID> regid =pVmScriptRun->GetTxAccount();
+
+	vector<unsigned char> item;
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+		for (auto& it : regid) {
+			vector<unsigned char> id = boost::get<CRegID>(it).GetVec6();
+			item.insert(item.end(), id.begin(), id.end());
+		}
+
+		(*tem.get()).push_back(item);
+		return std::make_tuple (true, tem);
 }
 enum CALL_API_FUN {
 	COMP_FUNC = 0,            //!< COMP_FUNC
@@ -1186,6 +1201,7 @@ enum CALL_API_FUN {
 
 	GETSCRIPTDATA_FUNC,		  //!<GETSCRIPTDATA_FUNC
 	GETSCRIPTID_FUNC,		//!<GETSCRIPTID_FUNC
+	GETCURTXACCOUNT_FUNC,//!<GETCURTXACCOUNT_FUNC
 };
 
 const static struct __MapExterFun FunMap[] = { //
@@ -1223,6 +1239,7 @@ const static struct __MapExterFun FunMap[] = { //
 		{WRITEOUTPUT_FUNC,ExWriteOutputFunc},
 		{GETSCRIPTDATA_FUNC,ExGetScriptDataFunc},
 		{GETSCRIPTID_FUNC,ExGetScriptIDFunc},
+		{GETCURTXACCOUNT_FUNC,ExGetCurTxAccountFunc	  },
 
 		};
 

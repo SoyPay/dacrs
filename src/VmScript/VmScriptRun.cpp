@@ -253,6 +253,11 @@ const CRegID& CVmScriptRun::GetScriptRegID()
 	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
 	return boost::get<CRegID>(tx->scriptRegId);
 }
+const vector<CUserID>& CVmScriptRun::GetTxAccount()
+{
+	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
+		return tx->vAccountRegId;
+}
 int CVmScriptRun::GetComfirHeight()
 {
 	return height;
