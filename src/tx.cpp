@@ -744,6 +744,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 		txundo.vAccountOperLog.push_back(acctInfo.accountOperLog);
 	}
 	txundo.txHash = GetHash();
+
 	if(script.size() == SCRIPT_ID_SIZE) {
 		vector<unsigned char> vScript;
 		CRegID regId(script);
@@ -752,13 +753,9 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 					ERROR("UpdateAccounts() : Get script id=%s error", HexStr(script.begin(), script.end())),
 					UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
 		}
-		if(!aAuthorizate.IsNull()) {
-			acctInfo.mapAuthorizate[script] = aAuthorizate;
+		if (!aAuthorizate.IsNull()) {
+			acctInfo.mapAuthorizate[regId.GetVec6()] = aAuthorizate;
 		}
-		CUserID userId = acctInfo.keyID;
-		if (!view.SetAccount(userId, acctInfo))
-					return state.DoS(100, ERROR("UpdateAccounts() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
-							"bad-save-accountdb");
 	}
 	else {
 		CVmScript vmScript;
@@ -786,16 +783,20 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 					ERROR("UpdateAccounts() : save script id %s script info error", regId.ToString()),
 					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
-		if(!aAuthorizate.IsNull()) {
-			account.mapAuthorizate[regId.GetVec6()] = aAuthorizate;
-		}
-
 		if (!view.SaveAccountInfo(regId, keyId, account)) {
 			return state.DoS(100,
 					ERROR("UpdateAccounts() : create new account script id %s script info error",
 							regId.ToString()), UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
+		if (!aAuthorizate.IsNull()) {
+			acctInfo.mapAuthorizate[regId.GetVec6()] = aAuthorizate;
+		}
 	}
+
+	CUserID userId = acctInfo.keyID;
+	if (!view.SetAccount(userId, acctInfo))
+		return state.DoS(100, ERROR("UpdateAccounts() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
+				"bad-save-accountdb");
 	return true;
 }
 bool CRegistScriptTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
@@ -1434,6 +1435,13 @@ Object CAccount::ToJosnObj() const
 		SelfFreeze.push_back(rew.ToJosnObj());
 	}
 	obj.push_back(Pair("SelfFreeze",     SelfFreeze));
+	Array listAuthorize;
+	Object authorizateObj;
+	for(auto & item : mapAuthorizate) {
+		authorizateObj.push_back(Pair(HexStr(item.first), item.second.ToJosnObj()));
+		listAuthorize.push_back(authorizateObj);
+	}
+	obj.push_back(Pair("Authorizates", listAuthorize));
 	return obj;
 }
 
@@ -1922,6 +1930,30 @@ unsigned int CAuthorizate::GetSerializeSize(int nType, int nVersion) const {
 		(nSerSize += ::SerReadWrite(s, (vData), nType, nVersion, ser_action));
 	}
 	return nSerSize;
+}
+
+Object CNetAuthorizate::ToJosnObj() const {
+	Object obj;
+	obj.push_back(Pair("AuthorizeTime",(uint64_t)nAuthorizeTime));
+	obj.push_back(Pair("MaxMoneyPerTime",nMaxMoneyPerTime));
+	obj.push_back(Pair("MaxMoneyTotal",nMaxMoneyTotal));
+	obj.push_back(Pair("MaxMoneyPerDay",nMaxMoneyPerDay));
+	obj.push_back(Pair("UserDefine",HexStr(nUserDefine)));
+	return obj;
+}
+
+string CNetAuthorizate::ToString(bool bFlag) const {
+	return write_string(Value(ToJosnObj()),bFlag);
+}
+Object CAuthorizate::ToJosnObj() const {
+	Object obj = CNetAuthorizate::ToJosnObj();
+	obj.push_back(Pair("LastOperHeight",(uint64_t)nLastOperHeight));
+	obj.push_back(Pair("CurMaxMoneyPerDay",nCurMaxMoneyPerDay));
+	return obj;
+}
+
+string CAuthorizate::ToString(bool bFlag) const {
+	return write_string(Value(ToJosnObj()),bFlag);
 }
 
 uint256 CContractTransaction::SignatureHash() const  {
