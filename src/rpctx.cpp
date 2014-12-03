@@ -53,7 +53,9 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		result.push_back(Pair("ver", prtx->nVersion));
 		result.push_back(Pair("addr", CSoyPayAddress(boost::get<CPubKey>(prtx->userId).GetKeyID()).ToString()));
 		CID id(prtx->userId);
+		CID minerId(prtx->MinerId);
 		result.push_back(Pair("pubkey", HexStr(id.GetID())));
+		result.push_back(Pair("miner_pubkey", HexStr(minerId.GetID())));
 		result.push_back(Pair("fees", prtx->llFees));
 		result.push_back(Pair("height", prtx->nValidHeight));
 		break;
@@ -1598,4 +1600,23 @@ Value getscriptdata(const Array& params, bool fHelp) {
 	}
 
 	return script;
+}
+
+Value saveblocktofile(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 2) {
+			string msg = "saveblocktofile nrequired"
+					"\nArguments:\n"
+					"1.\"blockhash\": (string, required)\n"
+					"2.\"filepath\": (string, required)\n";
+			throw runtime_error(msg);
+		}
+	string strblockhash = params[0].get_str();
+	uint256 blockHash(params[0].get_str());
+	CBlockIndex *pIndex = mapBlockIndex[blockHash];
+	CBlock reLoadblock;
+	if (!ReadBlockFromDisk(reLoadblock, pIndex))
+		throw runtime_error(_("Failed to read block"));
+	string file = params[1].get_str();
+	FILE* fp = fopen(file.c_str(), "wb+");
+	return "save succeed";
 }
