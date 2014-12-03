@@ -177,8 +177,8 @@ bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 	account.regID = regId;
 	account.MinerPKey = boost::get<CPubKey>(MinerId);
 
-	if (!account.MinerPKey.IsFullyValid()) {
-		return state.DoS(100, ERROR("UpdateAccounts() : MinerPKey Is Invalid", account.MinerPKey.ToString()),
+	if (account.MinerPKey.IsValid() && !account.MinerPKey.IsFullyValid()) {
+		return state.DoS(100, ERROR("UpdateAccounts() : MinerPKey:%s Is Invalid", account.MinerPKey.ToString()),
 				UPDATE_ACCOUNT_FAIL, "MinerPKey Is Invalid");
 	}
 
