@@ -234,11 +234,11 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 
 
 //		LogPrint("vm", "account id:%s\r\n", HexStr(accountid).c_str());
-//		LogPrint("vm", "muls account:%s\r\n", vmAccount.get()->ToString().c_str());
-//		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
+		LogPrint("vm", "befer account:%s\r\n", vmAccount.get()->ToString().c_str());
+		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
 		bool ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype,fund,height);
 
-//		LogPrint("vm", "after muls account:%s\r\n", vmAccount.get()->ToString().c_str());
+		LogPrint("vm", "after account:%s\r\n", vmAccount.get()->ToString().c_str());
 		if (!ret) {
 			return false;
 		}
@@ -252,6 +252,11 @@ const CRegID& CVmScriptRun::GetScriptRegID()
 {
 	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
 	return boost::get<CRegID>(tx->scriptRegId);
+}
+const vector<CUserID>& CVmScriptRun::GetTxAccount()
+{
+	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
+		return tx->vAccountRegId;
 }
 int CVmScriptRun::GetComfirHeight()
 {
