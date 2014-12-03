@@ -124,6 +124,7 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		result.push_back(Pair("script", HexStr(prtx->script)));
 		result.push_back(Pair("fees", prtx->llFees));
 		result.push_back(Pair("height", prtx->nValidHeight));
+		result.push_back(Pair("authorizate", prtx->aAuthorizate.ToJosnObj()));
 		break;
 	}
 	default:
@@ -729,7 +730,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 				"8.\"nMaxMoneyPerTime\": (numeric, optional)\n"
 				"9.\"nMaxMoneyTotal\": (numeric, optional)\n"
 				"10.\"nMaxMoneyPerDay\": (numeric, optional)\n"
-				"11.\"nUserDefine\": (numeric, optional)\n"
+				"11.\"nUserDefine\": (string, optional)\n"
 				"\nResult:\n"
 				"\"txhash\": (string)\n"
 				"\nExamples:\n"
@@ -800,7 +801,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	}
 	if (params.size() > 6) {
 		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type));
-		nAuthorizeTime = params[6].get_int();
+		nAuthorizeTime = params[6].get_uint64();
 	}
 	if (params.size() > 7) {
 		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type)(int_type));
@@ -1244,7 +1245,9 @@ Value gettxoperationlog(const Array& params, bool fHelp)
 	vector<CAccountOperLog> vLog;
 	Object retobj;
 	retobj.push_back(Pair("hash",  txHash.GetHex()));
-	if(GetTxOperLog(txHash, vLog))
+	if(!GetTxOperLog(txHash, vLog))
+	   throw JSONRPCError(RPC_INVALID_PARAMS, "error hash");
+
 	{
 		Array arrayvLog;
         for(auto const &te :vLog)
@@ -1264,10 +1267,7 @@ Value gettxoperationlog(const Array& params, bool fHelp)
         retobj.push_back(Pair("AccountOperLog",  arrayvLog));
 
 	}
-	else
-	{
-		retobj.push_back(Pair("info",  "error hash"));
-	}
+
 	return retobj;
 
 }
@@ -1291,19 +1291,19 @@ Value disconnectblock(const Array& params, bool fHelp) {
 //	      if (!DisconnectBlockFromTip(state))
 //	    	  return false;
 		if (!ReadBlockFromDisk(block, pindex))
-			return ERROR("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
+			throw ERROR("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
 					pindex->GetBlockHash().ToString());
 		bool fClean = true;
 		CTransactionCache txCacheTemp(*pTxCacheTip);
 		CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
 		if (!DisconnectBlock(block, state, view, pindex, txCacheTemp, contractScriptTemp, &fClean))
-			return ERROR("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
+			throw ERROR("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
 					pindex->GetBlockHash().ToString());
 		CBlockIndex *pindexDelete = pindex;
 		pindex = pindex->pprev;
 		chainActive.SetTip(pindex);
 	    if (!pTxCacheTip->DeleteBlockFromCache(block))
-	    	return state.Abort(_("Disconnect tip block failed to delete tx from txcache"));
+	    	throw runtime_error(_("Disconnect tip block failed to delete tx from txcache"));
 
 	    //load a block tx into cache transaction
 		CBlockIndex *pReLoadBlockIndex = pindexDelete;
@@ -1311,15 +1311,15 @@ Value disconnectblock(const Array& params, bool fHelp) {
 			pReLoadBlockIndex = chainActive[pindexDelete->nHeight - SysCfg().GetTxCacheHeight()];
 			CBlock reLoadblock;
 			if (!ReadBlockFromDisk(reLoadblock, pindexDelete))
-				return state.Abort(_("Failed to read block"));
+				throw runtime_error(_("Failed to read block"));
 			if (!pTxCacheTip->AddBlockToCache(reLoadblock))
-					return state.Abort(_("Disconnect tip block reload preblock tx to txcache"));
+				throw  runtime_error(_("Disconnect tip block reload preblock tx to txcache"));
 		}
 
 		assert(view.Flush() && contractScriptTemp.Flush());
 	}
 	Object obj;
-	obj.push_back(Pair("info", "disconnect ok"));
+	obj.push_back(Pair("info", strprintf("disconnect block hash%s hight:%s",block.GetHash().ToString(),block.nHeight)));
 	return obj;
 
 }

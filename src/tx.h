@@ -202,7 +202,8 @@ public:
 		READWRITE(VARINT(nMaxMoneyTotal));
 		READWRITE(VARINT(nMaxMoneyPerDay));
 	)
-
+	Object ToJosnObj() const;
+	string ToString(bool bFlag) const;
 protected:
 	uint32_t nAuthorizeTime;
 	vector<unsigned char> nUserDefine;
@@ -275,6 +276,8 @@ public:
 			ds >> VARINT(nCurMaxMoneyPerDay);
 		}
 	}
+	Object ToJosnObj() const;
+	string ToString(bool bFlag) const;
 
 private:
 	uint32_t nLastOperHeight;
@@ -1310,6 +1313,7 @@ public:
 			READWRITE(vFreedomFund);
 			READWRITE(vFreeze);
 			READWRITE(vSelfFreeze);
+			READWRITE(mapAuthorizate);
 	)
 
 private:
