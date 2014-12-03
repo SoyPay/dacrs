@@ -124,6 +124,7 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		result.push_back(Pair("script", HexStr(prtx->script)));
 		result.push_back(Pair("fees", prtx->llFees));
 		result.push_back(Pair("height", prtx->nValidHeight));
+		result.push_back(Pair("authorizate", prtx->aAuthorizate.ToJosnObj()));
 		break;
 	}
 	default:
@@ -723,7 +724,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 				"8.\"nMaxMoneyPerTime\": (numeric, optional)\n"
 				"9.\"nMaxMoneyTotal\": (numeric, optional)\n"
 				"10.\"nMaxMoneyPerDay\": (numeric, optional)\n"
-				"11.\"nUserDefine\": (numeric, optional)\n"
+				"11.\"nUserDefine\": (string, optional)\n"
 				"\nResult:\n"
 				"\"txhash\": (string)\n"
 				"\nExamples:\n"
@@ -794,7 +795,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	}
 	if (params.size() > 6) {
 		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type));
-		nAuthorizeTime = params[6].get_int();
+		nAuthorizeTime = params[6].get_uint64();
 	}
 	if (params.size() > 7) {
 		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type)(int_type));
