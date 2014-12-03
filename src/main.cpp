@@ -2905,11 +2905,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 {
     RandAddSeedPerfmon();
     LogPrint("net", "received: %s (%u bytes)\n", strCommand, vRecv.size());
-    if (GetRand(atoi(SysCfg().GetArg("-dropmessagestest", "0"))) == 0)
-    {
-        LogPrint("INFO","dropmessagestest DROPPING RECV MESSAGE\n");
-        return true;
-    }
+//    if (GetRand(atoi(SysCfg().GetArg("-dropmessagestest", "0"))) == 0)
+//    {
+//        LogPrint("INFO","dropmessagestest DROPPING RECV MESSAGE\n");
+//        return true;
+//    }
 
     {
         LOCK(cs_main);
