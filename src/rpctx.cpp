@@ -413,7 +413,8 @@ Value createcontracttx(const Array& params, bool fHelp) {
 
 	assert(pwalletMain != NULL);
 
-	CContractTransaction tx;
+//	CContractTransaction tx;
+	std::shared_ptr<CContractTransaction> tx = make_shared<CContractTransaction>();
 	{
 	//	LOCK2(cs_main, pwalletMain->cs_wallet);
 		EnsureWalletIsUnlocked();
@@ -448,11 +449,11 @@ Value createcontracttx(const Array& params, bool fHelp) {
 			vaccountid.push_back(CUserID(GetUserId(keyid)));
 		}
 
-		tx.scriptRegId = vscriptid;
-		tx.vAccountRegId = vaccountid;
-		tx.llFees = fee;
-		tx.vContract = vcontract;
-		tx.nValidHeight = chainActive.Tip()->nHeight;
+		tx.get()->scriptRegId = vscriptid;
+		tx.get()->vAccountRegId = vaccountid;
+		tx.get()->llFees = fee;
+		tx.get()->vContract = vcontract;
+		tx.get()->nValidHeight = chainActive.Tip()->nHeight;
 //		tx.nValidHeight = height;
 
 
@@ -467,25 +468,27 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		CKey key;
 		pwalletMain->GetKey(keyid, key);
 		vector<unsigned char> signature;
-		if (!key.Sign(tx.SignatureHash(), signature)) {
+		if (!key.Sign(tx.get()->SignatureHash(), signature)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: Sign failed.");
 		}
 
-		tx.vSignature.push_back(signature);
+		tx.get()->vSignature.push_back(signature);
 	}
-	if(tx.vSignature.size() == tx.vAccountRegId.size())
+	if(tx.get()->vSignature.size() == tx.get()->vAccountRegId.size())
 	{
-		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
+		if (!pwalletMain->CommitTransaction((CBaseTransaction *) tx.get())) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: CommitTransaction failed.");
 		}
 		Object obj;
-		obj.push_back(Pair("txhash",tx.GetHash().ToString()));
+		obj.push_back(Pair("txhash",tx.get()->GetHash().ToString()));
 		return obj;
 	}
 	else
 	{
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
-		ds << tx;
+		cout<<"cont:"<<tx.get()->ToString(*pAccountViewTip)<<endl;
+		std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
+		ds << pBaseTx;
 		Object obj;
 		obj.push_back(Pair("RawTx",HexStr(ds.begin(),ds.end())));
 		return obj;
@@ -514,9 +517,11 @@ Value signcontracttx(const Array& params, bool fHelp) {
 	vector<unsigned char> vch(ParseHex(params[0].get_str()));
 	CDataStream stream(vch, SER_DISK, CLIENT_VERSION);
 
-	CContractTransaction tx;
-	stream >> tx;
+	std::shared_ptr<CBaseTransaction> pBaseTx;//= make_shared<CContractTransaction>();
+	stream >> pBaseTx;
 
+	std::shared_ptr<CContractTransaction> tx = make_shared<CContractTransaction>(pBaseTx.get());
+	cout<<"sig:"<<tx.get()->ToString(*pAccountViewTip)<<endl;
 	assert(pwalletMain != NULL);
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
@@ -525,18 +530,18 @@ Value signcontracttx(const Array& params, bool fHelp) {
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
 
-		if (tx.vAccountRegId.size() < 1 || tx.vSignature.size() >= tx.vAccountRegId.size()) {
+		if (tx.get()->vAccountRegId.size() < 1 || tx.get()->vSignature.size() >= tx.get()->vAccountRegId.size()) {
 			throw runtime_error("in signsecuretx :tx data err\n");
 		}
 
 		vector<unsigned char> vscript;
-		if (!pScriptDBTip->GetScript(boost::get<CRegID>(tx.scriptRegId), vscript)) {
-			CID id(tx.scriptRegId);
+		if (!pScriptDBTip->GetScript(boost::get<CRegID>(tx.get()->scriptRegId), vscript)) {
+			CID id(tx.get()->scriptRegId);
 			throw runtime_error(
 					tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(id.GetID())));
 		}
 
-		for (auto& item : tx.vAccountRegId) {
+		for (auto& item : tx.get()->vAccountRegId) {
 			CAccount account;
 			if (!pAccountViewTip->GetAccount(item, account)) {
 				CID id(item);
@@ -544,22 +549,22 @@ Value signcontracttx(const Array& params, bool fHelp) {
 			}
 		}
 
-		CRegID accountid = boost::get<CRegID>(tx.vAccountRegId.at(tx.vSignature.size()));
+		CRegID accountid = boost::get<CRegID>(tx.get()->vAccountRegId.at(tx.get()->vSignature.size()));
 
 		if (!pwalletMain->count(accountid.getKeyID(*pAccountViewTip))) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,"signcontracttx error: Not to my time!\r\n");
 		}
 
 		//verify sig
-		for (int ii = 0; ii < tx.vSignature.size(); ii++) {
+		for (int ii = 0; ii < tx.get()->vSignature.size(); ii++) {
 			CAccount account;
-			if (!view.GetAccount(tx.vAccountRegId.at(ii), account)) {
-				CID id(tx.vAccountRegId.at(ii));
+			if (!view.GetAccount(tx.get()->vAccountRegId.at(ii), account)) {
+				CID id(tx.get()->vAccountRegId.at(ii));
 				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
 						string("unregister RegID: ") + HexStr(id.GetID()));
 			}
 
-			if (!account.PublicKey.Verify(tx.SignatureHash(), tx.vSignature.at(ii))) {
+			if (!account.PublicKey.Verify(tx.get()->SignatureHash(), tx.get()->vSignature.at(ii))) {
 				throw runtime_error("in signsecuretx :tx data sign err\n");
 			}
 		}
@@ -567,7 +572,7 @@ Value signcontracttx(const Array& params, bool fHelp) {
 		//sig
 		//get keyid by accountid
 		CKeyID keyid;
-		if (!view.GetKeyId(tx.vAccountRegId.at(tx.vSignature.size()), keyid)) {
+		if (!view.GetKeyId(tx.get()->vAccountRegId.at(tx.get()->vSignature.size()), keyid)) {
 			LogPrint("INFO", "vaccountid:%s have no key id\r\n", accountid.ToString());
 			assert(0);
 		}
@@ -575,27 +580,28 @@ Value signcontracttx(const Array& params, bool fHelp) {
 		CKey key;
 		pwalletMain->GetKey(keyid, key);
 		vector<unsigned char> signature;
-		if (!key.Sign(tx.SignatureHash(), signature)) {
+		if (!key.Sign(tx.get()->SignatureHash(), signature)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: Sign failed.");
 		}
 
-		tx.vSignature.push_back(signature);
+		tx.get()->vSignature.push_back(signature);
 	}
 
 	{
-		if(tx.vSignature.size() == tx.vAccountRegId.size())
+		if(tx.get()->vSignature.size() == tx.get()->vAccountRegId.size())
 		{
-			if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
+			if (!pwalletMain->CommitTransaction((CBaseTransaction *) tx.get())) {
 						throw JSONRPCError(RPC_WALLET_ERROR, "signcontracttx Error: CommitTransaction failed.");
 					}
 			Object obj;
-			obj.push_back(Pair("txhash",tx.GetHash().ToString()));
+			obj.push_back(Pair("txhash",tx.get()->GetHash().ToString()));
 			return obj;
 		}
 		else
 		{
 			CDataStream ds(SER_DISK, CLIENT_VERSION);
-			ds << tx;
+			std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
+			ds << pBaseTx;
 			Object obj;
 			obj.push_back(Pair("RawTx",HexStr(ds.begin(),ds.end())));
 			return obj;

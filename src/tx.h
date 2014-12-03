@@ -546,19 +546,19 @@ public:
 			nVersion = this->nVersion;
 			CID scriptId(scriptRegId);
 			READWRITE(scriptId);
-			for(auto &acctRegId : vAccountRegId) {
-				vector<CID> vAcctId;
-				vAcctId.push_back(CID(acctRegId));
-				READWRITE(vAcctId);
-			}
+			vector<CID> vAcctId;
 			if(fRead) {
 				scriptRegId = scriptId.GetUserId();
-				vector<CID> vAcctId;
 				READWRITE(vAcctId);
 				for(auto &acctId : vAcctId) {
 					CUserID userId = acctId.GetUserId();
 					vAccountRegId.push_back(userId);
 				}
+			} else {
+				for(auto &acctRegId : vAccountRegId) {
+					vAcctId.push_back(CID(acctRegId));
+				}
+				READWRITE(vAcctId);
 			}
 			READWRITE(VARINT(llFees));
 			READWRITE(vContract);
