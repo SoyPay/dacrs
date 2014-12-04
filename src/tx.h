@@ -293,6 +293,10 @@ public:
 	unsigned char nTxType;
 	int nVersion;
 public:
+
+
+
+
 	CBaseTransaction(const CBaseTransaction &other) {
 		*this = other;
 	}
@@ -374,7 +378,7 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
-		READWRITE(this->nVersion);
+		READWRITE(VARINT(this->nVersion));
 		nVersion = this->nVersion;
 		CID id(userId);
 		READWRITE(id);
@@ -404,7 +408,8 @@ public:
 	uint256 SignatureHash() const {
 		CHashWriter ss(SER_GETHASH, 0);
 		CID id(userId);
-		ss << id << VARINT(llFees) << VARINT(nValidHeight);
+		CID id2(MinerId);
+		ss <<VARINT(nVersion) << nTxType << id << id2 << VARINT(llFees) << VARINT(nValidHeight);
 		return ss.GetHash();
 	}
 
@@ -457,7 +462,7 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(this->nVersion);
+			READWRITE(VARINT(this->nVersion));
 			nVersion = this->nVersion;
 			CID srcId(srcUserId);
 			READWRITE(srcId);
@@ -542,7 +547,7 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(this->nVersion);
+			READWRITE(VARINT(this->nVersion));
 			nVersion = this->nVersion;
 			CID scriptId(scriptRegId);
 			READWRITE(scriptId);
@@ -637,7 +642,7 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(this->nVersion);
+		    READWRITE(VARINT(this->nVersion));
 			nVersion = this->nVersion;
 			CID regId(regAccountId);
 			READWRITE(regId);
@@ -666,7 +671,7 @@ public:
 	uint256 SignatureHash() const {
 		CHashWriter ss(SER_GETHASH, 0);
 		CID regId(regAccountId);
-		ss << regId << VARINT(llFees) << VARINT(llFreezeFunds) << VARINT(nValidHeight) << VARINT(nUnfreezeHeight);
+		ss <<VARINT(nVersion) << nTxType << regId << VARINT(llFees) << VARINT(llFreezeFunds) << VARINT(nValidHeight) << VARINT(nUnfreezeHeight);
 		return ss.GetHash();
 	}
 
@@ -719,7 +724,7 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
-		READWRITE(this->nVersion);
+		READWRITE(VARINT(this->nVersion));
 		nVersion = this->nVersion;
 		CID acctId(account);
 		READWRITE(acctId);
@@ -741,7 +746,7 @@ public:
 	uint256 SignatureHash() const {
 		CHashWriter ss(SER_GETHASH, 0);
 		CID accId(account);
-		ss << accId << VARINT(rewardValue) << VARINT(nHeight);
+		ss <<VARINT(nVersion) << nTxType<< accId << VARINT(rewardValue) << VARINT(nHeight);
 		return ss.GetHash();
 	}
 
@@ -798,7 +803,7 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
-		READWRITE(this->nVersion);
+		READWRITE(VARINT(this->nVersion));
 		nVersion = this->nVersion;
 		CID regAcctId(regAccountId);
 		READWRITE(regAcctId);

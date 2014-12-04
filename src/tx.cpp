@@ -150,8 +150,15 @@ CKeyID CRegID::getKeyID(const CAccountViewCache &view)const
 
 
 void CRegID::SetRegIDByCompact(const vector<unsigned char> &vIn) {
+	if(vIn.size()>0)
+	{
 	CDataStream ds(vIn, SER_DISK, CLIENT_VERSION);
 	ds >> *this;
+	}
+	else
+	{
+		clean();
+	}
 }
 
 bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
@@ -1959,7 +1966,7 @@ string CAuthorizate::ToString(bool bFlag) const {
 uint256 CContractTransaction::SignatureHash() const  {
 	CHashWriter ss(SER_GETHASH, 0);
 	CID scriptId(scriptRegId);
-	ss << scriptId;
+	ss <<VARINT(nVersion) << nTxType << scriptId;
 	for(auto & acctRegId : vAccountRegId) {
 		CID acctId(acctRegId);
 		ss << acctId;
