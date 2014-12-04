@@ -563,7 +563,7 @@ bool CheckTransaction(CBaseTransaction *ptx, CValidationState &state, CAccountVi
 		return state.DoS(100, ERROR("CheckTransaction() : size limits failed"), REJECT_INVALID, "bad-txns-oversize");
 
 	if(pTxCacheTip->IsContainTx(ptx->GetHash()))
-		return state.DoS(100, ERROR("CheckTransaction() : tx has been confirmed"), REJECT_INVALID, "bad-txns-oversize");
+		return state.DoS(100, ERROR("CheckTransaction() : tx hash %s has been confirmed", ptx->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
 
 	if(!ptx->CheckTransction(state, view))
 		return false;

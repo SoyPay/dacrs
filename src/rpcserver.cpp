@@ -307,9 +307,10 @@ static const CRPCCommand vRPCCommands[] =
 
 
 //for test code
-	{ "gettxoperationlog",      &gettxoperationlog,        false,      false,      false },
+	{ "gettxoperationlog",      &gettxoperationlog,      false,     false,      false },
     { "disconnectblock",        &disconnectblock,        true,      false,      true },
     { "reloadtxcache",          &reloadtxcache,          true,      false,      true },
+    { "saveblocktofile",        &saveblocktofile,        true,      false,      false},
 };
 
 CRPCTable::CRPCTable()

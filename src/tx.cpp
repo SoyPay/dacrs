@@ -175,7 +175,7 @@ bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 	CRegID regId(nHeight, nIndex);
 	CKeyID keyId = boost::get<CPubKey>(userId).GetKeyID();
 	if (!view.GetAccount(userId, account))
-		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", regId.ToString()),
+		return state.DoS(100, ERROR("UpdateAccounts() : read source keyId %s account info error", keyId.ToString()),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 
 	if(account.PublicKey.IsFullyValid() && account.PublicKey.GetKeyID() == keyId) {
