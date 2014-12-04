@@ -479,40 +479,28 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate) {
 //}
 
 void CWallet::ResendWalletTransactions() {
-	// Do this infrequently and randomly to avoid giving away
-	// that these are our transactions.
-//	if (GetTime() < nNextResend)
-//		return;
-//	bool fFirst = (nNextResend == 0);
-//	uint64_t rand = max(GetRand(30 * 60), (uint64_t) 120);
-//	nNextResend = GetTime() + rand;
-//	if (fFirst)
-//		return;
-//
-//	// Only do it if there's been a new block since last time
-//	if (Params().GetBestRecvTime() < nLastResend)
-//		return;
-//	nLastResend = GetTime();
-//
-//	// Rebroadcast any of our txes that aren't in a block yet
-//	LogPrint("INFO","ResendWalletTransactions()\n");
-//	{
-//		LOCK(cs_wallet);
-//		// Sort them in chronological order
-////		multimap<unsigned int, CWalletTx*> mapSorted;
-////		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet) {
-////			CWalletTx& wtx = item.second;
-////			// Don't rebroadcast until it's had plenty of time that
-////			// it should have gotten in already by now.
-////			if (nTimeBestReceived - (int64_t) wtx.nTimeReceived > 5 * 60)
-////				mapSorted.insert(make_pair(wtx.nTimeReceived, &wtx));
-////		}
-//		mapWalletTx[uint256(0)].RelayWalletTransaction();
-//	}
+	vector<uint256> erase;
+	for(auto &te:UnConfirmTx)
+	{
+		std::shared_ptr<CBaseTransaction> pBaseTx = te.second->GetNewInstance();
+		auto ret = CommitTransaction(&(*pBaseTx.get()));
+		if(!std::get<0>(ret))
+		{
+			erase.push_back(te.first);
+		}
+	}
+	for(auto& tee:erase)
+	{
+		UnConfirmTx.erase(tee);
+	}
+	if(erase.size() > 0)
+	{
+		FushToDisk();
+	}
 }
 
 //// Call after CreateTransaction unless you want to abort
-bool CWallet::CommitTransaction(CBaseTransaction *pTx) {
+std::tuple<bool, string> CWallet::CommitTransaction(CBaseTransaction *pTx) {
 	LOCK2(cs_main, cs_wallet);
 	LogPrint("INFO", "CommitTransaction:\n%s", pTx->ToString(*pAccountViewTip));
 //		{
@@ -543,13 +531,15 @@ bool CWallet::CommitTransaction(CBaseTransaction *pTx) {
 		if (!::AcceptToMemoryPool(mempool, state, pTx, true, NULL)) {
 			// This must not fail. The transaction has already been signed and recorded.
 			LogPrint("INFO", "CommitTransaction() : Error: Transaction not valid\n");
-			return false;
+			return std::make_tuple (false,state.GetRejectReason());
+
 		}
 	}
 	uint256 txhash = pTx->GetHash();
 	UnConfirmTx[txhash] = pTx->GetNewInstance();
 	::RelayTransaction(pTx, txhash);
-	return FushToDisk();
+	return std::make_tuple (FushToDisk(),"had into mempool");
+
 }
 
 DBErrors CWallet::LoadWallet(bool fFirstRunRet) {
@@ -644,7 +634,7 @@ int64_t CWallet::GetRawBalance(int ncurhigh) const
 }
 
 
-std::string CWallet::SendMoney(const CRegID &send, const CUserID &rsv, int64_t nValue)
+std::tuple<bool,string>  CWallet::SendMoney(const CRegID &send, const CUserID &rsv, int64_t nValue)
 {
 //	if (IsLocked())
 //	{
@@ -667,17 +657,18 @@ std::string CWallet::SendMoney(const CRegID &send, const CUserID &rsv, int64_t n
 	if(!pAccountViewTip->GetKeyId(send,keID) ||
 			!GetKey(keID, key))
 	{
-		return _("key or keID failed");
+
+		return std::make_tuple (false,"key or keID failed");
 	}
 
 	if (!key.Sign(tx.SignatureHash(), tx.signature)) {
-		return _("Sign failed");
+		return std::make_tuple (false,"Sign failed");
 	}
+	std::tuple<bool,string> ret = CommitTransaction((CBaseTransaction *) &tx);
+	if(!std::get<0>(ret))
+		return ret;
+	return  std::make_tuple (true,tx.GetHash().GetHex());
 
-	if (!CommitTransaction((CBaseTransaction *) &tx)) {
-		return _("CommitTransaction failed");
-	}
-	return tx.GetHash().GetHex();
 
 }
 

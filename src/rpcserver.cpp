@@ -283,7 +283,7 @@ static const CRPCCommand vRPCCommands[] =
     { "listaddr",               &listaddr,       	     true,      false,      true },
     { "listtx",                 &listtx,       	         true,      false,      true },
     { "registeraccounttx",      &registeraccounttx,      true,      false,      true },
-	{ "createnormaltx",         &createnormaltx,       	 true,      false,      true },
+//	{ "createnormaltx",         &createnormaltx,       	 true,      false,      true },
 	{ "createcontracttx",       &createcontracttx,       true,      false,      true },
 	{ "signcontracttx",         &signcontracttx,       	 true,      false,      true },
 	{ "createfreezetx",         &createfreezetx,       	 true,      false,      true },

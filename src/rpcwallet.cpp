@@ -214,18 +214,22 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
 	CRegID sendreg;
 	CRegID revreg;
+
+
 	if (!pwalletMain->GetRegId(sendKeyId, sendreg)) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 	}
-	string hash;
+
+	std::tuple<bool,string> ret;
 	if (pAccountViewTip->GetRegId(CUserID(RevKeyId), revreg)) {
-		hash = pwalletMain->SendMoney(sendreg, revreg, nAmount);
+		ret = pwalletMain->SendMoney(sendreg, revreg, nAmount);
+
 	} else {
-		hash = pwalletMain->SendMoney(sendreg, CUserID(RevKeyId), nAmount);
+		ret = pwalletMain->SendMoney(sendreg, CUserID(RevKeyId), nAmount);
 	}
 
 	Object obj;
-	obj.push_back(Pair("txhash", hash));
+	obj.push_back(Pair(std::get<0>(ret) ? "hash" : "error code", std::get<1>(ret)));
 	return obj;
 }
 
