@@ -480,21 +480,17 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate) {
 
 void CWallet::ResendWalletTransactions() {
 	vector<uint256> erase;
-	for(auto &te:UnConfirmTx)
-	{
+	for (auto &te : UnConfirmTx) {
 		std::shared_ptr<CBaseTransaction> pBaseTx = te.second->GetNewInstance();
 		auto ret = CommitTransaction(&(*pBaseTx.get()));
-		if(!std::get<0>(ret))
-		{
+		if (!std::get<0>(ret)) {
 			erase.push_back(te.first);
 		}
 	}
-	for(auto& tee:erase)
-	{
+	for (auto& tee : erase) {
 		UnConfirmTx.erase(tee);
 	}
-	if(erase.size() > 0)
-	{
+	if (erase.size() > 0) {
 		FushToDisk();
 	}
 }
@@ -538,7 +534,7 @@ std::tuple<bool, string> CWallet::CommitTransaction(CBaseTransaction *pTx) {
 	uint256 txhash = pTx->GetHash();
 	UnConfirmTx[txhash] = pTx->GetNewInstance();
 	::RelayTransaction(pTx, txhash);
-	return std::make_tuple (FushToDisk(),"had into mempool");
+	return std::make_tuple (FushToDisk(),txhash.ToString());
 
 }
 
