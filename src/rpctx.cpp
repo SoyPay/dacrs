@@ -249,122 +249,28 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 		if (!key.Sign(rtx.SignatureHash(), rtx.signature)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: Sign failed.");
 		}
-		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &rtx)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "registeraccounttx Error: CommitTransaction failed.");
-		}
-	}
-	Object obj;
-	obj.push_back(Pair("txhash",rtx.GetHash().ToString()));
-	return obj;
-}
 
-//create a normal tx
-Value createnormaltx(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 5) {
-		string msg =
-				"createnormaltx nrequired \"send addr\" \"recv addr\" money fee height\n"
-						"\nsend money from one addr to another addr\n"
-						"\nArguments:\n"
-						"1.\"send addr\": (string)\n"
-						"2.\"recv addr\": (string)\n"
-						"3.money: (numeric) pay to recv addr\n"
-						"4.fee: (numeric) pay to miner\n"
-						"5.height: (numeric)valid  height\n"
-						"\nResult:\n"
-						"\"txhash\": (string)\n"
-						"\nExamples:\n"
-						+ HelpExampleCli("createnormaltx",
-								"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 20000000000 100000 1")
-						+ "\nAs json rpc call\n"
-						+ HelpExampleRpc("createnormaltx",
-								"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 20000000000 100000 1");
-		throw runtime_error(msg);
+
+
+
+//		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &rtx)) {
+//			throw JSONRPCError(RPC_WALLET_ERROR, "registeraccounttx Error: CommitTransaction failed.");
+//		}
 	}
 
-	RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(int_type)(int_type));
 
-	//get addresss
-	CSoyPayAddress sendaddr(params[0].get_str());
-	CSoyPayAddress recvaddr(params[1].get_str());
-	uint64_t money = params[2].get_uint64();
-	uint64_t fee = params[3].get_uint64();
-	uint32_t nvalidheight = params[4].get_int();
-
-	if (money < CTransaction::nMinTxFee) {
-		throw runtime_error("in createnormaltx :money is smaller than nMinTxFee\n");
-	}
-	//get keyid
-	CKeyID Sendkeyid;
-	if (!sendaddr.GetKeyID(Sendkeyid)) {
-		throw runtime_error("in createnormaltx :send address err\n");
-	}
-	CKeyID recvkeyid;
-	if (!recvaddr.GetKeyID(recvkeyid)) {
-		throw runtime_error("in createnormaltx :recv address err\n");
-	}
-
-	assert(pwalletMain != NULL);
-	CTransaction tx;
-	{
-	//	LOCK2(cs_main, pwalletMain->cs_wallet);
-		EnsureWalletIsUnlocked();
-
-		//balance
-		CAccountViewCache view(*pAccountViewTip, true);
-		CAccount acct;
-
-		uint64_t balance = 0;
-		CUserID userId = Sendkeyid;
-		if (view.GetAccount(userId, acct)) {
-			balance = acct.GetRawBalance(chainActive.Tip()->nHeight);
-		}
-
-		if (!acct.IsRegister()) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "in createnormaltx Error: Account is not registered.");
-		}
-
-		if (!pwalletMain->count(Sendkeyid)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "in createnormaltx Error: WALLET file is not correct.");
-		}
-
-		if (balance < fee || balance < money || balance < (money + fee)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "in createnormaltx Error: Account balance is insufficient.");
-		}
-
-		auto GetUserId = [&](const CKeyID &mkeyId)
+		std::tuple<bool,string> ret;
+		ret = pwalletMain->CommitTransaction((CBaseTransaction *) &rtx);
+		if(!std::get<0>(ret))
 		{
-			CAccount acct;
-			CUserID ret;
-			if (!view.GetAccount(CUserID(mkeyId), acct)) {
-				ret= acct.regID;
-			}
-			else{
-			ret = mkeyId;
-			}
-			return ret;
-		};
-
-		tx.srcUserId = GetUserId(Sendkeyid);
-		tx.desUserId = GetUserId(recvkeyid);
-		tx.llValues = money;
-		tx.llFees = fee;
-		tx.nValidHeight = chainActive.Tip()->nHeight; //for test
-//		tx.nValidHeight = nvalidheight;
-
-		CKey key;
-		pwalletMain->GetKey(Sendkeyid, key);
-		if (!key.Sign(tx.SignatureHash(), tx.signature)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "createnormaltx Error: Sign failed.");
+			throw JSONRPCError(RPC_WALLET_ERROR, "registeraccounttx Error:"+ std::get<1>(ret));
 		}
-		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "createnormaltx Error: CommitTransaction failed.");
-		}
-	}
-	Object obj;
-	obj.push_back(Pair("txhash",tx.GetHash().ToString()));
-	return obj;
-//	return tx.GetHash().ToString();
+		Object obj;
+		obj.push_back(Pair("hash", std::get<1>(ret)));
+		return obj;
+
 }
+
 
 //create a contract tx
 Value createcontracttx(const Array& params, bool fHelp) {
@@ -477,23 +383,22 @@ Value createcontracttx(const Array& params, bool fHelp) {
 
 		tx.get()->vSignature.push_back(signature);
 	}
-	if(tx.get()->vSignature.size() == tx.get()->vAccountRegId.size())
-	{
-		if (!pwalletMain->CommitTransaction((CBaseTransaction *) tx.get())) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: CommitTransaction failed.");
+	if (tx.get()->vSignature.size() == tx.get()->vAccountRegId.size()) {
+		std::tuple<bool, string> ret;
+		ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
+		if (!std::get<0>(ret)) {
+			throw JSONRPCError(RPC_WALLET_ERROR, "Error:" + std::get<1>(ret));
 		}
 		Object obj;
-		obj.push_back(Pair("txhash",tx.get()->GetHash().ToString()));
+		obj.push_back(Pair("hash", std::get<1>(ret)));
 		return obj;
-	}
-	else
-	{
+	} else {
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
-		cout<<"cont:"<<tx.get()->ToString(*pAccountViewTip)<<endl;
+		cout << "cont:" << tx.get()->ToString(*pAccountViewTip) << endl;
 		std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 		ds << pBaseTx;
 		Object obj;
-		obj.push_back(Pair("RawTx",HexStr(ds.begin(),ds.end())));
+		obj.push_back(Pair("RawTx", HexStr(ds.begin(), ds.end())));
 		return obj;
 	}
 }
@@ -520,11 +425,11 @@ Value signcontracttx(const Array& params, bool fHelp) {
 	vector<unsigned char> vch(ParseHex(params[0].get_str()));
 	CDataStream stream(vch, SER_DISK, CLIENT_VERSION);
 
-	std::shared_ptr<CBaseTransaction> pBaseTx;//= make_shared<CContractTransaction>();
+	std::shared_ptr<CBaseTransaction> pBaseTx; //= make_shared<CContractTransaction>();
 	stream >> pBaseTx;
 
 	std::shared_ptr<CContractTransaction> tx = make_shared<CContractTransaction>(pBaseTx.get());
-	cout<<"sig:"<<tx.get()->ToString(*pAccountViewTip)<<endl;
+	cout << "sig:" << tx.get()->ToString(*pAccountViewTip) << endl;
 	assert(pwalletMain != NULL);
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
@@ -548,14 +453,15 @@ Value signcontracttx(const Array& params, bool fHelp) {
 			CAccount account;
 			if (!pAccountViewTip->GetAccount(item, account)) {
 				CID id(item);
-				throw runtime_error(tinyformat::format("createcontracttx :account id %s is not exist\n", HexStr(id.GetID())));
+				throw runtime_error(
+						tinyformat::format("createcontracttx :account id %s is not exist\n", HexStr(id.GetID())));
 			}
 		}
 
 		CRegID accountid = boost::get<CRegID>(tx.get()->vAccountRegId.at(tx.get()->vSignature.size()));
 
 		if (!pwalletMain->count(accountid.getKeyID(*pAccountViewTip))) {
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,"signcontracttx error: Not to my time!\r\n");
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "signcontracttx error: Not to my time!\r\n");
 		}
 
 		//verify sig
@@ -563,8 +469,7 @@ Value signcontracttx(const Array& params, bool fHelp) {
 			CAccount account;
 			if (!view.GetAccount(tx.get()->vAccountRegId.at(ii), account)) {
 				CID id(tx.get()->vAccountRegId.at(ii));
-				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-						string("unregister RegID: ") + HexStr(id.GetID()));
+				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("unregister RegID: ") + HexStr(id.GetID()));
 			}
 
 			if (!account.PublicKey.Verify(tx.get()->SignatureHash(), tx.get()->vSignature.at(ii))) {
@@ -590,26 +495,25 @@ Value signcontracttx(const Array& params, bool fHelp) {
 		tx.get()->vSignature.push_back(signature);
 	}
 
-	{
-		if(tx.get()->vSignature.size() == tx.get()->vAccountRegId.size())
-		{
-			if (!pwalletMain->CommitTransaction((CBaseTransaction *) tx.get())) {
-						throw JSONRPCError(RPC_WALLET_ERROR, "signcontracttx Error: CommitTransaction failed.");
-					}
-			Object obj;
-			obj.push_back(Pair("txhash",tx.get()->GetHash().ToString()));
-			return obj;
+	if (tx.get()->vSignature.size() == tx.get()->vAccountRegId.size()) {
+
+		std::tuple<bool, string> ret;
+		ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
+		if (!std::get<0>(ret)) {
+			throw JSONRPCError(RPC_WALLET_ERROR, "registerscripttx Error:" + std::get<1>(ret));
 		}
-		else
-		{
-			CDataStream ds(SER_DISK, CLIENT_VERSION);
-			std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
-			ds << pBaseTx;
-			Object obj;
-			obj.push_back(Pair("RawTx",HexStr(ds.begin(),ds.end())));
-			return obj;
-		}
+		Object obj;
+		obj.push_back(Pair("hash", std::get<1>(ret)));
+		return obj;
+	} else {
+		CDataStream ds(SER_DISK, CLIENT_VERSION);
+		std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
+		ds << pBaseTx;
+		Object obj;
+		obj.push_back(Pair("RawTx", HexStr(ds.begin(), ds.end())));
+		return obj;
 	}
+
 }
 
 //create a freeze tx
@@ -709,14 +613,20 @@ Value createfreezetx(const Array& params, bool fHelp) {
 		if (!key.Sign(tx.SignatureHash(), tx.signature)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "createfreezetx Error: Sign failed.");
 		}
-		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "createfreezetx Error: CommitTransaction failed.");
-		}
+//		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
+//			throw JSONRPCError(RPC_WALLET_ERROR, "createfreezetx Error: CommitTransaction failed.");
+//		}
 	}
 
-	Object obj;
-	obj.push_back(Pair("txhash",tx.GetHash().ToString()));
-	return obj;
+	std::tuple<bool,string> ret;
+		ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
+		if(!std::get<0>(ret))
+		{
+			throw JSONRPCError(RPC_WALLET_ERROR, "registerscripttx Error:"+ std::get<1>(ret));
+		}
+		Object obj;
+		obj.push_back(Pair("hash", std::get<1>(ret)));
+		return obj;
 }
 
 //create a register script tx
@@ -909,14 +819,21 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		if (!key.Sign(tx.SignatureHash(), tx.signature)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "registerscripttx Error: Sign failed.");
 		}
-		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "registerscripttx Error: CommitTransaction failed.");
-		}
+//		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
+//			throw JSONRPCError(RPC_WALLET_ERROR, "registerscripttx Error: CommitTransaction failed.");
+//		}
 	}
 
-	Object obj;
-	obj.push_back(Pair("txhash",tx.GetHash().ToString()));
-	return obj;
+		std::tuple<bool,string> ret;
+		ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
+		if(!std::get<0>(ret))
+		{
+			throw JSONRPCError(RPC_WALLET_ERROR, "registerscripttx Error:"+ std::get<1>(ret));
+		}
+		Object obj;
+		obj.push_back(Pair("hash", std::get<1>(ret)));
+		return obj;
+
 }
 
 Value listaddr(const Array& params, bool fHelp) {
