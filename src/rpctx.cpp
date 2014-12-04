@@ -382,7 +382,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 	}
 	if (tx.get()->vSignature.size() == tx.get()->vAccountRegId.size()) {
 		std::tuple<bool, string> ret;
-		ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
+		ret = pwalletMain->CommitTransaction((CBaseTransaction *) tx.get());
 		if (!std::get<0>(ret)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "Error:" + std::get<1>(ret));
 		}
@@ -495,7 +495,7 @@ Value signcontracttx(const Array& params, bool fHelp) {
 	if (tx.get()->vSignature.size() == tx.get()->vAccountRegId.size()) {
 
 		std::tuple<bool, string> ret;
-		ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
+		ret = pwalletMain->CommitTransaction((CBaseTransaction *) tx.get());
 		if (!std::get<0>(ret)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "registerscripttx Error:" + std::get<1>(ret));
 		}
