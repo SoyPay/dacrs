@@ -171,6 +171,7 @@ public:
  * and provides the ability to create new transactions.
  */
 class CWallet : public CWalletInterface{
+
 private:
 	static bool StartUp();
 
@@ -206,6 +207,7 @@ public:
 				READWRITE(MasterKey);
 				READWRITE(mKeyPool);
 				READWRITE(mapInBlockTx);
+				READWRITE(UnConfirmTx);
 				uint256 sun(0);
 				if(fWrite){
 				 sun = GetCheckSum();
@@ -287,7 +289,7 @@ public:
 //	void ReacceptWalletTransactions();
 		void ResendWalletTransactions();
 
-	std::string SendMoney(const CRegID &send,const CUserID &rsv, int64_t nValue);
+	std::tuple<bool,string>  SendMoney(const CRegID &send,const CUserID &rsv, int64_t nValue);
 
 	bool IsMine(CBaseTransaction*pTx)const;
 
@@ -311,7 +313,7 @@ public:
 		return nWalletVersion;
 	}
 
-	bool CommitTransaction(CBaseTransaction *pTx);
+	std::tuple<bool,string>  CommitTransaction(CBaseTransaction *pTx);
 
 	/** Address book entry changed.
 	 * @note called with lock cs_wallet held.

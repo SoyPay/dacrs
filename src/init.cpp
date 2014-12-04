@@ -988,10 +988,10 @@ bool AppInit2(boost::thread_group& threadGroup)
 
 
     // Generate coins in the background
-    if (pwalletMain)
-        GenerateBitcoins(SysCfg().GetBoolArg("-gen", false), pwalletMain, SysCfg().GetArg("-genproclimit", -1));
-
-
+	if (pwalletMain) {
+		GenerateBitcoins(SysCfg().GetBoolArg("-gen", false), pwalletMain, SysCfg().GetArg("-genproclimit", -1));
+		pwalletMain->ResendWalletTransactions();
+	}
     // ********************************************************* Step 12: finished
 
     uiInterface.InitMessage(_("Done loading"));
