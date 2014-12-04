@@ -34,12 +34,17 @@ bool CID::Set(const CPubKey &id) {
 	memcpy(&vchData[0], &id, id.size());
 	return true;
 }
+bool CID::Set(const CNullID &id) {
+	return true;
+}
+
+
 bool CID::Set(const CUserID &userid) {
 	return boost::apply_visitor(CIDVisitor(this), userid);
 }
 
 CUserID CID::GetUserId() {
-	if (vchData.size() <= 10) {
+	if (1< vchData.size() && vchData.size() <= 10) {
 		CRegID regId;
 		regId.SetRegIDByCompact(vchData);
 		return CUserID(regId);
@@ -50,7 +55,10 @@ CUserID CID::GetUserId() {
 		uint160 data = uint160(vchData);
 		CKeyID keyId(data);
 		return CUserID(keyId);
-	} else {
+	} else if(vchData.empty()) {
+		return CNullID();
+	}
+	else {
 		assert(0);
 	}
 	return CNullID();
@@ -182,11 +190,13 @@ bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 
 	account.PublicKey = boost::get<CPubKey>(userId);
 	account.regID = regId;
-	account.MinerPKey = boost::get<CPubKey>(MinerId);
+	if (typeid(CPubKey) == typeid(minerId)) {
+		account.MinerPKey = boost::get<CPubKey>(minerId);
 
-	if (account.MinerPKey.IsValid() && !account.MinerPKey.IsFullyValid()) {
-		return state.DoS(100, ERROR("UpdateAccounts() : MinerPKey:%s Is Invalid", account.MinerPKey.ToString()),
-				UPDATE_ACCOUNT_FAIL, "MinerPKey Is Invalid");
+		if (account.MinerPKey.IsValid() && !account.MinerPKey.IsFullyValid()) {
+			return state.DoS(100, ERROR("UpdateAccounts() : MinerPKey:%s Is Invalid", account.MinerPKey.ToString()),
+					UPDATE_ACCOUNT_FAIL, "MinerPKey Is Invalid");
+		}
 	}
 
 	if (!view.SaveAccountInfo(regId, keyId, account)) {
@@ -243,7 +253,7 @@ bool CRegisterAccountTx::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view)
 string CRegisterAccountTx::ToString(CAccountViewCache &view) const {
 	string str;
 	str += strprintf("txType=%s, hash=%s, ver=%d, pubkey=%s, llFees=%ld, keyid=%s, nValidHeight=%d\n",
-	txTypeArray[nTxType],GetHash().ToString().c_str(), nVersion, HexStr(boost::get<CPubKey>(userId).begin(), boost::get<CPubKey>(userId).end()).c_str(), llFees, boost::get<CPubKey>(userId).GetKeyID().ToAddress(), nValidHeight);
+	txTypeArray[nTxType],GetHash().ToString().c_str(), nVersion, boost::get<CPubKey>(userId).ToString(), llFees, boost::get<CPubKey>(userId).GetKeyID().ToAddress(), nValidHeight);
 	return str;
 }
 bool CRegisterAccountTx::CheckTransction(CValidationState &state, CAccountViewCache &view) {

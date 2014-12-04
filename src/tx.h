@@ -86,6 +86,7 @@ public:
 	bool Set(const CRegID &id);
     bool Set(const CKeyID &id);
     bool Set(const CPubKey &id);
+    bool Set(const CNullID &id);
     bool Set(const CUserID &userid);
     CID() {}
     CID(const CUserID &dest) {Set(dest);}
@@ -114,7 +115,7 @@ public:
 		return pId->Set(id);
 	}
 	bool operator()(const CNullID &no) const {
-		return false;
+		return true;
 	}
 };
 
@@ -356,7 +357,7 @@ class CRegisterAccountTx: public CBaseTransaction {
 
 public:
 	mutable CUserID userId;      //pubkey
-	mutable CUserID MinerId;    //Miner pubkey
+	mutable CUserID minerId;     //Miner pubkey
 	int64_t llFees;
 	int nValidHeight;
 	vector<unsigned char> signature;
@@ -376,22 +377,94 @@ public:
 	~CRegisterAccountTx() {
 	}
 
-	IMPLEMENT_SERIALIZE
-	(
-		READWRITE(VARINT(this->nVersion));
-		nVersion = this->nVersion;
-		CID id(userId);
-		READWRITE(id);
-		CID mMinerid(MinerId);
-		READWRITE(mMinerid);
-		if(fRead) {
-			userId = id.GetUserId();
-			MinerId = mMinerid.GetUserId();
+	unsigned int GetSerializeSize(int nType, int nVersion) const {
+		CSerActionGetSerializeSize ser_action;
+		const bool fGetSize = true;
+		const bool fWrite = false;
+		const bool fRead = false;
+		unsigned int nSerSize = 0;
+		ser_streamplaceholder s;
+		s.nType = nType;
+		s.nVersion = nVersion;
+		{
+			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(this->nVersion)))), nType, nVersion, ser_action));
+			nVersion = this->nVersion;
+			CID id(userId);
+			(nSerSize += ::SerReadWrite(s, (id), nType, nVersion, ser_action));
+			CID mMinerid(minerId);
+			(nSerSize += ::SerReadWrite(s, (mMinerid), nType, nVersion, ser_action));
+			if (fRead) {
+				userId = id.GetUserId();
+				minerId = mMinerid.GetUserId();
+			}
+			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(llFees)))), nType, nVersion, ser_action));
+			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(nValidHeight)))), nType, nVersion, ser_action));
+			(nSerSize += ::SerReadWrite(s, (signature), nType, nVersion, ser_action));
 		}
-		READWRITE(VARINT(llFees));
-		READWRITE(VARINT(nValidHeight));
-		READWRITE(signature);
-	)
+		return nSerSize;
+	}
+	template<typename Stream>
+	void Serialize(Stream& s, int nType, int nVersion) const {
+		CSerActionSerialize ser_action;
+		const bool fGetSize = false;
+		const bool fWrite = true;
+		const bool fRead = false;
+		unsigned int nSerSize = 0;
+		{
+			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(this->nVersion)))), nType, nVersion, ser_action));
+			nVersion = this->nVersion;
+			CID id(userId);
+			(nSerSize += ::SerReadWrite(s, (id), nType, nVersion, ser_action));
+			CID mMinerid(minerId);
+			(nSerSize += ::SerReadWrite(s, (mMinerid), nType, nVersion, ser_action));
+			if (fRead) {
+				userId = id.GetUserId();
+				minerId = mMinerid.GetUserId();
+			}
+			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(llFees)))), nType, nVersion, ser_action));
+			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(nValidHeight)))), nType, nVersion, ser_action));
+			(nSerSize += ::SerReadWrite(s, (signature), nType, nVersion, ser_action));
+		}
+	}
+	template<typename Stream>
+	void Unserialize(Stream& s, int nType, int nVersion) {
+		CSerActionUnserialize ser_action;
+		const bool fGetSize = false;
+		const bool fWrite = false;
+		const bool fRead = true;
+		unsigned int nSerSize = 0;
+		{
+			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(this->nVersion)))), nType, nVersion, ser_action));
+			nVersion = this->nVersion;
+			CID id(userId);
+			(nSerSize += ::SerReadWrite(s, (id), nType, nVersion, ser_action));
+			CID mMinerid(minerId);
+			(nSerSize += ::SerReadWrite(s, (mMinerid), nType, nVersion, ser_action));
+			if (fRead) {
+				userId = id.GetUserId();
+				minerId = mMinerid.GetUserId();
+			}
+			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(llFees)))), nType, nVersion, ser_action));
+			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(nValidHeight)))), nType, nVersion, ser_action));
+			(nSerSize += ::SerReadWrite(s, (signature), nType, nVersion, ser_action));
+		}
+	}
+//	IMPLEMENT_SERIALIZE
+//	(
+//		READWRITE(VARINT(this->nVersion));
+//		nVersion = this->nVersion;
+//		CID id(userId);
+//		READWRITE(id);
+//		CID mMinerid(minerId);
+//		READWRITE(mMinerid);
+//		if(fRead) {
+//			userId = id.GetUserId();
+//			minerId = mMinerid.GetUserId();
+//		}
+//		READWRITE(VARINT(llFees));
+//		READWRITE(VARINT(nValidHeight));
+//		READWRITE(signature);
+//	)
 
 	uint64_t GetFee() const {
 		return llFees;
@@ -408,7 +481,7 @@ public:
 	uint256 SignatureHash() const {
 		CHashWriter ss(SER_GETHASH, 0);
 		CID id(userId);
-		CID id2(MinerId);
+		CID id2(minerId);
 		ss <<VARINT(nVersion) << nTxType << id << id2 << VARINT(llFees) << VARINT(nValidHeight);
 		return ss.GetHash();
 	}
