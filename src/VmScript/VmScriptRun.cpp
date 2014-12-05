@@ -163,6 +163,8 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 		}
 		vector<unsigned char> accountid(it.accountid, it.accountid + sizeof(it.accountid));
 		CRegID regId(accountid);
+		if(regId.IsEmpty() || regId.getKeyID( *m_view) == uint160(0))
+			return false;
 		/// if account script id ,the it.opeatortype must be ADD_FREE or MINUS_FREE
 		if (m_ScriptDBTip->HaveScript(regId) && it.opeatortype != ADD_FREE && it.opeatortype != MINUS_FREE) {
 			return false;
@@ -257,6 +259,11 @@ const vector<CUserID>& CVmScriptRun::GetTxAccount()
 {
 	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
 		return tx->vAccountRegId;
+}
+const vector<unsigned char>& CVmScriptRun::GetTxContact()
+{
+	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
+		return tx->vContract;
 }
 int CVmScriptRun::GetComfirHeight()
 {

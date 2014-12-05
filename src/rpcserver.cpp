@@ -87,7 +87,7 @@ int64_t AmountToRawValue(const Value& value)
     double dAmount = value.get_real();
     if (dAmount <= 0.0 || dAmount > 21000000.0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-    int64_t nAmount = roundint64(dAmount * COIN);
+    int64_t nAmount = roundint64(dAmount * COIN)/COIN;
     if (!MoneyRange(nAmount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
     return nAmount;
@@ -209,10 +209,10 @@ Value stop(const Array& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "stop\n"
-            "\nStop Bitcoin server.");
+            "\nStop Soypayd server.");
     // Shutdown will take long enough that the response should get back
     StartShutdown();
-    return "Bitcoin server stopping";
+    return "Soypayd server stopping";
 }
 
 
@@ -220,7 +220,7 @@ Value stop(const Array& params, bool fHelp)
 //
 // Call Table
 //
-
+extern Value restclient(const Array& params, bool fHelp);
 extern Value gettxoperationlog(const Array& params, bool fHelp);
 static const CRPCCommand vRPCCommands[] =
 { //  name                      actor (function)         okSafeMode threadSafe reqWallet
@@ -307,10 +307,10 @@ static const CRPCCommand vRPCCommands[] =
 
 
 //for test code
-	{ "gettxoperationlog",      &gettxoperationlog,      false,     false,      false },
+	{ "gettxoperationlog",      &gettxoperationlog,      false,      false,     false },
     { "disconnectblock",        &disconnectblock,        true,      false,      true },
+    { "restclient",             &restclient,             true,      false,      false },
     { "reloadtxcache",          &reloadtxcache,          true,      false,      true },
-    { "saveblocktofile",        &saveblocktofile,        true,      false,      false},
 };
 
 CRPCTable::CRPCTable()

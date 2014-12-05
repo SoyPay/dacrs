@@ -16,6 +16,8 @@
 #include "json/json_spirit_writer.h"
 #include "json/json_spirit_value.h"
 #include "json/json_spirit_stream_reader.h"
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 using namespace std;
 using namespace boost;
 using namespace json_spirit;
@@ -24,7 +26,6 @@ extern Object CallRPC(const string& strMethod, const Array& params);
 extern int TestCallRPC(std::string strMethod, const std::vector<std::string> &vParams, std::string &strRet);
 extern void GetAccountInfo(char *address);
 extern void GenerateMiner();
-
 void CreateScript(char * vmpath)
 {
 	int argc = 7;
@@ -85,7 +86,7 @@ string Parsejson(string str)
 			{
 				ret = val_val.get_str();
 			}
-		}else if(str_name =="txhash")
+		}else if(str_name =="hash")
 		{
 			ret = val_val.get_str();
 		}
@@ -115,7 +116,7 @@ string CreateDarkTx()
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << contact;
 	string temp = HexStr(scriptData);
-	cout<<"first:"<<temp<<endl;
+//	cout<<"first:"<<temp<<endl;
 	vInputParams.push_back(temp);
 	vInputParams.push_back("1000000");
 	vInputParams.push_back("10");
@@ -145,7 +146,7 @@ void CreateSecondDarkTx(string hash)
 	NEXT_CONTRACT contact;
 	contact.dnType = 0x02;
 	uint256 tx(hash.c_str());
-	cout<<"hash:"<<hash<<endl;
+//	cout<<"hash:"<<hash<<endl;
 	//contact.hash = tx;
 	memcpy(contact.hash,tx.begin(),sizeof(contact.hash));
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
@@ -154,7 +155,7 @@ void CreateSecondDarkTx(string hash)
 	uint256 hash1(hash.c_str());
 	string param ="02";
 	param += HexStr(hash1);
-	cout<<"second:"<<param<<endl;
+//	cout<<"second:"<<param<<endl;
 	vInputParams.push_back(param);
 	vInputParams.push_back("1000000");
 	vInputParams.push_back("10");
@@ -238,10 +239,60 @@ void Createanony(string addr)
 	cout<<strReturn<<endl;
 	return ;
 }
+uint64_t GetValue(string str)
+{
+	json_spirit::Value val;
+	json_spirit::read(str, val);
+//	json_spirit::json ::
+	if (val.type() != obj_type)
+	{
+		return 0;
+	}
+	json_spirit::Value::Object obj=  val.get_obj();
+	string ret;
+	for(int i = 0; i < obj.size(); ++i)
+	{
+		const json_spirit::Pair& pair = obj[i];
+		const std::string& str_name = pair.name_;
+		const json_spirit::Value& val_val = pair.value_;
+		if(str_name =="FreedomFund")
+		{
+			json_spirit::Value::Array narray = val_val.get_array();
+			json_spirit::Value::Object obj1 = narray[0].get_obj();
+			for(int j = 0; j < obj1.size(); ++j)
+			{
+				const json_spirit::Pair& pair = obj1[i];
+				const std::string& str_name = pair.name_;
+				const json_spirit::Value& val_val = pair.value_;
+				if(val_val.get_str() != "value")
+				{
+					return val_val.get_int64();
+				}
+			}
+
+		}
+
+	}
+	return 0;
+}
+string GetAccountInfo1(string address) {
+	//cout << "Get Address " << address << "INFO" << endl;
+//	int argc = 3;
+//	char *argv[3] = { "rpctest", "getaccountinfo", address };
+//	CommandLineRPC(argc, argv);
+	std::vector<std::string> vInputParams;
+	vInputParams.push_back(address);
+	std::string strReturn("");
+	TestCallRPC("getaccountinfo", vInputParams, strReturn);
+	return strReturn;
+
+}
 BOOST_AUTO_TEST_SUITE(test_app)
 
 BOOST_AUTO_TEST_CASE(test_dark){
-	CreateScript("D:\\cppwork\\vmsdk\\darksecure\\Debug\\Exe\\darksecure.bin");
+	string path = "D:\\bitcoin\\data\\darksecure.bin";
+	BOOST_CHECK_MESSAGE(boost::filesystem::exists(path),path + " not exitst");
+	CreateScript((char*)path.c_str());
 	GenerateMiner();
 	cout<<"1"<<endl;
 	string temp = CreateDarkTx();
@@ -250,7 +301,8 @@ BOOST_AUTO_TEST_CASE(test_dark){
 	string strReturn;
 	TestCallRPC("generateblock", vInputParams, strReturn);
 	GenerateMiner();
-	GetAccountInfo("010000000100");
+	string temp1 = GetAccountInfo1("010000000100");
+	BOOST_CHECK_EQUAL(GetValue(temp1),150);
 	GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
 	GetAccountInfo("mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y");
 	cout<<"2"<<endl;
@@ -263,8 +315,9 @@ BOOST_AUTO_TEST_CASE(test_dark){
 
 BOOST_AUTO_TEST_CASE(test_anony){
 
-
-	CreateScript("D:\\cppwork\\vmsdk\\anonymous\\Debug\\Exe\\anony.bin");
+	string path = "D:\\bitcoin\\data\\anony.bin";
+	BOOST_CHECK_MESSAGE(boost::filesystem::exists(path),path + " not exitst");
+	CreateScript((char*)path.c_str());
 	GenerateMiner();
 	cout<<"1"<<endl;
 	Createanony("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");

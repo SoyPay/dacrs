@@ -43,6 +43,14 @@ string RegIDToAddress(CUserID &userId) {
 	return CSoyPayAddress(acct.keyID).ToString();
 }
 
+static  bool GetKeyId(string const &addr,CKeyID &KeyId) {
+	if (!CRegID::GetKeyID(addr, KeyId)) {
+		KeyId=CKeyID(addr);
+		if (KeyId.IsEmpty())
+		return false;
+	}
+	return true;
+};
 Object TxToJSON(CBaseTransaction *pTx) {
 	Object result;
 	result.push_back(Pair("hash", pTx->GetHash().GetHex()));
@@ -51,7 +59,7 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		CRegisterAccountTx *prtx = (CRegisterAccountTx *) pTx;
 		result.push_back(Pair("txtype", "RegisterAccTx"));
 		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("addr", CSoyPayAddress(boost::get<CPubKey>(prtx->userId).GetKeyID()).ToString()));
+		result.push_back(Pair("addr", boost::get<CPubKey>(prtx->userId).GetKeyID().ToAddress()));
 		CID id(prtx->userId);
 		CID minerId(prtx->minerId);
 		result.push_back(Pair("pubkey", HexStr(id.GetID())));
@@ -350,11 +358,11 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		vector<CUserID > vaccountid;
 
 		for (auto& item : addr) {
-			CSoyPayAddress tmpaddr(item.get_str());
 			CKeyID keyid;
-			if (!tmpaddr.GetKeyID(keyid)) {
+			if (!GetKeyId(item.get_str(),keyid)) {
 				throw runtime_error("in createcontracttx :address err\n");
 			}
+
 			vaccountid.push_back(CUserID(GetUserId(keyid)));
 		}
 
@@ -659,7 +667,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type));
 	CVmScript vmScript;
 	//get addresss
-	CSoyPayAddress addr(params[0].get_str());
+//	CSoyPayAddress addr(params[0].get_str());
 	vector<unsigned char> vscript;
 	int flag = params[1].get_int();
 	if (0 == flag) {
@@ -740,9 +748,10 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	}
 	//get keyid
 	CKeyID keyid;
-	if (!addr.GetKeyID(keyid)) {
+	if (!GetKeyId(params[0].get_str(),keyid)) {
 		throw runtime_error("in registerscripttx :send address err\n");
 	}
+
 
 	assert(pwalletMain != NULL);
 	CRegistScriptTx tx;
@@ -956,18 +965,14 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 	CKeyID keyid;
 	CUserID userId;
 	string addr = params[0].get_str();
-   	if(!CRegID::GetKeyID(addr,keyid))
-	{
-		CSoyPayAddress address(addr);
-		if (!address.IsValid() || !address.GetKeyID(keyid) ){
-		    			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
-		    	}
+if (!GetKeyId(addr,keyid) ){
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 	}
+
    	userId = keyid;
 	Object obj;
 	{
 		LOCK(cs_main);
-
 		CAccount account;
 		CAccountViewCache accView(*pAccountViewTip, true);
 		if (accView.GetAccount(userId, account)) {
@@ -1194,6 +1199,50 @@ Value gettxoperationlog(const Array& params, bool fHelp)
 	return retobj;
 
 }
+static Value TestDisconnectBlock(int number)
+{
+		CAccountViewCache view(*pAccountViewTip, true);
+		CBlockIndex* pindex = chainActive.Tip();
+		CBlock block;
+		CValidationState state;
+		while (number--) {
+			// check level 0: read from disk
+	//	      if (!DisconnectBlockFromTip(state))
+	//	    	  return false;
+			if (!ReadBlockFromDisk(block, pindex))
+				throw ERROR("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
+						pindex->GetBlockHash().ToString());
+			bool fClean = true;
+			CTransactionCache txCacheTemp(*pTxCacheTip);
+			CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
+			if (!DisconnectBlock(block, state, view, pindex, txCacheTemp, contractScriptTemp, &fClean))
+				throw ERROR("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
+						pindex->GetBlockHash().ToString());
+			CBlockIndex *pindexDelete = pindex;
+			pindex = pindex->pprev;
+			chainActive.SetTip(pindex);
+		    if (!txCacheTemp.DeleteBlockFromCache(block))
+		    	throw runtime_error(_("Disconnect tip block failed to delete tx from txcache"));
+
+		    //load a block tx into cache transaction
+			CBlockIndex *pReLoadBlockIndex = pindexDelete;
+			if(pindexDelete->nHeight - SysCfg().GetTxCacheHeight()>0) {
+				pReLoadBlockIndex = chainActive[pindexDelete->nHeight - SysCfg().GetTxCacheHeight()];
+				CBlock reLoadblock;
+				if (!ReadBlockFromDisk(reLoadblock, pindexDelete))
+					throw runtime_error(_("Failed to read block"));
+				if (!txCacheTemp.AddBlockToCache(reLoadblock))
+					throw  runtime_error(_("Disconnect tip block reload preblock tx to txcache"));
+			}
+
+			assert(view.Flush() &&txCacheTemp.Flush()&& contractScriptTemp.Flush() );
+		}
+//		pTxCacheTip->Flush();
+		Object obj;
+		obj.push_back(Pair("tip", strprintf("hash%s hight:%s",chainActive.Tip()->GetBlockHash().ToString(),chainActive.Tip()->nHeight)));
+		return obj;
+}
+
 
 Value disconnectblock(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
@@ -1204,46 +1253,27 @@ Value disconnectblock(const Array& params, bool fHelp) {
 				"\"disconnect result\"  (bool) \n"
 				"\nExamples:\n" + HelpExampleCli("disconnectblock", "\"1\""));
 	}
-	int64_t number = params[0].get_int64();
-	CAccountViewCache view(*pAccountViewTip, true);
-	CBlockIndex* pindex = chainActive.Tip();
-	CBlock block;
-	CValidationState state;
-	while (number--) {
-		// check level 0: read from disk
-//	      if (!DisconnectBlockFromTip(state))
-//	    	  return false;
-		if (!ReadBlockFromDisk(block, pindex))
-			throw ERROR("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
-					pindex->GetBlockHash().ToString());
-		bool fClean = true;
-		CTransactionCache txCacheTemp(*pTxCacheTip);
-		CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
-		if (!DisconnectBlock(block, state, view, pindex, txCacheTemp, contractScriptTemp, &fClean))
-			throw ERROR("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
-					pindex->GetBlockHash().ToString());
-		CBlockIndex *pindexDelete = pindex;
-		pindex = pindex->pprev;
-		chainActive.SetTip(pindex);
-	    if (!pTxCacheTip->DeleteBlockFromCache(block))
-	    	throw runtime_error(_("Disconnect tip block failed to delete tx from txcache"));
+	int number = params[0].get_int();
 
-	    //load a block tx into cache transaction
-		CBlockIndex *pReLoadBlockIndex = pindexDelete;
-		if(pindexDelete->nHeight - SysCfg().GetTxCacheHeight()>0) {
-			pReLoadBlockIndex = chainActive[pindexDelete->nHeight - SysCfg().GetTxCacheHeight()];
-			CBlock reLoadblock;
-			if (!ReadBlockFromDisk(reLoadblock, pindexDelete))
-				throw runtime_error(_("Failed to read block"));
-			if (!pTxCacheTip->AddBlockToCache(reLoadblock))
-				throw  runtime_error(_("Disconnect tip block reload preblock tx to txcache"));
-		}
+	Value te = TestDisconnectBlock(number);
 
-		assert(view.Flush() && contractScriptTemp.Flush());
-	}
-	Object obj;
-	obj.push_back(Pair("info", strprintf("disconnect block hash%s hight:%s",block.GetHash().ToString(),block.nHeight)));
-	return obj;
+	return te;
+}
+
+Value restclient(const Array& params, bool fHelp) {
+	Value te = TestDisconnectBlock(chainActive.Tip()->nHeight);
+	pwalletMain->CleanAll();
+    mapBlockIndex.clear();
+    chainActive.SetTip(NULL);
+    mapBlockIndex.clear();
+
+//    mapOrphanTransactions.clear();
+//    mapOrphanTransactionsByPrev.clear();
+//    mapOrphanBlocksByPrev.clear();
+	CBlock firs = SysCfg().GenesisBlock();
+	pwalletMain->SyncTransaction(0,NULL,&firs);
+	mempool.clear();
+	return te;
 
 }
 
@@ -1298,10 +1328,9 @@ Value getaddrbalance(const Array& params, bool fHelp) {
 	}
 
 	assert(pwalletMain != NULL);
-	CSoyPayAddress addr(params[0].get_str());
 
 	CKeyID keyid;
-	if (!addr.GetKeyID(keyid))
+	if (!GetKeyId(params[0].get_str(),keyid))
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 
 	double dbalance = 0.0;
@@ -1330,18 +1359,13 @@ Value generateblock(const Array& params, bool fHelp) {
 				+ HelpExampleRpc("generateblock", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9");
 		throw runtime_error(msg);
 	}
-
-	string addr = params[0].get_str();
-
 	//get keyid
 	CKeyID keyid;
-   	if(!CRegID::GetKeyID(addr,keyid))
-	{
-		CSoyPayAddress address(addr);
-		if (!address.IsValid() || !address.GetKeyID(keyid) ){
-		    			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "in generateblock :address err");
-		    	}
+
+	if (!GetKeyId(params[0].get_str(), keyid)) {
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "in generateblock :address err");
 	}
+
 	uint256 hash = CreateBlockWithAppointedAddr(keyid);
 	if (hash == 0) {
 		throw runtime_error("in generateblock :cannot generate block\n");

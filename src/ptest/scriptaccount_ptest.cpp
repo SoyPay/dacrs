@@ -16,6 +16,8 @@
 #include "json/json_spirit_writer.h"
 #include "json/json_spirit_value.h"
 #include "json/json_spirit_stream_reader.h"
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 using namespace std;
 using namespace boost;
 using namespace json_spirit;
@@ -28,18 +30,26 @@ extern void GenerateMiner();
 void CreateScriptTx1()
 {
 	int argc = 7;
+	char* path = "D:\\bitcoin\\data\\testscriptid.bin";
+	string message = path;
+	message += "not exitst";
+		BOOST_CHECK_MESSAGE(boost::filesystem::exists(path),message);
 	char *argv[7] =
 			{ "rpctest", "registerscripttx", "mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","0",
-					"D:\\cppwork\\vmsdk\\testscriptid\\Debug\\Exe\\testscriptid.bin",
+					path,
 					"1000000", "2" };
 	CommandLineRPC(argc, argv);
 }
 void CreateScriptTx2()
 {
 	int argc = 7;
+	char* path = "D:\\bitcoin\\data\\scripttest.bin";
+	string message = path;
+	message += "not exitst";
+		BOOST_CHECK_MESSAGE(boost::filesystem::exists(path),message);
 	char *argv[7] =
 			{ "rpctest", "registerscripttx", "mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","0",
-					"D:\\cppwork\\vmsdk\\sendsriptid\\Debug\\Exe\\scripttest.bin",
+					path,
 					"1000000", "2" };
 	CommandLineRPC(argc, argv);
 }

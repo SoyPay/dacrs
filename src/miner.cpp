@@ -967,7 +967,7 @@ void static SoypayMiner(CWallet *pwallet) {
 					SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
 					if (SysCfg().NetworkID() == CBaseParams::REGTEST)
-						throw boost::thread_interrupted();
+//						throw boost::thread_interrupted();
 					::MilliSleep(800);
 					break;
 				}
@@ -1050,7 +1050,7 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads) {
 	minerThreads = new boost::thread_group();
 	for (int i = 0; i < nThreads; i++)
 		minerThreads->create_thread(boost::bind(&SoypayMiner, pwallet));
-	minerThreads->join_all();
+//	minerThreads->join_all();
 }
 
 #endif

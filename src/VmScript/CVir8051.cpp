@@ -1163,6 +1163,17 @@ static RET_DEFINE ExGetCurTxAccountFunc(unsigned char * ipara,void * pVmScript)
 		(*tem.get()).push_back(item);
 		return std::make_tuple (true, tem);
 }
+static RET_DEFINE ExGetCurTxContactFunc(unsigned char * ipara,void * pVmScript)
+{
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	vector<unsigned char> contact =pVmScriptRun->GetTxContact();
+
+	vector<unsigned char> item;
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+
+	(*tem.get()).push_back(contact);
+	return std::make_tuple (true, tem);
+}
 enum CALL_API_FUN {
 	COMP_FUNC = 0,            //!< COMP_FUNC
 	MULL_MONEY ,              //!< MULL_MONEY
@@ -1202,6 +1213,7 @@ enum CALL_API_FUN {
 	GETSCRIPTDATA_FUNC,		  //!<GETSCRIPTDATA_FUNC
 	GETSCRIPTID_FUNC,		//!<GETSCRIPTID_FUNC
 	GETCURTXACCOUNT_FUNC,//!<GETCURTXACCOUNT_FUNC
+	GETCURTXCONTACT_FUNC,		 //!<GETCURTXCONTACT_FUNC
 };
 
 const static struct __MapExterFun FunMap[] = { //
@@ -1240,6 +1252,7 @@ const static struct __MapExterFun FunMap[] = { //
 		{GETSCRIPTDATA_FUNC,ExGetScriptDataFunc},
 		{GETSCRIPTID_FUNC,ExGetScriptIDFunc},
 		{GETCURTXACCOUNT_FUNC,ExGetCurTxAccountFunc	  },
+		{GETCURTXCONTACT_FUNC,ExGetCurTxContactFunc		},
 
 		};
 

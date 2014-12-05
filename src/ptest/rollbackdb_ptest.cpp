@@ -11,6 +11,8 @@
 #include "VmScript/TestMcu.h"
 #include "json/json_spirit_writer_template.h"
 #include "rpcclient.h"
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 using namespace std;
 using namespace boost;
 using namespace json_spirit;
@@ -23,9 +25,13 @@ extern void GenerateMiner();
 void CreateRegScriptdbTx()
 {
 	int argc = 7;
+	char* path = "D:\\bitcoin\\data\\testrollback.bin";
+	string message =path;
+	message +=" not exitst";
+		BOOST_CHECK_MESSAGE(boost::filesystem::exists(path),message);
 	char *argv[7] =
 			{ "rpctest", "registerscripttx", "5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG","0",
-					"D:\\cppwork\\vmsdk\\testrollbackDB\\Debug\\Exe\\testrollback.bin",
+					path,
 					"1000000", "2" };
 	CommandLineRPC(argc, argv);
 }

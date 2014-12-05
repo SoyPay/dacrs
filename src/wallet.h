@@ -171,11 +171,8 @@ public:
  * and provides the ability to create new transactions.
  */
 class CWallet : public CWalletInterface{
-
 private:
 	static bool StartUp();
-
-	CWalletDB *pwalletdbEncryption;
 
 	CMasterKey MasterKey;
 
@@ -185,7 +182,6 @@ private:
 	uint256 GetCheckSum()const;
 
 public:
-	bool fFileBacked;
 	string strWalletFile;
 
 	map<uint256, CAccountTx> mapInBlockTx;
@@ -245,6 +241,7 @@ public:
 	bool GetKeyIds(set<CKeyID> &setKeyID)const ;
 	bool AddPubKey(const CPubKey& pk);
 
+	bool CleanAll(); //just for unit test
 
     bool count(const CKeyID &address) const
     {
@@ -260,12 +257,10 @@ public:
 		SetNull();
 
 		strWalletFile = strWalletFileIn;
-		fFileBacked = true;
+
 	}
 	void SetNull() {
 		nWalletVersion = FEATURE_BASE;
-		fFileBacked = false;
-		pwalletdbEncryption = NULL;
 
 	}
 
