@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(boolargno) {
 BOOST_AUTO_TEST_CASE(chain_main) {
 	BOOST_CHECK(
 			SysParamsMain().HashGenesisBlock()
-					== uint256("0x4190333c5dda503009efa4ecb0623a41ee55faad124620f3564abf3a7d81d062"));
+					== uint256("a92ad16900276e098c2f19808e4cefd3c0300c14885c44930f790b08c6d3e62e"));
 	BOOST_CHECK(SysParamsMain().MessageStart()[0] == 0xf9);
 	BOOST_CHECK(SysParamsMain().MessageStart()[1] == 0xbe);
 	BOOST_CHECK(SysParamsMain().MessageStart()[2] == 0xb4);
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(chain_main) {
 BOOST_AUTO_TEST_CASE(chain_test) {
 	BOOST_CHECK(
 			SysParamsTest().HashGenesisBlock()
-					== uint256("0x35524e1abd3bf60afde8cffe41562f0d90d8eaf26eebca730496e843889cfc37"));
+					== uint256("a8115c640c16d92be16460bb2ab520a97ed93413bade6aeec18254ecd255cf19"));
 	BOOST_CHECK(SysParamsTest().MessageStart()[0] == 0x0b);
 	BOOST_CHECK(SysParamsTest().MessageStart()[1] == 0x11);
 	BOOST_CHECK(SysParamsTest().MessageStart()[2] == 0x09);
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(chain_test) {
 BOOST_AUTO_TEST_CASE(chain_regtest) {
 	BOOST_CHECK(
 			SysParamsReg().HashGenesisBlock()
-					== uint256("0x4b77ba2ca34aa9b63653e05a5dfb09cc11aec3c2d1c32ae9b99ce17533c17277"));
+					== uint256("e08b58fca28e638152efa68e171baf848aea2fb975e916c70cc0a8a6d09d6d5b"));
 	BOOST_CHECK(SysParamsReg().MessageStart()[0] == 0xfa);
 	BOOST_CHECK(SysParamsReg().MessageStart()[1] == 0xbf);
 	BOOST_CHECK(SysParamsReg().MessageStart()[2] == 0xb5);

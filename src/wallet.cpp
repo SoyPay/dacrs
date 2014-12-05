@@ -27,7 +27,7 @@ using namespace std;
 
 // Settings
 int64_t nTransactionFee = DEFAULT_TRANSACTION_FEE;
-bool bSpendZeroConfChange = true;
+
 string CWallet:: defaultFilename("");
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -100,9 +100,6 @@ bool CWallet::FushToDisk() const {
 bool CWallet::AddKey(const CKey& secret) {
 	AssertLockHeld(cs_wallet);
 
-
-	if (!fFileBacked)
-		return true;
 	CKeyStoreValue tem(secret);
 	if(mKeyPool.count(tem.GetCKeyID()) > 0)
 		{
@@ -539,8 +536,7 @@ std::tuple<bool, string> CWallet::CommitTransaction(CBaseTransaction *pTx) {
 }
 
 DBErrors CWallet::LoadWallet(bool fFirstRunRet) {
-	if (!fFileBacked)
-		return DB_LOAD_OK;
+
 
 	   filesystem::path blocksDir = GetDataDir() / strWalletFile;
 	if (!exists(blocksDir)) {
@@ -591,8 +587,7 @@ DBErrors CWallet::LoadWallet(bool fFirstRunRet) {
 }
 
 DBErrors CWallet::ZapWalletTx() {
-	if (!fFileBacked)
-		return DB_LOAD_OK;
+
 	DBErrors nZapWalletTxRet = CWalletDB(strWalletFile, "cr+").ZapWalletTx(this);
 	if (nZapWalletTxRet == DB_NEED_REWRITE) {
 		if (CDB::Rewrite(strWalletFile, "\x04pool")) {
@@ -875,4 +870,13 @@ bool CWallet::GetKeyIds(set<CKeyID>& setKeyID) const {
 		setKeyID.insert(tem.first);
 	}
 	return setKeyID.size() > 0;
+}
+
+bool CWallet::CleanAll() {
+	UnConfirmTx.clear();
+	mapInBlockTx.clear();
+	bestBlock.SetNull();
+	mKeyPool.clear();
+	MasterKey.SetNull();
+	return true;
 }

@@ -3,12 +3,28 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpcserver.h"
+#include <boost/foreach.hpp>
+#include <algorithm>
+#include <cassert>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 #include "chainparams.h"
+#include "core.h"
 #include "init.h"
-#include "net.h"
 #include "main.h"
 #include "miner.h"
+//#include "net.h"
+#include "rpcprotocol.h"
+#include "rpcserver.h"
+#include "serialize.h"
+#include "sync.h"
+#include "txmempool.h"
+#include "uint256.h"
+#include "util.h"
+#include "version.h"
+
 #ifdef ENABLE_WALLET
 #include "db.h"
 #include "wallet.h"
