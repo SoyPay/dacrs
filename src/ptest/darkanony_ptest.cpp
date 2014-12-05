@@ -127,9 +127,9 @@ string CreateDarkTx()
 			vInputParams.push_back(strReturn);
 			if (TestCallRPC("signcontracttx", vInputParams, strReturn) > 0) {
 				strReturn= Parsejson(strReturn);
-				cout <<strReturn << endl;
 			}
 		}
+	cout <<strReturn << endl;
 	return strReturn;
 }
 void CreateSecondDarkTx(string hash)
@@ -245,6 +245,10 @@ BOOST_AUTO_TEST_CASE(test_dark){
 	GenerateMiner();
 	cout<<"1"<<endl;
 	string temp = CreateDarkTx();
+	std::vector<std::string> vInputParams;
+	vInputParams.push_back("mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y");
+	string strReturn;
+	TestCallRPC("generateblock", vInputParams, strReturn);
 	GenerateMiner();
 	GetAccountInfo("010000000100");
 	GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
