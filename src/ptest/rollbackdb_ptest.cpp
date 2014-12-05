@@ -26,7 +26,9 @@ void CreateRegScriptdbTx()
 {
 	int argc = 7;
 	char* path = "D:\\bitcoin\\data\\testrollback.bin";
-		BOOST_CHECK_MESSAGE(boost::filesystem::exists(path),path + " not exitst");
+	string message =path;
+	message +=" not exitst";
+		BOOST_CHECK_MESSAGE(boost::filesystem::exists(path),message);
 	char *argv[7] =
 			{ "rpctest", "registerscripttx", "5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG","0",
 					path,
