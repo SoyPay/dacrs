@@ -26,20 +26,6 @@ extern Object CallRPC(const string& strMethod, const Array& params);
 extern int TestCallRPC(std::string strMethod, const std::vector<std::string> &vParams, std::string &strRet);
 extern void GetAccountInfo(char *address);
 extern void GenerateMiner();
-void StopSever()
-{
-	std::vector<std::string> vInputParams;
-	std::string strReturn("");
-	while(1)
-	{
-		TestCallRPC("stop", vInputParams, strReturn);
-		cout<<strReturn<<endl;
-		if(strcmp(strReturn.c_str(),"error: couldn't connect to server") == 0)
-		{
-			break;
-		}
-	}
-}
 void CreateScript(char * vmpath)
 {
 	int argc = 7;
@@ -304,7 +290,6 @@ string GetAccountInfo1(string address) {
 BOOST_AUTO_TEST_SUITE(test_app)
 
 BOOST_AUTO_TEST_CASE(test_dark){
-	StopSever();
 	string path = "D:\\bitcoin\\data\\darksecure.bin";
 	BOOST_CHECK_MESSAGE(boost::filesystem::exists(path),path + " not exitst");
 	CreateScript((char*)path.c_str());
@@ -326,7 +311,6 @@ BOOST_AUTO_TEST_CASE(test_dark){
 	GetAccountInfo("010000000100");
 	GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
 	GetAccountInfo("mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y");
-
 }
 
 BOOST_AUTO_TEST_CASE(test_anony){

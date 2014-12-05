@@ -260,6 +260,11 @@ const vector<CUserID>& CVmScriptRun::GetTxAccount()
 	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
 		return tx->vAccountRegId;
 }
+const vector<unsigned char>& CVmScriptRun::GetTxContact()
+{
+	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
+		return tx->vContract;
+}
 int CVmScriptRun::GetComfirHeight()
 {
 	return height;
