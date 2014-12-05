@@ -119,6 +119,15 @@ public:
 };
 
 
+static  bool GetKeyId(string const &addr,CKeyID &KeyId) {
+	if (!CRegID::GetKeyID(addr, KeyId)) {
+		KeyId=CKeyID(addr);
+		if (KeyId.IsEmpty())
+		return false;
+	}
+	return true;
+};
+
 Value verifymessage(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 3)
@@ -146,12 +155,8 @@ Value verifymessage(const Array& params, bool fHelp)
     string strSign     = params[1].get_str();
     string strMessage  = params[2].get_str();
 
-    CSoyPayAddress addr(strAddress);
-    if (!addr.IsValid())
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
-
     CKeyID keyID;
-    if (!addr.GetKeyID(keyID))
+    if (!GetKeyId(strAddress,keyID))
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
 
     bool fInvalid = false;

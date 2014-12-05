@@ -59,6 +59,15 @@ public:
         nDerivationMethod = 0;
         vchOtherDerivationParameters = vector<unsigned char>(0);
     }
+    bool SetNull()
+    {
+    	vchCryptedKey.clear();
+    	vchSalt.clear();
+    	vchOtherDerivationParameters.clear();
+        nDeriveIterations = 25000;
+        nDerivationMethod = 0;
+        return true;
+    }
 };
 
 typedef vector<unsigned char, secure_allocator<unsigned char> > CKeyingMaterial;

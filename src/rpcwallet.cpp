@@ -175,13 +175,11 @@ Value sendtoaddress(const Array& params, bool fHelp)
 	int64_t nAmount = 0;
 	//// from address to addreww
 	if (size == 3) {
-		string addr1 = params[0].get_str();
-		string addr2 = params[1].get_str();
 
-		if (!GetKeyId(addr1, sendKeyId)) {
+		if (!GetKeyId(params[0].get_str(), sendKeyId)) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid  address");
 		}
-		if (!GetKeyId(addr2, RevKeyId)) {
+		if (!GetKeyId(params[1].get_str(), RevKeyId)) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "to Invalid  address");
 		}
 
@@ -201,7 +199,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No Key In wallet \n");
 		}
 		for (auto &te : sKeyid) {
-			if (pAccountViewTip->GetRawBalance(sendKeyId, chainActive.Tip()->nHeight) >= nAmount + nTransactionFee) {
+			if (pAccountViewTip->GetRawBalance(te, chainActive.Tip()->nHeight) >= nAmount + nTransactionFee) {
 				sendKeyId = te;
 				break;
 			}
