@@ -14,6 +14,16 @@
 #include "VmScript/TestMcu.h"
 #include "json/json_spirit_writer_template.h"
 #include "rpcclient.h"
+#include "json/json_spirit_reader_template.h"
+#include "json/json_spirit_reader.h"
+#include "json/json_spirit_writer.h"
+#include "json/json_spirit_value.h"
+#include "json/json_spirit_stream_reader.h"
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+using namespace std;
+using namespace boost;
+using namespace json_spirit;
 using namespace std;
 using namespace boost;
 using namespace json_spirit;
@@ -86,9 +96,13 @@ void ListRegScript1() {
 void CreateRegScriptTx2() {
 	cout <<"CreateRegScriptTx1" << endl;
 	int argc = 7;
+	char* path = "D:\\bitcoin\\data\\sdk.bin";
+	string message = path;
+	message += "not exitst";
+	BOOST_CHECK_MESSAGE(boost::filesystem::exists(path),message);
 	char *argv[7] =
 			{ "rpctest", "registerscripttx", "5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG","0",
-					"D:\\VmSdk\\sdk\\Debug\\Exe\\sdk.bin",
+					path,
 					"1000000", "2" };
 	CommandLineRPC(argc, argv);
 }
