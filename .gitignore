@@ -92,4 +92,4 @@ qa/pull-tester/build-tests.sh
 /src/build-aux/depcomp
 /src/build-aux/install-sh
 /src/build-aux/missing
-/src/*.bat
+
