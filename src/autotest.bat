@@ -16,7 +16,7 @@ call :CloseServer
 
 
 
-
+pause
 exit /b 0
 
 
