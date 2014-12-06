@@ -128,7 +128,7 @@ public:
 private:
     bool WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry);
 public:
-    bool WriteAccountingEntry(const CAccountingEntry& acentry);
+		bool WriteAccountingEntry(const CAccountingEntry& acentry);
     int64_t GetAccountCreditDebit(const string& strAccount);
     void ListAccountCreditDebit(const string& strAccount, list<CAccountingEntry>& acentries);
 
