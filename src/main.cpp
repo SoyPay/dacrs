@@ -540,30 +540,30 @@ bool CheckSignScript(const CRegID &regId,const uint256& sighash,
 	return true;
 }
 
-bool CheckTransaction(CBaseTransaction *ptx, CValidationState &state, CAccountViewCache &view, int blockHeight)
+bool CheckTransaction(CBaseTransaction *ptx, CValidationState &state, CAccountViewCache &view)
 {
 	if( REWARD_TX == ptx->nTxType)
 		return true;
 
-	if (0 == blockHeight) {
-		if (!ptx->IsValidHeight(chainActive.Tip()->nHeight, SysCfg().GetTxCacheHeight())) {
-			return state.DoS(100, ERROR("CheckTransaction() : txhash=%s beyond the scope of valid height ", ptx->GetHash().GetHex()), REJECT_INVALID,
-					"bad-txns-oversize");
-		}
-	}
-	else {
-		if (!ptx->IsValidHeight(blockHeight, SysCfg().GetTxCacheHeight())) {
-					return state.DoS(100, ERROR("CheckTransaction() : txhash=%s beyond the scope of valid height ", ptx->GetHash().GetHex()), REJECT_INVALID,
-							"bad-txns-oversize");
-		}
-	}
+//	if (0 == blockHeight) {
+//		if (!ptx->IsValidHeight(chainActive.Tip()->nHeight, SysCfg().GetTxCacheHeight())) {
+//			return state.DoS(100, ERROR("CheckTransaction() : txhash=%s beyond the scope of valid height ", ptx->GetHash().GetHex()), REJECT_INVALID,
+//					"bad-txns-oversize");
+//		}
+//	}
+//	else {
+//		if (!ptx->IsValidHeight(blockHeight, SysCfg().GetTxCacheHeight())) {
+//					return state.DoS(100, ERROR("CheckTransaction() : txhash=%s beyond the scope of valid height ", ptx->GetHash().GetHex()), REJECT_INVALID,
+//							"bad-txns-oversize");
+//		}
+//	}
 
 	// Size limits
 	if (::GetSerializeSize(ptx->GetNewInstance(), SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
 		return state.DoS(100, ERROR("CheckTransaction() : size limits failed"), REJECT_INVALID, "bad-txns-oversize");
 
-	if(pTxCacheTip->IsContainTx(ptx->GetHash()))
-		return state.DoS(100, ERROR("CheckTransaction() : tx hash %s has been confirmed", ptx->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
+//	if(pTxCacheTip->IsContainTx(ptx->GetHash()))
+//		return state.DoS(100, ERROR("CheckTransaction() : tx hash %s has been confirmed", ptx->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
 
 	if(!ptx->CheckTransction(state, view))
 		return false;
@@ -611,6 +611,21 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
     AssertLockHeld(cs_main);
     if(pfMissingRefer)
 		*pfMissingRefer = false;
+
+    // is it already in the memory pool?
+    uint256 hash = pBaseTx->GetHash();
+    if (pool.exists(hash))
+        return false;
+    // is it already confirmed in block
+    if(pTxCacheTip->IsContainTx(hash))
+    	return state.DoS(100, ERROR("CheckTransaction() : tx hash %s has been confirmed", hash.GetHex()), REJECT_INVALID, "bad-txns-oversize");
+
+	// is it in valid height
+	if (!pBaseTx->IsValidHeight(chainActive.Tip()->nHeight, SysCfg().GetTxCacheHeight())) {
+		return state.DoS(100, ERROR("CheckTransaction() : txhash=%s beyond the scope of valid height ", hash.GetHex()),
+				REJECT_INVALID, "bad-txns-oversize");
+	}
+
     CAccountViewCache view(*pAccountViewTip, true);
     if (!CheckTransaction(pBaseTx, state, view))
         return ERROR("AcceptToMemoryPool: : CheckTransaction failed");
@@ -621,12 +636,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
         return state.DoS(0,
                          ERROR("AcceptToMemoryPool : nonstandard transaction: %s", reason),
                          REJECT_NONSTANDARD, reason);
-
-    // is it already in the memory pool?
-    uint256 hash = pBaseTx->GetHash();
-    if (pool.exists(hash))
-        return false;
-
     {
         double dPriority = pBaseTx->GetPriority();
         int64_t nFees = pBaseTx->GetFee();
@@ -1167,14 +1176,8 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
     if (blockUndo.vtxundo.size() != block.vptx.size())
         return ERROR("DisconnectBlock() : block and undo data inconsistent");
 
-    LogPrint("INFO","%s", blockUndo.ToString());
-    CKeyID keyId = uint160("21d4830eaa965e3f289c81870fe79e0280aa2f9f");
-    CUserID userId = keyId;
-    CAccount account;
-    if(view.GetAccount(userId, account))
-    {
-    	LogPrint("INFO", "Get account before undo: %s, height:%d", account.ToString(), pindex->nHeight);
-    }
+//  LogPrint("INFO","%s", blockUndo.ToString());
+
     //undo reward tx
     std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[0];
 	CTxUndo txundo = blockUndo.vtxundo.back();
@@ -1188,13 +1191,24 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
         if(!pBaseTx->UndoUpdateAccount(i, view, state, txundo, pindex->nHeight, txCache, scriptCache))
         	return false;
     }
-    if(view.GetAccount(userId, account))
-    {
-    	LogPrint("INFO", "Get account after undo: %s, height:%d", account.ToString(), pindex->nHeight);
-    }
 
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
+
+
+	if (!txCache.DeleteBlockFromCache(block))
+		return state.Abort(_("Disconnect tip block failed to delete tx from txcache"));
+
+	//load a block tx into cache transaction
+	CBlockIndex *pReLoadBlockIndex = pindex;
+	if(pindex->nHeight - SysCfg().GetTxCacheHeight()>0) {
+		pReLoadBlockIndex = chainActive[pindex->nHeight - SysCfg().GetTxCacheHeight()];
+		CBlock reLoadblock;
+		if (!ReadBlockFromDisk(reLoadblock, pReLoadBlockIndex))
+			return state.Abort(_("Failed to read block"));
+		if (!txCache.AddBlockToCache(reLoadblock))
+				return state.Abort(_("Disconnect tip block reload preblock tx to txcache"));
+	}
 
     if (pfClean) {
         *pfClean = fClean;
@@ -1233,7 +1247,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 
 
 
-bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &view, CBlockIndex* pindex, CTransactionCache &txCache, CScriptDBViewCache &scriptCache, bool fJustCheck)
+bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &view, CBlockIndex* pindex, CTransactionCache &txCache, CScriptDBViewCache &scriptDBCache, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
     // Check it again in case a previous version let a bad block in
@@ -1264,7 +1278,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 	}
 
 	uint64_t nInterest = 0;
-	if(!VerifyPosTx(pindex->pprev, view, &block, nInterest, txCache, scriptCache, false)) {
+	if(!VerifyPosTx(pindex->pprev, view, &block, nInterest, txCache, scriptDBCache, false)) {
 		return state.DoS(100,
 							ERROR("ConnectBlock() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
 							REJECT_INVALID, "bad-pos-tx");
@@ -1295,7 +1309,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 						REJECT_INVALID, "bad-cb-amount");
 			}
 			CTxUndo txundo;
-			if(!pBaseTx->UpdateAccount(i, view, state, txundo, pindex->nHeight, txCache, scriptCache)) {
+			if(!pBaseTx->UpdateAccount(i, view, state, txundo, pindex->nHeight, txCache, scriptDBCache)) {
 				return false;
 			}
 
@@ -1306,7 +1320,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 	}
     //deal with reward_tx
     CTxUndo txundo;
-    if(!block.vptx[0]->UpdateAccount(0, view, state, txundo, pindex->nHeight, txCache, scriptCache))
+    if(!block.vptx[0]->UpdateAccount(0, view, state, txundo, pindex->nHeight, txCache, scriptDBCache))
     	return false;
 	blockundo.vtxundo.push_back(txundo);
 
@@ -1347,6 +1361,17 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
     bool ret;
     ret = view.SetBestBlock(pindex->GetBlockHash());
     assert(ret);
+
+	if (!txCache.AddBlockToCache(block))
+			return state.Abort(_("Connect tip block failed add block tx to txcache"));
+	if(pindex->nHeight-SysCfg().GetTxCacheHeight() > 0) {
+		CBlockIndex *pDeleteBlockIndex = chainActive[pindex->nHeight - SysCfg().GetTxCacheHeight()];
+		CBlock deleteBlock;
+		if (!ReadBlockFromDisk(deleteBlock, pDeleteBlockIndex))
+			return state.Abort(_("Failed to read block"));
+		if(!txCache.DeleteBlockFromCache(deleteBlock))
+			return state.Abort(_("Connect tip block failed delete block tx to txcache"));
+	}
 
     return true;
 }
@@ -1440,19 +1465,19 @@ bool static DisconnectTip(CValidationState &state) {
     if (!WriteChainState(state))
         return false;
 
-    if (!pTxCacheTip->DeleteBlockFromCache(block))
-    	return state.Abort(_("Disconnect tip block failed to delete tx from txcache"));
-
-    //load a block tx into cache transaction
-	CBlockIndex *pReLoadBlockIndex = pindexDelete;
-	if(pindexDelete->nHeight - SysCfg().GetTxCacheHeight()>0) {
-		pReLoadBlockIndex = chainActive[pindexDelete->nHeight - SysCfg().GetTxCacheHeight()];
-		CBlock reLoadblock;
-		if (!ReadBlockFromDisk(reLoadblock, pindexDelete))
-			return state.Abort(_("Failed to read block"));
-		if (!pTxCacheTip->AddBlockToCache(reLoadblock))
-				return state.Abort(_("Disconnect tip block reload preblock tx to txcache"));
-	}
+//    if (!pTxCacheTip->DeleteBlockFromCache(block))
+//    	return state.Abort(_("Disconnect tip block failed to delete tx from txcache"));
+//
+//    //load a block tx into cache transaction
+//	CBlockIndex *pReLoadBlockIndex = pindexDelete;
+//	if(pindexDelete->nHeight - SysCfg().GetTxCacheHeight()>0) {
+//		pReLoadBlockIndex = chainActive[pindexDelete->nHeight - SysCfg().GetTxCacheHeight()];
+//		CBlock reLoadblock;
+//		if (!ReadBlockFromDisk(reLoadblock, pindexDelete))
+//			return state.Abort(_("Failed to read block"));
+//		if (!pTxCacheTip->AddBlockToCache(reLoadblock))
+//				return state.Abort(_("Disconnect tip block reload preblock tx to txcache"));
+//	}
 
 	// Resurrect mempool transactions from the disconnected block.
 	for (const auto &ptx : block.vptx) {
@@ -1504,16 +1529,16 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
 		list<std::shared_ptr<CBaseTransaction> > unused;
 		mempool.remove(ptx.get(), unused);
 	}
-    if (!pTxCacheTip->AddBlockToCache(block))
-    		return state.Abort(_("Connect tip block failed add block tx to txcache"));
-    if(pindexNew->nHeight-SysCfg().GetTxCacheHeight() > 0) {
-    	CBlockIndex *pDeleteBlockIndex = chainActive[pindexNew->nHeight - SysCfg().GetTxCacheHeight()];
-		CBlock deleteBlock;
-		if (!ReadBlockFromDisk(deleteBlock, pDeleteBlockIndex))
-			return state.Abort(_("Failed to read block"));
-		if(!pTxCacheTip->DeleteBlockFromCache(deleteBlock))
-			return state.Abort(_("Connect tip block failed delete block tx to txcache"));
-    }
+//    if (!pTxCacheTip->AddBlockToCache(block))
+//    		return state.Abort(_("Connect tip block failed add block tx to txcache"));
+//    if(pindexNew->nHeight-SysCfg().GetTxCacheHeight() > 0) {
+//    	CBlockIndex *pDeleteBlockIndex = chainActive[pindexNew->nHeight - SysCfg().GetTxCacheHeight()];
+//		CBlock deleteBlock;
+//		if (!ReadBlockFromDisk(deleteBlock, pDeleteBlockIndex))
+//			return state.Abort(_("Failed to read block"));
+//		if(!pTxCacheTip->DeleteBlockFromCache(deleteBlock))
+//			return state.Abort(_("Connect tip block failed delete block tx to txcache"));
+//    }
     // Update chainActive & related variables.
     UpdateTip(pindexNew, block);
 
@@ -1798,28 +1823,53 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 				return state.Abort(_("Failed to read block"));
 			bool bfClean = true;
 			if (!DisconnectBlock(block, state, view, pBlockIndex, txCacheTemp, contractScriptTemp, &bfClean)) {
-				return ERROR("DisconnectTip() : DisconnectBlock %s failed", pBlockIndex->GetBlockHash().ToString());
+				return ERROR("CheckBlockProofWorkWithCoinDay() : DisconnectBlock %s failed", pBlockIndex->GetBlockHash().ToString());
 			}
 			pBlockIndex = pBlockIndex->pprev;
 		}
 
 		for (auto &item : vPreBlocks) {
 			if (!ConnectBlock(item, state, view, mapBlockIndex[item.GetHash()], txCacheTemp, contractScriptTemp, false))
-				return ERROR("ConnectTip() : ConnectBlock %s failed", item.GetHash().ToString());
+				return ERROR("CheckBlockProofWorkWithCoinDay() : ConnectBlock %s failed", item.GetHash().ToString());
 		}
 
+		//校验pos交易
 		uint64_t nInterest = 0;
 		if (!VerifyPosTx(mapBlockIndex[block.hashPrevBlock], view, &block, nInterest, txCacheTemp, contractScriptTemp, false)) {
 			return state.DoS(100,
 					ERROR("ConnectBlock() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
 					REJECT_INVALID, "bad-pos-tx");
 		}
+
+		for(auto & item : block.vptx) {
+			//校验交易是否在有效高度
+			if (!item->IsValidHeight(mapBlockIndex[view.GetBestBlock()]->nHeight, SysCfg().GetTxCacheHeight())) {
+				return state.DoS(100,
+						ERROR("CheckBlockProofWorkWithCoinDay() : txhash=%s beyond the scope of valid height ",
+								item->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
+			}
+			//校验是否有重复确认交易
+			if(txCacheTemp.IsContainTx(item->GetHash()))
+				return state.DoS(100, ERROR("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed", item->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
+		}
 	} else {
 		uint64_t nInterest = 0;
 		if (!VerifyPosTx(pPreBlockIndex, view, &block, nInterest, txCacheTemp, contractScriptTemp, false)) {
 			return state.DoS(100,
-					ERROR("ConnectBlock() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
+					ERROR("CheckBlockProofWorkWithCoinDay() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
 					REJECT_INVALID, "bad-pos-tx");
+		}
+
+		for(auto & item : block.vptx) {
+			//校验交易是否在有效高度
+			if (!item->IsValidHeight(mapBlockIndex[view.GetBestBlock()]->nHeight, SysCfg().GetTxCacheHeight())) {
+				return state.DoS(100,
+						ERROR("CheckBlockProofWorkWithCoinDay() : txhash=%s beyond the scope of valid height ",
+								item->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
+			}
+			//校验是否有重复确认交易
+			if(txCacheTemp.IsContainTx(item->GetHash()))
+				return state.DoS(100, ERROR("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed", item->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
 		}
 		return true;
 	}
@@ -1861,7 +1911,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // Check transactions
     CAccountViewCache view(*pAccountViewTip, true);
 	for (const auto &ptx : block.vptx)
-		if (!CheckTransaction(ptx.get(), state, view, block.nHeight))
+		if (!CheckTransaction(ptx.get(), state, view))
 			return ERROR("CheckBlock() : CheckTransaction failed");
 
     // Build the merkle tree already. We need it anyway later, and it makes the
