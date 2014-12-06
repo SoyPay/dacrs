@@ -963,7 +963,7 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 		CAccount account;
 		CAccountViewCache accView(*pAccountViewTip, true);
 		if (accView.GetAccount(userId, account)) {
-			return account.ToString();
+			return account.ToJosnObj();
 		}
 	}
 	return obj;
