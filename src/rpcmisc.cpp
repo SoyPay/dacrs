@@ -10,10 +10,10 @@
 #include "netbase.h"
 #include "rpcserver.h"
 #include "util.h"
-#ifdef ENABLE_WALLET
+
 #include "wallet.h"
 #include "walletdb.h"
-#endif
+
 
 #include <stdint.h>
 

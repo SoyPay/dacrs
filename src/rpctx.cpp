@@ -31,8 +31,6 @@ using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
 
-static boost::thread_group sThreadGroup;
-
 string RegIDToAddress(CUserID &userId) {
 	CAccountViewCache view(*pAccountViewTip, true);
 	CAccount acct;
@@ -1138,7 +1136,7 @@ static Value COperFundToJson(const COperFund &opfound)
       obj2.push_back(Pair("FundType",  strname[te.nFundType]));
       obj2.push_back(Pair("sriptID",  HexStr(te.scriptID)));
       obj2.push_back(Pair("value",  te.value));
-      obj2.push_back(Pair("value",  te.nHeight));
+      obj2.push_back(Pair("nHeight",  te.nHeight));
       array.push_back(obj2);
 	}
 	obj.push_back(Pair("vFund", array));
@@ -1264,9 +1262,6 @@ Value restclient(const Array& params, bool fHelp) {
     chainActive.SetTip(NULL);
     mapBlockIndex.clear();
 
-//    mapOrphanTransactions.clear();
-//    mapOrphanTransactionsByPrev.clear();
-//    mapOrphanBlocksByPrev.clear();
 	CBlock firs = SysCfg().GenesisBlock();
 	pwalletMain->SyncTransaction(0,NULL,&firs);
 	mempool.clear();
@@ -1297,12 +1292,14 @@ Value listregscript(const Array& params, bool fHelp) {
 		if(!pScriptDBTip->GetScript(0, regId, vScript))
 			throw JSONRPCError(RPC_DATABASE_ERROR, "get script error: cannot get registered script.");
 		script.push_back(Pair("scriptId", HexStr(regId.GetVec6())));
+		script.push_back(Pair("scriptId2", regId.ToString()));
 		if(showDetail)
 		script.push_back(Pair("scriptContent", HexStr(vScript.begin(), vScript.end())));
 		arrayScript.push_back(script);
 		while(pScriptDBTip->GetScript(1, regId, vScript)) {
 			Object obj;
 			obj.push_back(Pair("scriptId", HexStr(regId.GetVec6())));
+			obj.push_back(Pair("scriptId2", regId.ToString()));
 			if(showDetail)
 			obj.push_back(Pair("scriptContent", string(vScript.begin(), vScript.end())));
 			arrayScript.push_back(obj);
@@ -1385,21 +1382,17 @@ Value getpublickey(const Array& params, bool fHelp) {
 
 	string address = params[0].get_str();
 	CKeyID keyid;
-	if (!CRegID::GetKeyID(address, keyid)) {
-		CSoyPayAddress address(address);
-		if (!address.GetKeyID(keyid))
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid SoyPay address");
+	if (GetKeyId(address, keyid)) {
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid SoyPay address");
 	}
-
-
 	CPubKey pubkey;
 	{
-//		LOCK2(cs_main, pwalletMain->cs_wallet);
+
 		if (!pwalletMain->GetPubKey(keyid, pubkey))
 			throw JSONRPCError(RPC_MISC_ERROR,
 					tinyformat::format("Wallet do not contain address %s", params[0].get_str()));
 	}
-//	return pubkey.ToString();
+
 	Object obj;
 	obj.push_back(Pair("pubkey",pubkey.ToString()));
 	return obj;
@@ -1468,14 +1461,13 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 
-	//RPCTypeCheck(params, list_of(str_type)(int_type)(int_type));
-	vector<unsigned char> vscriptid = ParseHex(params[0].get_str());
-
-
-	if (vscriptid.size() != SCRIPT_ID_SIZE) {
+//	//RPCTypeCheck(params, list_of(str_type)(int_type)(int_type));
+//	vector<unsigned char> vscriptid = ParseHex(params[0].get_str());
+	CRegID regid(params[0].get_str());
+	if (regid.IsEmpty() == true) {
 		throw runtime_error("in getscriptdata :vscriptid size is error!\n");
 	}
-	CRegID regid(vscriptid);
+
 	if (!pScriptDBTip->HaveScript(regid)) {
 		throw runtime_error("in getscriptdata :vscriptid id is exist!\n");
 	}

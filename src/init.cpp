@@ -119,19 +119,19 @@ void Shutdown()
     StopRPCThreads();
     ShutdownRPCMining();
 
-#ifdef ENABLE_WALLET
+
     if (pwalletMain)
         bitdb.Flush(false);
     GenerateBitcoins(false, NULL, 0);
-#endif
+
     StopNode();
     UnregisterNodeSignals(GetNodeSignals());
     {
         LOCK(cs_main);
-#ifdef ENABLE_WALLET
+
         if (pwalletMain)
             pwalletMain->SetBestChain(chainActive.GetLocator());
-#endif
+
         if (pblocktree)
             pblocktree->Flush();
 
@@ -153,16 +153,16 @@ void Shutdown()
 
 
     }
-#ifdef ENABLE_WALLET
+
     if (pwalletMain)
         bitdb.Flush(true);
-#endif
+
     boost::filesystem::remove(GetPidFile());
     UnregisterAllWallets();
-#ifdef ENABLE_WALLET
+
     if (pwalletMain)
         delete pwalletMain;
-#endif
+
     LogPrint("INFO","Shutdown : done\n");
     printf("Shutdown : done\n");
 }
