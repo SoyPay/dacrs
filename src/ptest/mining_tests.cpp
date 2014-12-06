@@ -300,7 +300,7 @@ BOOST_FIXTURE_TEST_CASE(test1, CSendItem)
 		param.push_back(recItem.GetAddress());    	    //目的地址
 		param.push_back(recItem.GetSendValue());	    //转账金额
 		CreateNormalTx(param);                          //创建普通交易
-		Sleep(1);
+		Sleep(1000);
 
 		//创建客户端1->客户端2的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(1);
@@ -327,7 +327,7 @@ BOOST_FIXTURE_TEST_CASE(test1, CSendItem)
 		param.push_back("100000000");					//手续费
 		param.push_back("0");                           //有效高度
 		CreateContractTx(param);                        //创建合约交易
-		Sleep(1);
+		Sleep(1000);
 	}
 }
 BOOST_AUTO_TEST_CASE(test2)
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(test2)
 		param.push_back(recItem.GetAddress());    	    //目的地址
 		param.push_back(recItem.GetSendValue());	    //转账金额
 		CreateNormalTx(param);                          //创建普通交易
-		Sleep(1);
+		Sleep(1000);
 
 		//创建客户端2->客户端3的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(2);
@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE(test2)
 		param.push_back("100000000");					//手续费
 		param.push_back("0");                           //有效高度
 		CreateContractTx(param);                        //创建合约交易
-		Sleep(1);
+		Sleep(1000);
 	}
 
 }
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(test3)
 		param.push_back(recItem.GetAddress());    	    //目的地址
 		param.push_back(recItem.GetSendValue());	    //转账金额
 		CreateNormalTx(param);                          //创建普通交易
-		Sleep(1);
+		Sleep(1000);
 
 		//创建客户端3->客户端4的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(3);
@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE(test3)
 		param.push_back("100000000");					//手续费
 		param.push_back("0");                           //有效高度
 		CreateContractTx(param);                        //创建合约交易
-		Sleep(1);
+		Sleep(1000);
 	}
 }
 
@@ -437,7 +437,7 @@ BOOST_AUTO_TEST_CASE(test4)
 		param.push_back(recItem.GetAddress());    	    //目的地址
 		param.push_back(recItem.GetSendValue());	    //转账金额
 		CreateNormalTx(param);                          //创建普通交易
-		Sleep(1);
+		Sleep(1000);
 
 		//创建客户端4->客户端5的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(4);
@@ -462,7 +462,7 @@ BOOST_AUTO_TEST_CASE(test4)
 		param.push_back("100000000");					//手续费
 		param.push_back("0");                           //有效高度
 		CreateContractTx(param);                        //创建合约交易
-		Sleep(1);
+		Sleep(1000);
 	}
 }
 BOOST_AUTO_TEST_CASE(test5)
@@ -483,7 +483,7 @@ BOOST_AUTO_TEST_CASE(test5)
 		param.push_back(recItem.GetAddress());    	    //目的地址
 		param.push_back(recItem.GetSendValue());	    //转账金额
 		CreateNormalTx(param);                          //创建普通交易
-		Sleep(1);
+		Sleep(1000);
 
 		//创建客户端5->客户端1的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(5);
@@ -508,7 +508,7 @@ BOOST_AUTO_TEST_CASE(test5)
 		param.push_back("100000000");					//手续费
 		param.push_back("0");                           //有效高度
 		CreateContractTx(param);                        //创建合约交易
-		Sleep(1);
+		Sleep(1000);
 	}
 
 }

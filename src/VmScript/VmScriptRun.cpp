@@ -236,11 +236,11 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 
 
 //		LogPrint("vm", "account id:%s\r\n", HexStr(accountid).c_str());
-		LogPrint("vm", "befer account:%s\r\n", vmAccount.get()->ToString().c_str());
-		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
+//		LogPrint("vm", "befer account:%s\r\n", vmAccount.get()->ToString().c_str());
+//		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
 		bool ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype,fund,height);
 
-		LogPrint("vm", "after account:%s\r\n", vmAccount.get()->ToString().c_str());
+//		LogPrint("vm", "after account:%s\r\n", vmAccount.get()->ToString().c_str());
 		if (!ret) {
 			return false;
 		}

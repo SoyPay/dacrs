@@ -558,6 +558,9 @@ bool DisconnectBlockFromTip(CValidationState &state);
 //get tx operate account log
 bool GetTxOperLog(const uint256 &txHash, vector<CAccountOperLog> &vAccountOperLog);
 
+//get setBlockIndexValid
+Value ListSetBlockIndexValid();
+
 class CBlockFileInfo
 {
 public:

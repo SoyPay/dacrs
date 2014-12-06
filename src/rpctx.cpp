@@ -1581,3 +1581,4 @@ Value saveblocktofile(const Array& params, bool fHelp) {
 	}
 	return "save succeed";
 }
+

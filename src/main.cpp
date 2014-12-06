@@ -27,6 +27,11 @@
 #include <memory>
 #include <algorithm>
 
+#include "json/json_spirit_utils.h"
+#include "json/json_spirit_value.h"
+#include "json/json_spirit_writer_template.h"
+using namespace json_spirit;
+
 using namespace std;
 using namespace boost;
 
@@ -1277,17 +1282,19 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 		return true;
 	}
 
-	uint64_t nInterest = 0;
-	if(!VerifyPosTx(pindex->pprev, view, &block, nInterest, txCache, scriptDBCache, false)) {
-		return state.DoS(100,
-							ERROR("ConnectBlock() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
-							REJECT_INVALID, "bad-pos-tx");
-	}
-	std::shared_ptr<CRewardTransaction> pRewardTx = dynamic_pointer_cast<CRewardTransaction>(block.vptx[0]);
-	if(pRewardTx->rewardValue !=  nInterest + block.GetFee())
-		return state.DoS(100, ERROR("ConnectBlock() : coinbase pays too much (actual=%d vs limit=%d)",
-									pRewardTx->rewardValue, nInterest + block.GetFee()),
-							   REJECT_INVALID, "bad-cb-amount");
+	//在前面CheckBlockProofWorkWithCoinDay中已校验过，不重复校验
+//	uint64_t nInterest = 0;
+//	if(!VerifyPosTx(pindex->pprev, view, &block, nInterest, txCache, scriptDBCache, false)) {
+//		return state.DoS(100,
+//							ERROR("ConnectBlock() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
+//							REJECT_INVALID, "bad-pos-tx");
+//	}
+//	std::shared_ptr<CRewardTransaction> pRewardTx = dynamic_pointer_cast<CRewardTransaction>(block.vptx[0]);
+//	if(pRewardTx->rewardValue !=  nInterest + block.GetFee())
+//		return state.DoS(100, ERROR("ConnectBlock() : coinbase pays too much (actual=%d vs limit=%d)",
+//									pRewardTx->rewardValue, nInterest + block.GetFee()),
+//							   REJECT_INVALID, "bad-cb-amount");
+
     bool fScriptChecks = pindex->nHeight >= Checkpoints::GetTotalBlocksEstimate();
     CBlockUndo blockundo;
 
@@ -1840,6 +1847,12 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 					ERROR("ConnectBlock() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
 					REJECT_INVALID, "bad-pos-tx");
 		}
+		//校验利息是否正常
+		std::shared_ptr<CRewardTransaction> pRewardTx = dynamic_pointer_cast<CRewardTransaction>(block.vptx[0]);
+			if(pRewardTx->rewardValue !=  nInterest + block.GetFee())
+				return state.DoS(100, ERROR("ConnectBlock() : coinbase pays too much (actual=%d vs limit=%d)",
+											pRewardTx->rewardValue, nInterest + block.GetFee()),
+									   REJECT_INVALID, "bad-cb-amount");
 
 		for(auto & item : block.vptx) {
 			//校验交易是否在有效高度
@@ -1859,6 +1872,12 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 					ERROR("CheckBlockProofWorkWithCoinDay() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
 					REJECT_INVALID, "bad-pos-tx");
 		}
+		//校验利息是否正常
+		std::shared_ptr<CRewardTransaction> pRewardTx = dynamic_pointer_cast<CRewardTransaction>(block.vptx[0]);
+			if(pRewardTx->rewardValue !=  nInterest + block.GetFee())
+				return state.DoS(100, ERROR("ConnectBlock() : coinbase pays too much (actual=%d vs limit=%d)",
+											pRewardTx->rewardValue, nInterest + block.GetFee()),
+									   REJECT_INVALID, "bad-cb-amount");
 
 		for(auto & item : block.vptx) {
 			//校验交易是否在有效高度
@@ -1941,7 +1960,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 	// Check for duplicate
 	uint256 hash = block.GetHash();
 	LogPrint("INFO", "AcceptBlcok hash:%s\n", hash.GetHex());
-	LogPrint("AcceptBlock", "AcceptBlcok hash:%s\n", hash.GetHex());
+	LogPrint("acceptblock", "AcceptBlcok hash:%s\n", hash.GetHex());
 	if (mapBlockIndex.count(hash))
 		return state.Invalid(ERROR("AcceptBlock() : block already in mapBlockIndex"), 0, "duplicate");
 
@@ -4067,4 +4086,14 @@ if (SysCfg().IsTxIndex()) {
 		}
 	}
 	return false;
+}
+
+Value ListSetBlockIndexValid() {
+	Object result;
+	std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexValid.rbegin();
+	for (; it != setBlockIndexValid.rend(); ++it) {
+		CBlockIndex *pIndex = *it;
+		result.push_back(Pair(tfm::format("%d",pIndex->nHeight).c_str(), pIndex->GetBlockHash().GetHex()));
+	}
+	return result;
 }

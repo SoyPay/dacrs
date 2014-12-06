@@ -852,16 +852,16 @@ bool AppInit2(boost::thread_group& threadGroup)
                     break;
                 }
 
+				if (!pTxCacheTip->LoadTransaction()) {
+					strLoadError = _("Error loading transaction cache database");
+				}
+
                 uiInterface.InitMessage(_("Verifying blocks..."));
                 if (!VerifyDB(SysCfg().GetArg("-checklevel", 3),
                 		SysCfg().GetArg("-checkblocks", 288))) {
                     strLoadError = _("Corrupted block database detected");
                     break;
                 }
-
-				if (!pTxCacheTip->LoadTransaction()) {
-					strLoadError = _("Error loading transaction cache database");
-				}
 
             } catch(std::exception &e) {
                 LogPrint("INFO","%s\n", e.what());

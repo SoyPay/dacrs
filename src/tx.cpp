@@ -1192,7 +1192,7 @@ bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 //	LogPrint("vm","befor undo %s\n",ToString().c_str());
 	vector<COperFund>::const_reverse_iterator iterOperFundLog = accountOperLog.vOperFund.rbegin();
 	for (; iterOperFundLog != accountOperLog.vOperFund.rend(); ++iterOperFundLog) {
-		LogPrint("INFO", "undo account:%s\n" ,iterOperFundLog->ToString());
+//		LogPrint("INFO", "undo account:%s\n" ,iterOperFundLog->ToString());
 		vector<CFund>::const_iterator iterFund = iterOperFundLog->vFund.begin();
 		for (; iterFund != iterOperFundLog->vFund.end(); ++iterFund) {
 		//	LogPrint("vm","fund_type is %d,oper_type is %d,fund info:%s",iterFund->nFundType,iterOperFundLog->operType,iterFund->ToString().c_str());
@@ -1282,7 +1282,7 @@ bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 		UndoAuthorityOverDay(accountOperLog.authorLog);
 	}
 
-	LogPrint("vm","after undo %s\n",ToString().c_str());
+//	LogPrint("vm","after undo %s\n",ToString().c_str());
 	return true;
 }
 
@@ -1838,7 +1838,7 @@ bool CTransactionCache::DeleteBlockFromCache(const CBlock &block) {
 		}
 		return true;
 	} else {
-		LogPrint("INFO", "the block hash:%s isn't in TxCache\n", block.GetHash().GetHex());
+		LogPrint("ERROR", "the block hash:%s isn't in TxCache\n", block.GetHash().GetHex());
 		return false;
 	}
 

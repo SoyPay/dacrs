@@ -311,6 +311,7 @@ static const CRPCCommand vRPCCommands[] =
     { "disconnectblock",        &disconnectblock,        true,      false,      true },
     { "restclient",             &restclient,             true,      false,      false },
     { "reloadtxcache",          &reloadtxcache,          true,      false,      true },
+    { "listsetblockindexvalid",  &listsetblockindexvalid, true,     false,      false},
 };
 
 CRPCTable::CRPCTable()
