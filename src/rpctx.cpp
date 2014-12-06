@@ -32,13 +32,12 @@ using namespace boost::assign;
 using namespace json_spirit;
 
 string RegIDToAddress(CUserID &userId) {
-	CAccountViewCache view(*pAccountViewTip, true);
-	CAccount acct;
-	if(!view.GetAccount(userId, acct)) {
-		CID id(userId);
-		return HexStr(id.GetID());
-	}
-	return CSoyPayAddress(acct.keyID).ToString();
+	CKeyID keid;
+	if(pAccountViewTip->GetKeyId(userId,keid))
+		{
+		 return keid.ToAddress();
+		}
+	return "can not get address";
 }
 
 static  bool GetKeyId(string const &addr,CKeyID &KeyId) {
@@ -196,12 +195,9 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 
 	//get keyid
 	CKeyID keyid;
-   	if(!CRegID::GetKeyID(addr,keyid))
+   	if(!GetKeyId(addr,keyid))
 	{
-		CSoyPayAddress address(addr);
-		if (!address.IsValid() || !address.GetKeyID(keyid) ){
-		    			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "in registeraccounttx :address err");
-		    	}
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "in registeraccounttx :address err");
 	}
 
 	CRegisterAccountTx rtx;
@@ -562,12 +558,8 @@ Value createfreezetx(const Array& params, bool fHelp) {
 	}
 	//get keyid
 	CKeyID keyid;
-   	if(!CRegID::GetKeyID(addr,keyid))
-	{
-		CSoyPayAddress address(addr);
-		if (!address.IsValid() || !address.GetKeyID(keyid) ){
-		    			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
-		    	}
+	if (!GetKeyId(addr, keyid)) {
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 	}
 
 	CKey key;
@@ -960,8 +952,8 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 	CKeyID keyid;
 	CUserID userId;
 	string addr = params[0].get_str();
-if (!GetKeyId(addr,keyid) ){
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+	if (!GetKeyId(addr, keyid)) {
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 	}
 
    	userId = keyid;
@@ -1021,12 +1013,11 @@ Value sign(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 
-	CSoyPayAddress addr(params[0].get_str());
 	vector<unsigned char> vch(ParseHex(params[1].get_str()));
 
 	//get keyid
 	CKeyID keyid;
-	if (!addr.GetKeyID(keyid)) {
+	if (!GetKeyId(params[0].get_str(),keyid)) {
 		throw runtime_error("in sign :send address err\n");
 	}
 	vector<unsigned char> vsign;
@@ -1043,7 +1034,9 @@ Value sign(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "sign Error: Sign failed.");
 		}
 	}
-	return HexStr(vsign);
+	Object retObj;
+	retObj.push_back(Pair("signeddata",  HexStr(vsign)));
+	return retObj;
 }
 //
 //Value getaccountinfo(const Array& params, bool fHelp) {
@@ -1382,7 +1375,7 @@ Value getpublickey(const Array& params, bool fHelp) {
 
 	string address = params[0].get_str();
 	CKeyID keyid;
-	if (GetKeyId(address, keyid)) {
+	if (!GetKeyId(address, keyid)) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid SoyPay address");
 	}
 	CPubKey pubkey;
