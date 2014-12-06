@@ -233,31 +233,6 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
 
 
-
-struct tallyitem
-{
-    int64_t nAmount;
-    int nConf;
-    vector<uint256> txids;
-    tallyitem()
-    {
-        nAmount = 0;
-        nConf = numeric_limits<int>::max();
-    }
-};
-
-
-
-//static void MaybePushAddress(Object & entry, const CTxDestination &dest)
-//{
-//    CSoyPayAddress addr;
-//    if (addr.Set(dest))
-//        entry.push_back(Pair("address", addr.ToString()));
-//}
-
-
-
-
 Value backupwallet(const Array& params, bool fHelp)
 {
 	  //!@todo  todo work list

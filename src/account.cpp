@@ -238,7 +238,11 @@ bool CAccountViewCache::GetKeyId(const CUserID &userId, CKeyID &keyId) {
 	} else if (userId.type() == typeid(CPubKey)) {
 		keyId = boost::get<CPubKey>(userId).GetKeyID();
 		return true;
-	} else {
+	} else if (userId.type() == typeid(CKeyID)) {
+		keyId = boost::get<CKeyID>(userId);
+		return true;
+	} else
+	{
 		assert(0);
 	}
 	return false;

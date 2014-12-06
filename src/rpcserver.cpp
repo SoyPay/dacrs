@@ -11,9 +11,8 @@
 #include "main.h"
 #include "ui_interface.h"
 #include "util.h"
-#ifdef ENABLE_WALLET
 #include "wallet.h"
-#endif
+
 
 #include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
@@ -155,11 +154,9 @@ string CRPCTable::help(string strCommand) const
             continue;
         if (strCommand != "" && strMethod != strCommand)
             continue;
-#ifdef ENABLE_WALLET
+
         if (pcmd->reqWallet && !pwalletMain)
             continue;
-#endif
-
         try
         {
             Array params;
@@ -844,10 +841,9 @@ json_spirit::Value CRPCTable::execute(const string &strMethod, const json_spirit
     const CRPCCommand *pcmd = tableRPC[strMethod];
     if (!pcmd)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found");
-#ifdef ENABLE_WALLET
+
     if (pcmd->reqWallet && !pwalletMain)
         throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
-#endif
 
     // Observe safe mode
     string strWarning = GetWarnings("rpc");

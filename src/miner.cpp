@@ -9,12 +9,12 @@
 #include "main.h"
 #include "tx.h"
 #include "net.h"
-#ifdef ENABLE_WALLET
+
 #include "wallet.h"
-#endif
+
 //////////////////////////////////////////////////////////////////////////////
 //
-// BitcoinMiner
+// SoyPayMiner
 //
 
 int static FormatHashBlocks(void* pbuffer, unsigned int len) {
@@ -370,7 +370,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
 	memcpy(phash1, &tmp.hash1, 64);
 }
 
-#ifdef ENABLE_WALLET
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Internal miner
@@ -1053,5 +1053,5 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads) {
 //	minerThreads->join_all();
 }
 
-#endif
+
 
