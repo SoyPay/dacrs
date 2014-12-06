@@ -886,11 +886,11 @@ Value listaddr(const Array& params, bool fHelp) {
 }
 
 Value listtx(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 0) {
+	if (fHelp || params.size() > 1) {
 		string msg = "listaddrtx \"addr\" showtxdetail\n"
 				"\listaddrtx\n"
 				"\nArguments:\n"
-				"1.\"addr\": (string required)"
+				"1.\"addr\": (optional,default all addr in wallet)"
 				"2.showtxdetail: (optional,default false)"
 				"\nResult:\n"
 				"\"txhash\"\n"
@@ -898,15 +898,20 @@ Value listtx(const Array& params, bool fHelp) {
 				+ "\nAs json rpc call\n" + HelpExampleRpc("listtx", "");
 		throw runtime_error(msg);
 	}
+    CKeyID keyid;
+	if (params.size() == 1) {
 
+		if (!GetKeyId(params[0].get_str(), keyid)) {
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+		}
+	}
 
 	Object retObj;
 	assert(pwalletMain != NULL);
 	{
 		Object Inblockobj;
 		for (auto const &wtx : pwalletMain->mapInBlockTx) {
-			Inblockobj.push_back(Pair("blockhash",  wtx.first.ToString()));
-			Inblockobj.push_back(Pair("tx",  wtx.second.ToJosnObj()));
+			Inblockobj.push_back(Pair("tx",  wtx.second.ToJosnObj(keyid)));
 		}
 		retObj.push_back(Pair("Inblocktx" ,Inblockobj));
 
@@ -963,7 +968,7 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 		CAccount account;
 		CAccountViewCache accView(*pAccountViewTip, true);
 		if (accView.GetAccount(userId, account)) {
-			return account.ToString();
+			return account.ToJosnObj();
 		}
 	}
 	return obj;
