@@ -55,9 +55,74 @@ private:
 	CPubKey mPKey;
 	CKey  mCkey;
 	CKey  mMinerCkey; //only used for miner
+	/***************************************************/
+	CPubKey mMinerPKey;
+	bool fEncrypt;
+	std::vector<unsigned char> mEnCkey;
+	std::vector<unsigned char> mEnMinerCkey;
+	/***************************************************/
 	INT64 nCreationTime;
 public:
+	/***************************************************/
+	bool SetEncryptKey(const vector<unsigned char> &in)
+	{
+		mEnCkey = in;
+		return true;
+	}
 
+	bool SetEncryptMinerKey(const vector<unsigned char> &in)
+	{
+		mEnMinerCkey = in;
+		return true;
+	}
+
+	bool SetEncryptFlag(void)
+	{
+		fEncrypt = true;
+		return true;
+	}
+
+	bool ClrEncryptFlag(void)
+	{
+		fEncrypt = false;
+		return true;
+	}
+
+	bool ClrKeyAndMinerKey(void)
+	{
+		mCkey.Clear();
+		mMinerCkey.Clear();
+		return true;
+	}
+
+	bool GetEncryptKey(vector<unsigned char> &mOutKey, bool IsMiner = false) const
+	{
+		if(fEncrypt)
+		{
+			if(IsMiner == true)
+			{
+				if(!mEnCkey.empty())
+				{
+					mOutKey = mEnCkey;
+					return true;
+				}
+				return false;
+			}
+
+			if(!mEnMinerCkey.empty())
+			{
+				mOutKey = mEnMinerCkey;
+				return true;
+			}
+			return false;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	/***************************************************/
 	string ToString()
 	{
 		return strprintf("CRegID:%s CPubKey:%s CKey:%s mMinerCkey:%s CreationTime:%d \n",mregId.ToString(),mPKey.ToString(),mCkey.ToString(),mMinerCkey.ToString(),nCreationTime);
@@ -85,17 +150,27 @@ public:
 	bool GetPubKey(CPubKey &mOutKey,bool IsMiner = false) const
 	{
 		if(IsMiner == true){
-			if(mMinerCkey.IsValid()){
-				mOutKey = mMinerCkey.GetPubKey();
+			if(mMinerPKey.IsValid()){
+				mOutKey = mMinerPKey;
+				return true;
+			}
+			return false;
+		}
+		else
+		{
+			if(mPKey.IsValid())
+			{
+				mOutKey = mPKey;
 				return true;
 			}
 			return false;
 		}
 
-		assert(mCkey.IsValid());
-		mOutKey =mPKey;
-		assert(mCkey.GetPubKey() == mPKey);
-		return  true;
+//		assert(mCkey.IsValid());
+//		mOutKey =mPKey;
+//		assert(mCkey.GetPubKey() == mPKey);
+//		return  true;
+
 	}
 	bool SynchronizSys(CAccountViewCache &view)
 	{
@@ -170,7 +245,8 @@ public:
 /** A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
  * and provides the ability to create new transactions.
  */
-class CWallet : public CWalletInterface{
+class CWallet : public CWalletInterface
+{
 private:
 	static bool StartUp();
 
@@ -216,6 +292,15 @@ public:
 				}
 			}
 	)
+
+
+/*********************************Encrypt Begin*******************************************/
+	typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
+	MasterKeyMap mapMasterKeys;
+	unsigned int nMasterKeyMaxID;
+	CKeyingMaterial vMasterKey;
+/********************************* Encrypt End *******************************************/
+
 	bool FushToDisk()const;
 
 	int64_t GetRawBalance(int ncurhigh)const;
@@ -297,9 +382,14 @@ public:
 
 	void UpdatedTransaction(const uint256 &hashTx);
 
+/************************Encrypt Wallet Begin**********************************/
+	bool Unlock(const SecureString& strWalletPassphrase);
+	bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase, const SecureString& strNewWalletPassphrase);
+	bool EncryptWallet(const SecureString& strWalletPassphrase);
 
-
-
+	bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);
+	bool Unlock(const CKeyingMaterial& vMasterKeyIn);
+/************************ Encrypt Wallet End **********************************/
 
 
 	// get the current wallet format (the oldest client version guaranteed to understand this wallet)
