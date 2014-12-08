@@ -1,9 +1,11 @@
 #include "rpcserver.h"
 #include "rpcclient.h"
 #include "util.h"
+#include "core.h"
+#include "chainparams.h"
 #include <boost/test/unit_test.hpp>
 #include <boost/assign/list_of.hpp>
-
+#include "tx.h"
 using namespace std;
 using namespace boost;
 using namespace json_spirit;
@@ -17,64 +19,92 @@ map<string, string> mapDesAddress[] = {
         ("000000000700",	"mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7")
         ("000000000400",	"moZJZgsGFC4qvwRdjzS7Bj3fHrtpUfEVEE")
         ("000000000100",	"mjSwCwMsvtKczMfta1tvr78z2FTsZA1JKw")
-        ("000000000a00",	"msdDQ1SXNmknrLuTDivmJiavu5J9VyX9fV")
         ("000000000600",	"mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v")
         ("000000000200",	"mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc"),
 
         boost::assign::map_list_of
-        ("020000000d00",	"mm8f5877wY4u2WhhX2JtGWPTPKwLbGJi37")
-        ("020000001200",	"n31DG5wjP1GcKyVMupGBvjvweNkM75MPuR")
-        ("020000002700",	"mkeict2uyvmb4Gjx3qXh6vReoTw1A2gkLZ")
-        ("020000002800",	"mtnCTLWKqnTf6BVqaXQQAYuPDyV78d8sTz")
-        ("020000001c00",	"mqwRHqjQZcJBqJP46E256Z2VuqqRAkZkKH")
-        ("020000000f00",	"moDJqwMZW1pKGrQp4NYcaYS4j5tdvqBevv")
-        ("020000002c00",	"mvV1fW4NMv9MGoRwHw583TDi8gnqqjQovZ")
-        ("020000002a00",	"mzGkgfAkWtkQ4AP2Ut4yiAzCNx6EDzWjW8")
-        ("020000000a00",	"n3wo9Ts6AUmHdGM1PixpRnLRFrG5G8a5QA")
-        ("020000000b00",	"mxrmM6qNswgZHmp1u2HTu2soncQLkud7tF"),
+        ("010000003300",	"mm8f5877wY4u2WhhX2JtGWPTPKwLbGJi37")
+        ("010000002d00",	"n31DG5wjP1GcKyVMupGBvjvweNkM75MPuR")
+        ("010000002a00",	"mkeict2uyvmb4Gjx3qXh6vReoTw1A2gkLZ")
+        ("010000002600",	"mqwRHqjQZcJBqJP46E256Z2VuqqRAkZkKH")
+        ("010000004300",	"mvV1fW4NMv9MGoRwHw583TDi8gnqqjQovZ")
+        ("010000003500",	"mzGkgfAkWtkQ4AP2Ut4yiAzCNx6EDzWjW8")
+        ("010000002500",	"n3wo9Ts6AUmHdGM1PixpRnLRFrG5G8a5QA")
+        ("010000004600",	"mxrmM6qNswgZHmp1u2HTu2soncQLkud7tF")
+        ("010000004500",	"mmBBV47uFguukjceTXkPsB3izndht2YXx7"),
 
         boost::assign::map_list_of
-        ("020000002b00",	"n3eyjajBMwXiK56ohkzvA2Xu53W9E6jj8K")
-        ("020000002100",	"n3YqGMig2xqbMvdHJ9q4Jfk5exbXK2tvLo")
-        ("020000001400",	"muDs5TAdk6n8rSyLdq6HTzBkJT2XxPF1wP")
-        ("020000001000",	"mxZqVtfao3A6dbwymKtn6oE4GacXoJNsac")
-        ("020000000900",	"mspw67fn4KGwUrG9oo9mvLJQAPrTYwxQ6w")
-        ("020000002400",	"mrRS8A9D1FXWXMFAMpZxmdfchyD1E1cAu6")
-        ("020000001700",	"mvNmNnB98GDSeYqg2jH2gSU557XEivs3N5")
-        ("020000000100",	"mjEGztB67nfscqSg5ryUGtzyTGwwEASZeQ")
-        ("020000001b00",	"mmCvt8WZzF27VGBMWWVkED3vsDRdpnigGV")
-        ("020000001a00",	"mxx4MohV2ZfifQiZnmU4yVUVf2QUVM2grx"),
+        ("010000003200",	"n3eyjajBMwXiK56ohkzvA2Xu53W9E6jj8K")
+        ("010000002900",	"muDs5TAdk6n8rSyLdq6HTzBkJT2XxPF1wP")
+        ("010000003700",	"mxZqVtfao3A6dbwymKtn6oE4GacXoJNsac")
+        ("010000004000",	"mspw67fn4KGwUrG9oo9mvLJQAPrTYwxQ6w")
+        ("010000004700",	"mvNmNnB98GDSeYqg2jH2gSU557XEivs3N5")
+        ("010000003a00",	"mjEGztB67nfscqSg5ryUGtzyTGwwEASZeQ")
+        ("010000004100",	"mmCvt8WZzF27VGBMWWVkED3vsDRdpnigGV")
+        ("010000003100",	"miUVkZNCDaKLTveqT3uWcy8kkpkA94gNvS")
+        ("010000004200",	"mxx4MohV2ZfifQiZnmU4yVUVf2QUVM2grx"),
 
 		boost::assign::map_list_of
-        ("020000000e00",	"mjuZWVqVQ2cmFoB8pJRj7XWVCPkeoiWJAq")
-        ("020000002200",	"n2tTaaF8xoWWYvaxSDkfQP5GeEcCCsjq1t")
-        ("020000000c00",	"mrKYnvKuTtxntndbJwMpR5fCJt571GsF9b")
-        ("020000002500",	"mw1XUknDsVtb68BUJNj25rKAikYG8qELHJ")
-        ("020000000200",	"mgE3hASaGCRPxJdZruAsydr2ygQz2UBWZM")
-        ("020000002600",	"n1vNXyu2GNypJGdZYxzCBCeQFVt1Fd42Qn")
-        ("020000001500",	"n4Cti65cSeufvfxStKUozHNGX3fQSHsDe5")
-        ("020000000300",	"mnZUhyb83ZTQWc9TXXFfhjJEu65q4cFj4S")
-        ("020000000700",	"muGiULSeqi2FQ2ypzU7aP8Uu1SWC5kRBki")
-        ("020000001100",	"mrMFs4kk8sqZ7iE8DquqPLL8udyGNDUZ8T"),
+        ("010000003f00",	"mjuZWVqVQ2cmFoB8pJRj7XWVCPkeoiWJAq")
+        ("010000002b00",	"n2tTaaF8xoWWYvaxSDkfQP5GeEcCCsjq1t")
+        ("010000002700",	"mw1XUknDsVtb68BUJNj25rKAikYG8qELHJ")
+        ("010000002f00",	"mgE3hASaGCRPxJdZruAsydr2ygQz2UBWZM")
+        ("010000003400",	"n1vNXyu2GNypJGdZYxzCBCeQFVt1Fd42Qn")
+        ("010000003d00",	"n4Cti65cSeufvfxStKUozHNGX3fQSHsDe5")
+        ("010000003c00",	"mnZUhyb83ZTQWc9TXXFfhjJEu65q4cFj4S")
+        ("010000004800",	"muGiULSeqi2FQ2ypzU7aP8Uu1SWC5kRBki")
+        ("010000003900",	"mrMFs4kk8sqZ7iE8DquqPLL8udyGNDUZ8T"),
 
         boost::assign::map_list_of
-        ("020000001900",	"mogX7FTZ9Yuu6gYscKaEf2oxroeRuNDi76")
-        ("020000001d00",	"mgs1mDsaXuj16aJ5YMHqLx7xsQ88snsZmB")
-        ("020000000600",	"mzUKrawp7a7LNB7D7kKzKEpgAStsAAHz18")
-        ("020000001e00",	"mgTkNe74wwdSdR3QjGoU5PKvSzFQsHxNTG")
-        ("020000001600",	"miNou7awKXUPN9wbzVP32zTXcWvPsZBpYg")
-        ("020000002300",	"mnnd1QQx2dM5yfp1j8Vp7Dcq7BhiS6bNEQ")
-        ("020000000500",	"mfiaCx5k4XpYBS4iHviWgBiQg4Riv2zT4R")
-        ("020000001f00",	"muS2Nxtva88d45uN6up7WeHszi3oWAcadK")
-        ("020000000400",	"mw8yB7Pp7GYiDHhLQT2GNsLc439rfJ3Fai")
-        ("020000001300",	"miRVDrwxtJJh4XnZFnYR6YbdqpAuirVDzZ")};
+        ("010000003800",	"mogX7FTZ9Yuu6gYscKaEf2oxroeRuNDi76")
+        ("010000002e00",	"mgs1mDsaXuj16aJ5YMHqLx7xsQ88snsZmB")
+        ("010000003b00",	"mzUKrawp7a7LNB7D7kKzKEpgAStsAAHz18")
+        ("010000002800",	"miNou7awKXUPN9wbzVP32zTXcWvPsZBpYg")
+        ("010000003e00",	"mnnd1QQx2dM5yfp1j8Vp7Dcq7BhiS6bNEQ")
+        ("010000004400",	"muS2Nxtva88d45uN6up7WeHszi3oWAcadK")
+        ("010000003600",	"mw8yB7Pp7GYiDHhLQT2GNsLc439rfJ3Fai")
+        ("010000002c00",	"miRVDrwxtJJh4XnZFnYR6YbdqpAuirVDzZ")
+        ("010000003000",	"mvqUh3LR4R7cDWfw4AW7mRUSxfZbvonQ8v")};
 
 
-string sendValues[2][10] = {
-		{"3B9ACA00","77359400","B2D05E00","EE6B2800","12A05F200","165A0BC00","1A13B8600","1DCD65000","218711A00","2540BE400"},
-		{"1000000000","2000000000","3000000000","4000000000","5000000000","6000000000","7000000000","8000000000","9000000000","10000000000"}
-	};
+int64_t sendValues[] = {1000000000, 2000000000, 3000000000, 4000000000, 5000000000, 6000000000, 7000000000, 8000000000, 9000000000, 10000000000};
 
+
+void SubmitBlock(vector<string> &param) {
+	if(1 != param.size())
+			return;
+	param.insert(param.begin(), "submitblock");
+	param.insert(param.begin(), "rpctest");
+
+	char *argv[param.size()];
+	int i=0;
+	for(auto & item : param) {
+		argv[i] = const_cast<char *>(param[i].c_str());
+		++i;
+	}
+	CommandLineRPC(param.size(), argv);
+}
+
+bool readblock(const string &filePath)
+{
+	CBlock block;
+    FILE* fp = fopen(filePath.c_str(), "rb");
+    if (!fp) return false;
+
+    fseek(fp, 8, SEEK_SET); // skip msgheader/size
+
+    CAutoFile filein = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
+    if (!filein) return false;
+    while(!feof(fp)) {
+    	filein >> block;
+		CDataStream ds(SER_DISK, CLIENT_VERSION);
+		ds << block;
+    	vector<string> param;
+    	param.push_back(HexStr(ds));
+    	SubmitBlock(param);
+    }
+    return true;
+}
 
 class CMiningTest {
 public:
@@ -91,29 +121,38 @@ class CSendItem{
 private:
 	string m_strRegId;
 	string m_strAddress;
-	string m_strSendValue;
+	int64_t m_llSendValue;
 public:
-	CSendItem(const string &strRegId, const string &strDesAddr, const string & strSendValue)
+	CSendItem(){
+	};
+	CSendItem(const string &strRegId, const string &strDesAddr, const int64_t &llSendValue)
 	{
 		m_strRegId = strRegId;
 		m_strAddress = strDesAddr;
-		m_strSendValue = strSendValue;
+		m_llSendValue = llSendValue;
 	}
 	void GetContranctData(vector<unsigned char> &vContranct ) {
+		//vector<unsigned char> temp = ParseHex(m_strRegId);
+		CRegID reg(m_strRegId);
+		vContranct.insert(vContranct.end(), reg.GetVec6().begin(), reg.GetVec6().end());
+		//temp.clear();
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
-		ds << ParseHex(m_strRegId) << ParseHex(m_strSendValue);
-		vContranct.insert(vContranct.end(), ds.begin(), ds.end());
+		ds << m_llSendValue;
+		vector<unsigned char> temp(ds.begin(), ds.end());
+		//string strSendValue = HexStr(temp);
+		vContranct.insert(vContranct.end(), temp.begin(), temp.end());
 	}
-	//nFlag 0:取数组sendValues1中值  1:取数组sendValues中值
 	//nIndex 取值范围1~5，表示1~5个客户端
-	static const CSendItem &GetRandomSendItem(int nFlag, int nIndex) {
-		int randAddr = std::rand()%10;
-		int randSendValue = std::rand()%10;
-		map<string, string>::iterator iterAddr = mapDesAddress[nIndex-1].begin();
+	static CSendItem GetRandomSendItem(int nIndex) {
+		int randAddr = std::rand() % 9;
+		int randSendValue = std::rand() % 10;
+		map<string, string>::iterator iterAddr = mapDesAddress[nIndex - 1].begin();
+		map<string, string>::iterator iterLast = mapDesAddress[nIndex - 1].end();
+		--iterLast;
 		do {
 			iterAddr++;
-		}while(randAddr-- && iterAddr != mapDesAddress[nIndex-1].end());
-		return CSendItem(iterAddr->first, iterAddr->second, sendValues[nFlag][randSendValue]);
+		} while (--randAddr > 0 && iterAddr != iterLast);
+		return CSendItem(iterAddr->first, iterAddr->second, sendValues[randSendValue]);
 	}
 	string GetRegID() {
 		return m_strRegId;
@@ -124,7 +163,11 @@ public:
 	}
 
 	string GetSendValue() {
-		return m_strSendValue;
+		char cSendValue[12] = {0};
+		sprintf(&cSendValue[0], "%lld", m_llSendValue);
+		string strSendValue(cSendValue);
+		cout << "GetSendValue:" << strSendValue << endl;
+		return strSendValue;
 	}
 
 
@@ -139,11 +182,10 @@ public:
  * param[4]:有效期高度
  */
 void CreateNormalTx(vector<string> &param) {
-	if(5 != param.size())
+	if(3 != param.size())
 		return;
-	param.insert(param.begin(), "createnormaltx");
+	param.insert(param.begin(), "sendtoaddress");
 	param.insert(param.begin(), "rpctest");
-//	char *argv[7] = { "rpctest", "createnormaltx", param.at(0), param.at(1), param.at(2), param.at(3), param.at(4)};
 	char *argv[param.size()];
 	int i=0;
 	for(auto & item : param) {
@@ -167,7 +209,6 @@ void CreateContractTx(vector<string> &param) {
 		return;
 	param.insert(param.begin(), "createcontracttx");
 	param.insert(param.begin(), "rpctest");
-	//char *argv[7] = {"rpctest", "createcontracttx", param.at(0), param.at(1), param.at(2), param.at(3), param.at(4)};
 	char *argv[param.size()];
 	int i=0;
 	for(auto & item : param) {
@@ -222,8 +263,8 @@ time_t string2time(const char * str,const char * formatStr)
   tm1.tm_sec=sec;
   return mktime(&tm1);
 }
-BOOST_AUTO_TEST_SUITE(auto_mining_test)
-BOOST_AUTO_TEST_CASE(reg_script) {
+BOOST_FIXTURE_TEST_SUITE(auto_mining_test, CSendItem)
+BOOST_AUTO_TEST_CASE(regscript) {
 	//注册脚本交易
 	vector<string> param;
 	param.push_back("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA");
@@ -242,33 +283,78 @@ BOOST_AUTO_TEST_CASE(reg_script) {
 	param.push_back("userdefine");
 	CreateRegScriptTx(param);
 }
-BOOST_AUTO_TEST_CASE(test1)
+BOOST_FIXTURE_TEST_CASE(test1, CSendItem)
 {
-
+	char *argv[] = {"progname", "-datadir=D:\\bitcoin\\1"};
+	int argc = sizeof(argv) / sizeof(char*);
+	CBaseParams::IntialParams(argc, argv);
 //	time_t t1 = string2time("2014-12-01 17:30:00","%d-%d-%d %d:%d:%d");
 	int64_t runTime = GetTime()+10*10*60;   //测试十分钟
 	vector<string> param;
 	while(GetTime()<runTime) {
 		//创建客户端1->客户端2的普通交易
-		CSendItem sendItem = CSendItem::GetRandomSendItem(1,1);
-		CSendItem recItem = CSendItem::GetRandomSendItem(1,2);
+		CSendItem sendItem = CSendItem::GetRandomSendItem(1);
+		CSendItem recItem = CSendItem::GetRandomSendItem(2);
 		param.clear();
 		param.push_back(sendItem.GetAddress());      	//源地址
 		param.push_back(recItem.GetAddress());    	    //目的地址
 		param.push_back(recItem.GetSendValue());	    //转账金额
-		param.push_back("100000000");					//手续费
-		param.push_back("0");                           //有效高度
-
 		CreateNormalTx(param);                          //创建普通交易
-		Sleep(1);
+		Sleep(1000);
 
 		//创建客户端1->客户端2的合约交易
-		CSendItem sendItem1 = CSendItem::GetRandomSendItem(1,1);
-		CSendItem recItem1 = CSendItem::GetRandomSendItem(1,1);
-		CSendItem recItem2 = CSendItem::GetRandomSendItem(1,1);
-		CSendItem recItem3 = CSendItem::GetRandomSendItem(1,1);
+		CSendItem sendItem1 = CSendItem::GetRandomSendItem(1);
+		CSendItem recItem1 = CSendItem::GetRandomSendItem(2);
+		CSendItem recItem2 = CSendItem::GetRandomSendItem(2);
+		CSendItem recItem3 = CSendItem::GetRandomSendItem(2);
 		param.clear();
-		param.push_back("000000000100");                     //脚本ID
+		param.push_back("020000000100");                     //脚本ID
+		param.push_back("[\""+sendItem1.GetAddress()+"\"]"); //交易发起地址
+		vector<unsigned char> vContranct;
+		vContranct.clear();
+		vector<unsigned char> vTemp;
+		vTemp.clear();
+		recItem1.GetContranctData(vTemp);
+		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
+		vTemp.clear();
+		recItem2.GetContranctData(vTemp);
+		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
+		vTemp.clear();
+		recItem3.GetContranctData(vTemp);
+		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
+		param.push_back(HexStr(vContranct));			//合约内容
+		cout << HexStr(vContranct) << endl;
+		param.push_back("100000000");					//手续费
+		param.push_back("0");                           //有效高度
+		CreateContractTx(param);                        //创建合约交易
+		Sleep(1000);
+	}
+}
+BOOST_AUTO_TEST_CASE(test2)
+{
+	char *argv[] = {"progname", "-datadir=D:\\bitcoin\\2"};
+	int argc = sizeof(argv) / sizeof(char*);
+	CBaseParams::IntialParams(argc, argv);
+	int64_t runTime = GetTime()+10*10*60;   //测试十分钟
+	vector<string> param;
+	while(GetTime()<runTime) {
+		//创建客户端2->客户端3的普通交易
+		CSendItem sendItem = CSendItem::GetRandomSendItem(2);
+		CSendItem recItem = CSendItem::GetRandomSendItem(3);
+		param.clear();
+		param.push_back(sendItem.GetAddress());      	//源地址
+		param.push_back(recItem.GetAddress());    	    //目的地址
+		param.push_back(recItem.GetSendValue());	    //转账金额
+		CreateNormalTx(param);                          //创建普通交易
+		Sleep(1000);
+
+		//创建客户端2->客户端3的合约交易
+		CSendItem sendItem1 = CSendItem::GetRandomSendItem(2);
+		CSendItem recItem1 = CSendItem::GetRandomSendItem(3);
+		CSendItem recItem2 = CSendItem::GetRandomSendItem(3);
+		CSendItem recItem3 = CSendItem::GetRandomSendItem(3);
+		param.clear();
+		param.push_back("020000000100");                     //脚本ID
 		param.push_back("[\""+sendItem1.GetAddress()+"\"]"); //交易发起地址
 		vector<unsigned char> vContranct;
 		vContranct.clear();
@@ -285,28 +371,146 @@ BOOST_AUTO_TEST_CASE(test1)
 		param.push_back("100000000");					//手续费
 		param.push_back("0");                           //有效高度
 		CreateContractTx(param);                        //创建合约交易
-		Sleep(1);
-
+		Sleep(1000);
 	}
-}
-BOOST_AUTO_TEST_CASE(test2)
-{
 
 }
 BOOST_AUTO_TEST_CASE(test3)
 {
+	char *argv[] = {"progname", "-datadir=D:\\bitcoin\\3"};
+	int argc = sizeof(argv) / sizeof(char*);
+	CBaseParams::IntialParams(argc, argv);
+	int64_t runTime = GetTime()+10*10*60;   //测试十分钟
+	vector<string> param;
+	while(GetTime()<runTime) {
+		//创建客户端3->客户端4的普通交易
+		CSendItem sendItem = CSendItem::GetRandomSendItem(3);
+		CSendItem recItem = CSendItem::GetRandomSendItem(4);
+		param.clear();
+		param.push_back(sendItem.GetAddress());      	//源地址
+		param.push_back(recItem.GetAddress());    	    //目的地址
+		param.push_back(recItem.GetSendValue());	    //转账金额
+		CreateNormalTx(param);                          //创建普通交易
+		Sleep(1000);
 
+		//创建客户端3->客户端4的合约交易
+		CSendItem sendItem1 = CSendItem::GetRandomSendItem(3);
+		CSendItem recItem1 = CSendItem::GetRandomSendItem(4);
+		CSendItem recItem2 = CSendItem::GetRandomSendItem(4);
+		CSendItem recItem3 = CSendItem::GetRandomSendItem(4);
+		param.clear();
+		param.push_back("020000000100");                     //脚本ID
+		param.push_back("[\""+sendItem1.GetAddress()+"\"]"); //交易发起地址
+		vector<unsigned char> vContranct;
+		vContranct.clear();
+		vector<unsigned char> vTemp;
+		vTemp.clear();
+		recItem1.GetContranctData(vTemp);
+		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
+		vTemp.clear();
+		recItem2.GetContranctData(vTemp);
+		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
+		recItem3.GetContranctData(vTemp);
+		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
+		param.push_back(HexStr(vContranct));			//合约内容
+		param.push_back("100000000");					//手续费
+		param.push_back("0");                           //有效高度
+		CreateContractTx(param);                        //创建合约交易
+		Sleep(1000);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(test4)
 {
 
+	char *argv[] = {"progname", "-datadir=D:\\bitcoin\\4"};
+	int argc = sizeof(argv) / sizeof(char*);
+	CBaseParams::IntialParams(argc, argv);
+	int64_t runTime = GetTime()+10*10*60;   //测试十分钟
+	vector<string> param;
+	while(GetTime()<runTime) {
+		//创建客户端4->客户端5的普通交易
+		CSendItem sendItem = CSendItem::GetRandomSendItem(4);
+		CSendItem recItem = CSendItem::GetRandomSendItem(5);
+		param.clear();
+		param.push_back(sendItem.GetAddress());      	//源地址
+		param.push_back(recItem.GetAddress());    	    //目的地址
+		param.push_back(recItem.GetSendValue());	    //转账金额
+		CreateNormalTx(param);                          //创建普通交易
+		Sleep(1000);
+
+		//创建客户端4->客户端5的合约交易
+		CSendItem sendItem1 = CSendItem::GetRandomSendItem(4);
+		CSendItem recItem1 = CSendItem::GetRandomSendItem(5);
+		CSendItem recItem2 = CSendItem::GetRandomSendItem(5);
+		CSendItem recItem3 = CSendItem::GetRandomSendItem(5);
+		param.clear();
+		param.push_back("020000000100");                     //脚本ID
+		param.push_back("[\""+sendItem1.GetAddress()+"\"]"); //交易发起地址
+		vector<unsigned char> vContranct;
+		vContranct.clear();
+		vector<unsigned char> vTemp;
+		vTemp.clear();
+		recItem1.GetContranctData(vTemp);
+		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
+		vTemp.clear();
+		recItem2.GetContranctData(vTemp);
+		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
+		recItem3.GetContranctData(vTemp);
+		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
+		param.push_back(HexStr(vContranct));			//合约内容
+		param.push_back("100000000");					//手续费
+		param.push_back("0");                           //有效高度
+		CreateContractTx(param);                        //创建合约交易
+		Sleep(1000);
+	}
 }
 BOOST_AUTO_TEST_CASE(test5)
 {
 
-}
-BOOST_AUTO_TEST_CASE(regscript){
+	char *argv[] = {"progname", "-datadir=D:\\bitcoin\\5"};
+	int argc = sizeof(argv) / sizeof(char*);
+	CBaseParams::IntialParams(argc, argv);
+
+	int64_t runTime = GetTime()+10*10*60;   //测试十分钟
+	vector<string> param;
+	while(GetTime()<runTime) {
+		//创建客户端5->客户端1的普通交易
+		CSendItem sendItem = CSendItem::GetRandomSendItem(5);
+		CSendItem recItem = CSendItem::GetRandomSendItem(1);
+		param.clear();
+		param.push_back(sendItem.GetAddress());      	//源地址
+		param.push_back(recItem.GetAddress());    	    //目的地址
+		param.push_back(recItem.GetSendValue());	    //转账金额
+		CreateNormalTx(param);                          //创建普通交易
+		Sleep(1000);
+
+		//创建客户端5->客户端1的合约交易
+		CSendItem sendItem1 = CSendItem::GetRandomSendItem(5);
+		CSendItem recItem1 = CSendItem::GetRandomSendItem(1);
+		CSendItem recItem2 = CSendItem::GetRandomSendItem(1);
+		CSendItem recItem3 = CSendItem::GetRandomSendItem(1);
+		param.clear();
+		param.push_back("020000000100");                     //脚本ID
+		param.push_back("[\""+sendItem1.GetAddress()+"\"]"); //交易发起地址
+		vector<unsigned char> vContranct;
+		vContranct.clear();
+		vector<unsigned char> vTemp;
+		vTemp.clear();
+		recItem1.GetContranctData(vTemp);
+		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
+		vTemp.clear();
+		recItem2.GetContranctData(vTemp);
+		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
+		recItem3.GetContranctData(vTemp);
+		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
+		param.push_back(HexStr(vContranct));			//合约内容
+		param.push_back("100000000");					//手续费
+		param.push_back("0");                           //有效高度
+		CreateContractTx(param);                        //创建合约交易
+		Sleep(1000);
+	}
 
 }
+
 BOOST_AUTO_TEST_SUITE_END()

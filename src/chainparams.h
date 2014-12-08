@@ -98,7 +98,10 @@ public:
 
 		return te;
 	}
-
+	virtual string GetDefaultTestDataPath() const
+	{
+		return string("D:\\bitcoin\\data\\");
+	}
 public:
 	int getConnectTimeOut()const {
 		int nConnectTimeout = 5000;

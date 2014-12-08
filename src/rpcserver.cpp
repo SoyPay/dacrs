@@ -84,9 +84,9 @@ void RPCTypeCheck(const Object& o,
 int64_t AmountToRawValue(const Value& value)
 {
     double dAmount = value.get_real();
-    if (dAmount <= 0.0 || dAmount > 21000000.0)
+    if (dAmount <= 0.0 || dAmount > 210000000.0 * COIN)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-    int64_t nAmount = roundint64(dAmount * COIN)/COIN;
+    int64_t nAmount = roundint64(dAmount);
     if (!MoneyRange(nAmount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
     return nAmount;
@@ -308,6 +308,7 @@ static const CRPCCommand vRPCCommands[] =
     { "disconnectblock",        &disconnectblock,        true,      false,      true },
     { "restclient",             &restclient,             true,      false,      false },
     { "reloadtxcache",          &reloadtxcache,          true,      false,      true },
+    { "listsetblockindexvalid",  &listsetblockindexvalid, true,     false,      false},
 };
 
 CRPCTable::CRPCTable()

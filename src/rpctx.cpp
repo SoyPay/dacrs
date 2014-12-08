@@ -58,7 +58,7 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		result.push_back(Pair("ver", prtx->nVersion));
 		result.push_back(Pair("addr", boost::get<CPubKey>(prtx->userId).GetKeyID().ToAddress()));
 		CID id(prtx->userId);
-		CID minerId(prtx->MinerId);
+		CID minerId(prtx->minerId);
 		result.push_back(Pair("pubkey", HexStr(id.GetID())));
 		result.push_back(Pair("miner_pubkey", HexStr(minerId.GetID())));
 		result.push_back(Pair("fees", prtx->llFees));
@@ -235,10 +235,13 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 			if (!pwalletMain->GetPubKey(keyid, MinerPKey, true)) {
 				throw JSONRPCError(RPC_WALLET_ERROR, " not find Miner key.");
 			}
+			rtx.minerId= MinerPKey;
 		}
-
+		else {
+			CNullID nullId;
+			rtx.minerId= nullId;
+		}
 		rtx.userId = pubkey;
-		rtx.MinerId=MinerPKey;
 		rtx.llFees = fee;
 		rtx.nValidHeight = chainActive.Tip()->nHeight;
 
@@ -1551,10 +1554,21 @@ Value saveblocktofile(const Array& params, bool fHelp) {
 	string strblockhash = params[0].get_str();
 	uint256 blockHash(params[0].get_str());
 	CBlockIndex *pIndex = mapBlockIndex[blockHash];
-	CBlock reLoadblock;
-	if (!ReadBlockFromDisk(reLoadblock, pIndex))
+	CBlock blockInfo;
+	if (!ReadBlockFromDisk(blockInfo, pIndex))
 		throw runtime_error(_("Failed to read block"));
 	string file = params[1].get_str();
-	FILE* fp = fopen(file.c_str(), "wb+");
+	try {
+		FILE* fp = fopen(file.c_str(), "a+");
+		CAutoFile fileout = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
+		if (!fileout)
+			throw JSONRPCError(RPC_MISC_ERROR, "open file:"+strblockhash+"failed!");
+		fileout << blockInfo;
+		fflush(fileout);
+		fclose(fp);
+	}catch(std::exception &e) {
+		throw JSONRPCError(RPC_MISC_ERROR, "save block to file error");
+	}
 	return "save succeed";
 }
+

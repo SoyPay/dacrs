@@ -353,3 +353,11 @@ Value getblockchaininfo(const Array& params, bool fHelp)
     obj.push_back(Pair("chainwork",     chainActive.Tip()->nChainWork.GetHex()));
     return obj;
 }
+
+Value listsetblockindexvalid(const Array& params, bool fHelp)
+{
+	if (fHelp || params.size() != 0) {
+		throw runtime_error("listsetblockindexvalid \n");
+	}
+	return ListSetBlockIndexValid();
+}
