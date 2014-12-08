@@ -161,7 +161,7 @@ void CreateSecondDarkTx(string hash)
 	vInputParams.push_back("10");
 	std::string strReturn("");
 	TestCallRPC("createcontracttx", vInputParams, strReturn);
-	cout<<strReturn<<endl;
+//	cout<<strReturn<<endl;
 	return ;
 }
 
@@ -201,7 +201,7 @@ void Createanony(string addr)
 	vInputParams.push_back("010000000100");
 	string temp1 = "[";
 	temp1+="\""+addr+"\""+"]";
-	cout<<temp1<<endl;
+//	cout<<temp1<<endl;
 	vInputParams.push_back(temp1);
 
 	string temp = "";
@@ -236,7 +236,7 @@ void Createanony(string addr)
 	vInputParams.push_back("10");
 	std::string strReturn("");
 	TestCallRPC("createcontracttx", vInputParams, strReturn);
-	cout<<strReturn<<endl;
+//	cout<<strReturn<<endl;
 	return ;
 }
 uint64_t GetValue(string str,string compare)
@@ -266,6 +266,8 @@ uint64_t GetValue(string str,string compare)
 			if(str_name =="FreedomFund")
 				{
 					json_spirit::Value::Array narray = val_val.get_array();
+					if(narray.size() == 0)
+						return false;
 					json_spirit::Value::Object obj1 = narray[0].get_obj();
 					for(int j = 0; j < obj1.size(); ++j)
 					{
@@ -312,20 +314,17 @@ BOOST_AUTO_TEST_CASE(test_dark){
 	BOOST_CHECK_MESSAGE(boost::filesystem::exists(path),path + " not exitst");
 	CreateScript((char*)path.c_str());
 	SetBlockGenerte("mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7");
-	GenerateMiner();
 	string temp = CreateDarkTx();
 	SetBlockGenerte("n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
-	GenerateMiner();
 	string temp1 = GetAccountInfo1("010000000100");
 	BOOST_CHECK_EQUAL(GetValue(temp1,"value"),150);
-	GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
+//	GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
 	temp1 = GetAccountInfo1("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
 	BOOST_CHECK_EQUAL(GetValue(temp1,"FreeValues"),999999999999900);
 	temp1 = GetAccountInfo1("mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y");
 	BOOST_CHECK_EQUAL(GetValue(temp1,"FreeValues"),999999998999950);
 	CreateSecondDarkTx(temp);
 	SetBlockGenerte("mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7");
-	GenerateMiner();
 	GetAccountInfo1("010000000100");
 	GetAccountInfo1("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
 	temp1 = GetAccountInfo1("mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y");
@@ -338,31 +337,27 @@ BOOST_AUTO_TEST_CASE(test_anony){
 	BOOST_CHECK_MESSAGE(boost::filesystem::exists(path),path + " not exitst");
 	CreateScript((char*)path.c_str());
 	SetBlockGenerte("mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7");
-	GenerateMiner();
-	cout<<"1"<<endl;
+//	cout<<"1"<<endl;
 	Createanony("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
-	SetBlockGenerte("mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz");
-	GenerateMiner();
+	SetBlockGenerte("msdDQ1SXNmknrLuTDivmJiavu5J9VyX9fV");
 	string temp1 = GetAccountInfo1("010000000100");
 	BOOST_CHECK_EQUAL(GetValue(temp1,"value"),100);
 	temp1 = GetAccountInfo1("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
 	BOOST_CHECK_EQUAL(GetValue(temp1,"FreeValues"),999999998999900);
 	temp1 = GetAccountInfo1("n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
-	cout<<temp1<<endl;
-	cout<<"2"<<endl;
+//	cout<<temp1<<endl;
+//	cout<<"2"<<endl;
 	Createanony("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
 	SetBlockGenerte("mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v");
-	GenerateMiner();
 	temp1 = GetAccountInfo1("010000000100");
 	BOOST_CHECK_EQUAL(GetValue(temp1,"value"),200);
 	temp1 = GetAccountInfo1("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
 	BOOST_CHECK_EQUAL(GetValue(temp1,"FreeValues"),999999997999800);
 	temp1 = GetAccountInfo1("n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
-	cout<<temp1<<endl;
-	cout<<"3"<<endl;
+//	cout<<temp1<<endl;
+//	cout<<"3"<<endl;
 	Createanony("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
 	SetBlockGenerte("mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc");
-	GenerateMiner();
 	temp1 = GetAccountInfo1("010000000100");
 	BOOST_CHECK_EQUAL(GetValue(temp1,"value"),100);
 	temp1 = GetAccountInfo1("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
@@ -370,7 +365,7 @@ BOOST_AUTO_TEST_CASE(test_anony){
 	temp1 = GetAccountInfo1("mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y");
 	BOOST_CHECK_EQUAL(GetValue(temp1,"value"),100);
 	temp1 = GetAccountInfo1("n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
-	cout<<temp1<<endl;
+//	cout<<temp1<<endl;
 	BOOST_CHECK_EQUAL(GetValue(temp1,"value"),100);
 }
 BOOST_AUTO_TEST_SUITE_END()
