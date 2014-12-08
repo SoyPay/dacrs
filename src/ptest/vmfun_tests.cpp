@@ -32,49 +32,7 @@ extern Object CallRPC(const string& strMethod, const Array& params);
 extern int TestCallRPC(std::string strMethod, const std::vector<std::string> &vParams, std::string &strRet);
 extern void GetAccountInfo(char *address);
 extern void GenerateMiner();
-	//
-//	string strPrint;
-//	int nRet;
-//	Array params = RPCConvertValues(strMethod, vParams);
-//
-//	Object reply = CallRPC(strMethod, params);
-//
-//	// Parse reply
-//	const Value& result = find_value(reply, "result");
-//	const Value& error = find_value(reply, "error");
-//
-//	if (error.type() != null_type) {
-//		// Error
-//		strPrint = "error: " + write_string(error, false);
-//		int code = find_value(error.get_obj(), "code").get_int();
-//		nRet = abs(code);
-//	} else {
-//		// Result
-//		if (result.type() == null_type)
-//			strPrint = "";
-//		else if (result.type() == str_type)
-//			strPrint = result.get_str();
-//		else
-//			strPrint = write_string(result, true);
-//	}
-//	strRet = strPrint;
-//	BOOST_MESSAGE(strPrint);
-//	//cout << strPrint << endl;
-//	return nRet;
-//}
-//static void GetAccountInfo(char *address) {
-//	int argc = 3;
-//	char *argv[3] = { "rpctest", "getaccountinfo", address };
-//	CommandLineRPC(argc, argv);
-//
-//}
-//static void GenerateMiner() {
-//	int argc = 3;
-//	char *argv[3] = { "rpctest", "setgenerate", "true" };
-//	CommandLineRPC(argc, argv);
-//}
-
-
+extern string Parsejson(string str);
 std::string TxHash("");
 void GenerateMiner(int count) {
 	//cout <<"Generate miner" << endl;
@@ -85,7 +43,7 @@ void GenerateMiner(int count) {
 	CommandLineRPC(argc, argv);
 }
 void GetAccountState1() {
-	GetAccountInfo("5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG");
+	GetAccountInfo("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA");
 }
 void ListRegScript1() {
 	//cout << "listRegScript" << endl;
@@ -94,45 +52,44 @@ void ListRegScript1() {
 	CommandLineRPC(argc, argv);
 }
 void CreateRegScriptTx2() {
-	cout <<"CreateRegScriptTx1" << endl;
 	int argc = 7;
 	char* path = "D:\\bitcoin\\data\\sdk.bin";
 	string message = path;
 	message += "not exitst";
 	BOOST_CHECK_MESSAGE(boost::filesystem::exists(path),message);
 	char *argv[7] =
-			{ "rpctest", "registerscripttx", "5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG","0",
+			{ "rpctest", "registerscripttx", "mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y","0",
 					path,
 					"1000000", "2" };
 	CommandLineRPC(argc, argv);
 }
-void CreateFirstTx()
+string CreateFirstTx()
 {
 	int argc = 8;
 	std::vector<std::string> vInputParams;
 	vInputParams.clear();
 	vInputParams.push_back("010000000100");
 	vInputParams.push_back(
-			"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]");
+			"[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]");
 	vInputParams.push_back("01");
 	vInputParams.push_back("1000000");
 	vInputParams.push_back("10");
 	std::string strReturn("");
 	if (TestCallRPC("createcontracttx", vInputParams, strReturn) > 0) {
 		vInputParams.clear();
-		cout << "create secure tx succeed1:"<<strReturn<< endl;
-		TxHash = strReturn;
+	//	cout << "create secure tx succeed1:"<<strReturn<< endl;
+		TxHash = Parsejson(strReturn);
 	}
-	return ;
+	return strReturn;
 }
-void CreateSecondTx()
+string CreateSecondTx()
 {
 	int argc = 8;
 	std::vector<std::string> vInputParams;
 	vInputParams.clear();
 	vInputParams.push_back("010000000100");
 	vInputParams.push_back(
-			"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]");
+			"[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]");
 	uint256 hash(TxHash.c_str());
 	string param ="02";
 	param += HexStr(hash);
@@ -142,68 +99,68 @@ void CreateSecondTx()
 	std::string strReturn("");
 	if (TestCallRPC("createcontracttx", vInputParams, strReturn) > 0) {
 		vInputParams.clear();
-		cout << "create secure tx succeed1:"<<strReturn<< endl;
+	//	cout << "create secure tx succeed1:"<<strReturn<< endl;
 	//	TxHash = strReturn;
 	}
-	return ;
+	return strReturn;
 }
 
-void CreateThirdTx()
+string CreateThirdTx()
 {
 	int argc = 8;
 	std::vector<std::string> vInputParams;
 	vInputParams.clear();
 	vInputParams.push_back("010000000100");
 	vInputParams.push_back(
-			"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]");
+			"[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]");
 	vInputParams.push_back("03");
 	vInputParams.push_back("1000000");
 	vInputParams.push_back("10");
 	std::string strReturn("");
 	if (TestCallRPC("createcontracttx", vInputParams, strReturn) > 0) {
 		vInputParams.clear();
-		cout << "create secure tx succeed1:"<<strReturn<< endl;
+	//	cout << "create secure tx succeed1:"<<strReturn<< endl;
 	//	TxHash = strReturn;
 	}
-	return ;
+	return strReturn;
 }
-void CreateForthTx()
+string CreateForthTx()
 {
 	int argc = 8;
 	std::vector<std::string> vInputParams;
 	vInputParams.clear();
 	vInputParams.push_back("010000000100");
 	vInputParams.push_back(
-			"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]");
+			"[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]");
 	vInputParams.push_back("04");
 	vInputParams.push_back("1000000");
 	vInputParams.push_back("10");
 	std::string strReturn("");
 	if (TestCallRPC("createcontracttx", vInputParams, strReturn) > 0) {
 		vInputParams.clear();
-		cout << "create secure tx succeed1:"<<strReturn<< endl;
+	//	cout << "create secure tx succeed1:"<<strReturn<< endl;
 	//	TxHash = strReturn;
 	}
-	return ;
+	return strReturn;
 }
 
 void CreateRegScriptTx3() {
-	cout <<"CreateRegScriptTx1" << endl;
+//	cout <<"CreateRegScriptTx1" << endl;
 	int argc = 7;
 	char *argv[7] =
-			{ "rpctest", "registerscripttx", "5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG","1",
+			{ "rpctest", "registerscripttx", "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb","1",
 					"010000000100",
 					"1000000", "2" };
 	CommandLineRPC(argc, argv);
 }
-void CreateFiveTx()
+string CreateFiveTx()
 {
 	int argc = 8;
 	std::vector<std::string> vInputParams;
 	vInputParams.clear();
 	vInputParams.push_back("010000000100");
 	vInputParams.push_back(
-			"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]");
+			"[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]");
 	uint256 hash(TxHash.c_str());
 	string param ="05";
 	param += HexStr(hash);
@@ -213,27 +170,30 @@ void CreateFiveTx()
 	std::string strReturn("");
 	if (TestCallRPC("createcontracttx", vInputParams, strReturn) > 0) {
 		vInputParams.clear();
-		cout << "create secure tx succeed1:"<<strReturn<< endl;
-		TxHash = strReturn;
+	//	cout << "create secure tx succeed1:"<<strReturn<< endl;
+		TxHash = Parsejson(strReturn);
 	}
-	return ;
+	return strReturn;
 }
 BOOST_AUTO_TEST_SUITE(VM_fun)
 BOOST_AUTO_TEST_CASE(test_fun)
 {
-	GetAccountState1();
+	//GetAccountState1();
 	CreateRegScriptTx2();
 	GenerateMiner();
 //	cout << "start first" << endl;
 //	ListRegScript1();
-	CreateFirstTx();
+	string temp=CreateFirstTx();
+	BOOST_CHECK_EQUAL(Parsejson(temp) != "",true);
 	GenerateMiner();
 	//cout << "strat second:" << endl;
-	CreateSecondTx();
+	temp=CreateSecondTx();
+	BOOST_CHECK_EQUAL(Parsejson(temp) != "",true);
 	GenerateMiner();
 
 //	cout << "strat third:" << endl;
-	CreateThirdTx();
+	temp=CreateThirdTx();
+	BOOST_CHECK_EQUAL(Parsejson(temp) != "",true);
 	GenerateMiner();
 
 //	cout << "script reg:" << endl;
@@ -241,7 +201,8 @@ BOOST_AUTO_TEST_CASE(test_fun)
 	GenerateMiner();
 
 //	cout << "five reg:" << endl;
-	CreateFiveTx();
+	temp=CreateFiveTx();
+	BOOST_CHECK_EQUAL(Parsejson(temp) != "",true);
 	GenerateMiner();
 
 //	cout << "strat forth:" << endl;

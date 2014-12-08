@@ -1165,7 +1165,7 @@ Value gettxoperationlog(const Array& params, bool fHelp)
 		}
 	}
 	RPCTypeCheck(params, list_of(str_type));
-	uint256 txHash(ParseHex(params[0].get_str()));
+	uint256 txHash(params[0].get_str());
 	vector<CAccountOperLog> vLog;
 	Object retobj;
 	retobj.push_back(Pair("hash",  txHash.GetHex()));

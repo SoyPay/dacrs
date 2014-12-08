@@ -26,7 +26,10 @@ extern Object CallRPC(const string& strMethod, const Array& params);
 extern int TestCallRPC(std::string strMethod, const std::vector<std::string> &vParams, std::string &strRet);
 extern void GetAccountInfo(char *address);
 extern void GenerateMiner();
-
+extern string GetAccountInfo1(string address);
+extern uint64_t GetValue(string str,string compare);
+extern string Parsejson(string str);
+extern void SetBlockGenerte(string address);
 void CreateScriptTx1()
 {
 	int argc = 7;
@@ -121,7 +124,7 @@ bool CreateScriptAndCheck()
 	vInputParams.push_back("010000000100");
 	std::string strReturn("");
 	TestCallRPC("getaccountinfo", vInputParams, strReturn);
-	cout<<strReturn<<endl;
+//	cout<<strReturn<<endl;
 	if(!CheckScriptid(strReturn,strRegID))
 	{
 		return false;
@@ -156,11 +159,11 @@ void CreateOperateSelfScriptTx(int param)
 	vInputParams.push_back("10");
 	std::string strReturn("");
 	TestCallRPC("createcontracttx", vInputParams, strReturn);
-	cout<<strReturn<<endl;
+//	cout<<strReturn<<endl;
 	return ;
 }
 
-void CreateOperateOtherScriptTx(int param)
+string CreateOperateOtherScriptTx(int param)
 {
 	string accountid = "010000000100";
 	int argc = 8;
@@ -177,33 +180,38 @@ void CreateOperateOtherScriptTx(int param)
 	vInputParams.push_back("10");
 	std::string strReturn("");
 	TestCallRPC("createcontracttx", vInputParams, strReturn);
-	cout<<strReturn<<endl;
-	return ;
+//	cout<<strReturn<<endl;
+	return strReturn;
 }
 BOOST_AUTO_TEST_SUITE(test_script)
 
 BOOST_AUTO_TEST_CASE(script_account){
-	CreateScriptAndCheck();
-	cout<<"1"<<endl;
+	BOOST_CHECK_EQUAL(CreateScriptAndCheck(),true);
+
 	CreateOperateSelfScriptTx(1);
-	GenerateMiner();
-	GetAccountInfo("010000000100");
-	GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
-	cout<<"2"<<endl;
+	SetBlockGenerte("mjSwCwMsvtKczMfta1tvr78z2FTsZA1JKw");
+	string temp1 = GetAccountInfo1("010000000100");
+	BOOST_CHECK_EQUAL(GetValue(temp1,"value"),10000);
+	temp1 = GetAccountInfo1("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
+	BOOST_CHECK_EQUAL(GetValue(temp1,"FreeValues"),999999998990000);
+
 	CreateOperateSelfScriptTx(2);
-	GenerateMiner();
-	GetAccountInfo("010000000100");
-	GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
-	cout<<"3"<<endl;
+	SetBlockGenerte("msdDQ1SXNmknrLuTDivmJiavu5J9VyX9fV");
+	temp1 = GetAccountInfo1("010000000100");
+	BOOST_CHECK_EQUAL(GetValue(temp1,"value"),0);
+	temp1 = GetAccountInfo1("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
+	BOOST_CHECK_EQUAL(GetValue(temp1,"value"),10000);
+
 	CreateOperateOtherScriptTx(1);
+	SetBlockGenerte("mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v");
+	temp1 = GetAccountInfo1("010000000100");
+	BOOST_CHECK_EQUAL(GetValue(temp1,"value"),10000);
+	temp1 = GetAccountInfo1("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
+	BOOST_CHECK_EQUAL(GetValue(temp1,"FreeValues"),999999996990000);
+
+	string ret = CreateOperateOtherScriptTx(2);
 	GenerateMiner();
-	GetAccountInfo("010000000100");
-	GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
-	cout<<"4"<<endl;
-	CreateOperateOtherScriptTx(2);
-	GenerateMiner();
-	GetAccountInfo("010000000100");
-	GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
+	BOOST_CHECK_EQUAL(Parsejson(ret) == "",true);
 
 }
 BOOST_AUTO_TEST_SUITE_END()
