@@ -579,7 +579,7 @@ public:
 		return CWalletDB(pWallet->strWalletFile).WriteAccountTx(blockHash, *this);
 	}
 
-	Object ToJosnObj() const;
+	Object ToJosnObj(CKeyID const &key = CKeyID()) const;
 
 
 	IMPLEMENT_SERIALIZE
