@@ -10,17 +10,17 @@
 #include "txdb.h"
 #include "ui_interface.h"
 #include "util.h"
-#ifdef ENABLE_WALLET
+
 #include "db.h"
 #include "wallet.h"
-#endif
+
 
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 #include "chainparams.h"
 
 
-extern void noui_connect();
+//extern void noui_connect();
 
 struct TestingSetup {
 	TestingSetup() {

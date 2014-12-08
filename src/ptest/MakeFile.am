@@ -29,5 +29,7 @@ soypay_ptest_SOURCES = \
   rollbackdb_ptest.cpp \
   scriptaccount_ptest.cpp \
   darkanony_ptest.cpp \
-  mining_tests.cpp
+  mining_tests.cpp	\
+  sesuretrade_ptest.cpp \
+  regscript_test.cpp
 

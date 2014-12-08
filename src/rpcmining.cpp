@@ -25,10 +25,10 @@
 #include "util.h"
 #include "version.h"
 
-#ifdef ENABLE_WALLET
+
 #include "db.h"
 #include "wallet.h"
-#endif
+
 #include <stdint.h>
 
 #include "json/json_spirit_utils.h"
@@ -37,7 +37,7 @@
 using namespace json_spirit;
 using namespace std;
 
-#ifdef ENABLE_WALLET
+
 // Key used by getwork miners.
 // Allocated in InitRPCMining, free'd in ShutdownRPCMining
 //static CReserveKey* pMiningKey = NULL;
@@ -60,14 +60,7 @@ void ShutdownRPCMining()
 //
 //    delete pMiningKey; pMiningKey = NULL;
 }
-#else
-void InitRPCMining()
-{
-}
-void ShutdownRPCMining()
-{
-}
-#endif
+
 
 // Return average network hashes per second based on the last 'lookup' blocks,
 // or from the last difficulty change if 'lookup' is nonpositive.
@@ -130,7 +123,7 @@ Value getnetworkhashps(const Array& params, bool fHelp)
     return GetNetworkHashPS(params.size() > 0 ? params[0].get_int() : 120, params.size() > 1 ? params[1].get_int() : -1);
 }
 
-#ifdef ENABLE_WALLET
+
 Value getgenerate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -223,7 +216,8 @@ Value setgenerate(const Array& params, bool fHelp)
     }
     else // Not -regtest: start generate thread, return immediately
     {
-    	SysCfg().SoftSetArgCover("-gen", fGenerate ? "1" : "0");
+    	SysCfg().SoftSetArgCover("-gen", fGenerate ?
+    			"1" : "0");
     	SysCfg().SoftSetArgCover("-genproclimit", itostr(nGenProcLimit));
         GenerateBitcoins(fGenerate, pwalletMain, nGenProcLimit);
     }
@@ -249,7 +243,7 @@ Value gethashespersec(const Array& params, bool fHelp)
         return (int64_t)0;
     return (int64_t)dHashesPerSec;
 }
-#endif
+
 
 
 Value getmininginfo(const Array& params, bool fHelp)
