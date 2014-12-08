@@ -237,19 +237,19 @@ bool CAccountViewDB::SaveAccountInfo(const vector<unsigned char> &accountId, con
 	return db.WriteBatch(batch, false);
 }
 
-CTransactionCacheDB::CTransactionCacheDB(size_t nCacheSize, bool fMemory, bool fWipe) :
-		CLevelDBWrapper(GetDataDir() / "blocks" / "txcache", nCacheSize, fMemory, fWipe) {
+CTransactionDB::CTransactionDB(size_t nCacheSize, bool fMemory, bool fWipe) :
+		db(GetDataDir() / "blocks" / "txcache", nCacheSize, fMemory, fWipe) {
 }
 
-bool CTransactionCacheDB::SetTxCache(const uint256 &blockHash, const vector<uint256> &vHashTx) {
-	return Write(make_pair('h', blockHash), vHashTx);
+bool CTransactionDB::SetTxCache(const uint256 &blockHash, const vector<uint256> &vHashTx) {
+	return db.Write(make_pair('h', blockHash), vHashTx);
 }
 
-bool CTransactionCacheDB::GetTxCache(const uint256 &blockHash, vector<uint256> &vHashTx) {
-	return Read(make_pair('h', blockHash), vHashTx);
+bool CTransactionDB::GetTxCache(const uint256 &blockHash, vector<uint256> &vHashTx) {
+	return db.Read(make_pair('h', blockHash), vHashTx);
 }
 
-bool CTransactionCacheDB::Flush(const map<uint256, vector<uint256> > &mapTxHashByBlockHash) {
+bool CTransactionDB::BatchWrite(const map<uint256, vector<uint256> > &mapTxHashByBlockHash) {
 	CLevelDBBatch batch;
 	for (auto & item : mapTxHashByBlockHash) {
 		if(item.second.empty()) {
@@ -259,12 +259,12 @@ bool CTransactionCacheDB::Flush(const map<uint256, vector<uint256> > &mapTxHashB
 		}
 	}
 
-	return WriteBatch(batch, false);
+	return db.WriteBatch(batch, false);
 }
 
-bool CTransactionCacheDB::LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash) {
+bool CTransactionDB::LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash) {
 
-	leveldb::Iterator *pcursor = NewIterator();
+	leveldb::Iterator *pcursor = db.NewIterator();
 
 	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
 	ssKeySet << make_pair('h', uint256(0));
@@ -308,21 +308,11 @@ bool CScriptDB::GetData(const vector<unsigned char> &vKey, vector<unsigned char>
 }
 
 bool CScriptDB::SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {
-//	vector<unsigned char> vTemp = { 0x64, 0x61, 0x74, 0x61, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x5f, 0x6b, 0x65, 0x79,	0x31, 0x00 };
-//	if (vKey == vTemp) {
-//		LogPrint("INFO", "set value item key:%s ,item value:%s\n", HexStr(vKey), HexStr(vValue));
-//	}
-
 	return db.Write(vKey, vValue);
 }
 bool CScriptDB::BatchWrite(const map<vector<unsigned char>, vector<unsigned char> > &mapDatas) {
 	CLevelDBBatch batch;
 	for (auto & item : mapDatas) {
-//		vector<unsigned char> vTemp = { 0x64, 0x61, 0x74, 0x61, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x5f, 0x6b, 0x65,
-//				0x79, 0x31, 0x00 };
-//		if (item.first == vTemp) {
-//			LogPrint("INFO", "set value item key:%s ,item value:%s\n", HexStr(item.first), HexStr(item.second));
-//		}
 		if (item.second.empty()) {
 			batch.Erase(item.first);
 		} else {

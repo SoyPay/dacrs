@@ -759,7 +759,7 @@ Object CAccountTx::ToJosnObj(CKeyID const  &key) const {
 	obj.push_back(Pair("blockHash",  blockHash.ToString()));
 	obj.push_back(Pair("blockhigh",  blockhigh));
 	Array Tx;
-	CAccountViewCache view(*pAccountViewTip);
+	CAccountViewCache view(*pAccountViewTip, true);
 	for (auto const &re : mapAccountTx) {
 		if (!key.IsEmpty()) {
 			auto find = mapOperLog.find(re.first);
@@ -855,7 +855,7 @@ bool CWallet::SynchronizRegId(const CKeyID& keyid, const CAccountViewCache& invi
 bool CWallet::IsMine(CBaseTransaction* pTx) const{
 
 	set<CKeyID> vaddr;
-	CAccountViewCache view(*pAccountViewTip);
+	CAccountViewCache view(*pAccountViewTip, true);
 	if (!pTx->GetAddress(vaddr, view)) {
 		return false;
 	}
@@ -868,7 +868,7 @@ bool CWallet::IsMine(CBaseTransaction* pTx) const{
 }
 
 bool CWallet::SynchronizSys(const CAccountViewCache& inview) {
-	CAccountViewCache view(inview);
+	CAccountViewCache view(const_cast<CAccountViewCache &>(inview), true);
 	for (auto &te : mKeyPool) {
 		te.second.SynchronizSys(view);
 	}

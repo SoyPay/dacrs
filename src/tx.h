@@ -21,8 +21,8 @@ class CValidationState;
 class CAccountViewCache;
 class CScriptDB;
 class CBlock;
-class CTransactionCacheDB;
-class CTransactionCache;
+class CTransactionDBCache;
+//class CTransactionDBCache;
 class CScriptDBViewCache;
 class CRegID;
 class CID;
@@ -344,10 +344,10 @@ public:
 	}
 
 	virtual bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-			int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) = 0;
+			int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) = 0;
 
 	virtual bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-			int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) = 0;
+			int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) = 0;
 
 	virtual bool CheckTransction(CValidationState &state, CAccountViewCache &view) = 0;
 
@@ -497,10 +497,10 @@ public:
 	string ToString(CAccountViewCache &view) const;
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
+			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
+			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
@@ -582,10 +582,10 @@ public:
 	string ToString(CAccountViewCache &view) const;
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
+			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
+			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
@@ -673,10 +673,10 @@ public:
 	}
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
+			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
+			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 
@@ -755,10 +755,10 @@ public:
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
+			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
+			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
@@ -840,10 +840,10 @@ public:
 	}
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
+			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
+			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
@@ -920,10 +920,10 @@ public:
 	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
 
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
+			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionCache &txCache, CScriptDBViewCache &scriptCache);
+			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
@@ -1410,24 +1410,6 @@ private:
 	void UndoAuthorityOverDay(const CAuthorizateLog& log);
 	uint64_t GetVecMoney(const vector<CFund>& vFund);
 };
-
-class CTransactionCache {
-private:
-	CTransactionCacheDB *base;
-	map<uint256, vector<uint256> > mapTxHashByBlockHash;  // key:block hash  value:tx hash
-	bool IsContainBlock(const CBlock &block);
-public:
-	CTransactionCache(CTransactionCacheDB *pTxCacheDB);
-	bool AddBlockToCache(const CBlock &block);
-	bool DeleteBlockFromCache(const CBlock &block);
-	bool IsContainTx(const uint256 & txHash);
-	const map<uint256, vector<uint256> > &GetTxHashCache(void) const;
-	void AddTxHashCache(const uint256 & blockHash, const vector<uint256> &vTxHash);
-	bool Flush();
-	bool LoadTransaction();
-	void Clear();
-};
-
 
 inline unsigned int GetSerializeSize(const std::shared_ptr<CBaseTransaction> &pa, int nType, int nVersion) {
 	return pa->GetSerializeSize(nType, nVersion) + 1;

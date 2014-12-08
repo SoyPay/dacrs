@@ -817,11 +817,11 @@ bool AppInit2(boost::thread_group& threadGroup)
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, SysCfg().IsReindex());
                 pAccountViewDB = new CAccountViewDB(nAccountDBCache, false, SysCfg().IsReindex());
-                pAccountViewTip =  new CAccountViewCache(*pAccountViewDB);
-                pTxCacheDB = new CTransactionCacheDB(nTxCacheSize, false, SysCfg().IsReindex());
-                pTxCacheTip = new CTransactionCache(pTxCacheDB);
+                pAccountViewTip =  new CAccountViewCache(*pAccountViewDB,true);
+                pTxCacheDB = new CTransactionDB(nTxCacheSize, false, SysCfg().IsReindex());
+                pTxCacheTip = new CTransactionDBCache(*pTxCacheDB,true);
                 pScriptDB = new CScriptDB(nScriptCacheSize, false , SysCfg().IsReindex());
-                pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
+                pScriptDBTip = new CScriptDBViewCache(*pScriptDB,true);
 
 
                 if (SysCfg().IsReindex())

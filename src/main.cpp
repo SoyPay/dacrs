@@ -407,8 +407,8 @@ CBlockIndex *CChain::FindFork(const CBlockLocator &locator) const {
 
 CBlockTreeDB *pblocktree = NULL;
 CAccountViewCache *pAccountViewTip = NULL;
-CTransactionCacheDB *pTxCacheDB = NULL;
-CTransactionCache *pTxCacheTip = NULL;
+CTransactionDB *pTxCacheDB = NULL;
+CTransactionDBCache *pTxCacheTip = NULL;
 CScriptDB *pScriptDB = NULL;
 CScriptDBViewCache *pScriptDBTip = NULL;
 
@@ -1162,7 +1162,7 @@ void UpdateTime(CBlockHeader& block, const CBlockIndex* pindexPrev)
 }
 
 
-bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &view, CBlockIndex* pindex, CTransactionCache &txCache, CScriptDBViewCache &scriptCache, bool* pfClean)
+bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &view, CBlockIndex* pindex, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool* pfClean)
 {
     assert(pindex->GetBlockHash() == view.GetBestBlock());
 
@@ -1252,7 +1252,7 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 
 
 
-bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &view, CBlockIndex* pindex, CTransactionCache &txCache, CScriptDBViewCache &scriptDBCache, bool fJustCheck)
+bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &view, CBlockIndex* pindex, CTransactionDBCache &txCache, CScriptDBViewCache &scriptDBCache, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
     // Check it again in case a previous version let a bad block in
@@ -1461,7 +1461,7 @@ bool static DisconnectTip(CValidationState &state) {
     int64_t nStart = GetTimeMicros();
     {
     	CAccountViewCache view(*pAccountViewTip, true);
-    	CScriptDBViewCache scriptDBView(*pScriptDBTip);
+    	CScriptDBViewCache scriptDBView(*pScriptDBTip, true);
         if (!DisconnectBlock(block, state, view, pindexDelete, *pTxCacheTip, scriptDBView, NULL))
             return ERROR("DisconnectTip() : DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
         assert(view.Flush() && scriptDBView.Flush());
@@ -1807,9 +1807,9 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 }
 
 bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockIndex, CValidationState& state) {
-	CAccountViewCache view(*pAccountViewTip);
-	CTransactionCache txCacheTemp(*pTxCacheTip);
-	CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
+	CAccountViewCache view(*pAccountViewTip, true);
+	CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
+	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 	vector<CBlock> vPreBlocks;
 	if (pPreBlockIndex->GetBlockHash() != chainActive.Tip()->GetBlockHash()) {
 		while (!chainActive.Contains(pPreBlockIndex)){
@@ -2474,8 +2474,8 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth)
     nCheckLevel = max(0, min(4, nCheckLevel));
     LogPrint("INFO","Verifying last %i blocks at level %i\n", nCheckDepth, nCheckLevel);
     CAccountViewCache view(*pAccountViewTip, true);
-    CTransactionCache txCacheTemp(*pTxCacheTip);
-    CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
+    CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
+    CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
     CBlockIndex* pindexState = chainActive.Tip();
     CBlockIndex* pindexFailure = NULL;
     int nGoodTransactions = 0;

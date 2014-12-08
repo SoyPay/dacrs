@@ -25,7 +25,7 @@ class CWallet;
 class CBaseTransaction;
 class COrphan;
 class CAccountViewCache;
-class CTransactionCache;
+class CTransactionDBCache;
 class CScriptDBViewCache;
 
 typedef boost::tuple<double, double, std::shared_ptr<CBaseTransaction> > TxPriority;
@@ -65,7 +65,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
 
 bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCreateKey);
 
-bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionCache &txCache, CScriptDBViewCache &scriptCache, bool bJustCheckSign = false);
+bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool bJustCheckSign = false);
 /** Check mined block */
 bool CheckWork(CBlock* pblock, CWallet& wallet);
 /** Base sha256 mining transform */
