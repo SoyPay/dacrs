@@ -753,18 +753,30 @@ CWallet* CWallet::getinstance() {
 
 }
 
-Object CAccountTx::ToJosnObj() const {
+Object CAccountTx::ToJosnObj(CKeyID const  &key) const {
 
 	Object obj;
 	obj.push_back(Pair("blockHash",  blockHash.ToString()));
 	obj.push_back(Pair("blockhigh",  blockhigh));
 	Array Tx;
 	CAccountViewCache view(*pAccountViewTip);
-	for(auto const &re:mapAccountTx)
-	{
-	  Tx.push_back(re.second.get()->ToString(view));
+	for (auto const &re : mapAccountTx) {
+		if (!key.IsEmpty()) {
+			auto find = mapOperLog.find(re.first);
+			if (find != mapOperLog.end()) {
+				vector<CAccountOperLog>  rep = find->second;
+				for (auto &te : rep) {
+					if (te.keyID == key) {
+						Tx.push_back(re.second.get()->ToString(view));
+					}
+				}
+			}
+		} else			//default add all tx to obj
+		{
+			Tx.push_back(re.second.get()->ToString(view));
+		}
 	}
-	obj.push_back(Pair("Tx",  Tx));
+	obj.push_back(Pair("Tx", Tx));
 
 	return obj;
 }

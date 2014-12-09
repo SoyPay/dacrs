@@ -58,7 +58,7 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		result.push_back(Pair("ver", prtx->nVersion));
 		result.push_back(Pair("addr", boost::get<CPubKey>(prtx->userId).GetKeyID().ToAddress()));
 		CID id(prtx->userId);
-		CID minerId(prtx->MinerId);
+		CID minerId(prtx->minerId);
 		result.push_back(Pair("pubkey", HexStr(id.GetID())));
 		result.push_back(Pair("miner_pubkey", HexStr(minerId.GetID())));
 		result.push_back(Pair("fees", prtx->llFees));
@@ -235,10 +235,13 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 			if (!pwalletMain->GetPubKey(keyid, MinerPKey, true)) {
 				throw JSONRPCError(RPC_WALLET_ERROR, " not find Miner key.");
 			}
+			rtx.minerId= MinerPKey;
 		}
-
+		else {
+			CNullID nullId;
+			rtx.minerId= nullId;
+		}
 		rtx.userId = pubkey;
-		rtx.MinerId=MinerPKey;
 		rtx.llFees = fee;
 		rtx.nValidHeight = chainActive.Tip()->nHeight;
 
@@ -886,11 +889,11 @@ Value listaddr(const Array& params, bool fHelp) {
 }
 
 Value listtx(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 0) {
+	if (fHelp || params.size() > 1) {
 		string msg = "listaddrtx \"addr\" showtxdetail\n"
 				"\listaddrtx\n"
 				"\nArguments:\n"
-				"1.\"addr\": (string required)"
+				"1.\"addr\": (optional,default all addr in wallet)"
 				"2.showtxdetail: (optional,default false)"
 				"\nResult:\n"
 				"\"txhash\"\n"
@@ -898,15 +901,20 @@ Value listtx(const Array& params, bool fHelp) {
 				+ "\nAs json rpc call\n" + HelpExampleRpc("listtx", "");
 		throw runtime_error(msg);
 	}
+    CKeyID keyid;
+	if (params.size() == 1) {
 
+		if (!GetKeyId(params[0].get_str(), keyid)) {
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+		}
+	}
 
 	Object retObj;
 	assert(pwalletMain != NULL);
 	{
 		Object Inblockobj;
 		for (auto const &wtx : pwalletMain->mapInBlockTx) {
-			Inblockobj.push_back(Pair("blockhash",  wtx.first.ToString()));
-			Inblockobj.push_back(Pair("tx",  wtx.second.ToJosnObj()));
+			Inblockobj.push_back(Pair("tx",  wtx.second.ToJosnObj(keyid)));
 		}
 		retObj.push_back(Pair("Inblocktx" ,Inblockobj));
 
@@ -1157,7 +1165,7 @@ Value gettxoperationlog(const Array& params, bool fHelp)
 		}
 	}
 	RPCTypeCheck(params, list_of(str_type));
-	uint256 txHash(ParseHex(params[0].get_str()));
+	uint256 txHash(params[0].get_str());
 	vector<CAccountOperLog> vLog;
 	Object retobj;
 	retobj.push_back(Pair("hash",  txHash.GetHex()));
@@ -1546,10 +1554,21 @@ Value saveblocktofile(const Array& params, bool fHelp) {
 	string strblockhash = params[0].get_str();
 	uint256 blockHash(params[0].get_str());
 	CBlockIndex *pIndex = mapBlockIndex[blockHash];
-	CBlock reLoadblock;
-	if (!ReadBlockFromDisk(reLoadblock, pIndex))
+	CBlock blockInfo;
+	if (!ReadBlockFromDisk(blockInfo, pIndex))
 		throw runtime_error(_("Failed to read block"));
 	string file = params[1].get_str();
-	FILE* fp = fopen(file.c_str(), "wb+");
+	try {
+		FILE* fp = fopen(file.c_str(), "a+");
+		CAutoFile fileout = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
+		if (!fileout)
+			throw JSONRPCError(RPC_MISC_ERROR, "open file:"+strblockhash+"failed!");
+		fileout << blockInfo;
+		fflush(fileout);
+		fclose(fp);
+	}catch(std::exception &e) {
+		throw JSONRPCError(RPC_MISC_ERROR, "save block to file error");
+	}
 	return "save succeed";
 }
+

@@ -283,7 +283,7 @@ inline bool AllowFree(double dPriority)
 }
 
 // Context-independent validity checks
-bool CheckTransaction(CBaseTransaction *pBaseTx, CValidationState& state, CAccountViewCache &view, int blockHeight = 0);
+bool CheckTransaction(CBaseTransaction *pBaseTx, CValidationState& state, CAccountViewCache &view);
 
 /** Check for standard transaction types
     @return True if all outputs (scriptPubKeys) use only standard transaction forms
@@ -557,6 +557,9 @@ bool DisconnectBlockFromTip(CValidationState &state);
 
 //get tx operate account log
 bool GetTxOperLog(const uint256 &txHash, vector<CAccountOperLog> &vAccountOperLog);
+
+//get setBlockIndexValid
+Value ListSetBlockIndexValid();
 
 class CBlockFileInfo
 {

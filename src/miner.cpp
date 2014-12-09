@@ -492,7 +492,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 		{
 			for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
 				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
-				if (pTxCacheTip->IsContainTx(pBaseTx->GetHash())) {
+				if (txCacheTemp.IsContainTx(pBaseTx->GetHash())) {
 					LogPrint("INFO","CreatePosTx duplicate tx\n");
 					mempool.mapTx.erase(pBaseTx->GetHash());
 					return false;
@@ -661,7 +661,7 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 		{
 			for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
 				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
-				if (pTxCacheTip->IsContainTx(pBaseTx->GetHash())) {
+				if (txCache.IsContainTx(pBaseTx->GetHash())) {
 					LogPrint("ERROR","VerifyPosTx duplicate tx\n");
 					return false;
 				}
@@ -763,7 +763,7 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 			postxinfo.nVersion, postxinfo.hashPrevBlock.GetHex(), postxinfo.hashMerkleRoot.GetHex(), postxinfo.nValues,
 			postxinfo.nTime, postxinfo.nNonce, pBlock->GetHash().GetHex());
 	if (curhash > adjusthash) {
-		LogPrint("INFO", "Account ProofOfWorkLimit error: \n"
+		LogPrint("ERROR", "Account ProofOfWorkLimit error: \n"
 				           "   pos hash:%s \n"
 				           "adjust hash:%s\r\n", curhash.GetHex(), adjusthash.GetHex());
 		return false;
@@ -1050,7 +1050,7 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads) {
 	minerThreads = new boost::thread_group();
 	for (int i = 0; i < nThreads; i++)
 		minerThreads->create_thread(boost::bind(&SoypayMiner, pwallet));
-	minerThreads->join_all();
+//	minerThreads->join_all();
 }
 
 
