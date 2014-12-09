@@ -92,7 +92,16 @@ public:
 		CRegID regId;
 		vector<unsigned char> vScript;
 
-		if (NULL == pScriptDBTip || pScriptDBTip && !pScriptDBTip->GetScript(0, regId, vScript))
+		if (pScriptDBTip == nullptr)
+			return false;
+
+		assert(pScriptDBTip->Flush());
+
+		int nCount(0);
+		if (!pScriptDBTip->GetScriptCount(nCount))
+			return false;
+		cout<<"script count is "<<nCount<<endl;
+		if (!pScriptDBTip->GetScript(0, regId, vScript))
 			return false;
 
 		string strRegID = HexStr(regId.GetVec6());
@@ -185,6 +194,14 @@ public:
 		strHash = result.get_str();
 		return true;
 	}
+
+	bool GetTxOperateLog(const uint256& txHash, vector<CAccountOperLog>& vLog) {
+		if (!GetTxOperLog(txHash, vLog))
+			return false;
+
+		return true;
+	}
+
 private:
 	boost::thread* pThreadShutdown;
 };
@@ -225,7 +242,18 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 
 	//通过listregscript 获取相关信息，一一核对，看是否和输入的一致
 	string strPath = SysCfg().GetDefaultTestDataPath() + strFileName;
+	cout<<"regid is "<<HexStr(regID.GetVec6())<<endl;
 	BOOST_CHECK(CheckRegScript(HexStr(regID.GetVec6()),strPath));
+
+	//Gettxoperationlog 获取交易log，查看是否正确
+	vector<CAccountOperLog> vLog;
+	BOOST_CHECK(GetTxOperateLog(uint256(strTxHash),vLog));
+	BOOST_CHECK(1 == vLog.size() && 1 == vLog[0].vOperFund.size() && 1 == vLog[0].vOperFund[0].vFund.size());
+	BOOST_CHECK(strAddr == vLog[0].keyID.ToAddress());
+	BOOST_CHECK(vLog[0].vOperFund[0].operType == MINUS_FREE && vLog[0].vOperFund[0].vFund[0].value == nFee);
+
+	BOOST_CHECK(DisConnectBlock(1));
+	BOOST_CHECK(nNewBlockHeight-1 == GetBlockHeight());
 }
 BOOST_AUTO_TEST_SUITE_END()
 

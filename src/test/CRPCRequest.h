@@ -156,6 +156,7 @@ public:
 
 	bool GenerateOneBlock();
 
+	bool DisConnectBlock(int nNum);
 protected:
 	boost::thread* pThreadShutdown;
 	std::map<string, AccState> mapAccState;

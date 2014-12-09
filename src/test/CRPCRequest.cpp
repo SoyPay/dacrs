@@ -599,6 +599,17 @@ bool CRPCRequest::GenerateOneBlock() {
 	return false;
 }
 
+bool CRPCRequest::DisConnectBlock(int nNum) {
+	string strNum = strprintf("%d",nNum);
+	char *argv[3] = { "rpctest", "disconnectblock", (char*)strNum.c_str() };
+	int argc = sizeof(argv) / sizeof(char*);
+
+	Value value;
+	if (CommandLineRPC_GetValue(argc, argv, value)) {
+		return true;
+	}
+	return false;
+}
 
 void CRPCRequest::StartServer(int argc,char* argv[]) {
 //		int argc = 2;
