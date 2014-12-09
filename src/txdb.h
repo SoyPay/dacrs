@@ -58,6 +58,7 @@ private:
 	CLevelDBWrapper db;
 public:
 	CAccountViewDB(size_t nCacheSize, bool fMemory=false, bool fWipe = false);
+	CAccountViewDB(const string& name,size_t nCacheSize, bool fMemory, bool fWipe);
 private:
 	CAccountViewDB(const CAccountViewDB&);
 	void operator=(const CAccountViewDB&);
@@ -98,6 +99,7 @@ class CScriptDB: public CScriptDBView
 private:
 	CLevelDBWrapper db;
 public:
+	CScriptDB(const string&name,size_t nCacheSize,  bool fMemory=false, bool fWipe = false);
 	CScriptDB(size_t nCacheSize, bool fMemory=false, bool fWipe = false);
 private:
 	CScriptDB(const CScriptDB&);

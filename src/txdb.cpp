@@ -143,6 +143,10 @@ CAccountViewDB::CAccountViewDB(size_t nCacheSize, bool fMemory, bool fWipe) :
 		db(GetDataDir() / "blocks" / "account", nCacheSize, fMemory, fWipe) {
 
 }
+CAccountViewDB::CAccountViewDB(const string& name,size_t nCacheSize, bool fMemory, bool fWipe) :
+		db(GetDataDir() / "blocks" / name, nCacheSize, fMemory, fWipe) {
+
+}
 
 bool CAccountViewDB::GetAccount(const CKeyID &keyId, CAccount &secureAccount) {
 	return db.Read(make_pair('k', keyId), secureAccount);
@@ -302,10 +306,11 @@ bool CTransactionDB::LoadTransaction(map<uint256, vector<uint256> > &mapTxHashBy
 	return true;
 }
 
-
+CScriptDB::CScriptDB(const string&name,size_t nCacheSize, bool fMemory, bool fWipe) :
+		db(GetDataDir() / "blocks" / name, nCacheSize, fMemory, fWipe){
+}
 CScriptDB::CScriptDB(size_t nCacheSize, bool fMemory, bool fWipe) :
 		db(GetDataDir() / "blocks" / "script", nCacheSize, fMemory, fWipe){
-
 }
 bool CScriptDB::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
 	return db.Read(vKey, vValue);

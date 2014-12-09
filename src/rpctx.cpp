@@ -1254,14 +1254,18 @@ Value disconnectblock(const Array& params, bool fHelp) {
 
 Value restclient(const Array& params, bool fHelp) {
 	Value te = TestDisconnectBlock(chainActive.Tip()->nHeight);
-	pwalletMain->CleanAll();
-    mapBlockIndex.clear();
-    chainActive.SetTip(NULL);
-    mapBlockIndex.clear();
-
-	CBlock firs = SysCfg().GenesisBlock();
-	pwalletMain->SyncTransaction(0,NULL,&firs);
-	mempool.clear();
+	if(chainActive.Tip()->nHeight == 0)
+	{
+		pwalletMain->CleanAll();
+		mapBlockIndex.clear();
+		CBlock firs = SysCfg().GenesisBlock();
+		pwalletMain->SyncTransaction(0,NULL,&firs);
+		mempool.clear();
+	}
+	else
+	{
+		throw JSONRPCError(RPC_WALLET_ERROR, "restclient Error: Sign failed.");
+	}
 	return te;
 
 }

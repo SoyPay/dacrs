@@ -2791,27 +2791,30 @@ BOOST_AUTO_TEST_CASE(scriptfun)
 		std::shared_ptr<CContractTransaction> nTemp = std::make_shared < CContractTransaction > (CContractTransaction());
 		nTemp->scriptRegId = scriptId;
 		nTemp.get()->llFees = 100000000000000000;
-		BOOST_CHECK(pScriptDB == NULL);
-        BOOST_CHECK(pScriptDBTip ==NULL);
-		pScriptDB = new CScriptDB(size_t(4<<20), false , SysCfg().IsReindex());
-		pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
-		pScriptDBTip->SetScript(scriptId, vpscript);
-		CAccountViewCache view(*pAccountViewTip, true);
-		CVmScriptRun prun;
+		BOOST_ERROR("need to fix");
 
-		uint64_t nBurnFactor = 1;
-		int nheight = 56;
-		std::shared_ptr<CBaseTransaction> Tx = static_cast<std::shared_ptr<CBaseTransaction> >(nTemp);
-		std::tuple<bool, uint64_t, string> retdata = prun.run(Tx,view,*pScriptDBTip,nheight,nBurnFactor);
-		BOOST_CHECK_EQUAL(std::get<0>(retdata),true);
-
-		if (pScriptDBTip) {
-			delete pScriptDBTip;
-			pScriptDBTip = NULL;
-		}
-		if (pScriptDB) {
-			delete pScriptDB;
-			pScriptDB = NULL;
-		}
+//		BOOST_CHECK(pScriptDB == NULL);
+//        BOOST_CHECK(pScriptDBTip ==NULL);
+//		pScriptDB = new CScriptDB(size_t(4<<20), false , SysCfg().IsReindex());
+//		pScriptDBTip = new CScriptDBViewCache(*pScriptDB, false);
+//		CScriptDBViewCache testview(*pScriptDB, false);
+//		pScriptDBTip->SetScript(scriptId, vpscript);
+//		CAccountViewCache view(*pAccountViewTip, true);
+//		CVmScriptRun prun;
+//
+//		uint64_t nBurnFactor = 1;
+//		int nheight = 56;
+//		std::shared_ptr<CBaseTransaction> Tx = static_cast<std::shared_ptr<CBaseTransaction> >(nTemp);
+//		std::tuple<bool, uint64_t, string> retdata = prun.run(Tx,view,*pScriptDBTip,nheight,nBurnFactor);
+//		BOOST_CHECK_EQUAL(std::get<0>(retdata),true);
+//
+//		if (pScriptDBTip) {
+//			delete pScriptDBTip;
+//			pScriptDBTip = NULL;
+//		}
+//		if (pScriptDB) {
+//			delete pScriptDB;
+//			pScriptDB = NULL;
+//		}
 }
 BOOST_AUTO_TEST_SUITE_END()
