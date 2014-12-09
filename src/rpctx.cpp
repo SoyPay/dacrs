@@ -1203,40 +1203,35 @@ static Value TestDisconnectBlock(int number)
 		CValidationState state;
 		while (number--) {
 			// check level 0: read from disk
-	//	      if (!DisconnectBlockFromTip(state))
-	//	    	  return false;
-			if (!ReadBlockFromDisk(block, pindex))
-				throw ERROR("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
-						pindex->GetBlockHash().ToString());
-			bool fClean = true;
-			CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
-			CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
-			if (!DisconnectBlock(block, state, view, pindex, txCacheTemp, contractScriptTemp, &fClean))
-				throw ERROR("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
-						pindex->GetBlockHash().ToString());
-			CBlockIndex *pindexDelete = pindex;
-			pindex = pindex->pprev;
-			chainActive.SetTip(pindex);
-//		    if (!txCacheTemp.DeleteBlockFromCache(block))
-//		    	throw runtime_error(_("Disconnect tip block failed to delete tx from txcache"));
-//
-//		    //load a block tx into cache transaction
-//			CBlockIndex *pReLoadBlockIndex = pindexDelete;
-//			if(pindexDelete->nHeight - SysCfg().GetTxCacheHeight()>0) {
-//				pReLoadBlockIndex = chainActive[pindexDelete->nHeight - SysCfg().GetTxCacheHeight()];
-//				CBlock reLoadblock;
-//				if (!ReadBlockFromDisk(reLoadblock, pindexDelete))
-//					throw runtime_error(_("Failed to read block"));
-//				if (!txCacheTemp.AddBlockToCache(reLoadblock))
-//					throw  runtime_error(_("Disconnect tip block reload preblock tx to txcache"));
-//			}
+			 CBlockIndex * pTipIndex = chainActive.Tip();
+		      if (!DisconnectBlockFromTip(state))
+		    	  return false;
+		      chainMostWork.SetTip(pTipIndex->pprev);
+		      if(!EraseBlockIndexFromSet(pTipIndex))
+		    	  return false;
+		      if(!pblocktree->EraseBlockIndex(pTipIndex->GetBlockHash()))
+		    	  return false;
+		      mapBlockIndex.erase(pTipIndex->GetBlockHash());
 
-			assert(view.Flush() &&txCacheTemp.Flush()&& contractScriptTemp.Flush() );
-			txCacheTemp.Clear();
+//			if (!ReadBlockFromDisk(block, pindex))
+//				throw ERROR("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
+//						pindex->GetBlockHash().ToString());
+//			bool fClean = true;
+//			CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
+//			CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+//			if (!DisconnectBlock(block, state, view, pindex, txCacheTemp, contractScriptTemp, &fClean))
+//				throw ERROR("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
+//						pindex->GetBlockHash().ToString());
+//			CBlockIndex *pindexDelete = pindex;
+//			pindex = pindex->pprev;
+//			chainActive.SetTip(pindex);
+//
+//			assert(view.Flush() &&txCacheTemp.Flush()&& contractScriptTemp.Flush() );
+//			txCacheTemp.Clear();
 		}
 //		pTxCacheTip->Flush();
 		Object obj;
-		obj.push_back(Pair("tip", strprintf("hash%s hight:%s",chainActive.Tip()->GetBlockHash().ToString(),chainActive.Tip()->nHeight)));
+		obj.push_back(Pair("tip", strprintf("hash:%s hight:%s",chainActive.Tip()->GetBlockHash().ToString(),chainActive.Tip()->nHeight)));
 		return obj;
 }
 

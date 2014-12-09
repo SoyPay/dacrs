@@ -26,6 +26,10 @@ bool CBlockTreeDB::WriteBlockIndex(const CDiskBlockIndex& blockindex) {
 	return Write(make_pair('b', blockindex.GetBlockHash()), blockindex);
 }
 
+bool CBlockTreeDB::EraseBlockIndex(const uint256& blockHash) {
+	return Erase(make_pair('b', blockHash));
+}
+
 bool CBlockTreeDB::WriteBestInvalidWork(const CBigNum& bnBestInvalidWork) {
 	// Obsolete; only written for backward compatibility.
 	return Write('I', bnBestInvalidWork);
@@ -428,3 +432,4 @@ bool CScriptDB::GetScriptData(const vector<unsigned char> &vScriptId, const int 
 		return false;
 	return true;
 }
+

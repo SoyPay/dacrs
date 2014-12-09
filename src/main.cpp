@@ -4097,3 +4097,9 @@ Value ListSetBlockIndexValid() {
 	}
 	return result;
 }
+
+
+bool EraseBlockIndexFromSet(CBlockIndex *pIndex) {
+	AssertLockHeld(cs_main);
+	return setBlockIndexValid.erase(pIndex)>0;
+}

@@ -832,7 +832,6 @@ public:
 };
 
 
-
 /** Used to marshal pointers into hashes for db storage. */
 class CDiskBlockIndex : public CBlockIndex
 {
@@ -1063,7 +1062,7 @@ struct CBlockTemplate
 };
 
 
-
+bool EraseBlockIndexFromSet(CBlockIndex *pIndex);
 
 
 
