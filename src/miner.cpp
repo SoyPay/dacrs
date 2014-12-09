@@ -487,8 +487,8 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 		}
 
 		CAccountViewCache accView(*pAccountViewTip, true);
-		CTransactionCache txCacheTemp(*pTxCacheTip);
-		CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
+		CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
+		CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 		{
 			for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
 				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
@@ -639,7 +639,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 	return false;
 }
 
-bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionCache &txCache, CScriptDBViewCache &scriptCache, bool bJustCheckSign) {
+bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool bJustCheckSign) {
 
 	uint64_t maxNonce = SysCfg().GetArg("-blockmaxnonce", 10000); //cacul times
 
@@ -652,8 +652,8 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 		LogPrint("ERROR", "hashMerkleRoot is error\r\n");
 		return false;
 	}
-	CAccountViewCache view(accView);
-	CScriptDBViewCache scriptDBView(scriptCache);
+	CAccountViewCache view(accView, true);
+	CScriptDBViewCache scriptDBView(scriptCache, true);
 	CAccount account;
 	{
 		CRewardTransaction *prtx = (CRewardTransaction *) pBlock->vptx[0].get();
@@ -824,9 +824,9 @@ CBlockTemplate* CreateNewBlock() {
 
 		TxPriorityCompare comparer(fSortedByFee);
 		make_heap(vecPriority.begin(), vecPriority.end(), comparer);
-		CAccountViewCache accviewtemp(accview);
-		CTransactionCache txCacheTemp(*pTxCacheTip);
-		CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
+		CAccountViewCache accviewtemp(accview, true);
+		CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
+		CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 
 		while (!vecPriority.empty()) {
 			// Take highest priority transaction off the priority queue:

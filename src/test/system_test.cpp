@@ -15,13 +15,13 @@
 #include "rpcserver.h"
 #include "noui.h"
 #include "ui_interface.h"
-#include "CRPCRequest.h"
+#include "SysTestBase.h"
 #include <boost/algorithm/string/predicate.hpp>
 
 using namespace std;
 using namespace boost;
 
-class CSystemTest:public CRPCRequest
+class CSystemTest:public SysTestBase
 {
 public:
 	CSystemTest() {
@@ -33,13 +33,13 @@ public:
 	}
 private:
 	void StartServer() {
-		int argc = 2;
-		char* argv[] = {"D:\\cppwork\\soypay\\src\\soypayd.exe","-datadir=d:\\bitcoin" };
-		CRPCRequest::StartServer(argc,argv);
+//		int argc = 2;
+//		char* argv[] = {"D:\\cppwork\\soypay\\src\\soypayd.exe","-datadir=d:\\bitcoin" };
+//		SysTestBase::StartServer(argc,argv);
 	}
 
 	void StopServer() {
-		CRPCRequest::StopServer();
+//		SysTestBase::StopServer();
 	}
 
 public:
@@ -239,6 +239,7 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 	uint256 blockHash;
 	BOOST_CHECK(GetBlockHash(nNewBlockHeight,blockHash));
 	BOOST_CHECK(IsTxConfirmdInWallet(blockHash,uint256(strTxHash)));
+
 
 	//通过listregscript 获取相关信息，一一核对，看是否和输入的一致
 	string strPath = SysCfg().GetDefaultTestDataPath() + strFileName;

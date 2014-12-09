@@ -5,7 +5,7 @@
  *      Author: ranger.shi
  */
 
-#include "CRPCRequest.h"
+#include "SysTestBase.h"
 
 
 
@@ -93,16 +93,16 @@ std::tuple<bool, boost::thread*> RunSoyPay(int argc, char* argv[]) {
 
 
 
-CRPCRequest::CRPCRequest() {
+SysTestBase::SysTestBase() {
 	// todo Auto-generated constructor stub
 
 }
 
-CRPCRequest::~CRPCRequest() {
+SysTestBase::~SysTestBase() {
 	// todo Auto-generated destructor stub
 }
 
-int CRPCRequest::GetRandomFee() {
+int SysTestBase::GetRandomFee() {
 	srand(time(NULL));
 	int r = (rand() % 1000000) + 1000000;
 	return r;
@@ -110,13 +110,13 @@ int CRPCRequest::GetRandomFee() {
 
 
 
-int CRPCRequest::GetRandomMoney() {
+int SysTestBase::GetRandomMoney() {
 	srand(time(NULL));
 	int r = (rand() % 1000) + 1000;
 	return r;
 }
 
-Value CRPCRequest::CreateRegScriptTx(const string& strAddress, const string& strScript, bool bRigsterScript, int nFee,
+Value SysTestBase::CreateRegScriptTx(const string& strAddress, const string& strScript, bool bRigsterScript, int nFee,
 		int nHeight, const CNetAuthorizate& author) {
 	string strScriptData;
 	char szType[1] = { 0 };
@@ -164,7 +164,7 @@ Value CRPCRequest::CreateRegScriptTx(const string& strAddress, const string& str
 	return value;
 }
 
-Value CRPCRequest::GetAccountInfo(const string& strID) {
+Value SysTestBase::GetAccountInfo(const string& strID) {
 	char *argv[] = { "rpctest", "getaccountinfo", (char*) strID.c_str() };
 	int argc = sizeof(argv) / sizeof(char*);
 
@@ -175,7 +175,7 @@ Value CRPCRequest::GetAccountInfo(const string& strID) {
 	return value;
 }
 
-bool CRPCRequest::CommandLineRPC_GetValue(int argc, char *argv[], Value &value) {
+bool SysTestBase::CommandLineRPC_GetValue(int argc, char *argv[], Value &value) {
 	string strPrint;
 	bool nRes = false;
 	try {
@@ -232,7 +232,7 @@ bool CRPCRequest::CommandLineRPC_GetValue(int argc, char *argv[], Value &value) 
 	return nRes;
 }
 
-bool CRPCRequest::IsScriptAccCreated(const string& strScript) {
+bool SysTestBase::IsScriptAccCreated(const string& strScript) {
 	Value valueRes = GetAccountInfo(strScript);
 	if (valueRes.type() == null_type)
 		return false;
@@ -244,7 +244,7 @@ bool CRPCRequest::IsScriptAccCreated(const string& strScript) {
 	return true;
 }
 
-uint64_t CRPCRequest::GetFreeMoney(const string& strID) {
+uint64_t SysTestBase::GetFreeMoney(const string& strID) {
 	Value valueRes = GetAccountInfo(strID);
 	BOOST_CHECK(valueRes.type() != null_type);
 	Value result = find_value(valueRes.get_obj(), "FreeValues");
@@ -264,7 +264,7 @@ uint64_t CRPCRequest::GetFreeMoney(const string& strID) {
 	return nMoney;
 }
 
-bool CRPCRequest::GetOneAddr(std::string &addr, char *pStrMinMoney, char *bpBoolReg) {
+bool SysTestBase::GetOneAddr(std::string &addr, char *pStrMinMoney, char *bpBoolReg) {
 	//CommanRpc
 	char *argv[] = { "rpctest", "getoneaddr", pStrMinMoney, bpBoolReg };
 	int argc = sizeof(argv) / sizeof(char*);
@@ -278,7 +278,7 @@ bool CRPCRequest::GetOneAddr(std::string &addr, char *pStrMinMoney, char *bpBool
 	return false;
 }
 
-bool CRPCRequest::GetOneScriptId(std::string &regscriptid) {
+bool SysTestBase::GetOneScriptId(std::string &regscriptid) {
 	//CommanRpc
 	char *argv[] = { "rpctest", "listscriptregid" };
 	int argc = sizeof(argv) / sizeof(char*);
@@ -293,7 +293,7 @@ bool CRPCRequest::GetOneScriptId(std::string &regscriptid) {
 	return false;
 }
 
-bool CRPCRequest::GetNewAddr(std::string &addr) {
+bool SysTestBase::GetNewAddr(std::string &addr) {
 	//CommanRpc
 	char *argv[] = { "rpctest", "getnewaddress" };
 	int argc = sizeof(argv) / sizeof(char*);
@@ -308,7 +308,7 @@ bool CRPCRequest::GetNewAddr(std::string &addr) {
 	return false;
 }
 
-bool CRPCRequest::GetAccState(const std::string &addr, AccState &accstate) {
+bool SysTestBase::GetAccState(const std::string &addr, AccState &accstate) {
 	//CommanRpc
 	char temp[64] = { 0 };
 	strncpy(temp, addr.c_str(), sizeof(temp) - 1);
@@ -332,7 +332,7 @@ bool CRPCRequest::GetAccState(const std::string &addr, AccState &accstate) {
 	return false;
 }
 
-bool CRPCRequest::GetBlockHeight(int &nHeight) {
+bool SysTestBase::GetBlockHeight(int &nHeight) {
 	char *argv[] = { "rpctest", "getinfo", };
 	int argc = sizeof(argv) / sizeof(char*);
 
@@ -347,7 +347,7 @@ bool CRPCRequest::GetBlockHeight(int &nHeight) {
 	return false;
 }
 
-bool CRPCRequest::CreateNormalTx(const std::string &srcAddr, const std::string &desAddr, const int nHeight) {
+bool SysTestBase::CreateNormalTx(const std::string &srcAddr, const std::string &desAddr, const int nHeight) {
 	//CommanRpc
 	char src[64] = { 0 };
 	strncpy(src, srcAddr.c_str(), sizeof(src) - 1);
@@ -380,7 +380,7 @@ bool CRPCRequest::CreateNormalTx(const std::string &srcAddr, const std::string &
 	return false;
 }
 
-bool CRPCRequest::CreateFreezeTx(const std::string &addr, const int nHeight) {
+bool SysTestBase::CreateFreezeTx(const std::string &addr, const int nHeight) {
 	//CommanRpc
 	char caddr[64] = { 0 };
 	strncpy(caddr, addr.c_str(), sizeof(caddr) - 1);
@@ -412,7 +412,7 @@ bool CRPCRequest::CreateFreezeTx(const std::string &addr, const int nHeight) {
 	return false;
 }
 
-bool CRPCRequest::RegisterAccountTx(const std::string &addr, const int nHeight) {
+bool SysTestBase::RegisterAccountTx(const std::string &addr, const int nHeight) {
 	//CommanRpc
 	char caddr[64] = { 0 };
 	strncpy(caddr, addr.c_str(), sizeof(caddr) - 1);
@@ -437,7 +437,7 @@ bool CRPCRequest::RegisterAccountTx(const std::string &addr, const int nHeight) 
 	return false;
 }
 
-bool CRPCRequest::CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
+bool SysTestBase::CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 		const int nHeight) {
 	char cscriptid[1024] = { 0 };
 //		vector<char> te(scriptid.begin(),scriptid.end());
@@ -470,16 +470,16 @@ bool CRPCRequest::CreateContractTx(const std::string &scriptid, const std::strin
 	return false;
 }
 
-Value CRPCRequest::RegisterScriptTx(const string& strAddress, const string& strScript, int nHeight, int nFee) {
+Value SysTestBase::RegisterScriptTx(const string& strAddress, const string& strScript, int nHeight, int nFee) {
 	return CreateRegScriptTx(strAddress, strScript, true, nFee, nHeight, CNetAuthorizate());
 }
 
-Value CRPCRequest::ModifyAuthor(const string& strAddress, const string& strScript, int nHeight, int nFee,
+Value SysTestBase::ModifyAuthor(const string& strAddress, const string& strScript, int nHeight, int nFee,
 		const CNetAuthorizate& author) {
 	return CreateRegScriptTx(strAddress, strScript, false, nFee, nHeight, author);
 }
 
-bool CRPCRequest::CreateSecureTx(const string &scriptid, const vector<string> &obaddrs, const vector<string> &addrs,
+bool SysTestBase::CreateSecureTx(const string &scriptid, const vector<string> &obaddrs, const vector<string> &addrs,
 		const string&contract, const int nHeight) {
 	//CommanRpc
 	char cscriptid[64] = { 0 };
@@ -524,7 +524,7 @@ bool CRPCRequest::CreateSecureTx(const string &scriptid, const vector<string> &o
 	return false;
 }
 
-bool CRPCRequest::SignSecureTx(const string &securetx) {
+bool SysTestBase::SignSecureTx(const string &securetx) {
 	//CommanRpc
 	char csecuretx[10 * 1024] = { 0 };
 	strncpy(csecuretx, securetx.c_str(), sizeof(csecuretx) - 1);
@@ -540,7 +540,7 @@ bool CRPCRequest::SignSecureTx(const string &securetx) {
 	return false;
 }
 
-bool CRPCRequest::IsAllTxInBlock() {
+bool SysTestBase::IsAllTxInBlock() {
 	char *argv[] = { "rpctest", "listunconfirmedtx" };
 	int argc = sizeof(argv) / sizeof(char*);
 
@@ -554,7 +554,7 @@ bool CRPCRequest::IsAllTxInBlock() {
 	return false;
 }
 
-bool CRPCRequest::GetBlockHash(const int nHeight, std::string &blockhash) {
+bool SysTestBase::GetBlockHash(const int nHeight, std::string &blockhash) {
 	char height[16] = { 0 };
 	sprintf(height, "%d", nHeight);
 
@@ -570,7 +570,7 @@ bool CRPCRequest::GetBlockHash(const int nHeight, std::string &blockhash) {
 	return false;
 }
 
-bool CRPCRequest::GetBlockMinerAddr(const std::string &blockhash, std::string &addr) {
+bool SysTestBase::GetBlockMinerAddr(const std::string &blockhash, std::string &addr) {
 	char cblockhash[80] = { 0 };
 	strncpy(cblockhash, blockhash.c_str(), sizeof(cblockhash) - 1);
 
@@ -587,8 +587,8 @@ bool CRPCRequest::GetBlockMinerAddr(const std::string &blockhash, std::string &a
 	}
 	return false;
 }
-
-bool CRPCRequest::GenerateOneBlock() {
+boost::thread*SysTestBase::pThreadShutdown = NULL;
+bool SysTestBase::GenerateOneBlock() {
 	char *argv[] = { "rpctest", "setgenerate", "true" };
 	int argc = sizeof(argv) / sizeof(char*);
 
@@ -611,20 +611,23 @@ bool CRPCRequest::DisConnectBlock(int nNum) {
 	return false;
 }
 
-void CRPCRequest::StartServer(int argc,char* argv[]) {
+void SysTestBase::StartServer(int argc,char* argv[]) {
 //		int argc = 2;
 //		char* argv[] = {"D:\\cppwork\\soypay\\src\\soypayd.exe","-datadir=d:\\bitcoin" };
+	assert(pThreadShutdown == NULL);
+	{
 	std::tuple<bool, boost::thread*> ret = RunSoyPay(argc, argv);
 	pThreadShutdown = std::get<1>(ret);
+	}
 }
 
 //void StartShutdown()
 //{
 //    fRequestShutdown = true;
 //}
-void CRPCRequest::StopServer() {
+void SysTestBase::StopServer() {
 	StartShutdown();
-
+	assert(pThreadShutdown != NULL);
 	if (pThreadShutdown) {
 		pThreadShutdown->join();
 		delete pThreadShutdown;

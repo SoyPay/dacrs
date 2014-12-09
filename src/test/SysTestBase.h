@@ -93,7 +93,7 @@ struct AccOperLog {
 	}
 };
 
-class CRPCRequest {
+class SysTestBase {
 protected:
 	int GetRandomFee();
 
@@ -105,13 +105,13 @@ protected:
 	Value GetAccountInfo(const string& strID);
 
 public:
-	CRPCRequest();
+	SysTestBase();
 
-	~CRPCRequest();
+	~SysTestBase();
 
-	void StartServer(int argc,char* argv[]);
+	static void StartServer(int argc,char* argv[]);
 
-	void StopServer();
+	static void StopServer();
 
 	bool CommandLineRPC_GetValue(int argc, char *argv[], Value &value);
 
@@ -158,7 +158,7 @@ public:
 
 	bool DisConnectBlock(int nNum);
 protected:
-	boost::thread* pThreadShutdown;
+	static boost::thread* pThreadShutdown ;
 	std::map<string, AccState> mapAccState;
 	std::map<string, AccOperLog> mapAccOperLog;
 	int nCurHeight;
