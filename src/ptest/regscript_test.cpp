@@ -171,6 +171,16 @@ private:
 		return value;
 	}
 
+	Value GetAccountInfo(const string& strID) {
+		char *argv[] = {"rpctest", "getaccountinfo",(char*) strID.c_str() };
+		int argc = sizeof(argv) / sizeof(char*);
+
+		Value value;
+		if (CommandLineRPC_GetValue(sizeof(argv) / sizeof(argv[0]), argv, value)) {
+			return value;
+		}
+		return value;
+	}
 public:
 	bool CommandLineRPC_GetValue(int argc, char *argv[],Value &value)
 	{
@@ -237,6 +247,39 @@ public:
 	    }
 
 	    return nRes;
+	}
+
+	bool IsScriptAccCreated(const string& strScript)
+	{
+		Value valueRes = GetAccountInfo(strScript);
+		if (valueRes.type() == null_type)
+			return false;
+
+		Value result = find_value(valueRes.get_obj(), "KeyID");
+		if (result.type() == null_type)
+			return false;
+
+		return true;
+	}
+
+	uint64_t GetFreeMoney(const string& strID)
+	{
+		Value valueRes = GetAccountInfo(strID);
+		BOOST_CHECK(valueRes.type() != null_type);
+		Value result = find_value(valueRes.get_obj(), "FreeValues");
+		BOOST_CHECK(result.type() != null_type);
+
+		uint64_t nMoney = result.get_int64();
+
+		result = find_value(valueRes.get_obj(), "FreedomFund");
+		Array arrayFreedom = result.get_array();
+
+		for (const auto& item:arrayFreedom)
+		{
+			nMoney += find_value(valueRes.get_obj(), "value").get_int64();
+
+		}
+		return nMoney;
 	}
 
 	bool GetOneAddr(std::string &addr,char *pStrMinMoney,char *bpBoolReg)
@@ -605,6 +648,7 @@ public:
 		return false;
 	}
 
+
 public:
 	CRPCRequest()
 	{
@@ -637,8 +681,6 @@ public:
 	}
 };
 
-
-
 //
 //void CreateContactTx(int param)
 //{
@@ -662,20 +704,27 @@ public:
 BOOST_FIXTURE_TEST_SUITE(regscript_test,CRPCRequest)
 BOOST_FIXTURE_TEST_CASE(reg_test,CRPCRequest)
  {
-	int nHeight = 0;
-	BOOST_CHECK(GetBlockHeight(nHeight) && 0 == nHeight);
-
-	int nFee = 10000;
-	Value valueRes = RegisterScriptTx("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA", "RegScriptTest.bin", 100, nFee);
-
-	BOOST_CHECK(valueRes.type() != null_type);
-	const Value& result = find_value(valueRes.get_obj(), "hash");
-	BOOST_CHECK(result.type() != null_type);
-
-	string strHash = result.get_str();
-
-	BOOST_CHECK(GenerateOneBlock() );
-
-
+//	int nHeight = 0;
+//	BOOST_CHECK(GetBlockHeight(nHeight) && 0 == nHeight);
+//
+//	string strAddr("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA");
+//
+//	int nFee = 10000;
+//	Value valueRes = RegisterScriptTx(strAddr, "RegScriptTest.bin", 100, nFee);
+//	BOOST_CHECK(valueRes.type() != null_type);
+//	const Value& result = find_value(valueRes.get_obj(), "hash");
+//	BOOST_CHECK(result.type() != null_type);
+//	string strHash = result.get_str();
+//
+//	//挖矿
+//	uint64_t nOldMoney = GetFreeMoney(strAddr);
+//	BOOST_CHECK(GenerateOneBlock() );
+//
+//	//确认钱已经扣除
+//	BOOST_CHECK(GetBlockHeight(nHeight) && 1 == nHeight);
+//	BOOST_CHECK(GetFreeMoney(strAddr) == nOldMoney-nFee);
+//
+//	BOOST_CHECK(IsScriptAccCreated(strAddr));
+//	BOOST_CHECK(!IsScriptAccCreated("000000000000"));
 }
 BOOST_AUTO_TEST_SUITE_END()

@@ -98,3 +98,14 @@ void CBlock::print(CAccountViewCache &view) const
 //    	LogPrint("INFO","%s ", vMerkleTree[i].ToString());
     LogPrint("INFO","\n");
 }
+
+std::tuple<bool, int> CBlock::GetTxIndex(const uint256& txHash) const {
+	for (size_t i = 0;i<vMerkleTree.size();i++) {
+			if (txHash == vMerkleTree[i]) {
+				return std::make_tuple(true,i);
+			}
+		}
+
+	return std::make_tuple(false,0);
+}
+

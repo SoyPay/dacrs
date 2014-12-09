@@ -18,7 +18,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
-CWallet* pwalletMain;
+//CWallet* pwalletMain;
 
 
 extern void noui_connect();
@@ -92,18 +92,18 @@ struct TestingSetup {
 
 BOOST_GLOBAL_FIXTURE(TestingSetup);
 
-void Shutdown(void* parg)
-{
-  exit(0);
-}
+//void Shutdown(void* parg)
+//{
+//  exit(0);
+//}
+//
+//void StartShutdown()
+//{
+//  exit(0);
+//}
 
-void StartShutdown()
-{
-  exit(0);
-}
-
-bool ShutdownRequested()
-{
-  return false;
-}
+//bool ShutdownRequested()
+//{
+//  return false;
+//}
 

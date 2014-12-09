@@ -16,7 +16,8 @@ JSON_TEST_FILES = \
   data/script_invalid.json.h \
   data/tx_invalid.json.h \
   data/tx_valid.json.h \
-  data/sighash.json.h
+  data/sighash.json.h	\
+  CRPCRequest.h
 
 RAW_TEST_FILES = data/alertTests.raw.h
 
@@ -60,6 +61,8 @@ soypay_test_SOURCES = \
   scriptdb_tests.cpp \
   betroll_test.cpp \
   CVir8051Func_test.cpp \
+  system_test.cpp	\
+  CRPCRequest.cpp	\
   $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 
 #if ENABLE_WALLET
