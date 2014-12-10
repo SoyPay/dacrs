@@ -113,6 +113,8 @@ public:
 
 	static void StopServer();
 
+	bool ResetEnv();
+
 	bool CommandLineRPC_GetValue(int argc, char *argv[], Value &value);
 
 	bool IsScriptAccCreated(const string& strScript);
@@ -157,6 +159,7 @@ public:
 
 	bool GenerateOneBlock();
 
+	bool DisConnectBlock(int nNum);
 protected:
 	static boost::thread* pThreadShutdown ;
 	std::map<string, AccState> mapAccState;

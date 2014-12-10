@@ -217,7 +217,7 @@ Value stop(const Array& params, bool fHelp)
 //
 // Call Table
 //
-extern Value restclient(const Array& params, bool fHelp);
+extern Value resetclient(const Array& params, bool fHelp);
 extern Value gettxoperationlog(const Array& params, bool fHelp);
 static const CRPCCommand vRPCCommands[] =
 { //  name                      actor (function)         okSafeMode threadSafe reqWallet
@@ -306,7 +306,7 @@ static const CRPCCommand vRPCCommands[] =
 //for test code
 	{ "gettxoperationlog",      &gettxoperationlog,      false,      false,     false },
     { "disconnectblock",        &disconnectblock,        true,      false,      true },
-    { "restclient",             &restclient,             true,      false,      false },
+    { "resetclient",             &resetclient,             true,      false,      false },
     { "reloadtxcache",          &reloadtxcache,          true,      false,      true },
     { "listsetblockindexvalid",  &listsetblockindexvalid, true,     false,      false},
 };

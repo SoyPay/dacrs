@@ -95,11 +95,46 @@ std::tuple<bool, boost::thread*> RunSoyPay(int argc, char* argv[]) {
 
 SysTestBase::SysTestBase() {
 	// todo Auto-generated constructor stub
-
 }
 
 SysTestBase::~SysTestBase() {
 	// todo Auto-generated destructor stub
+}
+
+bool SysTestBase::ResetEnv() {
+	char *argv[] = { "rpctest", "resetclient" };
+
+	Value value;
+	if (!CommandLineRPC_GetValue(sizeof(argv) / sizeof(argv[0]), argv, value)) {
+		return false;
+	}
+
+	char* pKey[] = { 															//
+					"cUa4v77hiXteMFkHoyuPVVbCCULS1CnFBhU1MhgKHEGRTHmd4BC5",		//
+					"cTAqnCwjuLwXqHxGe5c6KrGqQw5yjHH6Na6yYRQCgKKnf6cJBPxF",
+					"cVFWoy8jmJVVSNnMs3YRizkR7XEekMTta4MzvuRshKuQEEJ4kbNg",
+					"cSu84vACzZkWqnP2LUdJQLX3M1PYYXo2gEDDCEKLWNWfM7B4zLiP",
+					"cSVY69D9aUo4MugzUG9rM14DtV21cBAbZUVXmgAC2RpJwtZRUbsM",
+					"cTCcDyQvX6ucP9NEjhyHfTixamKQHQkFiSyfupm4CGZZYV7YYnf8",
+					"cUwPkEYdg3d3CmNctg2aegdyeq7dbLta1HAVHcGQTp33kWqzMSuT ",
+					"cPqVgscsWpPgkLHZP3pKJVSU5ZTCCvVhkd5cmXVWVydXdMTtBGj7",
+					"cU1dxQgvyKt8yEqqkKiNLK9jfyW498RKi8y2evqzjtLXrLD4fBMs",
+					"cRYYMN1EFd9X4sGqEkUkWLi38GCFyAccKQEuF1WiYFwUWsqBGwHe",
+					"cR5wPiv3Vp4sQmww2gWzShkDUaamYrJ6QHHtDd1Pm4nVJFTxnksC",
+					"cT1BuRbx5Cvmvic2dX2aq3ep2fu75CDwYk8fCQPtrftKiBEQiPJm", };
+
+	int nCount = sizeof(pKey) / sizeof(char*);
+	for (int i = 0; i < nCount; i++) {
+		char *argv2[] = { "rpctest", "importprivkey", };
+		int argc2 = sizeof(argv2) / sizeof(char*);
+
+		Value value;
+		if (!CommandLineRPC_GetValue(sizeof(argv2) / sizeof(argv2[0]), argv2, value)) {
+			return false;
+		}
+	}
+
+	return true;
 }
 
 int SysTestBase::GetRandomFee() {
@@ -625,6 +660,17 @@ bool SysTestBase::GenerateOneBlock() {
 	return false;
 }
 
+bool SysTestBase::DisConnectBlock(int nNum) {
+	string strNum = strprintf("%d",nNum);
+	char *argv[3] = { "rpctest", "disconnectblock", (char*)strNum.c_str() };
+	int argc = sizeof(argv) / sizeof(char*);
+
+	Value value;
+	if (CommandLineRPC_GetValue(argc, argv, value)) {
+		return true;
+	}
+	return false;
+}
 
 void SysTestBase::StartServer(int argc,char* argv[]) {
 //		int argc = 2;
