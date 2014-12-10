@@ -280,13 +280,15 @@ bool SysTestBase::GetOneAddr(std::string &addr, char *pStrMinMoney, char *bpBool
 
 bool SysTestBase::GetOneScriptId(std::string &regscriptid) {
 	//CommanRpc
-	char *argv[] = { "rpctest", "listscriptregid" };
+	char *argv[] = { "rpctest", "listregscript" };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
 		Object &Oid = value.get_obj();
-		regscriptid = Oid[0].value_.get_str();
+		Object &Oid1 = Oid[0].value_.get_obj();
+		const Value& result1 = find_value(Oid1, "scriptId");
+		regscriptid = result1.get_str();
 		LogPrint("test_miners", "GetOneAddr:%s\r\n", regscriptid.c_str());
 		return true;
 	}
@@ -436,7 +438,31 @@ bool SysTestBase::RegisterAccountTx(const std::string &addr, const int nHeight) 
 	}
 	return false;
 }
+Value SysTestBase::CreateContractTx1(const std::string &scriptid, const std::string &addrs, const std::string &contract,
+			const int nHeight)
+{
+	char cscriptid[1024] = { 0 };
 
+	char fee[64] = { 0 };
+	int nfee = GetRandomFee();
+	sprintf(fee, "%d", nfee);
+	nCurFee = nfee;
+
+	char height[16] = { 0 };
+	sprintf(height, "%d", nHeight);
+
+	char *argv[] = { "rpctest", "createcontracttx", (char *) (scriptid.c_str()), (char *) (addrs.c_str()),
+			(char *) (contract.c_str()), fee, height };
+	int argc = sizeof(argv) / sizeof(char*);
+
+	Value value;
+	if (CommandLineRPC_GetValue(argc, argv, value)) {
+		LogPrint("test_miners", "createcontracttx:%s\r\n", value.get_str().c_str());
+		return value;
+	}
+	LogPrint("test_miners", "createcontracttx:%s\r\n", value.get_str().c_str());
+	return value;
+}
 bool SysTestBase::CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 		const int nHeight) {
 	char cscriptid[1024] = { 0 };
