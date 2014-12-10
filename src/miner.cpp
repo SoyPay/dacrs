@@ -906,7 +906,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet) {
 	{
 		LOCK(cs_main);
 		if (pblock->hashPrevBlock != chainActive.Tip()->GetBlockHash())
-			return ERROR("BitcoinMiner : generated block is stale");
+			return ERROR("SoypayMiner : generated block is stale");
 
 		// Remove key from key pool
 	//	reservekey.KeepKey();
@@ -920,7 +920,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet) {
 		// Process this block the same as if we had received it from another node
 		CValidationState state;
 		if (!ProcessBlock(state, NULL, pblock))
-			return ERROR("BitcoinMiner : ProcessBlock, block not accepted");
+			return ERROR("SoypayMiner : ProcessBlock, block not accepted");
 	}
 
 	return true;
@@ -986,7 +986,7 @@ void static SoypayMiner(CWallet *pwallet) {
 			}
 		}
 	} catch (boost::thread_interrupted) {
-		LogPrint("INFO","BitcoinMiner terminated\n");
+		LogPrint("INFO","SoypayMiner  terminated\n");
 		throw;
 	}
 }
@@ -1031,12 +1031,14 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads) {
 	static boost::thread_group* minerThreads = NULL;
 
-	if (nThreads < 0) {
-		if (SysCfg().NetworkID() == CBaseParams::REGTEST)
-			nThreads = 1;
-		else
-			nThreads = boost::thread::hardware_concurrency();
+	if (nThreads != 0) {//in pos system one thread is enough  marked by ranger.shi
+		nThreads = 1;
+//		if (SysCfg().NetworkID() == CBaseParams::REGTEST)
+//			nThreads = 1;
+//		else
+//			nThreads = boost::thread::hardware_concurrency();
 	}
+
 
 	if (minerThreads != NULL) {
 		minerThreads->interrupt_all();
