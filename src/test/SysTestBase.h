@@ -113,6 +113,8 @@ public:
 
 	static void StopServer();
 
+	bool ResetEnv();
+
 	bool CommandLineRPC_GetValue(int argc, char *argv[], Value &value);
 
 	bool IsScriptAccCreated(const string& strScript);

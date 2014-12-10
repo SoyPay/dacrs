@@ -368,22 +368,24 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 			}
 		};
 		auto DisConnectBlockProgress = [&]() {
-			CAccountTx Oldtx(this, blockhash);
+//			CAccountTx Oldtx(this, blockhash);
 			for (const auto &sptx : pblock->vptx) {
-				if (sptx->nTxType == REG_ACCT_TX) {
-					if (IsMine(sptx.get())) {
+				if(IsMine(sptx.get())) {
+					if (sptx->nTxType == REG_ACCT_TX) {
 						fIsNeedUpDataRegID = true;
 					}
-				}
-				Oldtx.AddTx(sptx->GetHash(), sptx.get());
-			}
-
-			Oldtx.AcceptToMemoryPool(); //add those tx to mempool
-				if (mapInBlockTx.count(blockhash)) {
-					mapInBlockTx.erase(blockhash);
+					UnConfirmTx[sptx.get()->GetHash()] = sptx.get()->GetNewInstance();
 					bupdate = true;
 				}
-		};
+//				Oldtx.AddTx(sptx->GetHash(), sptx.get());
+
+			}
+//			Oldtx.AcceptToMemoryPool(); //add those tx to mempool
+			if (mapInBlockTx.count(blockhash)) {
+				mapInBlockTx.erase(blockhash);
+				bupdate = true;
+			}
+			};
 		auto IsConnect = [&]() // test is connect or disconct
 			{
 				return mapBlockIndex.count(blockhash) && chainActive.Contains(mapBlockIndex[blockhash]);

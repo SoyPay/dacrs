@@ -1252,7 +1252,7 @@ Value disconnectblock(const Array& params, bool fHelp) {
 	return te;
 }
 
-Value restclient(const Array& params, bool fHelp) {
+Value resetclient(const Array& params, bool fHelp) {
 	Value te = TestDisconnectBlock(chainActive.Tip()->nHeight);
 	if(chainActive.Tip()->nHeight == 0)
 	{

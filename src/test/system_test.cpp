@@ -72,6 +72,24 @@ public:
 		return false;
 	}
 
+	bool IsTxUnConfirmdInWallet(const uint256& txHash) {
+		for (const auto &item : pwalletMain->UnConfirmTx) {
+			if (txHash == item.first) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool IsTxInMemorypool(const uint256& txHash) {
+		for (const auto& entry : mempool.mapTx) {
+			if (entry.first == txHash)
+				return true;
+		}
+
+		return false;
+	}
+
 	bool GetTxIndexInBlock(const uint256& txHash, int& nIndex) {
 		CBlockIndex* pindex = chainActive.Tip();
 		CBlock block;
@@ -209,52 +227,105 @@ private:
 BOOST_FIXTURE_TEST_SUITE(system_test,CSystemTest)
 BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 {
-	int nOldBlockHeight = GetBlockHeight();
-	string strAddr("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA");
-
-	int nFee = 10000;
+	int nOldBlockHeight = 0;
+	int nNewBlockHeight = 0;
+	int nTimeOutHeight = 5;
+	int nFee = 100000;
+	uint64_t nOldMoney = 0;
+	uint64_t nNewMoney = 0;
 	string strTxHash;
 	string strFileName("RegScriptTest.bin");
-	Value valueRes = RegisterScriptTx(strAddr,strFileName , 100, nFee);
-	BOOST_CHECK(GetHashFromCreatedTx(valueRes,strTxHash));
+	string strAddr("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA");
 
-	//挖矿
-	uint64_t nOldMoney = GetFreeMoney(strAddr);
-	BOOST_CHECK(GenerateOneBlock());
-	int nNewBlockHeight = GetBlockHeight();
-
-	//确认钱已经扣除
-	BOOST_CHECK(nNewBlockHeight = nOldBlockHeight +1 );
-	cout<<"new: "<<GetFreeMoney(strAddr)<<" old: "<<nOldMoney<<" nfee: "<<nFee<<endl;
-	BOOST_CHECK(GetFreeMoney(strAddr) == nOldMoney - nFee);
-
-	//确认脚本账号已经生成
-	int nIndex = 0;
-	BOOST_CHECK(GetTxIndexInBlock(uint256(strTxHash),nIndex));
-	CRegID regID(nNewBlockHeight,nIndex);
-	BOOST_CHECK(IsScriptAccCreated(HexStr(regID.GetVec6())));
-	BOOST_CHECK(!IsScriptAccCreated("000000000000"));
-
-	//检查钱包里的已确认交易里是否有此笔交易
-	uint256 blockHash;
-	BOOST_CHECK(GetBlockHash(nNewBlockHeight,blockHash));
-	BOOST_CHECK(IsTxConfirmdInWallet(blockHash,uint256(strTxHash)));
-
-
-	//通过listregscript 获取相关信息，一一核对，看是否和输入的一致
-	string strPath = SysCfg().GetDefaultTestDataPath() + strFileName;
-	cout<<"regid is "<<HexStr(regID.GetVec6())<<endl;
-	BOOST_CHECK(CheckRegScript(HexStr(regID.GetVec6()),strPath));
-
-	//Gettxoperationlog 获取交易log，查看是否正确
+	vector<map<int,string> >vDataInfo;
 	vector<CAccountOperLog> vLog;
-	BOOST_CHECK(GetTxOperateLog(uint256(strTxHash),vLog));
-	BOOST_CHECK(1 == vLog.size() && 1 == vLog[0].vOperFund.size() && 1 == vLog[0].vOperFund[0].vFund.size());
-	BOOST_CHECK(strAddr == vLog[0].keyID.ToAddress());
-	BOOST_CHECK(vLog[0].vOperFund[0].operType == MINUS_FREE && vLog[0].vOperFund[0].vFund[0].value == nFee);
+	for (int i = 0; i < nTimeOutHeight; i++) {
+		//0:产生注册脚本交易
+		Value valueRes = RegisterScriptTx(strAddr,strFileName , nTimeOutHeight, nFee);
+		BOOST_CHECK(GetHashFromCreatedTx(valueRes,strTxHash));
 
-	BOOST_CHECK(DisConnectBlock(1));
-	BOOST_CHECK(nNewBlockHeight-1 == GetBlockHeight());
+		//1:挖矿
+		nOldMoney = GetFreeMoney(strAddr);
+		nOldBlockHeight = GetBlockHeight();
+		BOOST_CHECK(GenerateOneBlock());
+		nNewBlockHeight = GetBlockHeight();
+		cout<<"new height is "<<nNewBlockHeight<<" old height is "<<nOldBlockHeight<<endl;
+
+		//2:确认钱已经扣除
+		BOOST_CHECK(nNewBlockHeight = nOldBlockHeight + 1);
+		nNewMoney = GetFreeMoney(strAddr);
+		cout << "new: " << nNewMoney << " old: " << nOldMoney << " nfee: " << nFee << endl;
+		BOOST_CHECK(nNewMoney == nOldMoney - nFee);
+
+		//3:确认脚本账号已经生成
+		int nIndex = 0;
+		BOOST_CHECK(GetTxIndexInBlock(uint256(strTxHash), nIndex));
+		CRegID regID(nNewBlockHeight, nIndex);
+		BOOST_CHECK(IsScriptAccCreated(HexStr(regID.GetVec6())));
+		BOOST_CHECK(!IsScriptAccCreated("000000000000"));
+
+		//4:检查钱包里的已确认交易里是否有此笔交易
+		uint256 blockHash;
+		BOOST_CHECK(GetBlockHash(nNewBlockHeight, blockHash));
+		BOOST_CHECK(IsTxConfirmdInWallet(blockHash, uint256(strTxHash)));
+
+		//5:通过listregscript 获取相关信息，一一核对，看是否和输入的一致
+		string strPath = SysCfg().GetDefaultTestDataPath() + strFileName;
+		cout << "regid is " << HexStr(regID.GetVec6()) << endl;
+		BOOST_CHECK(CheckRegScript(HexStr(regID.GetVec6()), strPath));
+
+		//6:Gettxoperationlog 获取交易log，查看是否正确
+		BOOST_CHECK(GetTxOperateLog(uint256(strTxHash), vLog));
+		BOOST_CHECK(1 == vLog.size() && 1 == vLog[0].vOperFund.size() && 1 == vLog[0].vOperFund[0].vFund.size());
+		BOOST_CHECK(strAddr == vLog[0].keyID.ToAddress());
+		BOOST_CHECK(vLog[0].vOperFund[0].operType == MINUS_FREE && vLog[0].vOperFund[0].vFund[0].value == nFee);
+
+		map<int,string> mapData;
+		mapData.insert(make_pair(nIndex,strTxHash));
+		vDataInfo.push_back(std::move(mapData));
+	}
+
+	for(int i = vDataInfo.size()-1;i>=0;i--) {
+		map<int,string> mapData = vDataInfo[i];
+		BOOST_CHECK(1 == mapData.size());
+
+		int nTxIndex = mapData.begin()->first;
+		string strTxHash = mapData.begin()->second;
+		uint256 txHash(strTxHash);
+
+		nOldBlockHeight = GetBlockHeight();
+		nOldMoney = GetFreeMoney(strAddr);
+
+		//8:回滚
+		BOOST_CHECK(DisConnectBlock(1));
+
+		//9.1:检查账户手续费是否回退
+		nNewMoney = GetFreeMoney(strAddr);
+		nNewBlockHeight = GetBlockHeight();
+		cout<<"Old Money is "<<nOldMoney<<" new money is "<<nNewMoney<<endl;
+		cout<<"Old Height is "<<nOldBlockHeight<<" new Height is "<<nNewBlockHeight<<endl;
+		BOOST_CHECK(nOldBlockHeight - 1 == nNewBlockHeight);
+		BOOST_CHECK(nNewMoney-nFee == nOldMoney);
+
+		//9.2:检测脚本账户是否删除
+		CRegID regID(nOldBlockHeight, mapData.begin()->first);
+		BOOST_CHECK(!IsScriptAccCreated(HexStr(regID.GetVec6())));
+
+		//9.3:交易是否已经已经放到钱包的未确认交易里
+		cout<<"hash: "<<strTxHash<<endl;
+		BOOST_CHECK(IsTxUnConfirmdInWallet(txHash));
+
+		//9.4:检查交易是否在mempool里
+		BOOST_CHECK(IsTxInMemorypool(txHash));
+
+		//9.5:检查operationlog 是否可以重新获取
+		BOOST_CHECK(!GetTxOperateLog(txHash, vLog));
+	}
+
+	//清空环境
+	ResetEnv();
+	nNewBlockHeight = GetBlockHeight();
+	BOOST_CHECK(0 == nNewBlockHeight);
 }
 BOOST_AUTO_TEST_SUITE_END()
 
