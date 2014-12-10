@@ -125,7 +125,7 @@ bool SysTestBase::ResetEnv() {
 
 	int nCount = sizeof(pKey) / sizeof(char*);
 	for (int i = 0; i < nCount; i++) {
-		char *argv2[] = { "rpctest", "importprivkey", };
+		char *argv2[] = { "rpctest", "importprivkey", pKey[i]};
 		int argc2 = sizeof(argv2) / sizeof(char*);
 
 		Value value;
@@ -661,12 +661,17 @@ bool SysTestBase::GenerateOneBlock() {
 }
 
 bool SysTestBase::DisConnectBlock(int nNum) {
+	int nCurHeight = static_cast<int>(chainActive.Height() );
+	BOOST_CHECK(nNum>0 && nNum<=nCurHeight);
+
 	string strNum = strprintf("%d",nNum);
 	char *argv[3] = { "rpctest", "disconnectblock", (char*)strNum.c_str() };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
+		int nHeightAfterDis = static_cast<int>(chainActive.Height() );
+		BOOST_CHECK(nHeightAfterDis+1 == nCurHeight);
 		return true;
 	}
 	return false;
