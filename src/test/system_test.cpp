@@ -249,12 +249,10 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 		nOldBlockHeight = GetBlockHeight();
 		BOOST_CHECK(GenerateOneBlock());
 		nNewBlockHeight = GetBlockHeight();
-		cout<<"new height is "<<nNewBlockHeight<<" old height is "<<nOldBlockHeight<<endl;
 
 		//2:确认钱已经扣除
 		BOOST_CHECK(nNewBlockHeight = nOldBlockHeight + 1);
 		nNewMoney = GetFreeMoney(strAddr);
-		cout << "new: " << nNewMoney << " old: " << nOldMoney << " nfee: " << nFee << endl;
 		BOOST_CHECK(nNewMoney == nOldMoney - nFee);
 
 		//3:确认脚本账号已经生成
@@ -271,7 +269,6 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 
 		//5:通过listregscript 获取相关信息，一一核对，看是否和输入的一致
 		string strPath = SysCfg().GetDefaultTestDataPath() + strFileName;
-		cout << "regid is " << HexStr(regID.GetVec6()) << endl;
 		BOOST_CHECK(CheckRegScript(HexStr(regID.GetVec6()), strPath));
 
 		//6:Gettxoperationlog 获取交易log，查看是否正确
@@ -302,8 +299,6 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 		//9.1:检查账户手续费是否回退
 		nNewMoney = GetFreeMoney(strAddr);
 		nNewBlockHeight = GetBlockHeight();
-		cout<<"Old Money is "<<nOldMoney<<" new money is "<<nNewMoney<<endl;
-		cout<<"Old Height is "<<nOldBlockHeight<<" new Height is "<<nNewBlockHeight<<endl;
 		BOOST_CHECK(nOldBlockHeight - 1 == nNewBlockHeight);
 		BOOST_CHECK(nNewMoney-nFee == nOldMoney);
 
@@ -312,7 +307,6 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 		BOOST_CHECK(!IsScriptAccCreated(HexStr(regID.GetVec6())));
 
 		//9.3:交易是否已经已经放到钱包的未确认交易里
-		cout<<"hash: "<<strTxHash<<endl;
 		BOOST_CHECK(IsTxUnConfirmdInWallet(txHash));
 
 		//9.4:检查交易是否在mempool里
@@ -326,6 +320,11 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 	ResetEnv();
 	nNewBlockHeight = GetBlockHeight();
 	BOOST_CHECK(0 == nNewBlockHeight);
+}
+
+BOOST_FIXTURE_TEST_CASE(author_test,CSystemTest)
+{
+
 }
 BOOST_AUTO_TEST_SUITE_END()
 

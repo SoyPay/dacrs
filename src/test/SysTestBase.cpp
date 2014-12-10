@@ -125,7 +125,7 @@ bool SysTestBase::ResetEnv() {
 
 	int nCount = sizeof(pKey) / sizeof(char*);
 	for (int i = 0; i < nCount; i++) {
-		char *argv2[] = { "rpctest", "importprivkey", };
+		char *argv2[] = { "rpctest", "importprivkey", pKey[i]};
 		int argc2 = sizeof(argv2) / sizeof(char*);
 
 		Value value;
