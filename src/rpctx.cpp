@@ -1201,6 +1201,10 @@ static Value TestDisconnectBlock(int number)
 		CBlockIndex* pindex = chainActive.Tip();
 		CBlock block;
 		CValidationState state;
+		if((chainActive.Tip()->nHeight - number) < 0)
+		{
+			throw JSONRPCError(RPC_INVALID_PARAMS, "restclient Error: number");
+		}
 		while (number--) {
 			// check level 0: read from disk
 			 CBlockIndex * pTipIndex = chainActive.Tip();
@@ -1254,10 +1258,22 @@ Value disconnectblock(const Array& params, bool fHelp) {
 
 Value resetclient(const Array& params, bool fHelp) {
 	Value te = TestDisconnectBlock(chainActive.Tip()->nHeight);
+
 	if(chainActive.Tip()->nHeight == 0)
 	{
 		pwalletMain->CleanAll();
-		mapBlockIndex.clear();
+		CBlockIndex* te=chainActive.Tip();
+		uint256 hash= te->GetBlockHash();
+		for(auto it = mapBlockIndex.begin(), ite = mapBlockIndex.end(); it != ite;)
+		{
+		  if(it->first != hash)
+		    it = mapBlockIndex.erase(it);
+		  else
+		    ++it;
+		}
+
+
+
 		CBlock firs = SysCfg().GenesisBlock();
 		pwalletMain->SyncTransaction(0,NULL,&firs);
 		mempool.clear();
