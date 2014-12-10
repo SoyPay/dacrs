@@ -118,7 +118,7 @@ public:
 		int nCount(0);
 		if (!pScriptDBTip->GetScriptCount(nCount))
 			return false;
-		cout<<"script count is "<<nCount<<endl;
+
 		if (!pScriptDBTip->GetScript(0, regId, vScript))
 			return false;
 
