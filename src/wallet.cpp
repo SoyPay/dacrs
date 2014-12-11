@@ -784,11 +784,9 @@ Object CAccountTx::ToJosnObj(CKeyID const  &key) const {
 }
 
 uint256 CWallet::GetCheckSum() const {
-	{
-			CHashWriter ss(SER_GETHASH, CLIENT_VERSION);
-			ss << nWalletVersion << bestBlock << MasterKey << mKeyPool << mapInBlockTx;
-			return ss.GetHash();
-		}
+	CHashWriter ss(SER_GETHASH, CLIENT_VERSION);
+	ss << nWalletVersion << bestBlock << MasterKey << mKeyPool << mapInBlockTx;
+	return ss.GetHash();
 }
 
 bool CWallet::GetRegId(const CUserID& address, CRegID& IdOut) const  {

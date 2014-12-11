@@ -362,6 +362,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		tx.get()->llFees = fee;
 		tx.get()->vContract = vcontract;
 		tx.get()->nValidHeight = chainActive.Tip()->nHeight;
+//		tx.nValidHeight = height;
 
 
 		//get keyid by accountid
@@ -392,7 +393,6 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		return obj;
 	} else {
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
-//		cout << "cont:" << tx.get()->ToString(*pAccountViewTip) << endl;
 		std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 		ds << pBaseTx;
 		Object obj;
@@ -1400,9 +1400,12 @@ Value getpublickey(const Array& params, bool fHelp) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid SoyPay address");
 	}
 	CPubKey pubkey;
-	if (!pwalletMain->GetPubKey(keyid, pubkey))
-		throw JSONRPCError(RPC_MISC_ERROR, tinyformat::format("Wallet do not contain address %s", params[0].get_str()));
+	{
 
+		if (!pwalletMain->GetPubKey(keyid, pubkey))
+			throw JSONRPCError(RPC_MISC_ERROR,
+					tinyformat::format("Wallet do not contain address %s", params[0].get_str()));
+	}
 
 	Object obj;
 	obj.push_back(Pair("pubkey",pubkey.ToString()));
