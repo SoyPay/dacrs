@@ -35,8 +35,8 @@ rd /s/q %targetdir%\regtest & md %targetdir%\regtest
 cp  %curdir%\test\data\soypay.conf %targetdir%\soypay.conf
 cp  %curdir%\test\data\anony.bin %targetdir%\data\anony.bin
 cp  %curdir%\test\data\darksecure.bin %targetdir%\data\darksecure.bin
-cp  %curdir%\ptest\data\scripttest.bin %targetdir%\data\scripttest.bin
-cp  %curdir%\ptest\data\soypay_test.bin %targetdir%\data\soypay_test.bin
+cp  %curdir%\test\data\scripttest.bin %targetdir%\data\scripttest.bin
+cp  %curdir%\test\data\soypay_test.bin %targetdir%\data\soypay_test.bin
 echo Clr environment OK
 GOTO :EOF
 
