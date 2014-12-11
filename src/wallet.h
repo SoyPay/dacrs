@@ -220,7 +220,7 @@ public:
 
 	int64_t GetRawBalance(int ncurhigh)const;
     bool SynchronizRegId(const CKeyID &keyid,const CAccountViewCache &inview);
-
+    bool Sign(const CUserID &keyID,const uint256 &hash,vector<unsigned char> &signature,bool IsMiner=false)const;
     bool AddKey(const CKey& secret,const CKey& minerKey);
 	bool SynchronizSys(const CAccountViewCache &inview) ;
 	static string defaultFilename ;
@@ -235,7 +235,7 @@ public:
 	bool GetPubKey(const CKeyID &address, CPubKey& keyOut,bool IsMiner = false);
 
 	bool GetKey(const CKeyID &address, CKey& keyOut, bool IsMiner = false) const ;
-	bool GetKey(const CUserID &address, CKey& keyOut) const ;
+	bool GetKey(const CUserID &address, CKey& keyOut,bool IsMiner = false) const ;
 	bool GetRegId(const CUserID &address, CRegID& IdOut) const;
 
 	bool GetKeyIds(set<CKeyID> &setKeyID)const ;

@@ -318,17 +318,14 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		throw runtime_error("in createcontracttx :fee is smaller than nMinTxFee\n");
 	}
 
-	if (vscriptid.GetVec6().size()!= SCRIPT_ID_SIZE) {
-		throw runtime_error("in createcontracttx :vscriptid size is error!\n");
+	if (vscriptid.IsEmpty()) {
+		throw runtime_error("in createcontracttx :addresss is error!\n");
 	}
-
-	assert(pwalletMain != NULL);
-
+	EnsureWalletIsUnlocked();
 //	CContractTransaction tx;
 	std::shared_ptr<CContractTransaction> tx = make_shared<CContractTransaction>();
 	{
-	//	LOCK2(cs_main, pwalletMain->cs_wallet);
-		EnsureWalletIsUnlocked();
+
 
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
@@ -336,7 +333,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 
 		if(!pScriptDBTip->HaveScript(vscriptid))
 		{
-			throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(vscriptid.GetVec6())));
+			throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", vscriptid.ToString()));
 		}
 
 		auto GetUserId = [&](CKeyID &keyId)
@@ -365,7 +362,6 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		tx.get()->llFees = fee;
 		tx.get()->vContract = vcontract;
 		tx.get()->nValidHeight = chainActive.Tip()->nHeight;
-//		tx.nValidHeight = height;
 
 
 		//get keyid by accountid
@@ -396,7 +392,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		return obj;
 	} else {
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
-		cout << "cont:" << tx.get()->ToString(*pAccountViewTip) << endl;
+//		cout << "cont:" << tx.get()->ToString(*pAccountViewTip) << endl;
 		std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 		ds << pBaseTx;
 		Object obj;
@@ -423,7 +419,8 @@ Value signcontracttx(const Array& params, bool fHelp) {
 								"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000");
 		throw runtime_error(msg);
 	}
-	LogPrint("INFO", "signcontracttx enter\r\n");
+//	LogPrint("INFO", "signcontracttx enter\r\n");
+	EnsureWalletIsUnlocked();
 	vector<unsigned char> vch(ParseHex(params[0].get_str()));
 	CDataStream stream(vch, SER_DISK, CLIENT_VERSION);
 
@@ -431,11 +428,11 @@ Value signcontracttx(const Array& params, bool fHelp) {
 	stream >> pBaseTx;
 
 	std::shared_ptr<CContractTransaction> tx = make_shared<CContractTransaction>(pBaseTx.get());
-	cout << "sig:" << tx.get()->ToString(*pAccountViewTip) << endl;
-	assert(pwalletMain != NULL);
+//	cout << "sig:" << tx.get()->ToString(*pAccountViewTip) << endl;
+//	assert(pwalletMain != NULL);
 	{
-		LOCK2(cs_main, pwalletMain->cs_wallet);
-		EnsureWalletIsUnlocked();
+
+
 
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
@@ -487,10 +484,10 @@ Value signcontracttx(const Array& params, bool fHelp) {
 			assert(0);
 		}
 
-		CKey key;
-		pwalletMain->GetKey(keyid, key);
+//		CKey key;
+//		pwalletMain->GetKey(keyid, key);
 		vector<unsigned char> signature;
-		if (!key.Sign(tx.get()->SignatureHash(), signature)) {
+		if (pwalletMain->Sign(keyid,tx.get()->SignatureHash(), signature)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: Sign failed.");
 		}
 
@@ -1382,7 +1379,7 @@ Value generateblock(const Array& params, bool fHelp) {
 		throw runtime_error("in generateblock :cannot generate block\n");
 	}
 	Object obj;
-	obj.push_back(Pair("blockhase",hash.GetHex()));
+	obj.push_back(Pair("blockhash",hash.GetHex()));
 	return obj;
 }
 
@@ -1403,12 +1400,9 @@ Value getpublickey(const Array& params, bool fHelp) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid SoyPay address");
 	}
 	CPubKey pubkey;
-	{
+	if (!pwalletMain->GetPubKey(keyid, pubkey))
+		throw JSONRPCError(RPC_MISC_ERROR, tinyformat::format("Wallet do not contain address %s", params[0].get_str()));
 
-		if (!pwalletMain->GetPubKey(keyid, pubkey))
-			throw JSONRPCError(RPC_MISC_ERROR,
-					tinyformat::format("Wallet do not contain address %s", params[0].get_str()));
-	}
 
 	Object obj;
 	obj.push_back(Pair("pubkey",pubkey.ToString()));
