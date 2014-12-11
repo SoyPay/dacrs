@@ -63,6 +63,7 @@ soypay_test_SOURCES = \
   CVir8051Func_test.cpp \
   system_test.cpp	\
   SysTestBase.cpp	\
+  SysTestScript.cpp \
   $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 
 #if ENABLE_WALLET

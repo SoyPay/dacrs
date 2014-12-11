@@ -318,13 +318,19 @@ bool SysTestBase::GetOneAddr(std::string &addr, char *pStrMinMoney, char *bpBool
 
 bool SysTestBase::GetOneScriptId(std::string &regscriptid) {
 	//CommanRpc
-	char *argv[] = { "rpctest", "listscriptregid" };
+	char *argv[] = { "rpctest", "listregscript","false" };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
 		Object &Oid = value.get_obj();
-		regscriptid = Oid[0].value_.get_str();
+		string strPrint = write_string((Value)Oid, true);
+		LogPrint("test_miners", "GetOneAddr1:%s\r\n", strPrint);
+		Array &Oid1 = Oid[0].value_.get_array();
+		strPrint = write_string((Value)Oid1, true);
+		LogPrint("test_miners", "GetOneAddr2:%s\r\n", strPrint);
+		const Value& result1 = find_value(Oid1[0].get_obj(), "scriptId");
+		regscriptid = result1.get_str();
 		LogPrint("test_miners", "GetOneAddr:%s\r\n", regscriptid.c_str());
 		return true;
 	}
@@ -474,7 +480,31 @@ bool SysTestBase::RegisterAccountTx(const std::string &addr, const int nHeight) 
 	}
 	return false;
 }
+Value SysTestBase::CreateContractTx1(const std::string &scriptid, const std::string &addrs, const std::string &contract,
+			const int nHeight)
+{
+	char cscriptid[1024] = { 0 };
 
+	char fee[64] = { 0 };
+	int nfee =1000000;
+	sprintf(fee, "%d", nfee);
+	nCurFee = nfee;
+
+	char height[16] = { 0 };
+	sprintf(height, "%d", nHeight);
+
+	char *argv[] = { "rpctest", "createcontracttx", (char *) (scriptid.c_str()), (char *) (addrs.c_str()),
+			(char *) (contract.c_str()), fee, height };
+	int argc = sizeof(argv) / sizeof(char*);
+
+	Value value;
+	if (CommandLineRPC_GetValue(argc, argv, value)) {
+	//	LogPrint("test_miners", "createcontracttx:%s\r\n", value.get_str().c_str());
+		return value;
+	}
+//	LogPrint("test_miners", "createcontracttx:%s\r\n", value.get_str().c_str());
+	return value;
+}
 bool SysTestBase::CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 		int nHeight,int nFee) {
 	char cscriptid[1024] = { 0 };
@@ -561,20 +591,20 @@ bool SysTestBase::CreateSecureTx(const string &scriptid, const vector<string> &o
 	return false;
 }
 
-bool SysTestBase::SignSecureTx(const string &securetx) {
+Value SysTestBase::SignSecureTx(const string &securetx) {
 	//CommanRpc
 	char csecuretx[10 * 1024] = { 0 };
 	strncpy(csecuretx, securetx.c_str(), sizeof(csecuretx) - 1);
 
-	char *argv[] = { "rpctest", "signsecuretx", csecuretx };
+	char *argv[] = { "rpctest", "signcontracttx", csecuretx };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		LogPrint("test_miners", "SignSecureTx:%s\r\n", value.get_str().c_str());
-		return true;
+		//LogPrint("test_miners", "SignSecureTx:%s\r\n", value.get_str().c_str());
+		return value;
 	}
-	return false;
+	return value;
 }
 
 bool SysTestBase::IsAllTxInBlock() {
@@ -628,9 +658,10 @@ boost::thread*SysTestBase::pThreadShutdown = NULL;
 bool SysTestBase::GenerateOneBlock() {
 	char *argv[] = { "rpctest", "setgenerate", "true" };
 	int argc = sizeof(argv) / sizeof(char*);
-
+    int high= chainActive.Height();
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
+		BOOST_CHECK(high+1==chainActive.Height());
 		return true;
 	}
 	return false;

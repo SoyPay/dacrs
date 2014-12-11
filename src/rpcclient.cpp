@@ -221,8 +221,8 @@ Array RPCConvertValues(const string &strMethod, const vector<string> &strParams)
     if (strMethod == "getoneaddr"          && n > 0) ConvertTo<int64_t>(params[0]);
     if (strMethod == "getoneaddr"          && n > 1) ConvertTo<bool>(params[1]);
     if (strMethod == "getoneaddr"          && n > 1) ConvertTo<bool>(params[1]);
-    if (strMethod == "getscriptdata"          && n > 1) ConvertTo<int>(params[1]);
-    if (strMethod == "getscriptdata"          && n > 2) ConvertTo<int>(params[2]);
+    if (strMethod == "getscriptdata"          && n ==3) ConvertTo<int>(params[1]);
+    if (strMethod == "getscriptdata"          && n == 3) ConvertTo<int>(params[2]);
     if (strMethod == "listregscript"          && n > 0) ConvertTo<bool>(params[0]);
 
     return params;
