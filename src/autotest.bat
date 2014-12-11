@@ -9,15 +9,6 @@ set autosevertestexe=%cd%\ptest\soypay_ptest.exe
 
 
 call :ClrEnvironment
-call :StartServer
-%autosevertestexe% --run_test=test_rollback/db_fun
-call :CloseServer
-
-call :ClrEnvironment
-call :StartServer
-%autosevertestexe% --run_test=test_app/test_dark
-call :CloseServer
-
 exit /b 0
 
 
