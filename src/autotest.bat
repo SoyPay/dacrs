@@ -18,21 +18,6 @@ call :StartServer
 %autosevertestexe% --run_test=test_app/test_dark
 call :CloseServer
 
-call :ClrEnvironment
-call :StartServer
-%autosevertestexe% --run_test=test_app/test_anony
-call :CloseServer
-
-call :ClrEnvironment
-call :StartServer
-%autosevertestexe% --run_test=test_script/script_account
-call :CloseServer
-
-call :ClrEnvironment
-call :StartServer
-%autosevertestexe% --run_test=VM_fun/test_fun
-call :CloseServer
-pause
 exit /b 0
 
 
@@ -57,14 +42,10 @@ GOTO :EOF
 echo Clr environment
 rd /s/q %targetdir%\regtest & md %targetdir%\regtest
 cp  %curdir%\test\data\soypay.conf %targetdir%\soypay.conf
-cp  %curdir%\test\data\wallet.dat %targetdir%\wallet.dat
-cp  %curdir%\test\data\wallet.dat %targetdir%\regtest\wallet.dat
-cp  %curdir%\ptest\data\anony.bin %targetdir%\data\anony.bin
-cp  %curdir%\ptest\data\darksecure.bin %targetdir%\data\darksecure.bin
+cp  %curdir%\test\data\anony.bin %targetdir%\data\anony.bin
+cp  %curdir%\test\data\darksecure.bin %targetdir%\data\darksecure.bin
 cp  %curdir%\ptest\data\scripttest.bin %targetdir%\data\scripttest.bin
-cp  %curdir%\ptest\data\sdk.bin %targetdir%\data\sdk.bin
-cp  %curdir%\ptest\data\testrollback.bin %targetdir%\data\testrollback.bin
-cp  %curdir%\ptest\data\testscriptid.bin %targetdir%\data\testscriptid.bin
+cp  %curdir%\ptest\data\soypay_test.bin %targetdir%\data\soypay_test.bin
 echo Clr environment OK
 GOTO :EOF
 
