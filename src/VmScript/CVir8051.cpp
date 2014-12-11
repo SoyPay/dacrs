@@ -822,7 +822,6 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) 
 		flag = false;
 	}
 
-
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     (*tem.get()).push_back(vValue);
 
