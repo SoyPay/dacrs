@@ -230,24 +230,24 @@ public:
 	void CheckRollBack()
 	{
 		CreateContactTx(6);    //新增脚本数据
-		cout<<6<<endl;
+		//cout<<6<<endl;
 		CreateContactTx(7);;   //修改脚本数据
-		cout<<7<<endl;
+		//cout<<7<<endl;
 		CreateContactTx(8);    //删除脚本数据
-		cout<<8<<endl;
+	//	cout<<8<<endl;
 		disblock1();           //删除1个block
 		mempool.mapTx.clear();
 		CreateContactTx(9);    //check删除的脚本是否恢复
-		cout<<9<<endl;
+	//	cout<<9<<endl;
 		disblock1();
 		disblock1();
 		mempool.mapTx.clear();
 		CreateContactTx(10);    //check修改的脚本数据是否恢复
-		cout<<10<<endl;
-//		disblock1();
-//		disblock1();
-//		mempool.mapTx.clear();
-//		CreateContactTx(11);   //check新增的脚本数据是否恢复
+//		cout<<10<<endl;
+		disblock1();
+		disblock1();
+		mempool.mapTx.clear();
+		CreateContactTx(11);   //check新增的脚本数据是否恢复
 	}
 	bool CheckScriptid(Value val,string scriptid)
 	{
@@ -502,16 +502,20 @@ BOOST_FIXTURE_TEST_SUITE(sysScript_test,CSysScriptTest)
 
 BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 {
-//	ResetEnv();
-//	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
-//	CheckSdk();
-
-	//// some problem
+	//// some debug
 	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
 	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
-	CheckRollBack();
+	CheckSdk();
+
 
 //	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
+//	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
+//	CheckRollBack();
+//
+//	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
 //	CheckScriptAccount();
 
 }
