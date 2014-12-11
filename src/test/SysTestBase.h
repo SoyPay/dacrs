@@ -149,7 +149,7 @@ public:
 	bool CreateSecureTx(const string &scriptid, const vector<string> &obaddrs, const vector<string> &addrs,
 			const string&contract, const int nHeight);
 
-	bool SignSecureTx(const string &securetx);
+	Value SignSecureTx(const string &securetx);
 
 	bool IsAllTxInBlock();
 

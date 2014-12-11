@@ -396,7 +396,6 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		return obj;
 	} else {
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
-		cout << "cont:" << tx.get()->ToString(*pAccountViewTip) << endl;
 		std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 		ds << pBaseTx;
 		Object obj;
@@ -431,7 +430,6 @@ Value signcontracttx(const Array& params, bool fHelp) {
 	stream >> pBaseTx;
 
 	std::shared_ptr<CContractTransaction> tx = make_shared<CContractTransaction>(pBaseTx.get());
-	cout << "sig:" << tx.get()->ToString(*pAccountViewTip) << endl;
 	assert(pwalletMain != NULL);
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
