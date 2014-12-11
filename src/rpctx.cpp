@@ -1528,12 +1528,15 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		if (dbsize >= pagesize * index) {
 			count = pagesize * (index - 1) - 1;
 			listcount = dbsize - pagesize * (index - 1);
-		} else if (dbsize < pagesize * index && dbsize > pagesize) {
+		} else if (dbsize < pagesize * index && dbsize > index) {
 			int preindex = dbsize / pagesize;
 			count = pagesize * (preindex - 1) - 1;
 			listcount = dbsize - pagesize * (index - 1);
 		}
-
+		if(listcount > index)
+		{
+			listcount = index;
+		}
 		while (count--) {
 			if (!pScriptDBTip->GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
 				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");

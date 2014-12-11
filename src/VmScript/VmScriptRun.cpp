@@ -238,7 +238,13 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 //		LogPrint("vm", "account id:%s\r\n", HexStr(accountid).c_str());
 //		LogPrint("vm", "befer account:%s\r\n", vmAccount.get()->ToString().c_str());
 //		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
-		bool ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype,fund,height);
+		bool ret = false;
+		if(IsSignatureAccount(vmAccount.get()->regID) || vmAccount.get()->regID.GetVec6() == boost::get<CRegID>(tx->scriptRegId).GetVec6())
+		{
+			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype,fund,height);
+		}else{
+			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype,fund,height,&GetScriptRegID().GetVec6(),true);
+		}
 
 //		LogPrint("vm", "after account:%s\r\n", vmAccount.get()->ToString().c_str());
 		if (!ret) {
@@ -259,6 +265,18 @@ const vector<CUserID>& CVmScriptRun::GetTxAccount()
 {
 	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
 		return tx->vAccountRegId;
+}
+const BOOL CVmScriptRun::IsSignatureAccount(CRegID account)
+{
+	vector<CUserID> regid =GetTxAccount();
+
+	vector<unsigned char> item;
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+		for (auto& it : regid) {
+			if(account.GetVec6() == boost::get<CRegID>(it).GetVec6())
+			return true;
+		}
+		return false;
 }
 const vector<unsigned char>& CVmScriptRun::GetTxContact()
 {

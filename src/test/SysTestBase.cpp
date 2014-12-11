@@ -656,9 +656,10 @@ boost::thread*SysTestBase::pThreadShutdown = NULL;
 bool SysTestBase::GenerateOneBlock() {
 	char *argv[] = { "rpctest", "setgenerate", "true" };
 	int argc = sizeof(argv) / sizeof(char*);
-
+    int high= chainActive.Height();
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
+		BOOST_CHECK(high+1==chainActive.Height());
 		return true;
 	}
 	return false;
