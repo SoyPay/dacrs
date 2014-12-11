@@ -405,10 +405,10 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 				"bad-signscript-check");
 	}
 
-	//鑻ュ湪浜ゆ槗绱㈠紩鏁版嵁搴撲腑瀛樺湪浜ゆ槗hash锛屾浜ゆ槗宸茬粡琚‘璁よ繃锛屾棤椤绘鏌�
+	//閼汇儱婀禍銈嗘缁便垹绱╅弫鐗堝祦鎼存挷鑵戠�涙ê婀禍銈嗘hash閿涘本顒濇禍銈嗘瀹歌尙绮＄悮顐も�樼拋銈堢箖閿涘本妫ゆい缁橆梾閺岋拷
 	CDiskTxPos postx;
 	if (!pblocktree->ReadTxIndex(GetHash(), postx)) {
-		//濡傛灉鏄氦鏄撹纭杩涘叆block涓椂锛岃嫢鐩殑鍦板潃涓簁eyId鏃跺繀椤绘槸鏈敞鍐岃处鎴�
+		//婵″倹鐏夐弰顖欐唉閺勬捁顫︾涵顔款吇鏉╂稑鍙哹lock娑擃厽妞傞敍宀冨閻╊喚娈戦崷鏉挎絻娑撶皝eyId閺冭泛绻�妞ょ粯妲搁張顏呮暈閸愬矁澶勯幋锟�
 			CAccount acctDesInfo;
 			if (desUserId.type() == typeid(CKeyID)) {
 				if (view.GetAccount(desUserId, acctDesInfo) && acctDesInfo.IsRegister()) {
@@ -446,7 +446,7 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 				UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 
 	}
-	//鎵ｅ噺灏忚垂鏃ュ織
+	//閹碉絽鍣虹亸蹇氬瀭閺冦儱绻�
 	txundo.vAccountOperLog.push_back(sourceAccount.accountOperLog);
 
 	CVmScriptRun vmRun;
@@ -1837,7 +1837,7 @@ CAuthorizate::CAuthorizate(CNetAuthorizate te) {
 	nMaxMoneyTotal = te.GetMaxMoneyTotal();
 	nMaxMoneyPerDay = te.GetMaxMoneyPerDay();
 	nLastOperHeight = 0;
-	nCurMaxMoneyPerDay = 0;
+	nCurMaxMoneyPerDay = te.GetMaxMoneyPerDay();
 }
 
 unsigned int CAuthorizate::GetSerializeSize(int nType, int nVersion) const {

@@ -138,8 +138,9 @@ public:
 	bool RegisterAccountTx(const std::string &addr, const int nHeight);
 
 	bool CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
-			 int nHeight,int nFee = 10000);
-
+			int nHeight,int nFee = 10000);
+	Value CreateContractTx1(const std::string &scriptid, const std::string &addrs, const std::string &contract,
+				const int nHeight);
 	Value RegisterScriptTx(const string& strAddress, const string& strScript, int nHeight, int nFee = 10000);
 
 	Value ModifyAuthor(const string& strAddress, const string& strScript, int nHeight, int nFee,
@@ -148,7 +149,7 @@ public:
 	bool CreateSecureTx(const string &scriptid, const vector<string> &obaddrs, const vector<string> &addrs,
 			const string&contract, const int nHeight);
 
-	bool SignSecureTx(const string &securetx);
+	Value SignSecureTx(const string &securetx);
 
 	bool IsAllTxInBlock();
 

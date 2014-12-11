@@ -396,7 +396,6 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		return obj;
 	} else {
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
-		cout << "cont:" << tx.get()->ToString(*pAccountViewTip) << endl;
 		std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 		ds << pBaseTx;
 		Object obj;
@@ -431,7 +430,6 @@ Value signcontracttx(const Array& params, bool fHelp) {
 	stream >> pBaseTx;
 
 	std::shared_ptr<CContractTransaction> tx = make_shared<CContractTransaction>(pBaseTx.get());
-	cout << "sig:" << tx.get()->ToString(*pAccountViewTip) << endl;
 	assert(pwalletMain != NULL);
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
@@ -1201,6 +1199,10 @@ static Value TestDisconnectBlock(int number)
 		CBlockIndex* pindex = chainActive.Tip();
 		CBlock block;
 		CValidationState state;
+		if((chainActive.Tip()->nHeight - number) < 0)
+		{
+			throw JSONRPCError(RPC_INVALID_PARAMS, "restclient Error: number");
+		}
 		while (number--) {
 			// check level 0: read from disk
 			 CBlockIndex * pTipIndex = chainActive.Tip();
@@ -1254,10 +1256,22 @@ Value disconnectblock(const Array& params, bool fHelp) {
 
 Value resetclient(const Array& params, bool fHelp) {
 	Value te = TestDisconnectBlock(chainActive.Tip()->nHeight);
+
 	if(chainActive.Tip()->nHeight == 0)
 	{
 		pwalletMain->CleanAll();
-		mapBlockIndex.clear();
+		CBlockIndex* te=chainActive.Tip();
+		uint256 hash= te->GetBlockHash();
+		for(auto it = mapBlockIndex.begin(), ite = mapBlockIndex.end(); it != ite;)
+		{
+		  if(it->first != hash)
+		    it = mapBlockIndex.erase(it);
+		  else
+		    ++it;
+		}
+
+
+
 		CBlock firs = SysCfg().GenesisBlock();
 		pwalletMain->SyncTransaction(0,NULL,&firs);
 		mempool.clear();
@@ -1514,12 +1528,15 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		if (dbsize >= pagesize * index) {
 			count = pagesize * (index - 1) - 1;
 			listcount = dbsize - pagesize * (index - 1);
-		} else if (dbsize < pagesize * index && dbsize > pagesize) {
+		} else if (dbsize < pagesize * index && dbsize > index) {
 			int preindex = dbsize / pagesize;
 			count = pagesize * (preindex - 1) - 1;
 			listcount = dbsize - pagesize * (index - 1);
 		}
-
+		if(listcount > index)
+		{
+			listcount = index;
+		}
 		while (count--) {
 			if (!pScriptDBTip->GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
 				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");

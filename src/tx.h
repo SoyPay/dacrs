@@ -1132,7 +1132,7 @@ public:
 		return scriptID;
 	}
 	void SetLastOperHeight(int nHeight)  {
-		assert(nHeight>0);
+		assert(nHeight>=0);
 		nLastOperHeight = nHeight;
 	}
 	void SetScriptID(const vector_unsigned_char& _scriptID) {
