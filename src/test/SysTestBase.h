@@ -138,7 +138,7 @@ public:
 	bool RegisterAccountTx(const std::string &addr, const int nHeight);
 
 	bool CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
-			const int nHeight);
+			 int nHeight,int nFee = 10000);
 
 	Value RegisterScriptTx(const string& strAddress, const string& strScript, int nHeight, int nFee = 10000);
 

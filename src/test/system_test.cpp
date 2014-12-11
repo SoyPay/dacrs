@@ -21,25 +21,51 @@
 using namespace std;
 using namespace boost;
 
+#define ACCOUNT_ID_SIZE 6
+#define MAX_ACCOUNT_LEN 20
+#pragma pack(1)
+typedef struct tag_INT64 {
+	unsigned char data[8];
+} Int64;
+typedef struct tagACCOUNT_ID
+{
+	char accounid[MAX_ACCOUNT_LEN];
+}ACCOUNT_ID;
+typedef struct {
+	unsigned char nType;
+	ACCOUNT_ID vregID[3];
+	long nHeight;
+	Int64 nPay;
+} CONTRACT_DATA;
+#pragma pack()
+
 class CSystemTest:public SysTestBase
 {
 public:
+	enum
+	{
+		BUYER_FREE_TO_SELF = 1,
+		BUYER_SELF_TO_FREE,
+		BUYER_FREE_TO_FREE,
+		SELLER_FREE_TO_FREE,
+		UNDEFINED_OPER
+	};
 	CSystemTest() {
-		StartServer();
+		nOldBlockHeight = 0;
+		nNewBlockHeight = 0;
+		nTimeOutHeight = 5;
+		nPayMoney = 10000;
+		nOldMoney = 0;
+		nNewMoney = 0;
+		strFileName = "RegScriptTest.bin";
+		strAddr = "mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA";
+		strBuyerRegID = "000000000900";
+		strSellerRegID = "000000000500";
+		strAr = "000000000700";
 	}
 
 	~CSystemTest(){
-		StopServer();
-	}
-private:
-	void StartServer() {
-//		int argc = 2;
-//		char* argv[] = {"D:\\cppwork\\soypay\\src\\soypayd.exe","-datadir=d:\\bitcoin" };
-//		SysTestBase::StartServer(argc,argv);
-	}
 
-	void StopServer() {
-//		SysTestBase::StopServer();
 	}
 
 public:
@@ -58,8 +84,13 @@ public:
 		return true;
 	}
 
-	bool IsTxConfirmdInWallet(const uint256& blockHash,const uint256& txHash)
+	bool IsTxConfirmdInWallet(int nBlockHeight,const uint256& txHash)
 	{
+		uint256 blockHash;
+		if (!GetBlockHash(nBlockHeight, blockHash)) {
+			return false;
+		}
+
 		auto itAccountTx = pwalletMain->mapInBlockTx.find(blockHash);
 		if (pwalletMain->mapInBlockTx.end() == itAccountTx)
 			return false;
@@ -220,22 +251,74 @@ public:
 		return true;
 	}
 
-private:
-	boost::thread* pThreadShutdown;
+	bool PacketContractData(unsigned char nOperType,const string& strBuyerID,const string& strSellerID,const string& strAr,
+			int nHeight,int nMoney,string& strData) {
+		if (nOperType>=UNDEFINED_OPER || strBuyerID.size() != 2*ACCOUNT_ID_SIZE|| strSellerID.size() != 2*ACCOUNT_ID_SIZE) {
+					return false;
+				}
+		memset(&contractData,0,sizeof(CONTRACT_DATA));
+		contractData.nType = nOperType;
+		vector<unsigned char> v = ParseHex(strBuyerID.c_str());
+		memcpy(contractData.vregID[0].accounid,&v[0],ACCOUNT_ID_SIZE);
+
+		v = ParseHex(strSellerID.c_str());
+		memcpy(contractData.vregID[1].accounid,&v[0],ACCOUNT_ID_SIZE);
+
+		v = ParseHex(strAr.c_str());
+		memcpy(contractData.vregID[2].accounid,&v[0],ACCOUNT_ID_SIZE);
+
+		contractData.nHeight = nHeight;
+
+		memcpy(contractData.nPay.data,&nMoney,sizeof(nMoney));
+
+		string strContractData;
+		char* pData = (char*)&contractData;
+		strData.assign(pData,pData+sizeof(contractData));
+		return true;
+	}
+
+	bool GenerateOneBlock() {
+		nOldBlockHeight = GetBlockHeight();
+		if (!SysTestBase::GenerateOneBlock()) {
+			return false;
+		}
+
+		nNewBlockHeight = GetBlockHeight();
+		if (nNewBlockHeight != nOldBlockHeight + 1) {
+			return false;
+		}
+
+		return true;
+	}
+protected:
+	int nOldBlockHeight;
+	int nNewBlockHeight;
+	int nTimeOutHeight;
+	int nPayMoney;
+	static const int nFee = 100000;
+	uint64_t nOldMoney;
+	uint64_t nNewMoney;
+	string strTxHash;
+	string strFileName;
+	string strAddr;
+	string strBuyerRegID;
+	string strSellerRegID;
+	string strAr;
+	CONTRACT_DATA contractData;
 };
 
 BOOST_FIXTURE_TEST_SUITE(system_test,CSystemTest)
 BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 {
-	int nOldBlockHeight = 0;
-	int nNewBlockHeight = 0;
-	int nTimeOutHeight = 5;
-	int nFee = 100000;
-	uint64_t nOldMoney = 0;
-	uint64_t nNewMoney = 0;
-	string strTxHash;
-	string strFileName("RegScriptTest.bin");
-	string strAddr("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA");
+//	int nOldBlockHeight = 0;
+//	int nNewBlockHeight = 0;
+//	int nTimeOutHeight = 5;
+//	int nFee = 100000;
+//	uint64_t nOldMoney = 0;
+//	uint64_t nNewMoney = 0;
+//	string strTxHash;
+//	string strFileName("RegScriptTest.bin");
+//	string strAddr("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA");
 
 	vector<map<int,string> >vDataInfo;
 	vector<CAccountOperLog> vLog;
@@ -246,12 +329,9 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 
 		//1:挖矿
 		nOldMoney = GetFreeMoney(strAddr);
-		nOldBlockHeight = GetBlockHeight();
 		BOOST_CHECK(GenerateOneBlock());
-		nNewBlockHeight = GetBlockHeight();
 
 		//2:确认钱已经扣除
-		BOOST_CHECK(nNewBlockHeight = nOldBlockHeight + 1);
 		nNewMoney = GetFreeMoney(strAddr);
 		BOOST_CHECK(nNewMoney == nOldMoney - nFee);
 
@@ -260,12 +340,9 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 		BOOST_CHECK(GetTxIndexInBlock(uint256(strTxHash), nIndex));
 		CRegID regID(nNewBlockHeight, nIndex);
 		BOOST_CHECK(IsScriptAccCreated(HexStr(regID.GetVec6())));
-		BOOST_CHECK(!IsScriptAccCreated("000000000000"));
 
 		//4:检查钱包里的已确认交易里是否有此笔交易
-		uint256 blockHash;
-		BOOST_CHECK(GetBlockHash(nNewBlockHeight, blockHash));
-		BOOST_CHECK(IsTxConfirmdInWallet(blockHash, uint256(strTxHash)));
+		BOOST_CHECK(IsTxConfirmdInWallet(nNewBlockHeight, uint256(strTxHash)));
 
 		//5:通过listregscript 获取相关信息，一一核对，看是否和输入的一致
 		string strPath = SysCfg().GetDefaultTestDataPath() + strFileName;
@@ -324,6 +401,35 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 
 BOOST_FIXTURE_TEST_CASE(author_test,CSystemTest)
 {
+	//0:创建脚本交易
+	Value valueRes = RegisterScriptTx(strAddr, strFileName, nTimeOutHeight, nFee);
+	BOOST_CHECK(GetHashFromCreatedTx(valueRes, strTxHash));
+
+	//1:挖矿
+	BOOST_CHECK(GenerateOneBlock());
+
+	//修改权限
+	int nIndex = 0;
+	BOOST_CHECK(GetTxIndexInBlock(uint256(strTxHash), nIndex));
+	CRegID regID(nNewBlockHeight, nIndex);
+
+	vector<unsigned char> vUserDefine;
+	vUserDefine.push_back(1);
+	CNetAuthorizate author(10,vUserDefine,10000,10000,10000);
+	valueRes = ModifyAuthor(strAddr,HexStr(regID.GetVec6()),nTimeOutHeight,nFee,author);
+	BOOST_CHECK(GetHashFromCreatedTx(valueRes, strTxHash));
+	BOOST_CHECK(GenerateOneBlock());
+
+	//合约交易
+	string strScriptID(HexStr(regID.GetVec6()));
+	string vconaddr = "[\"" + strAddr + "\"] ";
+	string strContractData;
+	BOOST_CHECK(PacketContractData(BUYER_FREE_TO_SELF, strBuyerRegID, strSellerRegID, //
+			strAr, nTimeOutHeight, nPayMoney, strContractData));
+	BOOST_CHECK(CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
+	BOOST_CHECK(!CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
+	//BOOST_CHECK(GenerateOneBlock());
+
 
 }
 BOOST_AUTO_TEST_SUITE_END()

@@ -261,6 +261,9 @@ bool SysTestBase::CommandLineRPC_GetValue(int argc, char *argv[], Value &value) 
 	}
 
 	if (strPrint != "") {
+		if (false == nRes) {
+			cout<<strPrint<<endl;
+		}
 		// fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
 	}
 
@@ -473,33 +476,32 @@ bool SysTestBase::RegisterAccountTx(const std::string &addr, const int nHeight) 
 }
 
 bool SysTestBase::CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
-		const int nHeight) {
+		int nHeight,int nFee) {
 	char cscriptid[1024] = { 0 };
-//		vector<char> te(scriptid.begin(),scriptid.end());
-//		&te[0]
-//		strncpy(cscriptid, scriptid.c_str(), sizeof(scriptid)-1);
 
-//		char caddr[1024] = { 0 };
-//		strncpy(caddr, addrs.c_str(), sizeof(addrs)-1);
+	string strFee;
+	if (0 == nFee) {
+		int nfee = GetRandomFee();
+		nCurFee = nfee;
+	} else {
+		nCurFee = nFee;
+	}
 
-//		char ccontract[128*1024] = { 0 };
-//		strncpy(ccontract, contract.c_str(), sizeof(contract)-1);
-
-	char fee[64] = { 0 };
-	int nfee = GetRandomFee();
-	sprintf(fee, "%d", nfee);
-	nCurFee = nfee;
+	strFee = strprintf("%d",nCurFee);
 
 	char height[16] = { 0 };
 	sprintf(height, "%d", nHeight);
 
+	vector<unsigned char> vTemp;
+	vTemp.assign(contract.begin(),contract.end());
+	string strContractData = HexStr(vTemp);
+
 	char *argv[] = { "rpctest", "createcontracttx", (char *) (scriptid.c_str()), (char *) (addrs.c_str()),
-			(char *) (contract.c_str()), fee, height };
+			(char *) (strContractData.c_str()), (char*)strFee.c_str(), height };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		LogPrint("test_miners", "createcontracttx:%s\r\n", value.get_str().c_str());
 		return true;
 	}
 	return false;
