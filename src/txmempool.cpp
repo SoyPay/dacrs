@@ -43,6 +43,25 @@ void CTxMemPool::SetAccountViewDB(CAccountViewCache *pAccountViewCacheIn) {
 	pAccountViewCache = make_shared<CAccountViewCache>(*pAccountViewCacheIn, false);
 }
 
+void CTxMemPool::ReScanMemPoolTx(const CBlock &block, CAccountViewCache *pAccountViewCacheIn) {
+	pAccountViewCache.reset(new CAccountViewCache(*pAccountViewCacheIn, false));
+	{
+		LOCK(cs);
+		for(auto &pTxItem : block.vptx){
+			mapTx.erase(pTxItem->GetHash());
+		}
+		list<std::shared_ptr<CBaseTransaction> > removed;
+		for(map<uint256, CTxMemPoolEntry >::iterator iterTx = mapTx.begin(); iterTx != mapTx.end(); ) {
+			if (!CheckTxInMemPool(iterTx->first, iterTx->second)) {
+				iterTx = mapTx.erase(iterTx++);
+				continue;
+			}
+			++iterTx;
+		}
+
+	}
+}
+
 unsigned int CTxMemPool::GetTransactionsUpdated() const {
 	LOCK(cs);
 	return nTransactionsUpdated;
@@ -70,18 +89,23 @@ void CTxMemPool::remove(CBaseTransaction *pBaseTx, list<std::shared_ptr<CBaseTra
 	}
 }
 
+bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &entry) {
+	CValidationState state;
+	CTxUndo txundo;
+	CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
+	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+	if (!entry.GetTx()->UpdateAccount(0, *pAccountViewCache, state, txundo, chainActive.Tip()->nHeight + 1,
+			txCacheTemp, contractScriptTemp))
+		return false;
+	return true;
+}
 bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry) {
 	// Add to memory pool without checking anything.
 	// Used by main.cpp AcceptToMemoryPool(), which DOES do
 	// all the appropriate checks.
 	LOCK(cs);
 	{
-		CValidationState state;
-		CTxUndo txundo;
-		CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
-		CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
-		if (!entry.GetTx()->UpdateAccount(0, *pAccountViewCache, state, txundo, chainActive.Tip()->nHeight + 1,
-				txCacheTemp, contractScriptTemp))
+		if(!CheckTxInMemPool(hash, entry))
 			return false;
 		mapTx[hash] = entry;
 		LogPrint("addtomempool", "add tx hash:%s time:%ld\n", hash.GetHex(), GetTime());

@@ -613,7 +613,7 @@ bool SysTestBase::IsAllTxInBlock() {
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value) ) {
 		value = find_value(value.get_obj(), "UnConfirmTx");
-		if (value.get_array().size())
+		if (0 == value.get_array().size())
 			return true;
 	}
 	return false;
