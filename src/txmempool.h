@@ -95,6 +95,10 @@ public:
     std::shared_ptr<CBaseTransaction> lookup(uint256 hash) const;
 
     void SetAccountViewDB(CAccountViewCache *pAccountViewCacheIn);
+
+    bool CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &entry);
+
+    void ReScanMemPoolTx(const CBlock &block, CAccountViewCache *pAccountViewCacheIn);
 };
 
 
