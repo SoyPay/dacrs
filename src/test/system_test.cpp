@@ -472,18 +472,18 @@ BOOST_FIXTURE_TEST_CASE(author_test,CSystemTest)
 
 
 	//对已签名账户随机转账
-	int nRandomValue = GetRandomValue();
-	for (int i = 0;i<nRandomTestCount;i++) {
-		BOOST_CHECK(PacketContractData(ID1_FREE_TO_FREE, strRegID1, strRegID2, //
-					strRegID3, nTimeOutHeight, nRandomValue, strContractData));
-
-		nOldMoney = GetFreeMoney(strAddr1);
-		if (nOldMoney>nRandomValue) {
-			BOOST_CHECK(CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
-			nNewMoney = GetFreeMoney(strAddr1);
-			BOOST_CHECK(nOldMoney-nRandomValue = nNewMoney);
-		}
-	}
+//	int nRandomValue = GetRandomValue();
+//	for (int i = 0;i<nRandomTestCount;i++) {
+//		BOOST_CHECK(PacketContractData(ID1_FREE_TO_FREE, strRegID1, strRegID2, //
+//					strRegID3, nTimeOutHeight, nRandomValue, strContractData));
+//
+//		nOldMoney = GetFreeMoney(strAddr1);
+//		if (nOldMoney>nRandomValue) {
+//			BOOST_CHECK(CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
+//			nNewMoney = GetFreeMoney(strAddr1);
+//			BOOST_CHECK(nOldMoney-nRandomValue = nNewMoney);
+//		}
+//	}
 }
 BOOST_AUTO_TEST_SUITE_END()
 
