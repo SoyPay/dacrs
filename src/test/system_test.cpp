@@ -44,24 +44,27 @@ class CSystemTest:public SysTestBase
 public:
 	enum
 	{
-		BUYER_FREE_TO_SELF = 1,
-		BUYER_SELF_TO_FREE,
-		BUYER_FREE_TO_FREE,
-		SELLER_FREE_TO_FREE,
+		ID1_FREE_TO_SELF = 1,
+		ID1_SELF_TO_FREE,
+		ID1_FREE_TO_FREE,
+		ID2_FREE_TO_FREE,
+		ID3_FREE_TO_FREE,
 		UNDEFINED_OPER
 	};
 	CSystemTest() {
 		nOldBlockHeight = 0;
 		nNewBlockHeight = 0;
-		nTimeOutHeight = 5;
+		nTimeOutHeight = 100;
 		nPayMoney = 10000;
 		nOldMoney = 0;
 		nNewMoney = 0;
+		nRandomRanger = 10000;
 		strFileName = "RegScriptTest.bin";
-		strAddr = "mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA";
-		strBuyerRegID = "000000000900";
-		strSellerRegID = "000000000500";
-		strAr = "000000000700";
+		strAddr1 = "mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA";
+		strAddr3 = "mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7";
+		strRegID1 = "000000000900";
+		strRegID2 = "000000000500";
+		strRegID3 = "000000000700";
 	}
 
 	~CSystemTest(){
@@ -290,20 +293,42 @@ public:
 
 		return true;
 	}
+
+	bool IsScriptAccCreatedEx(const uint256& txHash,int nConfirmHeight) {
+		int nIndex = 0;
+		if (!GetTxIndexInBlock(uint256(strTxHash), nIndex)) {
+			return false;
+		}
+
+		CRegID regID(nConfirmHeight, nIndex);
+		return IsScriptAccCreated(HexStr(regID.GetVec6()));
+	}
+
+	int GetRandomValue()
+	{
+		return rand()%nRandomRanger;
+	}
+
+	void SetRandomRanger(int nMaxRanger) {
+		nRandomRanger = nMaxRanger;
+	}
 protected:
+	int nRandomRanger;
 	int nOldBlockHeight;
 	int nNewBlockHeight;
 	int nTimeOutHeight;
 	int nPayMoney;
 	static const int nFee = 100000;
+	static const int nRandomTestCount = 10;
 	uint64_t nOldMoney;
 	uint64_t nNewMoney;
 	string strTxHash;
 	string strFileName;
-	string strAddr;
-	string strBuyerRegID;
-	string strSellerRegID;
-	string strAr;
+	string strAddr1;
+	string strAddr3;
+	string strRegID1;
+	string strRegID2;
+	string strRegID3;
 	CONTRACT_DATA contractData;
 };
 
@@ -324,15 +349,15 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 	vector<CAccountOperLog> vLog;
 	for (int i = 0; i < nTimeOutHeight; i++) {
 		//0:产生注册脚本交易
-		Value valueRes = RegisterScriptTx(strAddr,strFileName , nTimeOutHeight, nFee);
+		Value valueRes = RegisterScriptTx(strAddr1,strFileName , nTimeOutHeight, nFee);
 		BOOST_CHECK(GetHashFromCreatedTx(valueRes,strTxHash));
 
 		//1:挖矿
-		nOldMoney = GetFreeMoney(strAddr);
+		nOldMoney = GetFreeMoney(strAddr1);
 		BOOST_CHECK(GenerateOneBlock());
 
 		//2:确认钱已经扣除
-		nNewMoney = GetFreeMoney(strAddr);
+		nNewMoney = GetFreeMoney(strAddr1);
 		BOOST_CHECK(nNewMoney == nOldMoney - nFee);
 
 		//3:确认脚本账号已经生成
@@ -351,7 +376,7 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 		//6:Gettxoperationlog 获取交易log，查看是否正确
 		BOOST_CHECK(GetTxOperateLog(uint256(strTxHash), vLog));
 		BOOST_CHECK(1 == vLog.size() && 1 == vLog[0].vOperFund.size() && 1 == vLog[0].vOperFund[0].vFund.size());
-		BOOST_CHECK(strAddr == vLog[0].keyID.ToAddress());
+		BOOST_CHECK(strAddr1 == vLog[0].keyID.ToAddress());
 		BOOST_CHECK(vLog[0].vOperFund[0].operType == MINUS_FREE && vLog[0].vOperFund[0].vFund[0].value == nFee);
 
 		map<int,string> mapData;
@@ -368,13 +393,13 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 		uint256 txHash(strTxHash);
 
 		nOldBlockHeight = GetBlockHeight();
-		nOldMoney = GetFreeMoney(strAddr);
+		nOldMoney = GetFreeMoney(strAddr1);
 
 		//8:回滚
 		BOOST_CHECK(DisConnectBlock(1));
 
 		//9.1:检查账户手续费是否回退
-		nNewMoney = GetFreeMoney(strAddr);
+		nNewMoney = GetFreeMoney(strAddr1);
 		nNewBlockHeight = GetBlockHeight();
 		BOOST_CHECK(nOldBlockHeight - 1 == nNewBlockHeight);
 		BOOST_CHECK(nNewMoney-nFee == nOldMoney);
@@ -402,7 +427,7 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 BOOST_FIXTURE_TEST_CASE(author_test,CSystemTest)
 {
 	//0:创建脚本交易
-	Value valueRes = RegisterScriptTx(strAddr, strFileName, nTimeOutHeight, nFee);
+	Value valueRes = RegisterScriptTx(strAddr1, strFileName, nTimeOutHeight, nFee);
 	BOOST_CHECK(GetHashFromCreatedTx(valueRes, strTxHash));
 
 	//1:挖矿
@@ -411,26 +436,54 @@ BOOST_FIXTURE_TEST_CASE(author_test,CSystemTest)
 	//修改权限
 	int nIndex = 0;
 	BOOST_CHECK(GetTxIndexInBlock(uint256(strTxHash), nIndex));
-	CRegID regID(nNewBlockHeight, nIndex);
+	CRegID striptID(nNewBlockHeight, nIndex);
 
 	vector<unsigned char> vUserDefine;
+	string strHash1,strHash2;
 	vUserDefine.push_back(1);
-	CNetAuthorizate author(10,vUserDefine,10000,10000,10000);
-	valueRes = ModifyAuthor(strAddr,HexStr(regID.GetVec6()),nTimeOutHeight,nFee,author);
-	BOOST_CHECK(GetHashFromCreatedTx(valueRes, strTxHash));
+	int nMaxMoneyPerDay = 15000;
+	int nAvailable = 0;
+	CNetAuthorizate author(10,vUserDefine,10000,10000,nMaxMoneyPerDay);
+	valueRes = ModifyAuthor(strAddr1,HexStr(striptID.GetVec6()),nTimeOutHeight,nFee,author);
+	BOOST_CHECK(GetHashFromCreatedTx(valueRes, strHash1));
+
+	valueRes = ModifyAuthor(strAddr3,HexStr(striptID.GetVec6()),nTimeOutHeight,nFee,author);
+	BOOST_CHECK(GetHashFromCreatedTx(valueRes, strHash2));
 	BOOST_CHECK(GenerateOneBlock());
+	nNewBlockHeight = GetBlockHeight();
+
+	BOOST_CHECK(IsTxConfirmdInWallet(nNewBlockHeight, uint256(strHash1)));
+	BOOST_CHECK(IsTxConfirmdInWallet(nNewBlockHeight, uint256(strHash2)));
 
 	//合约交易
-	string strScriptID(HexStr(regID.GetVec6()));
-	string vconaddr = "[\"" + strAddr + "\"] ";
+	string strScriptID(HexStr(striptID.GetVec6()));
+	string vconaddr = "[\"" + strAddr1 + "\"] ";
 	string strContractData;
-	BOOST_CHECK(PacketContractData(BUYER_FREE_TO_SELF, strBuyerRegID, strSellerRegID, //
-			strAr, nTimeOutHeight, nPayMoney, strContractData));
+	BOOST_CHECK(PacketContractData(ID3_FREE_TO_FREE, strRegID1, strRegID2, //
+			strRegID3, nTimeOutHeight, nPayMoney, strContractData));
 	BOOST_CHECK(CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
-	BOOST_CHECK(!CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
-	//BOOST_CHECK(GenerateOneBlock());
+
+	nAvailable = nMaxMoneyPerDay - nPayMoney;
+	if (nAvailable>=0) {
+		BOOST_CHECK(CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
+	} else {
+		BOOST_CHECK(!CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
+	}
 
 
+	//对已签名账户随机转账
+//	int nRandomValue = GetRandomValue();
+//	for (int i = 0;i<nRandomTestCount;i++) {
+//		BOOST_CHECK(PacketContractData(ID1_FREE_TO_FREE, strRegID1, strRegID2, //
+//					strRegID3, nTimeOutHeight, nRandomValue, strContractData));
+//
+//		nOldMoney = GetFreeMoney(strAddr1);
+//		if (nOldMoney>nRandomValue) {
+//			BOOST_CHECK(CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
+//			nNewMoney = GetFreeMoney(strAddr1);
+//			BOOST_CHECK(nOldMoney-nRandomValue = nNewMoney);
+//		}
+//	}
 }
 BOOST_AUTO_TEST_SUITE_END()
 
