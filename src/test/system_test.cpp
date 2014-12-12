@@ -54,10 +54,11 @@ public:
 	CSystemTest() {
 		nOldBlockHeight = 0;
 		nNewBlockHeight = 0;
-		nTimeOutHeight = 5;
+		nTimeOutHeight = 100;
 		nPayMoney = 10000;
 		nOldMoney = 0;
 		nNewMoney = 0;
+		nRandomRanger = 10000;
 		strFileName = "RegScriptTest.bin";
 		strAddr1 = "mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA";
 		strAddr3 = "mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7";
@@ -303,12 +304,22 @@ public:
 		return IsScriptAccCreated(HexStr(regID.GetVec6()));
 	}
 
+	int GetRandomValue()
+	{
+		return rand()%nRandomRanger;
+	}
+
+	void SetRandomRanger(int nMaxRanger) {
+		nRandomRanger = nMaxRanger;
+	}
 protected:
+	int nRandomRanger;
 	int nOldBlockHeight;
 	int nNewBlockHeight;
 	int nTimeOutHeight;
 	int nPayMoney;
 	static const int nFee = 100000;
+	static const int nRandomTestCount = 10;
 	uint64_t nOldMoney;
 	uint64_t nNewMoney;
 	string strTxHash;
@@ -430,7 +441,9 @@ BOOST_FIXTURE_TEST_CASE(author_test,CSystemTest)
 	vector<unsigned char> vUserDefine;
 	string strHash1,strHash2;
 	vUserDefine.push_back(1);
-	CNetAuthorizate author(10,vUserDefine,10000,10000,10000);
+	int nMaxMoneyPerDay = 15000;
+	int nAvailable = 0;
+	CNetAuthorizate author(10,vUserDefine,10000,10000,nMaxMoneyPerDay);
 	valueRes = ModifyAuthor(strAddr1,HexStr(striptID.GetVec6()),nTimeOutHeight,nFee,author);
 	BOOST_CHECK(GetHashFromCreatedTx(valueRes, strHash1));
 
@@ -449,10 +462,22 @@ BOOST_FIXTURE_TEST_CASE(author_test,CSystemTest)
 	BOOST_CHECK(PacketContractData(ID3_FREE_TO_FREE, strRegID1, strRegID2, //
 			strRegID3, nTimeOutHeight, nPayMoney, strContractData));
 	BOOST_CHECK(CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
-	BOOST_CHECK(!CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
-	//BOOST_CHECK(GenerateOneBlock());
+
+	nAvailable = nMaxMoneyPerDay - nPayMoney;
+	if (nAvailable>=0) {
+		BOOST_CHECK(CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
+	} else {
+		BOOST_CHECK(!CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
+	}
 
 
+	//对已签名账户随机转账
+	int nRandomValue = GetRandomValue();
+	nOldMoney = GetFreeMoney(strAddr1);
+	for (int i = 0;i<nRandomTestCount;i++) {
+		BOOST_CHECK(PacketContractData(ID1_FREE_TO_FREE, strRegID1, strRegID2, //
+					strRegID3, nTimeOutHeight, nRandomValue, strContractData));
+	}
 }
 BOOST_AUTO_TEST_SUITE_END()
 
