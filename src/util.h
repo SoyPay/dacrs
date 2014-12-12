@@ -136,7 +136,8 @@ TINYFORMAT_FOREACH_ARGNUM(MAKE_ERROR_AND_TRACE_FUNC)
 
 
 static inline bool error2(int line, const char* file,const char* format) {
-	LogPrintStr(tfm::format("[%s:%d]: ", file, line)+string("ERROR: ") + format + "\n");
+//	LogPrintStr(tfm::format("[%s:%d]: ", file, line)+string("ERROR: ") + format + "\n");
+	LogPrintStr("ERROR",  GetLogHead(line,file,"ERROR") + format + "\n");
 	return false;
 }
 

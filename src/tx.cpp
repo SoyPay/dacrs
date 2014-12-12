@@ -1815,12 +1815,12 @@ bool CTransactionCache::AddBlockToCache(const CBlock &block) {
 		mapTxHashByBlockHash.insert(make_pair(block.GetHash(), vTxHash));
 	}
 
-	LogPrint("INFO", "mapTxHashByBlockHash size:%d\n", mapTxHashByBlockHash.size());
-	for (auto &item : mapTxHashByBlockHash) {
-		LogPrint("INFO", "blockhash:%s\n", item.first.GetHex());
+//	LogPrint("INFO", "mapTxHashByBlockHash size:%d\n", mapTxHashByBlockHash.size());
+//	for (auto &item : mapTxHashByBlockHash) {
+//		LogPrint("INFO", "blockhash:%s\n", item.first.GetHex());
 //		for (auto &txHash : item.second)
 //			LogPrint("INFO", "txhash:%s\n", txHash.GetHex());
-	}
+//	}
 //	for(auto &item : mapTxHashCacheByPrev) {
 //		LogPrint("INFO", "prehash:%s\n", item.first.GetHex());
 //		for(auto &relayTx : item.second)
