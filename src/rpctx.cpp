@@ -1194,7 +1194,6 @@ Value gettxoperationlog(const Array& params, bool fHelp)
 }
 static Value TestDisconnectBlock(int number)
 {
-		CAccountViewCache view(*pAccountViewTip, true);
 		CBlockIndex* pindex = chainActive.Tip();
 		CBlock block;
 		CValidationState state;
