@@ -862,10 +862,12 @@ CBlockTemplate* CreateNewBlock() {
 
 			CTxUndo txundo;
 			CValidationState state;
-			if (!pBaseTx->UpdateAccount(nBlockTx + 1, accviewtemp, state, txundo, pIndexPrev->nHeight + 1, txCacheTemp, contractScriptTemp)) {
+			if (!pBaseTx->UpdateAccount(nBlockTx + 1, accviewtemp, state, txundo, pIndexPrev->nHeight + 1,
+					txCacheTemp, contractScriptTemp)) {
 				continue;
 			}
-			accview = accviewtemp;
+//			accview = accviewtemp;
+			accviewtemp.Flush();
 			nBlockTx++;
 			pblock->vptx.push_back(stx);
 			nFees += pBaseTx->GetFee();
