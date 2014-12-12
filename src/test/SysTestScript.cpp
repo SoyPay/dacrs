@@ -174,11 +174,11 @@ public:
 
 	void CheckSdk()
 	{
+		int nHeight = 0;
 		string param ="01";
 		Value resut =CreateContractTx1("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,TxHash));
 		BOOST_CHECK(GenerateOneBlock());
-
 		uint256 hash(TxHash.c_str());
 		param ="02";
 		param += HexStr(hash);
