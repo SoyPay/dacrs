@@ -711,7 +711,13 @@ bool CScriptDBViewCache::HaveScriptData(const vector<unsigned char> &vScriptId, 
 
 
 bool CScriptDBViewCache::GetScript(const int nIndex, CRegID &scriptId, vector<unsigned char> &vValue) {
-	return GetScript(nIndex, scriptId.GetVec6(), vValue);
+	vector<unsigned char> tem;
+	if(GetScript(nIndex, tem, vValue))
+	{
+		scriptId.SetRegID(tem);
+		return true;
+	}
+	return false;
 }
 bool CScriptDBViewCache::SetScript(const CRegID &scriptId, const vector<unsigned char> &vValue) {
 	return SetScript(scriptId.GetVec6(), vValue);

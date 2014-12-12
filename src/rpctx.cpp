@@ -1306,15 +1306,15 @@ Value listregscript(const Array& params, bool fHelp) {
 		Object script;
 		if(!pScriptDBTip->GetScript(0, regId, vScript))
 			throw JSONRPCError(RPC_DATABASE_ERROR, "get script error: cannot get registered script.");
-		script.push_back(Pair("scriptId", HexStr(regId.GetVec6())));
-		script.push_back(Pair("scriptId2", regId.ToString()));
+		script.push_back(Pair("scriptId", regId.ToString()));
+		script.push_back(Pair("scriptId2", HexStr(regId.GetVec6())));
 		if(showDetail)
 		script.push_back(Pair("scriptContent", HexStr(vScript.begin(), vScript.end())));
 		arrayScript.push_back(script);
 		while(pScriptDBTip->GetScript(1, regId, vScript)) {
 			Object obj;
-			obj.push_back(Pair("scriptId", HexStr(regId.GetVec6())));
-			obj.push_back(Pair("scriptId2", regId.ToString()));
+			obj.push_back(Pair("scriptId",  regId.ToString()));
+			obj.push_back(Pair("scriptId2", HexStr(regId.GetVec6())));
 			if(showDetail)
 			obj.push_back(Pair("scriptContent", string(vScript.begin(), vScript.end())));
 			arrayScript.push_back(obj);
