@@ -97,6 +97,7 @@ bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &en
 	if (!entry.GetTx()->UpdateAccount(0, *pAccountViewCache, state, txundo, chainActive.Tip()->nHeight + 1,
 			txCacheTemp, contractScriptTemp))
 		return false;
+	return true;
 }
 bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry) {
 	// Add to memory pool without checking anything.
