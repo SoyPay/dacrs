@@ -343,8 +343,8 @@ bool SysTestBase::GetNewAddr(std::string &addr) {
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
-	int ret = CommandLineRPC_GetValue(argc, argv, value);
-	if (!ret) {
+
+	if (CommandLineRPC_GetValue(argc, argv, value)) {
 		addr = value.get_str();
 		LogPrint("test_miners", "GetNewAddr:%s\r\n", addr.c_str());
 		return true;
@@ -360,8 +360,8 @@ bool SysTestBase::GetAccState(const std::string &addr, AccState &accstate) {
 	char *argv[] = { "rpctest", "getaddramount", temp };
 	int argc = sizeof(argv) / sizeof(char*);
 	Value value;
-	int ret = CommandLineRPC_GetValue(argc, argv, value);
-	if (!ret) {
+
+	if (CommandLineRPC_GetValue(argc, argv, value)) {
 		Object obj = value.get_obj();
 		double dfree = find_value(obj, "free amount").get_real();
 		double dmature = find_value(obj, "mature amount").get_real();
@@ -416,8 +416,7 @@ bool SysTestBase::CreateNormalTx(const std::string &srcAddr, const std::string &
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
-	int ret = CommandLineRPC_GetValue(argc, argv, value);
-	if (!ret) {
+	if (CommandLineRPC_GetValue(argc, argv, value)) {
 		LogPrint("test_miners", "CreateNormalTx:%s\r\n", value.get_str().c_str());
 		return true;
 	}
@@ -473,8 +472,8 @@ bool SysTestBase::RegisterAccountTx(const std::string &addr, const int nHeight) 
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
-	int ret = CommandLineRPC_GetValue(argc, argv, value);
-	if (!ret) {
+
+	if (CommandLineRPC_GetValue(argc, argv, value)) {
 		LogPrint("test_miners", "RegisterSecureTx:%s\r\n", value.get_str().c_str());
 		return true;
 	}
@@ -612,8 +611,7 @@ bool SysTestBase::IsAllTxInBlock() {
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
-	int ret = CommandLineRPC_GetValue(argc, argv, value);
-	if (!ret) {
+	if (CommandLineRPC_GetValue(argc, argv, value) ) {
 		Array array = value.get_array();
 		if (array.size() == 0)
 			return true;
@@ -645,8 +643,7 @@ bool SysTestBase::GetBlockMinerAddr(const std::string &blockhash, std::string &a
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
-	int ret = CommandLineRPC_GetValue(argc, argv, value);
-	if (!ret) {
+	if (CommandLineRPC_GetValue(argc, argv, value) ) {
 		Array txs = find_value(value.get_obj(), "tx").get_array();
 		addr = find_value(txs[0].get_obj(), "addr").get_str();
 		LogPrint("test_miners", "GetBlockMinerAddr:%s\r\n", addr.c_str());

@@ -478,11 +478,13 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 	CAccount acctInfo;
 	set<CAccount, CAccountComparator> setAcctInfo;
 
+	LogPrint("INFO","CreatePosTx block time:%d\n",  pBlock->nTime);
+
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
 		pwalletMain->GetKeyIds(setKeyID); //get addrs
 		if (setKeyID.empty()) {
-			LogPrint("INFO","CreatePosTx setKeyID empty\n");
+			LogPrint("ERROR","CreatePosTx setKeyID empty\n");
 			return false;
 		}
 
@@ -493,7 +495,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 			for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
 				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
 				if (txCacheTemp.IsContainTx(pBaseTx->GetHash())) {
-					LogPrint("INFO","CreatePosTx duplicate tx\n");
+					LogPrint("ERROR","CreatePosTx duplicate tx hash:%s\n", pBaseTx->GetHash().GetHex());
 					mempool.mapTx.erase(pBaseTx->GetHash());
 					return false;
 				}
@@ -501,7 +503,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 				CValidationState state;
 
 				if (!pBaseTx->UpdateAccount(i, accView, state, txundo, pPrevIndex->nHeight + 1, txCacheTemp, contractScriptTemp)) {
-					LogPrint("INFO","tx hash:%s transaction is invalid\n", pBaseTx->GetHash().GetHex());
+					LogPrint("ERROR","tx hash:%s transaction is invalid\n", pBaseTx->GetHash().GetHex());
 
 					mempool.mapTx.erase(pBaseTx->GetHash());
 					return false;
@@ -535,7 +537,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 
 	if (setAcctInfo.empty()) {
 		setCreateKey.clear();
-		LogPrint("INFO","CreatePosTx setSecureAcc empty\n");
+		LogPrint("ERROR","CreatePosTx setSecureAcc empty\n");
 		return false;
 	}
 
@@ -549,7 +551,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 		uint64_t posacc = item.GetAccountPos(pPrevIndex->nHeight);
 		if (posacc == 0) //have no pos
 				{
-			LogPrint("INFO","CreatePosTx posacc zero\n");
+			LogPrint("ERROR","CreatePosTx posacc zero\n");
 			continue;
 		}
 
@@ -609,10 +611,10 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 					pBlock->hashMerkleRoot = pBlock->BuildMerkleTree();
 					vector<unsigned char> vRegId = regid.GetVec6();
 					printf("CreatePosTx addr = %s \nhight:%d time:%s\r\n\n",item.keyID.ToAddress().c_str(),prtx->nHeight,DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
-					LogPrint("postx", "find pos tx hash succeed: \n"
+					LogPrint("INFO", "find pos tx hash succeed: \n"
 									  "   pos hash:%s \n"
 									  "adjust hash:%s \r\n", curhash.GetHex(), adjusthash.GetHex());
-					LogPrint("postx",
+					LogPrint("INFO",
 							"nVersion=%d, hashPreBlock=%s, hashMerkleRoot=%s, nValue=%ld, nTime=%ld, nNonce=%ld\n",
 							postxinfo.nVersion, postxinfo.hashPrevBlock.GetHex(), postxinfo.hashMerkleRoot.GetHex(),
 							postxinfo.nValues, postxinfo.nTime, postxinfo.nNonce);
@@ -625,13 +627,16 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 
 					if (key.Sign(pBlock->SignatureHash(), pBlock->vSignature)) {
 //						cout << "miner signature:" << HexStr(pBlock->vSignature) << endl;
+						LogPrint("INFO","Create new block,hash:%s\n", pBlock->GetHash().GetHex());
 						return true;
 					} else {
 						LogPrint("ERROR", "sign fail\r\n");
 					}
+
 				} else {
 					LogPrint("ERROR", "GetKey fail or GetVec6 fail\r\n");
 				}
+
 			}
 		}
 	}
@@ -866,8 +871,6 @@ CBlockTemplate* CreateNewBlock() {
 					txCacheTemp, contractScriptTemp)) {
 				continue;
 			}
-//			accview = accviewtemp;
-			accviewtemp.Flush();
 			nBlockTx++;
 			pblock->vptx.push_back(stx);
 			nFees += pBaseTx->GetFee();
