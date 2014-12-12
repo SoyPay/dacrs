@@ -18,7 +18,7 @@
 class CBigNum;
 class uint256;
 class CKeyID;
-class CTransactionCache;
+class CTransactionDBCache;
 // -dbcache default (MiB)
 static const int64_t nDefaultDbCache = 100;
 // max. -dbcache in (MiB)
@@ -36,6 +36,7 @@ private:
     void operator=(const CBlockTreeDB&);
 public:
     bool WriteBlockIndex(const CDiskBlockIndex& blockindex);
+    bool EraseBlockIndex(const uint256 &blockHash);
     bool WriteBestInvalidWork(const CBigNum& bnBestInvalidWork);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &fileinfo);
     bool WriteBlockFileInfo(int nFile, const CBlockFileInfo &fileinfo);
@@ -57,6 +58,7 @@ private:
 	CLevelDBWrapper db;
 public:
 	CAccountViewDB(size_t nCacheSize, bool fMemory=false, bool fWipe = false);
+	CAccountViewDB(const string& name,size_t nCacheSize, bool fMemory, bool fWipe);
 private:
 	CAccountViewDB(const CAccountViewDB&);
 	void operator=(const CAccountViewDB&);
@@ -77,19 +79,19 @@ public:
 	bool SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &secureAccount);
 };
 
-class CTransactionCacheDB: public CLevelDBWrapper {
-public:
-	CTransactionCacheDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+class CTransactionDB: public CTransactionDBView{
 private:
-	CTransactionCacheDB(const CTransactionCacheDB&);
-	void operator=(const CTransactionCacheDB&);
+	CLevelDBWrapper db;
 public:
-//	bool SetRelayTx(const uint256 &prevhash, const vector<uint256> &vHashTx);
-//	bool GetRelayTx(const uint256 &prevhash, vector<uint256> &vHashTx);
+	CTransactionDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+private:
+	CTransactionDB(const CTransactionDB&);
+	void operator=(const CTransactionDB&);
+public:
 	bool SetTxCache(const uint256 &blockHash, const vector<uint256> &hashTxSet);
 	bool GetTxCache(const uint256 &hashblock, vector<uint256> &hashTx);
 	bool LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash);
-	bool Flush(const map<uint256, vector<uint256> > &mapTxHashByBlockHash);
+	bool BatchWrite(const map<uint256, vector<uint256> > &mapTxHashByBlockHash);
 };
 
 class CScriptDB: public CScriptDBView
@@ -97,6 +99,7 @@ class CScriptDB: public CScriptDBView
 private:
 	CLevelDBWrapper db;
 public:
+	CScriptDB(const string&name,size_t nCacheSize,  bool fMemory=false, bool fWipe = false);
 	CScriptDB(size_t nCacheSize, bool fMemory=false, bool fWipe = false);
 private:
 	CScriptDB(const CScriptDB&);

@@ -133,6 +133,8 @@ public:
 
     uint256 BuildMerkleTree() const;
 
+    std::tuple<bool, int> GetTxIndex(const uint256& txHash) const;
+
     const uint256 &GetTxHash(unsigned int nIndex) const {
         assert(vMerkleTree.size() > 0); // BuildMerkleTree must have been called first
         assert(nIndex < vptx.size());

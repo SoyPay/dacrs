@@ -396,7 +396,6 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		return obj;
 	} else {
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
-		cout << "cont:" << tx.get()->ToString(*pAccountViewTip) << endl;
 		std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 		ds << pBaseTx;
 		Object obj;
@@ -431,7 +430,6 @@ Value signcontracttx(const Array& params, bool fHelp) {
 	stream >> pBaseTx;
 
 	std::shared_ptr<CContractTransaction> tx = make_shared<CContractTransaction>(pBaseTx.get());
-	cout << "sig:" << tx.get()->ToString(*pAccountViewTip) << endl;
 	assert(pwalletMain != NULL);
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
@@ -889,11 +887,11 @@ Value listaddr(const Array& params, bool fHelp) {
 }
 
 Value listtx(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 0) {
+	if (fHelp || params.size() > 1) {
 		string msg = "listaddrtx \"addr\" showtxdetail\n"
 				"\listaddrtx\n"
 				"\nArguments:\n"
-				"1.\"addr\": (string required)"
+				"1.\"addr\": (optional,default all addr in wallet)"
 				"2.showtxdetail: (optional,default false)"
 				"\nResult:\n"
 				"\"txhash\"\n"
@@ -901,19 +899,24 @@ Value listtx(const Array& params, bool fHelp) {
 				+ "\nAs json rpc call\n" + HelpExampleRpc("listtx", "");
 		throw runtime_error(msg);
 	}
+    CKeyID keyid;
+	if (params.size() == 1) {
 
+		if (!GetKeyId(params[0].get_str(), keyid)) {
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+		}
+	}
 
 	Object retObj;
 	assert(pwalletMain != NULL);
 	{
 		Object Inblockobj;
 		for (auto const &wtx : pwalletMain->mapInBlockTx) {
-			Inblockobj.push_back(Pair("blockhash",  wtx.first.ToString()));
-			Inblockobj.push_back(Pair("tx",  wtx.second.ToJosnObj()));
+			Inblockobj.push_back(Pair("tx",  wtx.second.ToJosnObj(keyid)));
 		}
 		retObj.push_back(Pair("Inblocktx" ,Inblockobj));
 
-		CAccountViewCache view(*pAccountViewTip);
+		CAccountViewCache view(*pAccountViewTip, true);
 		Array UnConfirmTxArry;
 			for (auto const &wtx : pwalletMain->UnConfirmTx) {
 				UnConfirmTxArry.push_back(wtx.second.get()->ToString(view));
@@ -988,7 +991,7 @@ Value listunconfirmedtx(const Array& params, bool fHelp) {
 	}
 
 	Object retObj;
-	CAccountViewCache view(*pAccountViewTip);
+	CAccountViewCache view(*pAccountViewTip, true);
 	Array UnConfirmTxArry;
 	for (auto const &wtx : pwalletMain->UnConfirmTx) {
 		UnConfirmTxArry.push_back(wtx.second.get()->ToString(view));
@@ -1160,7 +1163,7 @@ Value gettxoperationlog(const Array& params, bool fHelp)
 		}
 	}
 	RPCTypeCheck(params, list_of(str_type));
-	uint256 txHash(ParseHex(params[0].get_str()));
+	uint256 txHash(params[0].get_str());
 	vector<CAccountOperLog> vLog;
 	Object retobj;
 	retobj.push_back(Pair("hash",  txHash.GetHex()));
@@ -1196,41 +1199,41 @@ static Value TestDisconnectBlock(int number)
 		CBlockIndex* pindex = chainActive.Tip();
 		CBlock block;
 		CValidationState state;
+		if((chainActive.Tip()->nHeight - number) < 0)
+		{
+			throw JSONRPCError(RPC_INVALID_PARAMS, "restclient Error: number");
+		}
 		while (number--) {
 			// check level 0: read from disk
-	//	      if (!DisconnectBlockFromTip(state))
-	//	    	  return false;
-			if (!ReadBlockFromDisk(block, pindex))
-				throw ERROR("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
-						pindex->GetBlockHash().ToString());
-			bool fClean = true;
-			CTransactionCache txCacheTemp(*pTxCacheTip);
-			CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
-			if (!DisconnectBlock(block, state, view, pindex, txCacheTemp, contractScriptTemp, &fClean))
-				throw ERROR("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
-						pindex->GetBlockHash().ToString());
-			CBlockIndex *pindexDelete = pindex;
-			pindex = pindex->pprev;
-			chainActive.SetTip(pindex);
-		    if (!txCacheTemp.DeleteBlockFromCache(block))
-		    	throw runtime_error(_("Disconnect tip block failed to delete tx from txcache"));
+			 CBlockIndex * pTipIndex = chainActive.Tip();
+		      if (!DisconnectBlockFromTip(state))
+		    	  return false;
+		      chainMostWork.SetTip(pTipIndex->pprev);
+		      if(!EraseBlockIndexFromSet(pTipIndex))
+		    	  return false;
+		      if(!pblocktree->EraseBlockIndex(pTipIndex->GetBlockHash()))
+		    	  return false;
+		      mapBlockIndex.erase(pTipIndex->GetBlockHash());
 
-		    //load a block tx into cache transaction
-			CBlockIndex *pReLoadBlockIndex = pindexDelete;
-			if(pindexDelete->nHeight - SysCfg().GetTxCacheHeight()>0) {
-				pReLoadBlockIndex = chainActive[pindexDelete->nHeight - SysCfg().GetTxCacheHeight()];
-				CBlock reLoadblock;
-				if (!ReadBlockFromDisk(reLoadblock, pindexDelete))
-					throw runtime_error(_("Failed to read block"));
-				if (!txCacheTemp.AddBlockToCache(reLoadblock))
-					throw  runtime_error(_("Disconnect tip block reload preblock tx to txcache"));
-			}
-
-			assert(view.Flush() &&txCacheTemp.Flush()&& contractScriptTemp.Flush() );
+//			if (!ReadBlockFromDisk(block, pindex))
+//				throw ERROR("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
+//						pindex->GetBlockHash().ToString());
+//			bool fClean = true;
+//			CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
+//			CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+//			if (!DisconnectBlock(block, state, view, pindex, txCacheTemp, contractScriptTemp, &fClean))
+//				throw ERROR("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
+//						pindex->GetBlockHash().ToString());
+//			CBlockIndex *pindexDelete = pindex;
+//			pindex = pindex->pprev;
+//			chainActive.SetTip(pindex);
+//
+//			assert(view.Flush() &&txCacheTemp.Flush()&& contractScriptTemp.Flush() );
+//			txCacheTemp.Clear();
 		}
 //		pTxCacheTip->Flush();
 		Object obj;
-		obj.push_back(Pair("tip", strprintf("hash%s hight:%s",chainActive.Tip()->GetBlockHash().ToString(),chainActive.Tip()->nHeight)));
+		obj.push_back(Pair("tip", strprintf("hash:%s hight:%s",chainActive.Tip()->GetBlockHash().ToString(),chainActive.Tip()->nHeight)));
 		return obj;
 }
 
@@ -1251,16 +1254,32 @@ Value disconnectblock(const Array& params, bool fHelp) {
 	return te;
 }
 
-Value restclient(const Array& params, bool fHelp) {
+Value resetclient(const Array& params, bool fHelp) {
 	Value te = TestDisconnectBlock(chainActive.Tip()->nHeight);
-	pwalletMain->CleanAll();
-    mapBlockIndex.clear();
-    chainActive.SetTip(NULL);
-    mapBlockIndex.clear();
 
-	CBlock firs = SysCfg().GenesisBlock();
-	pwalletMain->SyncTransaction(0,NULL,&firs);
-	mempool.clear();
+	if(chainActive.Tip()->nHeight == 0)
+	{
+		pwalletMain->CleanAll();
+		CBlockIndex* te=chainActive.Tip();
+		uint256 hash= te->GetBlockHash();
+		for(auto it = mapBlockIndex.begin(), ite = mapBlockIndex.end(); it != ite;)
+		{
+		  if(it->first != hash)
+		    it = mapBlockIndex.erase(it);
+		  else
+		    ++it;
+		}
+
+
+
+		CBlock firs = SysCfg().GenesisBlock();
+		pwalletMain->SyncTransaction(0,NULL,&firs);
+		mempool.clear();
+	}
+	else
+	{
+		throw JSONRPCError(RPC_WALLET_ERROR, "restclient Error: Sign failed.");
+	}
 	return te;
 
 }
@@ -1509,12 +1528,15 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		if (dbsize >= pagesize * index) {
 			count = pagesize * (index - 1) - 1;
 			listcount = dbsize - pagesize * (index - 1);
-		} else if (dbsize < pagesize * index && dbsize > pagesize) {
+		} else if (dbsize < pagesize * index && dbsize > index) {
 			int preindex = dbsize / pagesize;
 			count = pagesize * (preindex - 1) - 1;
 			listcount = dbsize - pagesize * (index - 1);
 		}
-
+		if(listcount > index)
+		{
+			listcount = index;
+		}
 		while (count--) {
 			if (!pScriptDBTip->GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
 				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");

@@ -54,11 +54,10 @@ public:
 	bool SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &account);
 };
 
-
 class CAccountViewCache : public CAccountViewBacked
 {
 public:
-    uint256 hashBlock;
+	uint256 hashBlock;
     map<CKeyID, CAccount> cacheAccounts;
     map<string, CKeyID> cacheKeyIds;
 
@@ -277,5 +276,48 @@ private:
 			const vector<unsigned char> &vScriptData, const int nHeight, CScriptDBOperLog &operLog);
 
 };
+
+class CTransactionDBView {
+public:
+	virtual bool IsContainTx(const uint256 & txHash);
+	virtual bool IsContainBlock(const CBlock &block);
+	virtual bool AddBlockToCache(const CBlock &block);
+	virtual bool DeleteBlockFromCache(const CBlock &block);
+	virtual bool LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash);
+	virtual bool BatchWrite(const map<uint256, vector<uint256> > &mapTxHashByBlockHashIn);
+	virtual ~CTransactionDBView(){};
+};
+
+class CTransactionDBViewBacked : public CTransactionDBView {
+protected:
+	CTransactionDBView * pBase;
+	bool LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash);
+public:
+	CTransactionDBViewBacked(CTransactionDBView &transactionView);
+	bool BatchWrite(const map<uint256, vector<uint256> > &mapTxHashByBlockHashIn);
+	bool IsContainTx(const uint256 & txHash);
+	bool IsContainBlock(const CBlock &block);
+	bool AddBlockToCache(const CBlock &block);
+	bool DeleteBlockFromCache(const CBlock &block);
+};
+
+class CTransactionDBCache : public CTransactionDBViewBacked{
+private:
+	CTransactionDBCache(CTransactionDBCache &transactionView);
+	map<uint256, vector<uint256> > mapTxHashByBlockHash;  // key:block hash  value:tx hash
+public:
+	CTransactionDBCache(CTransactionDBView &pTxCacheDB, bool fDummy);
+	bool IsContainBlock(const CBlock &block);
+	bool AddBlockToCache(const CBlock &block);
+	bool DeleteBlockFromCache(const CBlock &block);
+	bool IsContainTx(const uint256 & txHash);
+	map<uint256, vector<uint256> > GetTxHashCache(void);
+	bool BatchWrite(const map<uint256, vector<uint256> > &mapTxHashByBlockHashIn);
+	void AddTxHashCache(const uint256 & blockHash, const vector<uint256> &vTxHash);
+	bool Flush();
+	bool LoadTransaction();
+	void Clear();
+};
+
 #endif
 

@@ -1,6 +1,8 @@
 #include "account.h"
 #include "util.h"
 #include "serialize.h"
+#include "core.h"
+#include <algorithm>
 
 bool CAccountView::GetAccount(const CKeyID &keyId, CAccount &account) {return false;}
 bool CAccountView::SetAccount(const CKeyID &keyId, const CAccount &account) {return false;}
@@ -770,4 +772,134 @@ bool CScriptDBViewCache::GetTxRelAccount(const uint256 &txHash, set<CKeyID> &rel
 	ds.insert(ds.end(), temp.begin(), temp.end());
 	ds >> relAccount;
 	return true;
+}
+
+bool CTransactionDBView::IsContainTx(const uint256 & txHash) { return false; }
+bool CTransactionDBView::IsContainBlock(const CBlock &block) { return false; }
+bool CTransactionDBView::AddBlockToCache(const CBlock &block) { return false; }
+bool CTransactionDBView::DeleteBlockFromCache(const CBlock &block) { return false; }
+bool CTransactionDBView::LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash) { return false; }
+bool CTransactionDBView::BatchWrite(const map<uint256, vector<uint256> > &mapTxHashByBlockHash) { return false; }
+
+
+
+CTransactionDBViewBacked::CTransactionDBViewBacked(CTransactionDBView &transactionView) {
+	pBase = &transactionView;
+}
+bool CTransactionDBViewBacked::IsContainTx(const uint256 & txHash) {
+	return pBase->IsContainTx(txHash);
+}
+bool CTransactionDBViewBacked::IsContainBlock(const CBlock &block) {
+	return pBase->IsContainBlock(block);
+}
+
+bool CTransactionDBViewBacked::AddBlockToCache(const CBlock &block) {
+	return pBase->AddBlockToCache(block);
+}
+bool CTransactionDBViewBacked::DeleteBlockFromCache(const CBlock &block) {
+	return pBase->DeleteBlockFromCache(block);
+}
+bool CTransactionDBViewBacked::LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash) {
+	return pBase->LoadTransaction(mapTxHashByBlockHash);
+}
+bool CTransactionDBViewBacked::BatchWrite(const map<uint256, vector<uint256> > &mapTxHashByBlockHashIn) {
+	return pBase->BatchWrite(mapTxHashByBlockHashIn);
+}
+
+CTransactionDBCache::CTransactionDBCache(CTransactionDBView &txCacheDB, bool fDummy) : CTransactionDBViewBacked(txCacheDB){
+
+}
+
+bool CTransactionDBCache::IsContainBlock(const CBlock &block) {
+	return ((mapTxHashByBlockHash.count(block.GetHash()) > 0 && mapTxHashByBlockHash[block.GetHash()].size() > 0)
+			|| pBase->IsContainBlock(block));
+}
+
+bool CTransactionDBCache::AddBlockToCache(const CBlock &block) {
+	vector<uint256> vTxHash;
+	vTxHash.clear();
+	for (auto &ptx : block.vptx) {
+		vTxHash.push_back(ptx->GetHash());
+	}
+//	if (IsContainBlock(block)) {
+//		LogPrint("INFO", "the block hash:%s is in TxCache\n", block.GetHash().GetHex());
+	mapTxHashByBlockHash[block.GetHash()] = vTxHash;
+//	} else {
+//		mapTxHashByBlockHash.insert(make_pair(block.GetHash(), vTxHash));
+//	}
+
+	LogPrint("INFO", "mapTxHashByBlockHash size:%d\n", mapTxHashByBlockHash.size());
+	for (auto &item : mapTxHashByBlockHash) {
+		LogPrint("INFO", "blockhash:%s\n", item.first.GetHex());
+//		for (auto &txHash : item.second)
+//			LogPrint("INFO", "txhash:%s\n", txHash.GetHex());
+	}
+//	for(auto &item : mapTxHashCacheByPrev) {
+//		LogPrint("INFO", "prehash:%s\n", item.first.GetHex());
+//		for(auto &relayTx : item.second)
+//			LogPrint("INFO", "relay tx hash:%s\n", relayTx.GetHex());
+//	}
+	return true;
+}
+
+bool CTransactionDBCache::DeleteBlockFromCache(const CBlock &block) {
+	if (IsContainBlock(block)) {
+		vector<uint256> vTxHash;
+		vTxHash.clear();
+		mapTxHashByBlockHash[block.GetHash()] = vTxHash;
+		return true;
+	} else {
+		LogPrint("ERROR", "the block hash:%s isn't in TxCache\n", block.GetHash().GetHex());
+		return false;
+	}
+
+	return true;
+}
+
+bool CTransactionDBCache::IsContainTx(const uint256 & txHash) {
+	for (auto & item : mapTxHashByBlockHash) {
+		vector<uint256>::iterator it = find(item.second.begin(), item.second.end(), txHash);
+		if (it != item.second.end())
+			return true;
+	}
+	return pBase->IsContainTx(txHash);
+}
+
+map<uint256, vector<uint256> > CTransactionDBCache::GetTxHashCache(void) {
+//	map<uint256, vector<uint256> > mapTemp;
+//	if(NULL != pBase) {
+//		map<uint256, vector<uint256> > mapTemp2 =((CTransactionDBCache *) pBase)->GetTxHashCache();
+//		std::merge(mapTxHashByBlockHash.begin(), mapTxHashByBlockHash.end(),
+//				mapTemp2.begin(), mapTemp2.end(), mapTemp.begin());
+//		return mapTemp;
+//	}
+//	else
+		return mapTxHashByBlockHash;
+}
+
+bool CTransactionDBCache::BatchWrite(const map<uint256, vector<uint256> > &mapTxHashByBlockHashIn) {
+	for(auto & item : mapTxHashByBlockHashIn) {
+		mapTxHashByBlockHash[item.first] = item.second;
+	}
+	return true;
+}
+
+bool CTransactionDBCache::Flush() {
+	bool bRet = pBase->BatchWrite(mapTxHashByBlockHash);
+//	if (bRet) {
+//		mapTxHashByBlockHash.clear();
+//	}
+	return bRet;
+}
+
+void CTransactionDBCache::AddTxHashCache(const uint256 & blockHash, const vector<uint256> &vTxHash) {
+	mapTxHashByBlockHash[blockHash] = vTxHash;
+}
+
+bool CTransactionDBCache::LoadTransaction() {
+	return pBase->LoadTransaction(mapTxHashByBlockHash);
+}
+
+void CTransactionDBCache::Clear() {
+	mapTxHashByBlockHash.clear();
 }

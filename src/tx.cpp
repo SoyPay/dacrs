@@ -170,7 +170,7 @@ void CRegID::SetRegIDByCompact(const vector<unsigned char> &vIn) {
 }
 
 bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
+		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	CAccount account;
 	CRegID regId(nHeight, nIndex);
 	CKeyID keyId = boost::get<CPubKey>(userId).GetKeyID();
@@ -208,7 +208,7 @@ bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 	return true;
 }
 bool CRegisterAccountTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
-		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
+		CTxUndo &txundo, int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	//drop account
 	CRegID accountId(nHeight, nIndex);
 	CAccount oldAccount;
@@ -276,7 +276,7 @@ bool CRegisterAccountTx::CheckTransction(CValidationState &state, CAccountViewCa
 }
 
 bool CTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
+		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	CAccount sourceAccount;
 	CAccount desAccount;
 	if (!view.GetAccount(srcUserId, sourceAccount))
@@ -311,7 +311,7 @@ bool CTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidatio
 	return true;
 }
 bool CTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
+		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	CAccount sourceAccount;
 	CAccount desAccount;
 	CID srcId(srcUserId);
@@ -405,10 +405,10 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 				"bad-signscript-check");
 	}
 
-	//鑻ュ湪浜ゆ槗绱㈠紩鏁版嵁搴撲腑瀛樺湪浜ゆ槗hash锛屾浜ゆ槗宸茬粡琚‘璁よ繃锛屾棤椤绘鏌�
+	//閼汇儱婀禍銈嗘缁便垹绱╅弫鐗堝祦鎼存挷鑵戠�涙ê婀禍銈嗘hash閿涘本顒濇禍銈嗘瀹歌尙绮＄悮顐も�樼拋銈堢箖閿涘本妫ゆい缁橆梾閺岋拷
 	CDiskTxPos postx;
 	if (!pblocktree->ReadTxIndex(GetHash(), postx)) {
-		//濡傛灉鏄氦鏄撹纭杩涘叆block涓椂锛岃嫢鐩殑鍦板潃涓簁eyId鏃跺繀椤绘槸鏈敞鍐岃处鎴�
+		//婵″倹鐏夐弰顖欐唉閺勬捁顫︾涵顔款吇鏉╂稑鍙哹lock娑擃厽妞傞敍宀冨閻╊喚娈戦崷鏉挎絻娑撶皝eyId閺冭泛绻�妞ょ粯妲搁張顏呮暈閸愬矁澶勯幋锟�
 			CAccount acctDesInfo;
 			if (desUserId.type() == typeid(CKeyID)) {
 				if (view.GetAccount(desUserId, acctDesInfo) && acctDesInfo.IsRegister()) {
@@ -424,8 +424,9 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 	return true;
 }
 
+
 bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
+		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 
 	CAccount sourceAccount;
 	uint64_t minusValue = llFees;
@@ -445,7 +446,7 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 				UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 
 	}
-	//鎵ｅ噺灏忚垂鏃ュ織
+	//閹碉絽鍣虹亸蹇氬瀭閺冦儱绻�
 	txundo.vAccountOperLog.push_back(sourceAccount.accountOperLog);
 
 	CVmScriptRun vmRun;
@@ -475,7 +476,7 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 	return true;
 }
 bool CContractTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
-		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
+		CTxUndo &txundo, int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 
 	for(auto & operacctlog : txundo.vAccountOperLog) {
 		CAccount account;
@@ -509,9 +510,9 @@ bool CContractTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &vie
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 	uint64_t el = GetElementForBurn(chainActive.Tip());
-	CScriptDBViewCache scriptDBView(*pScriptDBTip);
+	CScriptDBViewCache scriptDBView(*pScriptDBTip, true);
 	if(!pTxCacheTip->IsContainTx(GetHash())) {
-		CAccountViewCache accountView(view);
+		CAccountViewCache accountView(view, true);
 		tuple<bool, uint64_t, string> ret = vmRun.run(pTx, accountView, scriptDBView, chainActive.Height() +1, el);
 		if (!std::get<0>(ret))
 			return ERROR("GetAddress()  : %s", std::get<2>(ret));
@@ -577,7 +578,7 @@ bool CContractTransaction::CheckTransction(CValidationState &state, CAccountView
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 
-	CScriptDBViewCache scriptDBCache(*pScriptDBTip);
+	CScriptDBViewCache scriptDBCache(*pScriptDBTip, true);
 	uint64_t el = GetElementForBurn(chainActive.Tip());
 	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptDBCache, chainActive.Height() +1, el);
 
@@ -589,7 +590,7 @@ bool CContractTransaction::CheckTransction(CValidationState &state, CAccountView
 }
 
 bool CFreezeTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
+		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	uint64_t minusValue = llFees + llFreezeFunds;
 	uint64_t freezeValue = llFreezeFunds;
 	CID id(regAccountId);
@@ -616,7 +617,7 @@ bool CFreezeTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 	return true;
 }
 bool CFreezeTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
-		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
+		CTxUndo &txundo, int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	CID id(regAccountId);
 	CAccount account;
 	if (!view.GetAccount(regAccountId, account))
@@ -674,7 +675,7 @@ bool CFreezeTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 }
 
 bool CRewardTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
+		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	CID id(account);
 	CAccount acctInfo;
 	if (!view.GetAccount(account, acctInfo)) {
@@ -695,7 +696,7 @@ bool CRewardTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 	return true;
 }
 bool CRewardTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
-		CTxUndo &txundo, int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
+		CTxUndo &txundo, int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	CID id(account);
 	if (account.type() != typeid(CRegID) && account.type() != typeid(CPubKey)) {
 		return state.DoS(100,
@@ -745,7 +746,7 @@ bool CRewardTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 }
 
 bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
+		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	LogPrint("INFO" ,"registscript UpdateAccount\n");
 	CID id(regAccountId);
 	CAccount acctInfo;
@@ -817,7 +818,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 	return true;
 }
 bool CRegistScriptTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-		int nHeight, CTransactionCache &txCache, CScriptDBViewCache &scriptCache) {
+		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	CID id(regAccountId);
 	CAccount account;
 	CUserID userId;
@@ -1794,91 +1795,6 @@ bool CAccount::GetUserData(const vector_unsigned_char& scriptID, vector<unsigned
 	return true;
 }
 
-CTransactionCache::CTransactionCache(CTransactionCacheDB *pTxCacheDB) {
-	base = pTxCacheDB;
-}
-
-bool CTransactionCache::IsContainBlock(const CBlock &block) {
-	return (mapTxHashByBlockHash.count(block.GetHash()) > 0);
-}
-
-bool CTransactionCache::AddBlockToCache(const CBlock &block) {
-	vector<uint256> vTxHash;
-	vTxHash.clear();
-	for (auto &ptx : block.vptx) {
-		vTxHash.push_back(ptx->GetHash());
-	}
-	if (IsContainBlock(block)) {
-		LogPrint("INFO", "the block hash:%s is in TxCache\n", block.GetHash().GetHex());
-		mapTxHashByBlockHash[block.GetHash()] = vTxHash;
-	} else {
-		mapTxHashByBlockHash.insert(make_pair(block.GetHash(), vTxHash));
-	}
-
-//	LogPrint("INFO", "mapTxHashByBlockHash size:%d\n", mapTxHashByBlockHash.size());
-//	for (auto &item : mapTxHashByBlockHash) {
-//		LogPrint("INFO", "blockhash:%s\n", item.first.GetHex());
-//		for (auto &txHash : item.second)
-//			LogPrint("INFO", "txhash:%s\n", txHash.GetHex());
-//	}
-//	for(auto &item : mapTxHashCacheByPrev) {
-//		LogPrint("INFO", "prehash:%s\n", item.first.GetHex());
-//		for(auto &relayTx : item.second)
-//			LogPrint("INFO", "relay tx hash:%s\n", relayTx.GetHex());
-//	}
-	return true;
-}
-
-bool CTransactionCache::DeleteBlockFromCache(const CBlock &block) {
-	if (IsContainBlock(block)) {
-		for (auto &ptx : block.vptx) {
-			vector<uint256> vTxHash;
-			vTxHash.clear();
-			mapTxHashByBlockHash[block.GetHash()] = vTxHash;
-		}
-		return true;
-	} else {
-		LogPrint("ERROR", "the block hash:%s isn't in TxCache\n", block.GetHash().GetHex());
-		return false;
-	}
-
-	return true;
-}
-
-bool CTransactionCache::IsContainTx(const uint256 & txHash) {
-	for (auto & item : mapTxHashByBlockHash) {
-		vector<uint256>::iterator it = find(item.second.begin(), item.second.end(), txHash);
-		if (it != item.second.end())
-			return true;
-	}
-	return false;
-}
-
-const map<uint256, vector<uint256> > &CTransactionCache::GetTxHashCache(void) const {
-	return mapTxHashByBlockHash;
-}
-
-bool CTransactionCache::Flush() {
-	bool bRet = base->Flush(mapTxHashByBlockHash);
-//	if (bRet) {
-//		mapTxHashByBlockHash.clear();
-//		mapTxHashCacheByPrev.clear();
-//	}
-	return bRet;
-}
-
-void CTransactionCache::AddTxHashCache(const uint256 & blockHash, const vector<uint256> &vTxHash) {
-	mapTxHashByBlockHash[blockHash] = vTxHash;
-}
-
-bool CTransactionCache::LoadTransaction() {
-	return base->LoadTransaction(mapTxHashByBlockHash);
-}
-
-void CTransactionCache::Clear() {
-	mapTxHashByBlockHash.clear();
-}
-
 
 void CRegID::SetRegID(const vector<unsigned char>& vIn) {
 	assert(vIn.size() == 6);
@@ -1921,7 +1837,7 @@ CAuthorizate::CAuthorizate(CNetAuthorizate te) {
 	nMaxMoneyTotal = te.GetMaxMoneyTotal();
 	nMaxMoneyPerDay = te.GetMaxMoneyPerDay();
 	nLastOperHeight = 0;
-	nCurMaxMoneyPerDay = 0;
+	nCurMaxMoneyPerDay = te.GetMaxMoneyPerDay();
 }
 
 unsigned int CAuthorizate::GetSerializeSize(int nType, int nVersion) const {

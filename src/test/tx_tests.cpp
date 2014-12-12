@@ -61,7 +61,7 @@ bool IsEqual(const vector<CFund>& vSrc, const vector<CFund>& vDest) {
 }
 struct CTxTest {
 	int nRunTimeHeight;
-	CBlockIndex block;
+//	CBlockIndex block;
 	CAccount accOperate;
 	CAccount accBeforOperate;
 	CAccount accYesterDayLastOper;
@@ -150,9 +150,9 @@ struct CTxTest {
 	void Init() {
 		srand((unsigned) time(NULL));
 		accOperate.llValues = TEST_SIZE*5;
-		block.nHeight = CHAIN_HEIGHT;
-		chainActive.SetTip(&block);
-		BOOST_CHECK(NULL != chainActive.Tip());
+//		block.nHeight = CHAIN_HEIGHT;
+//		chainActive.SetTip(&block);
+//		BOOST_CHECK(NULL != chainActive.Tip());
 
 		nRunTimeHeight = 0;
 

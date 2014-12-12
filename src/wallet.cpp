@@ -368,22 +368,24 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 			}
 		};
 		auto DisConnectBlockProgress = [&]() {
-			CAccountTx Oldtx(this, blockhash);
+//			CAccountTx Oldtx(this, blockhash);
 			for (const auto &sptx : pblock->vptx) {
-				if (sptx->nTxType == REG_ACCT_TX) {
-					if (IsMine(sptx.get())) {
+				if(IsMine(sptx.get())) {
+					if (sptx->nTxType == REG_ACCT_TX) {
 						fIsNeedUpDataRegID = true;
 					}
-				}
-				Oldtx.AddTx(sptx->GetHash(), sptx.get());
-			}
-
-			Oldtx.AcceptToMemoryPool(); //add those tx to mempool
-				if (mapInBlockTx.count(blockhash)) {
-					mapInBlockTx.erase(blockhash);
+					UnConfirmTx[sptx.get()->GetHash()] = sptx.get()->GetNewInstance();
 					bupdate = true;
 				}
-		};
+//				Oldtx.AddTx(sptx->GetHash(), sptx.get());
+
+			}
+//			Oldtx.AcceptToMemoryPool(); //add those tx to mempool
+			if (mapInBlockTx.count(blockhash)) {
+				mapInBlockTx.erase(blockhash);
+				bupdate = true;
+			}
+			};
 		auto IsConnect = [&]() // test is connect or disconct
 			{
 				return mapBlockIndex.count(blockhash) && chainActive.Contains(mapBlockIndex[blockhash]);
@@ -753,18 +755,30 @@ CWallet* CWallet::getinstance() {
 
 }
 
-Object CAccountTx::ToJosnObj() const {
+Object CAccountTx::ToJosnObj(CKeyID const  &key) const {
 
 	Object obj;
 	obj.push_back(Pair("blockHash",  blockHash.ToString()));
 	obj.push_back(Pair("blockhigh",  blockhigh));
 	Array Tx;
-	CAccountViewCache view(*pAccountViewTip);
-	for(auto const &re:mapAccountTx)
-	{
-	  Tx.push_back(re.second.get()->ToString(view));
+	CAccountViewCache view(*pAccountViewTip, true);
+	for (auto const &re : mapAccountTx) {
+		if (!key.IsEmpty()) {
+			auto find = mapOperLog.find(re.first);
+			if (find != mapOperLog.end()) {
+				vector<CAccountOperLog>  rep = find->second;
+				for (auto &te : rep) {
+					if (te.keyID == key) {
+						Tx.push_back(re.second.get()->ToString(view));
+					}
+				}
+			}
+		} else			//default add all tx to obj
+		{
+			Tx.push_back(re.second.get()->ToString(view));
+		}
 	}
-	obj.push_back(Pair("Tx",  Tx));
+	obj.push_back(Pair("Tx", Tx));
 
 	return obj;
 }
@@ -843,7 +857,7 @@ bool CWallet::SynchronizRegId(const CKeyID& keyid, const CAccountViewCache& invi
 bool CWallet::IsMine(CBaseTransaction* pTx) const{
 
 	set<CKeyID> vaddr;
-	CAccountViewCache view(*pAccountViewTip);
+	CAccountViewCache view(*pAccountViewTip, true);
 	if (!pTx->GetAddress(vaddr, view)) {
 		return false;
 	}
@@ -856,7 +870,7 @@ bool CWallet::IsMine(CBaseTransaction* pTx) const{
 }
 
 bool CWallet::SynchronizSys(const CAccountViewCache& inview) {
-	CAccountViewCache view(inview);
+	CAccountViewCache view(const_cast<CAccountViewCache &>(inview), true);
 	for (auto &te : mKeyPool) {
 		te.second.SynchronizSys(view);
 	}

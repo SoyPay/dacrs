@@ -822,7 +822,6 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) 
 		flag = false;
 	}
 
-
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     (*tem.get()).push_back(vValue);
 
@@ -1294,10 +1293,10 @@ int64_t CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 						pos += size + 2;
 					}
 				}
-				if(methodID == READDB_FUNC) {
-					LogPrint("vm","data1:%s\r\n",HexStr(ipara,ipara+totalsize));
-					LogPrint("INFO","data1:%s\r\n",HexStr(ipara,ipara+totalsize));
-				}
+//				if(methodID == READDB_FUNC) {
+//					LogPrint("vm","data1:%s\r\n",HexStr(ipara,ipara+totalsize));
+//					LogPrint("INFO","data1:%s\r\n",HexStr(ipara,ipara+totalsize));
+//				}
 			}
 		} else if (Sys.PC == 0x0008) {
 				INT8U result=GetExRam(0xEFFD);

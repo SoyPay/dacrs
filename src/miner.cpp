@@ -489,8 +489,8 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 		}
 
 		CAccountViewCache accView(*pAccountViewTip, true);
-		CTransactionCache txCacheTemp(*pTxCacheTip);
-		CScriptDBViewCache contractScriptTemp(*pScriptDBTip);
+		CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
+		CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 		{
 			for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
 				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
@@ -554,7 +554,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 			LogPrint("ERROR","CreatePosTx posacc zero\n");
 			continue;
 		}
-//		LogPrint("INFO","CreatePosTx miner address account balance:%d\n", posacc);
+
 		uint256 adjusthash = GetAdjustHash(targetHash, posacc); //adjust nbits
 
 //need compute this block proofofwork
@@ -644,7 +644,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 	return false;
 }
 
-bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionCache &txCache, CScriptDBViewCache &scriptCache, bool bJustCheckSign) {
+bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool bJustCheckSign) {
 
 	uint64_t maxNonce = SysCfg().GetArg("-blockmaxnonce", 10000); //cacul times
 
@@ -657,8 +657,8 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 		LogPrint("ERROR", "hashMerkleRoot is error\r\n");
 		return false;
 	}
-	CAccountViewCache view(accView);
-	CScriptDBViewCache scriptDBView(scriptCache);
+	CAccountViewCache view(accView, true);
+	CScriptDBViewCache scriptDBView(scriptCache, true);
 	CAccount account;
 	{
 		CRewardTransaction *prtx = (CRewardTransaction *) pBlock->vptx[0].get();
@@ -719,7 +719,6 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 		return false;
 	}
 
-	LogPrint("INFO","VerifyPosTx miner address account balance:%d\n", posacc);
 	uint256 adjusthash = GetAdjustHash(targetHash, posacc); //adjust nbits
 
 //need compute this block proofofwork
@@ -813,7 +812,7 @@ CBlockTemplate* CreateNewBlock() {
 	{
 		LOCK2(cs_main, mempool.cs);
 		CBlockIndex* pIndexPrev = chainActive.Tip();
-
+		CAccountViewCache accview(*pAccountViewTip, true);
 
 		bool fPrintPriority = SysCfg().GetBoolArg("-printpriority", false);
 
@@ -830,8 +829,8 @@ CBlockTemplate* CreateNewBlock() {
 
 		TxPriorityCompare comparer(fSortedByFee);
 		make_heap(vecPriority.begin(), vecPriority.end(), comparer);
-		CAccountViewCache accview(*pAccountViewTip, true);
-		CTransactionCache txCacheTemp(*pTxCacheTip, true);
+		CAccountViewCache accviewtemp(accview, true);
+		CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
 		CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 
 		while (!vecPriority.empty()) {
@@ -868,7 +867,8 @@ CBlockTemplate* CreateNewBlock() {
 
 			CTxUndo txundo;
 			CValidationState state;
-			if (!pBaseTx->UpdateAccount(nBlockTx + 1, accviewtemp, state, txundo, pIndexPrev->nHeight + 1, txCacheTemp, contractScriptTemp)) {
+			if (!pBaseTx->UpdateAccount(nBlockTx + 1, accviewtemp, state, txundo, pIndexPrev->nHeight + 1,
+					txCacheTemp, contractScriptTemp)) {
 				continue;
 			}
 			nBlockTx++;
@@ -911,7 +911,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet) {
 	{
 		LOCK(cs_main);
 		if (pblock->hashPrevBlock != chainActive.Tip()->GetBlockHash())
-			return ERROR("BitcoinMiner : generated block is stale");
+			return ERROR("SoypayMiner : generated block is stale");
 
 		// Remove key from key pool
 	//	reservekey.KeepKey();
@@ -925,7 +925,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet) {
 		// Process this block the same as if we had received it from another node
 		CValidationState state;
 		if (!ProcessBlock(state, NULL, pblock))
-			return ERROR("BitcoinMiner : ProcessBlock, block not accepted, block hash:%s", pblock->GetHash().GetHex());
+			return ERROR("SoypayMiner : ProcessBlock, block not accepted");
 	}
 
 	return true;
@@ -972,7 +972,7 @@ void static SoypayMiner(CWallet *pwallet) {
 					SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
 					if (SysCfg().NetworkID() == CBaseParams::REGTEST)
-//						throw boost::thread_interrupted();
+						throw boost::thread_interrupted();
 					::MilliSleep(800);
 					break;
 				}
@@ -991,7 +991,7 @@ void static SoypayMiner(CWallet *pwallet) {
 			}
 		}
 	} catch (boost::thread_interrupted) {
-		LogPrint("INFO","BitcoinMiner terminated\n");
+		LogPrint("INFO","SoypayMiner  terminated\n");
 		throw;
 	}
 }
@@ -1036,12 +1036,14 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads) {
 	static boost::thread_group* minerThreads = NULL;
 
-	if (nThreads < 0) {
-		if (SysCfg().NetworkID() == CBaseParams::REGTEST)
-			nThreads = 1;
-		else
-			nThreads = boost::thread::hardware_concurrency();
+	if (nThreads != 0) {//in pos system one thread is enough  marked by ranger.shi
+		nThreads = 1;
+//		if (SysCfg().NetworkID() == CBaseParams::REGTEST)
+//			nThreads = 1;
+//		else
+//			nThreads = boost::thread::hardware_concurrency();
 	}
+
 
 	if (minerThreads != NULL) {
 		minerThreads->interrupt_all();

@@ -9,14 +9,6 @@ set autosevertestexe=%cd%\ptest\soypay_ptest.exe
 
 
 call :ClrEnvironment
-call :StartServer
-%autosevertestexe% --run_test=test_rollback/db_fun
-call :CloseServer
-
-
-
-
-pause
 exit /b 0
 
 
@@ -41,8 +33,10 @@ GOTO :EOF
 echo Clr environment
 rd /s/q %targetdir%\regtest & md %targetdir%\regtest
 cp  %curdir%\test\data\soypay.conf %targetdir%\soypay.conf
-cp  %curdir%\test\data\wallet.dat %targetdir%\wallet.dat
-cp  %curdir%\test\data\wallet.dat %targetdir%\regtest\wallet.dat
+cp  %curdir%\test\data\anony.bin %targetdir%\data\anony.bin
+cp  %curdir%\test\data\darksecure.bin %targetdir%\data\darksecure.bin
+cp  %curdir%\test\data\scripttest.bin %targetdir%\data\scripttest.bin
+cp  %curdir%\test\data\soypay_test.bin %targetdir%\data\soypay_test.bin
 echo Clr environment OK
 GOTO :EOF
 
