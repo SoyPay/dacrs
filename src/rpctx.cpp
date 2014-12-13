@@ -1204,6 +1204,7 @@ static Value TestDisconnectBlock(int number)
 		while (number--) {
 			// check level 0: read from disk
 			 CBlockIndex * pTipIndex = chainActive.Tip();
+			 LogPrint("vm", "current height:%d\n", pTipIndex->nHeight);
 		      if (!DisconnectBlockFromTip(state))
 		    	  return false;
 		      chainMostWork.SetTip(pTipIndex->pprev);
