@@ -510,14 +510,14 @@ BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 	CheckSdk();
 
 
-//	ResetEnv();
-//	BOOST_CHECK(0==chainActive.Height());
-//	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
-//	CheckRollBack();
-//
-//	ResetEnv();
-//	BOOST_CHECK(0==chainActive.Height());
-//	CheckScriptAccount();
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
+	CheckRollBack();
+
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	CheckScriptAccount();
 
 }
 BOOST_FIXTURE_TEST_CASE(darksecure,CSysScriptTest)
