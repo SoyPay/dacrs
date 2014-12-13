@@ -39,7 +39,7 @@ uint64_t GetPayMoney() {
 	while(true)
 	{
 		srand(time(NULL));
-		uint64_t r = (rand() % 1000002) + 100000000;
+		r = (rand() % 1000002) + 100000000;
 		if(r%2 == 0 && r != 0)
 			break;
 	}
@@ -279,14 +279,13 @@ string Createanony(string scriptid,string addr,string toaddress1,string toaddres
 	CONTRACT_ANONY contact;
 	contact.nHeight = 10;
 	contact.nPayMoney = paymoney;
-	cout<<"first"<<paymoney<<endl;
-
+	cout<<"first:"<<paymoney<<endl;
 	CRegID regIdb(addr);
 	memcpy(contact.Sender,&regIdb.GetVec6().at(0),sizeof(contact.Sender));
 
 	ACCOUNT_INFO info;
 	info.nReciMoney = paymoney/2;
-	cout<<"first"<<info.nReciMoney<<endl;
+	cout<<"first:"<<info.nReciMoney<<endl;
 	CRegID regId1(toaddress1);
 	memcpy(info.account,&regId1.GetVec6().at(0),sizeof(info.account));
 
