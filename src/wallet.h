@@ -238,7 +238,7 @@ public:
 	bool GetKey(const CUserID &address, CKey& keyOut,bool IsMiner = false) const ;
 	bool GetRegId(const CUserID &address, CRegID& IdOut) const;
 
-	bool GetKeyIds(set<CKeyID> &setKeyID)const ;
+	bool GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner = false)const ;
 	bool AddPubKey(const CPubKey& pk);
 
 	bool CleanAll(); //just for unit test

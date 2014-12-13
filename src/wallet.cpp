@@ -876,11 +876,15 @@ bool CWallet::SynchronizSys(const CAccountViewCache& inview) {
 	return true;
 }
 
-bool CWallet::GetKeyIds(set<CKeyID>& setKeyID) const {
+bool CWallet::GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner) const {
 	AssertLockHeld(cs_wallet);
 	setKeyID.clear();
 	for (auto const & tem : mKeyPool) {
-		setKeyID.insert(tem.first);
+		if (IsMiner == false) {
+			setKeyID.insert(tem.first);
+		} else if (!tem.second.GetRegID().IsEmpty()) {			//only the reged key is useful fo miner
+			setKeyID.insert(tem.first);
+		}
 	}
 	return setKeyID.size() > 0;
 }
