@@ -262,7 +262,7 @@ bool SysTestBase::CommandLineRPC_GetValue(int argc, char *argv[], Value &value) 
 
 	if (strPrint != "") {
 		if (false == nRes) {
-			cout<<strPrint<<endl;
+//			cout<<strPrint<<endl;
 		}
 		// fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
 	}
@@ -612,8 +612,8 @@ bool SysTestBase::IsAllTxInBlock() {
 
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value) ) {
-		Array array = value.get_array();
-		if (array.size() == 0)
+		value = find_value(value.get_obj(), "UnConfirmTx");
+		if (0 == value.get_array().size())
 			return true;
 	}
 	return false;

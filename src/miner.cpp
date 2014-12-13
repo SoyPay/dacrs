@@ -482,8 +482,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
-		pwalletMain->GetKeyIds(setKeyID); //get addrs
-		if (setKeyID.empty()) {
+		if (!pwalletMain->GetKeyIds(setKeyID,true)) {
 			LogPrint("ERROR","CreatePosTx setKeyID empty\n");
 			return false;
 		}
@@ -515,10 +514,8 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 			//find CAccount info by keyid
 			if(setCreateKey.size()) {
 				bool bfind = false;
-				for(auto &item: setCreateKey)
-				{
-					if(item == keyid)
-					{
+				for(auto &item: setCreateKey){
+					if(item == keyid){
 						bfind = true;
 						break;
 					}
@@ -610,7 +607,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 					prtx->nHeight = pPrevIndex->nHeight+1;
 					pBlock->hashMerkleRoot = pBlock->BuildMerkleTree();
 					vector<unsigned char> vRegId = regid.GetVec6();
-					printf("CreatePosTx addr = %s \nhight:%d time:%s\r\n\n",item.keyID.ToAddress().c_str(),prtx->nHeight,DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
+					LogPrint("MINER","Miner hight:%d time:%s addr = %s \r\n",prtx->nHeight,DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str(),item.keyID.ToAddress().c_str());
 					LogPrint("INFO", "find pos tx hash succeed: \n"
 									  "   pos hash:%s \n"
 									  "adjust hash:%s \r\n", curhash.GetHex(), adjusthash.GetHex());
@@ -1020,7 +1017,7 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 			}
 			if(setCreateKey.empty())
 			{
-				LogPrint("postx", "%s is not exist in the wallet\r\n",CSoyPayAddress(keyID).ToString().c_str());
+				LogPrint("postx", "%s is not exist in the wallet\r\n",keyID.ToAddress());
 				break;
 			}
 			::MilliSleep(1);

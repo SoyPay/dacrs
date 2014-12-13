@@ -203,8 +203,7 @@ FILE* m_fileout;
 boost::mutex* m_mutexDebugLog;
 };
 
-static map<string,
-DebugLogFile> g_DebugLogs;
+static map<string,DebugLogFile> g_DebugLogs;
 
 
 static void DebugPrintInit() {
