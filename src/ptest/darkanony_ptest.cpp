@@ -35,8 +35,15 @@ int GetRandomFee() {
 }
 
 uint64_t GetPayMoney() {
-	srand(time(NULL));
-	uint64_t r = (rand() % 1000000) + 100000000;
+	uint64_t r = 0;
+	while(true)
+	{
+		srand(time(NULL));
+		uint64_t r = (rand() % 1000002) + 100000000;
+		if(r%2 == 0 && r != 0)
+			break;
+	}
+
 	return r;
 }
 char* dest[] ={
@@ -127,43 +134,22 @@ string Parsejson(string str)
 	}
 	return ret;
 }
-bool GetRegId(string addr,CRegID &regid)
-{
-	CAccountViewCache view(*pAccountViewTip, true);
-	auto GetUserId = [&](CKeyID &keyId)
-	{
-		CAccount acct;
-		if (view.GetAccount(CUserID(keyId), acct)) {
-			return acct.regID;
-		}
-	};
-	CKeyID keyid;
-	if (!CRegID::GetKeyID(addr, keyid)) {
-		keyid=CKeyID(addr);
-		if (keyid.IsEmpty())
-		return false;
-	}
 
-	regid =CRegID(GetUserId(keyid));
-	return false;
-}
 string CreateDarkTx(string scriptid,string buyeraddr,string selleraddr,string nfee,uint64_t paymoney)
 {
 	std::vector<std::string> vInputParams;
 	vInputParams.clear();
 	vInputParams.push_back(scriptid);
 	string temp1 = "[";
-		temp1+="\""+buyeraddr+"\""+"\""+selleraddr+"\""+"]";
+		temp1+="\""+buyeraddr+"\""+","+"\""+selleraddr+"\""+"]";
 	vInputParams.push_back(temp1);
 
 	FIRST_CONTRACT contact;
 	contact.dnType = 0x01;
 	contact.nHeight = 10;
 	contact.nPayMoney = paymoney;
-	CRegID regIdb ;
-	GetRegId(buyeraddr,regIdb);
-	CRegID regIds ;
-	GetRegId(selleraddr,regIds);
+	CRegID regIdb(buyeraddr) ;
+	CRegID regIds(selleraddr) ;
 	memcpy(contact.buyer,&regIdb.GetVec6().at(0),sizeof(contact.buyer));
 	memcpy(contact.seller,&regIds.GetVec6().at(0),sizeof(contact.seller));
 
@@ -293,18 +279,19 @@ string Createanony(string scriptid,string addr,string toaddress1,string toaddres
 	CONTRACT_ANONY contact;
 	contact.nHeight = 10;
 	contact.nPayMoney = paymoney;
-
+	cout<<"first"<<paymoney<<endl;
 
 	CRegID regIdb(addr);
 	memcpy(contact.Sender,&regIdb.GetVec6().at(0),sizeof(contact.Sender));
 
 	ACCOUNT_INFO info;
-	info.nReciMoney = paymoney - 10000;
+	info.nReciMoney = paymoney/2;
+	cout<<"first"<<info.nReciMoney<<endl;
 	CRegID regId1(toaddress1);
 	memcpy(info.account,&regId1.GetVec6().at(0),sizeof(info.account));
 
 	ACCOUNT_INFO info1;
-	info1.nReciMoney = 10000;
+	info1.nReciMoney =  paymoney/2;
 	CRegID regId2(toaddress2);
 	memcpy(info1.account,&regId2.GetVec6().at(0),sizeof(info1.account));
 
@@ -443,7 +430,16 @@ void SendDarkTx(string scriptid)
 	uint64_t paymoney =GetPayMoney();
 	string txhash = CreateDarkTx(scriptid,buyaddr,selleraddr,nfee,paymoney);
 
-	BOOST_CHECK(Parsejson(txhash) != "");
+	BOOST_CHECK(txhash != "");
+
+	GenerateMiner();
+	//// 确认交易放到block中去了
+	while(true)
+	{
+		string qhash = GetScript(txhash);
+		if(qhash != "" )
+			break;
+	}
 	if(txhash != "")
 	{
 	  string hash = CreateSecondDarkTx(scriptid,txhash,buyaddr,nfee);
