@@ -487,7 +487,7 @@ Value signcontracttx(const Array& params, bool fHelp) {
 //		CKey key;
 //		pwalletMain->GetKey(keyid, key);
 		vector<unsigned char> signature;
-		if (pwalletMain->Sign(keyid,tx.get()->SignatureHash(), signature)) {
+		if (!pwalletMain->Sign(keyid,tx.get()->SignatureHash(), signature)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: Sign failed.");
 		}
 
