@@ -309,6 +309,7 @@ static const CRPCCommand vRPCCommands[] =
     { "resetclient",             &resetclient,             true,      false,      false },
     { "reloadtxcache",          &reloadtxcache,          true,      false,      true },
     { "listsetblockindexvalid",  &listsetblockindexvalid, true,     false,      false},
+    { "getscriptid",  &getscriptid, true,     false,      false},
 };
 
 CRPCTable::CRPCTable()
