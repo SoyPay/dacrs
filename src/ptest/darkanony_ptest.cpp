@@ -40,24 +40,19 @@ uint64_t GetPayMoney() {
 	return r;
 }
 char* dest[] ={
-		  "mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA",
-
-		  "mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5",
-
-		  "mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y",
-
-		  "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb",
-		  "mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7",
-
-		  "moZJZgsGFC4qvwRdjzS7Bj3fHrtpUfEVEE",
-
-		  "mjSwCwMsvtKczMfta1tvr78z2FTsZA1JKw",
-
-		  "msdDQ1SXNmknrLuTDivmJiavu5J9VyX9fV",
-		  "mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v",
-		 "mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc",
+		  "000000000900",
+		  "000000000500",
+		  "000000000300",
+		  "000000000800",
+		  "000000000700",
+		  "000000000400",
+		  "000000000100",
+		  "000000000a00",
+		  "000000000600",
+		 "000000000200",
 
 };
+
 string CreateScript(char * vmpath,string addr,string nfee)
 {
 	std::vector<std::string> vInputParams;
@@ -300,20 +295,17 @@ string Createanony(string scriptid,string addr,string toaddress1,string toaddres
 	contact.nPayMoney = paymoney;
 
 
-	CRegID regIdb;
-	GetRegId(addr,regIdb);
+	CRegID regIdb(addr);
 	memcpy(contact.Sender,&regIdb.GetVec6().at(0),sizeof(contact.Sender));
 
 	ACCOUNT_INFO info;
 	info.nReciMoney = paymoney - 10000;
-	CRegID regId1;
-	GetRegId(toaddress1,regId1);
+	CRegID regId1(toaddress1);
 	memcpy(info.account,&regId1.GetVec6().at(0),sizeof(info.account));
 
 	ACCOUNT_INFO info1;
 	info1.nReciMoney = 10000;
-	CRegID regId2 ;
-	GetRegId(toaddress2,regId2);
+	CRegID regId2(toaddress2);
 	memcpy(info1.account,&regId2.GetVec6().at(0),sizeof(info1.account));
 
 	contact.len = ::GetSerializeSize(info, SER_DISK, CLIENT_VERSION)*2;
@@ -430,8 +422,8 @@ void GetAddress(string& addr1,string& addr2,string addr3)
 	int d = 0;
 	while(true)
 	{
-		k = rand() % 10 +1;
-		d = rand() % 10 +1;
+		k = rand() % 10;
+		d = rand() % 10;
 		if(k != i && d != k && d != i)
 			break;
 	}
@@ -488,6 +480,10 @@ BOOST_AUTO_TEST_CASE(sendtx){
 	cout<<darkhash<<endl;
 	cout<<anonyhahs<<endl;
 	string darkscriptkid,anonyscriptid;
+	darkhash = Parsejson(darkhash);
+	anonyhahs = Parsejson(anonyhahs);
+	cout<<darkhash<<endl;
+	cout<<anonyhahs<<endl;
 	while(true)
 	{
 		darkscriptkid = GetScript(darkhash);

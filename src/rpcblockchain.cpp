@@ -371,7 +371,7 @@ Value getscriptid(const Array& params, bool fHelp)
 
 	int nIndex = 0;
 	int BlockHeight =GetTxComfirmHigh(txhash) ;
-	if(BlockHeight > chainActive.Height())
+	if(BlockHeight > chainActive.Height() && BlockHeight != -1)
 	{
 		throw runtime_error("height lagre tip block \n");
 	}
