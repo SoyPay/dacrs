@@ -262,7 +262,7 @@ bool SysTestBase::CommandLineRPC_GetValue(int argc, char *argv[], Value &value) 
 
 	if (strPrint != "") {
 		if (false == nRes) {
-			cout<<strPrint<<endl;
+//			cout<<strPrint<<endl;
 		}
 		// fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
 	}

@@ -784,11 +784,9 @@ Object CAccountTx::ToJosnObj(CKeyID const  &key) const {
 }
 
 uint256 CWallet::GetCheckSum() const {
-	{
-			CHashWriter ss(SER_GETHASH, CLIENT_VERSION);
-			ss << nWalletVersion << bestBlock << MasterKey << mKeyPool << mapInBlockTx;
-			return ss.GetHash();
-		}
+	CHashWriter ss(SER_GETHASH, CLIENT_VERSION);
+	ss << nWalletVersion << bestBlock << MasterKey << mKeyPool << mapInBlockTx;
+	return ss.GetHash();
 }
 
 bool CWallet::GetRegId(const CUserID& address, CRegID& IdOut) const  {
@@ -813,16 +811,17 @@ bool CWallet::GetRegId(const CUserID& address, CRegID& IdOut) const  {
 	return false;
 }
 
-bool CWallet::GetKey(const CUserID& address, CKey& keyOut) const{
+bool CWallet::GetKey(const CUserID& address, CKey& keyOut,bool IsMiner) const{
 	AssertLockHeld(cs_wallet);
-	if (address.type() == typeid(CKeyID)) {
-		return GetKey(boost::get<CKeyID>(address),keyOut);
+	CAccountViewCache dumy(*pAccountViewTip,true);
+	CKeyID keyid;
+	if (dumy.GetKeyId(address, keyid)) {
+		if (mKeyPool.count(keyid)) {
+			auto tep = mKeyPool.find(keyid);
+			if (tep != mKeyPool.end())
+				return tep->second.getCKey(keyOut, IsMiner);
+		}
 	}
-	else
-	{
-		assert(0 && "to fixme");
-	}
-
 	return false;
 }
 
@@ -877,11 +876,15 @@ bool CWallet::SynchronizSys(const CAccountViewCache& inview) {
 	return true;
 }
 
-bool CWallet::GetKeyIds(set<CKeyID>& setKeyID) const {
+bool CWallet::GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner) const {
 	AssertLockHeld(cs_wallet);
 	setKeyID.clear();
 	for (auto const & tem : mKeyPool) {
-		setKeyID.insert(tem.first);
+		if (IsMiner == false) {
+			setKeyID.insert(tem.first);
+		} else if (!tem.second.GetRegID().IsEmpty()) {			//only the reged key is useful fo miner
+			setKeyID.insert(tem.first);
+		}
 	}
 	return setKeyID.size() > 0;
 }
@@ -893,4 +896,11 @@ bool CWallet::CleanAll() {
 	mKeyPool.clear();
 	MasterKey.SetNull();
 	return true;
+}
+
+bool CWallet::Sign(const CUserID& Userid, const uint256& hash, vector<unsigned char> &signature,bool IsMiner)const {
+	CKey key;
+	if(GetKey(Userid, key,IsMiner))
+	return(key.Sign(hash, signature));
+    return false;
 }
