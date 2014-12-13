@@ -182,6 +182,7 @@ public:
 		uint256 hash(TxHash.c_str());
 		param ="02";
 		param += HexStr(hash);
+		LogPrint("TEST","CheckSdk(), create contract tx, type:02, hash:%s\n", TxHash.c_str());
 		string temp;
 		resut =CreateContractTx1("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
@@ -503,20 +504,20 @@ BOOST_FIXTURE_TEST_SUITE(sysScript_test,CSysScriptTest)
 BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 {
 //	//// some debug
-//	ResetEnv();
-//	BOOST_CHECK(0==chainActive.Height());
-//	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
-//	CheckSdk();
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
+	CheckSdk();
 
 
 	ResetEnv();
 	BOOST_CHECK(0==chainActive.Height());
 	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
 	CheckRollBack();
-//
-//	ResetEnv();
-//	BOOST_CHECK(0==chainActive.Height());
-//	CheckScriptAccount();
+
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	CheckScriptAccount();
 
 }
 BOOST_FIXTURE_TEST_CASE(darksecure,CSysScriptTest)

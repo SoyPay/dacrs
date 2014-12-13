@@ -18,7 +18,7 @@
 #include "util.h"
 #include "miner.h"
 #include "tx.h"
-
+#include "VmScript/VmScriptRun.h"
 #include <sstream>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -1492,9 +1492,10 @@ bool static DisconnectTip(CValidationState &state) {
 //				return state.Abort(_("Disconnect tip block reload preblock tx to txcache"));
 //	}
 
+	// Update chainActive and related variables.
+    UpdateTip(pindexDelete->pprev, block);
 
     mempool.ReScanMemPoolTx(block, pAccountViewTip);
-
 	// Resurrect mempool transactions from the disconnected block.
 	for (const auto &ptx : block.vptx) {
 		// ignore validation errors in resurrected transactions
@@ -1504,10 +1505,6 @@ bool static DisconnectTip(CValidationState &state) {
 			if (!AcceptToMemoryPool(mempool, stateDummy, ptx.get(), false, NULL))
 				mempool.remove(ptx.get(), removed, true);
 	}
-
-
-	// Update chainActive and related variables.
-    UpdateTip(pindexDelete->pprev, block);
     return true;
 }
 
@@ -1546,7 +1543,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
 //		list<std::shared_ptr<CBaseTransaction> > unused;
 //		mempool.remove(ptx.get(), unused);
 //	}
-    mempool.ReScanMemPoolTx(block, pAccountViewTip);
+
 //    if (!pTxCacheTip->AddBlockToCache(block))
 //    		return state.Abort(_("Connect tip block failed add block tx to txcache"));
 //    if(pindexNew->nHeight-SysCfg().GetTxCacheHeight() > 0) {
@@ -1560,6 +1557,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     // Update chainActive & related variables.
     UpdateTip(pindexNew, block);
 
+    mempool.ReScanMemPoolTx(block, pAccountViewTip);
     return true;
 }
 
@@ -1822,14 +1820,15 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockIndex, CValidationState& state) {
 	CAccountViewCache view(*pAccountViewTip, true);
 	CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
-	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+	CScriptDBViewCache scriptDBTemp(*pScriptDBTip, true);
 	vector<CBlock> vPreBlocks;
 	if (pPreBlockIndex->GetBlockHash() != chainActive.Tip()->GetBlockHash()) {
 		while (!chainActive.Contains(pPreBlockIndex)){
 			CBlock block;
 			if (!ReadBlockFromDisk(block, pPreBlockIndex))
 				return state.Abort(_("Failed to read block"));
-			vPreBlocks.insert(vPreBlocks.begin(), block);   //将支链的block保存起来
+			//vPreBlocks.insert(vPreBlocks.begin(), block);
+			vPreBlocks.push_back(block);                   //将支链的block保存起来
 			pPreBlockIndex = pPreBlockIndex->pprev;
 			map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(pPreBlockIndex->GetBlockHash());
 			if (mi == mapBlockIndex.end())
@@ -1842,20 +1841,20 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 			if (!ReadBlockFromDisk(block, pBlockIndex))
 				return state.Abort(_("Failed to read block"));
 			bool bfClean = true;
-			if (!DisconnectBlock(block, state, view, pBlockIndex, txCacheTemp, contractScriptTemp, &bfClean)) {
+			if (!DisconnectBlock(block, state, view, pBlockIndex, txCacheTemp, scriptDBTemp, &bfClean)) {
 				return ERROR("CheckBlockProofWorkWithCoinDay() : DisconnectBlock %s failed", pBlockIndex->GetBlockHash().ToString());
 			}
 			pBlockIndex = pBlockIndex->pprev;
 		}
-
-		for (auto &item : vPreBlocks) {
-			if (!ConnectBlock(item, state, view, mapBlockIndex[item.GetHash()], txCacheTemp, contractScriptTemp, false))
-				return ERROR("CheckBlockProofWorkWithCoinDay() : ConnectBlock %s failed", item.GetHash().ToString());
+		vector<CBlock>::reverse_iterator rIter = vPreBlocks.rbegin();
+		for(; rIter != vPreBlocks.rend(); ++rIter) { //连接支链的block
+			if (!ConnectBlock(*rIter, state, view, mapBlockIndex[rIter->GetHash()], txCacheTemp, scriptDBTemp, false))
+				return ERROR("CheckBlockProofWorkWithCoinDay() : ConnectBlock %s failed", rIter->GetHash().ToString());
 		}
 
 		//校验pos交易
 		uint64_t nInterest = 0;
-		if (!VerifyPosTx(mapBlockIndex[block.hashPrevBlock], view, &block, nInterest, txCacheTemp, contractScriptTemp, false)) {
+		if (!VerifyPosTx(mapBlockIndex[block.hashPrevBlock], view, &block, nInterest, txCacheTemp, scriptDBTemp, false)) {
 			return state.DoS(100,
 					ERROR("ConnectBlock() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
 					REJECT_INVALID, "bad-pos-tx");
@@ -1877,10 +1876,21 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 			//校验是否有重复确认交易
 			if(txCacheTemp.IsContainTx(item->GetHash()))
 				return state.DoS(100, ERROR("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed", item->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
+			//校验合约是否能有效执行，因为合约的执行和系统环境有关系，必须在这里校验
+			if(CONTRACT_TX == item->nTxType) {
+				CVmScriptRun vmRun;
+				uint64_t el = GetElementForBurn(mapBlockIndex[view.GetBestBlock()]);
+				std::shared_ptr<CBaseTransaction> pTx = item->GetNewInstance();
+				std::tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptDBTemp, mapBlockIndex[view.GetBestBlock()]->nHeight +1, el);
+				if (!std::get<0>(ret))
+					return state.DoS(100,
+							ERROR("CheckBlockProofWorkWithCoinDay() : ContractTransaction txhash=%s run script error,%s",
+									item->GetHash().GetHex(), std::get<2>(ret)), REJECT_INVALID, "run-script-error");
+			}
 		}
 	} else {
 		uint64_t nInterest = 0;
-		if (!VerifyPosTx(pPreBlockIndex, view, &block, nInterest, txCacheTemp, contractScriptTemp, false)) {
+		if (!VerifyPosTx(pPreBlockIndex, view, &block, nInterest, txCacheTemp, scriptDBTemp, false)) {
 			return state.DoS(100,
 					ERROR("CheckBlockProofWorkWithCoinDay() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
 					REJECT_INVALID, "bad-pos-tx");
@@ -1902,6 +1912,18 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 			//校验是否有重复确认交易
 			if(txCacheTemp.IsContainTx(item->GetHash()))
 				return state.DoS(100, ERROR("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed", item->GetHash().GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
+
+			//校验合约是否能有效执行，因为合约的执行和系统环境有关系，必须在这里校验
+			if(CONTRACT_TX == item->nTxType) {
+				CVmScriptRun vmRun;
+				uint64_t el = GetElementForBurn(mapBlockIndex[view.GetBestBlock()]);
+				std::shared_ptr<CBaseTransaction> pTx = item->GetNewInstance();
+				std::tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptDBTemp, mapBlockIndex[view.GetBestBlock()]->nHeight +1, el);
+				if (!std::get<0>(ret))
+					return state.DoS(100,
+							ERROR("CheckBlockProofWorkWithCoinDay() : ContractTransaction txhash=%s run script error,%s",
+									item->GetHash().GetHex(), std::get<2>(ret)), REJECT_INVALID, "run-script-error");
+			}
 		}
 		return true;
 	}

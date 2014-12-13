@@ -44,7 +44,7 @@ private:
 	void SetRegIDByCompact(const vector<unsigned char> &vIn);
 public:
 	friend class CID;
-	vector<unsigned char> &GetVec6() const {return vRegID;}
+	const vector<unsigned char> &GetVec6() const {return vRegID;}
 	void SetRegID(const vector<unsigned char> &vIn) ;
 	void SetRegID(string strRegID);
     CKeyID getKeyID(const CAccountViewCache &view)const;

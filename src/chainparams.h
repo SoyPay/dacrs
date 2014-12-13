@@ -67,6 +67,8 @@ public:
 	}
 	virtual bool InitalConfig() const{
 		fServer = GetBoolArg("-server", false);
+
+		m_mapMultiArgs["-debug"].push_back("ERROR"); //add froce ERROR to log
 		fDebug = !m_mapMultiArgs["-debug"].empty();
 		if (fDebug) {
 			fDebugAll = GetBoolArg("-logprintall", false);

@@ -570,22 +570,10 @@ bool CContractTransaction::CheckTransction(CValidationState &state, CAccountView
 		}
 	}
 
-	//for VerifyDB checkblock return true
-	if (pTxCacheTip->IsContainTx(GetHash())) {
-		return true;
-	}
-
-	CVmScriptRun vmRun;
-	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
-
-	CScriptDBViewCache scriptDBCache(*pScriptDBTip, true);
-	uint64_t el = GetElementForBurn(chainActive.Tip());
-	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptDBCache, chainActive.Height() +1, el);
-
-	if (!std::get<0>(ret))
-		return state.DoS(100,
-				ERROR("CheckTransaction() : ContractTransaction txhash=%s run script error,%s",
-						GetHash().GetHex(), std::get<2>(ret)), UPDATE_ACCOUNT_FAIL, "run-script-error");
+//	//for VerifyDB checkblock return true
+//	if (pTxCacheTip->IsContainTx(GetHash())) {
+//		return true;
+//	}
 	return true;
 }
 
