@@ -146,7 +146,7 @@ string CreateDarkTx(string scriptid,string buyeraddr,string selleraddr,string nf
 
 	FIRST_CONTRACT contact;
 	contact.dnType = 0x01;
-	contact.nHeight = 10;
+	contact.nHeight = 1000000;
 	contact.nPayMoney = paymoney;
 	CRegID regIdb(buyeraddr) ;
 	CRegID regIds(selleraddr) ;
@@ -232,7 +232,7 @@ void Createanony(string addr)
 
 	string temp = "";
 	CONTRACT_ANONY contact;
-	contact.nHeight = 10;
+	contact.nHeight = 1000000;
 	contact.nPayMoney = 100;
 
 
@@ -279,13 +279,13 @@ string Createanony(string scriptid,string addr,string toaddress1,string toaddres
 	CONTRACT_ANONY contact;
 	contact.nHeight = 10;
 	contact.nPayMoney = paymoney;
-	cout<<"first:"<<paymoney<<endl;
+//	cout<<"first:"<<paymoney<<endl;
 	CRegID regIdb(addr);
 	memcpy(contact.Sender,&regIdb.GetVec6().at(0),sizeof(contact.Sender));
 
 	ACCOUNT_INFO info;
 	info.nReciMoney = paymoney/2;
-	cout<<"first:"<<info.nReciMoney<<endl;
+//	cout<<"first:"<<info.nReciMoney<<endl;
 	CRegID regId1(toaddress1);
 	memcpy(info.account,&regId1.GetVec6().at(0),sizeof(info.account));
 
@@ -400,7 +400,7 @@ void GetAddress(string& buyaddr,string& selleraddr)
 	selleraddr = dest[k];
 }
 
-void GetAddress(string& addr1,string& addr2,string addr3)
+void GetAddress(string& addr1,string& addr2,string& addr3)
 {
 	srand(time(NULL));
 	int i = rand() % 10;
@@ -415,7 +415,7 @@ void GetAddress(string& addr1,string& addr2,string addr3)
 	}
 	addr1 = dest[i];
 	addr2 = dest[k];
-	addr3 = dest[k];
+	addr3 = dest[d];
 }
 
 void SendDarkTx(string scriptid)
@@ -452,8 +452,20 @@ void SendanonyTx(string scriptid)
 	string nfee;
 	nfee = strprintf("%d",GetRandomFee());
 	uint64_t paymoney =GetPayMoney();
+//	cout<<sendaddr<<endl;
+//	cout<<recviaddr1<<endl;
+//	cout<<reciveaddr2<<endl;
 	string txhash = Createanony(scriptid,sendaddr,recviaddr1,reciveaddr2,nfee,paymoney);
-	BOOST_CHECK(Parsejson(txhash) != "");
+	cout<<txhash<<endl;
+	txhash = Parsejson(txhash);
+	BOOST_CHECK(txhash != "");
+	GenerateMiner();
+	while(true)
+	{
+		string qhash = GetScript(txhash);
+		if(qhash != "" )
+			break;
+	}
 }
 BOOST_AUTO_TEST_SUITE(test_app)
 BOOST_AUTO_TEST_CASE(sendtx){
@@ -471,14 +483,14 @@ BOOST_AUTO_TEST_CASE(sendtx){
 	BOOST_CHECK(Parsejson(anonyhahs) != "");
 
 	GenerateMiner();
-	cout<<"regscript"<<endl;
-	cout<<darkhash<<endl;
-	cout<<anonyhahs<<endl;
+//	cout<<"regscript"<<endl;
+//	cout<<darkhash<<endl;
+//	cout<<anonyhahs<<endl;
 	string darkscriptkid,anonyscriptid;
 	darkhash = Parsejson(darkhash);
 	anonyhahs = Parsejson(anonyhahs);
-	cout<<darkhash<<endl;
-	cout<<anonyhahs<<endl;
+//	cout<<darkhash<<endl;
+//	cout<<anonyhahs<<endl;
 	while(true)
 	{
 		darkscriptkid = GetScript(darkhash);
@@ -488,8 +500,10 @@ BOOST_AUTO_TEST_CASE(sendtx){
 	}
 	while(GetTime()<runTime) {
 		SendDarkTx(darkscriptkid);
+		cout<<"Send Darck end"<<endl;
 		Sleep(sleepTime);
 		SendanonyTx(anonyscriptid);
+		cout<<"Send SendanonyTx end"<<endl;
 		Sleep(sleepTime);
 	}
 }
