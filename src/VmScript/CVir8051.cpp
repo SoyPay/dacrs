@@ -589,11 +589,11 @@ static RET_DEFINE ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
 	if(flag)
 	{
 		LogPrint("vm","%s\r\n", HexStr(pdata).c_str());
-		LogPrint("INFO","%s\r\n", HexStr(pdata).c_str());
+//		LogPrint("INFO","%s\r\n", HexStr(pdata).c_str());
 	}else
 	{
 		LogPrint("vm","%s\r\n",pdata.c_str());
-		LogPrint("INFO","%s\r\n",pdata.c_str());
+//		LogPrint("INFO","%s\r\n",pdata.c_str());
 	}
 
 
@@ -617,7 +617,7 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
     }
 	uint256 hash1(*retdata.at(0));
 	//cout<<"ExGetTxContractsFunc1:"<<hash1.GetHex()<<endl;
-	LogPrint("vm","ExGetTxContractsFunc1:%s",hash1.GetHex().c_str());
+	LogPrint("vm","ExGetTxContractsFunc1:%s\n",hash1.GetHex().c_str());
 
 
 	std::shared_ptr<CBaseTransaction> pBaseTx;
@@ -834,13 +834,12 @@ static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 //	vector<unsigned char> key =AddChar(*retdata.at(0));
 //	int size = key.size();
 	CScriptDBOperLog operlog;
-	if(!scriptDB->SetScriptData(scriptid,*retdata.at(0),*retdata.at(1),height,operlog))
-	{
+	if (!scriptDB->SetScriptData(scriptid, *retdata.at(0), *retdata.at(1), height, operlog)) {
 		flag = false;
+	} else {
+		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
+		(*m_dblog.get()).push_back(operlog);
 	}
-
-	shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
-	(*m_dblog.get()).push_back(operlog);
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << flag;
@@ -864,12 +863,12 @@ static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
 
 	CScriptDBOperLog operlog;
-	if(!scriptDB->EraseScriptData(scriptid,*retdata.at(0),operlog))
-	{
+	if (!scriptDB->EraseScriptData(scriptid, *retdata.at(0), operlog)) {
 		flag = false;
+	} else {
+		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
+		m_dblog.get()->push_back(operlog);
 	}
-	shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
-	m_dblog.get()->push_back(operlog);
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << flag;

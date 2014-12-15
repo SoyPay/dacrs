@@ -48,4 +48,5 @@ extern Value listtxcache(const Array& params, bool fHelp);
 extern Value reloadtxcache(const Array& params, bool fHelp);
 extern Value getscriptdata(const Array& params, bool fHelp);
 extern Value saveblocktofile(const Array& params, bool fHelp);
+extern Value getscriptdbsize(const Array& params, bool fHelp);
 #endif /* RPCTX_H_ */

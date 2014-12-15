@@ -1187,7 +1187,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
     if (blockUndo.vtxundo.size() != block.vptx.size())
         return ERROR("DisconnectBlock() : block and undo data inconsistent");
 
-//  LogPrint("INFO","%s", blockUndo.ToString());
+//    LogPrint("INFO","%s", blockUndo.ToString());
 
     //undo reward tx
     std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[0];

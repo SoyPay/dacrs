@@ -1064,6 +1064,17 @@ public:
 		READWRITE(vKey);
 		READWRITE(vValue);
 	)
+
+	string ToString() const {
+		string str("");
+		str += "vKey:";
+		str += HexStr(vKey);
+		str += "\n";
+		str +="vValue:";
+		str += HexStr(vValue);
+		str += "\n";
+		return str;
+	}
 };
 
 

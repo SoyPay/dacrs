@@ -181,19 +181,24 @@ public:
 		string param ="01";
 		Value resut =CreateContractTx1("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,TxHash));
+		LogPrint("vm", "create new contract tx:hash=%s\n", TxHash);
+		LogPrint("INFO", "create new contract tx:hash=%s\n", TxHash);
 		BOOST_CHECK(GenerateOneBlock());
 		uint256 hash(TxHash.c_str());
 		param ="02";
 		param += HexStr(hash);
-		LogPrint("TEST","CheckSdk(), create contract tx, type:02, hash:%s\n", TxHash.c_str());
 		string temp;
 		resut =CreateContractTx1("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
+		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
+		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
 		BOOST_CHECK(GenerateOneBlock());
 
 		param ="03";
 		resut =CreateContractTx1("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
+		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
+		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
 		BOOST_CHECK(GenerateOneBlock());
 
 		param ="05";
@@ -201,6 +206,8 @@ public:
 
 		resut =CreateContractTx1("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
+		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
+		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
 		BOOST_CHECK(GenerateOneBlock());
 	}
 
@@ -221,6 +228,8 @@ public:
 		string temp;
 		Value resut =CreateContractTx1("010000000100", "[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]", buffer,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
+		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
+		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
 		BOOST_CHECK(GenerateOneBlock());
 		return temp;
 	}
@@ -319,6 +328,8 @@ public:
 		temp += tinyformat::format("%02x%s",param,accountid);
 		Value resut =CreateContractTx1("010000000100", "[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\"]", temp,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
+		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
+		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
 		return ;
 	}
 
@@ -390,6 +401,8 @@ public:
 		Value resut =CreateContractTx1("010000000100", "[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\",\"mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y\"]", temp,10);
 		string strReturn;
 		BOOST_CHECK(GetHashFromCreatedTx(resut,strReturn));
+		LogPrint("vm", "create new contract tx:hash=%s\n", strReturn);
+		LogPrint("INFO", "create new contract tx:hash=%s\n", strReturn);
 		resut =SignSecureTx(strReturn);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,strReturn));
 		return strReturn;
@@ -404,6 +417,8 @@ public:
 		Value resut =CreateContractTx1("010000000100", "[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\"]", param,10);
 		string strReturn;
 		BOOST_CHECK(GetHashFromCreatedTx(resut,strReturn));
+		LogPrint("vm", "create new contract tx:hash=%s\n", strReturn);
+		LogPrint("INFO", "create new contract tx:hash=%s\n", strReturn);
 		return ;
 	}
 	void Createanony(string addr)
@@ -440,7 +455,26 @@ public:
 		Value resut =CreateContractTx1("010000000100", temp1, temp,10);
 		string strReturn;
 		BOOST_CHECK(GetHashFromCreatedTx(resut,strReturn));
+		LogPrint("vm", "create new contract tx:hash=%s\n", strReturn);
+		LogPrint("INFO", "create new contract tx:hash=%s\n", strReturn);
 		return ;
+	}
+
+	void GetScriptDataSize() {
+		char *param[] = { "rpctest",
+					"getscriptdbsize",
+					"010000000100"};
+		CommandLineRPC(3, param);
+	}
+
+	void ListScriptData() {
+		char *param[] = {
+				"rpctest",
+				"getscriptdata",
+				"010000000100",
+				"100",
+				"1"};
+		CommandLineRPC(5, param);
 	}
 	void CheckDark()
 	{
@@ -448,9 +482,9 @@ public:
 		Value valueRes = RegisterScriptTx("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","darksecure.bin" , 100, 10000000);
 		BOOST_CHECK(GetHashFromCreatedTx(valueRes,strTxHash));
 		SetBlockGenerte("mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7");
-
 		string temp = CreateDarkTx();
 		SetBlockGenerte("n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
+
 		Value temp1 = GetAccountInfo("010000000100");
 		BOOST_CHECK_EQUAL(GetValue(temp1,"value"),150);
 		temp1 = GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
@@ -809,14 +843,14 @@ BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 	CheckSdk();
 
 
-	ResetEnv();
-	BOOST_CHECK(0==chainActive.Height());
-	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
-	CheckRollBack();
-
-	ResetEnv();
-	BOOST_CHECK(0==chainActive.Height());
-	CheckScriptAccount();
+//	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
+//	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
+//	CheckRollBack();
+//
+//	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
+//	CheckScriptAccount();
 
 }
 BOOST_FIXTURE_TEST_CASE(darksecure,CSysScriptTest)

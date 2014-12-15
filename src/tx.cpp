@@ -477,26 +477,28 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 }
 bool CContractTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
 		CTxUndo &txundo, int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
-
-	for(auto & operacctlog : txundo.vAccountOperLog) {
+	vector<CAccountOperLog>::reverse_iterator rIterAccountLog = txundo.vAccountOperLog.rbegin();
+	for(; rIterAccountLog != txundo.vAccountOperLog.rend(); ++rIterAccountLog) {
 		CAccount account;
-		CUserID userId = operacctlog.keyID;
+		CUserID userId = rIterAccountLog->keyID;
 		if(!view.GetAccount(userId, account))  {
 			return state.DoS(100,
 							ERROR("UpdateAccounts() : ContractTransaction undo updateaccount read accountId= %s account info error"),
 							UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 		}
-		account.UndoOperateAccount(operacctlog);
+		account.UndoOperateAccount(*rIterAccountLog);
 		if(!view.SetAccount(userId, account)) {
 			return state.DoS(100,
 					ERROR("UpdateAccounts() : ContractTransaction undo updateaccount write accountId= %s account info error"),
 					UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 		}
 	}
-	for(auto &operlog : txundo.vScriptOperLog)
-		if(!scriptCache.SetData(operlog.vKey, operlog.vValue))
+	vector<CScriptDBOperLog>::reverse_iterator rIterScriptDBLog = txundo.vScriptOperLog.rbegin();
+	for(; rIterScriptDBLog != txundo.vScriptOperLog.rend(); ++rIterScriptDBLog) {
+		if(!scriptCache.UndoScriptData(rIterScriptDBLog->vKey, rIterScriptDBLog->vValue))
 			return state.DoS(100,
 					ERROR("UpdateAccounts() : ContractTransaction undo scriptdb data error"), UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
+	}
 	return true;
 }
 
@@ -946,8 +948,13 @@ Object CFund::ToJosnObj() const
 }
 
 string CFund::ToString() const {
-
-	return  write_string(Value(ToJosnObj()),true);
+	string str;
+	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "IN_FREEZD_FUND",
+			"OUT_FREEZD_FUND", "SELF_FREEZD_FUND" };
+	str += strprintf("            nType=%s, uTxHash=%d, value=%ld, nHeight=%d\n",
+	fundTypeArray[nFundType], HexStr(scriptID).c_str(), value, nHeight);
+	return str;
+//	return write_string(Value(ToJosnObj()),true);
 }
 
 string COperFund::ToString() const {
@@ -984,7 +991,12 @@ string CTxUndo::ToString() const {
 	for (; iterLog != vAccountOperLog.end(); ++iterLog) {
 		str += iterLog->ToString();
 	}
-	return str;
+	vector<CScriptDBOperLog>::const_iterator iterDbLog = vScriptOperLog.begin();
+	string strDbLog(" list script db oper Log:\n");
+	for	(; iterDbLog !=  vScriptOperLog.end(); ++iterDbLog) {
+		strDbLog += iterDbLog->ToString();
+	}
+	return str+strDbLog;
 }
 
 bool CTxUndo::GetAccountOperLog(const CKeyID &keyId, CAccountOperLog &accountOperLog) {
