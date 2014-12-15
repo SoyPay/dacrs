@@ -494,7 +494,7 @@ bool CContractTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view
 		}
 	}
 	for(auto &operlog : txundo.vScriptOperLog)
-		if(!scriptCache.SetData(operlog.vKey, operlog.vValue))
+		if(!scriptCache.UndoScriptData(operlog.vKey, operlog.vValue))
 			return state.DoS(100,
 					ERROR("UpdateAccounts() : ContractTransaction undo scriptdb data error"), UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 	return true;
@@ -946,8 +946,13 @@ Object CFund::ToJosnObj() const
 }
 
 string CFund::ToString() const {
-
-	return  write_string(Value(ToJosnObj()),true);
+	string str;
+	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "IN_FREEZD_FUND",
+			"OUT_FREEZD_FUND", "SELF_FREEZD_FUND" };
+	str += strprintf("            nType=%s, uTxHash=%d, value=%ld, nHeight=%d\n",
+	fundTypeArray[nFundType], HexStr(scriptID).c_str(), value, nHeight);
+	return str;
+//	return write_string(Value(ToJosnObj()),true);
 }
 
 string COperFund::ToString() const {
@@ -984,7 +989,12 @@ string CTxUndo::ToString() const {
 	for (; iterLog != vAccountOperLog.end(); ++iterLog) {
 		str += iterLog->ToString();
 	}
-	return str;
+	vector<CScriptDBOperLog>::const_iterator iterDbLog = vScriptOperLog.begin();
+	string strDbLog(" list script db oper Log:\n");
+	for	(; iterDbLog !=  vScriptOperLog.end(); ++iterDbLog) {
+		strDbLog += iterDbLog->ToString();
+	}
+	return str+strDbLog;
 }
 
 bool CTxUndo::GetAccountOperLog(const CKeyID &keyId, CAccountOperLog &accountOperLog) {

@@ -589,11 +589,11 @@ static RET_DEFINE ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
 	if(flag)
 	{
 		LogPrint("vm","%s\r\n", HexStr(pdata).c_str());
-		LogPrint("INFO","%s\r\n", HexStr(pdata).c_str());
+//		LogPrint("INFO","%s\r\n", HexStr(pdata).c_str());
 	}else
 	{
 		LogPrint("vm","%s\r\n",pdata.c_str());
-		LogPrint("INFO","%s\r\n",pdata.c_str());
+//		LogPrint("INFO","%s\r\n",pdata.c_str());
 	}
 
 
@@ -617,7 +617,7 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
     }
 	uint256 hash1(*retdata.at(0));
 	//cout<<"ExGetTxContractsFunc1:"<<hash1.GetHex()<<endl;
-	LogPrint("vm","ExGetTxContractsFunc1:%s",hash1.GetHex().c_str());
+	LogPrint("vm","ExGetTxContractsFunc1:%s\n",hash1.GetHex().c_str());
 
 
 	std::shared_ptr<CBaseTransaction> pBaseTx;

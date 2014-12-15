@@ -358,7 +358,6 @@ bool CScriptDBViewBacked::GetScriptData(const vector<unsigned char> &vScriptId, 
 
 CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScriptDBViewBacked(base) {
 	mapDatas.clear();
-	LogPrint("INFO","new a CScriptDBViewCache mapDatas size:%d\r\n",mapDatas.size());
 }
 
 bool CScriptDBViewCache::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
@@ -372,24 +371,39 @@ bool CScriptDBViewCache::GetData(const vector<unsigned char> &vKey, vector<unsig
 	if (!pBase->GetData(vKey, vValue))
 		return false;
 	mapDatas[vKey] = vValue;
-//	if(vKey == vTempTest) {
-//		LogPrint("INFO", "set mapDatas key:%s, value:%s\n", HexStr(vKey), HexStr(vValue));
-//	}
 	return true;
 }
 bool CScriptDBViewCache::SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {
 	mapDatas[vKey] = vValue;
-//	if (vKey == vTempTest) {
-//		LogPrint("INFO", "set mapDatas key:%s, value:%s\n", HexStr(vKey), HexStr(vValue));
-//	}
+	return true;
+}
+bool CScriptDBViewCache::UndoScriptData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {
+	mapDatas[vKey] = vValue;
+	vector<unsigned char> vScriptCountKey = {'s', 'd', 'n', 'u','m'};
+	vector<unsigned char> vScriptId(vKey.begin()+4, vKey.begin()+10);
+	vScriptCountKey.insert(vScriptCountKey.end(), vScriptId.begin(), vScriptId.end());
+	CDataStream ds(SER_DISK, CLIENT_VERSION);
+	int nCount(0);
+	if(vValue.empty()) {   //如何值为空，脚本数据数量减1
+			if(!GetScriptDataCount(vScriptId, nCount))
+				return false;
+			--nCount;
+			if(!SetScriptDataCount(vScriptId, nCount))
+				return false;
+	}
+	else {    //如果值不为空，且数据库原本没有此key值，脚本数据数量加1
+		if(!HaveData(vKey)) {
+			GetScriptDataCount(vScriptId, nCount);
+			++nCount;
+			if(!SetScriptDataCount(vScriptId, nCount))
+				return false;
+		}
+	}
 	return true;
 }
 bool CScriptDBViewCache::BatchWrite(const map<vector<unsigned char>, vector<unsigned char> > &mapData) {
 	for (auto &items : mapData) {
 		mapDatas[items.first] = items.second;
-//		if (items.first == vTempTest) {
-//			LogPrint("INFO", "set mapDatas key:%s, value:%s\n", HexStr(items.first), HexStr(mapDatas[items.first]));
-//		}
 	}
 	return true;
 }
@@ -401,9 +415,6 @@ bool CScriptDBViewCache::EraseKey(const vector<unsigned char> &vKey) {
 		if (pBase->GetData(vKey, vValue)) {
 			vValue.clear();
 			mapDatas[vKey] = vValue;
-//			if (vKey == vTempTest) {
-//				LogPrint("INFO", "set mapDatas key:%s, value:%s\n", HexStr(vKey), HexStr(mapDatas[vKey]));
-//			}
 		}
 		else {
 			return false;
@@ -441,8 +452,6 @@ bool CScriptDBViewCache::Flush() {
 	if(ok) {
 		mapDatas.clear();
 	}
-	LogPrint("SetScriptData","Flush ret: %d %p\r\n",ok,this);
-
 	return ok;
 }
 unsigned int CScriptDBViewCache::GetCacheSize() {
@@ -676,7 +685,6 @@ bool CScriptDBViewCache::GetScriptDataCount(const vector<unsigned char> &vScript
 }
 bool CScriptDBViewCache::SetScriptDataCount(const vector<unsigned char> &vScriptId, int nCount) {
 	vector<unsigned char> scriptKey = { 's', 'd', 'n', 'u','m'};
-
 	scriptKey.insert(scriptKey.end(), vScriptId.begin(), vScriptId.end());
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	ds << nCount;
@@ -695,7 +703,8 @@ bool CScriptDBViewCache::EraseScriptData(const vector<unsigned char> &vScriptId,
 
 	if (HaveScriptData(vScriptId, vScriptKey)) {
 		int nCount(0);
-		GetScriptDataCount(vScriptId, nCount);
+		if(!GetScriptDataCount(vScriptId, nCount))
+			return false;
 		--nCount;
 		if (!SetScriptDataCount(vScriptId, nCount))
 			return false;
