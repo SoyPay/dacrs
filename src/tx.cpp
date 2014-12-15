@@ -1053,16 +1053,16 @@ void CAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
 }
 
 void CAccount::WriteOperLog(const COperFund &operLog) {
-	for(auto item:operLog.vFund)
-	{
-		LogPrint("key","keyid:%s\n",HexStr(keyID).c_str());
-		LogPrint("key"," type is:%d,fund:%s\n",static_cast<int>(operLog.operType),item.ToString().c_str());
+//	for(auto item:operLog.vFund)
+//	{
+//		LogPrint("key","keyid:%s\n",HexStr(keyID).c_str());
+//		LogPrint("key"," type is:%d,fund:%s\n",static_cast<int>(operLog.operType),item.ToString().c_str());
 //		string s("9f2faa80029ee70f87819c283f5e96aa0e83d421");
 //		if (keyID == uint160(s) )
 //		cout<<"height is "<<item.nHeight<<
 //				" type is: "<<static_cast<int>(operLog.operType)<<" value is: "<<item.value<<
 //				" fund type is: "<<static_cast<int>(item.nFundType) <<" scriptID is: "<<HexStr(item.scriptID).c_str()<<endl;
-	}
+//	}
 
 	accountOperLog.InsertOperateLog(operLog);
 }

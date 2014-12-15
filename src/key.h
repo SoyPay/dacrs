@@ -280,11 +280,11 @@ public:
 			READWRITE(fValid);
 	)
 
-   string ToString()
+   string ToString()const
 	{
 		if(fValid)
 		return HexStr(begin(),end());
-		return " ";
+		return "";
 	}
 
 	// Construct an invalid private key.
