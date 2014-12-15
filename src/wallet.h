@@ -224,6 +224,8 @@ public:
     bool SynchronizRegId(const CKeyID &keyid,const CAccountViewCache &inview);
     bool Sign(const CUserID &keyID,const uint256 &hash,vector<unsigned char> &signature,bool IsMiner=false)const;
     bool AddKey(const CKey& secret,const CKey& minerKey);
+    bool AddKey(const CKeyStoreValue& store);
+	bool AddPubKey(const CPubKey& pk);
 	bool SynchronizSys(const CAccountViewCache &inview) ;
 	static string defaultFilename ;
 
@@ -241,7 +243,7 @@ public:
 	bool GetRegId(const CUserID &address, CRegID& IdOut) const;
 
 	bool GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner = false)const ;
-	bool AddPubKey(const CPubKey& pk);
+
 
 	bool CleanAll(); //just for unit test
 

@@ -168,6 +168,7 @@ public:
     leveldb::Iterator *NewIterator() {
         return pdb->NewIterator(iteroptions);
     }
+    int64_t GetDbCount();
 };
 
 #endif // BITCOIN_LEVELDBWRAPPER_H

@@ -136,8 +136,9 @@ Value importprivkey(const Array& params, bool fHelp)
             pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
         }
     }
-
-    return "OK";
+    Object reply2;
+    reply2.push_back(Pair("Imorpt Key address",pubkey.GetKeyID().ToAddress()));
+    return reply2;
 }
 
 Value importwallet(const Array& params, bool fHelp)
@@ -168,25 +169,34 @@ Value importwallet(const Array& params, bool fHelp)
     int64_t nTimeBegin = chainActive.Tip()->nTime;
 
     bool fGood = true;
-
     int64_t nFilesize = max((int64_t)1, (int64_t)file.tellg());
     file.seekg(0, file.beg);
-
+    int inmsizeport = 0;
     pwalletMain->ShowProgress(_("Importing..."), 0); // show progress dialog in GUI
     if (file.good()){
-//        pwalletMain->ShowProgress("", max(1, min(99, (int)(((double)file.tellg() / (double)nFilesize) * 100))));
     	Value reply;
-//    	string te;
-//    	file >>te;
     	json_spirit::read(file,reply);
-//    	/
-    		  return write_string(reply, true);
-//    		}
-
+    	const Value & keyobj = find_value(reply.get_obj(),"key");
+    	const Array & keyarry = keyobj.get_array();
+    	inmsizeport = keyarry.size();
+    	for(auto const &te :keyarry)
+    	{
+    		CKeyStoreValue tep;
+    		tep.UnSersailFromJson(te.get_obj());
+    		pwalletMain->AddKey(tep);
+    		pwalletMain->SynchronizRegId(tep.GetCKeyID(),*pAccountViewTip);
+    	}
     }
     file.close();
     pwalletMain->ShowProgress("", 100); // hide progress dialog in GUI
-    return "OK";
+
+    pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+
+
+    Object reply2;
+    reply2.push_back(Pair("imorpt key size",inmsizeport));
+    return reply2;
+
 
 }
 

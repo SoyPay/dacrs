@@ -118,12 +118,25 @@ bool CWallet::AddKey(const CKey& secret) {
 	}
 	return true;
 }
+bool CWallet::AddKey(const CKeyStoreValue& storeValue) {
+	CPubKey Pk;
+	if (!storeValue.GetPubKey(Pk)) {
+		return false;
+	}
+	if (!IsCrypted()) {
+		mKeyPool[Pk.GetKeyID()] = storeValue;
+		return true;
+	} else {
+		assert(0 && "fix me");
+	}
+	return false;
+}
+
 bool CWallet::AddKey(const CKey& secret,const CKey& minerKey) {
 	AssertLockHeld(cs_wallet);
 
 	CKeyStoreValue tem(secret,minerKey);
-	if(mKeyPool.count(tem.GetCKeyID()) > 0)
-		{
+	if(mKeyPool.count(tem.GetCKeyID()) > 0)	{
 		  LogPrint("CWallet","this key is in the CWallet");
 		 return false;
 		}
@@ -646,16 +659,12 @@ std::tuple<bool,string>  CWallet::SendMoney(const CRegID &send, const CUserID &r
 		tx.nValidHeight = chainActive.Tip()->nHeight;
 	}
 
-	CKey key;
 	CKeyID keID;
-	if(!pAccountViewTip->GetKeyId(send,keID) ||
-			!GetKey(keID, key))
-	{
-
+	if(!pAccountViewTip->GetKeyId(send,keID)){
 		return std::make_tuple (false,"key or keID failed");
 	}
 
-	if (!key.Sign(tx.SignatureHash(), tx.signature)) {
+	if (!Sign(keID,tx.SignatureHash(), tx.signature)) {
 		return std::make_tuple (false,"Sign failed");
 	}
 	std::tuple<bool,string> ret = CommitTransaction((CBaseTransaction *) &tx);
