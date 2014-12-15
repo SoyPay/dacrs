@@ -44,11 +44,11 @@ class CSystemTest:public SysTestBase
 public:
 	enum
 	{
-		ID1_FREE_TO_SELF = 1,
-		ID1_SELF_TO_FREE,
-		ID1_FREE_TO_FREE,
-		ID2_FREE_TO_FREE,
-		ID3_FREE_TO_FREE,
+		ID1_FREE_TO_ID2_FREE = 1,
+		ID2_FREE_TO_ID3_FREE,
+		ID3_FREE_TO_ID3_SELF,
+		ID3_SELF_TO_ID2_FREE,
+		ID3_FREE_TO_ID2_FREE,
 		UNDEFINED_OPER
 	};
 	CSystemTest() {
@@ -306,10 +306,13 @@ public:
 
 	int GetRandomValue()
 	{
-		return rand()%nRandomRanger;
+		return rand()%nRandomRanger+1;
 	}
 
 	void SetRandomRanger(int nMaxRanger) {
+		if (!nMaxRanger) {
+			nMaxRanger = 10000;
+		}
 		nRandomRanger = nMaxRanger;
 	}
 
@@ -335,9 +338,10 @@ public:
 		CAuthorizate author = GetAuthorByAddress(strOperAddr, strScriptID);
 		int nAvailable = author.GetCurMaxMoneyPerDay();
 		SetRandomRanger(nAvailable);
-		int nRandomValue = /*GetRandomValue()*/1000;
+		int nRandomValue = 0;
 
 		for (int i = 0; i < nRandomTestCount; i++) {
+			nRandomValue = GetRandomValue();
 			BOOST_CHECK(PacketContractData(nTestType, strRegID1, strRegID2, //
 					strRegID3, nTimeOutHeight, nRandomValue, strContractData));
 
@@ -359,20 +363,16 @@ public:
 		}
 	}
 
-
 	void Transfer_NotSigned_NotAuthor(const string& strScriptID, const string& strSignAddr, unsigned char nTestType) {
 		string strContractData;
-		int nRandomValue = GetRandomMoney();
+		int nRandomValue = 0;
 		string vAddr = "[\"" + strSignAddr + "\"] ";
 		for (int i = 0; i < nRandomTestCount; i++) {
+			nRandomValue = GetRandomValue();
 			BOOST_CHECK(PacketContractData(nTestType, strRegID1, strRegID2, //
 					strRegID3, nTimeOutHeight, nRandomValue, strContractData));
 
-			if (0 == nRandomValue) {
-				BOOST_CHECK(CreateContractTx(strScriptID, vAddr, strContractData, nTimeOutHeight, nFee));
-			} else {
-				BOOST_CHECK(!CreateContractTx(strScriptID, vAddr, strContractData, nTimeOutHeight, nFee));
-			}
+			BOOST_CHECK(!CreateContractTx(strScriptID, vAddr, strContractData, nTimeOutHeight, nFee));
 
 		}
 	}
@@ -380,8 +380,9 @@ public:
 	void Transfer_Signed(const string& strScriptID, const string& strSignAddr,unsigned char nTestType) {
 		string strContractData;
 		string vAddr = "[\"" + strSignAddr + "\"] ";
-		int nRandomValue = GetRandomValue();
+		int nRandomValue = 0;
 		for (int i = 0; i < nRandomTestCount; i++) {
+			nRandomValue = GetRandomValue();
 			BOOST_CHECK(PacketContractData(nTestType, strRegID1, strRegID2, //
 					strRegID3, nTimeOutHeight, nRandomValue, strContractData));
 
@@ -404,7 +405,7 @@ protected:
 	int nTimeOutHeight;
 	int nPayMoney;
 	static const int nFee = 100000;
-	static const int nRandomTestCount = 10;
+	static const int nRandomTestCount = 20;
 	uint64_t nOldMoney;
 	uint64_t nNewMoney;
 	string strTxHash;
@@ -523,7 +524,8 @@ BOOST_FIXTURE_TEST_CASE(author_test,CSystemTest)
 	//1:挖矿
 	BOOST_CHECK(GenerateOneBlock());
 
-	//修改权限
+	//修改权限(对第一个和第三个账号授权)
+	//账号1：签名且授权 账号2：不签名不授权 账号3：不签名但授权
 	int nIndex = 0;
 	BOOST_CHECK(GetTxIndexInBlock(uint256(strTxHash), nIndex));
 	CRegID striptID(nNewBlockHeight, nIndex);
@@ -532,7 +534,6 @@ BOOST_FIXTURE_TEST_CASE(author_test,CSystemTest)
 	string strHash1,strHash2;
 	vUserDefine.push_back(1);
 	const int nMaxMoneyPerDay = 15000;
-	int nAvailable = nMaxMoneyPerDay;
 	CNetAuthorizate author(100,vUserDefine,10000,nMaxMoneyPerDay,nMaxMoneyPerDay);
 	valueRes = ModifyAuthor(strAddr1,HexStr(striptID.GetVec6()),nTimeOutHeight,nFee,author);
 	BOOST_CHECK(GetHashFromCreatedTx(valueRes, strHash1));
@@ -545,34 +546,41 @@ BOOST_FIXTURE_TEST_CASE(author_test,CSystemTest)
 	BOOST_CHECK(IsTxConfirmdInWallet(nNewBlockHeight, uint256(strHash1)));
 	BOOST_CHECK(IsTxConfirmdInWallet(nNewBlockHeight, uint256(strHash2)));
 
-	//合约交易
+	//合约交易，主动冻结一部分钱，查看是否计算在权限金额以内
 	string strScriptID(HexStr(striptID.GetVec6()));
 	string vconaddr = "[\"" + strAddr1 + "\"] ";
 	string strContractData;
-	BOOST_CHECK(PacketContractData(ID3_FREE_TO_FREE, strRegID1, strRegID2, //
-			strRegID3, nTimeOutHeight, nPayMoney, strContractData));
+	int nAvailable = nMaxMoneyPerDay;
+	BOOST_CHECK(PacketContractData(ID3_FREE_TO_ID3_SELF, strRegID1, strRegID2, //
+			strRegID3, nTimeOutHeight, 5000, strContractData));
 	BOOST_CHECK(CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
+	BOOST_CHECK(GenerateOneBlock());
 	nAvailable -= nPayMoney;
 
-	if (nAvailable >= nPayMoney) {
-		nAvailable -= nPayMoney;
-		BOOST_CHECK(CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
-	} else {
-		BOOST_CHECK(!CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
-	}
+	//扣除主动冻结中的钱，并检查权限
+	BOOST_CHECK(nAvailable < nPayMoney);
+	BOOST_CHECK(PacketContractData(ID3_SELF_TO_ID2_FREE, strRegID1, strRegID2, //
+			strRegID3, nTimeOutHeight, 5000, strContractData));
+	BOOST_CHECK(CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
 	BOOST_CHECK(GenerateOneBlock());
+	nAvailable -= nPayMoney;
 
-	CAuthorizate auth = GetAuthorByAddress(strAddr3,strScriptID);
+	//再次扣除（超过剩余权限）自由金额，并检查权限
+	BOOST_CHECK(nAvailable < nPayMoney);
+	BOOST_CHECK(PacketContractData(ID3_FREE_TO_ID3_SELF, strRegID1, strRegID2, //
+				strRegID3, nTimeOutHeight, 10000, strContractData));
+	BOOST_CHECK(!CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
+	BOOST_CHECK(GenerateOneBlock());
 
 	vector<uint256> vUnConfirmTxHash;
 	//对已签名账户随机转账
-	Transfer_Signed(strScriptID,strAddr1,ID1_FREE_TO_SELF);
+	Transfer_Signed(strScriptID,strAddr1,ID1_FREE_TO_ID2_FREE);
 
 	//对未签名已授权账户随机操作
-	Transfer_Authorizated(strScriptID,strAddr1,strAddr3,ID3_FREE_TO_FREE);
+	Transfer_Authorizated(strScriptID,strAddr1,strAddr3,ID3_FREE_TO_ID2_FREE);
 
 	//对未签名未授权账户随机操作
-	Transfer_NotSigned_NotAuthor(strScriptID,strAddr1,ID2_FREE_TO_FREE);
+	Transfer_NotSigned_NotAuthor(strScriptID,strAddr1,ID2_FREE_TO_ID3_FREE);
 }
 BOOST_AUTO_TEST_SUITE_END()
 
