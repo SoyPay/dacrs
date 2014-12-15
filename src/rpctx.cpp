@@ -1589,3 +1589,19 @@ Value saveblocktofile(const Array& params, bool fHelp) {
 	return "save succeed";
 }
 
+Value getscriptdbsize(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 1) {
+				string msg = "getscriptdbsize nrequired"
+						"\nArguments:\n"
+						"1.\"scriptid\": (string, required)\n";
+				throw runtime_error(msg);
+			}
+	string strScriptId = params[0].get_str();
+	CRegID scriptRegId;
+	scriptRegId.SetRegID(strScriptId);
+	int nDataCount = 0;
+	if(!pScriptDBTip->GetScriptDataCount(scriptRegId, nDataCount)) {
+		throw runtime_error("GetScriptDataCount error!");
+	}
+	return nDataCount;
+}

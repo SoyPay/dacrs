@@ -152,6 +152,7 @@ public:
 	bool SetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
 				const vector<unsigned char> &vScriptData, const int nHeight, CScriptDBOperLog &operLog);
 	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
+	bool UndoScriptData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
 	/**
 	 * @brief Get all number of scripts in scriptdb
 	 * @param nCount
