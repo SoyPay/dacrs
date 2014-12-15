@@ -477,26 +477,28 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 }
 bool CContractTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
 		CTxUndo &txundo, int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
-
-	for(auto & operacctlog : txundo.vAccountOperLog) {
+	vector<CAccountOperLog>::reverse_iterator rIterAccountLog = txundo.vAccountOperLog.rbegin();
+	for(; rIterAccountLog != txundo.vAccountOperLog.rend(); ++rIterAccountLog) {
 		CAccount account;
-		CUserID userId = operacctlog.keyID;
+		CUserID userId = rIterAccountLog->keyID;
 		if(!view.GetAccount(userId, account))  {
 			return state.DoS(100,
 							ERROR("UpdateAccounts() : ContractTransaction undo updateaccount read accountId= %s account info error"),
 							UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 		}
-		account.UndoOperateAccount(operacctlog);
+		account.UndoOperateAccount(*rIterAccountLog);
 		if(!view.SetAccount(userId, account)) {
 			return state.DoS(100,
 					ERROR("UpdateAccounts() : ContractTransaction undo updateaccount write accountId= %s account info error"),
 					UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 		}
 	}
-	for(auto &operlog : txundo.vScriptOperLog)
-		if(!scriptCache.UndoScriptData(operlog.vKey, operlog.vValue))
+	vector<CScriptDBOperLog>::reverse_iterator rIterScriptDBLog = txundo.vScriptOperLog.rbegin();
+	for(; rIterScriptDBLog != txundo.vScriptOperLog.rend(); ++rIterScriptDBLog) {
+		if(!scriptCache.UndoScriptData(rIterScriptDBLog->vKey, rIterScriptDBLog->vValue))
 			return state.DoS(100,
 					ERROR("UpdateAccounts() : ContractTransaction undo scriptdb data error"), UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
+	}
 	return true;
 }
 

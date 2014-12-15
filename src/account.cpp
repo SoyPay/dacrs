@@ -378,27 +378,41 @@ bool CScriptDBViewCache::SetData(const vector<unsigned char> &vKey, const vector
 	return true;
 }
 bool CScriptDBViewCache::UndoScriptData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {
-	mapDatas[vKey] = vValue;
+	assert(vKey.size() > 10);
+	if(vKey.size()<10) {
+		return ERROR("UndoScriptData(): vKey=%s error!\n", HexStr(vKey));
+	}
 	vector<unsigned char> vScriptCountKey = {'s', 'd', 'n', 'u','m'};
 	vector<unsigned char> vScriptId(vKey.begin()+4, vKey.begin()+10);
+	vector<unsigned char> vOldValue;
+	if(mapDatas.count(vKey)) {
+		vOldValue = mapDatas[vKey];
+	}
+	else {
+		GetData(vKey, vOldValue);
+	}
 	vScriptCountKey.insert(vScriptCountKey.end(), vScriptId.begin(), vScriptId.end());
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
+
 	int nCount(0);
-	if(vValue.empty()) {   //如何值为空，脚本数据数量减1
+	if(vValue.empty()) {   //key所对应的值由非空设置为空，计数减1
+			if(!vOldValue.empty()) {
 			if(!GetScriptDataCount(vScriptId, nCount))
 				return false;
 			--nCount;
 			if(!SetScriptDataCount(vScriptId, nCount))
 				return false;
+			}
 	}
-	else {    //如果值不为空，且数据库原本没有此key值，脚本数据数量加1
-		if(!HaveData(vKey)) {
+	else {    //key所对应的值由空设置为非空，计数加1
+		if(vOldValue.empty()) {
 			GetScriptDataCount(vScriptId, nCount);
 			++nCount;
 			if(!SetScriptDataCount(vScriptId, nCount))
 				return false;
 		}
 	}
+	mapDatas[vKey] = vValue;
 	return true;
 }
 bool CScriptDBViewCache::BatchWrite(const map<vector<unsigned char>, vector<unsigned char> > &mapData) {
@@ -634,6 +648,7 @@ bool CScriptDBViewCache::SetScriptData(const vector<unsigned char> &vScriptId, c
 	oldValue.clear();
 	GetData(vKey, oldValue);
 	operLog = CScriptDBOperLog(vKey, oldValue);
+	LogPrint("INFO", "SetScriptData oper log:%s\n", operLog.ToString());
 	return SetData(vKey, vValue);
 }
 
@@ -681,6 +696,7 @@ bool CScriptDBViewCache::GetScriptDataCount(const vector<unsigned char> &vScript
 		return false;
 	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
 	ds >> nCount;
+	LogPrint("INFO", "GetScriptDataCount(): vScriptId=%s, nCount=%d\n", HexStr(vScriptId), nCount);
 	return true;
 }
 bool CScriptDBViewCache::SetScriptDataCount(const vector<unsigned char> &vScriptId, int nCount) {
@@ -714,7 +730,6 @@ bool CScriptDBViewCache::EraseScriptData(const vector<unsigned char> &vScriptId,
 	if(!GetData(scriptKey, vValue))
 		return false;
 	operLog = CScriptDBOperLog(scriptKey, vValue);
-
 	if(!EraseKey(scriptKey))
 		return false;
 

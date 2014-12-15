@@ -478,16 +478,9 @@ public:
 		Value valueRes = RegisterScriptTx("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","darksecure.bin" , 100, 10000000);
 		BOOST_CHECK(GetHashFromCreatedTx(valueRes,strTxHash));
 		SetBlockGenerte("mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7");
-		cout << "block chain height: 1" << endl;
-		cout << "GetScritpDataCount size:" << endl;
-		GetScriptDataSize();
-		ListScriptData();
 		string temp = CreateDarkTx();
 		SetBlockGenerte("n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
-		cout << "block chain height: 2" << endl;
-		cout << "GetScritpDataCount size:" << endl;
-		ListScriptData();
-		GetScriptDataSize();
+
 		Value temp1 = GetAccountInfo("010000000100");
 		BOOST_CHECK_EQUAL(GetValue(temp1,"value"),150);
 		temp1 = GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
@@ -497,10 +490,6 @@ public:
 
 		CreateSecondDarkTx(temp);
 		SetBlockGenerte("mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7");
-		cout << "block chain height: 3" << endl;
-		cout << "GetScritpDataCount size:" << endl;
-		ListScriptData();
-		GetScriptDataSize();
 		GetAccountInfo("010000000100");
 		GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
 		temp1 = GetAccountInfo("mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y");
