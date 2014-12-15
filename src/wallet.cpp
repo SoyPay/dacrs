@@ -10,20 +10,21 @@
 #include "checkpoints.h"
 //#include "coincontrol.h"
 #include "net.h"
-
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
-
-
 #include <boost/assign/list_of.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include "json/json_spirit_value.h"
+#include "json/json_spirit_writer_template.h"
+#include <boost/algorithm/string/replace.hpp>
+#include <openssl/rand.h>
+using namespace json_spirit;
 using namespace boost::assign;
 
 using namespace std;
 using namespace boost;
-#include <boost/algorithm/string/replace.hpp>
-#include <openssl/rand.h>
-using namespace std;
 
 // Settings
 int64_t nTransactionFee = DEFAULT_TRANSACTION_FEE;
@@ -903,4 +904,32 @@ bool CWallet::Sign(const CUserID& Userid, const uint256& hash, vector<unsigned c
 	if(GetKey(Userid, key,IsMiner))
 	return(key.Sign(hash, signature));
     return false;
+}
+
+Object CKeyStoreValue::ToJsonObj()const {
+	Object reply;
+	reply.push_back(Pair("mregId",mregId.ToString()));
+	reply.push_back(Pair("mPKey",mPKey.ToString()));
+	reply.push_back(Pair("mCkey",mCkey.ToString()));
+	reply.push_back(Pair("mMinerCkey",mMinerCkey.ToString()));
+	reply.push_back(Pair("nCreationTime",nCreationTime));
+    return std::move(reply);
+}
+bool CKeyStoreValue::UnSersailFromJson(const Object& obj){
+	try {
+		Object reply;
+		mregId = (find_value(obj, "mregId").get_str());
+		mPKey= ::ParseHex(find_value(obj, "mPKey").get_str());
+		auto const &tem1 = ::ParseHex(find_value(obj, "mCkey").get_str());
+		mCkey.Set(tem1.begin(),tem1.end(),true);
+		auto const &tem2=::ParseHex(find_value(obj, "mMinerCkey").get_str());
+		mMinerCkey.Set(tem2.begin(),tem2.end(),true);
+		nCreationTime =find_value(obj, "nCreationTime").get_int64();
+		assert(mCkey.GetPubKey() == mPKey);
+	} catch (...) {
+		ERROR("UnSersailFromJson Failed !");
+		return false;
+	}
+
+    return true;
 }

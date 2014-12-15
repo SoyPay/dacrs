@@ -8,7 +8,7 @@
 #include "core.h"
 #include "crypter.h"
 #include "key.h"
-#include "keystore.h"
+//#include "keystore.h"
 #include "main.h"
 #include "ui_interface.h"
 #include "util.h"
@@ -62,6 +62,8 @@ public:
 	{
 		return strprintf("CRegID:%s CPubKey:%s CKey:%s mMinerCkey:%s CreationTime:%d",mregId.ToString(),mPKey.ToString(),mCkey.ToString(),mMinerCkey.ToString(),nCreationTime);
 	}
+	Object ToJsonObj()const;
+	bool UnSersailFromJson(const Object&);
 	INT64 getBirthDay()const
 	{
 		return nCreationTime;
