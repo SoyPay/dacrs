@@ -598,16 +598,15 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 //				LogPrint("Hash", "nNonce:%s\n", str.c_str());
 //				printf("curhash smaller then adjusthash\r\n");
 				CRegID regid;
-				CKey key;
 
-				if (pwalletMain->GetKey(item.keyID, key,true) && pAccountViewTip->GetRegId(item.keyID, regid)) {
+				if (pAccountViewTip->GetRegId(item.keyID, regid)) {
 					CRewardTransaction *prtx = (CRewardTransaction *) pBlock->vptx[0].get();
 					prtx->rewardValue += item.GetInterest();
 					prtx->account = regid;
 					prtx->nHeight = pPrevIndex->nHeight+1;
 					pBlock->hashMerkleRoot = pBlock->BuildMerkleTree();
-					vector<unsigned char> vRegId = regid.GetVec6();
-					LogPrint("MINER","Miner hight:%d time:%s addr = %s \r\n",prtx->nHeight,DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str(),item.keyID.ToAddress().c_str());
+//					vector<unsigned char> vRegId = regid.GetVec6();
+					LogPrint("MINER","Miner hight:%d time:%s addr = %s \r\n",prtx->nHeight,DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()),item.keyID.ToAddress());
 					LogPrint("INFO", "find pos tx hash succeed: \n"
 									  "   pos hash:%s \n"
 									  "adjust hash:%s \r\n", curhash.GetHex(), adjusthash.GetHex());
@@ -617,12 +616,10 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 							postxinfo.nValues, postxinfo.nTime, postxinfo.nNonce);
 //					cout << "miner block hash:" << pBlock->SignatureHash().GetHex() << endl;
 //					cout << "miner regId :" << regid.ToString() << endl;
-					CPubKey tep = key.GetPubKey();
-					assert(tep == item.PublicKey);
 //					cout << "miner keyid's pubkey:" << HexStr(tep.begin(),tep.end()) << endl;
 //					cout << "miner item's accont:" << item.ToString() << endl;
 
-					if (key.Sign(pBlock->SignatureHash(), pBlock->vSignature)) {
+					if (pwalletMain->Sign(item.keyID,pBlock->SignatureHash(), pBlock->vSignature,true)) {
 //						cout << "miner signature:" << HexStr(pBlock->vSignature) << endl;
 						LogPrint("INFO","Create new block,hash:%s\n", pBlock->GetHash().GetHex());
 						return true;

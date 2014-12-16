@@ -8,7 +8,7 @@
 #include "core.h"
 #include "crypter.h"
 #include "key.h"
-#include "keystore.h"
+//#include "keystore.h"
 #include "main.h"
 #include "ui_interface.h"
 #include "util.h"
@@ -62,6 +62,8 @@ public:
 	{
 		return strprintf("CRegID:%s CPubKey:%s CKey:%s mMinerCkey:%s CreationTime:%d",mregId.ToString(),mPKey.ToString(),mCkey.ToString(),mMinerCkey.ToString(),nCreationTime);
 	}
+	Object ToJsonObj()const;
+	bool UnSersailFromJson(const Object&);
 	INT64 getBirthDay()const
 	{
 		return nCreationTime;
@@ -222,6 +224,8 @@ public:
     bool SynchronizRegId(const CKeyID &keyid,const CAccountViewCache &inview);
     bool Sign(const CUserID &keyID,const uint256 &hash,vector<unsigned char> &signature,bool IsMiner=false)const;
     bool AddKey(const CKey& secret,const CKey& minerKey);
+    bool AddKey(const CKeyStoreValue& store);
+	bool AddPubKey(const CPubKey& pk);
 	bool SynchronizSys(const CAccountViewCache &inview) ;
 	static string defaultFilename ;
 
@@ -239,7 +243,7 @@ public:
 	bool GetRegId(const CUserID &address, CRegID& IdOut) const;
 
 	bool GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner = false)const ;
-	bool AddPubKey(const CPubKey& pk);
+
 
 	bool CleanAll(); //just for unit test
 
