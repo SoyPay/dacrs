@@ -304,12 +304,13 @@ static const CRPCCommand vRPCCommands[] =
 
 
 //for test code
-	{ "gettxoperationlog",      &gettxoperationlog,      false,      false,     false },
+	{ "gettxoperationlog",      &gettxoperationlog,      false,     false,      false },
     { "disconnectblock",        &disconnectblock,        true,      false,      true },
-    { "resetclient",             &resetclient,             true,      false,      false },
+    { "resetclient",            &resetclient,            true,      false,      false },
     { "reloadtxcache",          &reloadtxcache,          true,      false,      true },
-    { "listsetblockindexvalid",  &listsetblockindexvalid, true,     false,      false},
-    { "getscriptid",  &getscriptid, true,     false,      false},
+    { "listsetblockindexvalid", &listsetblockindexvalid, true,      false,      false},
+    { "getscriptid",  			&getscriptid,            true,      false,      false},
+    { "getscriptdbsize",        &getscriptdbsize,        true,      false,      false},
 };
 
 CRPCTable::CRPCTable()

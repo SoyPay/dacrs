@@ -184,6 +184,7 @@ bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 	}
 	account.PublicKey = boost::get<CPubKey>(userId);
 	if (llFees > 0) {
+		account.CompactAccount(nHeight-1);
 		CFund fund(llFees);
 		account.OperateAccount(MINUS_FREE, fund);
 	}
@@ -477,26 +478,28 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 }
 bool CContractTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
 		CTxUndo &txundo, int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
-
-	for(auto & operacctlog : txundo.vAccountOperLog) {
+	vector<CAccountOperLog>::reverse_iterator rIterAccountLog = txundo.vAccountOperLog.rbegin();
+	for(; rIterAccountLog != txundo.vAccountOperLog.rend(); ++rIterAccountLog) {
 		CAccount account;
-		CUserID userId = operacctlog.keyID;
+		CUserID userId = rIterAccountLog->keyID;
 		if(!view.GetAccount(userId, account))  {
 			return state.DoS(100,
 							ERROR("UpdateAccounts() : ContractTransaction undo updateaccount read accountId= %s account info error"),
 							UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 		}
-		account.UndoOperateAccount(operacctlog);
+		account.UndoOperateAccount(*rIterAccountLog);
 		if(!view.SetAccount(userId, account)) {
 			return state.DoS(100,
 					ERROR("UpdateAccounts() : ContractTransaction undo updateaccount write accountId= %s account info error"),
 					UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 		}
 	}
-	for(auto &operlog : txundo.vScriptOperLog)
-		if(!scriptCache.SetData(operlog.vKey, operlog.vValue))
+	vector<CScriptDBOperLog>::reverse_iterator rIterScriptDBLog = txundo.vScriptOperLog.rbegin();
+	for(; rIterScriptDBLog != txundo.vScriptOperLog.rend(); ++rIterScriptDBLog) {
+		if(!scriptCache.UndoScriptData(rIterScriptDBLog->vKey, rIterScriptDBLog->vValue))
 			return state.DoS(100,
 					ERROR("UpdateAccounts() : ContractTransaction undo scriptdb data error"), UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
+	}
 	return true;
 }
 
@@ -671,6 +674,7 @@ bool CRewardTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	}
 //	LogPrint("INFO", "before rewardtx confirm account:%s\n", acctInfo.ToString());
+	acctInfo.CompactAccount(nHeight -1);
 	acctInfo.ClearAccPos(GetHash(), nHeight - 1, SysCfg().GetIntervalPos());
 	CFund fund(REWARD_FUND,rewardValue, nHeight);
 	acctInfo.OperateAccount(ADD_FREE, fund);
@@ -733,7 +737,7 @@ bool CRewardTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 	return true;
 }
 
-bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
+bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view,CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	LogPrint("INFO" ,"registscript UpdateAccount\n");
 	CID id(regAccountId);
@@ -745,6 +749,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 
 	uint64_t minusValue = llFees;
 	if (minusValue > 0) {
+		acctInfo.CompactAccount(nHeight -1);
 		CFund fund(minusValue);
 		acctInfo.OperateAccount(MINUS_FREE, fund);
 		txundo.vAccountOperLog.push_back(acctInfo.accountOperLog);
@@ -946,8 +951,13 @@ Object CFund::ToJosnObj() const
 }
 
 string CFund::ToString() const {
-
-	return  write_string(Value(ToJosnObj()),true);
+	string str;
+	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "IN_FREEZD_FUND",
+			"OUT_FREEZD_FUND", "SELF_FREEZD_FUND" };
+	str += strprintf("            nType=%s, uTxHash=%s, value=%ld, nHeight=%d\n",
+	fundTypeArray[nFundType], HexStr(scriptID).c_str(), value, nHeight);
+	return str;
+//	return write_string(Value(ToJosnObj()),true);
 }
 
 string COperFund::ToString() const {
@@ -984,7 +994,12 @@ string CTxUndo::ToString() const {
 	for (; iterLog != vAccountOperLog.end(); ++iterLog) {
 		str += iterLog->ToString();
 	}
-	return str;
+	vector<CScriptDBOperLog>::const_iterator iterDbLog = vScriptOperLog.begin();
+	string strDbLog(" list script db oper Log:\n");
+	for	(; iterDbLog !=  vScriptOperLog.end(); ++iterDbLog) {
+		strDbLog += iterDbLog->ToString();
+	}
+	return str+strDbLog;
 }
 
 bool CTxUndo::GetAccountOperLog(const CKeyID &keyId, CAccountOperLog &accountOperLog) {
@@ -1053,16 +1068,16 @@ void CAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
 }
 
 void CAccount::WriteOperLog(const COperFund &operLog) {
-	for(auto item:operLog.vFund)
-	{
-		LogPrint("key","keyid:%s\n",HexStr(keyID).c_str());
-		LogPrint("key"," type is:%d,fund:%s\n",static_cast<int>(operLog.operType),item.ToString().c_str());
+//	for(auto item:operLog.vFund)
+//	{
+//		LogPrint("key","keyid:%s\n",HexStr(keyID).c_str());
+//		LogPrint("key"," type is:%d,fund:%s\n",static_cast<int>(operLog.operType),item.ToString().c_str());
 //		string s("9f2faa80029ee70f87819c283f5e96aa0e83d421");
 //		if (keyID == uint160(s) )
 //		cout<<"height is "<<item.nHeight<<
 //				" type is: "<<static_cast<int>(operLog.operType)<<" value is: "<<item.value<<
 //				" fund type is: "<<static_cast<int>(item.nFundType) <<" scriptID is: "<<HexStr(item.scriptID).c_str()<<endl;
-	}
+//	}
 
 	accountOperLog.InsertOperateLog(operLog);
 }

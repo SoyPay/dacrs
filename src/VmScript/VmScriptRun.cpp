@@ -235,9 +235,9 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		}
 
 
-		LogPrint("vm", "account id:%s\r\n", HexStr(accountid).c_str());
-		LogPrint("vm", "befer account:%s\r\n", vmAccount.get()->ToString().c_str());
-		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
+//		LogPrint("vm", "account id:%s\r\n", HexStr(accountid).c_str());
+//		LogPrint("vm", "befer account:%s\r\n", vmAccount.get()->ToString().c_str());
+//		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
 		bool ret = false;
 		if(IsSignatureAccount(vmAccount.get()->regID) || vmAccount.get()->regID.GetVec6() == boost::get<CRegID>(tx->scriptRegId).GetVec6())
 		{
@@ -246,7 +246,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype,fund,height,&GetScriptRegID().GetVec6(),true);
 		}
 
-		LogPrint("vm", "after account:%s\r\n", vmAccount.get()->ToString().c_str());
+//		LogPrint("vm", "after account:%s\r\n", vmAccount.get()->ToString().c_str());
 		if (!ret) {
 			return false;
 		}

@@ -19,6 +19,68 @@ using namespace std;
 map<string, string> CBaseParams::m_mapArgs;
 map<string, vector<string> > CBaseParams::m_mapMultiArgs;
 
+
+
+//	{
+//        "addr" : "mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA",
+//        "RegID" : "0-9",
+//        "RegID2" : "000000000900"
+//    },
+//    {
+//        "addr" : "mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5",
+//        "RegID" : "0-5",
+//        "RegID2" : "000000000500"
+//    },
+//    {
+//        "addr" : "mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y",
+//        "RegID" : "0-3",
+//        "RegID2" : "000000000300"
+//    },
+//    {
+//        "addr" : "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb",
+//        "RegID" : "0-8",
+//        "RegID2" : "000000000800"
+//    },
+//    {
+//        "addr" : "mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7",
+//        "RegID" : "0-7",
+//        "RegID2" : "000000000700"
+//    },
+//    {
+//        "addr" : "moZJZgsGFC4qvwRdjzS7Bj3fHrtpUfEVEE",
+//        "RegID" : "0-4",
+//        "RegID2" : "000000000400"
+//    },
+//    {
+//        "addr" : "mfzdtseoKfMpTd8V9N2xETEqUSWRujndgZ",
+//        "RegID" : " ",
+//        "RegID2" : "000000000000"
+//    },
+//    {
+//        "addr" : "mjSwCwMsvtKczMfta1tvr78z2FTsZA1JKw",
+//        "RegID" : "0-1",
+//        "RegID2" : "000000000100"
+//    },
+//    {
+//        "addr" : "msdDQ1SXNmknrLuTDivmJiavu5J9VyX9fV",
+//        "RegID" : "0-10",
+//        "RegID2" : "000000000a00"
+//    },
+//    {
+//        "addr" : "mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz",
+//        "RegID" : " ",
+//        "RegID2" : "000000000000"
+//    },
+//    {
+//        "addr" : "mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v",
+//        "RegID" : "0-6",
+//        "RegID2" : "000000000600"
+//    },
+//    {
+//        "addr" : "mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc",
+//        "RegID" : "0-2",
+//        "RegID2" : "000000000200"
+//    }
 //
 // Main network
 //
