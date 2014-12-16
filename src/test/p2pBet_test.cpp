@@ -27,38 +27,50 @@
 using namespace std;
 using namespace boost;
 
+enum OperAccountType {
+	ADDFREE = 1, //!< ADD_FREE
+	MINUSFREE,   //!< MINUS_FREE
+	ADDSELF,     //!< ADD_SELF
+	MINUSSELF,   //!< MINUS_SELF
+	ADDFREEZD,   //!< ADD_FREEZD
+	MINUSFREEZD, //!< MINUS_FREEZD
+	NULLOPERTYPE,//!< NULL_OPERTYPE
+};
+
 //enum OPERATETYPE {
 //	SEND,
 //	ACCEPT,
 //	OPEN
 //};
-struct AccINFO{
+struct AccINFO {
 	int64_t RewardFund;		//!< reward money
 	int64_t FreedomFund;		//!< freedom money
 	int64_t Freeze;			//!< freezed money
 	int64_t SelfFreeze;		//!< self-freeze money
-	AccINFO()
-	{
+	AccINFO() {
 		RewardFund = 0;
 		FreedomFund = 0;
 		Freeze = 0;
 		SelfFreeze = 0;
 	}
-	AccINFO(int64_t ref, int64_t frf, int64_t frez, int64_t self)
-	{
+	AccINFO(int64_t ref, int64_t frf, int64_t frez, int64_t self) {
 		RewardFund = ref;
 		FreedomFund = frf;
 		Freeze = frez;
 		SelfFreeze = self;
 	}
 
-	bool operator==(AccINFO &a)
-	{
-		if(RewardFund == a.RewardFund &&
-		FreedomFund == a.FreedomFund &&
-		Freeze == a.Freeze &&
-		SelfFreeze == a.SelfFreeze)
-		{
+	bool SetInfo(int64_t ref, int64_t frf, int64_t frez, int64_t self) {
+			RewardFund = ref;
+			FreedomFund = frf;
+			Freeze = frez;
+			SelfFreeze = self;
+			return true;
+		}
+
+	bool operator==(AccINFO &a) {
+		if (RewardFund == a.RewardFund && FreedomFund == a.FreedomFund && Freeze == a.Freeze
+				&& SelfFreeze == a.SelfFreeze) {
 			return true;
 		}
 		return false;
@@ -72,8 +84,7 @@ struct AccINFO{
 //		return l==r;
 //	}
 
-	AccINFO& operator+=(AccINFO &a)
-	{
+	AccINFO& operator+=(AccINFO &a) {
 		RewardFund += a.RewardFund;
 		FreedomFund += a.FreedomFund;
 		Freeze += a.Freeze;
@@ -82,14 +93,12 @@ struct AccINFO{
 	}
 };
 
-struct AccINFOOperLog{
+struct AccINFOOperLog {
 	std::map<int, AccINFO> mapAccState;
-	AccINFOOperLog()
-	{
+	AccINFOOperLog() {
 		mapAccState.clear();
 	}
-	bool Add(int &nHeight, AccINFO &accstate)
-	{
+	bool Add(int &nHeight, AccINFO &accstate) {
 		mapAccState[nHeight] = accstate;
 		return true;
 	}
@@ -113,20 +122,58 @@ struct AccINFOOperLog{
 //	}
 };
 
-class Cp2pBetTest:public SysTestBase
-{
+class Cp2pBetTest: public SysTestBase {
 public:
-	std::map<string,AccINFO> mapAccState;
-	std::map<string,AccINFOOperLog> mapAccOperLog;
+	std::map<string, AccINFO> mapAccState;
+	std::map<string, AccINFOOperLog> mapAccOperLog;
+	int operatetimes;
+
+	string scriptid;
+	string sendtxhash;
+	uint64_t betamount;
+	unsigned char sdata[5];
+	unsigned char rdata[5];
 
 	Cp2pBetTest() {
 		mapAccState.clear();
 		mapAccOperLog.clear();
+		operatetimes = 0;
+		scriptid.clear();
+		sendtxhash.clear();
+		betamount = 0;
+		memset(sdata, 0, sizeof(sdata));
+		memset(rdata, 0, sizeof(rdata));
 	}
 
-	~Cp2pBetTest(){
+	bool clear()
+	{
+		mapAccState.clear();
+		mapAccOperLog.clear();
+		operatetimes = 0;
+		scriptid.clear();
+		sendtxhash.clear();
+		betamount = 0;
+		memset(sdata, 0, sizeof(sdata));
+		memset(rdata, 0, sizeof(rdata));
+		return true;
+	}
+
+	~Cp2pBetTest() {
 //		StopServer();
 	}
+
+	uint64_t GetRandomBetAmount() {
+		srand(time(NULL));
+		int r = (rand() % 1000000) + 500000;
+		return r;
+	}
+
+	uint64_t GetRandomBetfee() {
+			srand(time(NULL));
+			int r = (rand() % 1000000) + 1000000;
+			return r;
+		}
+
 //注意，我这里将自由金额和超过30天的金额算在一起，如不注意滥用，后果自负
 	bool GetAccInfo(const std::string &addr, AccINFO &accstate) {
 		//CommanRpc
@@ -143,13 +190,13 @@ public:
 				Array tmp = find_value(obj, "RewardFund").get_array();
 				for (auto &fund : tmp) {
 					accstate.RewardFund += find_value(fund.get_obj(), "value").get_int64();
-					}
+				}
 			}
 			{
 				Array tmp = find_value(obj, "FreedomFund").get_array();
 				for (auto &fund : tmp) {
 					accstate.FreedomFund += find_value(fund.get_obj(), "value").get_int64();
-					}
+				}
 			}
 			{
 				accstate.FreedomFund += find_value(obj, "FreeValues").get_int64();
@@ -158,13 +205,13 @@ public:
 				Array tmp = find_value(obj, "Freeze").get_array();
 				for (auto &fund : tmp) {
 					accstate.Freeze += find_value(fund.get_obj(), "value").get_int64();
-					}
+				}
 			}
 			{
 				Array tmp = find_value(obj, "SelfFreeze").get_array();
 				for (auto &fund : tmp) {
 					accstate.SelfFreeze += find_value(fund.get_obj(), "value").get_int64();
-					}
+				}
 			}
 
 //			LogPrint("spark", "\r\n addr:%s"
@@ -182,42 +229,31 @@ public:
 		return false;
 	}
 
-	bool CheckAccState(const string &addr, AccINFO &lastState)
-	{
+	bool CheckAccState(const string &addr, AccINFO &lastState) {
 		AccINFO initState = mapAccState[addr];
 		AccINFOOperLog operlog = mapAccOperLog[addr];
 
-		for(auto & item:operlog.mapAccState)
-		{
+		for (auto & item : operlog.mapAccState) {
 			initState += item.second;
 		}
-
 
 		bool b = false;
 
 		LogPrint("spark", "\r\n ************CheckAccState:"
-							"\r\n addr:%s"
-							"\r\n lastState.RewardFund:%I"
-							"\r\n lastState.FreedomFund:%I"
-							"\r\n lastState.Freeze:%I"
-							"\r\n lastState.SelfFreeze:%I"
-							"\r\n",
-							addr,
-							lastState.RewardFund, lastState.FreedomFund,
-							lastState.Freeze, lastState.SelfFreeze
-							);
+				"\r\n addr:%s"
+				"\r\n lastState.RewardFund:%I"
+				"\r\n lastState.FreedomFund:%I"
+				"\r\n lastState.Freeze:%I"
+				"\r\n lastState.SelfFreeze:%I"
+				"\r\n", addr, lastState.RewardFund, lastState.FreedomFund, lastState.Freeze, lastState.SelfFreeze);
 
 		LogPrint("spark", "\r\n ************CheckAccState:"
-							"\r\n addr:%s"
-							"\r\n initState.RewardFund:%I"
-							"\r\n initState.FreedomFund:%I"
-							"\r\n initState.Freeze:%I"
-							"\r\n initState.SelfFreeze:%I"
-							"\r\n",
-							addr,
-							initState.RewardFund, initState.FreedomFund,
-							initState.Freeze, initState.SelfFreeze
-							);
+				"\r\n addr:%s"
+				"\r\n initState.RewardFund:%I"
+				"\r\n initState.FreedomFund:%I"
+				"\r\n initState.Freeze:%I"
+				"\r\n initState.SelfFreeze:%I"
+				"\r\n", addr, initState.RewardFund, initState.FreedomFund, initState.Freeze, initState.SelfFreeze);
 
 		b = (initState == lastState);
 
@@ -225,14 +261,13 @@ public:
 	}
 
 public:
-	bool GetHashFromCreatedTx(const Value& valueRes,string& strHash)
-	{
+	bool GetHashFromCreatedTx(const Value& valueRes, string& strHash) {
 		if (valueRes.type() == null_type) {
 			return false;
 		}
 
 		const Value& result = find_value(valueRes.get_obj(), "hash");
-		if (result.type() == null_type){
+		if (result.type() == null_type) {
 			return false;
 		}
 
@@ -240,14 +275,12 @@ public:
 		return true;
 	}
 
-	int GetBlockHeight()
-	{
-		return  (int)chainActive.Height();
+	int GetBlockHeight() {
+		return (int) chainActive.Height();
 	}
 
-	bool SetAddrGenerteBlock(char *addr)
-	{
-		char *argv[] = { "rpctest", "generateblock", addr};
+	bool SetAddrGenerteBlock(char *addr) {
+		char *argv[] = { "rpctest", "generateblock", addr };
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
@@ -256,7 +289,6 @@ public:
 		}
 		return false;
 	}
-
 
 private:
 	boost::thread* pThreadShutdown;
@@ -267,67 +299,53 @@ typedef struct {
 	unsigned char type;
 	uint64_t money;
 	int hight;
-	unsigned char dhash[32];
-	IMPLEMENT_SERIALIZE
+	unsigned char dhash[32];IMPLEMENT_SERIALIZE
 	(
-		READWRITE(type);
-		READWRITE(money);
-		READWRITE(hight);
-		for(int i = 0; i < 32; i++)
-		{
-			READWRITE(dhash[i]);
-		}
+			READWRITE(type);
+			READWRITE(money);
+			READWRITE(hight);
+			for(int i = 0; i < 32; i++)
+			{
+				READWRITE(dhash[i]);
+			}
 	)
-}SEND_DATA;
+} SEND_DATA;
 
 typedef struct {
 	unsigned char type;
 	uint64_t money;
-	unsigned char targetkey[32];//发起对赌的哈希，也是对赌数据的关键字
-	unsigned char dhash[32];
-	IMPLEMENT_SERIALIZE
+	unsigned char targetkey[32];		//发起对赌的哈希，也是对赌数据的关键字
+	unsigned char dhash[32];IMPLEMENT_SERIALIZE
 	(
-		READWRITE(type);
-		READWRITE(money);
-		for(int i = 0; i < 32; i++)
-		{
-			READWRITE(targetkey[i]);
-		}
-		for(int ii = 0; ii < 32; ii++)
-		{
-			READWRITE(dhash[ii]);
-		}
+			READWRITE(type);
+			READWRITE(money);
+			for(int i = 0; i < 32; i++)
+			{
+				READWRITE(targetkey[i]);
+			}
+			for(int ii = 0; ii < 32; ii++)
+			{
+				READWRITE(dhash[ii]);
+			}
 	)
-}ACCEPT_DATA;
+} ACCEPT_DATA;
 
 typedef struct {
 	unsigned char type;
-	unsigned char targetkey[32];//发起对赌的哈希，也是对赌数据的关键字
-	unsigned char dhash[5];
-	IMPLEMENT_SERIALIZE
+	unsigned char targetkey[32];		//发起对赌的哈希，也是对赌数据的关键字
+	unsigned char dhash[5];IMPLEMENT_SERIALIZE
 	(
-		READWRITE(type);
-		for(int i = 0; i < 32; i++)
-		{
-			READWRITE(targetkey[i]);
-		}
-		for(int ii = 0; ii < 5; ii++)
-		{
-			READWRITE(dhash[ii]);
-		}
+			READWRITE(type);
+			for(int i = 0; i < 32; i++)
+			{
+				READWRITE(targetkey[i]);
+			}
+			for(int ii = 0; ii < 5; ii++)
+			{
+				READWRITE(dhash[ii]);
+			}
 	)
-}OPEN_DATA;
-
-
-typedef struct {
-	string scriptid;
-	string sendtxhash;
-	unsigned char sdata[5];
-	unsigned char rdata[5];
-}RUN_CTX;
-
-
-RUN_CTX gRunCtxData;
+} OPEN_DATA;
 
 #define MINERADDR "mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc"
 #define ADDR_REG  "mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA"
@@ -340,345 +358,299 @@ Cp2pBetTest gTestValue;
 
 BOOST_AUTO_TEST_SUITE(p2pBetTest)
 
-//注册对赌脚本
-BOOST_AUTO_TEST_CASE(regscript)
-{
+static bool RegScript(void) {
 	string strFileName("p2pbet.bin");
-	int nFee = 100000;
+	int nFee = gTestValue.GetRandomBetfee();
 	//注册对赌脚本
-	Value valueRes = gTestValue.RegisterScriptTx(ADDR_REG, strFileName , gTestValue.GetBlockHeight(), nFee);
+	Value valueRes = gTestValue.RegisterScriptTx(ADDR_REG, strFileName, gTestValue.GetBlockHeight(), nFee);
 	string regTxHash;
 	BOOST_CHECK(gTestValue.GetHashFromCreatedTx(valueRes, regTxHash));
 
-	do
-	{
+	do {
 		BOOST_CHECK(gTestValue.SetAddrGenerteBlock(MINERADDR));
-	}
-	while(!pwalletMain->UnConfirmTx.empty());
+	} while (!pwalletMain->UnConfirmTx.empty());
 
+	assert(pScriptDBTip->Flush());
+
+	return true;
 }
 
-////挖矿产生一个BLOCk
-//BOOST_FIXTURE_TEST_CASE(mining, Cp2pBetTest)
-//{
-//	BOOST_CHECK(GenerateOneBlock());
-//}
-
-//A基于脚本发起对赌包
-BOOST_AUTO_TEST_CASE(Asendbet)
+static bool GetRandomBetData(unsigned char *buf, int num)
 {
-	unsigned char sdata[5] = {0, 1, 2, 3, 4};
-	memcpy(gRunCtxData.sdata, sdata, sizeof(sdata));
-	BOOST_CHECK(gTestValue.GetOneScriptId(gRunCtxData.scriptid));
-	printf("\r\n***************the script id:%s \r\n", gRunCtxData.scriptid.c_str());
+	RAND_bytes(buf, num);
+	return true;
+}
+
+static bool GetABInitInfo(void)
+{
+	AccINFO initStateA;
+	BOOST_REQUIRE(gTestValue.GetAccInfo(ADDR_A, initStateA));
+	gTestValue.mapAccState[ADDR_A] = initStateA;
+
+	AccINFO initStateB;
+	BOOST_REQUIRE(gTestValue.GetAccInfo(ADDR_B, initStateB));
+	gTestValue.mapAccState[ADDR_B] = initStateB;
+	return true;
+}
+
+static bool OperateAccount(const string &addr, const OperAccountType &operate, const uint64_t &amount, const uint64_t &fee)
+{
+	AccINFOOperLog &operlog = gTestValue.mapAccOperLog[addr];
+
+	AccINFO acc;
+	switch (operate) {
+	case ADDFREE:
+		acc.SetInfo(0, amount-fee, 0, 0);
+		break;
+	case MINUSFREE:
+		acc.SetInfo(0, -amount-fee, 0, 0);
+		break;
+	case ADDFREEZD:
+		acc.SetInfo(0, -fee, amount, 0);
+		break;
+	case MINUSFREEZD:
+		acc.SetInfo(0, -fee, -amount, 0);
+		break;
+	case ADDSELF:
+		acc.SetInfo(0, -fee, 0, amount);
+		break;
+	case MINUSSELF:
+		acc.SetInfo(0, -fee, 0, -amount);
+		break;
+		defualt: break;
+	}
+
+	operlog.Add(gTestValue.operatetimes, acc);
+	gTestValue.operatetimes++;
+
+	return true;
+}
+
+static bool CheckAccountInfo(void)
+{
+	for(auto tmp : gTestValue.mapAccState)
+	{
+		AccINFO tmpaccount;
+		BOOST_CHECK(gTestValue.GetAccInfo(tmp.first, tmpaccount));
+		BOOST_CHECK(gTestValue.CheckAccState(tmp.first, tmpaccount));
+	}
+	return true;
+}
+
+static bool ASendP2PBet(int shight) {
+	GetRandomBetData(gTestValue.sdata, sizeof(gTestValue.sdata));
+	BOOST_CHECK(gTestValue.GetOneScriptId(gTestValue.scriptid));
+	printf("\r\n***************the script id:%s \r\n", gTestValue.scriptid.c_str());
 	SEND_DATA senddata;
 	senddata.type = 1;
-	senddata.hight = 50;
-	senddata.money = 500000;
-	memcpy(senddata.dhash, Hash(sdata, sdata + sizeof(sdata)).begin(), sizeof(senddata.dhash));
+	senddata.hight = shight;
+	senddata.money = gTestValue.GetRandomBetAmount();
+	gTestValue.betamount = senddata.money;
+	memcpy(senddata.dhash, Hash(gTestValue.sdata, gTestValue.sdata + sizeof(gTestValue.sdata)).begin(), sizeof(senddata.dhash));
 
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << senddata;
 	string sendcontract = HexStr(scriptData);
-	uint64_t sendfee = 1000000;
-	Value vsend = gTestValue.PCreateContractTx(gRunCtxData.scriptid, VADDR_A, sendcontract, gTestValue.GetBlockHeight(), sendfee);
-	BOOST_CHECK(gTestValue.GetHashFromCreatedTx(vsend, gRunCtxData.sendtxhash));
-	{
-		AccINFO initStateA;
-		BOOST_REQUIRE(gTestValue.GetAccInfo(ADDR_A, initStateA));
-		gTestValue.mapAccState[ADDR_A] = initStateA;
+	uint64_t sendfee = gTestValue.GetRandomBetfee();
+	Value vsend = gTestValue.PCreateContractTx(gTestValue.scriptid, VADDR_A, sendcontract, gTestValue.GetBlockHeight(),
+			sendfee);
+	BOOST_CHECK(gTestValue.GetHashFromCreatedTx(vsend, gTestValue.sendtxhash));
 
-		AccINFO initStateB;
-		BOOST_REQUIRE(gTestValue.GetAccInfo(ADDR_B, initStateB));
-		gTestValue.mapAccState[ADDR_B] = initStateB;
-	}
+	GetABInitInfo();
 
-	{
-		int temphight = gTestValue.GetBlockHeight();
-		AccINFOOperLog &operlog = gTestValue.mapAccOperLog[ADDR_A];
-		AccINFO acc(0, -500000 - sendfee, 500000, 0);
-		operlog.Add(temphight, acc);
-	}
+	OperateAccount(ADDR_A, MINUSFREE, senddata.money, sendfee);
+	OperateAccount(ADDR_A, ADDFREEZD, senddata.money, 0);
 
-	do
-	{
+	do {
 		BOOST_CHECK(gTestValue.SetAddrGenerteBlock(MINERADDR));
-	}
-	while(!pwalletMain->UnConfirmTx.empty());
+	} while (!pwalletMain->UnConfirmTx.empty());
 
-	{
-		AccINFO lastStateA;
-		BOOST_REQUIRE(gTestValue.GetAccInfo(ADDR_A,lastStateA));
-		BOOST_REQUIRE(gTestValue.CheckAccState(ADDR_A,lastStateA));
+	CheckAccountInfo();
 
-		AccINFO lastStateB;
-		BOOST_REQUIRE(gTestValue.GetAccInfo(ADDR_B,lastStateB));
-		BOOST_REQUIRE(gTestValue.CheckAccState(ADDR_B,lastStateB));
-	}
+	return true;
 }
 
-//B基于脚本发起接受A的对赌
-BOOST_AUTO_TEST_CASE(acceptbet)
-{
-	unsigned char rdata[5] = {0, 1, 2, 3, 5};
-	memcpy(gRunCtxData.rdata, rdata, sizeof(rdata));
+static bool BAcceptP2PBet(void) {
+	GetRandomBetData(gTestValue.rdata, sizeof(gTestValue.rdata));
 	ACCEPT_DATA acceptdata;
 	acceptdata.type = 2;
-	acceptdata.money = 500000;
-	memcpy(acceptdata.targetkey, uint256(gRunCtxData.sendtxhash).begin(), sizeof(acceptdata.targetkey));
-	memcpy(acceptdata.dhash, Hash(rdata, rdata + sizeof(rdata)).begin(), sizeof(acceptdata.dhash));
+	acceptdata.money = gTestValue.betamount;
+	memcpy(acceptdata.targetkey, uint256(gTestValue.sendtxhash).begin(), sizeof(acceptdata.targetkey));
+	memcpy(acceptdata.dhash, Hash(gTestValue.rdata, gTestValue.rdata + sizeof(gTestValue.rdata)).begin(), sizeof(acceptdata.dhash));
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << acceptdata;
 	string acceptcontract = HexStr(scriptData);
-	uint64_t acceptfee = 1000000;
-	Value vaccept = gTestValue.PCreateContractTx(gRunCtxData.scriptid, VADDR_B, acceptcontract, gTestValue.GetBlockHeight(), acceptfee);
+	uint64_t acceptfee = gTestValue.GetRandomBetfee();
+	Value vaccept = gTestValue.PCreateContractTx(gTestValue.scriptid, VADDR_B, acceptcontract,
+			gTestValue.GetBlockHeight(), acceptfee);
 	string acceptTxHash;
 	BOOST_CHECK(gTestValue.GetHashFromCreatedTx(vaccept, acceptTxHash));
 
-	{
-		int temphight = gTestValue.GetBlockHeight();
-		AccINFOOperLog &operlog = gTestValue.mapAccOperLog[ADDR_B];
-		AccINFO acc(0, -500000-acceptfee, 500000, 0);
-		operlog.Add(temphight, acc);
-	}
 
-	do
-	{
+	OperateAccount(ADDR_B, MINUSFREE, acceptdata.money, acceptfee);
+	OperateAccount(ADDR_B, ADDFREEZD, acceptdata.money, 0);
+
+	do {
 		BOOST_CHECK(gTestValue.SetAddrGenerteBlock(MINERADDR));
-	}
-	while(!pwalletMain->UnConfirmTx.empty());
+	} while (!pwalletMain->UnConfirmTx.empty());
 
-	{
-		AccINFO lastStateA;
-		BOOST_REQUIRE(gTestValue.GetAccInfo(ADDR_A,lastStateA));
-		BOOST_REQUIRE(gTestValue.CheckAccState(ADDR_A,lastStateA));
-
-		AccINFO lastStateB;
-		BOOST_REQUIRE(gTestValue.GetAccInfo(ADDR_B,lastStateB));
-		BOOST_REQUIRE(gTestValue.CheckAccState(ADDR_B,lastStateB));
-	}
+	CheckAccountInfo();
+	return true;
 }
 
-//A发数据开奖
-BOOST_AUTO_TEST_CASE(Aopenbet)
+static bool IsSendIDWin(void)
 {
+	unsigned char rslt = 0;
+	for (auto tmp : gTestValue.sdata) {
+		rslt += tmp;
+	}
+
+	for (auto tmp : gTestValue.rdata) {
+		rslt += tmp;
+	}
+
+	return (rslt%2 == 1)?(true):(false);
+}
+
+static bool AOpenP2PBet(const bool isfistopen) {
 	OPEN_DATA openA;
 	openA.type = 3;
-	memcpy(openA.targetkey, uint256(gRunCtxData.sendtxhash).begin(), sizeof(openA.targetkey));
-	memcpy(openA.dhash, gRunCtxData.sdata, sizeof(gRunCtxData.sdata));
+	memcpy(openA.targetkey, uint256(gTestValue.sendtxhash).begin(), sizeof(openA.targetkey));
+	memcpy(openA.dhash, gTestValue.sdata, sizeof(gTestValue.sdata));
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << openA;
 	string openAcontract = HexStr(scriptData);
-	uint64_t openfee = 1000000;
-	Value vopenA = gTestValue.PCreateContractTx(gRunCtxData.scriptid, VADDR_A, openAcontract, gTestValue.GetBlockHeight(), openfee);
+	uint64_t openfee = gTestValue.GetRandomBetfee();
+	Value vopenA = gTestValue.PCreateContractTx(gTestValue.scriptid, VADDR_A, openAcontract,
+			gTestValue.GetBlockHeight(), openfee);
 	string openATxHash;
 	BOOST_CHECK(gTestValue.GetHashFromCreatedTx(vopenA, openATxHash));
 
+	if(!isfistopen)
 	{
-		int temphight = gTestValue.GetBlockHeight();
-		AccINFOOperLog &operlogA = gTestValue.mapAccOperLog[ADDR_A];
-		AccINFOOperLog &operlogB = gTestValue.mapAccOperLog[ADDR_B];
-		AccINFO accA(0, -openfee, 500000, 0);
-		AccINFO accB(0, 0, -500000, 0);
-		operlogA.Add(temphight, accA);
-		operlogB.Add(temphight, accB);
+		if (!IsSendIDWin())		//B win
+		{
+			OperateAccount(ADDR_A, MINUSFREEZD, 2*gTestValue.betamount, 0);
+			OperateAccount(ADDR_B, ADDFREE, 2*gTestValue.betamount, 0);
+			OperateAccount(ADDR_A, MINUSFREE, 0, openfee);
+		} else {
+			OperateAccount(ADDR_A, MINUSFREEZD, 2*gTestValue.betamount, 0);
+			OperateAccount(ADDR_A, ADDFREE, 2*gTestValue.betamount, 0);
+			OperateAccount(ADDR_A, MINUSFREE, 0, openfee);
+		}
+	}
+	else
+	{
+		OperateAccount(ADDR_A, ADDFREEZD, gTestValue.betamount, openfee);
+		OperateAccount(ADDR_B, MINUSFREEZD, gTestValue.betamount, 0);
 	}
 
-	do
-	{
+	do {
 		BOOST_CHECK(gTestValue.SetAddrGenerteBlock(MINERADDR));
-	}
-	while(!pwalletMain->UnConfirmTx.empty());
+	} while (!pwalletMain->UnConfirmTx.empty());
 
-	{
-		AccINFO lastStateA;
-		BOOST_REQUIRE(gTestValue.GetAccInfo(ADDR_A,lastStateA));
-		BOOST_REQUIRE(gTestValue.CheckAccState(ADDR_A,lastStateA));
-
-		AccINFO lastStateB;
-		BOOST_REQUIRE(gTestValue.GetAccInfo(ADDR_B,lastStateB));
-		BOOST_REQUIRE(gTestValue.CheckAccState(ADDR_B,lastStateB));
-	}
+	CheckAccountInfo();
+	return true;
 }
 
-//B发数据开奖
-BOOST_AUTO_TEST_CASE(Bopenbet)
-{
+static bool BOpenP2PBet(const bool isfistopen) {
 	OPEN_DATA openB;
 	openB.type = 3;
-	memcpy(openB.targetkey, uint256(gRunCtxData.sendtxhash).begin(), sizeof(openB.targetkey));
-	memcpy(openB.dhash, gRunCtxData.rdata, sizeof(gRunCtxData.rdata));
+	memcpy(openB.targetkey, uint256(gTestValue.sendtxhash).begin(), sizeof(openB.targetkey));
+	memcpy(openB.dhash, gTestValue.rdata, sizeof(gTestValue.rdata));
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << openB;
 	string openBcontract = HexStr(scriptData);
-	uint64_t openfee = 1000000;
-	Value vopenB = gTestValue.PCreateContractTx(gRunCtxData.scriptid, VADDR_B, openBcontract, gTestValue.GetBlockHeight(), openfee);
+	uint64_t openfee = gTestValue.GetRandomBetfee();
+	Value vopenB = gTestValue.PCreateContractTx(gTestValue.scriptid, VADDR_B, openBcontract,
+			gTestValue.GetBlockHeight(), openfee);
 	string openBTxHash;
 	BOOST_CHECK(gTestValue.GetHashFromCreatedTx(vopenB, openBTxHash));
 
+	if(!isfistopen)
 	{
-		int temphight = gTestValue.GetBlockHeight();
-		AccINFOOperLog &operlogA = gTestValue.mapAccOperLog[ADDR_A];
-		AccINFOOperLog &operlogB = gTestValue.mapAccOperLog[ADDR_B];
-		AccINFO accA;
-		AccINFO accB;
-		if(0)//B win
+		if (!IsSendIDWin())		//B win
 		{
-			AccINFO tmpA(0, 0, -1000000, 0);
-			AccINFO tmpB(0, 1000000-openfee, 0, 0);
-			accA += tmpA;
-			accB += tmpB;
+			OperateAccount(ADDR_A, MINUSFREEZD, 2*gTestValue.betamount, 0);
+			OperateAccount(ADDR_B, ADDFREE, 2*gTestValue.betamount, 0);
+			OperateAccount(ADDR_B, MINUSFREE, 0, openfee);
+		} else {
+			OperateAccount(ADDR_A, MINUSFREEZD, 2*gTestValue.betamount, 0);
+			OperateAccount(ADDR_A, ADDFREE, 2*gTestValue.betamount, 0);
+			OperateAccount(ADDR_B, MINUSFREE, 0, openfee);
 		}
-		else
-		{
-			AccINFO tmpA1(0, 1000000, -1000000, 0);
-			AccINFO tmpB1(0, -openfee, 0, 0);
-			accA += tmpA1;
-			accB += tmpB1;
-		}
-		operlogA.Add(temphight, accA);
-		operlogB.Add(temphight, accB);
+	}
+	else
+	{
+		OperateAccount(ADDR_B, ADDFREEZD, gTestValue.betamount, openfee);
+		OperateAccount(ADDR_A, MINUSFREEZD, gTestValue.betamount, 0);
 	}
 
-	do
-	{
+	do {
 		BOOST_CHECK(gTestValue.SetAddrGenerteBlock(MINERADDR));
-	}
-	while(!pwalletMain->UnConfirmTx.empty());
+	} while (!pwalletMain->UnConfirmTx.empty());
 
-	{
-		AccINFO lastStateA;
-		BOOST_REQUIRE(gTestValue.GetAccInfo(ADDR_A,lastStateA));
-		BOOST_REQUIRE(gTestValue.CheckAccState(ADDR_A,lastStateA));
-
-		AccINFO lastStateB;
-		BOOST_REQUIRE(gTestValue.GetAccInfo(ADDR_B,lastStateB));
-		BOOST_REQUIRE(gTestValue.CheckAccState(ADDR_B,lastStateB));
-	}
+	CheckAccountInfo();
+	return true;
 }
 
-#if 0
-BOOST_FIXTURE_TEST_CASE(NormalTest,Cp2pBetTest)
+static bool TestTimeOut(int hight)
 {
-	string strFileName("p2pbet.bin");
-//	string strAddrA("[\"mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA\"]");
-//	string strAddrB("[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\"]");
-	int nTimeOutHeight = 5;
-	int nFee = 100000;
-
-	//注册对赌脚本
-	Value valueRes = RegisterScriptTx("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA", strFileName , nTimeOutHeight, nFee);
-	string regTxHash;
-	BOOST_CHECK(GetHashFromCreatedTx(valueRes, regTxHash));
-
-	//挖矿
-//	uint64_t nOldMoney = GetFreeMoney(strAddr1);
-//	uint64_t nOldBlockHeight = GetBlockHeight();
-
-	BOOST_CHECK(GenerateOneBlock());
-	int nNewBlockHeight = GetBlockHeight();
-
-//	BOOST_CHECK(IsAllTxInBlock());
-
-	//A基于脚本发起对赌包
-	unsigned char sdata[5] = {0, 1, 2, 3, 4};
-	string scriptid;
-	BOOST_CHECK(GetOneScriptId(scriptid));
-
-	SEND_DATA senddata;
-	senddata.type = 0;
-	senddata.hight = nTimeOutHeight;
-	senddata.money = 500000;
-//	senddata.dhash = Hash(sdata, sdata + sizeof(sdata));
-	memcpy(senddata.dhash, Hash(sdata, sdata + sizeof(sdata)).begin(), sizeof(senddata.dhash));
-
-	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
-	scriptData << senddata;
-	string sendcontract = HexStr(scriptData);
-
-	Value vsend = CreateContractTx(scriptid, "[\"mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA\"]", sendcontract, nNewBlockHeight);
-	string sendTxHash;
-	BOOST_CHECK(GetHashFromCreatedTx(vsend, sendTxHash));
-
-	//挖矿
-	BOOST_CHECK(GenerateOneBlock());
-
-	//另外一个账户B接受对赌
-	unsigned char rdata[5] = {0, 1, 2, 3, 5};
-	ACCEPT_DATA acceptdata;
-	acceptdata.type = 1;
-	acceptdata.money = 500000;
-	memcpy(acceptdata.targetkey, uint256(sendTxHash).begin(), sizeof(acceptdata.targetkey));
-	memcpy(acceptdata.dhash, Hash(rdata, rdata + sizeof(rdata)).begin(), sizeof(acceptdata.dhash));
-	scriptData.clear();
-	scriptData << acceptdata;
-	string acceptcontract = HexStr(scriptData);
-
-	Value vaccept = CreateContractTx(scriptid, "[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\"]", acceptcontract, nNewBlockHeight);
-	string acceptTxHash;
-	BOOST_CHECK(GetHashFromCreatedTx(vaccept, acceptTxHash));
-
-	//挖矿
-	//	uint64_t nOldMoney = GetFreeMoney(strAddr1);
-	//	uint64_t nOldBlockHeight = GetBlockHeight();
-	BOOST_CHECK(GenerateOneBlock());
-
-	//情况一：A揭赌，B不揭赌，判断结果
-
-	//回滚一个block
-
-	//情况二：B揭赌，A不揭赌，判断结果
-
-	//回滚一个block
-
-	//情况三：A揭赌，B也揭赌，判断结果
-	{
-		//A揭赌合约交易
-		OPEN_DATA openA;
-		openA.type = 2;
-//		openA.targetkey = uint256(sendTxHash);
-		memcpy(openA.targetkey, uint256(sendTxHash).begin(), sizeof(openA.targetkey));
-		memcpy(openA.dhash, sdata, sizeof(sdata));
-		scriptData.clear();
-		scriptData << openA;
-		string openAcontract = HexStr(scriptData);
-
-		Value vopenA = CreateContractTx(scriptid, "[\"mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA\"]", openAcontract, nNewBlockHeight);
-		string openATxHash;
-		BOOST_CHECK(GetHashFromCreatedTx(vopenA, openATxHash));
-
-		//挖矿
-		BOOST_CHECK(GenerateOneBlock());
-
-		//B揭赌合约交易
-		OPEN_DATA openB;
-		openB.type = 2;
-//		openB.targetkey = uint256(sendTxHash);
-		memcpy(openB.targetkey, uint256(sendTxHash).begin(), sizeof(openB.targetkey));
-		memcpy(openB.dhash, rdata, sizeof(rdata));
-		scriptData.clear();
-		scriptData << openB;
-		string openBcontract = HexStr(scriptData);
-
-		Value vopenB = CreateContractTx(scriptid, "[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\"]", openBcontract, nNewBlockHeight);
-		string openBTxHash;
-		BOOST_CHECK(GetHashFromCreatedTx(vopenB, openBTxHash));
-
-		//挖矿
-		BOOST_CHECK(GenerateOneBlock());
-
-	}
-
-	//回滚一个block
-
-	//情况四：A不揭赌，B也不揭赌
-
+	do {
+			BOOST_CHECK(gTestValue.SetAddrGenerteBlock(MINERADDR));
+		} while (gTestValue.GetBlockHeight() < hight);
+	BOOST_CHECK(gTestValue.SetAddrGenerteBlock(MINERADDR));
+	return true;
 }
-#endif
-BOOST_FIXTURE_TEST_CASE(AbnormalTest,Cp2pBetTest)
+
+static bool AccountNotTimeOut(const string &addr)
 {
+	OperateAccount(addr, MINUSFREEZD, 2*gTestValue.betamount, 0);
+	OperateAccount(addr, ADDFREE, 2*gTestValue.betamount, 0);
 
+	CheckAccountInfo();
+	return true;
 }
+
+
+BOOST_AUTO_TEST_CASE(normal0)
+{
+	gTestValue.ResetEnv();
+	gTestValue.clear();
+	RegScript();
+	//A、B揭赌
+	ASendP2PBet(15);
+	BAcceptP2PBet();
+	AOpenP2PBet(true);
+	BOpenP2PBet(false);
+}
+
+BOOST_AUTO_TEST_CASE(normal1)
+{
+	gTestValue.ResetEnv();
+	gTestValue.clear();
+	RegScript();
+	//A揭赌
+	ASendP2PBet(15);
+	BAcceptP2PBet();
+	AOpenP2PBet(true);
+	TestTimeOut(15);
+	AccountNotTimeOut(ADDR_A);
+}
+
+BOOST_AUTO_TEST_CASE(normal2)
+{
+	gTestValue.ResetEnv();
+	gTestValue.clear();
+	RegScript();
+	//B揭赌
+	ASendP2PBet(15);
+	BAcceptP2PBet();
+	BOpenP2PBet(true);
+	TestTimeOut(15);
+	AccountNotTimeOut(ADDR_B);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 
