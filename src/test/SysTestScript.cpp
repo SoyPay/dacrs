@@ -24,7 +24,7 @@
 #include "json/json_spirit_writer.h"
 #include "json/json_spirit_value.h"
 #include "json/json_spirit_stream_reader.h"
-
+#include "tx.h"
 using namespace std;
 using namespace boost;
 std::string TxHash("");
@@ -567,7 +567,7 @@ public:
 		vector<unsigned char> value;
 		vector<unsigned char> vScriptKey;
 		int nHeight = 0;
-
+		CScriptDBOperLog operLog;
 		if (!pScriptDBTip->GetScriptData(regid, 0, vScriptKey, value, nHeight)) {
 			return false;
 		}
@@ -626,7 +626,8 @@ public:
 			vector<unsigned char> value;
 			int nHeight = 0;
 
-			if (!pScriptDBTip->GetScriptData(regid,key, value, nHeight)) {
+			CScriptDBOperLog operLog;
+			if (!pScriptDBTip->GetScriptData(regid,key, value, nHeight,operLog)) {
 				return false;
 			}
 			return true;
