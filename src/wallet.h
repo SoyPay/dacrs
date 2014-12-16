@@ -99,25 +99,8 @@ public:
 		assert(mCkey.GetPubKey() == mPKey);
 		return  true;
 	}
-	bool SynchronizSys(CAccountViewCache &view)
-	{
-		 CAccount account;
-		if(!view.GetAccount(CUserID(mPKey.GetKeyID()),account))
-		{
-			mregId.clean();
-			mMinerCkey.Clear();
-		}
-		else
-		{
-			mregId = account.regID;
-			assert(account.PublicKey == mPKey);
-			if(account.MinerPKey.IsValid())
-			assert(account.MinerPKey == mMinerCkey.GetPubKey());
-		}
+	bool SynchronizSys(CAccountViewCache &view);
 
-		LogPrint("wallet","%s \r\n",this->ToString());
-		return true;
-	}
 
 	CKeyStoreValue(const CPubKey &pubkey) {
 		assert(mCkey.IsValid() == false && pubkey.IsFullyValid()); //the ckey mustbe unvalid
