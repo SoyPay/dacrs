@@ -1492,8 +1492,8 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		vector<unsigned char> key = ParseHex(params[1].get_str());
 		vector<unsigned char> value;
 		int nHeight = 0;
-
-		if (!pScriptDBTip->GetScriptData(regid, key, value, nHeight)) {
+		CScriptDBOperLog operLog;
+		if (!pScriptDBTip->GetScriptData(regid, key, value, nHeight, operLog)) {
 			throw runtime_error("in getscriptdata :the key not exist!\n");
 		}
 		script.push_back(Pair("scritpid", params[0].get_str()));

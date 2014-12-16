@@ -85,7 +85,8 @@ void testscriptdatadb() {
 	CRegID regScriptId(vScriptId);
 	BOOST_CHECK(pTestView->SetScriptData(regScriptId, vScriptKey, vScriptData, 100, operlog));
 	int height = 0;
-	BOOST_CHECK(pTestView->GetScriptData(regScriptId,vScriptKey,vScriptData,height));
+
+	BOOST_CHECK(pTestView->GetScriptData(regScriptId,vScriptKey,vScriptData,height,operlog));
 	pTestView->GetScriptCount(height);
 	BOOST_CHECK(pTestView->GetScriptData(regScriptId, 0, vScriptKey, vScriptData, height));
 	BOOST_CHECK(pTestView->SetScriptData(regScriptId, vScriptKey, vScriptData, 100, operlog));
@@ -100,7 +101,7 @@ void testscriptdatadb() {
 	vector<unsigned char> vScript;
 	int nValidHeight;
 	//read script content from db by scriptId
-	BOOST_CHECK(pTestView->GetScriptData(regScriptId, vScriptKey, vScript, nValidHeight));
+	BOOST_CHECK(pTestView->GetScriptData(regScriptId, vScriptKey, vScript, nValidHeight, operlog));
 	// if the readed script content equals with original
 	BOOST_CHECK(vScriptData == vScript);
 	BOOST_CHECK_EQUAL(nValidHeight, 100);
