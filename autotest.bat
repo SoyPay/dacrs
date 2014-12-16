@@ -3,9 +3,9 @@
 set targetdir=d:\bitcoin
 set curdir=%cd%
 set sever=%cd%\soypayd.exe
-set autotestexe=%cd%\test\soypay_test.exe
-set autosevertestexe=%cd%\ptest\soypay_ptest.exe
-set movefiles= %curdir%\test\data\*.bin
+set autotestexe=%cd%\src\test\soypay_test.exe
+set autosevertestexe=%cd%\src\ptest\soypay_ptest.exe
+set movefiles= %curdir%\src\test\data\*.bin
 
 
 call :ClrEnvironment
@@ -32,7 +32,7 @@ GOTO :EOF
 :ClrEnvironment
 echo Clr environment
 rd /s/q %targetdir%\regtest & md %targetdir%\regtest
-cp  %curdir%\test\data\soypay.conf %targetdir%\soypay.conf
+cp  %curdir%\src\test\data\soypay.conf %targetdir%\soypay.conf
 copy %movefiles% %targetdir%\data\
 
 echo Clr environment OK
