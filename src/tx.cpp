@@ -184,6 +184,7 @@ bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 	}
 	account.PublicKey = boost::get<CPubKey>(userId);
 	if (llFees > 0) {
+		account.CompactAccount(nHeight-1);
 		CFund fund(llFees);
 		account.OperateAccount(MINUS_FREE, fund);
 	}
@@ -673,6 +674,7 @@ bool CRewardTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	}
 //	LogPrint("INFO", "before rewardtx confirm account:%s\n", acctInfo.ToString());
+	acctInfo.CompactAccount(nHeight -1);
 	acctInfo.ClearAccPos(GetHash(), nHeight - 1, SysCfg().GetIntervalPos());
 	CFund fund(REWARD_FUND,rewardValue, nHeight);
 	acctInfo.OperateAccount(ADD_FREE, fund);
@@ -747,6 +749,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValida
 
 	uint64_t minusValue = llFees;
 	if (minusValue > 0) {
+		acctInfo.CompactAccount(nHeight -1);
 		CFund fund(minusValue);
 		acctInfo.OperateAccount(MINUS_FREE, fund);
 		txundo.vAccountOperLog.push_back(acctInfo.accountOperLog);
