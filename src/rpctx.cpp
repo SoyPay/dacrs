@@ -1266,10 +1266,10 @@ Value resetclient(const Array& params, bool fHelp) {
 		  else
 		    ++it;
 		}
-//		pAccountViewTip->Flush();
-//		pScriptDBTip->Flush();
-//
-//       assert(pAccountViewDB->GetDbCount() == 0);
+		pAccountViewTip->Flush();
+		pScriptDBTip->Flush();
+       if(SysCfg().Network::TESTNET == SysCfg().NetworkID())
+       assert(pAccountViewDB->GetDbCount() == 22);
 //       assert(pScriptDB->GetDbCount() == 0);
 
 		CBlock firs = SysCfg().GenesisBlock();
