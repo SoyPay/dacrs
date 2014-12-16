@@ -537,6 +537,35 @@ bool SysTestBase::CreateContractTx(const std::string &scriptid, const std::strin
 	return false;
 }
 
+//注意，此函数为彩票测试专用，其他滥用后果自负
+Value SysTestBase::PCreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
+		int nHeight,int nFee) {
+	char cscriptid[1024] = { 0 };
+
+	string strFee;
+	if (0 == nFee) {
+		int nfee = GetRandomFee();
+		nCurFee = nfee;
+	} else {
+		nCurFee = nFee;
+	}
+
+	strFee = strprintf("%d",nCurFee);
+
+	char height[16] = { 0 };
+	sprintf(height, "%d", nHeight);
+
+	char *argv[] = { "rpctest", "createcontracttx", (char *) (scriptid.c_str()), (char *) (addrs.c_str()),
+			(char *) (contract.c_str()), (char*)strFee.c_str(), height };
+	int argc = sizeof(argv) / sizeof(char*);
+
+	Value value;
+	if (CommandLineRPC_GetValue(argc, argv, value)) {
+		return value;
+	}
+	return value;
+}
+
 Value SysTestBase::RegisterScriptTx(const string& strAddress, const string& strScript, int nHeight, int nFee) {
 	return CreateRegScriptTx(strAddress, strScript, true, nFee, nHeight, CNetAuthorizate());
 }

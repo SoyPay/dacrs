@@ -2,6 +2,7 @@
 #include "util.h"
 #include "serialize.h"
 #include "core.h"
+#include "main.h"
 #include <algorithm>
 
 bool CAccountView::GetAccount(const CKeyID &keyId, CAccount &account) {return false;}
@@ -483,7 +484,7 @@ bool CScriptDBViewCache::GetScript(const CRegID &scriptId, vector<unsigned char>
 }
 
 bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
-		vector<unsigned char> &vScriptData, int &nHeight) {
+		vector<unsigned char> &vScriptData, int &nHeight, CScriptDBOperLog &operLog) {
 //	assert(vScriptKey.size() == 8);
 	vector<unsigned char> vKey = { 'd', 'a', 't', 'a' };
 
@@ -498,6 +499,10 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
 	ds >> nHeight;
 	ds >> vScriptData;
+	if(nHeight<chainActive.Tip()->nHeight) {
+		EraseScriptData(vScriptId, vScriptKey, operLog);
+		return false;
+	}
 	return true;
 }
 bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
@@ -648,7 +653,6 @@ bool CScriptDBViewCache::SetScriptData(const vector<unsigned char> &vScriptId, c
 	oldValue.clear();
 	GetData(vKey, oldValue);
 	operLog = CScriptDBOperLog(vKey, oldValue);
-	LogPrint("INFO", "SetScriptData oper log:%s\n", operLog.ToString());
 	return SetData(vKey, vValue);
 }
 
@@ -777,8 +781,8 @@ bool CScriptDBViewCache::HaveScriptData(const CRegID &scriptId, const vector<uns
 	return HaveScriptData(scriptId.GetVec6(), vScriptKey);
 }
 bool CScriptDBViewCache::GetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
-			vector<unsigned char> &vScriptData, int &nHeight) {
-	return GetScriptData(scriptId.GetVec6() , vScriptKey, vScriptData, nHeight);
+			vector<unsigned char> &vScriptData, int &nHeight, CScriptDBOperLog &operLog) {
+	return GetScriptData(scriptId.GetVec6() , vScriptKey, vScriptData, nHeight, operLog);
 }
 bool CScriptDBViewCache::GetScriptData(const CRegID &scriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData,
 		int &nHeight) {
