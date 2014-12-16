@@ -17,6 +17,9 @@
 #include "json/json_spirit_value.h"
 #include "json/json_spirit_writer_template.h"
 
+#include "json/json_spirit_reader_template.h"
+#include "json/json_spirit_reader.h"
+#include "json/json_spirit_stream_reader.h"
 
 
 using namespace json_spirit;
@@ -133,8 +136,9 @@ Value importprivkey(const Array& params, bool fHelp)
             pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
         }
     }
-
-    return "OK";
+    Object reply2;
+    reply2.push_back(Pair("Imorpt Key address",pubkey.GetKeyID().ToAddress()));
+    return reply2;
 }
 
 Value importwallet(const Array& params, bool fHelp)
@@ -154,90 +158,46 @@ Value importwallet(const Array& params, bool fHelp)
             + HelpExampleRpc("importwallet", "\"test\"")
         );
 
-    throw JSONRPCError(RPC_INVALID_PARAMETER, "todo work list");
 
-    ///todo work list
-//    EnsureWalletIsUnlocked();
-//
-//    ifstream file;
-//    file.open(params[0].get_str().c_str(), ios::in | ios::ate);
-//    if (!file.is_open())
-//        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
-//
-//    int64_t nTimeBegin = chainActive.Tip()->nTime;
-//
-//    bool fGood = true;
-//
-//    int64_t nFilesize = max((int64_t)1, (int64_t)file.tellg());
-//    file.seekg(0, file.beg);
-//
-//    pwalletMain->ShowProgress(_("Importing..."), 0); // show progress dialog in GUI
-//    while (file.good()) {
-//        pwalletMain->ShowProgress("", max(1, min(99, (int)(((double)file.tellg() / (double)nFilesize) * 100))));
-//        string line;
-//        getline(file, line);
-//        if (line.empty() || line[0] == '#')
-//            continue;
-//
-//        vector<string> vstr;
-//        boost::split(vstr, line, boost::is_any_of(" "));
-//        if (vstr.size() < 2)
-//            continue;
-//        CSoyPaySecret vchSecret;
-//        if (!vchSecret.SetString(vstr[0]))
-//            continue;
-//        CKey key = vchSecret.GetKey();
-//        CPubKey pubkey = key.GetPubKey();
-//        CKeyID keyid = pubkey.GetID();
-////        if (pwalletMain->HaveKey(keyid)) {
-////            LogPrint("INFO","Skipping import of %s (key already present)\n", CSoyPayAddress(keyid).ToString());
-////            continue;
-////        }
-//        assert(0);
-//        int64_t nTime = DecodeDumpTime(vstr[1]);
-//        string strLabel;
-//        bool fLabel = true;
-//        for (unsigned int nStr = 2; nStr < vstr.size(); nStr++) {
-//            if (boost::algorithm::starts_with(vstr[nStr], "#"))
-//                break;
-//            if (vstr[nStr] == "change=1")
-//                fLabel = false;
-//            if (vstr[nStr] == "reserve=1")
-//                fLabel = false;
-//            if (boost::algorithm::starts_with(vstr[nStr], "label=")) {
-//                strLabel = DecodeDumpString(vstr[nStr].substr(6));
-//                fLabel = true;
-//            }
-//        }
-//        LogPrint("INFO","Importing %s...\n", CSoyPayAddress(keyid).ToString());
-//        if (!pwalletMain->AddKey(key)) {
-//            fGood = false;
-//            continue;
-//        }
-////        pwalletMain->mapKeyMetadata[keyid].nCreateTime = nTime;
-////        if (fLabel)
-////            pwalletMain->SetAddressBook(keyid, strLabel, "receive");
-////        nTimeBegin = min(nTimeBegin, nTime);
-//    }
-//    file.close();
-//    pwalletMain->ShowProgress("", 100); // hide progress dialog in GUI
-//
-//    CBlockIndex *pindex = chainActive.Tip();
-//    while (pindex && pindex->pprev && pindex->nTime > nTimeBegin - 7200)
-//        pindex = pindex->pprev;
-//
-////    if (!pwalletMain->nTimeFirstKey || nTimeBegin < pwalletMain->nTimeFirstKey)
-////        pwalletMain->nTimeFirstKey = nTimeBegin;
-//
-//    LogPrint("INFO","Rescanning last %i blocks\n", chainActive.Height() - pindex->nHeight + 1);
-//    pwalletMain->ScanForWalletTransactions(pindex);
-//
-////    pwalletMain->MarkDirty();
-//
-//    if (!fGood)
-//        throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys to wallet");
-//
-//    return Value::null;
+    EnsureWalletIsUnlocked();
+
+    ifstream file;
+    file.open(params[0].get_str().c_str(), ios::in | ios::ate);
+    if (!file.is_open())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
+
+    int64_t nTimeBegin = chainActive.Tip()->nTime;
+
+    bool fGood = true;
+    int64_t nFilesize = max((int64_t)1, (int64_t)file.tellg());
+    file.seekg(0, file.beg);
+    int inmsizeport = 0;
+    pwalletMain->ShowProgress(_("Importing..."), 0); // show progress dialog in GUI
+    if (file.good()){
+    	Value reply;
+    	json_spirit::read(file,reply);
+    	const Value & keyobj = find_value(reply.get_obj(),"key");
+    	const Array & keyarry = keyobj.get_array();
+    	inmsizeport = keyarry.size();
+    	for(auto const &te :keyarry)
+    	{
+    		CKeyStoreValue tep;
+    		tep.UnSersailFromJson(te.get_obj());
+    		pwalletMain->AddKey(tep);
+    		pwalletMain->SynchronizRegId(tep.GetCKeyID(),*pAccountViewTip);
+    	}
+    }
+    file.close();
+    pwalletMain->ShowProgress("", 100); // hide progress dialog in GUI
+
+    pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+
+
+    Object reply2;
+    reply2.push_back(Pair("imorpt key size",inmsizeport));
+    return reply2;
+
+
 }
 
 Value dumpprivkey(const Array& params, bool fHelp)
@@ -269,7 +229,9 @@ Value dumpprivkey(const Array& params, bool fHelp)
     CKey vchSecret;
     if (!pwalletMain->GetKey(keyID, vchSecret))
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
-    return CSoyPaySecret(vchSecret).ToString();
+    Object reply;
+    	reply.push_back(Pair("privkey", CSoyPaySecret(vchSecret).ToString()));
+    return reply;
 }
 
 
@@ -297,11 +259,15 @@ Value dumpwallet(const Array& params, bool fHelp) {
 
 	map<CKeyID, CKeyStoreValue> tepmKeyPool = pwalletMain->GetKeyPool();
 	int index = 0;
+	Array key;
 	for (auto &te : tepmKeyPool) {
-		reply.push_back(Pair(strprintf("index%d",index++), te.second.ToString()));
+		key.push_back(te.second.ToJsonObj());
 	}
+	reply.push_back(Pair("key",key));
 	file <<  write_string(Value(reply), true);
-
 	file.close();
-	return "dump OK";
+	Object reply2;
+	reply2.push_back(Pair("info","dump ok"));
+	reply2.push_back(Pair("key size",(int)tepmKeyPool.size()));
+	return reply2;
 }

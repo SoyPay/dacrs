@@ -737,7 +737,7 @@ bool CRewardTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 	return true;
 }
 
-bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
+bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view,CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	LogPrint("INFO" ,"registscript UpdateAccount\n");
 	CID id(regAccountId);
@@ -954,7 +954,7 @@ string CFund::ToString() const {
 	string str;
 	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "IN_FREEZD_FUND",
 			"OUT_FREEZD_FUND", "SELF_FREEZD_FUND" };
-	str += strprintf("            nType=%s, uTxHash=%d, value=%ld, nHeight=%d\n",
+	str += strprintf("            nType=%s, uTxHash=%s, value=%ld, nHeight=%d\n",
 	fundTypeArray[nFundType], HexStr(scriptID).c_str(), value, nHeight);
 	return str;
 //	return write_string(Value(ToJosnObj()),true);
@@ -1068,16 +1068,16 @@ void CAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
 }
 
 void CAccount::WriteOperLog(const COperFund &operLog) {
-	for(auto item:operLog.vFund)
-	{
-		LogPrint("key","keyid:%s\n",HexStr(keyID).c_str());
-		LogPrint("key"," type is:%d,fund:%s\n",static_cast<int>(operLog.operType),item.ToString().c_str());
+//	for(auto item:operLog.vFund)
+//	{
+//		LogPrint("key","keyid:%s\n",HexStr(keyID).c_str());
+//		LogPrint("key"," type is:%d,fund:%s\n",static_cast<int>(operLog.operType),item.ToString().c_str());
 //		string s("9f2faa80029ee70f87819c283f5e96aa0e83d421");
 //		if (keyID == uint160(s) )
 //		cout<<"height is "<<item.nHeight<<
 //				" type is: "<<static_cast<int>(operLog.operType)<<" value is: "<<item.value<<
 //				" fund type is: "<<static_cast<int>(item.nFundType) <<" scriptID is: "<<HexStr(item.scriptID).c_str()<<endl;
-	}
+//	}
 
 	accountOperLog.InsertOperateLog(operLog);
 }

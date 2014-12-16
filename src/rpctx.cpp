@@ -246,9 +246,9 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 		rtx.nValidHeight = chainActive.Tip()->nHeight;
 
 		//sign
-		CKey key;
-		pwalletMain->GetKey(keyid, key);
-		if (!key.Sign(rtx.SignatureHash(), rtx.signature)) {
+//		CKey key;
+//		pwalletMain->GetKey(keyid, key);
+		if (!pwalletMain->Sign(keyid,rtx.SignatureHash(), rtx.signature)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: Sign failed.");
 		}
 
@@ -373,10 +373,8 @@ Value createcontracttx(const Array& params, bool fHelp) {
 			assert(0);
 		}
 
-		CKey key;
-		pwalletMain->GetKey(keyid, key);
 		vector<unsigned char> signature;
-		if (!key.Sign(tx.get()->SignatureHash(), signature)) {
+		if (!pwalletMain->Sign(keyid,tx.get()->SignatureHash(), signature)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: Sign failed.");
 		}
 
@@ -562,11 +560,11 @@ Value createfreezetx(const Array& params, bool fHelp) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 	}
 
-	CKey key;
-	if(!pwalletMain->GetKey(keyid, key))
-	{
-		throw runtime_error("keyid not exist\n");
-	}
+//	CKey key;
+//	if(!pwalletMain->GetKey(keyid, key))
+//	{
+//		throw runtime_error("keyid not exist\n");
+//	}
 
 	CFreezeTransaction tx;
 	{
@@ -605,7 +603,7 @@ Value createfreezetx(const Array& params, bool fHelp) {
 		tx.nUnfreezeHeight = freeheight;
 
 
-		if (!key.Sign(tx.SignatureHash(), tx.signature)) {
+		if (!pwalletMain->Sign(keyid,tx.SignatureHash(), tx.signature)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "createfreezetx Error: Sign failed.");
 		}
 //		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
@@ -810,9 +808,9 @@ Value registerscripttx(const Array& params, bool fHelp) {
 //			tx.nFlag = 0;
 //		}
 
-		CKey key;
-		pwalletMain->GetKey(keyid, key);
-		if (!key.Sign(tx.SignatureHash(), tx.signature)) {
+//		CKey key;
+//		pwalletMain->GetKey(keyid, key);
+		if (!pwalletMain->Sign(keyid,tx.SignatureHash(), tx.signature)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "registerscripttx Error: Sign failed.");
 		}
 //		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
@@ -1252,7 +1250,7 @@ Value disconnectblock(const Array& params, bool fHelp) {
 
 	return te;
 }
-
+extern CAccountViewDB *pAccountViewDB;
 Value resetclient(const Array& params, bool fHelp) {
 	Value te = TestDisconnectBlock(chainActive.Tip()->nHeight);
 
@@ -1268,8 +1266,11 @@ Value resetclient(const Array& params, bool fHelp) {
 		  else
 		    ++it;
 		}
-
-
+//		pAccountViewTip->Flush();
+//		pScriptDBTip->Flush();
+//
+//       assert(pAccountViewDB->GetDbCount() == 0);
+//       assert(pScriptDB->GetDbCount() == 0);
 
 		CBlock firs = SysCfg().GenesisBlock();
 		pwalletMain->SyncTransaction(0,NULL,&firs);
