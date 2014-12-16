@@ -15,14 +15,16 @@ public:
 		return true;
 	};
 
-	bool RegisterAccount(const string& strAddr, uint64_t nFee,string& strTxHash) {
+	bool RegisterAccount(const string& strAddr, uint64_t nFee,string& strTxHash,int nHeight = 0,bool bSign = true) {
 		CKeyID keyid;
-		if (!GetKeyId(strAddr, keyid))
-			return false;
+		if (!GetKeyId(strAddr, keyid)) {
+			//return false;
+		}
+
 
 		CPubKey pubkey;
 		if (!pwalletMain->GetPubKey(keyid, pubkey)) {
-			return false;
+			//return false;
 		}
 
 		CRegisterAccountTx rtx;
@@ -31,13 +33,14 @@ public:
 
 		rtx.userId = pubkey;
 		rtx.llFees = nFee;
-		rtx.nValidHeight = chainActive.Tip()->nHeight;
+		rtx.nValidHeight = (0 != nHeight?nHeight:chainActive.Tip()->nHeight);
 
-		CKey key;
-		pwalletMain->GetKey(keyid, key);
-		if (!key.Sign(rtx.SignatureHash(), rtx.signature)) {
-			return false;
+		if (bSign) {
+			if (!pwalletMain->Sign(keyid, rtx.SignatureHash(), rtx.signature)) {
+				//return false;
+			}
 		}
+
 
 		std::tuple<bool,string> ret = pwalletMain->CommitTransaction((CBaseTransaction *) &rtx);
 		if (std::get<0>(ret)) {
@@ -134,6 +137,15 @@ public:
 		return false;
 	}
 
+	bool IsTxUnConfirmdInWallet(const uint256& txHash) {
+			for (const auto &item : pwalletMain->UnConfirmTx) {
+				if (txHash == item.first) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 	bool GenerateBlock(const string& strKeyID) {
 		int nOldBlockHeight = GetBlockHeight();
 
@@ -147,11 +159,44 @@ public:
 		return 0 != hash;
 	}
 
+	bool GetBlockHash(int nHeight, uint256& blockHash) {
+		if (nHeight < 0 || nHeight > chainActive.Height())
+			return false;
+
+		CBlockIndex* pblockindex = chainActive[nHeight];
+		blockHash = pblockindex->GetBlockHash();
+		return true;
+	}
+
+	bool IsTxInTipBlock(const uint256& txHash) {
+		CBlockIndex* pindex = chainActive.Tip();
+		CBlock block;
+		if (!ReadBlockFromDisk(block, pindex))
+			return false;
+
+		block.BuildMerkleTree();
+		std::tuple<bool, int> ret = block.GetTxIndex(txHash);
+		if (!std::get<0>(ret)) {
+			return false;
+		}
+
+		return true;
+	}
+
+	bool GetTxOperateLog(const uint256& txHash, vector<CAccountOperLog>& vLog) {
+		if (!GetTxOperLog(txHash, vLog))
+			return false;
+
+		return true;
+	}
+
+
 };
 
 BOOST_FIXTURE_TEST_SUITE(sysregisteracc_test,CSysRegisterAccTest)
 BOOST_FIXTURE_TEST_CASE(rpc_test,CSysRegisterAccTest)
 {
+	ResetEnv();
 	//转账
 	string strRegAddr = "mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz";
 	string strSrcRegID = "000000000400";
@@ -193,34 +238,91 @@ BOOST_FIXTURE_TEST_CASE(rpc_test,CSysRegisterAccTest)
 
 BOOST_FIXTURE_TEST_CASE(sysonly_test,CSysRegisterAccTest)
  {
+	ResetEnv();
+	return ;
 	string strTxHash;
 	CRegID regID;
 	string strRegAddr1("mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz");
 	string strRegAddr2("mydRNvqewpZt9tyNtBSmBCrKr1NTiii5JH");
+	int64_t nFee = 10000;
+	vector<string> vFailedTxHash;
+
+	//无效的高度
 	int nInValidHeight = 1000;
-	BOOST_CHECK(RegisterAccount(strRegAddr1, nInValidHeight, strTxHash));
+	BOOST_CHECK(!RegisterAccount(strRegAddr1, nFee, strTxHash,nInValidHeight));
+	vFailedTxHash.push_back(strTxHash);
+	nInValidHeight = 100;
 
-	BOOST_CHECK(IsTxInMemorypool(uint256(strTxHash)));
+	//无法读取的账号地址
+	string strInvalidAddr("fjsofeoifdsfdsfdsafafafafafafafa");
+	BOOST_CHECK(!RegisterAccount(strInvalidAddr, nFee, strTxHash,nInValidHeight));
+	vFailedTxHash.push_back(strTxHash);
+
+	//不签名
+	BOOST_CHECK(!RegisterAccount(strRegAddr1, nFee, strTxHash,nInValidHeight,false));
+	vFailedTxHash.push_back(strTxHash);
+
+	//手续费超过最大值
+	BOOST_CHECK(!RegisterAccount(strRegAddr1, nFee+MAX_MONEY, strTxHash,nInValidHeight));
+	vFailedTxHash.push_back(strTxHash);
+
+	//重复注册的地址
+	string strReRegisrerAddr("mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc");
+	BOOST_CHECK(!RegisterAccount(strReRegisrerAddr, nFee, strTxHash,nInValidHeight));
+	cout<<"repeat addr hash: "<<strTxHash<<endl;
+	vFailedTxHash.push_back(strTxHash);
+
+	//账户上没有余额的未注册地址
+	BOOST_CHECK(!RegisterAccount(strRegAddr1, nFee, strTxHash,nInValidHeight));
+	vFailedTxHash.push_back(strTxHash);
+
+	//检查失败的交易是否在memorypool中
+	for (const auto& item : vFailedTxHash) {
+		uint256 txHash(item);
+		BOOST_CHECK(!IsTxInMemorypool(txHash));
+		BOOST_CHECK(!IsTxUnConfirmdInWallet(txHash));
+	}
+
+	//给没有余额的账户转账
+	string strSrcRegID = "000000000400";
+	uint64_t nMoney = 100000;
+	BOOST_CHECK(SendMoney(strSrcRegID, strRegAddr1, nMoney));
+	BOOST_CHECK(GenerateOneBlock());
+
+	//确认转账成功
+	uint64_t nFreeMoney = GetFreeMoney(strRegAddr1);
+	BOOST_CHECK(nFreeMoney == nMoney);
+
+	//再次检查失败的交易是否在memorypool中
+	for (const auto& item : vFailedTxHash) {
+		uint256 txHash(item);
+		BOOST_CHECK(!IsTxInMemorypool(txHash));
+		BOOST_CHECK(!IsTxUnConfirmdInWallet(txHash));
+	}
 
 
+	string strSpecial;
+	BOOST_CHECK(RegisterAccount(strRegAddr1, nFee, strSpecial,nInValidHeight));
+	BOOST_CHECK(IsTxInMemorypool(uint256(strSpecial)));
+	BOOST_CHECK(IsTxUnConfirmdInWallet(uint256(strSpecial)));
 
+	//交易已经在memorypool中
+	BOOST_CHECK(!RegisterAccount(strRegAddr1, nFee, strTxHash,nInValidHeight));
+	BOOST_CHECK(!IsTxInMemorypool(uint256(strTxHash)));
+	BOOST_CHECK(!IsTxUnConfirmdInWallet(uint256(strTxHash)));
 
+	BOOST_CHECK(GenerateOneBlock());
 
-//	string strKeyID("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA");
-//	CKeyID keyID(strKeyID);
-//	CRegID regID(0,9);
-//	CUserID userId = keyID;
-//
-//	CAccount account;
-//	CAccountViewCache accView(*pAccountViewTip, true);
-//
-//	BOOST_CHECK(accView.GetAccount(userId, account));
-//	string strScript("000000000400");
-//	vector_unsigned_char vScript = ParseHex(strScript);
-//	BOOST_CHECK(account.OperateAccount(ADD_FREEZD,CFund(FREEZD_FUND,10000,2,vScript)));
-//	BOOST_CHECK(accView.SaveAccountInfo(regID,strKeyID,account));
-//	BOOST_CHECK(accView.Flush());
-//	BOOST_CHECK(pAccountViewTip->Flush());
+	//确认注册成功的交易在tip中
+	BOOST_CHECK(IsTxInTipBlock(uint256(strSpecial)));
+
+	vector<CAccountOperLog> vLog;
+	BOOST_CHECK(GetTxOperateLog(uint256(strSpecial),vLog));
+
+	//检查日志记录是否正确
+	BOOST_CHECK(1 == vLog.size() && 1 == vLog[0].vOperFund.size() && 1 == vLog[0].vOperFund[0].vFund.size());
+	BOOST_CHECK(strRegAddr1 == vLog[0].keyID.ToAddress());
+	BOOST_CHECK(vLog[0].vOperFund[0].operType == MINUS_FREE && vLog[0].vOperFund[0].vFund[0].value == nFee);
 }
 
 BOOST_FIXTURE_TEST_CASE(sysonly_test1,CSysRegisterAccTest)
