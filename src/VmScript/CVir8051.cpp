@@ -617,7 +617,7 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
     }
 	uint256 hash1(*retdata.at(0));
 	//cout<<"ExGetTxContractsFunc1:"<<hash1.GetHex()<<endl;
-	LogPrint("vm","ExGetTxContractsFunc1:%s\n",hash1.GetHex().c_str());
+//	LogPrint("vm","ExGetTxContractsFunc1:%s\n",hash1.GetHex().c_str());
 
 
 	std::shared_ptr<CBaseTransaction> pBaseTx;
@@ -733,7 +733,7 @@ static RET_DEFINE ExGetTxConFirmHeightFunc(unsigned char * ipara,void * pVmScrip
     }
 	uint256 hash1(*retdata.at(0));
 	//cout<<"ExGetTxContractsFunc1:"<<hash1.GetHex()<<endl;
-	LogPrint("vm","ExGetTxContractsFunc1:%s",hash1.GetHex().c_str());
+//	LogPrint("vm","ExGetTxContractsFunc1:%s",hash1.GetHex().c_str());
 
 
 	std::shared_ptr<CBaseTransaction> pBaseTx;

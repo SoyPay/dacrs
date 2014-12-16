@@ -158,7 +158,7 @@ public:
 		const Value& result = find_value(valueRes.get_obj(), "hash");
 		const Value& result1 = find_value(valueRes.get_obj(), "RawTx");
 		const Value& result3 = find_value(valueRes.get_obj(), "script");
-		if (result.type() == null_type && result1.type() == null_type){
+		if (result.type() == null_type && result1.type() == null_type && result3.type() == null_type){
 			return false;
 		}
 		if (result.type() != null_type){
@@ -534,40 +534,20 @@ public:
 
 		BOOST_CHECK_EQUAL(GetValue(temp1,"value"),100);
 	}
-	bool CheckValue(int key,int Height,int outheight)
+	bool CheckScriptDB(string srcipt,int height,string hash,int flag)
 	{
-		if(key <= 200)
+		int tipH = chainActive.Height();
+		int outHeight = tipH +5;
+		int maxKey = (tipH- height+1)*200;
+		int Size = (5-(tipH- height))*200;
+		string  hash2 = "hash";
+		if(flag)
 		{
-			if(outheight != (Height + 5))
-				return false;
-		}
+			maxKey = maxKey>800?800:maxKey;
+			if(maxKey >= 600)
+			outHeight = 11;
 
-		if(key <= 400 && key >200)
-		{
-			if(outheight != (Height + 6))
-				return false;
 		}
-
-		if(key <= 600&& key >400)
-		{
-			if(outheight != (Height + 7))
-				return false;
-		}
-
-		if(key <= 800&& key >600)
-		{
-			if(outheight != (Height + 8))
-				return false;
-		}
-
-		if(key <= 1000&& key >800)
-		{
-			if(outheight != (Height + 9))
-				return false;
-		}
-	}
-	bool CheckScriptDB(string srcipt,int height,string hash)
-	{
 		CRegID regid(srcipt);
 		if (regid.IsEmpty() == true) {
 			return false;
@@ -582,7 +562,7 @@ public:
 			throw runtime_error("in getscriptdata :the scirptid database not data!\n");
 		}
 
-		BOOST_CHECK(1000==chainActive.Height());
+		BOOST_CHECK(Size==dbsize);
 
 		vector<unsigned char> value;
 		vector<unsigned char> vScriptKey;
@@ -592,27 +572,42 @@ public:
 			return false;
 		}
 		uint256 hash1(value);
-		BOOST_CHECK(hash==hash1.GetHex());
-		int key = 0;
+		string pvalue(value.begin(),value.end());
+		if(flag)
+		BOOST_CHECK(hash==hash1.GetHex()|| pvalue == hash2);
+		else{
+			BOOST_CHECK(hash==hash1.GetHex());
+		}
+		BOOST_CHECK(nHeight>=outHeight);
+		unsigned short key = 0;
 		memcpy(&key,  &vScriptKey.at(0), sizeof(key));
-		BOOST_CHECK(CheckValue(key,height,nHeight));
+		BOOST_CHECK(key>=(maxKey - 200));
 
 		int count = dbsize - 1;
 		while (count--) {
 			if (!pScriptDBTip->GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
 				return false;
 			}
-			uint256 hash2(value);
-			BOOST_CHECK(hash==hash1.GetHex());
+			uint256 hash3(value);
+			string pvalue(value.begin(),value.end());
+			if(flag)
+			BOOST_CHECK(hash==hash3.GetHex()|| pvalue == hash2);
+			else{
+					BOOST_CHECK(hash==hash1.GetHex());
+				}
+			BOOST_CHECK(nHeight>=outHeight);
+			unsigned short key = 0;
 			memcpy(&key,  &vScriptKey.at(0), sizeof(key));
-			BOOST_CHECK(CheckValue(key,height,nHeight));
+			BOOST_CHECK(key>=(maxKey - 200));
 		}
-
+		return true;
 	}
 
 	void CreateTx(string pcontact,string addr)
 	{
-		Value resut =CreateContractTx1("010000000100", "[" +"\""+addr+"\""+"]", pcontact,10);
+		string temp ="[";
+		temp += "\""+addr+"\""+"]";
+		Value resut =CreateContractTx1("010000000100", temp, pcontact,10);
 		string strReturn;
 		BOOST_CHECK(GetHashFromCreatedTx(resut,strReturn));
 		BOOST_CHECK(GenerateOneBlock());
@@ -650,8 +645,7 @@ public:
 			pScriptDBTip->GetScriptDataCount(regid, dbsize);
 			return dbsize;
 	}
-
-	void testdb()
+	string CreatWriteTx(string &hash)
 	{
 		string shash = CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
 		Value ret =GetScriptID(shash);
@@ -661,13 +655,22 @@ public:
 		string phash = CreateContactTx(15);
 		int  height = chainActive.Height();
 
-		BOOST_CHECK(CheckScriptDB(scriptid,height,phash));
+		BOOST_CHECK(CheckScriptDB(scriptid,height,phash,false));
 
+		hash = phash;
+		return scriptid;
+	}
+	void testdb()
+	{
+		string phash = "";
+		string scriptid =  CreatWriteTx(phash);
+		int height = chainActive.Height();
 		int circle = 6;
 		while(circle--)
 		{
 			BOOST_CHECK(GenerateOneBlock());
 		}
+
 		int count = GetScriptSize(scriptid);
 		while(count)
 		{
@@ -676,6 +679,7 @@ public:
 				int param =16;
 				string temp = "";
 				temp += tinyformat::format("%02x%s%02x",param,HexStr(hash),height);
+				cout<<"cont:"<<temp;
 				CreateTx(temp,"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
 
 				vector<unsigned char> key;
@@ -683,151 +687,64 @@ public:
 				key.insert(key.begin(),key1, key1 + strlen(key1) +1);
 				BOOST_CHECK(!GetScriptData(scriptid,key));
 
-				height = chainActive.Height();
-				int outkey = ((height-7)>0?(height-7):0)*200;
-				for(short i =0;i<outkey;i++)
-				{
-				    CDataStream tep(SER_DISK, CLIENT_VERSION);
-				    tep << i;
-				    vector<unsigned char> key(tep.begin(),tep.end());
-				    if(i < outkey)
-				    BOOST_CHECK(!GetScriptData(scriptid,key));
-				    else
-				    {
-				    	 BOOST_CHECK(GetScriptData(scriptid,key));
-				    }
-				}
+				CheckScriptDB(scriptid,height,phash,false);
 				count = GetScriptSize(scriptid);
 		}
-		count = 200;
+
 		while(true)
 		{
 			disblock1();
-			count = GetScriptSize(scriptid);
-			int outkey = ((height-7)>0?(height-7):0)*200;
-			for(short i =0;i<outkey;i++)
-			{
-			    CDataStream tep(SER_DISK, CLIENT_VERSION);
-			    tep << i;
-			    vector<unsigned char> key(tep.begin(),tep.end());
-			    if(i < outkey)
-			    BOOST_CHECK(!GetScriptData(scriptid,key));
-			    else
-			    {
-			    	 BOOST_CHECK(GetScriptData(scriptid,key));
-			    }
-			}
+			CheckScriptDB(scriptid,height,phash,false);
 			if(count == 1000)
 				break;
 		}
 
 	}
-	bool checkModify(string srcipt,int mHeight)
-	{
-		CRegID regid(srcipt);
-		if (regid.IsEmpty() == true) {
-			return false;
-		}
 
-		if (!pScriptDBTip->HaveScript(regid)) {
-			return false;
-		}
-		int dbsize;
-		pScriptDBTip->GetScriptDataCount(regid, dbsize);
-		if (0 == dbsize) {
-			throw runtime_error("in getscriptdata :the scirptid database not data!\n");
-		}
-		vector<unsigned char> value;
-		vector<unsigned char> vScriptKey;
-		int nHeight = 0;
-
-		if (!pScriptDBTip->GetScriptData(regid, 0, vScriptKey, value, nHeight)) {
-			return false;
-		}
-		int key = 0;
-		memcpy(&key,  &vScriptKey.at(0), sizeof(key));
-        if(key > 800)
-        	return false;
-        if(key > 400 && key < 600)
-        {
-        	string value1(value.begin(),value.end());
-        	if(value1 != "hash")
-        		return false;
-        }
-
-        if(key > 600 && key < 800)
-        {
-        	if(nHeight != mHeight)
-        		return false;
-        }
-		int count = dbsize - 1;
-		while (count--) {
-			if (!pScriptDBTip->GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
-				return false;
-			}
-			memcpy(&key,  &vScriptKey.at(0), sizeof(key));
-	        if(key > 800)
-	        	return false;
-	        if(key > 400 && key < 600)
-	        {
-	        	string value1(value.begin(),value.end());
-	        	if(value1 != "hash")
-	        		return false;
-	        }
-
-	        if(key > 600 && key < 800)
-	        {
-	        	if(nHeight != mHeight)
-	        		return false;
-	        }
-		}
-
-	}
 	void testdeletmodifydb()
 	{
-		string shash = CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
-		Value ret =GetScriptID(shash);
-		string scriptid;
-		BOOST_CHECK(GetHashFromCreatedTx(ret,scriptid));
-		//// first tx
-		string phash = CreateContactTx(15);
-		int  height = chainActive.Height();
+		string  writetxhash= "";
+		string scriptid =  CreatWriteTx(writetxhash);
+		int height = chainActive.Height();
 
-		BOOST_CHECK(CheckScriptDB(scriptid,height,phash));
-
+		///// 修改删除包
 		int param =17;
 		string temp = "";
 		temp += tinyformat::format("%02x%02x",param,11);
-		CreateTx(temp,"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
-
-
-		int param =18;
-		string temp = "";
-		temp += tinyformat::format("%02x",param);
 		CreateTx(temp,"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
 		vector<unsigned char> key;
 		char *key1="3_error";
 		key.insert(key.begin(),key1, key1 + strlen(key1) +1);
 		BOOST_CHECK(!GetScriptData(scriptid,key));
-		BOOST_CHECK(checkModify(scriptid,11));
+		CheckScriptDB(scriptid,height,writetxhash,true);
+		int modHeight = chainActive.Height();
 
+		//// 遍历
+		int count = GetScriptSize(scriptid);
+        while(count)
+        {
+    		int param =18;
+    		string temp = "";
+    		temp += tinyformat::format("%02x",param);
+    		CreateTx(temp,"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
+        	CheckScriptDB(scriptid,height,writetxhash,true);
+        	count = GetScriptSize(scriptid);
+        }
 
-		height = chainActive.Height();
-		int outkey = ((height-7)>0?(height-7):0)*200;
-		for(short i =0;i<outkey;i++)
+    	count = GetScriptSize(scriptid);
+      /// 回滚
+		while(true)
 		{
-		    CDataStream tep(SER_DISK, CLIENT_VERSION);
-		    tep << i;
-		    vector<unsigned char> key(tep.begin(),tep.end());
-		    if(i < outkey)
-		    BOOST_CHECK(!GetScriptData(scriptid,key));
-		    else
-		    {
-		    	 BOOST_CHECK(GetScriptData(scriptid,key));
-		    }
+			disblock1();
+			count = GetScriptSize(scriptid);
+			if(chainActive.Height() > modHeight){
+			CheckScriptDB(scriptid,height,writetxhash,true);
+			}else{
+				CheckScriptDB(scriptid,height,writetxhash,false);
+			}
+			if(count == 1000)
+				break;
 		}
-
-
 	}
 };
 
@@ -836,11 +753,11 @@ BOOST_FIXTURE_TEST_SUITE(sysScript_test,CSysScriptTest)
 
 BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 {
-//	//// some debug
-	ResetEnv();
-	BOOST_CHECK(0==chainActive.Height());
-	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
-	CheckSdk();
+////	//// some debug
+//	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
+//	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
+//	CheckSdk();
 
 
 //	ResetEnv();
@@ -851,6 +768,10 @@ BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 //	ResetEnv();
 //	BOOST_CHECK(0==chainActive.Height());
 //	CheckScriptAccount();
+
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	testdb();
 
 }
 BOOST_FIXTURE_TEST_CASE(darksecure,CSysScriptTest)
