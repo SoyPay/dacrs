@@ -146,7 +146,7 @@ public:
 	bool EraseScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey, CScriptDBOperLog &operLog);
 	bool HaveScriptData(const CRegID &scriptId, const vector<unsigned char > &vScriptKey);
 	bool GetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
-				vector<unsigned char> &vScriptData, int &nHeight);
+				vector<unsigned char> &vScriptData, int &nHeight, CScriptDBOperLog &operLog);
 	bool GetScriptData(const CRegID &scriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData,
 			int &nHeight);
 	bool SetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
@@ -253,7 +253,7 @@ private:
 	 * @return true if get succeed, otherwise false
 	 */
 	bool GetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
-			vector<unsigned char> &vScriptData, int &nHeight);
+			vector<unsigned char> &vScriptData, int &nHeight, CScriptDBOperLog &operLog);
 	/**
 	 * @brief Get script data and valide height by scriptid and nIndex
 	 * @param vScriptId

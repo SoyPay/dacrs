@@ -239,7 +239,6 @@ BOOST_FIXTURE_TEST_CASE(rpc_test,CSysRegisterAccTest)
 BOOST_FIXTURE_TEST_CASE(sysonly_test,CSysRegisterAccTest)
  {
 	ResetEnv();
-	return ;
 	string strTxHash;
 	CRegID regID;
 	string strRegAddr1("mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz");
@@ -269,7 +268,6 @@ BOOST_FIXTURE_TEST_CASE(sysonly_test,CSysRegisterAccTest)
 	//重复注册的地址
 	string strReRegisrerAddr("mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc");
 	BOOST_CHECK(!RegisterAccount(strReRegisrerAddr, nFee, strTxHash,nInValidHeight));
-	cout<<"repeat addr hash: "<<strTxHash<<endl;
 	vFailedTxHash.push_back(strTxHash);
 
 	//账户上没有余额的未注册地址
@@ -325,11 +323,6 @@ BOOST_FIXTURE_TEST_CASE(sysonly_test,CSysRegisterAccTest)
 	BOOST_CHECK(vLog[0].vOperFund[0].operType == MINUS_FREE && vLog[0].vOperFund[0].vFund[0].value == nFee);
 }
 
-BOOST_FIXTURE_TEST_CASE(sysonly_test1,CSysRegisterAccTest)
-{
-	string strKeyID("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA");
-	BOOST_CHECK(GenerateBlock(strKeyID));
-}
 BOOST_AUTO_TEST_SUITE_END()
 
 

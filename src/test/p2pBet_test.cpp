@@ -501,6 +501,17 @@ static bool BAcceptP2PBet(void) {
 static bool IsSendIDWin(void)
 {
 	unsigned char rslt = 0;
+
+	for(int ii = 0; ii < 5; ii++)
+	{
+		LogPrint("p2p", "\r\nsdata:%x\r\n", gTestValue.sdata[ii]);
+	}
+
+	for(int kk = 0; kk < 5; kk++)
+	{
+		LogPrint("p2p", "\r\nrdata:%x\r\n", gTestValue.rdata[kk]);
+	}
+
 	for (auto tmp : gTestValue.sdata) {
 		rslt += tmp;
 	}
@@ -508,7 +519,7 @@ static bool IsSendIDWin(void)
 	for (auto tmp : gTestValue.rdata) {
 		rslt += tmp;
 	}
-
+	LogPrint("p2p", "\r\nrslt:%x\r\n", rslt);
 	return (rslt%2 == 1)?(true):(false);
 }
 
@@ -571,10 +582,12 @@ static bool BOpenP2PBet(const bool isfistopen) {
 	{
 		if (!IsSendIDWin())		//B win
 		{
+			LogPrint("p2p", "\r\nB WIN\r\n");
 			OperateAccount(ADDR_A, MINUSFREEZD, 2*gTestValue.betamount, 0);
 			OperateAccount(ADDR_B, ADDFREE, 2*gTestValue.betamount, 0);
 			OperateAccount(ADDR_B, MINUSFREE, 0, openfee);
 		} else {
+			LogPrint("p2p", "\r\nA WIN\r\n");
 			OperateAccount(ADDR_A, MINUSFREEZD, 2*gTestValue.betamount, 0);
 			OperateAccount(ADDR_A, ADDFREE, 2*gTestValue.betamount, 0);
 			OperateAccount(ADDR_B, MINUSFREE, 0, openfee);
