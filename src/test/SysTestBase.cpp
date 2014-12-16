@@ -262,7 +262,7 @@ bool SysTestBase::CommandLineRPC_GetValue(int argc, char *argv[], Value &value) 
 
 	if (strPrint != "") {
 		if (false == nRes) {
-			cout<<strPrint<<endl;
+//			cout<<strPrint<<endl;
 		}
 		// fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
 	}
@@ -499,6 +499,7 @@ Value SysTestBase::CreateContractTx1(const std::string &scriptid, const std::str
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
 	//	LogPrint("test_miners", "createcontracttx:%s\r\n", value.get_str().c_str());
+		const Value& result = find_value(value.get_obj(), "hash");
 		return value;
 	}
 //	LogPrint("test_miners", "createcontracttx:%s\r\n", value.get_str().c_str());

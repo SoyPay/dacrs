@@ -22,7 +22,13 @@ CTxMemPoolEntry::CTxMemPoolEntry(CBaseTransaction *pBaseTx, int64_t _nFee, int64
 }
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTxMemPoolEntry& other) {
-	*this = other;
+	this->dPriority = other.dPriority;
+	this->nFee = other.nFee;
+	this->nTxSize = other.nTxSize;
+	this->nTime = other.nTime;
+	this->dPriority = other.dPriority;
+	this->nHeight = other.nHeight;
+	this->pTx = other.pTx->GetNewInstance();
 }
 
 double CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const {
@@ -95,8 +101,9 @@ bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &en
 	CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
 	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 	if (!entry.GetTx()->UpdateAccount(0, *pAccountViewCache, state, txundo, chainActive.Tip()->nHeight + 1,
-			txCacheTemp, contractScriptTemp))
+			txCacheTemp, contractScriptTemp)) {
 		return false;
+	}
 	return true;
 }
 bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry) {
@@ -105,9 +112,10 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry)
 	// all the appropriate checks.
 	LOCK(cs);
 	{
-		if(!CheckTxInMemPool(hash, entry))
+		if(!CheckTxInMemPool(hash, entry)) {
 			return false;
-		mapTx[hash] = entry;
+		}
+		mapTx.insert(make_pair(hash, entry));
 		LogPrint("addtomempool", "add tx hash:%s time:%ld\n", hash.GetHex(), GetTime());
 		nTransactionsUpdated++;
 	}
@@ -121,6 +129,7 @@ void CTxMemPool::removeConflicts(CBaseTransaction *pBaseTx, list<std::shared_ptr
 void CTxMemPool::clear() {
 	LOCK(cs);
 	mapTx.clear();
+	pAccountViewCache.reset(new CAccountViewCache(*pAccountViewTip, false));
 	++nTransactionsUpdated;
 }
 

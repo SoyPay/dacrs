@@ -75,3 +75,24 @@ bool CLevelDBWrapper::WriteBatch(CLevelDBBatch &batch, bool fSync) throw(leveldb
     HandleError(status);
     return true;
 }
+
+int64_t CLevelDBWrapper::GetDbCount()
+   {
+   	leveldb::Iterator *pcursor = NewIterator();
+   	int64_t ret = -1;
+   	pcursor->SeekToFirst();
+   	while (pcursor->Valid()) {
+   		boost::this_thread::interruption_point();
+   		try {
+   			ret++;
+   			pcursor->Next();
+
+   		} catch (std::exception &e) {
+   			 if(pcursor)
+   			 delete pcursor;
+   			return ERROR("%s : Deserialize or I/O error - %s", __func__, e.what());
+   		}
+   	}
+   	delete pcursor;
+   	return true;
+   }

@@ -173,13 +173,14 @@ nodist_libsoypay_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
 # bitcoind binary #
 soypayd_LDADD = \
   libsoypay_server.a \
+  libsoypay_wallet.a \
   libsoypay_cli.a \
   libsoypay_common.a \
   $(LIBLEVELDB) \
   $(LIBMEMENV)
-if ENABLE_WALLET
-soypayd_LDADD += libsoypay_wallet.a
-endif
+#if ENABLE_WALLET
+#soypayd_LDADD += libsoypay_wallet.a
+#endif
 soypayd_SOURCES = soypayd.cpp
 #
 

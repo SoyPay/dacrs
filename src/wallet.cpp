@@ -10,20 +10,21 @@
 #include "checkpoints.h"
 //#include "coincontrol.h"
 #include "net.h"
-
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
-
-
 #include <boost/assign/list_of.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include "json/json_spirit_value.h"
+#include "json/json_spirit_writer_template.h"
+#include <boost/algorithm/string/replace.hpp>
+#include <openssl/rand.h>
+using namespace json_spirit;
 using namespace boost::assign;
 
 using namespace std;
 using namespace boost;
-#include <boost/algorithm/string/replace.hpp>
-#include <openssl/rand.h>
-using namespace std;
 
 // Settings
 int64_t nTransactionFee = DEFAULT_TRANSACTION_FEE;
@@ -117,12 +118,25 @@ bool CWallet::AddKey(const CKey& secret) {
 	}
 	return true;
 }
+bool CWallet::AddKey(const CKeyStoreValue& storeValue) {
+	CPubKey Pk;
+	if (!storeValue.GetPubKey(Pk)) {
+		return false;
+	}
+	if (!IsCrypted()) {
+		mKeyPool[Pk.GetKeyID()] = storeValue;
+		return true;
+	} else {
+		assert(0 && "fix me");
+	}
+	return false;
+}
+
 bool CWallet::AddKey(const CKey& secret,const CKey& minerKey) {
 	AssertLockHeld(cs_wallet);
 
 	CKeyStoreValue tem(secret,minerKey);
-	if(mKeyPool.count(tem.GetCKeyID()) > 0)
-		{
+	if(mKeyPool.count(tem.GetCKeyID()) > 0)	{
 		  LogPrint("CWallet","this key is in the CWallet");
 		 return false;
 		}
@@ -525,7 +539,7 @@ std::tuple<bool, string> CWallet::CommitTransaction(CBaseTransaction *pTx) {
 		CValidationState state;
 		if (!::AcceptToMemoryPool(mempool, state, pTx, true, NULL)) {
 			// This must not fail. The transaction has already been signed and recorded.
-			LogPrint("INFO", "CommitTransaction() : Error: Transaction not valid\n");
+			LogPrint("INFO", "CommitTransaction() : Error: Transaction not valid %s \n",state.GetRejectReason());
 			return std::make_tuple (false,state.GetRejectReason());
 
 		}
@@ -645,16 +659,12 @@ std::tuple<bool,string>  CWallet::SendMoney(const CRegID &send, const CUserID &r
 		tx.nValidHeight = chainActive.Tip()->nHeight;
 	}
 
-	CKey key;
 	CKeyID keID;
-	if(!pAccountViewTip->GetKeyId(send,keID) ||
-			!GetKey(keID, key))
-	{
-
+	if(!pAccountViewTip->GetKeyId(send,keID)){
 		return std::make_tuple (false,"key or keID failed");
 	}
 
-	if (!key.Sign(tx.SignatureHash(), tx.signature)) {
+	if (!Sign(keID,tx.SignatureHash(), tx.signature)) {
 		return std::make_tuple (false,"Sign failed");
 	}
 	std::tuple<bool,string> ret = CommitTransaction((CBaseTransaction *) &tx);
@@ -784,11 +794,9 @@ Object CAccountTx::ToJosnObj(CKeyID const  &key) const {
 }
 
 uint256 CWallet::GetCheckSum() const {
-	{
-			CHashWriter ss(SER_GETHASH, CLIENT_VERSION);
-			ss << nWalletVersion << bestBlock << MasterKey << mKeyPool << mapInBlockTx;
-			return ss.GetHash();
-		}
+	CHashWriter ss(SER_GETHASH, CLIENT_VERSION);
+	ss << nWalletVersion << bestBlock << MasterKey << mKeyPool << mapInBlockTx;
+	return ss.GetHash();
 }
 
 bool CWallet::GetRegId(const CUserID& address, CRegID& IdOut) const  {
@@ -813,16 +821,17 @@ bool CWallet::GetRegId(const CUserID& address, CRegID& IdOut) const  {
 	return false;
 }
 
-bool CWallet::GetKey(const CUserID& address, CKey& keyOut) const{
+bool CWallet::GetKey(const CUserID& address, CKey& keyOut,bool IsMiner) const{
 	AssertLockHeld(cs_wallet);
-	if (address.type() == typeid(CKeyID)) {
-		return GetKey(boost::get<CKeyID>(address),keyOut);
+	CAccountViewCache dumy(*pAccountViewTip,true);
+	CKeyID keyid;
+	if (dumy.GetKeyId(address, keyid)) {
+		if (mKeyPool.count(keyid)) {
+			auto tep = mKeyPool.find(keyid);
+			if (tep != mKeyPool.end())
+				return tep->second.getCKey(keyOut, IsMiner);
+		}
 	}
-	else
-	{
-		assert(0 && "to fixme");
-	}
-
 	return false;
 }
 
@@ -877,11 +886,15 @@ bool CWallet::SynchronizSys(const CAccountViewCache& inview) {
 	return true;
 }
 
-bool CWallet::GetKeyIds(set<CKeyID>& setKeyID) const {
+bool CWallet::GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner) const {
 	AssertLockHeld(cs_wallet);
 	setKeyID.clear();
 	for (auto const & tem : mKeyPool) {
-		setKeyID.insert(tem.first);
+		if (IsMiner == false) {
+			setKeyID.insert(tem.first);
+		} else if (!tem.second.GetRegID().IsEmpty()) {			//only the reged key is useful fo miner
+			setKeyID.insert(tem.first);
+		}
 	}
 	return setKeyID.size() > 0;
 }
@@ -893,4 +906,39 @@ bool CWallet::CleanAll() {
 	mKeyPool.clear();
 	MasterKey.SetNull();
 	return true;
+}
+
+bool CWallet::Sign(const CUserID& Userid, const uint256& hash, vector<unsigned char> &signature,bool IsMiner)const {
+	CKey key;
+	if(GetKey(Userid, key,IsMiner))
+	return(key.Sign(hash, signature));
+    return false;
+}
+
+Object CKeyStoreValue::ToJsonObj()const {
+	Object reply;
+	reply.push_back(Pair("mregId",mregId.ToString()));
+	reply.push_back(Pair("mPKey",mPKey.ToString()));
+	reply.push_back(Pair("mCkey",mCkey.ToString()));
+	reply.push_back(Pair("mMinerCkey",mMinerCkey.ToString()));
+	reply.push_back(Pair("nCreationTime",nCreationTime));
+    return std::move(reply);
+}
+bool CKeyStoreValue::UnSersailFromJson(const Object& obj){
+	try {
+		Object reply;
+		mregId = (find_value(obj, "mregId").get_str());
+		mPKey= ::ParseHex(find_value(obj, "mPKey").get_str());
+		auto const &tem1 = ::ParseHex(find_value(obj, "mCkey").get_str());
+		mCkey.Set(tem1.begin(),tem1.end(),true);
+		auto const &tem2=::ParseHex(find_value(obj, "mMinerCkey").get_str());
+		mMinerCkey.Set(tem2.begin(),tem2.end(),true);
+		nCreationTime =find_value(obj, "nCreationTime").get_int64();
+		assert(mCkey.GetPubKey() == mPKey);
+	} catch (...) {
+		ERROR("UnSersailFromJson Failed !");
+		return false;
+	}
+
+    return true;
 }

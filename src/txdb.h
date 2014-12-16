@@ -77,6 +77,10 @@ public:
 	bool EraseKeyId(const vector<unsigned char> &accountId);
 	bool GetAccount(const vector<unsigned char> &accountId, CAccount &secureAccount);
 	bool SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &secureAccount);
+	int64_t GetDbCount()
+	{
+		return db.GetDbCount();
+	}
 };
 
 class CTransactionDB: public CTransactionDBView{
@@ -92,6 +96,11 @@ public:
 	bool GetTxCache(const uint256 &hashblock, vector<uint256> &hashTx);
 	bool LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash);
 	bool BatchWrite(const map<uint256, vector<uint256> > &mapTxHashByBlockHash);
+	int64_t GetDbCount()
+	{
+		return db.GetDbCount();
+	}
+
 };
 
 class CScriptDB: public CScriptDBView
@@ -113,6 +122,9 @@ public:
 	bool GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
 	bool GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData,
 			int &nHeight);
-
+	int64_t GetDbCount()
+	{
+		return db.GetDbCount();
+	}
 };
 #endif // BITCOIN_TXDB_LEVELDB_H

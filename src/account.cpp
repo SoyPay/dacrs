@@ -70,9 +70,12 @@ bool CAccountViewBacked::SaveAccountInfo(const vector<unsigned char> &accountId,
 
 CAccountViewCache::CAccountViewCache(CAccountView &accountView, bool fDummy):CAccountViewBacked(accountView), hashBlock(0) {}
 bool CAccountViewCache::GetAccount(const CKeyID &keyId, CAccount &account) {
-	if (cacheAccounts.count(keyId) && cacheAccounts[keyId].keyID != uint160(0)) {
-		account = cacheAccounts[keyId];
-		return true;
+	if (cacheAccounts.count(keyId)) {
+		if (cacheAccounts[keyId].keyID != uint160(0)) {
+			account = cacheAccounts[keyId];
+			return true;
+		} else
+			return false;
 	}
 	if (pBase->GetAccount(keyId, account)) {
 		cacheAccounts[keyId] = account;
@@ -154,17 +157,20 @@ bool CAccountViewCache::SetKeyId(const vector<unsigned char> &accountId, const C
 	return true;
 }
 bool CAccountViewCache::GetKeyId(const vector<unsigned char> &accountId, CKeyID &keyId) {
-	if(cacheKeyIds.count(HexStr(accountId)) && cacheKeyIds[HexStr(accountId)] != uint160(0))
-	{
-		keyId = cacheKeyIds[HexStr(accountId)];
-		return true;
+	if(cacheKeyIds.count(HexStr(accountId))){
+		if(cacheKeyIds[HexStr(accountId)] != uint160(0))
+		{
+			keyId = cacheKeyIds[HexStr(accountId)];
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
-
 	if(pBase->GetKeyId(accountId, keyId) ){
 		cacheKeyIds[HexStr(accountId)] = keyId;
 		return true;
 	}
-
 	return false;
 }
 
@@ -352,35 +358,66 @@ bool CScriptDBViewBacked::GetScriptData(const vector<unsigned char> &vScriptId, 
 
 CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScriptDBViewBacked(base) {
 	mapDatas.clear();
-	LogPrint("INFO","new a CScriptDBViewCache mapDatas size:%d\r\n",mapDatas.size());
 }
 
 bool CScriptDBViewCache::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
-	if (mapDatas.count(vKey) > 0 && !mapDatas[vKey].empty()) {
-		vValue = mapDatas[vKey];
-		return true;
+	if (mapDatas.count(vKey) > 0) {
+		if (!mapDatas[vKey].empty()) {
+			vValue = mapDatas[vKey];
+			return true;
+		} else
+			return false;
 	}
 	if (!pBase->GetData(vKey, vValue))
 		return false;
 	mapDatas[vKey] = vValue;
-//	if(vKey == vTempTest) {
-//		LogPrint("INFO", "set mapDatas key:%s, value:%s\n", HexStr(vKey), HexStr(vValue));
-//	}
 	return true;
 }
 bool CScriptDBViewCache::SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {
 	mapDatas[vKey] = vValue;
-//	if (vKey == vTempTest) {
-//		LogPrint("INFO", "set mapDatas key:%s, value:%s\n", HexStr(vKey), HexStr(vValue));
-//	}
+	return true;
+}
+bool CScriptDBViewCache::UndoScriptData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {
+	assert(vKey.size() > 10);
+	if(vKey.size()<10) {
+		return ERROR("UndoScriptData(): vKey=%s error!\n", HexStr(vKey));
+	}
+	vector<unsigned char> vScriptCountKey = {'s', 'd', 'n', 'u','m'};
+	vector<unsigned char> vScriptId(vKey.begin()+4, vKey.begin()+10);
+	vector<unsigned char> vOldValue;
+	if(mapDatas.count(vKey)) {
+		vOldValue = mapDatas[vKey];
+	}
+	else {
+		GetData(vKey, vOldValue);
+	}
+	vScriptCountKey.insert(vScriptCountKey.end(), vScriptId.begin(), vScriptId.end());
+	CDataStream ds(SER_DISK, CLIENT_VERSION);
+
+	int nCount(0);
+	if(vValue.empty()) {   //key所对应的值由非空设置为空，计数减1
+			if(!vOldValue.empty()) {
+			if(!GetScriptDataCount(vScriptId, nCount))
+				return false;
+			--nCount;
+			if(!SetScriptDataCount(vScriptId, nCount))
+				return false;
+			}
+	}
+	else {    //key所对应的值由空设置为非空，计数加1
+		if(vOldValue.empty()) {
+			GetScriptDataCount(vScriptId, nCount);
+			++nCount;
+			if(!SetScriptDataCount(vScriptId, nCount))
+				return false;
+		}
+	}
+	mapDatas[vKey] = vValue;
 	return true;
 }
 bool CScriptDBViewCache::BatchWrite(const map<vector<unsigned char>, vector<unsigned char> > &mapData) {
 	for (auto &items : mapData) {
 		mapDatas[items.first] = items.second;
-//		if (items.first == vTempTest) {
-//			LogPrint("INFO", "set mapDatas key:%s, value:%s\n", HexStr(items.first), HexStr(mapDatas[items.first]));
-//		}
 	}
 	return true;
 }
@@ -392,9 +429,6 @@ bool CScriptDBViewCache::EraseKey(const vector<unsigned char> &vKey) {
 		if (pBase->GetData(vKey, vValue)) {
 			vValue.clear();
 			mapDatas[vKey] = vValue;
-//			if (vKey == vTempTest) {
-//				LogPrint("INFO", "set mapDatas key:%s, value:%s\n", HexStr(vKey), HexStr(mapDatas[vKey]));
-//			}
 		}
 		else {
 			return false;
@@ -432,8 +466,6 @@ bool CScriptDBViewCache::Flush() {
 	if(ok) {
 		mapDatas.clear();
 	}
-	LogPrint("SetScriptData","Flush ret: %d %p\r\n",ok,this);
-
 	return ok;
 }
 unsigned int CScriptDBViewCache::GetCacheSize() {
@@ -489,7 +521,7 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 				break;
 			}
 		}
-		if(!pBase->GetScriptData(vScriptId, nIndex, vScriptKey, vScriptData, nHeight)) {
+		if(!pBase->GetScriptData(vScriptId, nIndex, vScriptKey, vScriptData, nHeight)) { //上级没有获取符合条件的key值
 			if (vDataKey.empty())
 				return false;
 			else {
@@ -505,13 +537,13 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 				return true;
 			}
 		}
-		else {
+		else { //上级获取到符合条件的key值
 			vector<unsigned char> dataKeyTemp(vKey.begin(), vKey.end());
 			dataKeyTemp.insert(dataKeyTemp.end(), vScriptKey.begin(), vScriptKey.end());
-			if(vDataKey.empty()) {  //缓存中没有符合条件的key，直接返回从数据库中查询结果
+			if(vDataKey.empty()) {  //缓存中没有符合条件的key，直接返回上级的查询结果
 				return true;
 			}
-			if(dataKeyTemp < vDataKey )  {  //若数据库中查询的key小于缓存的key,且此key在缓存中没有，则直接返回数据库中查询的结果
+			if(dataKeyTemp < vDataKey )  {  //若上级查询的key小于本级缓存的key,且此key在缓存中没有，则直接返回数据库中查询的结果
 				if(mapDatas.count(dataKeyTemp) == 0)
 					return true;
 				else {
@@ -519,7 +551,7 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 					return GetScriptData(vScriptId, 1, vScriptKey, vScriptData, nHeight); //重新从数据库中获取下一条数据
 				}
 			}
-			else if(dataKeyTemp == vDataKey && vDataValue.empty()){ //若数据库中查询的key与缓存查询的key相等，直接返回查询的结果
+			else if(dataKeyTemp == vDataKey && vDataValue.empty()){ //若上级查询的key与缓存查询的key相等，直接返回查询的结果
 				return true;
 			}
 			else{
@@ -537,8 +569,9 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 		vector<unsigned char> vKey = { 'd', 'a', 't', 'a' };
 		vKey.insert(vKey.end(), vScriptId.begin(), vScriptId.end());
 		vKey.push_back('_');
-		vKey.insert(vKey.end(), vScriptKey.begin(), vScriptKey.end());
-		map<vector<unsigned char>, vector<unsigned char> >::iterator iterFindKey = mapDatas.find(vKey);
+		vector<unsigned char> vPreKey(vKey);
+		vPreKey.insert(vPreKey.end(), vScriptKey.begin(), vScriptKey.end());
+		map<vector<unsigned char>, vector<unsigned char> >::iterator iterFindKey = mapDatas.find(vPreKey);
 		vector<unsigned char> vDataKey;
 		vDataKey.clear();
 		while (iterFindKey != mapDatas.end() && ++iterFindKey != mapDatas.end()) {
@@ -554,7 +587,7 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 
 			}
 		}
-		if (!pBase->GetScriptData(vScriptId, nIndex, vScriptKey, vScriptData, nHeight)) {
+		if (!pBase->GetScriptData(vScriptId, nIndex, vScriptKey, vScriptData, nHeight)) { //从BASE获取指定键值之后的下一个值
 			if (vDataKey.empty())
 				return false;
 			else {
@@ -572,8 +605,8 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 		} else {
 			vector<unsigned char> dataKeyTemp(vKey.begin(), vKey.end());
 			dataKeyTemp.insert(dataKeyTemp.end(), vScriptKey.begin(), vScriptKey.end());
-			if (vDataKey.empty())
-					return true;
+			if (vDataKey.empty())    //缓存中没有符合条件的key，直接返回上级的查询结果
+				return true;
 			if (dataKeyTemp < vDataKey) {
 				return true;
 			} else {
@@ -615,6 +648,7 @@ bool CScriptDBViewCache::SetScriptData(const vector<unsigned char> &vScriptId, c
 	oldValue.clear();
 	GetData(vKey, oldValue);
 	operLog = CScriptDBOperLog(vKey, oldValue);
+	LogPrint("INFO", "SetScriptData oper log:%s\n", operLog.ToString());
 	return SetData(vKey, vValue);
 }
 
@@ -662,11 +696,11 @@ bool CScriptDBViewCache::GetScriptDataCount(const vector<unsigned char> &vScript
 		return false;
 	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
 	ds >> nCount;
+	LogPrint("INFO", "GetScriptDataCount(): vScriptId=%s, nCount=%d\n", HexStr(vScriptId), nCount);
 	return true;
 }
 bool CScriptDBViewCache::SetScriptDataCount(const vector<unsigned char> &vScriptId, int nCount) {
 	vector<unsigned char> scriptKey = { 's', 'd', 'n', 'u','m'};
-
 	scriptKey.insert(scriptKey.end(), vScriptId.begin(), vScriptId.end());
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	ds << nCount;
@@ -685,7 +719,8 @@ bool CScriptDBViewCache::EraseScriptData(const vector<unsigned char> &vScriptId,
 
 	if (HaveScriptData(vScriptId, vScriptKey)) {
 		int nCount(0);
-		GetScriptDataCount(vScriptId, nCount);
+		if(!GetScriptDataCount(vScriptId, nCount))
+			return false;
 		--nCount;
 		if (!SetScriptDataCount(vScriptId, nCount))
 			return false;
@@ -695,7 +730,6 @@ bool CScriptDBViewCache::EraseScriptData(const vector<unsigned char> &vScriptId,
 	if(!GetData(scriptKey, vValue))
 		return false;
 	operLog = CScriptDBOperLog(scriptKey, vValue);
-
 	if(!EraseKey(scriptKey))
 		return false;
 
@@ -711,7 +745,16 @@ bool CScriptDBViewCache::HaveScriptData(const vector<unsigned char> &vScriptId, 
 
 
 bool CScriptDBViewCache::GetScript(const int nIndex, CRegID &scriptId, vector<unsigned char> &vValue) {
-	return GetScript(nIndex, scriptId.GetVec6(), vValue);
+	vector<unsigned char> tem;
+	if (nIndex != 0) {
+		tem = scriptId.GetVec6();
+	}
+	if (GetScript(nIndex, tem, vValue)) {
+		scriptId.SetRegID(tem);
+		return true;
+	}
+
+	return false;
 }
 bool CScriptDBViewCache::SetScript(const CRegID &scriptId, const vector<unsigned char> &vValue) {
 	return SetScript(scriptId.GetVec6(), vValue);

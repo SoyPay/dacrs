@@ -361,3 +361,36 @@ Value listsetblockindexvalid(const Array& params, bool fHelp)
 	}
 	return ListSetBlockIndexValid();
 }
+Value getscriptid(const Array& params, bool fHelp)
+{
+	if (fHelp || params.size() != 1) {
+		throw runtime_error("getscriptid error \n");
+	}
+
+	uint256 txhash(params[0].get_str());
+
+	int nIndex = 0;
+	int BlockHeight =GetTxComfirmHigh(txhash) ;
+	if(BlockHeight > chainActive.Height() || BlockHeight == -1)
+	{
+		throw runtime_error("height lagre tip block \n");
+	}
+	CBlockIndex* pindex = chainActive[BlockHeight];
+	CBlock block;
+	if (!ReadBlockFromDisk(block, pindex))
+		return false;
+
+	block.BuildMerkleTree();
+	std::tuple<bool,int> ret = block.GetTxIndex(txhash);
+	if (!std::get<0>(ret)) {
+		 throw runtime_error("tx not exit in block");
+	}
+
+	nIndex = std::get<1>(ret);
+
+	CRegID striptID(BlockHeight, nIndex);
+
+	Object result;
+	result.push_back(Pair("script", HexStr(striptID.GetVec6())));
+	return result;
+}
