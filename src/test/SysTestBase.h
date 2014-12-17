@@ -163,6 +163,7 @@ public:
 	bool GenerateOneBlock();
 
 	bool DisConnectBlock(int nNum);
+	Value GetScriptID(string txhash);
 protected:
 	static boost::thread* pThreadShutdown ;
 	std::map<string, AccState> mapAccState;

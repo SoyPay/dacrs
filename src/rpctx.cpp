@@ -1489,12 +1489,13 @@ Value getscriptdata(const Array& params, bool fHelp) {
 	}
 	Object script;
 	Array retArray;
+	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 	if (params.size() == 2) {
 		vector<unsigned char> key = ParseHex(params[1].get_str());
 		vector<unsigned char> value;
 		int nHeight = 0;
 		CScriptDBOperLog operLog;
-		if (!pScriptDBTip->GetScriptData(regid, key, value, nHeight, operLog)) {
+		if (!contractScriptTemp.GetScriptData(regid, key, value, nHeight, operLog)) {
 			throw runtime_error("in getscriptdata :the key not exist!\n");
 		}
 		script.push_back(Pair("scritpid", params[0].get_str()));
@@ -1505,7 +1506,7 @@ Value getscriptdata(const Array& params, bool fHelp) {
 
 	} else {
 		int dbsize;
-		pScriptDBTip->GetScriptDataCount(regid, dbsize);
+		contractScriptTemp.GetScriptDataCount(regid, dbsize);
 		if (0 == dbsize) {
 			throw runtime_error("in getscriptdata :the scirptid database not data!\n");
 		}
@@ -1516,7 +1517,7 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		int nHeight = 0;
 
 		set<CScriptDBOperLog> setOperLog;
-		if (!pScriptDBTip->GetScriptData(regid, 0, vScriptKey, value, nHeight, setOperLog)) {
+		if (!contractScriptTemp.GetScriptData(regid, 0, vScriptKey, value, nHeight,setOperLog)) {
 			throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 		}
 		Object firt;
@@ -1540,13 +1541,13 @@ Value getscriptdata(const Array& params, bool fHelp) {
 			listcount = index;
 		}
 		while (count--) {
-			if (!pScriptDBTip->GetScriptData(regid, 1, vScriptKey, value, nHeight, setOperLog)) {
+			if (!contractScriptTemp.GetScriptData(regid, 1, vScriptKey, value, nHeight,setOperLog)) {
 				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 			}
 		}
 
 		while (listcount--) {
-			if (!pScriptDBTip->GetScriptData(regid, 1, vScriptKey, value, nHeight, setOperLog)) {
+			if (!contractScriptTemp.GetScriptData(regid, 1, vScriptKey, value, nHeight,setOperLog)) {
 				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 			}
 			Object firt;

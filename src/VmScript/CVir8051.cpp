@@ -1033,7 +1033,9 @@ static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 //	GetData(ipara,retdata);
 //	assert(retdata.size() == 2);
-    if(!GetData(ipara,retdata) ||retdata.size() != 2 )
+    if(!GetData(ipara,retdata) ||retdata.size() != 2
+    		|| retdata.at(0).get()->size() != 6
+    		|| retdata.at(1).get()->size() != sizeof(uint64_t))
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
@@ -1222,7 +1224,7 @@ static RET_DEFINE ExGetAuthoritedDefineFunc(unsigned char * ipara,void * pVmScri
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 //	GetData(ipara,retdata);
 //	assert(retdata.size() == 1);
-    if(!GetData(ipara,retdata) ||retdata.size() != 1 )
+    if(!GetData(ipara,retdata) ||retdata.size() != 1 || retdata.at(0).get()->size() != 6)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
@@ -1255,7 +1257,7 @@ static RET_DEFINE ExGetScriptDataFunc(unsigned char * ipara,void * pVmScript)
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 //	GetData(ipara,retdata);
 //	assert(retdata.size() == 2);
-    if(!GetData(ipara,retdata) ||retdata.size() != 2 )
+    if(!GetData(ipara,retdata) ||retdata.size() != 2 || retdata.at(0).get()->size() != 6)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);

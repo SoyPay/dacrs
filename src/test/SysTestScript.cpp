@@ -24,7 +24,7 @@
 #include "json/json_spirit_writer.h"
 #include "json/json_spirit_value.h"
 #include "json/json_spirit_stream_reader.h"
-
+#include "tx.h"
 using namespace std;
 using namespace boost;
 std::string TxHash("");
@@ -157,8 +157,8 @@ public:
 
 		const Value& result = find_value(valueRes.get_obj(), "hash");
 		const Value& result1 = find_value(valueRes.get_obj(), "RawTx");
-
-		if (result.type() == null_type && result1.type() == null_type){
+		const Value& result3 = find_value(valueRes.get_obj(), "script");
+		if (result.type() == null_type && result1.type() == null_type && result3.type() == null_type){
 			return false;
 		}
 		if (result.type() != null_type){
@@ -167,6 +167,9 @@ public:
 		else if(result1.type() != null_type)
 		{
 			strHash = result1.get_str();
+		}else if(result3.type() != null_type)
+		{
+			strHash = result3.get_str();
 		}
 
 		return true;
@@ -208,7 +211,7 @@ public:
 		BOOST_CHECK(GenerateOneBlock());
 	}
 
-	void CreateRegScript(char*strAddr,char*sourceCode)
+	string CreateRegScript(char*strAddr,char*sourceCode)
 	{
 		int nFee = 10000000;
 		string strTxHash;
@@ -216,8 +219,9 @@ public:
 		Value valueRes = RegisterScriptTx(strAddr,strFileName , 100, nFee);
 		BOOST_CHECK(GetHashFromCreatedTx(valueRes,strTxHash));
 		BOOST_CHECK(GenerateOneBlock());
+		return strTxHash;
 	}
-	void CreateContactTx(int param)
+	string CreateContactTx(int param)
 	{
 		char buffer[3] = {0};
 		sprintf(buffer,"%02x",param);
@@ -227,7 +231,7 @@ public:
 		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
 		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
 		BOOST_CHECK(GenerateOneBlock());
-		return ;
+		return temp;
 	}
 	void disblock1()
 	{
@@ -530,6 +534,224 @@ public:
 
 		BOOST_CHECK_EQUAL(GetValue(temp1,"value"),100);
 	}
+	bool CheckScriptDB(int nheigh,string srcipt,int height,string hash,int flag)
+	{
+		int tipH = chainActive.Height();
+		int outHeight =tipH <nheigh?nheigh: tipH +5;
+		int maxKey = tipH <nheigh?200:((tipH- height+1)*200);
+		int Size =  tipH <nheigh?1000:(5-(tipH- height))*200;
+		string  hash2 = "hash";
+		if(flag)
+		{
+			maxKey = maxKey>800?800:maxKey;
+			if(maxKey >= 600)
+			outHeight = 11;
+
+		}
+		CRegID regid(srcipt);
+		if (regid.IsEmpty() == true) {
+			return false;
+		}
+
+		CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+		if (!contractScriptTemp.HaveScript(regid)) {
+			return false;
+		}
+		int dbsize;
+		contractScriptTemp.GetScriptDataCount(regid, dbsize);
+		if (0 == dbsize) {
+			throw runtime_error("in getscriptdata :the scirptid database not data!\n");
+		}
+
+		BOOST_CHECK(Size==dbsize);
+		if(Size <=0)
+		{
+			return true;
+		}
+		vector<unsigned char> value;
+		vector<unsigned char> vScriptKey;
+		int nHeight = 0;
+		set<CScriptDBOperLog> setOperLog;
+		if (!contractScriptTemp.GetScriptData(regid, 0, vScriptKey, value, nHeight,setOperLog)) {
+			return false;
+		}
+		uint256 hash1(value);
+		string pvalue(value.begin(),value.end());
+		if(flag)
+		BOOST_CHECK(hash==hash1.GetHex()|| pvalue == hash2);
+		else{
+			BOOST_CHECK(hash==hash1.GetHex());
+		}
+		BOOST_CHECK(nHeight>=outHeight);
+		unsigned short key = 0;
+		memcpy(&key,  &vScriptKey.at(0), sizeof(key));
+		BOOST_CHECK(key>=(maxKey - 200));
+
+		int count = dbsize - 1;
+		while (count--) {
+			if (!contractScriptTemp.GetScriptData(regid, 1, vScriptKey, value, nHeight,setOperLog)) {
+				return false;
+			}
+			uint256 hash3(value);
+			string pvalue(value.begin(),value.end());
+			if(flag)
+			BOOST_CHECK(hash==hash3.GetHex()|| pvalue == hash2);
+			else{
+					BOOST_CHECK(hash==hash1.GetHex());
+				}
+			BOOST_CHECK(nHeight>=outHeight);
+			unsigned short key = 0;
+			memcpy(&key,  &vScriptKey.at(0), sizeof(key));
+			BOOST_CHECK(key>=(maxKey - 200));
+		}
+		return true;
+	}
+
+	void CreateTx(string pcontact,string addr)
+	{
+		string temp ="[";
+		temp += "\""+addr+"\""+"]";
+		Value resut =CreateContractTx1("010000000100", temp, pcontact,10);
+		string strReturn;
+		BOOST_CHECK(GetHashFromCreatedTx(resut,strReturn));
+		BOOST_CHECK(GenerateOneBlock());
+		return ;
+	}
+	bool GetScriptData(string srcipt,vector<unsigned char> key)
+	{
+		CRegID regid(srcipt);
+			if (regid.IsEmpty() == true) {
+				return false;
+			}
+			CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+			if (!contractScriptTemp.HaveScript(regid)) {
+				return false;
+			}
+			vector<unsigned char> value;
+			int nHeight = 0;
+
+			CScriptDBOperLog operLog;
+			if (!contractScriptTemp.GetScriptData(regid,key, value, nHeight,operLog)) {
+				return false;
+			}
+			return true;
+	}
+	int GetScriptSize(string srcipt)
+	{
+			CRegID regid(srcipt);
+			if (regid.IsEmpty() == true) {
+				return 0;
+			}
+
+			if (!pScriptDBTip->HaveScript(regid)) {
+				return 0;
+			}
+			int dbsize;
+			pScriptDBTip->GetScriptDataCount(regid, dbsize);
+			return dbsize;
+	}
+	string CreatWriteTx(string &hash)
+	{
+		string shash = CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
+		Value ret =GetScriptID(shash);
+		string scriptid;
+		BOOST_CHECK(GetHashFromCreatedTx(ret,scriptid));
+		//// first tx
+		string phash = CreateContactTx(15);
+		int  height = chainActive.Height();
+
+		BOOST_CHECK(CheckScriptDB((height+5),scriptid,height,phash,false));
+
+		hash = phash;
+		return scriptid;
+	}
+	void testdb()
+	{
+		string phash = "";
+		string scriptid =  CreatWriteTx(phash);
+		int height = chainActive.Height();
+		int circle = 6;
+		while(circle--)
+		{
+			BOOST_CHECK(GenerateOneBlock());
+		}
+
+		int count = GetScriptSize(scriptid);
+		while(count)
+		{
+			//// second tx
+				uint256 hash(phash.c_str());
+				int param =16;
+				string temp = "";
+				temp += tinyformat::format("%02x%s%02x",param,HexStr(hash),height);
+				cout<<"cont:"<<temp;
+				CreateTx(temp,"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
+
+				vector<unsigned char> key;
+				char *key1="2_error";
+				key.insert(key.begin(),key1, key1 + strlen(key1) +1);
+				BOOST_CHECK(!GetScriptData(scriptid,key));
+
+				CheckScriptDB((height+5),scriptid,height,phash,false);
+				count = GetScriptSize(scriptid);
+		}
+
+		while(true)
+		{
+			disblock1();
+			CheckScriptDB((height+5),scriptid,height,phash,false);
+			if(count == 1000)
+				break;
+		}
+
+	}
+
+	void testdeletmodifydb()
+	{
+		string  writetxhash= "";
+		string scriptid =  CreatWriteTx(writetxhash);
+		int height = chainActive.Height();
+
+		///// 修改删除包
+		int param =17;
+		string temp = "";
+		temp += tinyformat::format("%02x%02x",param,11);
+		CreateTx(temp,"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
+		vector<unsigned char> key;
+		char *key1="3_error";
+		key.insert(key.begin(),key1, key1 + strlen(key1) +1);
+		BOOST_CHECK(!GetScriptData(scriptid,key));
+		CheckScriptDB((height+5),scriptid,height,writetxhash,true);
+		int modHeight = chainActive.Height();
+
+		cout<<"end:"<<endl;
+		//// 遍历
+		int count = GetScriptSize(scriptid);
+        while(count)
+        {
+    		int param =18;
+    		string temp = "";
+    		temp += tinyformat::format("%02x",param);
+    		CreateTx(temp,"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
+        	CheckScriptDB((height+5),scriptid,height,writetxhash,true);
+        	count = GetScriptSize(scriptid);
+        }
+
+    	count = GetScriptSize(scriptid);
+      /// 回滚
+		while(true)
+		{
+			disblock1();
+			count = GetScriptSize(scriptid);
+			if(chainActive.Height() > modHeight){
+			CheckScriptDB((height+5),scriptid,height,writetxhash,true);
+			}else{
+				CheckScriptDB((height+5),scriptid,height,writetxhash,false);
+			}
+			if(count == 1000)
+				break;
+		}
+	}
 };
 
 
@@ -553,6 +775,13 @@ BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 //	BOOST_CHECK(0==chainActive.Height());
 //	CheckScriptAccount();
 
+//	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
+//	testdb();
+
+//	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
+//	 testdeletmodifydb();
 }
 BOOST_FIXTURE_TEST_CASE(darksecure,CSysScriptTest)
 {

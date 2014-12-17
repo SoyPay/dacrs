@@ -710,7 +710,16 @@ bool SysTestBase::DisConnectBlock(int nNum) {
 	}
 	return false;
 }
-
+Value SysTestBase::GetScriptID(string txhash)
+{
+	char *argv[3] = { "rpctest", "getscriptid", (char*)txhash.c_str() };
+	int argc = sizeof(argv) / sizeof(char*);
+	Value value;
+	if (CommandLineRPC_GetValue(argc, argv, value)) {
+		return value;
+	}
+	return value;
+}
 void SysTestBase::StartServer(int argc,char* argv[]) {
 //		int argc = 2;
 //		char* argv[] = {"D:\\cppwork\\soypay\\src\\soypayd.exe","-datadir=d:\\bitcoin" };
