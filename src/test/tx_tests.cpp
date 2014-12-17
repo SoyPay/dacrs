@@ -265,6 +265,7 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_free,CTxTest) {
 	bool bOverDay = false;
 	bool bCheckAuthority = true;
 
+	accOperate.CompactAccount(10000);
 	for (int i = 1; i <= TEST_SIZE / 10; i++) {
 		nRunTimeHeight += 10;
 		bOverDay = nRunTimeHeight / DAY_BLOCKS > nLastOperHeight / DAY_BLOCKS;
@@ -381,7 +382,8 @@ BOOST_FIXTURE_TEST_CASE(tx_add_self,CTxTest) {
 }
 
 BOOST_FIXTURE_TEST_CASE(tx_minus_self,CTxTest) {
-	accOperate.CompactAccount(5);
+	//accOperate.CompactAccount(5);
+	accOperate.CompactAccount(10000);
 	int nBranch[4] = { 0 };
 	int nRunTimeHeight = 0;
 	int nLastOperHeight = 0;
