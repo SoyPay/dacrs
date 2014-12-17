@@ -473,7 +473,7 @@ uint256 GetAdjustHash(const uint256 TargetHash, const uint64_t nPos) {
 	return adjusthash;
 }
 extern CWallet* pwalletMain;
-bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCreateKey) {
+bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock) {
 	set<CKeyID> setKeyID;
 	CAccount acctInfo;
 	set<CAccount, CAccountComparator> setAcctInfo;
@@ -511,17 +511,6 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 		}
 
 		for(const auto &keyid:setKeyID) {
-			//find CAccount info by keyid
-			if(setCreateKey.size()) {
-				bool bfind = false;
-				for(auto &item: setCreateKey){
-					if(item == keyid){
-						bfind = true;
-						break;
-					}
-				}
-				if(!bfind) continue;
-			}
 			CUserID userId = keyid;
 			if (accView.GetAccount(userId, acctInfo)) {
 				//available
@@ -533,7 +522,6 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 	}
 
 	if (setAcctInfo.empty()) {
-		setCreateKey.clear();
 		LogPrint("ERROR","CreatePosTx setSecureAcc empty\n");
 		return false;
 	}
@@ -927,8 +915,25 @@ bool CheckWork(CBlock* pblock, CWallet& wallet) {
 
 void static SoypayMiner(CWallet *pwallet) {
 	LogPrint("INFO","Miner started\n");
+
 	SetThreadPriority(THREAD_PRIORITY_LOWEST);
 	RenameThread("soypay-miner");
+
+	{
+		LOCK2(cs_main, pwalletMain->cs_wallet);
+		set<CKeyID> dummy;
+		if (!pwalletMain->GetKeyIds(dummy, true)) {
+			ERROR("ERROR", "no key for minering\n");
+			LogPrint("INFO","SoypayMiner  terminated\n");
+		    throw;
+		}
+
+	}
+
+
+
+
+
 
 	// Each thread has its own key and counter
 	unsigned int nExtraNonce = 0;
@@ -967,9 +972,10 @@ void static SoypayMiner(CWallet *pwallet) {
 
 			while (true) {
 				pblock->nTime = GetNextTimeAndSleep();// max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
-				set<CKeyID> setCreateKey;
-				setCreateKey.clear();
-				if (CreatePosTx(pindexPrev, pblock, setCreateKey)) {
+//				set<CKeyID> setCreateKey;
+//				setCreateKey.clear();
+
+				if (CreatePosTx(pindexPrev, pblock)) {
 
 					SetThreadPriority(THREAD_PRIORITY_NORMAL);
 					CheckWork(pblock, *pwallet);
