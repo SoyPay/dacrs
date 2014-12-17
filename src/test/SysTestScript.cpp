@@ -759,11 +759,11 @@ BOOST_FIXTURE_TEST_SUITE(sysScript_test,CSysScriptTest)
 
 BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 {
-////	//// some debug
-//	ResetEnv();
-//	BOOST_CHECK(0==chainActive.Height());
-//	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
-//	CheckSdk();
+//	//// some debug
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
+	CheckSdk();
 
 
 //	ResetEnv();
@@ -775,9 +775,9 @@ BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 //	BOOST_CHECK(0==chainActive.Height());
 //	CheckScriptAccount();
 
-	ResetEnv();
-	BOOST_CHECK(0==chainActive.Height());
-	testdb();
+//	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
+//	testdb();
 
 //	ResetEnv();
 //	BOOST_CHECK(0==chainActive.Height());

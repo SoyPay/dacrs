@@ -1602,7 +1602,8 @@ Value getscriptdbsize(const Array& params, bool fHelp) {
 	CRegID scriptRegId;
 	scriptRegId.SetRegID(strScriptId);
 	int nDataCount = 0;
-	if(!pScriptDBTip->GetScriptDataCount(scriptRegId, nDataCount)) {
+	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+	if(!contractScriptTemp.GetScriptDataCount(scriptRegId, nDataCount)) {
 		throw runtime_error("GetScriptDataCount error!");
 	}
 	return nDataCount;
