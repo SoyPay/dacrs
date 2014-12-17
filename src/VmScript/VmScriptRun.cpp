@@ -154,7 +154,7 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 			CRegID regId(accountid);
 			CContractTransaction* secure = static_cast<CContractTransaction*>(listTx.get());
 			/// current tx's script cant't mius other script's regid
-			if(m_ScriptDBTip->HaveScript(regId) && regId.GetVec6() != boost::get<CRegID>(secure->scriptRegId).GetVec6())
+			if(m_ScriptDBTip->HaveScript(regId) && regId != boost::get<CRegID>(secure->scriptRegId))
 			{
 				return false;
 			}
@@ -239,7 +239,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 //		LogPrint("vm", "befer account:%s\r\n", vmAccount.get()->ToString().c_str());
 //		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
 		bool ret = false;
-		if(IsSignatureAccount(vmAccount.get()->regID) || vmAccount.get()->regID.GetVec6() == boost::get<CRegID>(tx->scriptRegId).GetVec6())
+		if(IsSignatureAccount(vmAccount.get()->regID) || vmAccount.get()->regID == boost::get<CRegID>(tx->scriptRegId))
 		{
 			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype,fund,height);
 		}else{

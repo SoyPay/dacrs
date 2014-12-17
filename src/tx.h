@@ -44,13 +44,16 @@ private:
 	void SetRegIDByCompact(const vector<unsigned char> &vIn);
 public:
 	friend class CID;
-	const vector<unsigned char> &GetVec6() const {return vRegID;}
+	const vector<unsigned char> &GetVec6() const {assert(vRegID.size() ==6);return vRegID;}
 	void SetRegID(const vector<unsigned char> &vIn) ;
 	void SetRegID(string strRegID);
     CKeyID getKeyID(const CAccountViewCache &view)const;
 	CRegID(string strRegID);
 	bool operator ==(const CRegID& co) const {
 		return (this->nHeight == co.nHeight && this->nIndex == co.nIndex);
+	}
+	bool operator !=(const CRegID& co) const {
+		return (this->nHeight != co.nHeight || this->nIndex != co.nIndex);
 	}
 	static bool IsSimpleRegIdStr(const string & str);
 	static bool IsRegIdStr(const string & str);
