@@ -427,7 +427,7 @@ bool CScriptDB::GetScriptData(const vector<unsigned char> &vScriptId, const int 
 						vector<unsigned char> vKey;
 						ssKey >> vKey;
 						vector<unsigned char> vValue;
-						CDataStream sValue(slValue.data(), slValue.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+						CDataStream sValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
 						sValue >> vValue;
 						operLog = CScriptDBOperLog(vKey, vValue);
 						setOperLog.insert(operLog);
