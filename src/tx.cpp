@@ -1014,6 +1014,9 @@ bool CTxUndo::GetAccountOperLog(const CKeyID &keyId, CAccountOperLog &accountOpe
 }
 
 void CAccount::CompactAccount(int nCurHeight) {
+	if (nCurHeight<=0) {
+		return ;
+	}
 	MergerFund(vRewardFund, nCurHeight);
 	MergerFund(vFreeze, nCurHeight);
 	MergerFund(vSelfFreeze, nCurHeight);
@@ -1489,6 +1492,8 @@ bool CAccount::MinusFreezed(const CFund& fund) {
 		return false;
 	}
 
+	assert(it->nHeight < chainActive.Height());
+
 	if (fund.value > it->value) {
 		return false;
 	} else {
@@ -1644,10 +1649,6 @@ bool CAccount::IsFundValid(OperType type, const CFund &fund, int nHeight, const 
 
 			if (accountOperLog.authorLog.GetScriptID() != *pscriptID)
 				accountOperLog.authorLog.SetScriptID(*pscriptID);
-
-			if (0 == accountOperLog.authorLog.GetLastOperHeight()) {
-
-			}
 		}
 		break;
 	}
@@ -1663,6 +1664,7 @@ bool CAccount::IsFundValid(OperType type, const CFund &fund, int nHeight, const 
 bool CAccount::OperateAccount(OperType type, const CFund &fund, int nHeight,
 		const vector_unsigned_char* pscriptID,
 		bool bCheckAuthorized) {
+	assert(IsCompacted(nHeight));
 	assert(keyID != uint160(0));
 	if (keyID != accountOperLog.keyID)
 		accountOperLog.keyID = keyID;
@@ -1798,6 +1800,16 @@ bool CAccount::GetUserData(const vector_unsigned_char& scriptID, vector<unsigned
 	return true;
 }
 
+uint256 CAccount::GetHash() const {
+	return SerializeHash(*this);
+}
+
+bool CAccount::IsCompacted(int nCurRunTimeHeight) {
+	uint256 beforeHash = GetHash();
+	CompactAccount(nCurRunTimeHeight);
+	uint256 afterHash = GetHash();
+	return beforeHash == afterHash;
+}
 
 void CRegID::SetRegID(const vector<unsigned char>& vIn) {
 	assert(vIn.size() == 6);
