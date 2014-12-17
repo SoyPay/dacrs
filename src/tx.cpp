@@ -406,10 +406,10 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 				"bad-signscript-check");
 	}
 
-	//閼汇儱婀禍銈嗘缁便垹绱╅弫鐗堝祦鎼存挷鑵戠�涙ê婀禍銈嗘hash閿涘本顒濇禍銈嗘瀹歌尙绮＄悮顐も�樼拋銈堢箖閿涘本妫ゆい缁橆梾閺岋拷
+	//���ڽ����������ݿ��д��ڽ���hash���˽����Ѿ���ȷ�Ϲ���������
 	CDiskTxPos postx;
 	if (!pblocktree->ReadTxIndex(GetHash(), postx)) {
-		//婵″倹鐏夐弰顖欐唉閺勬捁顫︾涵顔款吇鏉╂稑鍙哹lock娑擃厽妞傞敍宀冨閻╊喚娈戦崷鏉挎絻娑撶皝eyId閺冭泛绻�妞ょ粯妲搁張顏呮暈閸愬矁澶勯幋锟�
+		//	//����ǽ��ױ�ȷ�Ͻ���block��ʱ����Ŀ�ĵ�ַΪkeyIdʱ������δע���˻�
 			CAccount acctDesInfo;
 			if (desUserId.type() == typeid(CKeyID)) {
 				if (view.GetAccount(desUserId, acctDesInfo) && acctDesInfo.IsRegister()) {
@@ -447,7 +447,7 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 				UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 
 	}
-	//閹碉絽鍣虹亸蹇氬瀭閺冦儱绻�
+	//�ۼ�С����־
 	txundo.vAccountOperLog.push_back(sourceAccount.accountOperLog);
 
 	CVmScriptRun vmRun;
@@ -1014,6 +1014,9 @@ bool CTxUndo::GetAccountOperLog(const CKeyID &keyId, CAccountOperLog &accountOpe
 }
 
 void CAccount::CompactAccount(int nCurHeight) {
+	if (nCurHeight<=0) {
+		return ;
+	}
 	MergerFund(vRewardFund, nCurHeight);
 	MergerFund(vFreeze, nCurHeight);
 	MergerFund(vSelfFreeze, nCurHeight);
@@ -1489,6 +1492,8 @@ bool CAccount::MinusFreezed(const CFund& fund) {
 		return false;
 	}
 
+	assert(it->nHeight < chainActive.Height());
+
 	if (fund.value > it->value) {
 		return false;
 	} else {
@@ -1644,10 +1649,6 @@ bool CAccount::IsFundValid(OperType type, const CFund &fund, int nHeight, const 
 
 			if (accountOperLog.authorLog.GetScriptID() != *pscriptID)
 				accountOperLog.authorLog.SetScriptID(*pscriptID);
-
-			if (0 == accountOperLog.authorLog.GetLastOperHeight()) {
-
-			}
 		}
 		break;
 	}
@@ -1663,6 +1664,7 @@ bool CAccount::IsFundValid(OperType type, const CFund &fund, int nHeight, const 
 bool CAccount::OperateAccount(OperType type, const CFund &fund, int nHeight,
 		const vector_unsigned_char* pscriptID,
 		bool bCheckAuthorized) {
+	assert(IsCompacted(nHeight));
 	assert(keyID != uint160(0));
 	if (keyID != accountOperLog.keyID)
 		accountOperLog.keyID = keyID;
@@ -1798,6 +1800,16 @@ bool CAccount::GetUserData(const vector_unsigned_char& scriptID, vector<unsigned
 	return true;
 }
 
+uint256 CAccount::GetHash() const {
+	return SerializeHash(*this);
+}
+
+bool CAccount::IsCompacted(int nCurRunTimeHeight) {
+	uint256 beforeHash = GetHash();
+	CompactAccount(nCurRunTimeHeight);
+	uint256 afterHash = GetHash();
+	return beforeHash == afterHash;
+}
 
 void CRegID::SetRegID(const vector<unsigned char>& vIn) {
 	assert(vIn.size() == 6);

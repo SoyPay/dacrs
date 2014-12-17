@@ -383,10 +383,19 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 		};
 		auto DisConnectBlockProgress = [&]() {
 //			CAccountTx Oldtx(this, blockhash);
+			int i = 0 ;
+			int index = pblock->nHeight;
 			for (const auto &sptx : pblock->vptx) {
+
+				CRegID regid(index, i++);
 				if(IsMine(sptx.get())) {
 					if (sptx->nTxType == REG_ACCT_TX) {
-						fIsNeedUpDataRegID = true;
+						for (auto &te : mKeyPool) {
+								if(te.second.GetRegID() == regid){
+									mKeyPool.erase(te.first);
+									break;
+								}
+							}
 					}
 					UnConfirmTx[sptx.get()->GetHash()] = sptx.get()->GetNewInstance();
 					bupdate = true;
@@ -941,4 +950,27 @@ bool CKeyStoreValue::UnSersailFromJson(const Object& obj){
 	}
 
     return true;
+}
+
+bool CKeyStoreValue::SynchronizSys(CAccountViewCache& view){
+	 CAccount account;
+	if(!view.GetAccount(CUserID(mPKey.GetKeyID()),account))
+	{
+		mregId.clean();
+		mMinerCkey.Clear();
+	}
+	else
+	{
+		mregId = account.regID;
+		if(account.PublicKey != mPKey)
+			{
+			ERROR("shit %s acc %s mPKey:%s\r\n","not fix the bug",account.ToString(),this->ToString());
+				assert(0);
+			}
+		if(account.MinerPKey.IsValid())
+		assert(account.MinerPKey == mMinerCkey.GetPubKey());
+	}
+
+	LogPrint("wallet","%s \r\n",this->ToString());
+	return true;
 }

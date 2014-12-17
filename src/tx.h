@@ -1424,6 +1424,8 @@ private:
 	void UndoAuthorityOnDay(uint64_t nUndoMoney,const CAuthorizateLog& log);
 	void UndoAuthorityOverDay(const CAuthorizateLog& log);
 	uint64_t GetVecMoney(const vector<CFund>& vFund);
+	bool IsCompacted(int nCurRunTimeHeight);
+	uint256 GetHash() const;
 };
 
 inline unsigned int GetSerializeSize(const std::shared_ptr<CBaseTransaction> &pa, int nType, int nVersion) {
