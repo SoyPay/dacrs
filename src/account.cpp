@@ -523,9 +523,6 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 				}
 				vDataKey = item.first;
 				vDataValue = item.second;
-				CDataStream ds(mapDatas[vDataKey], SER_DISK, CLIENT_VERSION);
-				ds >> nHeight;
-				ds >> vScriptData;
 				if(nHeight < chainActive.Tip()->nHeight) { //若找到的key对应的数据保存时间已经超时，则需要删除该数据项，继续找下一个符合条件的key
 					CScriptDBOperLog operLog(vDataKey, vDataValue);
 					vDataKey.clear();
@@ -533,6 +530,9 @@ bool CScriptDBViewCache::GetScriptData(const vector<unsigned char> &vScriptId, c
 					setOperLog.insert(operLog);
 					continue;
 				}
+				CDataStream ds(mapDatas[vDataKey], SER_DISK, CLIENT_VERSION);
+				ds >> nHeight;
+				ds >> vScriptData;
 				break;
 			}
 		}
