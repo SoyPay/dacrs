@@ -553,11 +553,12 @@ public:
 			return false;
 		}
 
-		if (!pScriptDBTip->HaveScript(regid)) {
+		CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+		if (!contractScriptTemp.HaveScript(regid)) {
 			return false;
 		}
 		int dbsize;
-		pScriptDBTip->GetScriptDataCount(regid, dbsize);
+		contractScriptTemp.GetScriptDataCount(regid, dbsize);
 		if (0 == dbsize) {
 			throw runtime_error("in getscriptdata :the scirptid database not data!\n");
 		}
@@ -571,7 +572,7 @@ public:
 		vector<unsigned char> vScriptKey;
 		int nHeight = 0;
 		CScriptDBOperLog operLog;
-		if (!pScriptDBTip->GetScriptData(regid, 0, vScriptKey, value, nHeight)) {
+		if (!contractScriptTemp.GetScriptData(regid, 0, vScriptKey, value, nHeight)) {
 			return false;
 		}
 		uint256 hash1(value);
@@ -588,7 +589,7 @@ public:
 
 		int count = dbsize - 1;
 		while (count--) {
-			if (!pScriptDBTip->GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
+			if (!contractScriptTemp.GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
 				return false;
 			}
 			uint256 hash3(value);
@@ -622,15 +623,15 @@ public:
 			if (regid.IsEmpty() == true) {
 				return false;
 			}
-
-			if (!pScriptDBTip->HaveScript(regid)) {
+			CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+			if (!contractScriptTemp.HaveScript(regid)) {
 				return false;
 			}
 			vector<unsigned char> value;
 			int nHeight = 0;
 
 			CScriptDBOperLog operLog;
-			if (!pScriptDBTip->GetScriptData(regid,key, value, nHeight,operLog)) {
+			if (!contractScriptTemp.GetScriptData(regid,key, value, nHeight,operLog)) {
 				return false;
 			}
 			return true;

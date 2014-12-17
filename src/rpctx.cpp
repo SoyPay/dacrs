@@ -1483,8 +1483,9 @@ Value getscriptdata(const Array& params, bool fHelp) {
 	if (regid.IsEmpty() == true) {
 		throw runtime_error("in getscriptdata :vscriptid size is error!\n");
 	}
+	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 
-	if (!pScriptDBTip->HaveScript(regid)) {
+	if (!contractScriptTemp.HaveScript(regid)) {
 		throw runtime_error("in getscriptdata :vscriptid id is exist!\n");
 	}
 	Object script;
@@ -1494,7 +1495,7 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		vector<unsigned char> value;
 		int nHeight = 0;
 		CScriptDBOperLog operLog;
-		if (!pScriptDBTip->GetScriptData(regid, key, value, nHeight, operLog)) {
+		if (!contractScriptTemp.GetScriptData(regid, key, value, nHeight, operLog)) {
 			throw runtime_error("in getscriptdata :the key not exist!\n");
 		}
 		script.push_back(Pair("scritpid", params[0].get_str()));
@@ -1505,7 +1506,7 @@ Value getscriptdata(const Array& params, bool fHelp) {
 
 	} else {
 		int dbsize;
-		pScriptDBTip->GetScriptDataCount(regid, dbsize);
+		contractScriptTemp.GetScriptDataCount(regid, dbsize);
 		if (0 == dbsize) {
 			throw runtime_error("in getscriptdata :the scirptid database not data!\n");
 		}
@@ -1515,7 +1516,7 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		vector<unsigned char> vScriptKey;
 		int nHeight = 0;
 
-		if (!pScriptDBTip->GetScriptData(regid, 0, vScriptKey, value, nHeight)) {
+		if (!contractScriptTemp.GetScriptData(regid, 0, vScriptKey, value, nHeight)) {
 			throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 		}
 		Object firt;
@@ -1539,13 +1540,13 @@ Value getscriptdata(const Array& params, bool fHelp) {
 			listcount = index;
 		}
 		while (count--) {
-			if (!pScriptDBTip->GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
+			if (!contractScriptTemp.GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
 				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 			}
 		}
 
 		while (listcount--) {
-			if (!pScriptDBTip->GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
+			if (!contractScriptTemp.GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
 				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 			}
 			Object firt;
