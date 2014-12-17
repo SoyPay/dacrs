@@ -534,12 +534,12 @@ public:
 
 		BOOST_CHECK_EQUAL(GetValue(temp1,"value"),100);
 	}
-	bool CheckScriptDB(string srcipt,int height,string hash,int flag)
+	bool CheckScriptDB(int nheigh,string srcipt,int height,string hash,int flag)
 	{
 		int tipH = chainActive.Height();
-		int outHeight = tipH +5;
-		int maxKey = (tipH- height+1)*200;
-		int Size = (5-(tipH- height))*200;
+		int outHeight =tipH <nheigh?nheigh: tipH +5;
+		int maxKey = tipH <nheigh?200:((tipH- height+1)*200);
+		int Size =  tipH <nheigh?1000:(5-(tipH- height))*200;
 		string  hash2 = "hash";
 		if(flag)
 		{
@@ -563,7 +563,10 @@ public:
 		}
 
 		BOOST_CHECK(Size==dbsize);
-
+		if(Size <=0)
+		{
+			return true;
+		}
 		vector<unsigned char> value;
 		vector<unsigned char> vScriptKey;
 		int nHeight = 0;
@@ -656,7 +659,7 @@ public:
 		string phash = CreateContactTx(15);
 		int  height = chainActive.Height();
 
-		BOOST_CHECK(CheckScriptDB(scriptid,height,phash,false));
+		BOOST_CHECK(CheckScriptDB((height+5),scriptid,height,phash,false));
 
 		hash = phash;
 		return scriptid;
@@ -688,14 +691,14 @@ public:
 				key.insert(key.begin(),key1, key1 + strlen(key1) +1);
 				BOOST_CHECK(!GetScriptData(scriptid,key));
 
-				CheckScriptDB(scriptid,height,phash,false);
+				CheckScriptDB((height+5),scriptid,height,phash,false);
 				count = GetScriptSize(scriptid);
 		}
 
 		while(true)
 		{
 			disblock1();
-			CheckScriptDB(scriptid,height,phash,false);
+			CheckScriptDB((height+5),scriptid,height,phash,false);
 			if(count == 1000)
 				break;
 		}
@@ -717,9 +720,10 @@ public:
 		char *key1="3_error";
 		key.insert(key.begin(),key1, key1 + strlen(key1) +1);
 		BOOST_CHECK(!GetScriptData(scriptid,key));
-		CheckScriptDB(scriptid,height,writetxhash,true);
+		CheckScriptDB((height+5),scriptid,height,writetxhash,true);
 		int modHeight = chainActive.Height();
 
+		cout<<"end:"<<endl;
 		//// ±éÀú
 		int count = GetScriptSize(scriptid);
         while(count)
@@ -728,7 +732,7 @@ public:
     		string temp = "";
     		temp += tinyformat::format("%02x",param);
     		CreateTx(temp,"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
-        	CheckScriptDB(scriptid,height,writetxhash,true);
+        	CheckScriptDB((height+5),scriptid,height,writetxhash,true);
         	count = GetScriptSize(scriptid);
         }
 
@@ -739,9 +743,9 @@ public:
 			disblock1();
 			count = GetScriptSize(scriptid);
 			if(chainActive.Height() > modHeight){
-			CheckScriptDB(scriptid,height,writetxhash,true);
+			CheckScriptDB((height+5),scriptid,height,writetxhash,true);
 			}else{
-				CheckScriptDB(scriptid,height,writetxhash,false);
+				CheckScriptDB((height+5),scriptid,height,writetxhash,false);
 			}
 			if(count == 1000)
 				break;
@@ -774,6 +778,9 @@ BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 	BOOST_CHECK(0==chainActive.Height());
 	testdb();
 
+//	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
+//	 testdeletmodifydb();
 }
 BOOST_FIXTURE_TEST_CASE(darksecure,CSysScriptTest)
 {
