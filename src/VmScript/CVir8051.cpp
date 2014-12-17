@@ -511,7 +511,7 @@ static RET_DEFINE ExVerifySignatureFunc(unsigned char *ipara,void * pVmScriptRun
 //	GetData(ipara,retdata);
 //	assert(retdata.size() == 3);
     if(!GetData(ipara,retdata) ||retdata.size() != 3||
-    		retdata.at(1).get()->size() != 20||
+    		retdata.at(1).get()->size() != 33||
     		retdata.at(2).get()->size() !=32)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();

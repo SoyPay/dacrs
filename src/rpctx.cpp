@@ -1523,22 +1523,24 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		firt.push_back(Pair("key", HexStr(vScriptKey)));
 		firt.push_back(Pair("value", HexStr(value)));
 		firt.push_back(Pair("height", nHeight));
-		retArray.push_back(firt);
+		//retArray.push_back(firt);
 
-		int listcount = dbsize - 1;
+		int listcount = 0;
 		int count = 0;
+		//// 中间某一页
 		if (dbsize >= pagesize * index) {
-			count = pagesize * (index - 1) - 1;
-			listcount = dbsize - pagesize * (index - 1);
-		} else if (dbsize < pagesize * index && dbsize > index) {
+			count = pagesize * (index - 1) -1;   /// 前面要跳过的条数
+			listcount = pagesize ;            /// 最终要显示的条数
+		} //// 显示最后一页的个数
+		else if (dbsize < pagesize * index && dbsize > pagesize) {
 			int preindex = dbsize / pagesize;
 			count = pagesize * (preindex - 1) - 1;
-			listcount = dbsize - pagesize * (index - 1);
+			listcount = dbsize - count;
+		}else{//// 条数一页就能够显示完
+			listcount = dbsize -1 ;
+			retArray.push_back(firt);
 		}
-		if(listcount > index)
-		{
-			listcount = index;
-		}
+
 		while (count--) {
 			if (!contractScriptTemp.GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
 				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
@@ -1547,7 +1549,7 @@ Value getscriptdata(const Array& params, bool fHelp) {
 
 		while (listcount--) {
 			if (!contractScriptTemp.GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
-				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
+				return retArray;
 			}
 			Object firt;
 			firt.push_back(Pair("key", HexStr(vScriptKey)));
