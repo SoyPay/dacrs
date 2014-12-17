@@ -1483,13 +1483,13 @@ Value getscriptdata(const Array& params, bool fHelp) {
 	if (regid.IsEmpty() == true) {
 		throw runtime_error("in getscriptdata :vscriptid size is error!\n");
 	}
-	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 
-	if (!contractScriptTemp.HaveScript(regid)) {
+	if (!pScriptDBTip->HaveScript(regid)) {
 		throw runtime_error("in getscriptdata :vscriptid id is exist!\n");
 	}
 	Object script;
 	Array retArray;
+	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 	if (params.size() == 2) {
 		vector<unsigned char> key = ParseHex(params[1].get_str());
 		vector<unsigned char> value;
@@ -1516,40 +1516,39 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		vector<unsigned char> vScriptKey;
 		int nHeight = 0;
 
-		if (!contractScriptTemp.GetScriptData(regid, 0, vScriptKey, value, nHeight)) {
+		set<CScriptDBOperLog> setOperLog;
+		if (!contractScriptTemp.GetScriptData(regid, 0, vScriptKey, value, nHeight,setOperLog)) {
 			throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 		}
 		Object firt;
 		firt.push_back(Pair("key", HexStr(vScriptKey)));
 		firt.push_back(Pair("value", HexStr(value)));
 		firt.push_back(Pair("height", nHeight));
-		//retArray.push_back(firt);
+		retArray.push_back(firt);
 
-		int listcount = 0;
+		int listcount = dbsize - 1;
 		int count = 0;
-		//// 中间某一页
 		if (dbsize >= pagesize * index) {
-			count = pagesize * (index - 1) -1;   /// 前面要跳过的条数
-			listcount = pagesize ;            /// 最终要显示的条数
-		} //// 显示最后一页的个数
-		else if (dbsize < pagesize * index && dbsize > pagesize) {
+			count = pagesize * (index - 1) - 1;
+			listcount = dbsize - pagesize * (index - 1);
+		} else if (dbsize < pagesize * index && dbsize > index) {
 			int preindex = dbsize / pagesize;
 			count = pagesize * (preindex - 1) - 1;
-			listcount = dbsize - count;
-		}else{//// 条数一页就能够显示完
-			listcount = dbsize -1 ;
-			retArray.push_back(firt);
+			listcount = dbsize - pagesize * (index - 1);
 		}
-
+		if(listcount > index)
+		{
+			listcount = index;
+		}
 		while (count--) {
-			if (!contractScriptTemp.GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
+			if (!contractScriptTemp.GetScriptData(regid, 1, vScriptKey, value, nHeight,setOperLog)) {
 				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 			}
 		}
 
 		while (listcount--) {
-			if (!contractScriptTemp.GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
-				return retArray;
+			if (!contractScriptTemp.GetScriptData(regid, 1, vScriptKey, value, nHeight,setOperLog)) {
+				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 			}
 			Object firt;
 			firt.push_back(Pair("key", HexStr(vScriptKey)));
@@ -1604,8 +1603,7 @@ Value getscriptdbsize(const Array& params, bool fHelp) {
 	CRegID scriptRegId;
 	scriptRegId.SetRegID(strScriptId);
 	int nDataCount = 0;
-	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
-	if(!contractScriptTemp.GetScriptDataCount(scriptRegId, nDataCount)) {
+	if(!pScriptDBTip->GetScriptDataCount(scriptRegId, nDataCount)) {
 		throw runtime_error("GetScriptDataCount error!");
 	}
 	return nDataCount;

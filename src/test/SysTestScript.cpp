@@ -571,8 +571,8 @@ public:
 		vector<unsigned char> value;
 		vector<unsigned char> vScriptKey;
 		int nHeight = 0;
-		CScriptDBOperLog operLog;
-		if (!contractScriptTemp.GetScriptData(regid, 0, vScriptKey, value, nHeight)) {
+		set<CScriptDBOperLog> setOperLog;
+		if (!contractScriptTemp.GetScriptData(regid, 0, vScriptKey, value, nHeight,setOperLog)) {
 			return false;
 		}
 		uint256 hash1(value);
@@ -589,7 +589,7 @@ public:
 
 		int count = dbsize - 1;
 		while (count--) {
-			if (!contractScriptTemp.GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
+			if (!contractScriptTemp.GetScriptData(regid, 1, vScriptKey, value, nHeight,setOperLog)) {
 				return false;
 			}
 			uint256 hash3(value);

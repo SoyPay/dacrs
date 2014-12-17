@@ -88,7 +88,8 @@ void testscriptdatadb() {
 
 	BOOST_CHECK(pTestView->GetScriptData(regScriptId,vScriptKey,vScriptData,height,operlog));
 	pTestView->GetScriptCount(height);
-//	BOOST_CHECK(pTestView->GetScriptData(regScriptId, 0, vScriptKey, vScriptData, height));
+	set<CScriptDBOperLog> setOperLog;
+	BOOST_CHECK(pTestView->GetScriptData(regScriptId, 0, vScriptKey, vScriptData, height, setOperLog));
 	BOOST_CHECK(pTestView->SetScriptData(regScriptId, vScriptKey, vScriptData, 100, operlog));
 
 	//write script data to db
@@ -115,11 +116,11 @@ void testscriptdatadb() {
 	vector<unsigned char> vKey;
 	vKey.clear();
 	nValidHeight = 0;
-//	BOOST_CHECK(pTestView->GetScriptData(regScriptId, 0, vKey, vScript, nValidHeight));
+	BOOST_CHECK(pTestView->GetScriptData(regScriptId, 0, vKey, vScript, nValidHeight, setOperLog));
 	BOOST_CHECK(vKey == vScriptKey);
 	BOOST_CHECK(vScript == vScriptData);
 	BOOST_CHECK_EQUAL(nValidHeight,100);
-//	BOOST_CHECK(pTestView->GetScriptData(regScriptId, 1, vKey, vScript, nValidHeight));
+	BOOST_CHECK(pTestView->GetScriptData(regScriptId, 1, vKey, vScript, nValidHeight, setOperLog));
 	BOOST_CHECK(vKey == vScriptKey1);
 	BOOST_CHECK(vScript == vScriptData1);
 	BOOST_CHECK_EQUAL(nValidHeight,101);
@@ -127,7 +128,7 @@ void testscriptdatadb() {
 	BOOST_CHECK(pTestView->EraseScriptData(regScriptId, vScriptKey, operlog));
 	vKey.clear();
 	vScript.clear();
-//	BOOST_CHECK(pTestView->GetScriptData(regScriptId, 0, vKey, vScript, nValidHeight));
+	BOOST_CHECK(pTestView->GetScriptData(regScriptId, 0, vKey, vScript, nValidHeight, setOperLog));
 	BOOST_CHECK(vKey == vScriptKey1);
 	BOOST_CHECK(vScript == vScriptData1);
 	BOOST_CHECK_EQUAL(nValidHeight,101);

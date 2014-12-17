@@ -1075,6 +1075,10 @@ public:
 		str += "\n";
 		return str;
 	}
+
+	friend bool operator<(const CScriptDBOperLog &log1, const CScriptDBOperLog &log2) {
+		return log1.vKey < log2.vKey;
+	}
 };
 
 
