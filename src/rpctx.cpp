@@ -1515,7 +1515,8 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		vector<unsigned char> vScriptKey;
 		int nHeight = 0;
 
-		if (!pScriptDBTip->GetScriptData(regid, 0, vScriptKey, value, nHeight)) {
+		set<CScriptDBOperLog> setOperLog;
+		if (!pScriptDBTip->GetScriptData(regid, 0, vScriptKey, value, nHeight, setOperLog)) {
 			throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 		}
 		Object firt;
@@ -1539,13 +1540,13 @@ Value getscriptdata(const Array& params, bool fHelp) {
 			listcount = index;
 		}
 		while (count--) {
-			if (!pScriptDBTip->GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
+			if (!pScriptDBTip->GetScriptData(regid, 1, vScriptKey, value, nHeight, setOperLog)) {
 				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 			}
 		}
 
 		while (listcount--) {
-			if (!pScriptDBTip->GetScriptData(regid, 1, vScriptKey, value, nHeight)) {
+			if (!pScriptDBTip->GetScriptData(regid, 1, vScriptKey, value, nHeight, setOperLog)) {
 				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 			}
 			Object firt;

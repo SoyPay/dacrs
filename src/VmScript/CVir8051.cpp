@@ -999,8 +999,13 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
 	}
 
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
-
-	flag = scriptDB->GetScriptData(scriptid,index,vScriptKey,vValue,nHeight);
+	set<CScriptDBOperLog> setOperLog;
+	flag = scriptDB->GetScriptData(scriptid,index,vScriptKey,vValue,nHeight,setOperLog);
+	if (!setOperLog.empty()) {
+		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
+		for(auto &item : setOperLog)
+			m_dblog.get()->push_back(item);
+	}
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     (*tem.get()).push_back(vScriptKey);
