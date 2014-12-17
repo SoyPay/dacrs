@@ -215,7 +215,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		//// 这个账号已经存在，需要合并
 		if (vnewAccount.get() != NULL) {
 			vmAccount = vnewAccount;
-			vmAccount.get()->CompactAccount(height - 1);
+			vmAccount.get()->CompactAccount(height);
 		}
 		if ((OperType) it.opeatortype == ADD_FREE) {
 			fund.nFundType = FREEDOM_FUND;
