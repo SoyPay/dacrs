@@ -1476,7 +1476,7 @@ Value getscriptdata(const Array& params, bool fHelp) {
 				"\"contract tx str\": (string)\n";
 		throw runtime_error(msg);
 	}
-
+	int height = chainActive.Height();
 //	//RPCTypeCheck(params, list_of(str_type)(int_type)(int_type));
 //	vector<unsigned char> vscriptid = ParseHex(params[0].get_str());
 	CRegID regid(params[0].get_str());
@@ -1495,7 +1495,7 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		vector<unsigned char> value;
 		int nHeight = 0;
 		CScriptDBOperLog operLog;
-		if (!contractScriptTemp.GetScriptData(regid, key, value, nHeight, operLog)) {
+		if (!contractScriptTemp.GetScriptData(height,regid, key, value, nHeight, operLog)) {
 			throw runtime_error("in getscriptdata :the key not exist!\n");
 		}
 		script.push_back(Pair("scritpid", params[0].get_str()));
@@ -1517,7 +1517,7 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		int nHeight = 0;
 
 		set<CScriptDBOperLog> setOperLog;
-		if (!contractScriptTemp.GetScriptData(regid, 0, vScriptKey, value, nHeight,setOperLog)) {
+		if (!contractScriptTemp.GetScriptData(height,regid, 0, vScriptKey, value, nHeight,setOperLog)) {
 			throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 		}
 		Object firt;
@@ -1540,13 +1540,13 @@ Value getscriptdata(const Array& params, bool fHelp) {
 			retArray.push_back(firt);
 		}
 		while (count--) {
-			if (!contractScriptTemp.GetScriptData(regid, 1, vScriptKey, value, nHeight,setOperLog)) {
+			if (!contractScriptTemp.GetScriptData(height,regid, 1, vScriptKey, value, nHeight,setOperLog)) {
 				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
 			}
 		}
 
 		while (listcount--) {
-			if (!contractScriptTemp.GetScriptData(regid, 1, vScriptKey, value, nHeight,setOperLog)) {
+			if (!contractScriptTemp.GetScriptData(height,regid, 1, vScriptKey, value, nHeight,setOperLog)) {
 				return retArray;
 			}
 			Object firt;
