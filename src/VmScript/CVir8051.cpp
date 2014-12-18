@@ -125,8 +125,9 @@ static RET_DEFINE ExInt64CompFunc(unsigned char *ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 //	GetData(ipara,retdata);
 //	assert(retdata.size() == 2);
-    if(!GetData(ipara,retdata) || retdata.size() != 2)
-    {
+	 if(!GetData(ipara,retdata) || retdata.size() != 2||
+	    	retdata.at(0).get()->size() != sizeof(int64_t)||retdata.at(1).get()->size() != sizeof(int64_t))
+	    {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
@@ -165,8 +166,9 @@ static RET_DEFINE ExInt64MullFunc(unsigned char *ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 //	GetData(ipara,retdata);
 //	assert(retdata.size() == 2);
-    if(!GetData(ipara,retdata) ||retdata.size() != 2)
-    {
+	 if(!GetData(ipara,retdata) ||retdata.size() != 2||
+	        	retdata.at(0).get()->size() != sizeof(int64_t)||retdata.at(1).get()->size() != sizeof(int64_t))
+	    {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
@@ -207,7 +209,8 @@ static RET_DEFINE ExInt64AddFunc(unsigned char *ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 //	GetData(ipara,retdata);
 //	assert(retdata.size() == 2);
-    if(!GetData(ipara,retdata) ||retdata.size() != 2)
+    if(!GetData(ipara,retdata) ||retdata.size() != 2||
+        retdata.at(0).get()->size() != sizeof(int64_t)||retdata.at(1).get()->size() != sizeof(int64_t))
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
@@ -251,7 +254,8 @@ static RET_DEFINE ExInt64SubFunc(unsigned char *ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 //	GetData(ipara,retdata);
 //	assert(retdata.size() == 2);
-    if(!GetData(ipara,retdata) ||retdata.size() != 2)
+    if(!GetData(ipara,retdata) ||retdata.size() != 2||
+            retdata.at(0).get()->size() != sizeof(int64_t)||retdata.at(1).get()->size() != sizeof(int64_t))
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
@@ -296,7 +300,8 @@ static RET_DEFINE ExInt64DivFunc(unsigned char *ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 //	GetData(ipara,retdata);
 //	assert(retdata.size() == 2);
-    if(!GetData(ipara,retdata) ||retdata.size() != 2)
+    if(!GetData(ipara,retdata) ||retdata.size() != 2||
+            retdata.at(0).get()->size() != sizeof(int64_t)||retdata.at(1).get()->size() != sizeof(int64_t))
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
@@ -505,7 +510,9 @@ static RET_DEFINE ExVerifySignatureFunc(unsigned char *ipara,void * pVmScriptRun
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 //	GetData(ipara,retdata);
 //	assert(retdata.size() == 3);
-    if(!GetData(ipara,retdata) ||retdata.size() != 3)
+    if(!GetData(ipara,retdata) ||retdata.size() != 3||
+    		retdata.at(1).get()->size() != 33||
+    		retdata.at(2).get()->size() !=32)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
@@ -610,14 +617,14 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 //	GetData(ipara,retdata);
 //	assert(retdata.size() == 1);
-    if(!GetData(ipara,retdata) ||retdata.size() != 1)
+    if(!GetData(ipara,retdata) ||retdata.size() != 1 || retdata.at(0).get()->size() != 32)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
 	uint256 hash1(*retdata.at(0));
 	//cout<<"ExGetTxContractsFunc1:"<<hash1.GetHex()<<endl;
-	LogPrint("vm","ExGetTxContractsFunc1:%s\n",hash1.GetHex().c_str());
+//	LogPrint("vm","ExGetTxContractsFunc1:%s\n",hash1.GetHex().c_str());
 
 
 	std::shared_ptr<CBaseTransaction> pBaseTx;
@@ -635,7 +642,7 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 	vector<std::shared_ptr<vector<unsigned char> > > retdata;
 //	GetData(ipara, retdata);
 //	assert(retdata.size() == 1);
-    if(!GetData(ipara,retdata) ||retdata.size() != 1)
+    if(!GetData(ipara,retdata) ||retdata.size() != 1|| retdata.at(0).get()->size() != 32)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
@@ -670,14 +677,13 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 //	GetData(ipara,retdata);
 //	assert(retdata.size() == 1);
-    if(!GetData(ipara,retdata) ||retdata.size() != 1)
+    if(!GetData(ipara,retdata) ||retdata.size() != 1|| retdata.at(0).get()->size() != 6)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
     bool flag = true;
 
-	string strParam((*retdata[0]).begin(), (*retdata[0]).end());
 	CAccount aAccount;
 	CRegID regid(*retdata.at(0));
 	CUserID userid(regid);
@@ -700,13 +706,12 @@ static RET_DEFINE ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScri
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 //	GetData(ipara,retdata);
 //	assert(retdata.size() == 1);
-    if(!GetData(ipara,retdata) ||retdata.size() != 1)
+    if(!GetData(ipara,retdata) ||retdata.size() != 1|| retdata.at(0).get()->size() != 6)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
 	bool flag = true;
-	string strParam((*retdata[0]).begin(), (*retdata[0]).end());
 	CAccount aAccount;
 	CRegID regid(*retdata.at(0));
 	CUserID userid(regid);
@@ -726,14 +731,14 @@ static RET_DEFINE ExGetTxConFirmHeightFunc(unsigned char * ipara,void * pVmScrip
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 //	GetData(ipara,retdata);
 //	assert(retdata.size() == 1);
-    if(!GetData(ipara,retdata) ||retdata.size() != 1)
+    if(!GetData(ipara,retdata) ||retdata.size() != 1|| retdata.at(0).get()->size() != 32)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
 	uint256 hash1(*retdata.at(0));
 	//cout<<"ExGetTxContractsFunc1:"<<hash1.GetHex()<<endl;
-	LogPrint("vm","ExGetTxContractsFunc1:%s",hash1.GetHex().c_str());
+//	LogPrint("vm","ExGetTxContractsFunc1:%s",hash1.GetHex().c_str());
 
 
 	std::shared_ptr<CBaseTransaction> pBaseTx;
