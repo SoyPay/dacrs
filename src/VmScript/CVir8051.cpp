@@ -1006,6 +1006,7 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
 	set<CScriptDBOperLog> setOperLog;
 	flag = scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid,index,vScriptKey,vValue,nHeight,setOperLog);
+
 	if (!setOperLog.empty()) {
 		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
 		for(auto &item : setOperLog)
