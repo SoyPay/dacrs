@@ -754,8 +754,8 @@ bool CScriptDBViewCache::EraseScriptData(const vector<unsigned char> &vKey) {
 	if(vKey.size() < 12) {
 		assert(0);
 	}
-	vector<unsigned char> vScriptId(vKey.begin()+3, vKey.begin()+9);
-	vector<unsigned char> vScriptKey(vKey.begin()+10, vKey.end());
+	vector<unsigned char> vScriptId(vKey.begin()+4, vKey.begin()+10);
+	vector<unsigned char> vScriptKey(vKey.begin()+11, vKey.end());
 	CScriptDBOperLog operLog;
 	return EraseScriptData(vScriptId, vScriptKey, operLog);
 }
@@ -810,8 +810,20 @@ bool CScriptDBViewCache::GetScriptData(const CRegID &scriptId, const int &nIndex
 	bool bRet = GetScriptData(scriptId.GetVec6(), nIndex, vScriptKey, vScriptData, nHeight, setOperLog);
 	if(!setOperLog.empty()) {    //删除已经超时的数据项
 		for(auto &item : setOperLog) {
-			if(!EraseScriptData(item.vKey))
+			if(!EraseScriptData(item.vKey)) {
+
+				CDataStream ds(item.vValue, SER_DISK, CLIENT_VERSION);
+				int nHeight;
+				vector<unsigned char> vScriptData;
+				ds >> nHeight;
+				ds >> vScriptData;
+				vector<unsigned char> vScriptId(item.vKey.begin()+4, item.vKey.begin()+10);
+				vector<unsigned char> vDefineKey(item.vKey.begin()+11, item.vKey.end());
+				CRegID regId;
+				regId.SetRegID(vScriptId);
+				LogPrint("ERROR", "vScriptId:%s, vScriptKey:%s, nHeight:%d  vScriptData:%s\n", regId.ToString(), HexStr(vDefineKey), nHeight, HexStr(vScriptData));
 				return ERROR("GetScriptData() delete timeout script data item of super level db error");
+			}
 		}
 	}
 	return bRet;
@@ -819,7 +831,7 @@ bool CScriptDBViewCache::GetScriptData(const CRegID &scriptId, const int &nIndex
 bool CScriptDBViewCache::SetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
 			const vector<unsigned char> &vScriptData, const int nHeight, CScriptDBOperLog &operLog) {
 	bool  temp =SetScriptData(scriptId.GetVec6(), vScriptKey, vScriptData, nHeight, operLog);
-	LogPrint("SetScriptData","SetScriptData sriptid ID:%s key:%s value:%s ret: %d %p \r\n",scriptId.ToString(),HexStr(vScriptKey),HexStr(vScriptData),temp,this);
+	LogPrint("SetScriptData","SetScriptData sriptid ID:%s key:%s value:%s height:%d, ret: %d %p \r\n",scriptId.ToString(), HexStr(vScriptKey), HexStr(vScriptData), nHeight, temp, this);
 	return temp;
 }
 bool CScriptDBViewCache::SetTxRelAccout(const uint256 &txHash, const set<CKeyID> &relAccount) {
