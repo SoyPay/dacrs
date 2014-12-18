@@ -406,10 +406,10 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 				"bad-signscript-check");
 	}
 
-	//锟斤拷锟节斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟捷匡拷锟叫达拷锟节斤拷锟斤拷hash锟斤拷锟剿斤拷锟斤拷锟窖撅拷锟斤拷确锟较癸拷锟斤拷锟斤拷锟斤拷锟斤拷
+	//若在交易索引数据库中存在交易hash，此交易已经被确认过，无须检查
 	CDiskTxPos postx;
 	if (!pblocktree->ReadTxIndex(GetHash(), postx)) {
-		//	//锟斤拷锟斤拷墙锟斤拷妆锟饺凤拷辖锟斤拷锟絙lock锟斤拷时锟斤拷锟斤拷目锟侥碉拷址为keyId时锟斤拷锟斤拷锟斤拷未注锟斤拷锟剿伙拷
+		//	//如果是交易被确认进入block中时，若目的地址为keyId时必须是未注册账户
 			CAccount acctDesInfo;
 			if (desUserId.type() == typeid(CKeyID)) {
 				if (view.GetAccount(desUserId, acctDesInfo) && acctDesInfo.IsRegister()) {
@@ -447,7 +447,7 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 				UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 
 	}
-	//锟桔硷拷小锟斤拷锟斤拷志
+	//扣减小费日志
 	txundo.vAccountOperLog.push_back(sourceAccount.accountOperLog);
 
 	CVmScriptRun vmRun;
