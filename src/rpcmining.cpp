@@ -204,7 +204,7 @@ Value setgenerate(const Array& params, bool fHelp)
             if (nHeightLast != nHeight)
             {
                 nHeightLast = nHeight;
-                GenerateBitcoins(fGenerate, pwalletMain, 1);
+                GenerateSoys(fGenerate, pwalletMain, 1);
             }
             MilliSleep(1);
             {   // Don't keep cs_main locked
@@ -219,7 +219,7 @@ Value setgenerate(const Array& params, bool fHelp)
     	SysCfg().SoftSetArgCover("-gen", fGenerate ?
     			"1" : "0");
     	SysCfg().SoftSetArgCover("-genproclimit", itostr(nGenProcLimit));
-        GenerateBitcoins(fGenerate, pwalletMain, nGenProcLimit);
+        GenerateSoys(fGenerate, pwalletMain, nGenProcLimit);
     }
 
     return Value::null;

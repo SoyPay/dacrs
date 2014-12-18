@@ -538,7 +538,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 		return false;
 	}
 
-	uint64_t maxNonce = SysCfg().GetArg("-blockmaxnonce", 10000); //cacul times
+	uint64_t maxNonce = SysCfg().GetArg("-blockmaxnonce", 100); //cacul times
 
 	uint256 prevblockhash = pPrevIndex->GetBlockHash();
 	const uint256 targetHash = CBigNum().SetCompact(pBlock->nBits).getuint256(); //target hash difficult
@@ -927,8 +927,24 @@ bool CheckWork(CBlock* pblock, CWallet& wallet) {
 
 void static SoypayMiner(CWallet *pwallet) {
 	LogPrint("INFO","Miner started\n");
+
 	SetThreadPriority(THREAD_PRIORITY_LOWEST);
 	RenameThread("soypay-miner");
+
+	{
+		LOCK2(cs_main, pwalletMain->cs_wallet);
+		set<CKeyID> dummy;
+		if (!pwalletMain->GetKeyIds(dummy, true)) {
+			LogPrint("INFO","SoypayMiner  terminated\n");
+		    throw ERROR("ERROR", "no key for minering\n");
+		}
+
+	}
+
+
+
+
+
 
 	// Each thread has its own key and counter
 	unsigned int nExtraNonce = 0;
@@ -952,14 +968,24 @@ void static SoypayMiner(CWallet *pwallet) {
 			if (!pblocktemplate.get())
 				return;
 			CBlock *pblock = &pblocktemplate.get()->block;
-
 			int64_t nStart = GetTime();
-			while (true) {
 
-				pblock->nTime = max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
+			//获取时间 同时等待下次时间到
+		    auto GetNextTimeAndSleep = [&](){
+		    	static unsigned int lasttime = 0xFFFFFFFF ;
+		    	while(max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime()) == lasttime)
+		    	{
+		    		::MilliSleep(800);
+		    	}
+		    	return (lasttime = max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime()));
+		    };
+
+
+			while (true) {
+				pblock->nTime = GetNextTimeAndSleep();// max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
 				set<CKeyID> setCreateKey;
 				setCreateKey.clear();
-				if (CreatePosTx(pindexPrev, pblock,setCreateKey)) {
+				if (CreatePosTx(pindexPrev, pblock, setCreateKey)) {
 
 					SetThreadPriority(THREAD_PRIORITY_NORMAL);
 					CheckWork(pblock, *pwallet);
@@ -967,12 +993,12 @@ void static SoypayMiner(CWallet *pwallet) {
 
 					if (SysCfg().NetworkID() == CBaseParams::REGTEST)
 						throw boost::thread_interrupted();
-					::MilliSleep(800);
+//					::MilliSleep(800);
 					break;
 				}
-				else
-					break;
-				::MilliSleep(800);
+//				else
+//					break;
+//				::MilliSleep(800);
 
 				// Check for stop or if block needs to be rebuilt
 				boost::this_thread::interruption_point();
@@ -1027,7 +1053,7 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 	return uint256(0);
 }
 
-void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads) {
+void GenerateSoys(bool fGenerate, CWallet* pwallet, int nThreads) {
 	static boost::thread_group* minerThreads = NULL;
 
 	if (nThreads != 0) {//in pos system one thread is enough  marked by ranger.shi
