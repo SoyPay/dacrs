@@ -473,7 +473,7 @@ uint256 GetAdjustHash(const uint256 TargetHash, const uint64_t nPos) {
 	return adjusthash;
 }
 extern CWallet* pwalletMain;
-bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock) {
+bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCreateKey) {
 	set<CKeyID> setKeyID;
 	CAccount acctInfo;
 	set<CAccount, CAccountComparator> setAcctInfo;
@@ -511,6 +511,17 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock) {
 		}
 
 		for(const auto &keyid:setKeyID) {
+			//find CAccount info by keyid
+			if(setCreateKey.size()) {
+				bool bfind = false;
+				for(auto &item: setCreateKey){
+					if(item == keyid){
+						bfind = true;
+						break;
+					}
+				}
+				if(!bfind) continue;
+			}
 			CUserID userId = keyid;
 			if (accView.GetAccount(userId, acctInfo)) {
 				//available
@@ -522,6 +533,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock) {
 	}
 
 	if (setAcctInfo.empty()) {
+		setCreateKey.clear();
 		LogPrint("ERROR","CreatePosTx setSecureAcc empty\n");
 		return false;
 	}
@@ -971,10 +983,9 @@ void static SoypayMiner(CWallet *pwallet) {
 
 			while (true) {
 				pblock->nTime = GetNextTimeAndSleep();// max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
-//				set<CKeyID> setCreateKey;
-//				setCreateKey.clear();
-
-				if (CreatePosTx(pindexPrev, pblock)) {
+				set<CKeyID> setCreateKey;
+				setCreateKey.clear();
+				if (CreatePosTx(pindexPrev, pblock, setCreateKey)) {
 
 					SetThreadPriority(THREAD_PRIORITY_NORMAL);
 					CheckWork(pblock, *pwallet);
