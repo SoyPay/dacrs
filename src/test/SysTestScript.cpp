@@ -568,11 +568,12 @@ public:
 		{
 			return true;
 		}
+		int curtiph = chainActive.Height();
 		vector<unsigned char> value;
 		vector<unsigned char> vScriptKey;
 		int nHeight = 0;
 		set<CScriptDBOperLog> setOperLog;
-		if (!contractScriptTemp.GetScriptData(regid, 0, vScriptKey, value, nHeight,setOperLog)) {
+		if (!contractScriptTemp.GetScriptData(curtiph,regid, 0, vScriptKey, value, nHeight,setOperLog)) {
 			return false;
 		}
 		uint256 hash1(value);
@@ -589,7 +590,7 @@ public:
 
 		int count = dbsize - 1;
 		while (count--) {
-			if (!contractScriptTemp.GetScriptData(regid, 1, vScriptKey, value, nHeight,setOperLog)) {
+			if (!contractScriptTemp.GetScriptData(curtiph,regid, 1, vScriptKey, value, nHeight,setOperLog)) {
 				return false;
 			}
 			uint256 hash3(value);
@@ -629,9 +630,9 @@ public:
 			}
 			vector<unsigned char> value;
 			int nHeight = 0;
-
+			int tipH = chainActive.Height();
 			CScriptDBOperLog operLog;
-			if (!contractScriptTemp.GetScriptData(regid,key, value, nHeight,operLog)) {
+			if (!contractScriptTemp.GetScriptData(tipH,regid,key, value, nHeight,operLog)) {
 				return false;
 			}
 			return true;
