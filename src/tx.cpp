@@ -1492,7 +1492,7 @@ bool CAccount::MinusFreezed(const CFund& fund) {
 		return false;
 	}
 
-	assert(it->nHeight < chainActive.Height());
+	assert(it->nHeight > chainActive.Height());
 
 	if (fund.value > it->value) {
 		return false;

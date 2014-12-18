@@ -48,6 +48,7 @@ protected:
 	mutable bool fBenchmark;
 	mutable bool fTxIndex;
 	mutable int64_t nTimeBestReceived;
+
 	int64_t nTargetSpacing;
 	int64_t nTargetTimespan;
 	int64_t nInterval;
@@ -100,6 +101,11 @@ public:
 
 		return te;
 	}
+	virtual int GetBlockMaxNonce() const
+	{
+		return 100;
+	}
+
 	virtual string GetDefaultTestDataPath() const
 	{
 		return string("D:\\bitcoin\\data\\");
@@ -147,6 +153,7 @@ public:
 	bool IsTxIndex() const {
 		return fTxIndex;
 	}
+
 
 	int64_t GetTargetSpacing() const {
 		return nTargetSpacing;
@@ -290,22 +297,7 @@ protected:
 	/********************************************************************/
 
 protected:
-	CBaseParams() {
-		fImporting = false;
-		fReindex = false;
-		fBenchmark = false;
-		fTxIndex = false;
-		nIntervalPos = 1;
-		nTxCacheHeight = 500;
-		nTimeBestReceived = 0;
-		nScriptCheckThreads = 0;
-		nCoinCacheSize = 2000000;
-		nTargetSpacing = /*20;//*/10*60;
-		nTargetTimespan = /*20*3;/*/30 * 60;
-		nInterval = nTargetTimespan / nTargetSpacing;
-		nMaxCoinDay = 30 * 24 * 60 * 60;
-		nSubsidyHalvingInterval = 0;
-	}
+	CBaseParams() ;
 
 	uint256 hashGenesisBlock;
 	MessageStartChars pchMessageStart;

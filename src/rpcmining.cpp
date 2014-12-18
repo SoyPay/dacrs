@@ -170,9 +170,10 @@ Value setgenerate(const Array& params, bool fHelp)
             + HelpExampleRpc("setgenerate", "true, 1")
         );
 
-    if (pwalletMain == NULL)
-        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
 
+    set<CKeyID>dmuy;
+    if(!pwalletMain->GetKeyIds(dmuy,true))
+    	throw JSONRPCError(RPC_INVALID_PARAMS, "no key for mining");
     bool fGenerate = true;
     if (params.size() > 0)
         fGenerate = params[0].get_bool();

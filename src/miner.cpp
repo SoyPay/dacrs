@@ -449,7 +449,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 		return false;
 	}
 
-	uint64_t maxNonce = SysCfg().GetArg("-blockmaxnonce", 100); //cacul times
+	uint64_t maxNonce = SysCfg().GetBlockMaxNonce(); //cacul times
 
 	uint256 prevblockhash = pPrevIndex->GetBlockHash();
 	const uint256 targetHash = CBigNum().SetCompact(pBlock->nBits).getuint256(); //target hash difficult
@@ -550,7 +550,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 
 bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool bJustCheckSign) {
 
-	uint64_t maxNonce = SysCfg().GetArg("-blockmaxnonce", 100); //cacul times
+	uint64_t maxNonce = SysCfg().GetBlockMaxNonce(); //cacul times
 
 	if (pBlock->nNonce > maxNonce) {
 		LogPrint("ERROR", "Nonce is larger than maxNonce\r\n");
@@ -853,10 +853,6 @@ void static SoypayMiner(CWallet *pwallet) {
 	}
 
 
-
-	// Each thread has its own key and counter
-	unsigned int nExtraNonce = 0;
-
 	try {
 		while (true) {
 			if (SysCfg().NetworkID() != CBaseParams::REGTEST) {
@@ -878,19 +874,21 @@ void static SoypayMiner(CWallet *pwallet) {
 			CBlock *pblock = &pblocktemplate.get()->block;
 			int64_t nStart = GetTime();
 
-			//获取时间 同时等待下次时间到
-		    auto GetNextTimeAndSleep = [&](){
-		    	static unsigned int lasttime = 0xFFFFFFFF ;
-		    	while(max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime()) == lasttime)
-		    	{
-		    		::MilliSleep(800);
-		    	}
-		    	return (lasttime = max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime()));
-		    };
+
 
 
 			while (true) {
-				pblock->nTime = GetNextTimeAndSleep();// max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
+				unsigned int lasttime = 0xFFFFFFFF;
+				//获取时间 同时等待下次时间到
+				auto GetNextTimeAndSleep = [&]() {
+					while(max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime()) == lasttime)
+					{
+						::MilliSleep(800);
+					}
+					return (lasttime = max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime()));
+				};
+
+				pblock->nTime = GetNextTimeAndSleep();	// max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
 				set<CKeyID> setCreateKey;
 				setCreateKey.clear();
 				if (CreatePosTx(pindexPrev, pblock, setCreateKey)) {
