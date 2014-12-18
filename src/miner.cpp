@@ -923,9 +923,8 @@ void static SoypayMiner(CWallet *pwallet) {
 		LOCK2(cs_main, pwalletMain->cs_wallet);
 		set<CKeyID> dummy;
 		if (!pwalletMain->GetKeyIds(dummy, true)) {
-			ERROR("ERROR", "no key for minering\n");
 			LogPrint("INFO","SoypayMiner  terminated\n");
-		    throw;
+		    throw ERROR("ERROR", "no key for minering\n");
 		}
 
 	}
@@ -1043,7 +1042,7 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 	return uint256(0);
 }
 
-void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads) {
+void GenerateSoys(bool fGenerate, CWallet* pwallet, int nThreads) {
 	static boost::thread_group* minerThreads = NULL;
 
 	if (nThreads != 0) {//in pos system one thread is enough  marked by ranger.shi
