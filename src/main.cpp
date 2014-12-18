@@ -47,7 +47,7 @@ CCriticalSection cs_main;
 
 CTxMemPool mempool;
 
-static const unsigned int nStakeTargetSpacing = 60;  // 60 sec block spacing
+//static const unsigned int nStakeTargetSpacing = 60;  // 60 sec block spacing
 map<uint256, CBlockIndex*> mapBlockIndex;
 CChain chainActive;
 CChain chainMostWork;
@@ -965,8 +965,8 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 
 		CBigNum bnNew;
 		bnNew.SetCompact(pindexPrev->nBits);
-		int64_t nTargetSpacing = nStakeTargetSpacing;
-		int64_t nInterval = SysCfg().GetTargetTimespan() / nTargetSpacing;
+		int64_t nTargetSpacing = SysCfg().GetTargetSpacing(); //nStakeTargetSpacing;
+		int64_t nInterval = SysCfg().GetInterval();//SysCfg().GetTargetTimespan() / nTargetSpacing;
 		bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
 		bnNew /= ((nInterval + 1) * nTargetSpacing);
 

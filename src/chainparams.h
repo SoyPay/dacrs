@@ -300,8 +300,8 @@ protected:
 		nTimeBestReceived = 0;
 		nScriptCheckThreads = 0;
 		nCoinCacheSize = 2000000;
-		nTargetSpacing = 10*60;
-		nTargetTimespan = 30 * 60;
+		nTargetSpacing = /*20;//*/10*60;
+		nTargetTimespan = /*20*3;/*/30 * 60;
 		nInterval = nTargetTimespan / nTargetSpacing;
 		nMaxCoinDay = 30 * 24 * 60 * 60;
 		nSubsidyHalvingInterval = 0;

@@ -11,7 +11,7 @@
 #include "net.h"
 
 #include "wallet.h"
-
+extern CWallet* pwalletMain;
 //////////////////////////////////////////////////////////////////////////////
 //
 // SoyPayMiner
@@ -34,22 +34,22 @@ int static FormatHashBlocks(void* pbuffer, unsigned int len) {
 static const unsigned int pSHA256InitState[8] = { 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f,
 		0x9b05688c, 0x1f83d9ab, 0x5be0cd19 };
 
-void SHA256Transform(void* pstate, void* pinput, const void* pinit) {
-	SHA256_CTX ctx;
-	unsigned char data[64];
-
-	SHA256_Init(&ctx);
-
-	for (int i = 0; i < 16; i++)
-		((uint32_t*) data)[i] = ByteReverse(((uint32_t*) pinput)[i]);
-
-	for (int i = 0; i < 8; i++)
-		ctx.h[i] = ((uint32_t*) pinit)[i];
-
-	SHA256_Update(&ctx, data, sizeof(data));
-	for (int i = 0; i < 8; i++)
-		((uint32_t*) pstate)[i] = ctx.h[i];
-}
+//void SHA256Transform(void* pstate, void* pinput, const void* pinit) {
+//	SHA256_CTX ctx;
+//	unsigned char data[64];
+//
+//	SHA256_Init(&ctx);
+//
+//	for (int i = 0; i < 16; i++)
+//		((uint32_t*) data)[i] = ByteReverse(((uint32_t*) pinput)[i]);
+//
+//	for (int i = 0; i < 8; i++)
+//		ctx.h[i] = ((uint32_t*) pinit)[i];
+//
+//	SHA256_Update(&ctx, data, sizeof(data));
+//	for (int i = 0; i < 8; i++)
+//		((uint32_t*) pstate)[i] = ctx.h[i];
+//}
 
 // Some explaining would be appreciated
 class COrphan {
@@ -330,95 +330,6 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
 	pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 }
 
-void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash1) {
-	//
-	// Pre-build hash buffers
-	//
-	struct {
-		struct unnamed2 {
-			int nVersion;
-			uint256 hashPrevBlock;
-			uint256 hashMerkleRoot;
-			unsigned int nTime;
-			unsigned int nBits;
-			unsigned int nNonce;
-		} block;
-		unsigned char pchPadding0[64];
-		uint256 hash1;
-		unsigned char pchPadding1[64];
-	} tmp;
-	memset(&tmp, 0, sizeof(tmp));
-
-	tmp.block.nVersion = pblock->nVersion;
-	tmp.block.hashPrevBlock = pblock->hashPrevBlock;
-	tmp.block.hashMerkleRoot = pblock->hashMerkleRoot;
-	tmp.block.nTime = pblock->nTime;
-	tmp.block.nBits = pblock->nBits;
-	tmp.block.nNonce = pblock->nNonce;
-
-	FormatHashBlocks(&tmp.block, sizeof(tmp.block));
-	FormatHashBlocks(&tmp.hash1, sizeof(tmp.hash1));
-
-	// Byte swap all the input buffer
-	for (unsigned int i = 0; i < sizeof(tmp) / 4; i++)
-		((unsigned int*) &tmp)[i] = ByteReverse(((unsigned int*) &tmp)[i]);
-
-	// Precalc the first half of the first hash, which stays constant
-	SHA256Transform(pmidstate, &tmp.block, pSHA256InitState);
-
-	memcpy(pdata, &tmp.block, 128);
-	memcpy(phash1, &tmp.hash1, 64);
-}
-
-
-//////////////////////////////////////////////////////////////////////////////
-//
-// Internal miner
-//
-double dHashesPerSec = 0.0;
-int64_t nHPSTimerStart = 0;
-
-//
-// ScanHash scans nonces looking for a hash with at least some zero bits.
-// It operates on big endian data.  Caller does the byte reversing.
-// All input buffers are 16-byte aligned.  nNonce is usually preserved
-// between calls, but periodically or if nNonce is 0xffff0000 or above,
-// the block is rebuilt and nNonce starts over at zero.
-//
-unsigned int static ScanHash_CryptoPP(char* pmidstate, char* pdata, char* phash1, char* phash,
-		unsigned int& nHashesDone) {
-	unsigned int& nNonce = *(unsigned int*) (pdata + 12);
-	for (;;) {
-		// Crypto++ SHA256
-		// Hash pdata using pmidstate as the starting state into
-		// pre-formatted buffer phash1, then hash phash1 into phash
-		nNonce++;
-		SHA256Transform(phash1, pdata, pmidstate);
-		SHA256Transform(phash, phash1, pSHA256InitState);
-
-		// Return the nonce if the hash has at least some zero bits,
-		// caller will check if it has enough to reach the target
-		if (((unsigned short*) phash)[14] == 0)
-			return nNonce;
-
-		// If nothing found after trying for a while, return -1
-		if ((nNonce & 0xffff) == 0) {
-			nHashesDone = 0xffff + 1;
-			return (unsigned int) -1;
-		}
-		if ((nNonce & 0xfff) == 0)
-			boost::this_thread::interruption_point();
-	}
-}
-
-//CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey) {
-//	CPubKey pubkey;
-//	if (!reservekey.GetReservedKey(pubkey))
-//		return NULL;
-//
-//	CScript scriptPubKey = CScript() << pubkey << OP_CHECKSIG;
-//	return CreateNewBlock(scriptPubKey);
-//}
 
 struct CAccountComparator {
 	bool operator()(const CAccount &a, const CAccount&b) {
@@ -472,7 +383,7 @@ uint256 GetAdjustHash(const uint256 TargetHash, const uint64_t nPos) {
 
 	return adjusthash;
 }
-extern CWallet* pwalletMain;
+
 bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCreateKey) {
 	set<CKeyID> setKeyID;
 	CAccount acctInfo;
@@ -605,7 +516,6 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 					prtx->account = regid;
 					prtx->nHeight = pPrevIndex->nHeight+1;
 					pBlock->hashMerkleRoot = pBlock->BuildMerkleTree();
-//					vector<unsigned char> vRegId = regid.GetVec6();
 					LogPrint("MINER","Miner hight:%d time:%s addr = %s \r\n",prtx->nHeight,DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()),item.keyID.ToAddress());
 					LogPrint("INFO", "find pos tx hash succeed: \n"
 									  "   pos hash:%s \n"
@@ -640,7 +550,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 
 bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool bJustCheckSign) {
 
-	uint64_t maxNonce = SysCfg().GetArg("-blockmaxnonce", 10000); //cacul times
+	uint64_t maxNonce = SysCfg().GetArg("-blockmaxnonce", 100); //cacul times
 
 	if (pBlock->nNonce > maxNonce) {
 		LogPrint("ERROR", "Nonce is larger than maxNonce\r\n");
@@ -936,13 +846,11 @@ void static SoypayMiner(CWallet *pwallet) {
 		set<CKeyID> dummy;
 		if (!pwalletMain->GetKeyIds(dummy, true)) {
 			LogPrint("INFO","SoypayMiner  terminated\n");
-		    throw ERROR("ERROR", "no key for minering\n");
+		    ERROR("ERROR:%s ", "no key for minering\n");
+		    throw ;
 		}
 
 	}
-
-
-
 
 
 
