@@ -384,7 +384,7 @@ bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, v
 		return false;
 	return true;
 }
-bool CScriptDB::GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
+bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex,
 		vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight, set<CScriptDBOperLog> &setOperLog) {
 	const int iPrefixLen = 4;
 	const int iScriptIdLen = 6;
@@ -425,7 +425,7 @@ bool CScriptDB::GetScriptData(const vector<unsigned char> &vScriptId, const int 
 					vScriptKey.clear();
 					vScriptKey.insert(vScriptKey.end(), slKey.data() + iPrefixLen + iScriptIdLen + iSpaceLen,
 							slKey.data() + slKey.size());
-					if (nHeight < chainActive.Tip()->nHeight) {    //遍历到如果有数据超时的情况，将超时数据记录到操作日志中，返回给下级备操作
+					if (nHeight <= curBlockHeight) {    //遍历到如果有数据超时的情况，将超时数据记录到操作日志中，返回给下级备操作
 						CScriptDBOperLog operLog;                  //继续遍历往前遍历查找合法的数据
 						vector<unsigned char> vKey(slKey.data(), slKey.data() + slKey.size());
 						vector<unsigned char> vValue;
