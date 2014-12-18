@@ -406,10 +406,10 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 				"bad-signscript-check");
 	}
 
-	//ÈôÔÚ½»Ò×Ë÷ÒýÊý¾Ý¿âÖÐ´æÔÚ½»Ò×hash£¬´Ë½»Ò×ÒÑ¾­±»È·ÈÏ¹ý£¬ÎÞÐë¼ì²é
+	//ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½Ð´ï¿½ï¿½Ú½ï¿½ï¿½ï¿½hashï¿½ï¿½ï¿½Ë½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½È·ï¿½Ï¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	CDiskTxPos postx;
 	if (!pblocktree->ReadTxIndex(GetHash(), postx)) {
-		//	//Èç¹ûÊÇ½»Ò×±»È·ÈÏ½øÈëblockÖÐÊ±£¬ÈôÄ¿µÄµØÖ·ÎªkeyIdÊ±±ØÐëÊÇÎ´×¢²áÕË»§
+		//	//ï¿½ï¿½ï¿½ï¿½Ç½ï¿½ï¿½×±ï¿½È·ï¿½Ï½ï¿½ï¿½ï¿½blockï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½Äµï¿½Ö·ÎªkeyIdÊ±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î´×¢ï¿½ï¿½ï¿½Ë»ï¿½
 			CAccount acctDesInfo;
 			if (desUserId.type() == typeid(CKeyID)) {
 				if (view.GetAccount(desUserId, acctDesInfo) && acctDesInfo.IsRegister()) {
@@ -447,7 +447,7 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 				UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 
 	}
-	//¿Û¼õÐ¡·ÑÈÕÖ¾
+	//ï¿½Û¼ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½Ö¾
 	txundo.vAccountOperLog.push_back(sourceAccount.accountOperLog);
 
 	CVmScriptRun vmRun;
@@ -1492,7 +1492,7 @@ bool CAccount::MinusFreezed(const CFund& fund) {
 		return false;
 	}
 
-	assert(it->nHeight < chainActive.Height());
+	assert(it->nHeight > chainActive.Height());
 
 	if (fund.value > it->value) {
 		return false;
