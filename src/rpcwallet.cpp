@@ -51,6 +51,7 @@ Value getnewaddress(const Array& params, bool fHelp)
         	"1. \"IsMiner\"  (bool)  private key Is used for miner if true will create tow key ,another for miner.\n"
            "\nExamples:\n"
             + HelpExampleCli("getnewaddress", "")
+            + HelpExampleCli("getnewaddress", "true")
         );
 
     // Parse the account first so we don't generate a key if there's an error

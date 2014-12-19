@@ -529,7 +529,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 //					cout << "miner keyid's pubkey:" << HexStr(tep.begin(),tep.end()) << endl;
 //					cout << "miner item's accont:" << item.ToString() << endl;
 
-					if (pwalletMain->Sign(item.keyID,pBlock->SignatureHash(), pBlock->vSignature,true)) {
+					if (pwalletMain->Sign(item.keyID,pBlock->SignatureHash(), pBlock->vSignature,item.MinerPKey.IsValid())) {
 //						cout << "miner signature:" << HexStr(pBlock->vSignature) << endl;
 						LogPrint("INFO","Create new block,hash:%s\n", pBlock->GetHash().GetHex());
 						return true;
@@ -586,10 +586,9 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 
 		if (view.GetAccount(prtx->account, account)) {
 			//available acc
-//			cout << "check block hash:" << pBlock->SignatureHash().GetHex() << endl;
+//     		cout << "check block hash:" << pBlock->SignatureHash().GetHex() << endl;
 //			cout << "check signature:" << HexStr(pBlock->vSignature) << endl;
-//			cout << "check secureAcc " << secureAcc.ToString() << endl;
-//			cout << "miner regId :" << secureAcc.regID.ToString() << endl;
+//			cout <<"account miner"<< account.ToString()<< endl;
 
 			if (!account.PublicKey.Verify(pBlock->SignatureHash(), pBlock->vSignature)) {
 				if (!account.MinerPKey.Verify(pBlock->SignatureHash(), pBlock->vSignature)) {

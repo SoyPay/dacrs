@@ -120,11 +120,15 @@ static bool GetData(unsigned char * ipara, vector<std::shared_ptr < std::vector<
 	}
 	return true;
 }
-
+/**
+ *
+ * 这个函数式从中间层传了两个参数过来:
+ * 1.第一个是int64_t类型的数据
+ * 2.第一个是int64_t类型的数据
+ */
 static RET_DEFINE ExInt64CompFunc(unsigned char *ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 2);
+
 	 if(!GetData(ipara,retdata) || retdata.size() != 2||
 	    	retdata.at(0).get()->size() != sizeof(int64_t)||retdata.at(1).get()->size() != sizeof(int64_t))
 	    {
@@ -135,8 +139,7 @@ static RET_DEFINE ExInt64CompFunc(unsigned char *ipara,void * pVmScriptRun) {
 	unsigned char rslt;
 	memcpy(&m1,  &retdata.at(0).get()->at(0), sizeof(m1));
 	memcpy(&m2,  &retdata.at(1).get()->at(0), sizeof(m2));
-//	printf("m1:%I64d\r\n", m1);
-//	printf("m2:%I64d\r\n", m2);
+
 	if (m1 > m2) {
 		rslt = 2;
 	} else if (m1 == m2) {
@@ -145,14 +148,6 @@ static RET_DEFINE ExInt64CompFunc(unsigned char *ipara,void * pVmScriptRun) {
 		rslt = 1;
 	}
 
-////	printf("rslt:%d\r\n", rslt);
-//	memset(ipara, 0, 512);
-//	int length = sizeof(rslt);
-//	memcpy(ipara, &length, 2);
-//	//ipara[0] = sizeof(rslt);
-//	memcpy(&ipara[2], &rslt, sizeof(rslt));
-
-//	return true;
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << rslt;
@@ -161,40 +156,26 @@ static RET_DEFINE ExInt64CompFunc(unsigned char *ipara,void * pVmScriptRun) {
 
 	return std::make_tuple (true, tem);
 }
-
+/**
+ *
+ * 这个函数式从中间层传了两个参数过来:
+ * 1.第一个是int64_t类型的数据
+ * 2.第一个是int64_t类型的数据
+ */
 static RET_DEFINE ExInt64MullFunc(unsigned char *ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 2);
+
 	 if(!GetData(ipara,retdata) ||retdata.size() != 2||
 	        	retdata.at(0).get()->size() != sizeof(int64_t)||retdata.at(1).get()->size() != sizeof(int64_t))
 	    {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
-	//	printf("the call func:%s\r\n", __FUNCTION__);
 
-//	unsigned char *pbuf = ipara;
-//	unsigned short len = GetParaLen(pbuf);
-////	printf("the total len:%d\r\n", len);
-//	unsigned short data1len = GetParaLen(pbuf);
-//	unsigned char *pdata1 = NULL;
-//	GetParaData(pbuf, pdata1, data1len);
-//	unsigned short data2len = GetParaLen(pbuf);
-//	unsigned char *pdata2 = NULL;
-//	GetParaData(pbuf, pdata2, data2len);
-//	printf("len:%d the data1:%s\r\n", data1len, HexStr(pdata1, pdata1 + data1len, true).c_str());
-//	printf("len:%d the data2:%s\r\n", data2len, HexStr(pdata2, pdata2 + data2len, true).c_str());
 	int64_t m1, m2, m3;
 	memcpy(&m1, &retdata.at(0).get()->at(0), sizeof(m1));
 	memcpy(&m2, &retdata.at(1).get()->at(0), sizeof(m2));
-//	printf("m1:%I64d\r\n", m1);
-//	printf("m2:%I64d\r\n", m2);
 	m3 = m1 * m2;
-//	printf("m3:%I64d\r\n", m3);
-//	memset(ipara, 0, 512);
-//	int length = sizeof(m3);
-//	memcpy(ipara, &length, 2);
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -204,42 +185,26 @@ static RET_DEFINE ExInt64MullFunc(unsigned char *ipara,void * pVmScriptRun) {
 
 	return std::make_tuple (true, tem);
 }
-
+/**
+ *
+ * 这个函数式从中间层传了两个参数过来:
+ * 1.第一个是int64_t类型的数据
+ * 2.第一个是int64_t类型的数据
+ */
 static RET_DEFINE ExInt64AddFunc(unsigned char *ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 2);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 2||
         retdata.at(0).get()->size() != sizeof(int64_t)||retdata.at(1).get()->size() != sizeof(int64_t))
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
-//	//	printf("the call func:%s\r\n", __FUNCTION__);
-//	unsigned char *pbuf = ipara;
-//	unsigned short len = GetParaLen(pbuf);
-////	printf("the total len:%d\r\n", len);
-//	unsigned short data1len = GetParaLen(pbuf);
-//	unsigned char *pdata1 = NULL;
-//	GetParaData(pbuf, pdata1, data1len);
-//	unsigned short data2len = GetParaLen(pbuf);
-//	unsigned char *pdata2 = NULL;
-//	GetParaData(pbuf, pdata2, data2len);
-//	printf("len:%d the data1:%s\r\n", data1len, HexStr(pdata1, pdata1 + data1len, true).c_str());
-//	printf("len:%d the data2:%s\r\n", data2len, HexStr(pdata2, pdata2 + data2len, true).c_str());
+
 	int64_t m1, m2, m3;
 	memcpy(&m1,  &retdata.at(0).get()->at(0), sizeof(m1));
 	memcpy(&m2,  &retdata.at(1).get()->at(0), sizeof(m2));
-//	printf("m1:%I64d\r\n", m1);
-//	printf("m2:%I64d\r\n", m2);
 	m3 = m1 + m2;
-//	printf("m3:%I64d\r\n", m3);
-//	memset(ipara, 0, 512);
-//	int length = sizeof(m3);
-//	memcpy(ipara, &length, 2);
-//	//ipara[0] = sizeof(m3);
-//	memcpy(&ipara[2], &m3, sizeof(m3));
-//	return true;
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -249,42 +214,25 @@ static RET_DEFINE ExInt64AddFunc(unsigned char *ipara,void * pVmScriptRun) {
 
 	return std::make_tuple (true, tem);
 }
-
+/**
+ *
+ * 这个函数式从中间层传了两个参数过来:
+ * 1.第一个是int64_t类型的数据
+ * 2.第一个是int64_t类型的数据
+ */
 static RET_DEFINE ExInt64SubFunc(unsigned char *ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 2);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 2||
             retdata.at(0).get()->size() != sizeof(int64_t)||retdata.at(1).get()->size() != sizeof(int64_t))
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
-	//	printf("the call func:%s\r\n", __FUNCTION__);
-
-//	unsigned char *pbuf = ipara;
-//	unsigned short len = GetParaLen(pbuf);
-////	printf("the total len:%d\r\n", len);
-//	unsigned short data1len = GetParaLen(pbuf);
-//	unsigned char *pdata1 = NULL;
-//	GetParaData(pbuf, pdata1, data1len);
-//	unsigned short data2len = GetParaLen(pbuf);
-//	unsigned char *pdata2 = NULL;
-//	GetParaData(pbuf, pdata2, data2len);
-//	printf("len:%d the data1:%s\r\n", data1len, HexStr(pdata1, pdata1 + data1len, true).c_str());
-//	printf("len:%d the data2:%s\r\n", data2len, HexStr(pdata2, pdata2 + data2len, true).c_str());
 	int64_t m1, m2, m3;
 	memcpy(&m1, &retdata.at(0).get()->at(0), sizeof(m1));
 	memcpy(&m2, &retdata.at(1).get()->at(0), sizeof(m2));
-//	printf("m1:%I64d\r\n", m1);
-//	printf("m2:%I64d\r\n", m2);
 	m3 = m1 - m2;
-//	printf("m3:%I64d\r\n", m3);
-//	memset(ipara, 0, 512);
-//	int length = sizeof(m3);
-//	memcpy(ipara, &length, 2);
-//	//ipara[0] = sizeof(m3);
-//	memcpy(&ipara[2], &m3, sizeof(m3));
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -293,50 +241,31 @@ static RET_DEFINE ExInt64SubFunc(unsigned char *ipara,void * pVmScriptRun) {
     (*tem.get()).push_back(tep1);
 
 	return std::make_tuple (true, tem);
-//	return true;
 }
-
+/**
+ *
+ * 这个函数式从中间层传了两个参数过来:
+ * 1.第一个是int64_t类型的数据
+ * 2.第一个是int64_t类型的数据
+ */
 static RET_DEFINE ExInt64DivFunc(unsigned char *ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 2);
     if(!GetData(ipara,retdata) ||retdata.size() != 2||
             retdata.at(0).get()->size() != sizeof(int64_t)||retdata.at(1).get()->size() != sizeof(int64_t))
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
-	//	printf("the call func:%s\r\n", __FUNCTION__);
-
-//	unsigned char *pbuf = ipara;
-//	unsigned short len = GetParaLen(pbuf);
-////	printf("the total len:%d\r\n", len);
-//	unsigned short data1len = GetParaLen(pbuf);
-//	unsigned char *pdata1 = NULL;
-//	GetParaData(pbuf, pdata1, data1len);
-//	unsigned short data2len = GetParaLen(pbuf);
-//	unsigned char *pdata2 = NULL;
-//	GetParaData(pbuf, pdata2, data2len);
-//	printf("len:%d the data1:%s\r\n", data1len, HexStr(pdata1, pdata1 + data1len, true).c_str());
-//	printf("len:%d the data2:%s\r\n", data2len, HexStr(pdata2, pdata2 + data2len, true).c_str());
 	int64_t m1, m2, m3;
 	memcpy(&m1, &retdata.at(0).get()->at(0), sizeof(m1));
 	memcpy(&m2, &retdata.at(1).get()->at(0), sizeof(m2));
-//	printf("m1:%I64d\r\n", m1);
-//	printf("m2:%I64d\r\n", m2);
+
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	if( m2 == 0)
 	{
 		return std::make_tuple (false, tem);
 	}
 	m3 = m1 / m2;
-//	printf("m3:%I64d\r\n", m3);
-//	memset(ipara, 0, 512);
-//	int length = sizeof(m3);
-//	memcpy(ipara, &length, 2);
-//	//ipara[0] = sizeof(m3);
-//	memcpy(&ipara[2], &m3, sizeof(m3));
-//	return true;
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << m3;
     vector<unsigned char> tep1(tep.begin(),tep.end());
@@ -344,30 +273,21 @@ static RET_DEFINE ExInt64DivFunc(unsigned char *ipara,void * pVmScriptRun) {
 
 	return std::make_tuple (true, tem);
 }
-
+/**
+ *
+ * 这个函数式从中间层传了一个参数过来:
+ * 1.第一个是要被计算hash值的字符串
+ */
 static RET_DEFINE ExSha256Func(unsigned char *ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 1);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 1)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
-//	//	printf("the call func:%s\r\n", __FUNCTION__);
-//	unsigned char *pbuf = (unsigned char *) ipara;
-//	unsigned short len = GetParaLen(pbuf);
-//	unsigned char *pdata = NULL;
-//	GetParaData(pbuf, pdata, len);
+
 	uint256 rslt = Hash(&retdata.at(0).get()->at(0), &retdata.at(0).get()->at(0) + retdata.at(0).get()->size());
-//	printf("the in para:%s\r\n", HexStr(pbuf + 1, pbuf + 1 + len, true).c_str());
-//	printf("the rslt:%s\r\n", rslt.ToString().c_str());
-//	memset(ipara, 0, 512);
-//	int length = 32;
-//	memcpy(ipara, &length, 2);
-//	//ipara[0] = sizeof(m3);
-//	//ipara[0] = 32;
-//	memcpy(ipara + 2, rslt.begin(), 32);
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -376,36 +296,23 @@ static RET_DEFINE ExSha256Func(unsigned char *ipara,void * pVmScriptRun) {
     (*tem.get()).push_back(tep1);
 
 	return std::make_tuple (true, tem);
-	//return true;
 }
-
+/**
+ *
+ * 这个函数式从中间层传了三个个参数过来:
+ * 1.第一个是要被加密数据或者解密数据
+ * 2.第二格式加密或者解密的key值
+ * 3.第三是标识符，是加密还是解密
+ */
 static RET_DEFINE ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 3);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 3)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
-	//	printf("the call func:%s\r\n", __FUNCTION__);
 
-//	unsigned char *pbuf = ipara;
-//	unsigned short len = GetParaLen(pbuf);
-////	printf("the total len:%d\r\n", len);
-//	unsigned short datalen = GetParaLen(pbuf);
-//	unsigned char *pdata = NULL;
-//	GetParaData(pbuf, pdata, datalen);
-//	unsigned short keylen = GetParaLen(pbuf);
-//	unsigned char *pkey = NULL;
-//	GetParaData(pbuf, pkey, keylen);
-//	unsigned short flaglen = GetParaLen(pbuf);
-//	unsigned char *pflag = NULL;
-//	GetParaData(pbuf, pflag, flaglen);
-
-//	printf("len:%d the data:%s\r\n", datalen, HexStr(pdata, pdata + datalen, true).c_str());
-//	printf("len:%d the key:%s\r\n", keylen, HexStr(pkey, pkey + keylen, true).c_str());
-//	printf("len:%d the flag:%s\r\n", flaglen, HexStr(pflag, pflag + flaglen, true).c_str());
 	DES_key_schedule deskey1, deskey2, deskey3;
 
 	vector<unsigned char> desdata;
@@ -416,7 +323,6 @@ static RET_DEFINE ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 		desdata.insert(desdata.end(), sizeof(DES_cblock) - datalen_rest, 0);
 	}
 
-//	printf("the rest len:%d the full data:%s\r\n", datalen_rest, HexStr(desdata.begin(), desdata.end(), true).c_str());
 	const_DES_cblock in;
 	DES_cblock out, key;
 
@@ -492,24 +398,22 @@ static RET_DEFINE ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 		}
 	}
 
-//	printf("***rslt len:%d the rslt:%s\r\n", desout.size(), HexStr(desout.begin(), desout.end(), true).c_str());
-//	memset(ipara, 0, 512);
-//	int length = desout.size();
-//	memcpy(ipara, &length, 2);
-//	//ipara[0] = desout.size();
-//	memcpy(&ipara[2], &desout[0], desout.size());
-//	return true;
-
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     (*tem.get()).push_back(desout);
 
 	return std::make_tuple (true, tem);
 }
 
+/**
+ *
+ * 这个函数式从中间层传了三个个参数过来:
+ * 1.第一个是签名的数据
+ * 2.第二个是用的签名的publickey
+ * 3.第三是签名之前的hash值
+ */
 static RET_DEFINE ExVerifySignatureFunc(unsigned char *ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 3);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 3||
     		retdata.at(1).get()->size() != 33||
     		retdata.at(2).get()->size() !=32)
@@ -517,44 +421,14 @@ static RET_DEFINE ExVerifySignatureFunc(unsigned char *ipara,void * pVmScriptRun
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
-	//	printf("the call func:%s\r\n", __FUNCTION__);
-//	unsigned char *pbuf = ipara;
-//	unsigned short len = GetParaLen(pbuf);
-////	printf("the total len:%d\r\n", len);
-//	unsigned short datalen = GetParaLen(pbuf);
-//	unsigned char *pdata = NULL;
-//	GetParaData(pbuf, pdata, datalen);
-//	unsigned short keylen = GetParaLen(pbuf);
-//	unsigned char *pkey = NULL;
-//	GetParaData(pbuf, pkey, keylen);
-//	unsigned short hashlen = GetParaLen(pbuf);
-//	unsigned char *phash = NULL;
-//	GetParaData(pbuf, phash, hashlen);
-//	printf("len:%d the data:%s\r\n", datalen, HexStr(pdata, pdata + datalen, true).c_str());
-//	printf("len:%d the key:%s\r\n", keylen, HexStr(pkey, pkey + keylen, true).c_str());
-//	printf("len:%d the hash:%s\r\n", hashlen, HexStr(phash, phash + hashlen, true).c_str());
 
 	CPubKey pk(retdata.at(1).get()->begin(),retdata.at(1).get()->end());
-//	vector<unsigned char> sig(pdata, pdata + datalen);
 	uint256 hash(*retdata.at(2).get());
 
-//	printf("pk:%s\r\n", HexStr(pk.begin(), pk.end(), true).c_str());
-//	printf("sig:%s\r\n", HexStr(*retdata.at(0)).c_str());
-//	printf("hash:%s\r\n", HexStr(hash.begin(), hash.end(), true).c_str());
 	bool rlt;
-//	if (pk.Verify(hash, sig)) {
-//		memset(ipara, 0, 512);
-//		ipara[0] = 32;
-//		memcpy(ipara, hash.begin(), 32);
-//		return true;
-//	} else {
-//		memset(ipara, 0, 512);
-//	}
 	if (pk.Verify(hash, *retdata.at(0))) {
-//		printf("verify ok!\r\n");
 		rlt = true;
 	} else {
-//		printf("verify Error!\r\n");
 		rlt = false;
 	}
 
@@ -568,16 +442,17 @@ static RET_DEFINE ExVerifySignatureFunc(unsigned char *ipara,void * pVmScriptRun
 }
 
 static RET_DEFINE ExSignatureFunc(unsigned char *ipara,void * pVmScriptRun) {
-//	printf("the call func:%s\r\n", __FUNCTION__);
-//	return true;
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	return std::make_tuple (true, tem);
 }
-
+/**
+ *
+ * 这个函数式从中间层传了两个个参数过来:
+ * 1.第一个是打印数据的表示符号，true是一十六进制打印,否则以字符串的格式打印
+ * 2.第二个是打印的字符串
+ */
 static RET_DEFINE ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 2);
     if(!GetData(ipara,retdata) ||retdata.size() != 2)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -586,13 +461,8 @@ static RET_DEFINE ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
 	CDataStream tep1(*retdata.at(0), SER_DISK, CLIENT_VERSION);
 	bool flag ;
 	tep1 >> flag;
-//	char *pCh = "testCheckDeleteRoolbackDB error";
-//	string errorMsg(pCh, pCh+32);
 	string pdata((*retdata[1]).begin(), (*retdata[1]).end());
 
-//	if (pdata == errorMsg) {
-//		LogPrint("vm", "error\r\n");
-//	}
 	if(flag)
 	{
 		LogPrint("vm","%s\r\n", HexStr(pdata).c_str());
@@ -610,20 +480,21 @@ static RET_DEFINE ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
 
 
 
-
+/**
+ *
+ * 这个函数式从中间层传了一个参数过来:
+ * 1.第一个是 hash
+ */
 
 static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun) {
 
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 1);
     if(!GetData(ipara,retdata) ||retdata.size() != 1 || retdata.at(0).get()->size() != 32)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
 	uint256 hash1(*retdata.at(0));
-	//cout<<"ExGetTxContractsFunc1:"<<hash1.GetHex()<<endl;
 //	LogPrint("vm","ExGetTxContractsFunc1:%s\n",hash1.GetHex().c_str());
 
 
@@ -638,10 +509,14 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
 	}
 	return std::make_tuple (true, tem);
 }
+/**
+ *
+ * 这个函数式从中间层传了一个参数过来:
+ * 1.第一个是 hash
+ */
+
 static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun) {
 	vector<std::shared_ptr<vector<unsigned char> > > retdata;
-//	GetData(ipara, retdata);
-//	assert(retdata.size() == 1);
     if(!GetData(ipara,retdata) ||retdata.size() != 1|| retdata.at(0).get()->size() != 32)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -650,7 +525,6 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 	CDataStream tep1(*retdata.at(0), SER_DISK, CLIENT_VERSION);
 	uint256 hash1(0);
 	tep1 >>hash1;
-	//cout<<"ExGetTxAccountsFunc:"<<hash1.GetHex()<<endl;
 //	LogPrint("vm","ExGetTxAccountsFunc:%s",hash1.GetHex().c_str());
 
 	std::shared_ptr<CBaseTransaction> pBaseTx;
@@ -662,7 +536,6 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 		vector<unsigned char> item;
 
 		for (auto& it : tx->vAccountRegId) {
-//			CID id(it);
 			vector<unsigned char> id = boost::get<CRegID>(it).GetVec6();
 			item.insert(item.end(), id.begin(), id.end());
 		}
@@ -671,12 +544,15 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 	}
 	return std::make_tuple(true, tem);
 }
-
+/**
+ *
+ * 这个函数式从中间层传了一个参数过来:
+ * 1.第一个是 账户id,六个字节
+ */
 static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScriptRun) {
 	CVmScriptRun *pVmScript = (CVmScriptRun *)pVmScriptRun;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 1);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 1|| retdata.at(0).get()->size() != 6)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -701,11 +577,14 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 
 	return std::make_tuple (flag, tem);
 }
+/**
+ *
+ * 这个函数式从中间层传了一个参数过来:
+ * 1.第一个是 账户id,六个字节
+ */
 static RET_DEFINE ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScriptRun) {
 	CVmScriptRun *pVmScript = (CVmScriptRun *)pVmScriptRun;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 1);
     if(!GetData(ipara,retdata) ||retdata.size() != 1|| retdata.at(0).get()->size() != 6)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -727,17 +606,20 @@ static RET_DEFINE ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScri
 
 	return std::make_tuple (flag , tem);
 }
+/**
+ *
+ * 这个函数式从中间层传了一个参数过来:
+ * 1.第一个是 hash,六个字节
+ */
 static RET_DEFINE ExGetTxConFirmHeightFunc(unsigned char * ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 1);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 1|| retdata.at(0).get()->size() != 32)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
 	uint256 hash1(*retdata.at(0));
-	//cout<<"ExGetTxContractsFunc1:"<<hash1.GetHex()<<endl;
 //	LogPrint("vm","ExGetTxContractsFunc1:%s",hash1.GetHex().c_str());
 
 
@@ -768,11 +650,15 @@ static RET_DEFINE ExGetTipHeightFunc(unsigned char * ipara,void * pVmScriptRun) 
 
 	return std::make_tuple (true, tem);
 }
+/**
+ *
+ * 这个函数式从中间层传了一个参数过来:
+ * 1.第一个是 int类型的参数
+ */
 static RET_DEFINE ExGetBlockHashFunc(unsigned char * ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 1);
-    if(!GetData(ipara,retdata) ||retdata.size() != 1)
+	CVmScriptRun *pVmScript = (CVmScriptRun *)pVmScriptRun;
+    if(!GetData(ipara,retdata) ||retdata.size() != 1 || retdata.at(0).get()->size() != sizeof(int))
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
@@ -780,14 +666,14 @@ static RET_DEFINE ExGetBlockHashFunc(unsigned char * ipara,void * pVmScriptRun) 
 	int height = 0;
 	memcpy(&height, &retdata.at(0).get()->at(0), sizeof(int));
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-	if (height <= 0 || height > chainActive.Height())
+	if (height <= 0 || height > pVmScript->GetComfirHeight())
 	{
 		return std::make_tuple (false, tem);
 	}
 	CBlockIndex *pindex = chainActive[height];
 	uint256 blockHash = pindex->GetBlockHash();
-	//cout<<"ExGetBlockHashFunc:"<<HexStr(blockHash).c_str()<<endl;
-	LogPrint("vm","ExGetBlockHashFunc:%s",HexStr(blockHash).c_str());
+
+//	LogPrint("vm","ExGetBlockHashFunc:%s",HexStr(blockHash).c_str());
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << blockHash;
     vector<unsigned char> tep1(tep.begin(),tep.end());
@@ -819,11 +705,17 @@ static vector<unsigned char> AddChar(vector<unsigned char>&param)
 	}
 	return param;
 }
+/**
+ *
+ * 这个函数式从中间层传了三个个参数过来:
+ * 1.第一个是 key值
+ * 2.第二个是value值
+ * 3.第三个是超时高度
+ */
 static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 3);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 3)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -836,8 +728,6 @@ static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	bool flag = true;
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
 
-//	vector<unsigned char> key =AddChar(*retdata.at(0));
-//	int size = key.size();
 	CScriptDBOperLog operlog;
 	if (!scriptDB->SetScriptData(scriptid, *retdata.at(0), *retdata.at(1), height, operlog)) {
 		flag = false;
@@ -852,11 +742,15 @@ static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
     (*tem.get()).push_back(tep1);
 	return std::make_tuple (true, tem);
 }
+/**
+ *
+ * 这个函数式从中间层传了一个参数过来:
+ * 1.第一个是 key值
+ */
 static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 1);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 1)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -882,11 +776,15 @@ static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 
 	return std::make_tuple (true, tem);
 }
+/**
+ *
+ * 这个函数式从中间层传了一个参数过来:
+ * 1.第一个是 key值
+ */
 static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 1);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 1)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -899,7 +797,6 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) 
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
 	bool flag =true;
 
-	//vector<unsigned char> key =AddChar(*retdata.at(0));
 //	LogPrint("INFO", "script run read data:%s\n", HexStr(*retdata.at(0)));
 	CScriptDBOperLog operLog;
 	if(!scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid, *retdata.at(0), vValue, nHeight, operLog))
@@ -916,11 +813,17 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) 
 
 	return std::make_tuple (flag, tem);
 }
+/**
+ *
+ * 这个函数式从中间层传了三个个参数过来:
+ * 1.第一个是 key值
+ * 2.第二个是value值
+ * 3.第三个是超时高度
+ */
 static RET_DEFINE ExModifyDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 3);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 3)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -934,7 +837,6 @@ static RET_DEFINE ExModifyDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
 
 	CScriptDBOperLog operlog;
-	//vector<unsigned char> key =AddChar(*retdata.at(0));
 	vector_unsigned_char vTemp;
 	int nHeight;
 	if(scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid, *retdata.at(0), vTemp, nHeight, operlog)) {
@@ -957,6 +859,7 @@ static RET_DEFINE ExModifyDataDBFunc(unsigned char * ipara,void * pVmScript) {
     (*tem.get()).push_back(tep1);
 	return std::make_tuple (true, tem);
 }
+
 static RET_DEFINE ExGetDBSizeFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	CRegID scriptid = pVmScriptRun->GetScriptRegID();
@@ -976,12 +879,19 @@ static RET_DEFINE ExGetDBSizeFunc(unsigned char * ipara,void * pVmScript) {
 
 	return std::make_tuple (flag, tem);
 }
+/**
+ *
+ * 当传的第一个参数index == 0，则传了一个参数过来
+ * 1.第一个是 index值
+ * 当传的第一个参数index == 1，则传了两个个参数过来
+ * 1.第一个是 index值
+ * 2.第二是key值
+ */
 static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 2 || retdata.size() == 1);
-    if(!GetData(ipara,retdata) ||retdata.size() != 2 && retdata.size() != 1)
+
+    if(!GetData(ipara,retdata) ||(retdata.size() != 2 && retdata.size() != 1))
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
@@ -1030,15 +940,20 @@ static RET_DEFINE ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
     tep << hash;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
-    //cout<<"ExGetCurTxHash:"<<HexStr(hash).c_str()<<endl;
+
  //   LogPrint("vm","ExGetCurTxHash:%s",HexStr(hash).c_str());
 	return std::make_tuple (true, tem);
 }
+/**
+ *
+ * 中间层传了两个参数
+ * 1.第一个是 账号的id
+ * 2.第二个是int64_t类型的数据
+ */
 static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 2);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 2
     		|| retdata.at(0).get()->size() != 6
     		|| retdata.at(1).get()->size() != sizeof(uint64_t))
@@ -1070,12 +985,15 @@ static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 	return std::make_tuple (flag, tem);
 
 }
+/**
+ *
+ * 中间层传了一个个参数
+ * 1.第一个是 key
+ */
 static RET_DEFINE ExReadDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 1);
     if(!GetData(ipara,retdata) ||retdata.size() != 1 )
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -1087,7 +1005,6 @@ static RET_DEFINE ExReadDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 	bool flag = true;
 	CScriptDBViewCache *scriptDB = pVmScriptRun->GetScriptDB();
 
-	//vector<unsigned char> key =AddChar(*retdata.at(0));
 	CScriptDBOperLog operLog;
 	if(!scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid,*retdata.at(0),vValue,nHeight, operLog))
 	{
@@ -1106,12 +1023,17 @@ static RET_DEFINE ExReadDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 
 	return std::make_tuple (flag, tem);
 }
+/**
+ *
+ * 中间层传了两个参数
+ * 1.第一个是 key
+ * 2.第二个是 超时时间
+ */
 static RET_DEFINE ExModifyDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 2);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 2 )
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -1128,7 +1050,6 @@ static RET_DEFINE ExModifyDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
 
 	CScriptDBOperLog operlog;
-	//vector<unsigned char> key =AddChar(*retdata.at(0));
 	if(scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid,*retdata.at(0),vValue,temp,operlog))
 	{
 		if(scriptDB->SetScriptData(scriptid,*retdata.at(0),vValue,height,operlog))
@@ -1152,14 +1073,18 @@ static RET_DEFINE ExModifyDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 
 	return std::make_tuple (ret , tem);
 }
-
+/**
+ *
+ * 中间层传了两个参数
+ * 1.第一个是 key
+ * 2.第二个是 value
+ */
 static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript)
 {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 2);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 2 )
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -1173,7 +1098,6 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
 
 	CScriptDBOperLog operlog;
-//	vector<unsigned char> key =AddChar(*retdata.at(0));
 	if(scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid,*retdata.at(0),vValue,temp,operlog))
 	{
 		if(scriptDB->SetScriptData(scriptid,*retdata.at(0),*retdata.at(1),temp,operlog))
@@ -1197,14 +1121,18 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript
 
 	return std::make_tuple (ret , tem);
 }
+/**
+ *
+ * 中间层传了一个参数
+ * 1.第一个是输出指令
+ */
 static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmScript)
 {
 
 	unsigned char * pbuffer = ipara;
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 1);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 1 )
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -1225,11 +1153,15 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmScript)
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	return std::make_tuple (true , tem);
 }
+/**
+ *
+ * 中间层传了一个参数
+ * 1.账户的id
+ */
 static RET_DEFINE ExGetAuthoritedDefineFunc(unsigned char * ipara,void * pVmScript){
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 1);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 1 || retdata.at(0).get()->size() != 6)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -1258,11 +1190,16 @@ static RET_DEFINE ExGetAuthoritedDefineFunc(unsigned char * ipara,void * pVmScri
 
 	return std::make_tuple (flag, tem);
 }
+/**
+ *
+ * 中间层传了两个个参数
+ * 1.脚本的id号
+ * 2.数据库的key值
+ */
 static RET_DEFINE ExGetScriptDataFunc(unsigned char * ipara,void * pVmScript)
 {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 2);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 2 || retdata.at(0).get()->size() != 6)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -1293,9 +1230,6 @@ static RET_DEFINE ExGetScriptDataFunc(unsigned char * ipara,void * pVmScript)
 static RET_DEFINE ExGetScriptIDFunc(unsigned char * ipara,void * pVmScript)
 {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-//	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-//	GetData(ipara,retdata);
-//	assert(retdata.size() == 1);
 
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptRegID().GetVec6();
 
