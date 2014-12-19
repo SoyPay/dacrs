@@ -666,12 +666,17 @@ static RET_DEFINE ExGetBlockHashFunc(unsigned char * ipara,void * pVmScriptRun) 
 	int height = 0;
 	memcpy(&height, &retdata.at(0).get()->at(0), sizeof(int));
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-	if (height <= 0 || height > pVmScript->GetComfirHeight())
+	if (height <= 0 || height >= pVmScript->GetComfirHeight()) //当前block 是不可以获取hash的
 	{
+		return std::make_tuple (false, tem);
+	}
+
+	if(chainActive.Height() < height){	         //获取比当前高度高的数据是不可以的
 		return std::make_tuple (false, tem);
 	}
 	CBlockIndex *pindex = chainActive[height];
 	uint256 blockHash = pindex->GetBlockHash();
+
 
 //	LogPrint("vm","ExGetBlockHashFunc:%s",HexStr(blockHash).c_str());
     CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -680,6 +685,7 @@ static RET_DEFINE ExGetBlockHashFunc(unsigned char * ipara,void * pVmScriptRun) 
     (*tem.get()).push_back(tep1);
 
 	return std::make_tuple (true, tem);
+
 }
 
 static RET_DEFINE ExGetCurRunEnvHeightFunc(unsigned char * ipara,void * pVmScript) {
