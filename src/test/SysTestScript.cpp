@@ -588,20 +588,20 @@ public:
 
 		int count = dbsize - 1;
 		while (count--) {
-			if (!contractScriptTemp.GetScriptData(curtiph,regid, 1, vScriptKey, value, nHeight,setOperLog)) {
+			if (!contractScriptTemp.GetScriptData(curtiph, regid, 1, vScriptKey, value, nHeight, setOperLog)) {
 				return false;
 			}
 			uint256 hash3(value);
-			string pvalue(value.begin(),value.end());
-			if(flag)
-			BOOST_CHECK(hash==hash3.GetHex()|| pvalue == hash2);
-			else{
-					BOOST_CHECK(hash==hash1.GetHex());
-				}
-			BOOST_CHECK(nHeight>=outHeight);
+			string pvalue(value.begin(), value.end());
+			if (flag)
+				BOOST_CHECK(hash == hash3.GetHex() || pvalue == hash2);
+			else {
+				BOOST_CHECK(hash == hash1.GetHex());
+			}
+			BOOST_CHECK(nHeight >= outHeight);
 			unsigned short key = 0;
-			memcpy(&key,  &vScriptKey.at(0), sizeof(key));
-			BOOST_CHECK(key>=(maxKey - 200));
+			memcpy(&key, &vScriptKey.at(0), sizeof(key));
+			BOOST_CHECK(key >= (maxKey - 200));
 		}
 		return true;
 	}
