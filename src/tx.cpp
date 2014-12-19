@@ -189,9 +189,9 @@ bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 		account.OperateAccount(MINUS_FREE, fund);
 	}
 
-	account.PublicKey = boost::get<CPubKey>(userId);
+//	account.MinerPKey = boost::get<CPubKey>(minerId);
 	account.regID = regId;
-	if (typeid(CPubKey) == typeid(minerId)) {
+	if (typeid(CPubKey) == minerId.type()) {
 		account.MinerPKey = boost::get<CPubKey>(minerId);
 
 		if (account.MinerPKey.IsValid() && !account.MinerPKey.IsFullyValid()) {
@@ -222,6 +222,7 @@ bool CRegisterAccountTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, 
 	if (!oldAccount.IsEmptyValue()) {
 		CPubKey empPubKey;
 		oldAccount.PublicKey = empPubKey;
+		oldAccount.MinerPKey = empPubKey;
 		if (llFees > 0) {
 			CAccountOperLog accountOperLog;
 			if (!txundo.GetAccountOperLog(keyId, accountOperLog))
@@ -1034,6 +1035,7 @@ bool CAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
 	bool bMergeFund = false;
 	bool bHasMergd = false;
 	for (; iterFund != vFund.rend();) {
+
 		int nMergerType(0);
 		if (iterFund->IsMergeFund(nCurHeight, nMergerType)) {
 			bMergeFund = true;
