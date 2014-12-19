@@ -5,6 +5,7 @@
 #include "txdb.h"
 #include "account.h"
 #include "main.h"
+#include "SysTestBase.h"
 using namespace std;
 #define DAY_BLOCKS	((24 * 60 * 60)/(10*60))
 #define MONTH_BLOCKS (30*DAY_BLOCKS)
@@ -59,7 +60,7 @@ bool IsEqual(const vector<CFund>& vSrc, const vector<CFund>& vDest) {
 
 	return true;
 }
-struct CTxTest {
+struct CTxTest :public SysTestBase{
 	int nRunTimeHeight;
 //	CBlockIndex block;
 	CAccount accOperate;
@@ -74,6 +75,7 @@ struct CTxTest {
 		accOperate.keyID = uint160(1);
 		accBeforOperate = accOperate;
 
+		ResetEnv();
 	}
 	~CTxTest(){
 		delete pScriptDB;

@@ -1013,23 +1013,26 @@ bool CTxUndo::GetAccountOperLog(const CKeyID &keyId, CAccountOperLog &accountOpe
 	return false;
 }
 
-void CAccount::CompactAccount(int nCurHeight) {
-	if (nCurHeight<=0) {
-		return ;
+bool CAccount::CompactAccount(int nCurHeight) {
+	if (nCurHeight <= 0) {
+		return false;
 	}
-	MergerFund(vRewardFund, nCurHeight);
-	MergerFund(vFreeze, nCurHeight);
-	MergerFund(vSelfFreeze, nCurHeight);
-	MergerFund(vFreedomFund, nCurHeight);
+
+	bool bMergeRewardRes = MergerFund(vRewardFund, nCurHeight);
+	bool bMergevFreezeRes = MergerFund(vFreeze, nCurHeight);
+	bool bMergeSelfRes = MergerFund(vSelfFreeze, nCurHeight);
+	bool bMergeFreeRes = MergerFund(vFreedomFund, nCurHeight);
+	return bMergeRewardRes||bMergevFreezeRes||bMergeSelfRes||bMergeFreeRes;
 }
 
-void CAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
+bool CAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
 	stable_sort(vFund.begin(), vFund.end(), greater<CFund>());
 	uint64_t value = 0;
 	vector<CFund> vMinusFunds;
 	vector<CFund> vAddFunds;
 	vector<CFund>::reverse_iterator iterFund = vFund.rbegin();
 	bool bMergeFund = false;
+	bool bHasMergd = false;
 	for (; iterFund != vFund.rend();) {
 		int nMergerType(0);
 		if (iterFund->IsMergeFund(nCurHeight, nMergerType)) {
@@ -1049,6 +1052,7 @@ void CAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
 		if (!bMergeFund) {
 			break;
 		} else {
+			bHasMergd = true;
 			bMergeFund = false;
 		}
 	}
@@ -1068,6 +1072,8 @@ void CAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
 		COperFund OperLog(ADD_FUND, vAddFunds);
 		WriteOperLog(OperLog);
 	}
+
+	return bHasMergd;
 }
 
 void CAccount::WriteOperLog(const COperFund &operLog) {
@@ -1664,7 +1670,7 @@ bool CAccount::IsFundValid(OperType type, const CFund &fund, int nHeight, const 
 bool CAccount::OperateAccount(OperType type, const CFund &fund, int nHeight,
 		const vector_unsigned_char* pscriptID,
 		bool bCheckAuthorized) {
-	assert(IsCompacted(nHeight));
+	assert(false == CompactAccount(nHeight));
 	assert(keyID != uint160(0));
 	if (keyID != accountOperLog.keyID)
 		accountOperLog.keyID = keyID;
@@ -1798,18 +1804,6 @@ bool CAccount::GetUserData(const vector_unsigned_char& scriptID, vector<unsigned
 
 	vData = mapAuthorizate[scriptID].GetUserData();
 	return true;
-}
-
-uint256 CAccount::GetHash() const {
-	return SerializeHash(*this);
-}
-
-bool CAccount::IsCompacted(int nCurRunTimeHeight) {
-	uint256 beforeHash = GetHash();
-	CompactAccount(nCurRunTimeHeight);
-	uint256 afterHash = GetHash();
-	bool bRet = (beforeHash == afterHash);
-	return bRet;
 }
 
 void CRegID::SetRegID(const vector<unsigned char>& vIn) {
