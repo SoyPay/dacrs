@@ -384,14 +384,16 @@ bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, v
 		return false;
 	return true;
 }
-bool CScriptDB::GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
-		vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight) {
+bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex,
+		vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight, set<CScriptDBOperLog> &setOperLog) {
+	const int iPrefixLen = 4;
+	const int iScriptIdLen = 6;
+	const int iSpaceLen = 1;
 	assert(nIndex >= 0 && nIndex <=1);
 	leveldb::Iterator* pcursor = db.NewIterator();
 	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
 
 	string strPrefixTemp("data");
-	//ssKeySet.insert(ssKeySet.end(), 19);
 	ssKeySet.insert(ssKeySet.end(), &strPrefixTemp[0], &strPrefixTemp[4]);
 	vector<char> vId(vScriptId.begin(), vScriptId.end());
 	ssKeySet.insert(ssKeySet.end(), vId.begin(), vId.end());
@@ -421,7 +423,18 @@ bool CScriptDB::GetScriptData(const vector<unsigned char> &vScriptId, const int 
 					ssValue >> nHeight;
 					ssValue >> vScriptData;
 					vScriptKey.clear();
-					vScriptKey.insert(vScriptKey.end(), slKey.data()+11, slKey.data()+slKey.size());
+					vScriptKey.insert(vScriptKey.end(), slKey.data() + iPrefixLen + iScriptIdLen + iSpaceLen,
+							slKey.data() + slKey.size());
+					if (nHeight <= curBlockHeight) {    //遍历到如果有数据超时的情况，将超时数据记录到操作日志中，返回给下级备操作
+						CScriptDBOperLog operLog;                  //继续遍历往前遍历查找合法的数据
+						vector<unsigned char> vKey(slKey.data(), slKey.data() + slKey.size());
+						vector<unsigned char> vValue;
+						CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+						ssValue >> vValue;
+						operLog = CScriptDBOperLog(vKey, vValue);
+						setOperLog.insert(operLog);
+						i = 0;
+					}
 				}
 				pcursor->Next();
 			} else {
@@ -429,7 +442,7 @@ bool CScriptDB::GetScriptData(const vector<unsigned char> &vScriptId, const int 
 				return false;
 			}
 		} catch (std::exception &e) {
-			return ERROR("%s : Deserialize or I/O error - %s", __func__, e.what());
+			return ERROR("%s : Deserialize or I/O error - %s\n", __func__, e.what());
 		}
 	}
 	delete pcursor;

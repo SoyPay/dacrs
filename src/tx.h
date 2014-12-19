@@ -44,13 +44,16 @@ private:
 	void SetRegIDByCompact(const vector<unsigned char> &vIn);
 public:
 	friend class CID;
-	const vector<unsigned char> &GetVec6() const {return vRegID;}
+	const vector<unsigned char> &GetVec6() const {assert(vRegID.size() ==6);return vRegID;}
 	void SetRegID(const vector<unsigned char> &vIn) ;
 	void SetRegID(string strRegID);
     CKeyID getKeyID(const CAccountViewCache &view)const;
 	CRegID(string strRegID);
 	bool operator ==(const CRegID& co) const {
 		return (this->nHeight == co.nHeight && this->nIndex == co.nIndex);
+	}
+	bool operator !=(const CRegID& co) const {
+		return (this->nHeight != co.nHeight || this->nIndex != co.nIndex);
 	}
 	static bool IsSimpleRegIdStr(const string & str);
 	static bool IsRegIdStr(const string & str);
@@ -1075,6 +1078,10 @@ public:
 		str += "\n";
 		return str;
 	}
+
+	friend bool operator<(const CScriptDBOperLog &log1, const CScriptDBOperLog &log2) {
+		return log1.vKey < log2.vKey;
+	}
 };
 
 
@@ -1420,6 +1427,8 @@ private:
 	void UndoAuthorityOnDay(uint64_t nUndoMoney,const CAuthorizateLog& log);
 	void UndoAuthorityOverDay(const CAuthorizateLog& log);
 	uint64_t GetVecMoney(const vector<CFund>& vFund);
+	bool IsCompacted(int nCurRunTimeHeight);
+	uint256 GetHash() const;
 };
 
 inline unsigned int GetSerializeSize(const std::shared_ptr<CBaseTransaction> &pa, int nType, int nVersion) {

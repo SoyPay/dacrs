@@ -150,11 +150,16 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 		}
 		if (it.opeatortype == MINUS_FREE || it.opeatortype == MINUS_SELF_FREEZD || it.opeatortype == MINUS_FREEZD) {
 
+			/// 从冻结金额里面扣钱，超时高度必须大于当前tip高度
+			if(it.opeatortype == MINUS_FREEZD && it.outheight <height)
+			{
+				return false;
+			}
 			vector<unsigned char > accountid(it.accountid,it.accountid+sizeof(it.accountid));
 			CRegID regId(accountid);
 			CContractTransaction* secure = static_cast<CContractTransaction*>(listTx.get());
 			/// current tx's script cant't mius other script's regid
-			if(m_ScriptDBTip->HaveScript(regId) && regId.GetVec6() != boost::get<CRegID>(secure->scriptRegId).GetVec6())
+			if(m_ScriptDBTip->HaveScript(regId) && regId != boost::get<CRegID>(secure->scriptRegId))
 			{
 				return false;
 			}
@@ -212,8 +217,10 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 			vmAccount = tem;
 		}
 		shared_ptr<CAccount> vnewAccount = GetNewAccount(tem);
+		//// 这个账号已经存在，需要合并
 		if (vnewAccount.get() != NULL) {
 			vmAccount = vnewAccount;
+			vmAccount.get()->CompactAccount(height);
 		}
 		if ((OperType) it.opeatortype == ADD_FREE) {
 			fund.nFundType = FREEDOM_FUND;
@@ -239,7 +246,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 //		LogPrint("vm", "befer account:%s\r\n", vmAccount.get()->ToString().c_str());
 //		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
 		bool ret = false;
-		if(IsSignatureAccount(vmAccount.get()->regID) || vmAccount.get()->regID.GetVec6() == boost::get<CRegID>(tx->scriptRegId).GetVec6())
+		if(IsSignatureAccount(vmAccount.get()->regID) || vmAccount.get()->regID == boost::get<CRegID>(tx->scriptRegId))
 		{
 			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype,fund,height);
 		}else{

@@ -109,8 +109,9 @@ public:
 	virtual bool EraseKey(const vector<unsigned char> &vKey);
 	virtual bool HaveData(const vector<unsigned char> &vKey);
 	virtual bool GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
-	virtual bool GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex,
-			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight);
+	virtual bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex,
+			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight,
+			set<CScriptDBOperLog> &setOperLog);
 
 	virtual ~CScriptDBView(){};
 };
@@ -126,8 +127,9 @@ public:
 	bool EraseKey(const vector<unsigned char> &vKey);
 	bool HaveData(const vector<unsigned char> &vKey);
 	bool GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
-	bool GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptKey,
-			vector<unsigned char> &vScriptData, int &nHeight);
+	bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex,
+			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight,
+			set<CScriptDBOperLog> &setOperLog);
 
 };
 
@@ -145,10 +147,11 @@ public:
 	bool GetScriptDataCount(const CRegID &scriptId, int &nCount);
 	bool EraseScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey, CScriptDBOperLog &operLog);
 	bool HaveScriptData(const CRegID &scriptId, const vector<unsigned char > &vScriptKey);
-	bool GetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
-				vector<unsigned char> &vScriptData, int &nHeight, CScriptDBOperLog &operLog);
-	bool GetScriptData(const CRegID &scriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData,
-			int &nHeight);
+	bool GetScriptData(const int nCurBlockHeight, const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
+			vector<unsigned char> &vScriptData, int &nHeight, CScriptDBOperLog &operLog);
+	bool GetScriptData(const int nCurBlockHeight, const CRegID &scriptId, const int &nIndex,
+			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight,
+			set<CScriptDBOperLog> &setOperLog);
 	bool SetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
 				const vector<unsigned char> &vScriptData, const int nHeight, CScriptDBOperLog &operLog);
 	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
@@ -237,6 +240,8 @@ private:
 	 * @return true if delete succeed, otherwise false
 	 */
 	bool EraseScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey, CScriptDBOperLog &operLog);
+
+	bool EraseScriptData(const vector<unsigned char> &vKey);
 	/**
 	 * @brief Detect if scriptdb contains the item of script's data by scriptid and scriptkey
 	 * @param vScriptId
@@ -252,7 +257,7 @@ private:
 	 * @param nHeight valide height of script data
 	 * @return true if get succeed, otherwise false
 	 */
-	bool GetScriptData(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
+	bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
 			vector<unsigned char> &vScriptData, int &nHeight, CScriptDBOperLog &operLog);
 	/**
 	 * @brief Get script data and valide height by scriptid and nIndex
@@ -263,8 +268,8 @@ private:
 	 * @param nHeight valide height of script data
 	 * @return true if get succeed, otherwise false
 	 */
-	bool GetScriptData(const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData,
-			int &nHeight);
+	bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData,
+			int &nHeight, set<CScriptDBOperLog> &setOperLog);
 	/**
 	 * @brief Save script data and valide height into script db
 	 * @param vScriptId

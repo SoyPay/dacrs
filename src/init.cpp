@@ -122,7 +122,7 @@ void Shutdown()
 
     if (pwalletMain)
         bitdb.Flush(false);
-    GenerateBitcoins(false, NULL, 0);
+    GenerateSoys(false, NULL, 0);
 
     StopNode();
     UnregisterNodeSignals(GetNodeSignals());
@@ -990,7 +990,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // Generate coins in the background
 	if (pwalletMain) {
-		GenerateBitcoins(SysCfg().GetBoolArg("-gen", false), pwalletMain, SysCfg().GetArg("-genproclimit", -1));
+		GenerateSoys(SysCfg().GetBoolArg("-gen", false), pwalletMain, SysCfg().GetArg("-genproclimit", -1));
 		pwalletMain->ResendWalletTransactions();
 	}
     // ********************************************************* Step 12: finished
