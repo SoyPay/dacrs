@@ -919,9 +919,17 @@ bool CWallet::CleanAll() {
 
 bool CWallet::Sign(const CUserID& Userid, const uint256& hash, vector<unsigned char> &signature,bool IsMiner)const {
 	CKey key;
-	if(GetKey(Userid, key,IsMiner))
+	if(GetKey(Userid, key,IsMiner)){
+//		if(IsMiner == true)
+//		{
+//			cout <<"Sign miner key PubKey"<< key.GetPubKey().ToString()<< endl;
+//			cout <<"Sign miner hash"<< hash.ToString()<< endl;
+//			cout <<"Sign user Id" << boost::get<CKeyID>(Userid).ToString() << endl;
+//		}
 	return(key.Sign(hash, signature));
-    return false;
+	}
+	return false;
+
 }
 
 Object CKeyStoreValue::ToJsonObj()const {
@@ -957,18 +965,21 @@ bool CKeyStoreValue::SynchronizSys(CAccountViewCache& view){
 	if(!view.GetAccount(CUserID(mPKey.GetKeyID()),account))
 	{
 		mregId.clean();
-		mMinerCkey.Clear();
 	}
-	else
+	else if(account.PublicKey.IsValid())//是注册的账户
 	{
 		mregId = account.regID;
 		if(account.PublicKey != mPKey)
 			{
-			ERROR("shit %s acc %s mPKey:%s\r\n","not fix the bug",account.ToString(),this->ToString());
+				ERROR("shit %s acc %s mPKey:%s\r\n","not fix the bug",account.ToString(),this->ToString());
 				assert(0);
 			}
 		if(account.MinerPKey.IsValid())
 		assert(account.MinerPKey == mMinerCkey.GetPubKey());
+	}
+	else//有可能是没有注册的账户
+	{
+		mregId.clean();
 	}
 
 	LogPrint("wallet","%s \r\n",this->ToString());
