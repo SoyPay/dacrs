@@ -2974,7 +2974,7 @@ void static ProcessGetData(CNode* pfrom)
                     if (pBaseTx.get()) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        if(NORMAL_TX == pBaseTx->nTxType ) {
+                        if(COMMON_TX == pBaseTx->nTxType ) {
                         	 ss << *((CTransaction *)(pBaseTx.get()));
                         }
                         else if(CONTRACT_TX == pBaseTx->nTxType) {
@@ -4093,7 +4093,7 @@ public:
 
 std::shared_ptr<CBaseTransaction> CreateNewEmptyTransaction(unsigned char uType){
 	switch(uType){
-	case NORMAL_TX:
+	case COMMON_TX:
 		return make_shared<CTransaction>();
 	case REG_ACCT_TX:
 		return make_shared<CRegisterAccountTx>();

@@ -493,7 +493,7 @@ public:
 	}
 	bool AddTx(const uint256 &hash, const CBaseTransaction*pTx) {
 		switch (pTx->nTxType) {
-		case NORMAL_TX:
+		case COMMON_TX:
 			mapAccountTx[hash] = make_shared<CTransaction>(pTx);
 			break;
 		case REG_ACCT_TX:

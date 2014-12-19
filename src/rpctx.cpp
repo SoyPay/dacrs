@@ -65,7 +65,7 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		result.push_back(Pair("height", prtx->nValidHeight));
 		break;
 	}
-	case NORMAL_TX: {
+	case COMMON_TX: {
 		CTransaction *prtx = (CTransaction *) pTx;
 		result.push_back(Pair("txtype", "NormalTx"));
 		result.push_back(Pair("ver", prtx->nVersion));

@@ -217,7 +217,7 @@ void GetPriorityTx(vector<TxPriority> &vecPriority, map<uint256, vector<COrphan*
 //				make_heap(vecPriority.begin(), vecPriority.end(), comparer);
 //			}
 //
-//            if(NORMAL_TX == pBaseTx->nTxType || GENTOSECURE_TX == pBaseTx->nTxType)
+//            if(COMMON_TX == pBaseTx->nTxType || GENTOSECURE_TX == pBaseTx->nTxType)
 //            {
 //            	const CTransaction& tx = *((CTransaction *)vecPriority.front().get<2>());
 //            	// Legacy limits on sigOps:
@@ -495,7 +495,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
 				if (txCacheTemp.IsContainTx(pBaseTx->GetHash())) {
 					LogPrint("ERROR","CreatePosTx duplicate tx hash:%s\n", pBaseTx->GetHash().GetHex());
-					mempool.mapTx.erase(pBaseTx->GetHash());
+//					mempool.mapTx.erase(pBaseTx->GetHash());
 					return false;
 				}
 				CTxUndo txundo;
@@ -503,8 +503,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 
 				if (!pBaseTx->UpdateAccount(i, accView, state, txundo, pPrevIndex->nHeight + 1, txCacheTemp, contractScriptTemp)) {
 					LogPrint("ERROR","tx hash:%s transaction is invalid\n", pBaseTx->GetHash().GetHex());
-
-					mempool.mapTx.erase(pBaseTx->GetHash());
+//					mempool.mapTx.erase(pBaseTx->GetHash());
 					return false;
 				}
 			}

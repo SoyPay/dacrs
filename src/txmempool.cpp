@@ -83,7 +83,7 @@ void CTxMemPool::remove(CBaseTransaction *pBaseTx, list<std::shared_ptr<CBaseTra
 	{
 		LOCK(cs);
 		uint256 hash = pBaseTx->GetHash();
-//        if(NORMAL_TX == pTx->nTxType ){
+//        if(COMMON_TX == pTx->nTxType ){
 //        	CTransaction *pNormalTx = (CTransaction *)pTx;//dynamic_pointer_cast<CTransaction>(pTx);
 //			}
 //        }
