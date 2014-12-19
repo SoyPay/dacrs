@@ -74,8 +74,8 @@ void SHA256Transform(void* pstate, void* pinput, const void* pinit);
 uint64_t GetElementForBurn(CBlockIndex *pindex);
 
 void GetPriorityTx(vector<TxPriority> &vecPriority, map<uint256, vector<COrphan*> > &mapDependers);
-extern double dHashesPerSec;
-extern int64_t nHPSTimerStart;
+//extern double dHashesPerSec;
+//extern int64_t nHPSTimerStart;
 
 extern uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID);
 

@@ -150,6 +150,11 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 		}
 		if (it.opeatortype == MINUS_FREE || it.opeatortype == MINUS_SELF_FREEZD || it.opeatortype == MINUS_FREEZD) {
 
+			/// 从冻结金额里面扣钱，超时高度必须大于当前tip高度
+			if(it.opeatortype == MINUS_FREEZD && it.outheight <height)
+			{
+				return false;
+			}
 			vector<unsigned char > accountid(it.accountid,it.accountid+sizeof(it.accountid));
 			CRegID regId(accountid);
 			CContractTransaction* secure = static_cast<CContractTransaction*>(listTx.get());

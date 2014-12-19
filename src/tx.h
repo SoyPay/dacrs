@@ -1387,7 +1387,7 @@ public:
 	bool IsEmptyValue() const {
 		return !(llValues > 0 || !vFreedomFund.empty() || !vFreeze.empty() || !vSelfFreeze.empty());
 	}
-	void CompactAccount(int nCurHeight);
+	bool CompactAccount(int nCurHeight);
 	void AddToFreedom(const CFund &fund,bool bWriteLog = true);
 	void AddToFreeze(const CFund &fund,bool bWriteLog = true);
 	void AddToSelfFreeze(const CFund &fund,bool bWriteLog = true);
@@ -1410,7 +1410,7 @@ public:
 	)
 
 private:
-	void MergerFund(vector<CFund> &vFund, int nCurHeight);
+	bool MergerFund(vector<CFund> &vFund, int nCurHeight);
 	void WriteOperLog(AccountOper emOperType, const CFund &fund,bool bAuthorizated = false);
 	void WriteOperLog(const COperFund &operLog);
 	bool IsFundValid(OperType type, const CFund &fund, int nHeight, const vector_unsigned_char* pscriptID = NULL,
@@ -1424,8 +1424,6 @@ private:
 	void UndoAuthorityOnDay(uint64_t nUndoMoney,const CAuthorizateLog& log);
 	void UndoAuthorityOverDay(const CAuthorizateLog& log);
 	uint64_t GetVecMoney(const vector<CFund>& vFund);
-	bool IsCompacted(int nCurRunTimeHeight);
-	uint256 GetHash() const;
 };
 
 inline unsigned int GetSerializeSize(const std::shared_ptr<CBaseTransaction> &pa, int nType, int nVersion) {

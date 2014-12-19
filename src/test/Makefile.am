@@ -60,7 +60,6 @@ soypay_test_SOURCES = \
   accountview_tests.cpp \
   scriptdb_tests.cpp \
   betroll_test.cpp \
-  CVir8051Func_test.cpp \
   system_test.cpp	\
   SysTestBase.cpp	\
   SysTestScript.cpp \

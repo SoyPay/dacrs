@@ -876,6 +876,7 @@ Value listaddr(const Array& params, bool fHelp) {
 			obj.push_back(Pair("addr",       tem.first.ToAddress()));
 			obj.push_back(Pair("balance",    GetDetailInfo(curheight)));
 			obj.push_back(Pair("RegID",      tem.second.GetRegID().ToString()));
+			if(!tem.second.GetRegID().IsEmpty())
 			obj.push_back(Pair("RegID2",     HexStr(tem.second.GetRegID().GetVec6())));
 			retArry.push_back(obj);
 		}

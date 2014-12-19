@@ -192,7 +192,10 @@ public:
 	virtual bool InitalConfig() {
 		return CBaseParams::InitalConfig();
 	}
-
+	virtual int GetBlockMaxNonce() const
+	{
+		return 100;
+	}
 	virtual const vector<CAddress>& FixedSeeds() const {
 		return vFixedSeeds;
 	}
@@ -267,6 +270,10 @@ public:
 		CMainParams::InitalConfig();
 		fServer = true;
 		return true;
+	}
+	virtual int GetBlockMaxNonce() const
+	{
+		return 1000;
 	}
 };
 //static CTestNetParams testNetParams;
@@ -532,5 +539,22 @@ bool CBaseParams::IntialParams(int argc, const char* const argv[]) {
 	return true;
 }
 
+CBaseParams::CBaseParams() {
+	fImporting = false;
+	fReindex = false;
+	fBenchmark = false;
+	fTxIndex = false;
+	nIntervalPos = 1;
+	nTxCacheHeight = 500;
+	nTimeBestReceived = 0;
+	nScriptCheckThreads = 0;
+	nCoinCacheSize = 2000000;
+	nTargetSpacing = 60*10; //8;  //
+	nTargetTimespan = 30 * 60;//20 * 3;  //
+	nInterval = nTargetTimespan / nTargetSpacing;
+	nMaxCoinDay = 30 * 24 * 60 * 60;
+	nSubsidyHalvingInterval = 0;
+
+}
 /********************************************************************************/
 

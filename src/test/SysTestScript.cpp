@@ -537,14 +537,14 @@ public:
 	bool CheckScriptDB(int nheigh,string srcipt,int height,string hash,int flag)
 	{
 		int tipH = chainActive.Height();
-		int outHeight =tipH <nheigh?nheigh: tipH +5;
-		int maxKey = tipH <nheigh?200:((tipH- height+1)*200);
-		int Size =  tipH <nheigh?1000:(5-(tipH- height))*200;
+		int outHeight =tipH <nheigh?nheigh: (tipH-nheigh) +5 +height;
+		int maxKey = tipH <nheigh?200:((tipH- nheigh+1)*200);
+		int Size =  tipH <nheigh?1000:(5-(tipH- nheigh+1))*200;
 		string  hash2 = "hash";
 		if(flag)
 		{
-			maxKey = maxKey>800?800:maxKey;
-			if(maxKey >= 600)
+			maxKey = maxKey>600?600:maxKey;
+			if(maxKey > 600)
 			outHeight = 11;
 
 		}
@@ -559,15 +559,13 @@ public:
 		}
 		int dbsize;
 		contractScriptTemp.GetScriptDataCount(regid, dbsize);
-		if (0 == dbsize) {
-			throw runtime_error("in getscriptdata :the scirptid database not data!\n");
-		}
-
-		BOOST_CHECK(Size==dbsize);
 		if(Size <=0)
 		{
+			BOOST_CHECK(0==dbsize);
 			return true;
 		}
+		BOOST_CHECK(Size==dbsize);
+
 		int curtiph = chainActive.Height();
 		vector<unsigned char> value;
 		vector<unsigned char> vScriptKey;
@@ -590,20 +588,20 @@ public:
 
 		int count = dbsize - 1;
 		while (count--) {
-			if (!contractScriptTemp.GetScriptData(curtiph,regid, 1, vScriptKey, value, nHeight,setOperLog)) {
+			if (!contractScriptTemp.GetScriptData(curtiph, regid, 1, vScriptKey, value, nHeight, setOperLog)) {
 				return false;
 			}
 			uint256 hash3(value);
-			string pvalue(value.begin(),value.end());
-			if(flag)
-			BOOST_CHECK(hash==hash3.GetHex()|| pvalue == hash2);
-			else{
-					BOOST_CHECK(hash==hash1.GetHex());
-				}
-			BOOST_CHECK(nHeight>=outHeight);
+			string pvalue(value.begin(), value.end());
+			if (flag)
+				BOOST_CHECK(hash == hash3.GetHex() || pvalue == hash2);
+			else {
+				BOOST_CHECK(hash == hash1.GetHex());
+			}
+			BOOST_CHECK(nHeight >= outHeight);
 			unsigned short key = 0;
-			memcpy(&key,  &vScriptKey.at(0), sizeof(key));
-			BOOST_CHECK(key>=(maxKey - 200));
+			memcpy(&key, &vScriptKey.at(0), sizeof(key));
+			BOOST_CHECK(key >= (maxKey - 200));
 		}
 		return true;
 	}
@@ -671,21 +669,21 @@ public:
 		string phash = "";
 		string scriptid =  CreatWriteTx(phash);
 		int height = chainActive.Height();
-		int circle = 6;
+		int circle = 4;
 		while(circle--)
 		{
 			BOOST_CHECK(GenerateOneBlock());
 		}
 
 		int count = GetScriptSize(scriptid);
-		while(count)
+		while(count > 1)
 		{
 			//// second tx
 				uint256 hash(phash.c_str());
 				int param =16;
 				string temp = "";
 				temp += tinyformat::format("%02x%s%02x",param,HexStr(hash),height);
-				cout<<"cont:"<<temp;
+			//	cout<<"cont:"<<temp<<endl;
 				CreateTx(temp,"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
 
 				vector<unsigned char> key;
@@ -701,6 +699,7 @@ public:
 		{
 			disblock1();
 			CheckScriptDB((height+5),scriptid,height,phash,false);
+			count = GetScriptSize(scriptid);
 			if(count == 1000)
 				break;
 		}
@@ -725,15 +724,17 @@ public:
 		CheckScriptDB((height+5),scriptid,height,writetxhash,true);
 		int modHeight = chainActive.Height();
 
-		cout<<"end:"<<endl;
+	//	cout<<"end:"<<endl;
 		//// ±éÀú
 		int count = GetScriptSize(scriptid);
-        while(count)
+        while(count > 1)
         {
     		int param =18;
     		string temp = "";
     		temp += tinyformat::format("%02x",param);
     		CreateTx(temp,"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
+  //  		cout<<"cont:"<<endl;
+   // 		cout<<chainActive.Height()<<endl;
         	CheckScriptDB((height+5),scriptid,height,writetxhash,true);
         	count = GetScriptSize(scriptid);
         }
@@ -760,29 +761,28 @@ BOOST_FIXTURE_TEST_SUITE(sysScript_test,CSysScriptTest)
 
 BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 {
-////	//// some debug
-//	ResetEnv();
-//	BOOST_CHECK(0==chainActive.Height());
-//	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
-//	CheckSdk();
+//	//// some debug
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
+	CheckSdk();
 
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
+	CheckRollBack();
 
-//	ResetEnv();
-//	BOOST_CHECK(0==chainActive.Height());
-//	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
-//	CheckRollBack();
-//
-//	ResetEnv();
-//	BOOST_CHECK(0==chainActive.Height());
-//	CheckScriptAccount();
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	CheckScriptAccount();
 
 	ResetEnv();
 	BOOST_CHECK(0==chainActive.Height());
 	testdb();
 
-//	ResetEnv();
-//	BOOST_CHECK(0==chainActive.Height());
-//	 testdeletmodifydb();
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	 testdeletmodifydb();
 }
 BOOST_FIXTURE_TEST_CASE(darksecure,CSysScriptTest)
 {
