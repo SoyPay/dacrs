@@ -40,10 +40,7 @@ class CAccountingEntry;
 //class CScript;
 //class CRegID;
 
-/** (client) version numbers for particular wallet features */
-enum WalletFeature {
-	FEATURE_BASE = 10000, // the earliest version new wallets supports (only useful for getinfo's clientversion output)
-};
+
 
 
 
@@ -58,6 +55,7 @@ private:
 	INT64 nCreationTime;
 public:
 
+	bool SelfCheck() const;
 	string ToString()
 	{
 		return strprintf("CRegID:%s CPubKey:%s CKey:%s mMinerCkey:%s CreationTime:%d",mregId.ToString(),mPKey.ToString(),mCkey.ToString(),mMinerCkey.ToString(),nCreationTime);
@@ -157,16 +155,20 @@ public:
  */
 class CWallet : public CWalletInterface{
 private:
+	CWallet();
+
 	static bool StartUp();
 
 	CMasterKey MasterKey;
 
-	map<CKeyID, CKeyStoreValue> mKeyPool;
+
 	int nWalletVersion;
 	CBlockLocator  bestBlock;
 	uint256 GetCheckSum()const;
-
 public:
+	CWalletDB db;
+	map<CKeyID, CKeyStoreValue> mKeyPool;
+	CPubKey vchDefaultKey ;
 	string strWalletFile;
 
 	map<uint256, CAccountTx> mapInBlockTx;
@@ -237,17 +239,15 @@ public:
     }
 
 
-	CWallet() {
-		SetNull();
-	}
-	CWallet(string strWalletFileIn) {
+
+	CWallet(string strWalletFileIn):db(strWalletFileIn) {
 		SetNull();
 
 		strWalletFile = strWalletFileIn;
 
 	}
 	void SetNull() {
-		nWalletVersion = FEATURE_BASE;
+		nWalletVersion = 0;
 
 	}
 
@@ -279,7 +279,7 @@ public:
 
 
 	DBErrors LoadWallet(bool fFirstRunRet);
-	DBErrors ZapWalletTx();
+
 
 
 	void UpdatedTransaction(const uint256 &hashTx);
@@ -563,7 +563,7 @@ public:
 	}
 
 	bool WriteToDisk() {
-		return CWalletDB(pWallet->strWalletFile).WriteAccountTx(blockHash, *this);
+		return pWallet->db.WriteBlockTx(blockHash, *this);
 	}
 
 	Object ToJosnObj(CKeyID const &key = CKeyID()) const;

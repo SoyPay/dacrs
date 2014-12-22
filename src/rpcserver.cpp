@@ -11,7 +11,7 @@
 #include "main.h"
 #include "ui_interface.h"
 #include "util.h"
-#include "wallet.h"
+
 
 
 #include <boost/algorithm/string.hpp>
@@ -24,7 +24,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <memory>
 #include "json/json_spirit_writer_template.h"
-
+#include "wallet.h"
 using namespace std;
 using namespace boost;
 using namespace boost::asio;

@@ -39,7 +39,6 @@ BITCOIN_CORE_H = \
   core.h \
   account.h \
   crypter.h \
-  db.h \
   hash.h \
   init.h \
   key.h \
@@ -131,7 +130,6 @@ libsoypay_server_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 libsoypay_wallet_a_SOURCES = \
-  db.cpp \
   crypter.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \

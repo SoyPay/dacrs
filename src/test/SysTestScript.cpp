@@ -238,7 +238,8 @@ public:
 		int argc = 3;
 		char *argv[3] = { "rpctest", "disconnectblock", "1" };
 	//	sprintf(argv[2], "%d", number);
-		CommandLineRPC(argc, argv);
+		Value dummy;
+		CommandLineRPC_GetValue(argc, argv,dummy);
 	}
 
 	void CheckRollBack()
@@ -464,7 +465,9 @@ public:
 		char *param[] = { "rpctest",
 					"getscriptdbsize",
 					"010000000100"};
-		CommandLineRPC(3, param);
+//		CommandLineRPC(3, param);
+		Value dummy;
+		CommandLineRPC_GetValue(3, param,dummy);
 	}
 
 	void ListScriptData() {
@@ -474,7 +477,10 @@ public:
 				"010000000100",
 				"100",
 				"1"};
-		CommandLineRPC(5, param);
+//		CommandLineRPC(5, param);
+		Value dummy;
+		CommandLineRPC_GetValue(5, param,dummy);
+
 	}
 	void CheckDark()
 	{
