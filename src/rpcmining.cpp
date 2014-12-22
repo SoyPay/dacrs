@@ -25,8 +25,6 @@
 #include "util.h"
 #include "version.h"
 
-
-#include "db.h"
 #include "wallet.h"
 
 #include <stdint.h>

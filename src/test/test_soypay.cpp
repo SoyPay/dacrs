@@ -11,7 +11,7 @@
 #include "ui_interface.h"
 #include "util.h"
 
-#include "db.h"
+
 #include "wallet.h"
 
 
