@@ -615,7 +615,7 @@ bool CWallet::StartUp() {
 	    return true;
 	};
 
-	 defaultFilename = SysCfg().GetArg("-wallet", "wallet.dat");
+	 defaultFilename = SysCfg().GetArg("-wallet", "wallet");
 	  bool fDisableWallet = SysCfg().GetBoolArg("-disablewallet", false);
     string strDataDir = GetDataDir().string();
 
