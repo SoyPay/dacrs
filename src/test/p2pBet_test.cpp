@@ -354,7 +354,7 @@ typedef struct {
 #define ADDR_B    "mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y"
 #define VADDR_B   "[\"mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y\"]"
 
-Cp2pBetTest gTestValue;
+static Cp2pBetTest gTestValue;
 
 BOOST_AUTO_TEST_SUITE(p2pBetTest)
 
@@ -639,7 +639,7 @@ BOOST_AUTO_TEST_CASE(normal0)
 }
 
 //账户冻结金额合并尚未解决，以下代码暂时屏蔽
-#if 0
+#if 1
 BOOST_AUTO_TEST_CASE(normal1)
 {
 	gTestValue.ResetEnv();
