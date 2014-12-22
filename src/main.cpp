@@ -635,8 +635,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
 				REJECT_INVALID, "tx-invalid-height");
 	}
 
-    CAccountViewCache view(*pAccountViewTip, true);
-    if (!CheckTransaction(pBaseTx, state, view))
+//  CAccountViewCache view(*pAccountViewTip, true);
+    if (!CheckTransaction(pBaseTx, state, *pool.pAccountViewCache))
         return ERROR("AcceptToMemoryPool: : CheckTransaction failed");
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
@@ -1940,8 +1940,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // These are checks that are independent of context
     // that can be verified before saving an orphan block.
 
+	int nBlockSize = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
     // Size limits
-    if (block.vptx.empty() || block.vptx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+    if (block.vptx.empty() || block.vptx.size() > MAX_BLOCK_SIZE ||  nBlockSize > MAX_BLOCK_SIZE)
         return state.DoS(100, ERROR("CheckBlock() : size limits failed"),
                          REJECT_INVALID, "bad-blk-length");
 
@@ -1960,29 +1961,27 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         return state.DoS(100, ERROR("CheckBlock() : first tx is not coinbase"),
                          REJECT_INVALID, "bad-cb-missing");
 
-	if (block.GetHash() != SysCfg().HashGenesisBlock()) {
-		for (unsigned int i = 1; i < block.vptx.size(); i++)
-			if (block.vptx[i]->IsCoinBase())
-				return state.DoS(100, ERROR("CheckBlock() : more than one coinbase"), REJECT_INVALID, "bad-cb-multiple");
-	}
+	// Build the merkle tree already. We need it anyway later, and it makes the
+	// block cache the transaction hashes, which means they don't need to be
+	// recalculated many times during this block's validation.
+	block.BuildMerkleTree();
 
     // Check transactions
     CAccountViewCache view(*pAccountViewTip, true);
-	for (const auto &ptx : block.vptx)
-		if (!CheckTransaction(ptx.get(), state, view))
+	// Check for duplicate txids. This is caught by ConnectInputs(),
+	// but catching it earlier avoids a potential DoS attack:
+	set<uint256> uniqueTx;
+	for (unsigned int i = 0; i < block.vptx.size(); i++) {
+		uniqueTx.insert(block.GetTxHash(i));
+
+		if (!CheckTransaction(block.vptx[i].get(), state, view))
 			return ERROR("CheckBlock() : CheckTransaction failed");
+		if(block.GetHash() != SysCfg().HashGenesisBlock()) {
+			if (0 != i && block.vptx[i]->IsCoinBase())
+				return state.DoS(100, ERROR("CheckBlock() : more than one coinbase"), REJECT_INVALID, "bad-cb-multiple");
+		}
+	}
 
-    // Build the merkle tree already. We need it anyway later, and it makes the
-    // block cache the transaction hashes, which means they don't need to be
-    // recalculated many times during this block's validation.
-    block.BuildMerkleTree();
-
-    // Check for duplicate txids. This is caught by ConnectInputs(),
-    // but catching it earlier avoids a potential DoS attack:
-    set<uint256> uniqueTx;
-    for (unsigned int i = 0; i < block.vptx.size(); i++) {
-        uniqueTx.insert(block.GetTxHash(i));
-    }
     if (uniqueTx.size() != block.vptx.size())
         return state.DoS(100, ERROR("CheckBlock() : duplicate transaction"),
                          REJECT_INVALID, "bad-txns-duplicate", true);

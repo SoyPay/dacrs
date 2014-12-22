@@ -740,7 +740,7 @@ bool CRewardTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 
 bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view,CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
-	LogPrint("INFO" ,"registscript UpdateAccount\n");
+//	LogPrint("INFO" ,"registscript UpdateAccount\n");
 	CID id(regAccountId);
 	CAccount acctInfo;
 	if (!view.GetAccount(regAccountId, acctInfo)) {

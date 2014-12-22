@@ -776,6 +776,7 @@ CBlockTemplate* CreateNewBlock() {
 			nBlockTx++;
 			pblock->vptx.push_back(stx);
 			nFees += pBaseTx->GetFee();
+			nBlockSize += stx->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
 
 		}
 
@@ -932,6 +933,8 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 			return false;
 		CBlock *pblock = &pblocktemplate.get()->block;
 
+		int nBlockSize = pblock->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
+
 		int64_t nStart = GetTime();
 		while (true) {
 
@@ -941,6 +944,7 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 			setCreateKey.insert(keyID);
 			if (CreatePosTx(pindexPrev, pblock,setCreateKey)) {
 				CheckWork(pblock, *pwalletMain);
+				int nBlockSize = pblock->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
 			}
 			if(setCreateKey.empty())
 			{

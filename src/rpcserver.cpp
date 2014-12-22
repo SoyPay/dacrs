@@ -293,7 +293,7 @@ static const CRPCCommand vRPCCommands[] =
 //	{ "gethashespersec",        &gethashespersec,        true,      false,     false },
 	{ "setgenerate",            &setgenerate,            true,      true,      false },
 	{ "listregscript",          &listregscript,          true,      false,      true },
-	{ "generateblock",          &generateblock, 		 true,      false,      true },
+	{ "generateblock",          &generateblock, 		 true,      true,      true },
 	{"getpublickey",            &getpublickey,           true,      false,      true },
 //	{ "listscriptregid",        &listscriptregid,        true,      false,      true },
 	{ "listtxcache",            &listtxcache,            true,      false,      true },

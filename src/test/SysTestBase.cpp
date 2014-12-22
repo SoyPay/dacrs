@@ -160,7 +160,7 @@ Value SysTestBase::CreateRegScriptTx(const string& strAddress, const string& str
 		szType[0] = '0';
 		strScriptData = SysCfg().GetDefaultTestDataPath() + strScript;
 		if (!boost::filesystem::exists(strScriptData)) {
-			BOOST_CHECK_MESSAGE(0, strScript + "not exist");
+			BOOST_CHECK_MESSAGE(0, strScriptData + " not exist");
 			return false;
 		}
 	} else {
@@ -263,9 +263,9 @@ bool SysTestBase::CommandLineRPC_GetValue(int argc, char *argv[], Value &value) 
 
 	if (strPrint != "") {
 		if (false == nRes) {
-//			cout<<strPrint<<endl;
+			cout<<strPrint<<endl;
 		}
-		// fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
+//	    fprintf((nRes == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
 	}
 
 	return nRes;

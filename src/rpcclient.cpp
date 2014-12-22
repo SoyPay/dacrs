@@ -287,10 +287,10 @@ int CommandLineRPC(int argc, char *argv[])
         throw;
     }
 
-//    if (strPrint != "")
-//    {
-////        fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
-//    }
+    if (strPrint != "")
+    {
+        fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
+    }
     return nRet;
 }
 

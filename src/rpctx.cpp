@@ -219,9 +219,9 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 		if (account.IsRegister()) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: Account is already registered");
 		}
-		if (balance < fee) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: Account balance is insufficient.");
-		}
+//		if (balance < fee) {
+//			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: Account balance is insufficient.");
+//		}
 
 		//pubkey
 		CPubKey pubkey;
