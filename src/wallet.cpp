@@ -105,7 +105,7 @@ bool CWallet::AddKey(const CKeyStoreValue& storeValue) {
 	}
 	if (!IsCrypted()) {
 		mKeyPool[Pk.GetKeyID()] = storeValue;
-		return db.WriteKeyStoreValue(tem.GetCKeyID(),tem);
+		return db.WriteKeyStoreValue(Pk.GetKeyID(),storeValue);
 	} else {
 		assert(0 && "fix me");
 	}
