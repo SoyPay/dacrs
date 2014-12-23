@@ -126,11 +126,11 @@ public:
 
 
 enum TxType {
-	REG_ACCT_TX = 1,  //!< tx that used to register account
-	NORMAL_TX = 2,    //!< transfer money from one account to another
-	CONTRACT_TX = 3,  //!< contract tx
-	FREEZE_TX = 4,    //!< freeze tx
-	REWARD_TX = 5,    //!< reward tx
+	REWARD_TX = 1,    //!< reward tx
+	REG_ACCT_TX = 2,  //!< tx that used to register account
+	COMMON_TX = 3,    //!< transfer money from one account to another
+	CONTRACT_TX = 4,  //!< contract tx
+	FREEZE_TX = 5,    //!< freeze tx
 	REG_SCRIPT_TX = 6,//!< register script or modify authorization
 	NULL_TX,          //!< NULL_TX
 };
@@ -298,9 +298,6 @@ public:
 	int nVersion;
 public:
 
-
-
-
 	CBaseTransaction(const CBaseTransaction &other) {
 		*this = other;
 	}
@@ -310,7 +307,7 @@ public:
 	}
 
 	CBaseTransaction() :
-			nVersion(CURRENT_VERSION), nTxType(NORMAL_TX) {
+			nVersion(CURRENT_VERSION), nTxType(COMMON_TX) {
 	}
 
 	virtual ~CBaseTransaction() {
@@ -380,94 +377,94 @@ public:
 	~CRegisterAccountTx() {
 	}
 
-	unsigned int GetSerializeSize(int nType, int nVersion) const {
-		CSerActionGetSerializeSize ser_action;
-		const bool fGetSize = true;
-		const bool fWrite = false;
-		const bool fRead = false;
-		unsigned int nSerSize = 0;
-		ser_streamplaceholder s;
-		s.nType = nType;
-		s.nVersion = nVersion;
-		{
-			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(this->nVersion)))), nType, nVersion, ser_action));
-			nVersion = this->nVersion;
-			CID id(userId);
-			(nSerSize += ::SerReadWrite(s, (id), nType, nVersion, ser_action));
-			CID mMinerid(minerId);
-			(nSerSize += ::SerReadWrite(s, (mMinerid), nType, nVersion, ser_action));
-			if (fRead) {
-				userId = id.GetUserId();
-				minerId = mMinerid.GetUserId();
-			}
-			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(llFees)))), nType, nVersion, ser_action));
-			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(nValidHeight)))), nType, nVersion, ser_action));
-			(nSerSize += ::SerReadWrite(s, (signature), nType, nVersion, ser_action));
-		}
-		return nSerSize;
-	}
-	template<typename Stream>
-	void Serialize(Stream& s, int nType, int nVersion) const {
-		CSerActionSerialize ser_action;
-		const bool fGetSize = false;
-		const bool fWrite = true;
-		const bool fRead = false;
-		unsigned int nSerSize = 0;
-		{
-			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(this->nVersion)))), nType, nVersion, ser_action));
-			nVersion = this->nVersion;
-			CID id(userId);
-			(nSerSize += ::SerReadWrite(s, (id), nType, nVersion, ser_action));
-			CID mMinerid(minerId);
-			(nSerSize += ::SerReadWrite(s, (mMinerid), nType, nVersion, ser_action));
-			if (fRead) {
-				userId = id.GetUserId();
-				minerId = mMinerid.GetUserId();
-			}
-			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(llFees)))), nType, nVersion, ser_action));
-			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(nValidHeight)))), nType, nVersion, ser_action));
-			(nSerSize += ::SerReadWrite(s, (signature), nType, nVersion, ser_action));
-		}
-	}
-	template<typename Stream>
-	void Unserialize(Stream& s, int nType, int nVersion) {
-		CSerActionUnserialize ser_action;
-		const bool fGetSize = false;
-		const bool fWrite = false;
-		const bool fRead = true;
-		unsigned int nSerSize = 0;
-		{
-			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(this->nVersion)))), nType, nVersion, ser_action));
-			nVersion = this->nVersion;
-			CID id(userId);
-			(nSerSize += ::SerReadWrite(s, (id), nType, nVersion, ser_action));
-			CID mMinerid(minerId);
-			(nSerSize += ::SerReadWrite(s, (mMinerid), nType, nVersion, ser_action));
-			if (fRead) {
-				userId = id.GetUserId();
-				minerId = mMinerid.GetUserId();
-			}
-			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(llFees)))), nType, nVersion, ser_action));
-			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(nValidHeight)))), nType, nVersion, ser_action));
-			(nSerSize += ::SerReadWrite(s, (signature), nType, nVersion, ser_action));
-		}
-	}
-//	IMPLEMENT_SERIALIZE
-//	(
-//		READWRITE(VARINT(this->nVersion));
-//		nVersion = this->nVersion;
-//		CID id(userId);
-//		READWRITE(id);
-//		CID mMinerid(minerId);
-//		READWRITE(mMinerid);
-//		if(fRead) {
-//			userId = id.GetUserId();
-//			minerId = mMinerid.GetUserId();
+//	unsigned int GetSerializeSize(int nType, int nVersion) const {
+//		CSerActionGetSerializeSize ser_action;
+//		const bool fGetSize = true;
+//		const bool fWrite = false;
+//		const bool fRead = false;
+//		unsigned int nSerSize = 0;
+//		ser_streamplaceholder s;
+//		s.nType = nType;
+//		s.nVersion = nVersion;
+//		{
+//			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(this->nVersion)))), nType, nVersion, ser_action));
+//			nVersion = this->nVersion;
+//			CID id(userId);
+//			(nSerSize += ::SerReadWrite(s, (id), nType, nVersion, ser_action));
+//			CID mMinerid(minerId);
+//			(nSerSize += ::SerReadWrite(s, (mMinerid), nType, nVersion, ser_action));
+//			if (fRead) {
+//				userId = id.GetUserId();
+//				minerId = mMinerid.GetUserId();
+//			}
+//			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(llFees)))), nType, nVersion, ser_action));
+//			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(nValidHeight)))), nType, nVersion, ser_action));
+//			(nSerSize += ::SerReadWrite(s, (signature), nType, nVersion, ser_action));
 //		}
-//		READWRITE(VARINT(llFees));
-//		READWRITE(VARINT(nValidHeight));
-//		READWRITE(signature);
-//	)
+//		return nSerSize;
+//	}
+//	template<typename Stream>
+//	void Serialize(Stream& s, int nType, int nVersion) const {
+//		CSerActionSerialize ser_action;
+//		const bool fGetSize = false;
+//		const bool fWrite = true;
+//		const bool fRead = false;
+//		unsigned int nSerSize = 0;
+//		{
+//			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(this->nVersion)))), nType, nVersion, ser_action));
+//			nVersion = this->nVersion;
+//			CID id(userId);
+//			(nSerSize += ::SerReadWrite(s, (id), nType, nVersion, ser_action));
+//			CID mMinerid(minerId);
+//			(nSerSize += ::SerReadWrite(s, (mMinerid), nType, nVersion, ser_action));
+//			if (fRead) {
+//				userId = id.GetUserId();
+//				minerId = mMinerid.GetUserId();
+//			}
+//			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(llFees)))), nType, nVersion, ser_action));
+//			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(nValidHeight)))), nType, nVersion, ser_action));
+//			(nSerSize += ::SerReadWrite(s, (signature), nType, nVersion, ser_action));
+//		}
+//	}
+//	template<typename Stream>
+//	void Unserialize(Stream& s, int nType, int nVersion) {
+//		CSerActionUnserialize ser_action;
+//		const bool fGetSize = false;
+//		const bool fWrite = false;
+//		const bool fRead = true;
+//		unsigned int nSerSize = 0;
+//		{
+//			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(this->nVersion)))), nType, nVersion, ser_action));
+//			nVersion = this->nVersion;
+//			CID id(userId);
+//			(nSerSize += ::SerReadWrite(s, (id), nType, nVersion, ser_action));
+//			CID mMinerid(minerId);
+//			(nSerSize += ::SerReadWrite(s, (mMinerid), nType, nVersion, ser_action));
+//			if (fRead) {
+//				userId = id.GetUserId();
+//				minerId = mMinerid.GetUserId();
+//			}
+//			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(llFees)))), nType, nVersion, ser_action));
+//			(nSerSize += ::SerReadWrite(s, (REF(WrapVarInt(REF(nValidHeight)))), nType, nVersion, ser_action));
+//			(nSerSize += ::SerReadWrite(s, (signature), nType, nVersion, ser_action));
+//		}
+//	}
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(VARINT(this->nVersion));
+		nVersion = this->nVersion;
+		CID id(userId);
+		READWRITE(id);
+		CID mMinerid(minerId);
+		READWRITE(mMinerid);
+		if(fRead) {
+			userId = id.GetUserId();
+			minerId = mMinerid.GetUserId();
+		}
+		READWRITE(VARINT(llFees));
+		READWRITE(VARINT(nValidHeight));
+		READWRITE(signature);
+	)
 
 	uint64_t GetFee() const {
 		return llFees;
@@ -485,7 +482,7 @@ public:
 		CHashWriter ss(SER_GETHASH, 0);
 		CID id(userId);
 		CID id2(minerId);
-		ss <<VARINT(nVersion) << nTxType << id << id2 << VARINT(llFees) << VARINT(nValidHeight);
+		ss << VARINT(nVersion) << nTxType << id << id2 << VARINT(llFees) << VARINT(nValidHeight);
 		return ss.GetHash();
 	}
 
@@ -520,7 +517,7 @@ public:
 public:
 
 	CTransaction(const CBaseTransaction *pBaseTx) {
-		assert(NORMAL_TX == pBaseTx->nTxType);
+		assert(COMMON_TX == pBaseTx->nTxType);
 		*this = *(CTransaction *) pBaseTx;
 	}
 
@@ -529,7 +526,7 @@ public:
 		llValues = 0;
 		llFees = 0;
 		nValidHeight = 0;
-		nTxType = NORMAL_TX;
+		nTxType = COMMON_TX;
 	}
 
 	~CTransaction() {
@@ -1309,7 +1306,7 @@ public:
 	CRegID regID;
 	CKeyID keyID;											//!< keyID of the account
 	CPubKey PublicKey;										//!< public key of the account
-	CPubKey MinerPKey;									//!< public key of the account for miner
+	CPubKey MinerPKey;									    //!< public key of the account for miner
 	uint64_t llValues;										//!< freedom money which coinage greater than 30 days
 	vector<CFund> vRewardFund;								//!< reward money
 	vector<CFund> vFreedomFund;								//!< freedom money
@@ -1377,7 +1374,7 @@ public:
 		return (PublicKey.IsFullyValid() && PublicKey.GetKeyID() == keyID);
 	}
 	bool SetRegId(const CRegID &regID){this->regID = regID;return true;};
-	bool GetRegId(CRegID &regID)const {regID = this->regID  ;return regID.IsEmpty();};
+	bool GetRegId(CRegID &regID)const {regID = this->regID;return regID.IsEmpty();};
 	uint64_t GetRewardAmount(int nCurHeight);
 	uint64_t GetSripteFreezeAmount(int nCurHeight);
 	uint64_t GetSelfFreezeAmount(int nCurHeight);
@@ -1440,7 +1437,7 @@ void Serialize(Stream& os, const std::shared_ptr<CBaseTransaction> &pa, int nTyp
 	if (pa->nTxType == REG_ACCT_TX) {
 		Serialize(os, *((CRegisterAccountTx *) (pa.get())), nType, nVersion);
 	}
-	else if (pa->nTxType == NORMAL_TX) {
+	else if (pa->nTxType == COMMON_TX) {
 		Serialize(os, *((CTransaction *) (pa.get())), nType, nVersion);
 	}
 	else if (pa->nTxType == CONTRACT_TX) {
@@ -1469,7 +1466,7 @@ void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, i
 		pa = make_shared<CRegisterAccountTx>();
 		Unserialize(is, *((CRegisterAccountTx *) (pa.get())), nType, nVersion);
 	}
-	else if (nTxType == NORMAL_TX) {
+	else if (nTxType == COMMON_TX) {
 		pa = make_shared<CTransaction>();
 		Unserialize(is, *((CTransaction *) (pa.get())), nType, nVersion);
 	}

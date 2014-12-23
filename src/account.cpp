@@ -451,7 +451,111 @@ bool CScriptDBViewCache::HaveData(const vector<unsigned char> &vKey) {
 	return pBase->HaveData(vKey);
 }
 bool CScriptDBViewCache::GetScript(const int nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue) {
-	return pBase->GetScript(nIndex, vScriptId, vValue);
+	if (0 == nIndex) {
+		vector<unsigned char> scriptKey = {'d','e','f'};
+		vector<unsigned char> vDataKey;
+		vector<unsigned char> vDataValue;
+		vDataKey.clear();
+		vDataValue.clear();
+		for (auto &item : mapDatas) {   //遍历本级缓存数据，找出合法的最小的key值
+			vector<unsigned char> vTemp(item.first.begin(), item.first.begin() + 3);
+			if (scriptKey == vTemp) {
+				if (item.second.empty()) {
+					continue;
+				}
+				vDataKey = item.first;
+				vDataValue = item.second;
+				break;
+			}
+		}
+		if (!pBase->GetScript(nIndex, vScriptId, vValue)) { //上级没有获取符合条件的key值
+			if (vDataKey.empty())
+				return false;
+			else {//返回本级缓存的查询结果
+				vScriptId.clear();
+				vValue.clear();
+				vScriptId.assign(vDataKey.begin()+3, vDataKey.end());
+				vValue = vDataValue;
+				return true;
+			}
+		} else { //上级获取到符合条件的key值
+			if (vDataKey.empty()) {  //缓存中没有符合条件的key，直接返回上级的查询结果
+				return true;
+			}
+			vector<unsigned char> dataKeyTemp = {'d', 'e', 'f'};
+			dataKeyTemp.insert(dataKeyTemp.end(), vScriptId.begin(), vScriptId.end()); //上级得到的key值
+			if (dataKeyTemp < vDataKey) {  //若上级查询的key小于本级缓存的key,且此key在缓存中没有，则直接返回数据库中查询的结果
+				if (mapDatas.count(dataKeyTemp) == 0)
+					return true;
+				else {
+					mapDatas[dataKeyTemp].clear();  //在缓存中dataKeyTemp已经被删除过了，重新将此key对应的value清除
+					return GetScript(nIndex, vScriptId, vValue); //重新从数据库中获取下一条数据
+				}
+			} else {  //若上级查询的key大于等于本级缓存的key,返回本级的数据
+				vScriptId.clear();
+				vValue.clear();
+				vScriptId.assign(vDataKey.begin()+3, vDataKey.end());
+				vValue = vDataValue;
+				return true;
+			}
+		}
+	} else if (1 == nIndex) {
+		vector<unsigned char> vKey = { 'd','e','f' };
+		vKey.insert(vKey.end(), vScriptId.begin(), vScriptId.end());
+		vector<unsigned char> vPreKey(vKey);
+		map<vector<unsigned char>, vector<unsigned char> >::iterator iterFindKey = mapDatas.find(vPreKey);
+		vector<unsigned char> vDataKey;
+		vector<unsigned char> vDataValue;
+ 		vDataKey.clear();
+ 		vDataValue.clear();
+		vector<unsigned char> vKeyTemp={'d','e','f'};
+		while (iterFindKey != mapDatas.end() && ++iterFindKey != mapDatas.end()) {
+			vector<unsigned char> vTemp(iterFindKey->first.begin(), iterFindKey->first.begin() + 3);
+			if (vKeyTemp == vTemp) {
+				if (iterFindKey->second.empty())
+					continue;
+				else {
+					vDataKey = iterFindKey->first;
+					vDataValue = iterFindKey->second;
+					break;
+				}
+			}
+		}
+		if (!pBase->GetScript(nIndex, vScriptId, vValue)) { //从BASE获取指定键值之后的下一个值
+			if (vDataKey.empty())
+				return false;
+			else {
+				vScriptId.clear();
+				vValue.clear();
+				vScriptId.assign(vDataKey.begin()+3, vDataKey.end());
+				vValue = vDataValue;
+				return true;
+			}
+		} else {
+			if (vDataKey.empty())    //缓存中没有符合条件的key，直接返回上级的查询结果
+				return true;
+			vector<unsigned char> dataKeyTemp = {'d', 'e', 'f'};
+			dataKeyTemp.insert(dataKeyTemp.end(), vScriptId.begin(), vScriptId.end()); //上级得到的key值
+			if (dataKeyTemp < vDataKey) {
+				if (mapDatas.count(dataKeyTemp) == 0)
+						return true;
+				else {
+					mapDatas[dataKeyTemp].clear();  //在缓存中dataKeyTemp已经被删除过了，重新将此key对应的value清除
+					return GetScript(nIndex, vScriptId, vValue); //重新从数据库中获取下一条数据
+				}
+			} else { //若上级查询的key大于等于本级缓存的key,返回本级的数据
+				vScriptId.clear();
+				vValue.clear();
+				vScriptId.assign(vDataKey.begin()+3, vDataKey.end());
+				vValue = vDataValue;
+				return true;
+			}
+		}
+
+	} else {
+		assert(0);
+	}
+	return true;
 }
 bool CScriptDBViewCache::SetScript(const vector<unsigned char> &vScriptId, const vector<unsigned char> &vValue) {
 	vector<unsigned char> scriptKey = {'d','e','f'};
@@ -557,12 +661,14 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 				return true;
 			}
 		}
-		else { //上级获取到符合条件的key值
-			vector<unsigned char> dataKeyTemp(vKey.begin(), vKey.end());
-			dataKeyTemp.insert(dataKeyTemp.end(), vScriptKey.begin(), vScriptKey.end());
+		else {
 			if(vDataKey.empty()) {  //缓存中没有符合条件的key，直接返回上级的查询结果
 				return true;
 			}
+			//上级获取到符合条件的key值
+			vector<unsigned char> dataKeyTemp(vKey.begin(), vKey.end());
+			dataKeyTemp.insert(dataKeyTemp.end(), vScriptKey.begin(), vScriptKey.end());
+
 			if(dataKeyTemp < vDataKey )  {  //若上级查询的key小于本级缓存的key,且此key在缓存中没有，则直接返回数据库中查询的结果
 				if(mapDatas.count(dataKeyTemp) == 0)
 					return true;
@@ -571,10 +677,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 					return GetScriptData(nCurBlockHeight, vScriptId, 1, vScriptKey, vScriptData, nHeight, setOperLog); //重新从数据库中获取下一条数据
 				}
 			}
-			else if(dataKeyTemp == vDataKey && vDataValue.empty()){ //若上级查询的key与缓存查询的key相等，直接返回查询的结果
-				return true;
-			}
-			else{  //若上级查询的key大于本级缓存的key,返回本级的数据
+			else{  //若上级查询的key大于或等于本级缓存的key,返回本级的数据
 				vScriptKey.clear();
 				vScriptData.clear();
 				vScriptKey.insert(vScriptKey.end(), vDataKey.begin()+11, vDataKey.end());
@@ -630,12 +733,17 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 				return true;
 			}
 		} else {
-			vector<unsigned char> dataKeyTemp(vKey.begin(), vKey.end());
-			dataKeyTemp.insert(dataKeyTemp.end(), vScriptKey.begin(), vScriptKey.end());
 			if (vDataKey.empty())    //缓存中没有符合条件的key，直接返回上级的查询结果
 				return true;
+			vector<unsigned char> dataKeyTemp(vKey.begin(), vKey.end());
+			dataKeyTemp.insert(dataKeyTemp.end(), vScriptKey.begin(), vScriptKey.end());
 			if (dataKeyTemp < vDataKey) {
-				return true;
+				if(mapDatas.count(dataKeyTemp) == 0)
+					return true;
+				else {
+					mapDatas[dataKeyTemp].clear();  //在缓存中dataKeyTemp已经被删除过了，重新将此key对应的value清除
+					return GetScriptData(nCurBlockHeight, vScriptId, 1, vScriptKey, vScriptData, nHeight, setOperLog); //重新从数据库中获取下一条数据
+				}
 			} else {
 				vScriptKey.clear();
 				vScriptData.clear();
@@ -823,16 +931,16 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const CRegID &
 	if(!setOperLog.empty()) {    //删除已经超时的数据项
 		for(auto &item : setOperLog) {
 			if(!EraseScriptData(item.vKey)) {
-				CDataStream ds(item.vValue, SER_DISK, CLIENT_VERSION);
-				int nHeight;
-				vector<unsigned char> vScriptData;
-				ds >> nHeight;
-				ds >> vScriptData;
-				vector<unsigned char> vScriptId(item.vKey.begin()+4, item.vKey.begin()+10);
-				vector<unsigned char> vDefineKey(item.vKey.begin()+11, item.vKey.end());
-				CRegID regId;
-				regId.SetRegID(vScriptId);
-				LogPrint("ERROR", "vScriptId:%s, vScriptKey:%s, nHeight:%d  vScriptData:%s\n", regId.ToString(), HexStr(vDefineKey), nHeight, HexStr(vScriptData));
+//				CDataStream ds(item.vValue, SER_DISK, CLIENT_VERSION);
+//				int nHeight;
+//				vector<unsigned char> vScriptData;
+//				ds >> nHeight;
+//				ds >> vScriptData;
+//				vector<unsigned char> vScriptId(item.vKey.begin()+4, item.vKey.begin()+10);
+//				vector<unsigned char> vDefineKey(item.vKey.begin()+11, item.vKey.end());
+//				CRegID regId;
+//				regId.SetRegID(vScriptId);
+//				LogPrint("ERROR", "vScriptId:%s, vScriptKey:%s, nHeight:%d  vScriptData:%s\n", regId.ToString(), HexStr(vDefineKey), nHeight, HexStr(vScriptData));
 				return ERROR("GetScriptData() delete timeout script data item of super level db error");
 			}
 		}

@@ -217,7 +217,7 @@ void GetPriorityTx(vector<TxPriority> &vecPriority, map<uint256, vector<COrphan*
 //				make_heap(vecPriority.begin(), vecPriority.end(), comparer);
 //			}
 //
-//            if(NORMAL_TX == pBaseTx->nTxType || GENTOSECURE_TX == pBaseTx->nTxType)
+//            if(COMMON_TX == pBaseTx->nTxType || GENTOSECURE_TX == pBaseTx->nTxType)
 //            {
 //            	const CTransaction& tx = *((CTransaction *)vecPriority.front().get<2>());
 //            	// Legacy limits on sigOps:
@@ -406,7 +406,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
 				if (txCacheTemp.IsContainTx(pBaseTx->GetHash())) {
 					LogPrint("ERROR","CreatePosTx duplicate tx hash:%s\n", pBaseTx->GetHash().GetHex());
-					mempool.mapTx.erase(pBaseTx->GetHash());
+//					mempool.mapTx.erase(pBaseTx->GetHash());
 					return false;
 				}
 				CTxUndo txundo;
@@ -414,8 +414,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 
 				if (!pBaseTx->UpdateAccount(i, accView, state, txundo, pPrevIndex->nHeight + 1, txCacheTemp, contractScriptTemp)) {
 					LogPrint("ERROR","tx hash:%s transaction is invalid\n", pBaseTx->GetHash().GetHex());
-
-					mempool.mapTx.erase(pBaseTx->GetHash());
+//					mempool.mapTx.erase(pBaseTx->GetHash());
 					return false;
 				}
 			}
@@ -777,6 +776,7 @@ CBlockTemplate* CreateNewBlock() {
 			nBlockTx++;
 			pblock->vptx.push_back(stx);
 			nFees += pBaseTx->GetFee();
+			nBlockSize += stx->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
 
 		}
 
@@ -933,6 +933,8 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 			return false;
 		CBlock *pblock = &pblocktemplate.get()->block;
 
+		int nBlockSize = pblock->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
+
 		int64_t nStart = GetTime();
 		while (true) {
 
@@ -942,6 +944,7 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 			setCreateKey.insert(keyID);
 			if (CreatePosTx(pindexPrev, pblock,setCreateKey)) {
 				CheckWork(pblock, *pwalletMain);
+				int nBlockSize = pblock->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
 			}
 			if(setCreateKey.empty())
 			{
