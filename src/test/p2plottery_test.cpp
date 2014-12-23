@@ -674,7 +674,8 @@ static bool OrderLotto(const string &addr)
 	ORDER_DATA orderdata;
 
 	orderdata.type = 1;
-	orderdata.money = gLottoTestData.GetRandomAmount();;
+//	orderdata.money = gLottoTestData.GetRandomAmount();
+	orderdata.money = 100000;
 	GetRandomByteOrderData(orderdata.num, orderdata.numlen);
 
 	gLottoTestData.mapSelect[addr].numlen = orderdata.numlen;
@@ -840,6 +841,8 @@ BOOST_AUTO_TEST_CASE(normal0)
 	InitAllAccountInfo();
 	RegScript();
 	RegLotto(100);
+
+//	OrderLotto("n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
 	for(auto tmp : OrderAddrs)
 	{
 		OrderLotto(tmp);
