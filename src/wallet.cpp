@@ -843,6 +843,7 @@ bool CWallet::CleanAll() {
 		db.EraseKeyStoreValue(a.first);
 	});
 	mKeyPool.clear();
+	db.EraseMasterKey();
 	MasterKey.SetNull();
 	return true;
 }
