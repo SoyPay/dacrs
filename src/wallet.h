@@ -271,7 +271,7 @@ public:
 //	void ReacceptWalletTransactions();
 		void ResendWalletTransactions();
 
-	std::tuple<bool,string>  SendMoney(const CRegID &send,const CUserID &rsv, int64_t nValue);
+	std::tuple<bool,string>  SendMoney(const CRegID &send,const CUserID &rsv, int64_t nValue, int64_t nFee=0);
 
 	bool IsMine(CBaseTransaction*pTx)const;
 
