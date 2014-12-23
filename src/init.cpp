@@ -20,7 +20,6 @@
 #include "util.h"
 #include "cuiserve.h"
 #include "tx.h"
-#include "db.h"
 #include "wallet.h"
 #include "walletdb.h"
 
@@ -120,8 +119,6 @@ void Shutdown()
     ShutdownRPCMining();
 
 
-    if (pwalletMain)
-        bitdb.Flush(false);
     GenerateSoys(false, NULL, 0);
 
     StopNode();
@@ -154,8 +151,6 @@ void Shutdown()
 
     }
 
-    if (pwalletMain)
-        bitdb.Flush(true);
 
     boost::filesystem::remove(GetPidFile());
     UnregisterAllWallets();
@@ -614,8 +609,6 @@ bool AppInit2(boost::thread_group& threadGroup)
     printf("SoyPay version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
     LogPrint("INFO","Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
     printf("Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
-    LogPrint("INFO","Using BerkeleyDB version %s\n", DbEnv::version(0, 0, 0));
-    printf("Using BerkeleyDB version %s\n", DbEnv::version(0, 0, 0));
 //    if (!fLogTimestamps)
     LogPrint("INFO","Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
     printf("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
