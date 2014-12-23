@@ -163,7 +163,7 @@ public:
 
 	uint64_t GetRandomAmount() {
 		srand(time(NULL));
-		int r = (rand() % 1000000) + 500000;
+		int r = (rand() % 500000) + 200000;
 		return r;
 	}
 
@@ -386,6 +386,10 @@ typedef struct {
 
 #define ADDR_REGLOTTO   "mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y"
 
+#define REWARD_NO1 3000
+#define REWARD_NO2 17
+#define REWARD_NO3 2
+
 string OrderAddrs[] = {
 		"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb",
 		"mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7",
@@ -403,6 +407,108 @@ static string AddrToVaddr(const string &addr)
 }
 
 Cp2pLottoTest gLottoTestData;
+
+typedef struct
+{
+ int m;
+ int n;
+ int result;
+}MAP_M6;
+
+const static MAP_M6 ms6map[] = {
+		{6,  6, 1},
+		{7,  6, 7},
+		{8,  6, 28},
+		{9,  6, 84},
+		{10, 6, 210},
+		{11, 6, 462},
+		{12, 6, 924},
+		{13, 6, 1716},
+		{14, 6, 3003},
+		{15, 6, 5005},
+		{5,  5, 1},
+		{6,  5, 6},
+		{7,  5, 21},
+		{8,  5, 56},
+		{9,  5, 126},
+		{10, 5, 252},
+		{11, 5, 462},
+		{12, 5, 792},
+		{13, 5, 1287},
+		{14, 5, 2002},
+		{15, 5, 3003},
+		{4,  4, 1},
+		{5,  4, 5},
+		{6,  4, 15},
+		{7,  4, 35},
+		{8,  4, 70},
+		{9,  4, 126},
+		{10, 4, 210},
+		{11, 4, 330},
+		{12, 4, 495},
+		{13, 4, 715},
+		{14, 4, 1001},
+		{15, 4, 1365},
+		{3,  3, 1},
+		{4,  3, 4},
+		{5,  3, 10},
+		{6,  3, 20},
+		{7,  3, 35},
+		{8,  3, 56},
+		{9,  3, 84},
+		{10, 3, 120},
+		{11, 3, 165},
+		{12, 3, 220},
+		{13, 3, 286},
+		{14, 3, 364},
+		{15, 3, 455},
+		{2,  2, 1},
+		{3,  2, 3},
+		{4,  2, 6},
+		{5,  2, 10},
+		{6,  2, 15},
+		{7,  2, 21},
+		{8,  2, 28},
+		{9,  2, 36},
+		{10, 2, 45},
+		{11, 2, 55},
+		{12, 2, 66},
+		{13, 2, 78},
+		{14, 2, 91},
+		{15, 2, 105},
+		{1,  1, 1},
+		{2,  1, 2},
+		{3,  1, 3},
+		{4,  1, 4},
+		{5,  1, 5},
+		{6,  1, 6},
+		{7,  1, 7},
+		{8,  1, 8},
+		{9,  1, 9},
+		{10, 1, 10},
+		{11, 1, 11},
+		{12, 1, 12},
+		{13, 1, 13},
+		{14, 1, 14},
+		{15, 1, 15},
+};
+
+int MselectN(int m, int n) {
+	if(m < n)
+	{
+		return 0;
+	}
+	for(auto tmp : ms6map)
+	{
+		if(tmp.m == m && tmp.n == n)
+		{
+			return tmp.result;
+		}
+	}
+
+	return 0;
+}
+
 
 
 BOOST_AUTO_TEST_SUITE(p2pLottoTest)
@@ -532,7 +638,7 @@ static bool RegLotto(int shight) {
 	REG_DATA regdata;
 	regdata.type = 0;
 	regdata.hight = shight;
-	regdata.money = 1000000000;
+	regdata.money = 5000000000;
 
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << regdata;
@@ -568,7 +674,7 @@ static bool OrderLotto(const string &addr)
 	ORDER_DATA orderdata;
 
 	orderdata.type = 1;
-	orderdata.money = 500000;
+	orderdata.money = gLottoTestData.GetRandomAmount();;
 	GetRandomByteOrderData(orderdata.num, orderdata.numlen);
 
 	gLottoTestData.mapSelect[addr].numlen = orderdata.numlen;
@@ -592,8 +698,8 @@ static bool OrderLotto(const string &addr)
 		BOOST_CHECK(gLottoTestData.SetAddrGenerteBlock(MINERADDR));
 	} while (!pwalletMain->UnConfirmTx.empty());
 
-	OperateAccount(addr, MINUSFREE, orderdata.money, orderfee);
-	OperateAccount(ADDR_REGLOTTO, ADDFREEZD, orderdata.money, 0);
+	OperateAccount(addr, MINUSFREE, orderdata.money*MselectN(orderdata.numlen, 6), orderfee);
+	OperateAccount(ADDR_REGLOTTO, ADDFREEZD, orderdata.money*MselectN(orderdata.numlen, 6), 0);
 
 	CheckAccountInfo();
 
@@ -611,108 +717,6 @@ typedef struct
 	int64_t top2;
 	int64_t top3;
 }REWARD_RESULT;
-
-typedef struct
-{
- int m;
- int n;
- int result;
-}MAP_M6;
-
-const static MAP_M6 ms6map[] = {
-		{6,  6, 1},
-		{7,  6, 7},
-		{8,  6, 28},
-		{9,  6, 84},
-		{10, 6, 210},
-		{11, 6, 462},
-		{12, 6, 924},
-		{13, 6, 1716},
-		{14, 6, 3003},
-		{15, 6, 5005},
-		{5,  5, 1},
-		{6,  5, 6},
-		{7,  5, 21},
-		{8,  5, 56},
-		{9,  5, 126},
-		{10, 5, 252},
-		{11, 5, 462},
-		{12, 5, 792},
-		{13, 5, 1287},
-		{14, 5, 2002},
-		{15, 5, 3003},
-		{4,  4, 1},
-		{5,  4, 5},
-		{6,  4, 15},
-		{7,  4, 35},
-		{8,  4, 70},
-		{9,  4, 126},
-		{10, 4, 210},
-		{11, 4, 330},
-		{12, 4, 495},
-		{13, 4, 715},
-		{14, 4, 1001},
-		{15, 4, 1365},
-		{3,  3, 1},
-		{4,  3, 4},
-		{5,  3, 10},
-		{6,  3, 20},
-		{7,  3, 35},
-		{8,  3, 56},
-		{9,  3, 84},
-		{10, 3, 120},
-		{11, 3, 165},
-		{12, 3, 220},
-		{13, 3, 286},
-		{14, 3, 364},
-		{15, 3, 455},
-		{2,  2, 1},
-		{3,  2, 3},
-		{4,  2, 6},
-		{5,  2, 10},
-		{6,  2, 15},
-		{7,  2, 21},
-		{8,  2, 28},
-		{9,  2, 36},
-		{10, 2, 45},
-		{11, 2, 55},
-		{12, 2, 66},
-		{13, 2, 78},
-		{14, 2, 91},
-		{15, 2, 105},
-		{1,  1, 1},
-		{2,  1, 2},
-		{3,  1, 3},
-		{4,  1, 4},
-		{5,  1, 5},
-		{6,  1, 6},
-		{7,  1, 7},
-		{8,  1, 8},
-		{9,  1, 9},
-		{10, 1, 10},
-		{11, 1, 11},
-		{12, 1, 12},
-		{13, 1, 13},
-		{14, 1, 14},
-		{15, 1, 15},
-};
-
-int MselectN(int m, int n) {
-	if(m < n)
-	{
-		return 0;
-	}
-	for(auto tmp : ms6map)
-	{
-		if(tmp.m == m && tmp.n == n)
-		{
-			return tmp.result;
-		}
-	}
-
-	return 0;
-}
-
 
 static bool GetLuckyNum(const uint256 &phash, vector<unsigned char> &luckynum)
 {
@@ -802,19 +806,19 @@ static bool OpenLotto(const string &addr, int openhight)
 	//更新投注者账户
 		for(auto tmp : gLottoTestData.mapSelect)
 		{
-			int total = MselectN(tmp.second.numlen, 6);
-			uint64_t price = tmp.second.amonut/total;
+//			int total = MselectN(tmp.second.numlen, 6);
+			uint64_t price = tmp.second.amonut;
 			REWARD_RESULT tmpslt = DrawLottery(pblockindex->GetBlockHash(), tmp.second.num, tmp.second.numlen);
 			LogPrint("spark", "\r\nrslt addr:%s\r\n", tmp.first);
 			{
-				LogPrint("spark", "\r\ntotal tickets:%d\r\n", total);
+//				LogPrint("spark", "\r\ntotal tickets:%d\r\n", total);
 				LogPrint("spark", "\r\nprice:%I\r\n", price);
 				LogPrint("spark", "\r\ntmpslt.top1:%I\r\n", tmpslt.top1);
 				LogPrint("spark", "\r\ntmpslt.top2:%I\r\n", tmpslt.top2);
 				LogPrint("spark", "\r\ntmpslt.top3:%I\r\n", tmpslt.top3);
 			}
 
-			uint64_t rsltamount = (tmpslt.top1 + tmpslt.top2 + tmpslt.top3)*price;
+			uint64_t rsltamount = (tmpslt.top1*REWARD_NO1 + tmpslt.top2*REWARD_NO2 + tmpslt.top3*REWARD_NO3)*price;
 			LogPrint("spark", "\r\nrsltamount:%I\r\n", rsltamount);
 			OperateAccount(tmp.first, ADDFREE, rsltamount, 0);
 			OperateAccount(ADDR_REGLOTTO, MINUSFREEZD, rsltamount, 0);
