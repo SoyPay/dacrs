@@ -1355,6 +1355,7 @@ public:
 	CAccount() :
 			keyID(uint160(0)), llValues(0) {
 		PublicKey = CPubKey();
+		MinerPKey = CPubKey();
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
 		vSelfFreeze.clear();
