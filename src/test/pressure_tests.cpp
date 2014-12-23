@@ -314,9 +314,8 @@ public:
 			if(0 != i) {
 				for(int j=0; j<100 ;++j)
 					cout<<'\b';
+				cout << "create tx progress: "<<  (int)(((i+1)/(float)txCount) * 100) << "%";
 			}
-			cout << "create tx progress: "<<  (int)(((i+1)/(float)txCount) * 100) << "%\n";
-
 		}
 	}
 
