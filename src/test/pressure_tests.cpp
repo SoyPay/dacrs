@@ -311,8 +311,12 @@ public:
 			}
 //			cout << "create tx order:" << i << "type:" <<nTxType << endl;
 			//putchar('\b');	//将当前行全部清空，用以显示最新的进度条状态
+			if(0 != i) {
+				for(int j=0; j<100 ;++j)
+					cout<<'\b';
+			}
 			cout << "create tx progress: "<<  (int)((i/(float)txCount) * 100) << "%";
-			putchar('\b');
+
 		}
 	}
 
