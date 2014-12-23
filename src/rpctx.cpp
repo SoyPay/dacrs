@@ -1261,6 +1261,10 @@ Value resetclient(const Array& params, bool fHelp) {
 		pwalletMain->CleanAll();
 		CBlockIndex* te=chainActive.Tip();
 		uint256 hash= te->GetBlockHash();
+//		auto ret = remove_if( mapBlockIndex.begin(), mapBlockIndex.end(),[&](std::map<uint256, CBlockIndex*>::reference a) {
+//			return (a.first == hash);
+//		});
+//		mapBlockIndex.erase(ret,mapBlockIndex.end());
 		for(auto it = mapBlockIndex.begin(), ite = mapBlockIndex.end(); it != ite;)
 		{
 		  if(it->first != hash)
