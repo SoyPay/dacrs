@@ -125,7 +125,7 @@ public:
 
 	bool GetOneScriptId(std::string &regscriptid);
 
-	bool GetNewAddr(std::string &addr);
+	bool GetNewAddr(std::string &addr,bool flag);
 
 	bool GetAccState(const std::string &addr, AccState &accstate);
 
@@ -164,6 +164,7 @@ public:
 
 	bool DisConnectBlock(int nNum);
 	Value GetScriptID(string txhash);
+	bool GetStrFromObj(const Value& valueRes,string& str);
 protected:
 	static boost::thread* pThreadShutdown ;
 	std::map<string, AccState> mapAccState;

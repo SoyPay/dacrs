@@ -338,17 +338,21 @@ bool SysTestBase::GetOneScriptId(std::string &regscriptid) {
 	return false;
 }
 
-bool SysTestBase::GetNewAddr(std::string &addr) {
+bool SysTestBase::GetNewAddr(std::string &addr,bool flag) {
 	//CommanRpc
-	char *argv[] = { "rpctest", "getnewaddress" };
+	string param = "false";
+	if(flag)
+	{
+		param = "true";
+	}
+	char *argv[] = { "rpctest", "getnewaddress",(char*)param.c_str() };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
 
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		addr = value.get_str();
-		LogPrint("test_miners", "GetNewAddr:%s\r\n", addr.c_str());
-		return true;
+		addr = "addr";
+		return GetStrFromObj(value,addr);
 	}
 	return false;
 }
@@ -744,4 +748,19 @@ void SysTestBase::StopServer() {
 		pThreadShutdown = NULL;
 	}
 	Shutdown();
+}
+bool SysTestBase::GetStrFromObj(const Value& valueRes,string& str)
+{
+	if (valueRes.type() == null_type) {
+				return false;
+			}
+
+			const Value& result = find_value(valueRes.get_obj(), str);
+			if (result.type() == null_type){
+				return false;
+			}
+			if (result.type() != null_type){
+				str = result.get_str();
+				}
+			return true;
 }

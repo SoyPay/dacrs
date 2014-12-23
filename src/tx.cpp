@@ -219,17 +219,19 @@ bool CRegisterAccountTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, 
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	CKeyID keyId;
 	view.GetKeyId(accountId, keyId);
+
+	if (llFees > 0) {
+		CAccountOperLog accountOperLog;
+		if (!txundo.GetAccountOperLog(keyId, accountOperLog))
+			return state.DoS(100, ERROR("UpdateAccounts() : read keyId=%s tx undo info error", keyId.GetHex()),
+					UPDATE_ACCOUNT_FAIL, "bad-read-txundoinfo");
+		oldAccount.UndoOperateAccount(accountOperLog);
+	}
+
 	if (!oldAccount.IsEmptyValue()) {
 		CPubKey empPubKey;
 		oldAccount.PublicKey = empPubKey;
 		oldAccount.MinerPKey = empPubKey;
-		if (llFees > 0) {
-			CAccountOperLog accountOperLog;
-			if (!txundo.GetAccountOperLog(keyId, accountOperLog))
-				return state.DoS(100, ERROR("UpdateAccounts() : read keyId=%s tx undo info error", keyId.GetHex()),
-						UPDATE_ACCOUNT_FAIL, "bad-read-txundoinfo");
-			oldAccount.UndoOperateAccount(accountOperLog);
-		}
 		CUserID userId(keyId);
 		view.SetAccount(userId, oldAccount);
 	} else {

@@ -48,6 +48,7 @@ public:
 	void SetRegID(const vector<unsigned char> &vIn) ;
 	void SetRegID(string strRegID);
     CKeyID getKeyID(const CAccountViewCache &view)const;
+    uint32_t getHight()const { return nHeight;};
 	CRegID(string strRegID);
 	bool operator ==(const CRegID& co) const {
 		return (this->nHeight == co.nHeight && this->nIndex == co.nIndex);
@@ -1348,6 +1349,7 @@ public:
 	CAccount(CKeyID &keyId, CPubKey &pubKey) :
 			keyID(keyId), PublicKey(pubKey) {
 		llValues = 0;
+		MinerPKey =  CPubKey();
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
 		vSelfFreeze.clear();
@@ -1355,7 +1357,7 @@ public:
 	CAccount() :
 			keyID(uint160(0)), llValues(0) {
 		PublicKey = CPubKey();
-		MinerPKey = CPubKey();
+		MinerPKey =  CPubKey();
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
 		vSelfFreeze.clear();

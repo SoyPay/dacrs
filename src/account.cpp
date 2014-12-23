@@ -3,6 +3,7 @@
 #include "serialize.h"
 #include "core.h"
 #include "main.h"
+#include "chainparams.h"
 #include <algorithm>
 
 bool CAccountView::GetAccount(const CKeyID &keyId, CAccount &account) {return false;}
@@ -279,7 +280,10 @@ bool CAccountViewCache::SetKeyId(const CUserID &userId, const CKeyID &keyId) {
 bool CAccountViewCache::EraseAccount(const CUserID &userId) {
 	if (userId.type() == typeid(CKeyID)) {
 		return EraseAccount(boost::get<CKeyID>(userId));
-	} else {
+	} else if(userId.type() == typeid(CPubKey)) {
+		return EraseAccount(boost::get<CPubKey>(userId).GetKeyID());
+	}
+	else {
 		assert(0);
 	}
 	return false;

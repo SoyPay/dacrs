@@ -921,7 +921,7 @@ bool CKeyStoreValue::SynchronizSys(CAccountViewCache& view){
 				assert(0);
 			}
 		if(account.MinerPKey.IsValid())
-		assert(account.MinerPKey == mMinerCkey.GetPubKey());
+			assert(account.MinerPKey == mMinerCkey.GetPubKey());
 	}
 	else//有可能是没有注册的账户
 	{

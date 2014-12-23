@@ -348,4 +348,5 @@ extern const CBaseParams &SysParamsTest();
 extern const CBaseParams &SysParamsReg();
 
 extern string initPubKey[];
+
 #endif
