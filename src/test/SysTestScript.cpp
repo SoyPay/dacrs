@@ -762,7 +762,7 @@ public:
 	}
 	void TestMinner()
 	{
-		for(int i=0;i < 1000;i++)
+		for(int i=0;i < 100;i++)
 		{
 			string newaddr;
 			srand(time(NULL));
@@ -772,7 +772,6 @@ public:
 			{
 				strflag ="true";
 			}
-			cout<<r<<endl;
 			BOOST_CHECK(GetNewAddr(newaddr,r));
 
 			char fee[64] = { 0 };
