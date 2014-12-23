@@ -326,7 +326,6 @@ BOOST_FIXTURE_TEST_CASE(test1, CSendItem)
 		recItem3.GetContranctData(vTemp);
 		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
 		param.push_back(HexStr(vContranct));			//合约内容
-		cout << HexStr(vContranct) << endl;
 		param.push_back("100000000");					//手续费
 		param.push_back("0");                           //有效高度
 		CreateContractTx(param);                        //创建合约交易

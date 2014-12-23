@@ -13,8 +13,8 @@
 #include "json/json_spirit_value.h"
 #include "json/json_spirit_writer_template.h"
 using namespace json_spirit;
-static string txTypeArray[] = { "NULL_TXTYPE", "REG_ACCT_TX", "NORMAL_TX", "CONTRACT_TX", "FREEZE_TX",
-		"REWARD_TX", "REG_SCRIPT_TX" };
+static string txTypeArray[] = { "NULL_TXTYPE", "REWARD_TX", "REG_ACCT_TX", "COMMON_TX", "CONTRACT_TX", "FREEZE_TX",
+		"REG_SCRIPT_TX" };
 
 
 bool CID::Set(const CRegID &id) {
@@ -740,7 +740,7 @@ bool CRewardTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 
 bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view,CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
-	LogPrint("INFO" ,"registscript UpdateAccount\n");
+//	LogPrint("INFO" ,"registscript UpdateAccount\n");
 	CID id(regAccountId);
 	CAccount acctInfo;
 	if (!view.GetAccount(regAccountId, acctInfo)) {

@@ -66,6 +66,7 @@ soypay_test_SOURCES = \
   SysRegisterAcc_test.cpp \
   p2pBet_test.cpp \
   p2plottery_test.cpp \
+  pressure_tests.cpp \
   $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 
 #if ENABLE_WALLET

@@ -65,7 +65,7 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		result.push_back(Pair("height", prtx->nValidHeight));
 		break;
 	}
-	case NORMAL_TX: {
+	case COMMON_TX: {
 		CTransaction *prtx = (CTransaction *) pTx;
 		result.push_back(Pair("txtype", "NormalTx"));
 		result.push_back(Pair("ver", prtx->nVersion));
@@ -219,9 +219,9 @@ Value registeraccounttx(const Array& params, bool fHelp) {
 		if (account.IsRegister()) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: Account is already registered");
 		}
-		if (balance < fee) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: Account balance is insufficient.");
-		}
+//		if (balance < fee) {
+//			throw JSONRPCError(RPC_WALLET_ERROR, "in registeraccounttx Error: Account balance is insufficient.");
+//		}
 
 		//pubkey
 		CPubKey pubkey;

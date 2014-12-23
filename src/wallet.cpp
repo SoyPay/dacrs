@@ -340,12 +340,12 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 					if (sptx->nTxType == REG_ACCT_TX) {
 						fIsNeedUpDataRegID = true;
 					} else if (sptx->nTxType == CONTRACT_TX) {
-						vector<CAccountOperLog> Log;
-						if (GetTxOperLog(hashtx, Log) == true) {
-							assert(newtx.AddOperLog(hashtx, Log));
-						} else {
-							ERROR("GetTxOperLog  error %s", hashtx.GetHex());
-						}
+//						vector<CAccountOperLog> Log;
+//						if (GetTxOperLog(hashtx, Log) == true) {
+//							assert(newtx.AddOperLog(hashtx, Log));
+//						} else {
+//							ERROR("GetTxOperLog  error %s", hashtx.GetHex());
+//						}
 					}
 					newtx.AddTx(hashtx,sptx.get());
 
