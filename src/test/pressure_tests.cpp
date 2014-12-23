@@ -383,6 +383,7 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 	BOOST_CHECK(DetectionAccount(0));
 	//随机创建6000个交易
 	CreateRandTx(iTxCount);
+	cout << endl;
 //	cout << "vTransactions size:" << vTransactions.size() << endl;
 	//检测mempool中是否有6000个交易
 	BOOST_CHECK(vTransactions.size()==iTxCount);
