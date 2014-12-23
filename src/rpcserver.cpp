@@ -300,6 +300,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "getscriptdata",          &getscriptdata,          true,      false,      true },
 	{ "signmessage",            &signmessage,            false,     false,      true },
 	{ "sendtoaddress",          &sendtoaddress,          false,     false,      true },
+	{ "sendtoaddresswithfee",   &sendtoaddresswithfee,   false,     false,      true },
     { "getbalance",             &getbalance,             false,     false,      true },
 
 

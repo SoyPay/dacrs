@@ -87,18 +87,18 @@ public:
 		char fee[64] = {0};
 		int nfee = GetRandomFee();
 		sprintf(fee, "%d", nfee);
-		char *argvFee[] = {"rpctest", "settxfee", fee};
-		int argcFee = sizeof(argvFee) / sizeof(char*);
-		Value value;
-		if (!CommandLineRPC_GetValue(argcFee, argvFee, value)) {
-			return false;
-		}
+//		char *argvFee[] = {"rpctest", "settxfee", fee};
+//		int argcFee = sizeof(argvFee) / sizeof(char*);
+//		Value value;
+//		if (!CommandLineRPC_GetValue(argcFee, argvFee, value)) {
+//			return false;
+//		}
 		char money[64] = {0};
 		int nmoney = GetRandomMoney();
 		sprintf(money, "%d00000000", nmoney);
-		char *argv[] = { "rpctest", "sendtoaddress", const_cast<char *>(srcAddr.c_str()), const_cast<char *>(desAddr.c_str()), money};
+		char *argv[] = { "rpctest", "sendtoaddresswithfee", const_cast<char *>(srcAddr.c_str()), const_cast<char *>(desAddr.c_str()), money, fee};
 		int argc = sizeof(argv) / sizeof(char*);
-
+		Value value;
 		if (!CommandLineRPC_GetValue(argc, argv, value)) {
 //			cout << "CreateCommonTx failed!" << endl;
 			return false;
@@ -314,9 +314,8 @@ public:
 			if(0 != i) {
 				for(int j=0; j<100 ;++j)
 					cout<<'\b';
+				cout << "create tx progress: "<<  (int)(((i+1)/(float)txCount) * 100) << "%";
 			}
-			cout << "create tx progress: "<<  (int)((i/(float)txCount) * 100) << "%";
-
 		}
 	}
 
@@ -406,14 +405,14 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 		BOOST_CHECK(SetBlockGenerte(iterAddr->second.c_str()));
 		CBlock block;
 		{
-			//LOCK(cs_main);
+			LOCK(cs_main);
 			CBlockIndex *pindex = chainActive.Tip();
 			BOOST_CHECK(ReadBlockFromDisk(block, pindex));
 		}
 
 		for(auto &item : block.vptx) {
 			{
-				//LOCK2(cs_main, pwalletMain->cs_wallet);
+				LOCK2(cs_main, pwalletMain->cs_wallet);
 				//检测钱包未确认列表中没有block中交易
 				BOOST_CHECK(!pwalletMain->UnConfirmTx.count(item->GetHash()) > 0);
 				//检测block中交易是否都在钱包已确认列表中
@@ -424,7 +423,7 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 
 		}
 		{
-			//LOCK2(cs_main, pwalletMain->cs_wallet);
+			LOCK2(cs_main, pwalletMain->cs_wallet);
 			//检测block中交易总数和钱包已确认列表中总数相等
 			BOOST_CHECK(pwalletMain->mapInBlockTx[block.GetHash()].mapAccountTx.size() == block.vptx.size());
 			nConfirmTxCount += block.vptx.size() - 1;
@@ -437,11 +436,9 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 		//检测Block最大值
 		BOOST_CHECK(block.GetSerializeSize(SER_DISK, CLIENT_VERSION) <= MAX_BLOCK_SIZE);
 		//检测block是否按照手续费比字节数大小值排序确认
-		vector<std::shared_ptr<CBaseTransaction> > vptxSort = block.vptx;
-		vector<std::shared_ptr<CBaseTransaction> >::iterator iterPTx = block.vptx.begin();
-		vector<std::shared_ptr<CBaseTransaction> >::iterator prePtx = ++iterPTx;
+		vector<std::shared_ptr<CBaseTransaction> >::iterator prePtx = block.vptx.begin()+1;
+		vector<std::shared_ptr<CBaseTransaction> >::iterator iterPTx = ++prePtx;
 		for(; iterPTx != block.vptx.end(); ++iterPTx){
-			++iterPTx;
 			int preProriry = prePtx->get()->GetFee() / prePtx->get()->GetSerializeSize(SER_DISK, CLIENT_VERSION);
 			int proriry = iterPTx->get()->GetFee() / iterPTx->get()->GetSerializeSize(SER_DISK, CLIENT_VERSION);
 			prePtx = iterPTx;

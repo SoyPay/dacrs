@@ -52,11 +52,11 @@ public:
 		return std::get<0>(ret);
 	}
 
-	bool SendMoney(const string& strRegAddr, const string& strDestAddr, uint64_t nMoney) {
+	bool SendMoney(const string& strRegAddr, const string& strDestAddr, uint64_t nMoney, uint64_t nFee=0) {
 		CKeyID keyid;
 		if (!GetKeyId(strDestAddr, keyid))
 			return false;
-		std::tuple<bool, string> ret = pwalletMain->SendMoney(strRegAddr, CUserID(keyid), nMoney);
+		std::tuple<bool, string> ret = pwalletMain->SendMoney(strRegAddr, CUserID(keyid), nMoney, nFee);
 		return std::get<0>(ret);
 	}
 
@@ -228,7 +228,7 @@ BOOST_FIXTURE_TEST_CASE(rpc_test,CSysRegisterAccTest)
 	string strUnRegister("mydRNvqewpZt9tyNtBSmBCrKr1NTiii5JH");
 	vector<unsigned char> vRegID = regID.GetVec6();
 	nMoney = nMoney/10;
-	BOOST_CHECK(SendMoney(HexStr(vRegID),strUnRegister,nMoney));
+	BOOST_CHECK(SendMoney(HexStr(vRegID),strUnRegister,nMoney, 10000));
 	BOOST_CHECK(GenerateOneBlock());
 
 	//确认转账成功

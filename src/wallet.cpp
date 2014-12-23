@@ -561,7 +561,7 @@ int64_t CWallet::GetRawBalance(int ncurhigh) const
 }
 
 
-std::tuple<bool,string>  CWallet::SendMoney(const CRegID &send, const CUserID &rsv, int64_t nValue)
+std::tuple<bool,string>  CWallet::SendMoney(const CRegID &send, const CUserID &rsv, int64_t nValue, int64_t nFee)
 {
 //	if (IsLocked())
 //	{
@@ -575,7 +575,10 @@ std::tuple<bool,string>  CWallet::SendMoney(const CRegID &send, const CUserID &r
 		tx.srcUserId = send;
 		tx.desUserId = rsv;
 		tx.llValues = nValue;
-		tx.llFees = nTransactionFee;
+		if (0 == nFee) {
+			tx.llFees = nTransactionFee;
+		}else
+			tx.llFees = nFee;
 		tx.nValidHeight = chainActive.Tip()->nHeight;
 	}
 
@@ -840,6 +843,7 @@ bool CWallet::CleanAll() {
 		db.EraseKeyStoreValue(a.first);
 	});
 	mKeyPool.clear();
+	db.EraseMasterKey();
 	MasterKey.SetNull();
 	return true;
 }

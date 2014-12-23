@@ -139,18 +139,18 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 bool CWalletDB::WriteBlockTx(const uint256 &hash, const CAccountTx& atx)
 {
 	nWalletDBUpdated++;
-	return db.Write(make_pair(string("blocktx"), hash), atx,true);
+	return db.Write(make_pair(string("blocktx"), hash), atx);
 }
+bool CWalletDB::EraseBlockTx(const uint256 &hash)
+{
+	nWalletDBUpdated++;
+	return db.Erase(make_pair(string("blocktx"), hash));
+}
+
 bool CWalletDB::WriteKeyStoreValue(const CKeyID &keyId, const CKeyStoreValue& KeyStoreValue)
 {
 	nWalletDBUpdated++;
 	return db.Write(make_pair(string("keystore"), keyId), KeyStoreValue,true);
-}
-
-bool CWalletDB::EraseBlockTx(const uint256 &hash)
-{
-	nWalletDBUpdated++;
-	return db.Erase(make_pair(string("blocktx"), hash),true);
 }
 
 bool CWalletDB::EraseKeyStoreValue(const CKeyID& keyId) {
@@ -158,14 +158,18 @@ bool CWalletDB::EraseKeyStoreValue(const CKeyID& keyId) {
 	return db.Erase(make_pair(string("keystore"), keyId),true);
 }
 
+
+
+
 bool CWalletDB::WriteUnComFirmedTx(const uint256& hash, const std::shared_ptr<CBaseTransaction>& tx) {
 	nWalletDBUpdated++;
-	return db.Write(make_pair(string("tx"), hash),tx,true);
+	return db.Write(make_pair(string("tx"), hash),tx);
 }
+
 
 bool CWalletDB::EraseUnComFirmedTx(const uint256& hash) {
 	nWalletDBUpdated++;
-	return db.Erase(make_pair(string("tx"), hash),true);
+	return db.Erase(make_pair(string("tx"), hash));
 }
 
 bool CWalletDB::WriteMasterKey(const CMasterKey& kMasterKey)
@@ -173,9 +177,6 @@ bool CWalletDB::WriteMasterKey(const CMasterKey& kMasterKey)
     nWalletDBUpdated++;
     return db.Write(string("mkey"), kMasterKey, true);
 }
-
-
-
 
 bool CWalletDB::EraseMasterKey() {
     nWalletDBUpdated++;
