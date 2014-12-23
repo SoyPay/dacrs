@@ -760,6 +760,35 @@ public:
 				break;
 		}
 	}
+	void TestMinner()
+	{
+		string newaddr;
+		srand(time(NULL));
+		int r = (rand() % 1);
+		string strflag = "false";
+		if(r == 1)
+		{
+			strflag ="true";
+		}
+		cout<<r<<endl;
+		BOOST_CHECK(GetNewAddr(newaddr,r));
+
+		char fee[64] = { 0 };
+		int nfee = GetRandomFee();
+		sprintf(fee, "%d", nfee);
+
+		char *argv[] = { "rpctest", "sendtoaddress", (char*)newaddr.c_str(),fee};
+		int argc = sizeof(argv) / sizeof(char*);
+
+		Value value;
+		BOOST_CHECK(CommandLineRPC_GetValue(argc, argv, value));
+		BOOST_CHECK(GenerateOneBlock());
+		char *argv1[] = { "rpctest", "registeraccounttx", (char*)newaddr.c_str(),fee,(char*)strflag.c_str()};
+		int argc1 = sizeof(argv) / sizeof(char*);
+		Value value1;
+		BOOST_CHECK(CommandLineRPC_GetValue(argc1, argv1, value1));
+		BOOST_CHECK(GenerateOneBlock());
+	}
 };
 
 
@@ -801,6 +830,12 @@ BOOST_FIXTURE_TEST_CASE(Anony,CSysScriptTest)
 
 	ResetEnv();
 	CheckAnony();
+}
+BOOST_FIXTURE_TEST_CASE(minier,CSysScriptTest)
+{
+
+	ResetEnv();
+	TestMinner();
 }
 BOOST_AUTO_TEST_SUITE_END()
 
