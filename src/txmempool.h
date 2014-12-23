@@ -18,6 +18,7 @@ using namespace std;
 static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
 class CAccountViewCache;
+class CScriptDBViewCache;
 
 /*
  * CTxMemPool stores these:
@@ -65,6 +66,7 @@ public:
     mutable CCriticalSection cs;
     map<uint256, CTxMemPoolEntry > mapTx;
     std::shared_ptr<CAccountViewCache> pAccountViewCache;
+    std::shared_ptr<CScriptDBViewCache> pScriptDBViewCache;
 
     CTxMemPool();
 
@@ -96,9 +98,11 @@ public:
 
     void SetAccountViewDB(CAccountViewCache *pAccountViewCacheIn);
 
+    void SetScriptDBViewDB(CScriptDBViewCache *pScriptDBViewCacheIn);
+
     bool CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &entry);
 
-    void ReScanMemPoolTx(const CBlock &block, CAccountViewCache *pAccountViewCacheIn);
+    void ReScanMemPoolTx(const CBlock &block, CAccountViewCache *pAccountViewCacheIn, CScriptDBViewCache *pScriptDBViewCacheIn);
 };
 
 

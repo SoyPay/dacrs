@@ -1499,7 +1499,7 @@ bool static DisconnectTip(CValidationState &state) {
 	// Update chainActive and related variables.
     UpdateTip(pindexDelete->pprev, block);
 
-    mempool.ReScanMemPoolTx(block, pAccountViewTip);
+    mempool.ReScanMemPoolTx(block, pAccountViewTip, pScriptDBTip);
 	// Resurrect mempool transactions from the disconnected block.
 	for (const auto &ptx : block.vptx) {
 		// ignore validation errors in resurrected transactions
@@ -1561,7 +1561,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     // Update chainActive & related variables.
     UpdateTip(pindexNew, block);
 
-    mempool.ReScanMemPoolTx(block, pAccountViewTip);
+    mempool.ReScanMemPoolTx(block, pAccountViewTip, pScriptDBTip);
     return true;
 }
 
