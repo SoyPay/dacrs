@@ -471,7 +471,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 		postxinfo.hashMerkleRoot = item.BuildMerkleTree(pPrevIndex->nHeight);
 		postxinfo.nValues = item.llValues;
 		postxinfo.nTime = pBlock->nTime; //max(pPrevIndex->GetMedianTimePast() + 1, GetAdjustedTime());
-		for (pBlock->nNonce = 0; pBlock->nNonce < maxNonce; pBlock->nNonce++) {
+		for (pBlock->nNonce = 0; pBlock->nNonce < maxNonce; ++pBlock->nNonce) {
 			postxinfo.nNonce = pBlock->nNonce;
 			uint256 curhash = postxinfo.GetHash();
 

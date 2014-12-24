@@ -578,7 +578,7 @@ std::tuple<bool,string>  CWallet::SendMoney(const CRegID &send, const CUserID &r
 		tx.desUserId = rsv;
 		tx.llValues = nValue;
 		if (0 == nFee) {
-			tx.llFees = SysCfg().GetDeflautTxFee();
+			tx.llFees = SysCfg().GetTxFee();
 		}else
 			tx.llFees = nFee;
 		tx.nValidHeight = chainActive.Tip()->nHeight;

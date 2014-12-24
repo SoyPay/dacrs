@@ -581,7 +581,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
 
-    if (SysCfg().GetDeflautTxFee() > nHighTransactionFeeWarning)
+    if (SysCfg().GetTxFee() > nHighTransactionFeeWarning)
     {
        InitWarning(_("Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction."));
     }

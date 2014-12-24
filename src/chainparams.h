@@ -79,8 +79,9 @@ public:
 			fLogPrintFileLine = GetBoolArg("-logprintfileline", false);
 		}
 		int64_t nTransactionFee ;
-		ParseMoney(GetArg("-paytxfee", ""), nTransactionFee);
+		if(ParseMoney(GetArg("-paytxfee", ""), nTransactionFee) && nTransactionFee > 0){
 		paytxfee = nTransactionFee;
+		}
 		return true;
 	}
 	virtual string ToString() {
@@ -106,9 +107,9 @@ public:
 	}
 	virtual int GetBlockMaxNonce() const
 	{
-		return 100;
+		return 1000;
 	}
-    int64_t GetDeflautTxFee()const;
+    int64_t GetTxFee()const;
     int64_t SetDeflautTxFee(int64_t fee)const;
 	virtual string GetDefaultTestDataPath() const
 	{
