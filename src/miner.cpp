@@ -879,9 +879,8 @@ void static SoypayMiner(CWallet *pwallet) {
 
 
 
-
+			unsigned int lasttime = 0xFFFFFFFF;
 			while (true) {
-				unsigned int lasttime = 0xFFFFFFFF;
 				//获取时间 同时等待下次时间到
 				auto GetNextTimeAndSleep = [&]() {
 					while(max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime()) == lasttime)
@@ -900,14 +899,13 @@ void static SoypayMiner(CWallet *pwallet) {
 					CheckWork(pblock, *pwallet);
 					SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
-					if (SysCfg().NetworkID() == CBaseParams::REGTEST)
-						throw boost::thread_interrupted();
-//					::MilliSleep(800);
+					if (SysCfg().NetworkID() != CBaseParams::MAIN)
+						if(SysCfg().GetBoolArg("-iscutmine", false)== false)
+						{
+						  throw boost::thread_interrupted();
+						}
 					break;
 				}
-//				else
-//					break;
-//				::MilliSleep(800);
 
 				// Check for stop or if block needs to be rebuilt
 				boost::this_thread::interruption_point();
@@ -968,27 +966,20 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 void GenerateSoys(bool fGenerate, CWallet* pwallet, int nThreads) {
 	static boost::thread_group* minerThreads = NULL;
 
-	if (nThreads != 0) {//in pos system one thread is enough  marked by ranger.shi
-		nThreads = 1;
-//		if (SysCfg().NetworkID() == CBaseParams::REGTEST)
-//			nThreads = 1;
-//		else
-//			nThreads = boost::thread::hardware_concurrency();
-	}
-
-
 	if (minerThreads != NULL) {
 		minerThreads->interrupt_all();
+		SysCfg().SoftSetArgCover("-ismining", "0");
 		delete minerThreads;
 		minerThreads = NULL;
 	}
 
-	if (nThreads == 0 || !fGenerate)
+	if (!fGenerate)
 		return;
-
+	//in pos system one thread is enough  marked by ranger.shi
 	minerThreads = new boost::thread_group();
-	for (int i = 0; i < nThreads; i++)
-		minerThreads->create_thread(boost::bind(&SoypayMiner, pwallet));
+	minerThreads->create_thread(boost::bind(&SoypayMiner, pwallet));
+
+	SysCfg().SoftSetArgCover("-ismining", "1");
 //	minerThreads->join_all();
 }
 
