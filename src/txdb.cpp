@@ -150,6 +150,9 @@ CAccountViewDB::CAccountViewDB(const string& name,size_t nCacheSize, bool fMemor
 
 bool CAccountViewDB::GetAccount(const CKeyID &keyId, CAccount &secureAccount) {
 	LogPrint("INFO", "GetAccount:%s\n", secureAccount.ToString());
+	CDataStream ds(SER_DISK, CLIENT_VERSION);
+	ds << secureAccount;
+	LogPrint("INFO", "acctInfo hex:%s\n", HexStr(ds));
 	bool ret = db.Read(make_pair('k', keyId), secureAccount);
 	for (int i = 0; i < 11; ++i) {
 		if(secureAccount.PublicKey.ToString() == initPubKey[i] && "" != secureAccount.MinerPKey.ToString())
