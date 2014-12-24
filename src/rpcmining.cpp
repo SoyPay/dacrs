@@ -185,7 +185,7 @@ Value setgenerate(const Array& params, bool fHelp)
     }
 
     // -regtest mode: don't return until nGenProcLimit blocks are generated
-    if (fGenerate && SysCfg().NetworkID() == CBaseParams::REGTEST)
+    if (fGenerate && SysCfg().NetworkID() != CBaseParams::MAIN)
     {
         int nHeightStart = 0;
         int nHeightEnd = 0;
@@ -212,12 +212,11 @@ Value setgenerate(const Array& params, bool fHelp)
             }
             //break;//leo
         }
+
     }
     else // Not -regtest: start generate thread, return immediately
     {
-    	SysCfg().SoftSetArgCover("-gen", fGenerate ?
-    			"1" : "0");
-    	SysCfg().SoftSetArgCover("-genproclimit", itostr(nGenProcLimit));
+    	SysCfg().SoftSetArgCover("-gen", fGenerate ?"1" : "0");
         GenerateSoys(fGenerate, pwalletMain, nGenProcLimit);
     }
 
@@ -275,12 +274,14 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("currentblocktx",   (uint64_t)nLastBlockTx));
     obj.push_back(Pair("difficulty",       (double)GetDifficulty()));
     obj.push_back(Pair("errors",           GetWarnings("statusbar")));
-    obj.push_back(Pair("genproclimit",     (int)SysCfg().GetArg("-genproclimit", -1)));
+    obj.push_back(Pair("genproclimit",     1));
     obj.push_back(Pair("networkhashps",    getnetworkhashps(params, false)));
     obj.push_back(Pair("pooledtx",         (uint64_t)mempool.size()));
-    obj.push_back(Pair("testnet",          TestNet()));
-    obj.push_back(Pair("generate",         getgenerate(params, false)));
-//    obj.push_back(Pair("hashespersec",     gethashespersec(params, false)));
+    static const string name[] = {"MAIN", "TESTNET", "REGTEST"};
+    obj.push_back(Pair("nettype",          name[SysCfg().NetworkID()]));
+    obj.push_back(Pair("posmaxnonce",      SysCfg().GetBlockMaxNonce()));
+
+    obj.push_back(Pair("generate",        SysCfg().GetBoolArg("-ismining", false)));
     return obj;
 }
 
