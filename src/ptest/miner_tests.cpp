@@ -83,7 +83,7 @@ int CommandLineRPC_GetValue(int argc, char *argv[],Value &value)
 
     if (strPrint != "")
     {
-       // fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
+//       fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
     }
 
     return nRet;

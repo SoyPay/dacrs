@@ -599,7 +599,16 @@ Value createfreezetx(const Array& params, bool fHelp) {
 		tx.regAccountId = account.regID;// pwalletMain->mapKeyRegID[keyid];
 		tx.llFreezeFunds = frozenmoney;
 		tx.llFees = fee;
+		if (0 == height) {
+			height = chainActive.Tip()->nHeight;
+		}
 		tx.nValidHeight = height;
+		if(0 == freeheight) {
+			freeheight = chainActive.Tip()->nHeight + 100;
+		}else
+		{
+			freeheight += chainActive.Tip()->nHeight;
+		}
 		tx.nUnfreezeHeight = freeheight;
 
 
@@ -794,6 +803,9 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		tx.regAccountId = GetUserId(keyid);
 		tx.script = vscript;
 		tx.llFees = fee;
+		if (0 == height) {
+			height = chainActive.Tip()->nHeight;
+		}
 		tx.nValidHeight = height;
 //		tx.aAuthorizate(nAuthorizeTime, nUserDefine, nMaxMoneyPerTime, nMaxMoneyTotal,
 //				nMaxMoneyPerDay);
