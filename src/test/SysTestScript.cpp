@@ -792,8 +792,14 @@ public:
 			BOOST_CHECK(CommandLineRPC_GetValue(argc1, argv1, value1));
 			BOOST_CHECK(GetHashFromCreatedTx(value1,hash));
 			BOOST_CHECK(GenerateOneBlock());
+			for(int j=0; j<100 ;++j)
+			cout<<'\b';
+			cout << "TestMinner progress: "<<  (int)(((i+1)/(float)100) * 100) << "%";
 		}
 
+		BOOST_CHECK(DisConnectBlock(chainActive.Height()-1));
+		BOOST_CHECK(GenerateOneBlock());
+		BOOST_CHECK(GenerateOneBlock());
 	}
 };
 

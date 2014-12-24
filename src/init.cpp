@@ -581,12 +581,9 @@ bool AppInit2(boost::thread_group& threadGroup)
     }
 
 
-    if (SysCfg().IsArgCount("-paytxfee"))
+    if (SysCfg().GetDeflautTxFee() > nHighTransactionFeeWarning)
     {
-        if (!ParseMoney(SysCfg().GetArg("-paytxfee", ""), nTransactionFee))
-            return InitError(strprintf(_("Invalid amount for -paytxfee=<amount>: '%s'"), SysCfg().GetArg("-paytxfee", "")));
-        if (nTransactionFee > nHighTransactionFeeWarning)
-            InitWarning(_("Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction."));
+       InitWarning(_("Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction."));
     }
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log

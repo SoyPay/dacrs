@@ -700,8 +700,8 @@ bool SysTestBase::GenerateOneBlock() {
 }
 
 bool SysTestBase::DisConnectBlock(int nNum) {
-	int nCurHeight = static_cast<int>(chainActive.Height() );
-	BOOST_CHECK(nNum>0 && nNum<=nCurHeight);
+	int nFirstHeight = static_cast<int>(chainActive.Height() );
+	BOOST_CHECK(nNum>0 && nNum<=nFirstHeight);
 
 	string strNum = strprintf("%d",nNum);
 	char *argv[3] = { "rpctest", "disconnectblock", (char*)strNum.c_str() };
@@ -710,7 +710,7 @@ bool SysTestBase::DisConnectBlock(int nNum) {
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
 		int nHeightAfterDis = static_cast<int>(chainActive.Height() );
-		BOOST_CHECK(nHeightAfterDis+1 == nCurHeight);
+		BOOST_CHECK(nHeightAfterDis == nFirstHeight-nNum);
 		return true;
 	}
 	return false;
