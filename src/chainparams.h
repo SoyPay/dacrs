@@ -48,7 +48,7 @@ protected:
 	mutable bool fBenchmark;
 	mutable bool fTxIndex;
 	mutable int64_t nTimeBestReceived;
-
+	mutable int64_t paytxfee;
 	int64_t nTargetSpacing;
 	int64_t nTargetTimespan;
 	int64_t nInterval;
@@ -78,6 +78,9 @@ public:
 			fPrintToToFile = GetBoolArg("-logprintfofile", false);
 			fLogPrintFileLine = GetBoolArg("-logprintfileline", false);
 		}
+		int64_t nTransactionFee ;
+		ParseMoney(GetArg("-paytxfee", ""), nTransactionFee);
+		paytxfee = nTransactionFee;
 		return true;
 	}
 	virtual string ToString() {
@@ -105,7 +108,8 @@ public:
 	{
 		return 100;
 	}
-
+    int64_t GetDeflautTxFee()const;
+    int64_t SetDeflautTxFee(int64_t fee)const;
 	virtual string GetDefaultTestDataPath() const
 	{
 		return string("D:\\bitcoin\\data\\");

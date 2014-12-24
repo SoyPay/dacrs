@@ -201,14 +201,13 @@ public:
 	}
 	template<typename Stream> void Unserialize(Stream &s, int nType, int nVersion) {
 		unsigned int len = ReadCompactSize(s);
-		if ( len <= 65 && len >0) {
-			s.read((char*) vch, len);
-		} else {
-	        //assert(0); //never come here
-			 char dummy;
-			 while (len--)
-				s.read(&dummy, 1);
+		if ( len == 33 ) {
+			s.read((char*) vch, 33);
+		} else if(len == 0){
 			Invalidate();
+		}
+		else{
+	        assert(0); //never come here
 		}
 	}
 

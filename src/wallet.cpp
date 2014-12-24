@@ -26,8 +26,8 @@ using namespace boost::assign;
 using namespace std;
 using namespace boost;
 
-// Settings
-int64_t nTransactionFee = DEFAULT_TRANSACTION_FEE;
+
+
 
 string CWallet:: defaultFilename("");
 //////////////////////////////////////////////////////////////////////////////
@@ -366,7 +366,9 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 			int i = 0 ;
 			int index = pblock->nHeight;
 			for (const auto &sptx : pblock->vptx) {
-
+				if(sptx->IsCoinBase()){
+					continue;
+				}
 				CRegID regid(index, i++);
 				if(IsMine(sptx.get())) {
 					if (sptx->nTxType == REG_ACCT_TX) {
@@ -576,7 +578,7 @@ std::tuple<bool,string>  CWallet::SendMoney(const CRegID &send, const CUserID &r
 		tx.desUserId = rsv;
 		tx.llValues = nValue;
 		if (0 == nFee) {
-			tx.llFees = nTransactionFee;
+			tx.llFees = SysCfg().GetDeflautTxFee();
 		}else
 			tx.llFees = nFee;
 		tx.nValidHeight = chainActive.Tip()->nHeight;

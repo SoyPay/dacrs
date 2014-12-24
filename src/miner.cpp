@@ -769,6 +769,10 @@ CBlockTemplate* CreateNewBlock() {
 
 			CTxUndo txundo;
 			CValidationState state;
+			if(pBaseTx->IsCoinBase())
+			{
+				assert(0); //never come here
+			}
 			if (!pBaseTx->UpdateAccount(nBlockTx + 1, accviewtemp, state, txundo, pIndexPrev->nHeight + 1,
 					txCacheTemp, contractScriptTemp)) {
 				continue;
