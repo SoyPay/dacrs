@@ -264,7 +264,18 @@ Value getblock(const Array& params, bool fHelp)
             + HelpExampleRpc("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
         );
 
-    std::string strHash = params[0].get_str();
+    std::string strHash;
+   if(int_type == params[0].type())
+   {
+	   int nHeight = params[0].get_int();
+	   if (nHeight < 0 || nHeight > chainActive.Height())
+        throw runtime_error("Block number out of range.");
+
+    CBlockIndex* pblockindex = chainActive[nHeight];
+    strHash= pblockindex->GetBlockHash().GetHex();
+   }else{
+	   strHash = params[0].get_str();
+   }
     uint256 hash(strHash);
 
     bool fVerbose = true;
