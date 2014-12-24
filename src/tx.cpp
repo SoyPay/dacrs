@@ -672,6 +672,9 @@ bool CRewardTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	CID id(account);
 	CAccount acctInfo;
+	CDataStream ds(SER_DISK, CLIENT_VERSION);
+	ds << acctInfo;
+	LogPrint("INFO", "acctInfo hex:%s", HexStr(ds));
 	if (!view.GetAccount(account, acctInfo)) {
 		return state.DoS(100, ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(id.GetID())),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
