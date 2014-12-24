@@ -90,7 +90,7 @@ Value getinfo(const Array& params, bool fHelp)
 
     if (pwalletMain && pwalletMain->IsCrypted())
 	 obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
-	 obj.push_back(Pair("paytxfee",      ValueFromAmount(SysCfg().GetDeflautTxFee())));
+	 obj.push_back(Pair("paytxfee",      ValueFromAmount(SysCfg().GetTxFee())));
 
     obj.push_back(Pair("relayfee",      ValueFromAmount(CTransaction::nMinRelayTxFee)));
     obj.push_back(Pair("data directory",GetDataDir().string().c_str()));

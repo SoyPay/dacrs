@@ -194,7 +194,7 @@ public:
 	}
 	virtual int GetBlockMaxNonce() const
 	{
-		return 100;
+		return 1000;
 	}
 	virtual const vector<CAddress>& FixedSeeds() const {
 		return vFixedSeeds;
@@ -539,11 +539,12 @@ bool CBaseParams::IntialParams(int argc, const char* const argv[]) {
 	return true;
 }
 
-int64_t CBaseParams::GetDeflautTxFee() const{
+int64_t CBaseParams::GetTxFee() const{
      return paytxfee;
 }
 int64_t CBaseParams::SetDeflautTxFee(int64_t fee)const{
 	paytxfee = fee;
+
 	return fee;
 }
 

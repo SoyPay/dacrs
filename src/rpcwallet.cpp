@@ -185,7 +185,7 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 		}
 
 		nAmount = AmountToRawValue(params[2]);
-		if (pAccountViewTip->GetRawBalance(sendKeyId, chainActive.Tip()->nHeight) <= nAmount + SysCfg().GetDeflautTxFee()) {
+		if (pAccountViewTip->GetRawBalance(sendKeyId, chainActive.Tip()->nHeight) <= nAmount + SysCfg().GetTxFee()) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM address not enough coins");
 		}
 		nFee = AmountToRawValue(params[3]);
@@ -202,7 +202,7 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 		}
 		nFee = AmountToRawValue(params[2]);
 		for (auto &te : sKeyid) {
-			if (pAccountViewTip->GetRawBalance(te, chainActive.Tip()->nHeight) >= nAmount + SysCfg().GetDeflautTxFee()) {
+			if (pAccountViewTip->GetRawBalance(te, chainActive.Tip()->nHeight) >= nAmount + SysCfg().GetTxFee()) {
 				sendKeyId = te;
 				break;
 			}
@@ -283,7 +283,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 		}
 
 		nAmount = AmountToRawValue(params[2]);
-		if (pAccountViewTip->GetRawBalance(sendKeyId, chainActive.Tip()->nHeight) <= nAmount + SysCfg().GetDeflautTxFee()) {
+		if (pAccountViewTip->GetRawBalance(sendKeyId, chainActive.Tip()->nHeight) <= nAmount + SysCfg().GetTxFee()) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM address not enough coins");
 		}
 	} else {
@@ -298,7 +298,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No Key In wallet \n");
 		}
 		for (auto &te : sKeyid) {
-			if (pAccountViewTip->GetRawBalance(te, chainActive.Tip()->nHeight) >= nAmount + SysCfg().GetDeflautTxFee()) {
+			if (pAccountViewTip->GetRawBalance(te, chainActive.Tip()->nHeight) >= nAmount + SysCfg().GetTxFee()) {
 				sendKeyId = te;
 				break;
 			}
