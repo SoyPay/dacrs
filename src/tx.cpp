@@ -1483,7 +1483,23 @@ Object CAccount::ToJosnObj() const
 }
 
 string CAccount::ToString() const {
-	return  write_string(Value(ToJosnObj()),true);
+	string str;
+	str += strprintf("keyID=%s, publicKey=%s, minerpubkey=%s, values=%ld\n",
+	HexStr(keyID).c_str(), HexStr(PublicKey).c_str(), HexStr(MinerPKey).c_str(), llValues);
+	for (unsigned int i = 0; i < vRewardFund.size(); ++i) {
+		str += "    " + vRewardFund[i].ToString() + "\n";
+	}
+	for (unsigned int i = 0; i < vFreedomFund.size(); ++i) {
+		str += "    " + vFreedomFund[i].ToString() + "\n";
+	}
+	for (unsigned int i = 0; i < vFreeze.size(); ++i) {
+		str += "    " + vFreeze[i].ToString() + "\n";
+	}
+	for (unsigned int i = 0; i < vSelfFreeze.size(); ++i) {
+		str += "    " + vSelfFreeze[i].ToString() + "\n";
+	}
+	return str;
+	//return  write_string(Value(ToJosnObj()),true);
 }
 
 void CAccount::WriteOperLog(AccountOper emOperType, const CFund &fund, bool bAuthorizated) {
