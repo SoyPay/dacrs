@@ -21,7 +21,7 @@ public:
 	virtual bool HaveAccount(const CKeyID &keyId);
 	virtual uint256 GetBestBlock();
 	virtual bool SetBestBlock(const uint256 &hashBlock);
-	virtual bool BatchWrite(const map<CKeyID, CAccount> &mapAccounts, const map<string, CKeyID> &mapKeyIds, const uint256 &hashBlock);
+	virtual bool BatchWrite(const map<CKeyID, CAccount> &mapAccounts, const map<vector<unsigned char>, CKeyID> &mapKeyIds, const uint256 &hashBlock);
 	virtual bool BatchWrite(const vector<CAccount> &vAccounts);
 	virtual bool EraseAccount(const CKeyID &keyId);
 	virtual bool SetKeyId(const vector<unsigned char> &accountId, const CKeyID &keyId);
@@ -44,7 +44,7 @@ public:
 	bool HaveAccount(const CKeyID &keyId);
 	uint256 GetBestBlock();
 	bool SetBestBlock(const uint256 &hashBlock);
-	bool BatchWrite(const map<CKeyID, CAccount> &mapAccounts, const map<string, CKeyID> &mapKeyIds, const uint256 &hashBlock);
+	bool BatchWrite(const map<CKeyID, CAccount> &mapAccounts, const map<vector<unsigned char>, CKeyID> &mapKeyIds, const uint256 &hashBlock);
 	bool BatchWrite(const vector<CAccount> &vAccounts);
 	bool EraseAccount(const CKeyID &keyId);
 	bool SetKeyId(const vector<unsigned char> &accountId, const CKeyID &keyId);
@@ -59,7 +59,7 @@ class CAccountViewCache : public CAccountViewBacked
 public:
 	uint256 hashBlock;
     map<CKeyID, CAccount> cacheAccounts;
-    map<string, CKeyID> cacheKeyIds;
+    map<vector<unsigned char>, CKeyID> cacheKeyIds;
 
 private:
 	bool GetAccount(const CKeyID &keyId, CAccount &account);
@@ -76,7 +76,7 @@ public:
     CAccountViewCache(CAccountView &base, bool fDummy=false);
 	uint256 GetBestBlock();
 	bool SetBestBlock(const uint256 &hashBlock);
-	bool BatchWrite(const map<CKeyID, CAccount> &mapAccounts, const map<string, CKeyID> &mapKeyIds, const uint256 &hashBlock);
+	bool BatchWrite(const map<CKeyID, CAccount> &mapAccounts, const map<vector<unsigned char>, CKeyID> &mapKeyIds, const uint256 &hashBlock);
 	bool BatchWrite(const vector<CAccount> &vAccounts);
 	/**
 	 * @brief from use id to reg id
@@ -285,7 +285,7 @@ private:
 
 class CTransactionDBView {
 public:
-	virtual bool IsContainTx(const uint256 & txHash);
+	virtual uint256 IsContainTx(const uint256 & txHash);
 	virtual bool IsContainBlock(const CBlock &block);
 	virtual bool AddBlockToCache(const CBlock &block);
 	virtual bool DeleteBlockFromCache(const CBlock &block);
@@ -301,7 +301,7 @@ protected:
 public:
 	CTransactionDBViewBacked(CTransactionDBView &transactionView);
 	bool BatchWrite(const map<uint256, vector<uint256> > &mapTxHashByBlockHashIn);
-	bool IsContainTx(const uint256 & txHash);
+	uint256 IsContainTx(const uint256 & txHash);
 	bool IsContainBlock(const CBlock &block);
 	bool AddBlockToCache(const CBlock &block);
 	bool DeleteBlockFromCache(const CBlock &block);
@@ -316,7 +316,7 @@ public:
 	bool IsContainBlock(const CBlock &block);
 	bool AddBlockToCache(const CBlock &block);
 	bool DeleteBlockFromCache(const CBlock &block);
-	bool IsContainTx(const uint256 & txHash);
+	uint256 IsContainTx(const uint256 & txHash);
 	map<uint256, vector<uint256> > GetTxHashCache(void);
 	bool BatchWrite(const map<uint256, vector<uint256> > &mapTxHashByBlockHashIn);
 	void AddTxHashCache(const uint256 & blockHash, const vector<uint256> &vTxHash);

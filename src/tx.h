@@ -1313,7 +1313,7 @@ public:
 	vector<CFund> vFreedomFund;								//!< freedom money
 	vector<CFund> vFreeze;									//!< freezed money
 	vector<CFund> vSelfFreeze;								//!< self-freeze money
-	map<vector_unsigned_char,CAuthorizate> mapAuthorizate;	//!< Key:scriptID,value :CAuthorizate
+	std::shared_ptr<map<vector_unsigned_char,CAuthorizate> > pMapAuthorizate;	//!< Key:scriptID,value :CAuthorizate
 	CAccountOperLog accountOperLog;							//!< record operlog, write at undoinfo
 
 public :
@@ -1353,6 +1353,7 @@ public:
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
 		vSelfFreeze.clear();
+		pMapAuthorizate.reset(new map<vector_unsigned_char,CAuthorizate>());
 	}
 	CAccount() :
 			keyID(uint160(0)), llValues(0) {
@@ -1361,6 +1362,36 @@ public:
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
 		vSelfFreeze.clear();
+		pMapAuthorizate.reset(new map<vector_unsigned_char,CAuthorizate>());
+	}
+	CAccount(const CAccount & other) {
+		this->regID = other.regID;
+		this->keyID = other.keyID;
+		this->PublicKey = other.PublicKey;
+		this->MinerPKey = other.MinerPKey;
+		this->llValues = other.llValues;
+		this->vRewardFund = other.vRewardFund;
+		this->vFreedomFund = other.vFreedomFund;
+		this->vFreeze = other.vFreeze;
+		this->vSelfFreeze = other.vSelfFreeze;
+     	this->pMapAuthorizate = other.pMapAuthorizate;
+		this->accountOperLog = other.accountOperLog;
+	}
+	CAccount &operator=(const CAccount & other) {
+		if(this == &other)
+			return *this;
+		this->regID = other.regID;
+		this->keyID = other.keyID;
+		this->PublicKey = other.PublicKey;
+		this->MinerPKey = other.MinerPKey;
+		this->llValues = other.llValues;
+		this->vRewardFund = other.vRewardFund;
+		this->vFreedomFund = other.vFreedomFund;
+		this->vFreeze = other.vFreeze;
+		this->vSelfFreeze = other.vSelfFreeze;
+		this->pMapAuthorizate = other.pMapAuthorizate;
+		this->accountOperLog = other.accountOperLog;
+		return *this;
 	}
 	std::shared_ptr<CAccount> GetNewInstance() {
 		return make_shared<CAccount>(*this);
@@ -1409,7 +1440,7 @@ public:
 			READWRITE(vFreedomFund);
 			READWRITE(vFreeze);
 			READWRITE(vSelfFreeze);
-			READWRITE(mapAuthorizate);
+			READWRITE(pMapAuthorizate);
 	)
 
 private:
@@ -1495,4 +1526,18 @@ void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, i
 	pa->nTxType = nTxType;
 }
 
+inline unsigned int GetSerializeSize(const std::shared_ptr<map<vector<unsigned char>,CAuthorizate> > &pAuthorizate, int nType, int nVersion) {
+	return ::GetSerializeSize(*((map<vector<unsigned char>,CAuthorizate> *) (pAuthorizate.get())), nType, nVersion);
+}
+
+template<typename Stream>
+void Serialize(Stream& os, const std::shared_ptr<map<vector<unsigned char>,CAuthorizate> > &pAuthorizate, int nType, int nVersion) {
+	::Serialize(os, *((map<vector<unsigned char>,CAuthorizate> *) (pAuthorizate.get())), nType, nVersion);
+}
+
+template<typename Stream>
+void Unserialize(Stream& is, std::shared_ptr<map<vector<unsigned char>,CAuthorizate> > &pAuthorizate, int nType, int nVersion) {
+	pAuthorizate = make_shared<map<vector_unsigned_char,CAuthorizate> >();
+	::Unserialize(is, *((map<vector<unsigned char>,CAuthorizate> *) (pAuthorizate.get())), nType, nVersion);
+}
 #endif

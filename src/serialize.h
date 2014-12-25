@@ -35,7 +35,7 @@ class CRegisterAccountTx;
 class CTransaction;
 class CFreezeTransaction;
 class CRewardTransaction;
-
+class CAuthorizate;
 
 
 static const unsigned int MAX_SIZE = 0x02000000;
@@ -436,6 +436,12 @@ extern inline unsigned int GetSerializeSize(const std::shared_ptr<CBaseTransacti
 template<typename Stream> void Serialize(Stream& os, const std::shared_ptr<CBaseTransaction> &pa, int nType, int nVersion);
 template<typename Stream> void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, int nVersion);
 
+//std::shared_ptr<map<vector_unsigned_char,CAuthorizate> >
+inline unsigned int GetSerializeSize(const std::shared_ptr<map<vector<unsigned char>,CAuthorizate> > &pAuthorizate, int nType, int nVersion);
+template<typename Stream>
+void Serialize(Stream& os, const std::shared_ptr<map<vector<unsigned char>,CAuthorizate> > &pAuthorizate, int nType, int nVersion);
+template<typename Stream>
+void Unserialize(Stream& is, std::shared_ptr<map<vector<unsigned char>,CAuthorizate> > &pAuthorizate, int nType, int nVersion);
 
 class CSerActionGetSerializeSize { };
 class CSerActionSerialize { };

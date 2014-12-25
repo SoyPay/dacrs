@@ -517,7 +517,7 @@ bool CContractTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &vie
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 	uint64_t el = GetElementForBurn(chainActive.Tip());
 	CScriptDBViewCache scriptDBView(*pScriptDBTip, true);
-	if(!pTxCacheTip->IsContainTx(GetHash())) {
+	if(uint256(0) == pTxCacheTip->IsContainTx(GetHash())) {
 		CAccountViewCache accountView(view, true);
 		tuple<bool, uint64_t, string> ret = vmRun.run(pTx, accountView, scriptDBView, chainActive.Height() +1, el);
 		if (!std::get<0>(ret))
@@ -768,7 +768,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view,CValidat
 					UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
 		}
 		if (!aAuthorizate.IsNull()) {
-			acctInfo.mapAuthorizate[regId.GetVec6()] = aAuthorizate;
+			(*(acctInfo.pMapAuthorizate))[regId.GetVec6()] = aAuthorizate;
 		}
 	}
 	else {
@@ -803,7 +803,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view,CValidat
 							regId.ToString()), UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
 		if (!aAuthorizate.IsNull()) {
-			acctInfo.mapAuthorizate[regId.GetVec6()] = aAuthorizate;
+			(*(acctInfo.pMapAuthorizate))[regId.GetVec6()] = aAuthorizate;
 		}
 	}
 
@@ -843,11 +843,12 @@ bool CRegistScriptTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CVa
 								UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
 	}
-	CAccountOperLog accountOperLog;
-	if (!txundo.GetAccountOperLog(account.keyID, accountOperLog))
-		return state.DoS(100, ERROR("UpdateAccounts() : read keyid=%s undo info error", account.keyID.GetHex()),
-				UPDATE_ACCOUNT_FAIL, "bad-read-txundoinfo");
-	account.UndoOperateAccount(accountOperLog);
+
+	for(auto &itemLog : txundo.vAccountOperLog){
+		if(itemLog.keyID == account.keyID) {
+			account.UndoOperateAccount(itemLog);
+		}
+	}
 	userId = account.keyID;
 	if (!view.SetAccount(userId, account))
 		return state.DoS(100, ERROR("UpdateAccounts() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
@@ -1471,7 +1472,7 @@ Object CAccount::ToJosnObj() const
 	obj.push_back(Pair("SelfFreeze",     SelfFreeze));
 	Array listAuthorize;
 	Object authorizateObj;
-	for(auto & item : mapAuthorizate) {
+	for(auto & item : (*pMapAuthorizate)) {
 		authorizateObj.push_back(Pair(HexStr(item.first), item.second.ToJosnObj()));
 		listAuthorize.push_back(authorizateObj);
 	}
@@ -1607,8 +1608,8 @@ bool CAccount::IsAuthorized(uint64_t nMoney, int nHeight, const vector_unsigned_
 	if (NULL == pScriptDBTip || !pScriptDBTip->GetScript(regId, vscript))
 		return false;
 
-	auto it = mapAuthorizate.find(scriptID);
-	if (it == mapAuthorizate.end())
+	auto it = (*pMapAuthorizate).find(scriptID);
+	if (it == (*pMapAuthorizate).end())
 		return false;
 
 	CAuthorizate& authorizate = it->second;
@@ -1749,9 +1750,9 @@ bool CAccount::OperateAccount(OperType type, const CFund &fund, int nHeight,
 }
 
 void CAccount::UpdateAuthority(int nHeight, uint64_t nMoney, const vector_unsigned_char& scriptID) {
-	map<vector_unsigned_char, CAuthorizate>::iterator it = mapAuthorizate.find(scriptID);
-	if (it == mapAuthorizate.end()) {
-		assert(it != mapAuthorizate.end());
+	map<vector_unsigned_char, CAuthorizate>::iterator it = (*pMapAuthorizate).find(scriptID);
+	if (it == (*pMapAuthorizate).end()) {
+		assert(it != (*pMapAuthorizate).end());
 		return;
 	}
 
@@ -1782,9 +1783,9 @@ void CAccount::UpdateAuthority(int nHeight, uint64_t nMoney, const vector_unsign
 }
 
 void CAccount::UndoAuthorityOverDay(const CAuthorizateLog& log) {
-	auto it = mapAuthorizate.find(log.GetScriptID());
-	if (it == mapAuthorizate.end()) {
-		assert(it != mapAuthorizate.end());
+	auto it = (*pMapAuthorizate).find(log.GetScriptID());
+	if (it == (*pMapAuthorizate).end()) {
+		assert(it != (*pMapAuthorizate).end());
 		return;
 	}
 
@@ -1795,9 +1796,9 @@ void CAccount::UndoAuthorityOverDay(const CAuthorizateLog& log) {
 }
 
 void CAccount::UndoAuthorityOnDay(uint64_t nUndoMoney, const CAuthorizateLog& log) {
-	auto it = mapAuthorizate.find(log.GetScriptID());
-	if (it == mapAuthorizate.end()) {
-		assert(it != mapAuthorizate.end());
+	auto it = (*pMapAuthorizate).find(log.GetScriptID());
+	if (it == (*pMapAuthorizate).end()) {
+		assert(it != (*pMapAuthorizate).end());
 		return;
 	}
 
@@ -1818,11 +1819,11 @@ bool CAccount::GetUserData(const vector_unsigned_char& scriptID, vector<unsigned
 	if (NULL == pScriptDBTip || !pScriptDBTip->GetScript(regId, vscript))
 		return false;
 
-	auto it = mapAuthorizate.find(scriptID);
-	if (it == mapAuthorizate.end())
+	auto it = (*pMapAuthorizate).find(scriptID);
+	if (it == (*pMapAuthorizate).end())
 		return false;
 
-	vData = mapAuthorizate[scriptID].GetUserData();
+	vData = (*pMapAuthorizate)[scriptID].GetUserData();
 	return true;
 }
 

@@ -179,7 +179,7 @@ bool CAccountViewDB::SetBestBlock(const uint256 &hashBlock) {
 }
 
 bool CAccountViewDB::BatchWrite(const map<CKeyID, CAccount> &mapAccounts,
-		const map<string, CKeyID> &mapKeyIds, const uint256 &hashBlock) {
+		const map<vector<unsigned char>, CKeyID> &mapKeyIds, const uint256 &hashBlock) {
 	CLevelDBBatch batch;
 	map<CKeyID, CAccount>::const_iterator iterAccount = mapAccounts.begin();
 	for (; iterAccount != mapAccounts.end(); ++iterAccount) {
@@ -190,12 +190,12 @@ bool CAccountViewDB::BatchWrite(const map<CKeyID, CAccount> &mapAccounts,
 		}
 	}
 
-	map<string, CKeyID>::const_iterator iterKey = mapKeyIds.begin();
+	map<vector<unsigned char>, CKeyID>::const_iterator iterKey = mapKeyIds.begin();
 	for (; iterKey != mapKeyIds.end(); ++iterKey) {
 		if (uint160(0) == iterKey->second) {
-			batch.Erase(make_pair('a', ParseHex(iterKey->first)));
+			batch.Erase(make_pair('a', iterKey->first));
 		} else {
-			batch.Write(make_pair('a', ParseHex(iterKey->first)), iterKey->second);
+			batch.Write(make_pair('a', iterKey->first), iterKey->second);
 		}
 	}
 	if (uint256(0) != hashBlock)
