@@ -47,17 +47,9 @@ uint64_t GetPayMoney() {
 	return r;
 }
 char* dest[] ={
-		  "000000000900",
-		  "000000000500",
-		  "000000000300",
-		  "000000000800",
-		  "000000000700",
-		  "000000000400",
+		  "1d0800000100",
 		  "000000000100",
-		  "000000000a00",
-		  "000000000600",
-		 "000000000200",
-
+		  "1d0800000200",
 };
 
 string CreateScript(char * vmpath,string addr,string nfee)
@@ -67,7 +59,7 @@ string CreateScript(char * vmpath,string addr,string nfee)
 	vInputParams.push_back("0");
 	vInputParams.push_back(vmpath);
 	vInputParams.push_back(nfee);
-	vInputParams.push_back("10");
+	vInputParams.push_back("0");
 	std::string strReturn("");
 	TestCallRPC("registerscripttx", vInputParams, strReturn);
 	return strReturn;
@@ -388,11 +380,11 @@ string GetScript(string hash)
 void GetAddress(string& buyaddr,string& selleraddr)
 {
 	srand(time(NULL));
-	int i = rand() % 10;
+	int i = rand() % 3;
 	int k = 0;
 	while(true)
 	{
-		k = rand() % 10;
+		k = rand() % 3;
 		if(k != i)
 			break;
 	}
@@ -403,13 +395,13 @@ void GetAddress(string& buyaddr,string& selleraddr)
 void GetAddress(string& addr1,string& addr2,string& addr3)
 {
 	srand(time(NULL));
-	int i = rand() % 10;
+	int i = rand() % 3;
 	int k = 0;
 	int d = 0;
 	while(true)
 	{
-		k = rand() % 10;
-		d = rand() % 10;
+		k = rand() % 3;
+		d = rand() % 3;
 		if(k != i && d != k && d != i)
 			break;
 	}

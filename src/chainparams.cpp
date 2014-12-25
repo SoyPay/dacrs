@@ -557,7 +557,7 @@ CBaseParams::CBaseParams() {
 	nTxCacheHeight = 500;
 	nTimeBestReceived = 0;
 	nScriptCheckThreads = 0;
-	nCoinCacheSize = 2000000;
+	nViewCacheSize = 2000000;
 	nTargetSpacing = 60*10; //8;  //
 	nTargetTimespan = 30 * 60;//20 * 3;  //
 	nInterval = nTargetTimespan / nTargetSpacing;

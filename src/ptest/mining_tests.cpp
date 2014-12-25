@@ -250,7 +250,7 @@ void CreateRegScriptTx(vector<string> &param) {
 	CommandLineRPC(param.size(), argv);
 }
 
-time_t sleepTime = 1000;     //每隔1秒发送一个交易
+time_t sleepTime = 500;     //每隔1秒发送一个交易
 int64_t llTime = 24*60*60;   //测试24小时
 
 time_t string2time(const char * str,const char * formatStr)
