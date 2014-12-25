@@ -571,9 +571,9 @@ Value createfreezetx(const Array& params, bool fHelp) {
 	//	LOCK2(cs_main, pwalletMain->cs_wallet);
 		EnsureWalletIsUnlocked();
 
-		if (freeheight < chainActive.Tip()->nHeight + 2) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "in createfreezetx Error: freeheight is invalid.");
-		}
+//		if (freeheight < chainActive.Tip()->nHeight + 2) {
+//			throw JSONRPCError(RPC_WALLET_ERROR, "in createfreezetx Error: freeheight is invalid.");
+//		}
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
 		CAccount account;
