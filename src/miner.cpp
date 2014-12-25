@@ -769,8 +769,7 @@ CBlockTemplate* CreateNewBlock() {
 
 			CTxUndo txundo;
 			CValidationState state;
-			if(pBaseTx->IsCoinBase())
-			{
+			if(pBaseTx->IsCoinBase()){
 				assert(0); //never come here
 			}
 			if (!pBaseTx->UpdateAccount(nBlockTx + 1, accviewtemp, state, txundo, pIndexPrev->nHeight + 1,
@@ -811,7 +810,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet) {
 
 	//// debug print
 //	LogPrint("INFO","proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
-	pblock->print(*pAccountViewTip);
+//	pblock->print(*pAccountViewTip);
 	// LogPrint("INFO","generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
 
 	// Found a solution

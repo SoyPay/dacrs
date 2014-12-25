@@ -691,7 +691,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
 
         // Store transaction in memory
          if(!pool.addUnchecked(hash, entry))
-        	 return false;
+        	 return ERROR("AcceptToMemoryPool: : addUnchecked failed hash:%s \r\n",
+                     hash.ToString());
     }
 
     g_signals.SyncTransaction(hash, pBaseTx, NULL);

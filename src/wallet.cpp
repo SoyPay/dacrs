@@ -484,11 +484,14 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate) {
 void CWallet::ResendWalletTransactions() {
 	vector<uint256> erase;
 	for (auto &te : UnConfirmTx) {
+		if(mempool.exists(te.first)){ //如果已经存在mempool 了那就不要再提交了
+			continue;
+		}
 		std::shared_ptr<CBaseTransaction> pBaseTx = te.second->GetNewInstance();
 		auto ret = CommitTransaction(&(*pBaseTx.get()));
 		if (!std::get<0>(ret)) {
 			erase.push_back(te.first);
-			LogPrint("CWallet","abort inavlibal tx %s",te.second.get()->ToString(*pAccountViewTip));
+			LogPrint("CWallet","abort inavlibal tx %s reason:%s\r\n",te.second.get()->ToString(*pAccountViewTip),std::get<1>(ret));
 		}
 	}
 	for (auto const & tee : erase) {
@@ -501,29 +504,7 @@ void CWallet::ResendWalletTransactions() {
 std::tuple<bool, string> CWallet::CommitTransaction(CBaseTransaction *pTx) {
 	LOCK2(cs_main, cs_wallet);
 	LogPrint("INFO", "CommitTransaction:\n%s", pTx->ToString(*pAccountViewTip));
-//		{
-//			// This is only to keep the database open to defeat the auto-flush for the
-//			// duration of this scope.  This is the only place where this optimization
-//			// maybe makes sense; please don't do it anywhere else.
-//			CWalletDB* pwalletdb = fFileBacked ? new CWalletDB(strWalletFile, "r") : NULL;
-//
-//			// Add tx to wallet, because if it has change it's also ours,
-//			// otherwise just for transaction history.
-//			AddToWallet(wtxNew);
-//
-//			// Notify that old coins are spent
-//			set<CWalletTx*> setCoins;
-//			BOOST_FOREACH(const CTxIn& txin, wtxNew.vin) {
-//				CWalletTx &coin = mapWallet[txin.prevout.hash];
-//				coin.BindWallet(this);
-//				NotifyTransactionChanged(this, coin.GetHash(), CT_UPDATED);
-//			}
-//
-//			if (fFileBacked)
-//				delete pwalletdb;
-//		}
 
-	// Broadcast
 	{
 		CValidationState state;
 		if (!::AcceptToMemoryPool(mempool, state, pTx, true, NULL)) {
