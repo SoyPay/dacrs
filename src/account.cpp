@@ -1038,7 +1038,7 @@ bool CTransactionDBCache::AddBlockToCache(const CBlock &block) {
 //		mapTxHashByBlockHash.insert(make_pair(block.GetHash(), vTxHash));
 //	}
 
-	LogPrint("block", "mapTxHashByBlockHash size:%d\n", mapTxHashByBlockHash.size());
+//	LogPrint("block", "mapTxHashByBlockHash size:%d\n", mapTxHashByBlockHash.size());
 //	for (auto &item : mapTxHashByBlockHash) {
 //		LogPrint("INFO", "blockhash:%s\n", item.first.GetHex());
 ////		for (auto &txHash : item.second)
