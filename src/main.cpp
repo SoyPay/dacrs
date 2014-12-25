@@ -626,7 +626,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
     if (pool.exists(hash))
         return false;
     // is it already confirmed in block
-    if(pTxCacheTip->IsContainTx(hash))
+    if(uint256(0) != pTxCacheTip->IsContainTx(hash))
     	return state.Invalid(ERROR("AcceptToMemoryPool() : tx hash %s has been confirmed", hash.GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
 
     if (pBaseTx->IsCoinBase())
@@ -1323,7 +1323,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
     if (block.vptx.size() > 1) {
 		for (unsigned int i = 1; i < block.vptx.size(); i++) {
 			std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[i];
-			if (txCache.IsContainTx((pBaseTx->GetHash()))) {
+			if (uint256(0) != txCache.IsContainTx((pBaseTx->GetHash()))) {
 				return state.DoS(100,
 						ERROR("ConnectBlock() : the TxHash %s the confirm duplicate", pBaseTx->GetHash().GetHex()),
 						REJECT_INVALID, "bad-cb-amount");
@@ -1831,6 +1831,9 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 	CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
 	CScriptDBViewCache scriptDBTemp(*pScriptDBTip, true);
 	vector<CBlock> vPreBlocks;
+	if(block.GetHash().GetHex() == "20a21337314ac51ca74e913cd5db4203e3631165dec419f516081dd221230c71") {
+		LogPrint("INFO", "checkfork\n");
+	}
 	if (pPreBlockIndex->GetBlockHash() != chainActive.Tip()->GetBlockHash()) {
 		while (!chainActive.Contains(pPreBlockIndex)){
 			CBlock block;
@@ -1883,7 +1886,7 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 								item->GetHash().GetHex()), REJECT_INVALID, "tx-invalid-height");
 			}
 			//校验是否有重复确认交易
-			if(txCacheTemp.IsContainTx(item->GetHash()))
+			if(uint256(0) != txCacheTemp.IsContainTx(item->GetHash()))
 				return state.DoS(100, ERROR("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed", item->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
 			//校验合约是否能有效执行，因为合约的执行和系统环境有关系，必须在这里校验
 			if(CONTRACT_TX == item->nTxType) {
@@ -1919,7 +1922,7 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 								item->GetHash().GetHex()), REJECT_INVALID, "tx-invalid-height");
 			}
 			//校验是否有重复确认交易
-			if(txCacheTemp.IsContainTx(item->GetHash()))
+			if(uint256(0) != txCacheTemp.IsContainTx(item->GetHash()))
 				return state.DoS(100, ERROR("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed", item->GetHash().GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
 
 			//校验合约是否能有效执行，因为合约的执行和系统环境有关系，必须在这里校验
