@@ -29,4 +29,5 @@ soypay_ptest_SOURCES = \
   mining_tests.cpp	\
   sesuretrade_ptest.cpp \
   regscript_test.cpp \
-  darkanony_ptest.cpp 
+  darkanony_ptest.cpp \
+  create_tx_tests.cpp 

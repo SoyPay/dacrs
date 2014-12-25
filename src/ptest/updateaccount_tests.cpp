@@ -58,7 +58,7 @@ void CreateNormalTx() {
 	CommandLineRPC(argc, argv);
 }
 
-void CreateFreezeTx() {
+void CreateSelfFreezeTx() {
 	//cout <<"CreateFreezeTx" << endl;
 	int argc = 7;
 	char *argv[7] = { "rpctest", "createfreezetx", "5j9hghjMKwAcY33kQoSxPDJPvokt75dDeYpU5LVgUc", "100000000000",
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(get_account_info)
 }
 BOOST_AUTO_TEST_CASE(create_freezetx)
 {
-	CreateFreezeTx();
+	CreateSelfFreezeTx();
 }
 BOOST_AUTO_TEST_CASE(create_normaltx)
 {
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(connect_block_test)
 	GetAccountState();
 	CreateNormalTx();
 	CreateRegisterTx();//"mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz"
-	CreateFreezeTx();//"5j9hghjMKwAcY33kQoSxPDJPvokt75dDeYpU5LVgUc"
+	CreateSelfFreezeTx();//"5j9hghjMKwAcY33kQoSxPDJPvokt75dDeYpU5LVgUc"
 	CreateRegScriptTx();//"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9"
 	GenerateMiner();
 	//MilliSleep(1000);
