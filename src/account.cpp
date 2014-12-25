@@ -834,7 +834,7 @@ bool CScriptDBViewCache::GetScriptDataCount(const vector<unsigned char> &vScript
 		return false;
 	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
 	ds >> nCount;
-	LogPrint("INFO", "GetScriptDataCount(): vScriptId=%s, nCount=%d\n", HexStr(vScriptId), nCount);
+//	LogPrint("INFO", "GetScriptDataCount(): vScriptId=%s, nCount=%d\n", HexStr(vScriptId), nCount);
 	return true;
 }
 bool CScriptDBViewCache::SetScriptDataCount(const vector<unsigned char> &vScriptId, int nCount) {
@@ -919,7 +919,7 @@ bool CScriptDBViewCache::GetScriptDataCount(const CRegID &scriptId, int &nCount)
 }
 bool CScriptDBViewCache::EraseScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey, CScriptDBOperLog &operLog) {
 	bool  temp = EraseScriptData(scriptId.GetVec6(), vScriptKey, operLog);
-	LogPrint("SetScriptData","EraseScriptData sriptid ID:%s key:%s ret:%d %p \r\n",scriptId.ToString(),HexStr(vScriptKey),temp,this);
+//	LogPrint("SetScriptData","EraseScriptData sriptid ID:%s key:%s ret:%d %p \r\n",scriptId.ToString(),HexStr(vScriptKey),temp,this);
 	return temp;
 }
 bool CScriptDBViewCache::HaveScriptData(const CRegID &scriptId, const vector<unsigned char > &vScriptKey) {
@@ -954,7 +954,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const CRegID &
 bool CScriptDBViewCache::SetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
 			const vector<unsigned char> &vScriptData, const int nHeight, CScriptDBOperLog &operLog) {
 	bool  temp =SetScriptData(scriptId.GetVec6(), vScriptKey, vScriptData, nHeight, operLog);
-	LogPrint("SetScriptData","SetScriptData sriptid ID:%s key:%s value:%s height:%d, ret: %d %p \r\n",scriptId.ToString(), HexStr(vScriptKey), HexStr(vScriptData), nHeight, temp, this);
+//	LogPrint("SetScriptData","SetScriptData sriptid ID:%s key:%s value:%s height:%d, ret: %d %p \r\n",scriptId.ToString(), HexStr(vScriptKey), HexStr(vScriptData), nHeight, temp, this);
 	return temp;
 }
 bool CScriptDBViewCache::SetTxRelAccout(const uint256 &txHash, const set<CKeyID> &relAccount) {
@@ -1039,11 +1039,11 @@ bool CTransactionDBCache::AddBlockToCache(const CBlock &block) {
 //	}
 
 	LogPrint("INFO", "mapTxHashByBlockHash size:%d\n", mapTxHashByBlockHash.size());
-	for (auto &item : mapTxHashByBlockHash) {
-		LogPrint("INFO", "blockhash:%s\n", item.first.GetHex());
-//		for (auto &txHash : item.second)
-//			LogPrint("INFO", "txhash:%s\n", txHash.GetHex());
-	}
+//	for (auto &item : mapTxHashByBlockHash) {
+//		LogPrint("INFO", "blockhash:%s\n", item.first.GetHex());
+////		for (auto &txHash : item.second)
+////			LogPrint("INFO", "txhash:%s\n", txHash.GetHex());
+//	}
 //	for(auto &item : mapTxHashCacheByPrev) {
 //		LogPrint("INFO", "prehash:%s\n", item.first.GetHex());
 //		for(auto &relayTx : item.second)
