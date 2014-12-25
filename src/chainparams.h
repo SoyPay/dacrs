@@ -54,7 +54,7 @@ protected:
 	int64_t nInterval;
 	int64_t nMaxCoinDay;
 	mutable unsigned int nScriptCheckThreads;
-	mutable int64_t nCoinCacheSize;
+	mutable int64_t nViewCacheSize;
 	mutable int nTxCacheHeight;
 	mutable int nIntervalPos;
 
@@ -178,8 +178,8 @@ public:
 	int64_t GetScriptCheckThreads() const {
 		return nScriptCheckThreads;
 	}
-	unsigned int GetCoinCacheSize() const {
-		return nCoinCacheSize;
+	unsigned int GetViewCacheSize() const {
+		return nViewCacheSize;
 	}
 	int GetTxCacheHeight() const {
 		return nTxCacheHeight;
@@ -206,8 +206,8 @@ public:
 	void SetScriptCheckThreads(int64_t nNum)const {
 		nScriptCheckThreads = nNum;
 	}
-	void SetCoinCacheSize(unsigned int nSize)const {
-		nCoinCacheSize = nSize;
+	void SetViewCacheSize(unsigned int nSize)const {
+		nViewCacheSize = nSize;
 	}
 	void SetTxCacheHeight(int nHeight)const {
 		nTxCacheHeight = nHeight;

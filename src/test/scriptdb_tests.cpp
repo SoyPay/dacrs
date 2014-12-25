@@ -9,7 +9,7 @@ using namespace std;
 CScriptDBViewCache *pTestView = NULL;
 CScriptDB *pTestDB = NULL;
 void init() {
-	 pTestDB = new CScriptDB("testdb",size_t(4<<20), false , SysCfg().IsReindex());
+	 pTestDB = new CScriptDB("testdb",size_t(4<<20), false , true);
 	 pTestView=  new CScriptDBViewCache(*pTestDB, false);
 }
 

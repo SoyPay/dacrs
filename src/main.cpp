@@ -1398,14 +1398,16 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 // Update the on-disk chain state.
 bool static WriteChainState(CValidationState &state) {
     static int64_t nLastWrite = 0;
-    if (!IsInitialBlockDownload() || pAccountViewTip->GetCacheSize() > SysCfg().GetCoinCacheSize() || GetTimeMicros() > nLastWrite + 600*1000000) {
+    int cachesize = pAccountViewTip->GetCacheSize()+pScriptDBTip->GetCacheSize();
+    if (!IsInitialBlockDownload() || cachesize > SysCfg().GetViewCacheSize() || GetTimeMicros() > nLastWrite + 600*1000000) {
         // Typical CCoins structures on disk are around 100 bytes in size.
         // Pushing a new one to the database can cause it to be written
         // twice (once in the log, and once in the tables). This is already
         // an overestimation, as most will delete an existing entry or
         // overwrite one. Still, use a conservative safety factor of 2.
-       if (!CheckDiskSpace(pAccountViewTip->GetCacheSize()))
+       if (!CheckDiskSpace(cachesize))
             return state.Error("out of disk space");
+
         FlushBlockFile();
         pblocktree->Sync();
         if (!pAccountViewTip->Flush())

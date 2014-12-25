@@ -730,31 +730,31 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     SysCfg().SetReIndex(SysCfg().GetBoolArg("-reindex", false) );
 
-    // Upgrading to 0.8; hard-link the old blknnnn.dat files into /blocks/
+
     filesystem::path blocksDir = GetDataDir() / "blocks";
     if (!filesystem::exists(blocksDir))
     {
         filesystem::create_directories(blocksDir);
-        bool linked = false;
-        for (unsigned int i = 1; i < 10000; i++) {
-            filesystem::path source = GetDataDir() / strprintf("blk%04u.dat", i);
-            if (!filesystem::exists(source)) break;
-            filesystem::path dest = blocksDir / strprintf("blk%05u.dat", i-1);
-            try {
-                filesystem::create_hard_link(source, dest);
-                LogPrint("INFO","Hardlinked %s -> %s\n", source.string(), dest.string());
-                linked = true;
-            } catch (filesystem::filesystem_error & e) {
-                // Note: hardlink creation failing is not a disaster, it just means
-                // blocks will get re-downloaded from peers.
-                LogPrint("INFO","Error hardlinking blk%04u.dat : %s\n", i, e.what());
-                break;
-            }
-        }
-        if (linked)
-        {
-        	SysCfg().SetReIndex(true);
-        }
+//        bool linked = false;
+//        for (unsigned int i = 1; i < 10000; i++) {
+//            filesystem::path source = GetDataDir() / strprintf("blk%04u.dat", i);
+//            if (!filesystem::exists(source)) break;
+//            filesystem::path dest = blocksDir / strprintf("blk%05u.dat", i-1);
+//            try {
+//                filesystem::create_hard_link(source, dest);
+//                LogPrint("INFO","Hardlinked %s -> %s\n", source.string(), dest.string());
+//                linked = true;
+//            } catch (filesystem::filesystem_error & e) {
+//                // Note: hardlink creation failing is not a disaster, it just means
+//                // blocks will get re-downloaded from peers.
+//                LogPrint("INFO","Error hardlinking blk%04u.dat : %s\n", i, e.what());
+//                break;
+//            }
+//        }
+//        if (linked)
+//        {
+//        	SysCfg().SetReIndex(true);
+//        }
     }
 
     // cache size calculations
@@ -773,7 +773,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     nTotalCache -= nScriptCacheSize;
     size_t nTxCacheSize = nTotalCache / 2;
 
-    SysCfg().SetCoinCacheSize(nTotalCache / 300); // coins in memory require around 300 bytes
+    SysCfg().SetViewCacheSize(nTotalCache / 300); // coins in memory require around 300 bytes
 
     try {
         pwalletMain = CWallet::getinstance();
@@ -819,6 +819,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                     pblocktree->WriteReindexing(true);
 
 				mempool.SetAccountViewDB(pAccountViewTip);
+				mempool.SetScriptDBViewDB(pScriptDBTip);
 
                 if (!LoadBlockIndex()) {
                     strLoadError = _("Error loading block database");
