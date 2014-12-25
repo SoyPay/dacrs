@@ -47,9 +47,9 @@ uint64_t GetPayMoney() {
 	return r;
 }
 char* dest[] ={
-		  "040000000100",
+		  "1d0800000100",
 		  "000000000100",
-		  "020000000100",
+		  "1d0800000200",
 };
 
 string CreateScript(char * vmpath,string addr,string nfee)
@@ -59,7 +59,7 @@ string CreateScript(char * vmpath,string addr,string nfee)
 	vInputParams.push_back("0");
 	vInputParams.push_back(vmpath);
 	vInputParams.push_back(nfee);
-	vInputParams.push_back("10");
+	vInputParams.push_back("0");
 	std::string strReturn("");
 	TestCallRPC("registerscripttx", vInputParams, strReturn);
 	return strReturn;
