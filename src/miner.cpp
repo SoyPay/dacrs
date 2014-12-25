@@ -88,9 +88,11 @@ uint64_t GetElementForBurn(CBlockIndex* pindex)
 			sumfee += pindex->GetBlockFee();
 			pindex = pindex->pprev;
 		}
-
-		return (sumfee / nBlock);
+		sumfee  = sumfee / nBlock;
+		if(sumfee < 100000) //如果平均值小于最小值 这取最小值
+			sumfee = 100000;
 	}
+	return sumfee;
 }
 
 // We want to sort transactions by priority and fee, so:
