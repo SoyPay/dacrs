@@ -154,20 +154,38 @@ Value gettxdetail(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 	uint256 txhash(params[0].get_str());
-
 	Object obj;
-
-	std::shared_ptr<CBaseTransaction> Tx;
-	if (!GetTransaction(Tx, txhash))
-		throw runtime_error("can not find the :" + txhash.ToString() + " tx");
-
-	obj = TxToJSON(Tx.get());
+	std::shared_ptr<CBaseTransaction> pBaseTx;
+	{
+		LOCK(cs_main);
+		{
+			pBaseTx = mempool.lookup(txhash);
+			if (pBaseTx.get()) {
+				obj = TxToJSON(pBaseTx.get());
+				return obj;
+			}
+		}
+		if (SysCfg().IsTxIndex()) {
+			CDiskTxPos postx;
+			if (pblocktree->ReadTxIndex(txhash, postx)) {
+				CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
+				CBlockHeader header;
+				try {
+					file >> header;
+					fseek(file, postx.nTxOffset, SEEK_CUR);
+					file >> pBaseTx;
+					obj = TxToJSON(pBaseTx.get());
+					obj.push_back(Pair("blockhash", header.GetHash().GetHex()));
+					obj.push_back(Pair("confirmHeight", (int)header.nHeight));
+				} catch (std::exception &e) {
+					throw runtime_error(tfm::format("%s : Deserialize or I/O error - %s", __func__, e.what()).c_str());
+				}
+				return obj;
+			}
+		}
+	}
 	return obj;
-
-
 }
-
-
 
 
 //create a register account tx
@@ -898,24 +916,15 @@ Value listaddr(const Array& params, bool fHelp) {
 }
 
 Value listtx(const Array& params, bool fHelp) {
-	if (fHelp || params.size() > 1) {
+	if (fHelp || params.size() != 0) {
 		string msg = "listaddrtx \"addr\" showtxdetail\n"
 				"\listaddrtx\n"
 				"\nArguments:\n"
-				"1.\"addr\": (optional,default all addr in wallet)"
-				"2.showtxdetail: (optional,default false)"
 				"\nResult:\n"
 				"\"txhash\"\n"
 				"\nExamples:\n" + HelpExampleCli("listtx", "")
 				+ "\nAs json rpc call\n" + HelpExampleRpc("listtx", "");
 		throw runtime_error(msg);
-	}
-    CKeyID keyid;
-	if (params.size() == 1) {
-
-		if (!GetKeyId(params[0].get_str(), keyid)) {
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
-		}
 	}
 
 	Object retObj;
@@ -923,14 +932,16 @@ Value listtx(const Array& params, bool fHelp) {
 	{
 		Object Inblockobj;
 		for (auto const &wtx : pwalletMain->mapInBlockTx) {
-			Inblockobj.push_back(Pair("tx",  wtx.second.ToJosnObj(keyid)));
+			for(auto const & item : wtx.second.mapAccountTx) {
+				Inblockobj.push_back(Pair("tx",  item.first.GetHex()));
+			}
 		}
-		retObj.push_back(Pair("Inblocktx" ,Inblockobj));
+		retObj.push_back(Pair("ConfirmTx" ,Inblockobj));
 
 		CAccountViewCache view(*pAccountViewTip, true);
 		Array UnConfirmTxArry;
 			for (auto const &wtx : pwalletMain->UnConfirmTx) {
-				UnConfirmTxArry.push_back(wtx.second.get()->ToString(view));
+				UnConfirmTxArry.push_back(wtx.first.GetHex());
 			}
 	  retObj.push_back(Pair("UnConfirmTx" ,UnConfirmTxArry));
 	}

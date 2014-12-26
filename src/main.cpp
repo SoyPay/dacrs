@@ -757,7 +757,6 @@ int GetTxComfirmHigh(const uint256 &hash) {
 // Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock
 bool GetTransaction(std::shared_ptr<CBaseTransaction> &pBaseTx, const uint256 &hash)
 {
-	CBlockIndex *pindexSlow = NULL;
     {
         LOCK(cs_main);
         {
