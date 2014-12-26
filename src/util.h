@@ -126,7 +126,7 @@ int LogPrintStr(const char* category, const string &str);
     template<TINYFORMAT_ARGTYPES(n)>                                          \
     static inline bool error2(int line, const char* file,const char* format1, TINYFORMAT_VARARGS(n))     \
     {                                                                         \
-    	LogPrintStr("ERROR", GetLogHead(line,file,"ERROR") + tfm::format(format1, TINYFORMAT_PASSARGS(n))); \
+    	LogPrintStr("ERROR", GetLogHead(line,file,"ERROR") + tfm::format(format1, TINYFORMAT_PASSARGS(n)) +'\n'); \
     	return false;                                                         \
     }
 

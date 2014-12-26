@@ -104,6 +104,14 @@ bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &en
 	CValidationState state;
 	CTxUndo txundo;
 	CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
+	// is it already confirmed in block
+	if(uint256(0) != pTxCacheTip->IsContainTx(hash))
+		return state.Invalid(ERROR("CheckTxInMemPool() : tx hash %s has been confirmed", hash.GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
+	// is it in valid height
+	if (!entry.GetTx()->IsValidHeight(chainActive.Tip()->nHeight, SysCfg().GetTxCacheHeight())) {
+		return state.Invalid(ERROR("CheckTxInMemPool() : txhash=%s beyond the scope of valid height ", hash.GetHex()),
+				REJECT_INVALID, "tx-invalid-height");
+	}
 	if (!entry.GetTx()->UpdateAccount(0, *pAccountViewCache, state, txundo, chainActive.Tip()->nHeight + 1,
 			txCacheTemp, *pScriptDBViewCache)) {
 		return false;
