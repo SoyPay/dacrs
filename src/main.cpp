@@ -1815,9 +1815,9 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 	CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
 	CScriptDBViewCache scriptDBTemp(*pScriptDBTip, true);
 	vector<CBlock> vPreBlocks;
-	if(block.GetHash().GetHex() == "20a21337314ac51ca74e913cd5db4203e3631165dec419f516081dd221230c71") {
-		LogPrint("INFO", "checkfork\n");
-	}
+//	if(block.GetHash().GetHex() == "20a21337314ac51ca74e913cd5db4203e3631165dec419f516081dd221230c71") {
+//		LogPrint("INFO", "checkfork\n");
+//	}
 	if (pPreBlockIndex->GetBlockHash() != chainActive.Tip()->GetBlockHash()) {
 		while (!chainActive.Contains(pPreBlockIndex)){
 			CBlock block;

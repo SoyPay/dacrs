@@ -106,8 +106,7 @@ int LogPrintStr(const string &str);
 extern string GetLogHead(int line, const char* file, const char* category);
 int LogPrintStr(const char* category, const string &str);
 
-#define getlineStr() strprintf("%s",__LINE__)
-#define getFilelineStr() strprintf("%s%s",__LINE__,__FILE__)
+
 #define strprintf tfm::format
 
 #define ERROR(...)  error2(__LINE__, __FILE__, __VA_ARGS__)
@@ -126,7 +125,7 @@ int LogPrintStr(const char* category, const string &str);
     template<TINYFORMAT_ARGTYPES(n)>                                          \
     static inline bool error2(int line, const char* file,const char* format1, TINYFORMAT_VARARGS(n))     \
     {                                                                         \
-    	LogPrintStr("ERROR", GetLogHead(line,file,"ERROR") + tfm::format(format1, TINYFORMAT_PASSARGS(n)) +'\n'); \
+    	LogPrintStr("ERROR", GetLogHead(line,file,"ERROR") + tfm::format(format1, TINYFORMAT_PASSARGS(n)) + "\n"); \
     	return false;                                                         \
     }
 
