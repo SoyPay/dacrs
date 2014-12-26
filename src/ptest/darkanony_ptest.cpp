@@ -296,7 +296,7 @@ string Createanony(string scriptid,string addr,string toaddress1,string toaddres
 //	cout<<"cotx:"<<temp<<endl;
 	vInputParams.push_back(temp);
 	vInputParams.push_back(nfee);
-	vInputParams.push_back("10");
+	vInputParams.push_back("0");
 	std::string strReturn("");
 	TestCallRPC("createcontracttx", vInputParams, strReturn);
 
