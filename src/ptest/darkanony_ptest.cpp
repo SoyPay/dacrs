@@ -151,7 +151,7 @@ string CreateDarkTx(string scriptid,string buyeraddr,string selleraddr,string nf
 //	cout<<"first:"<<temp<<endl;
 	vInputParams.push_back(temp);
 	vInputParams.push_back(nfee);
-	vInputParams.push_back("10");
+	vInputParams.push_back("0");
 	std::string strReturn("");
 	if(TestCallRPC("createcontracttx", vInputParams, strReturn)){
 			strReturn= Parsejson(strReturn);
@@ -177,7 +177,7 @@ string CreateSecondDarkTx(string scriptid,string hash,string buyeraddr,string nf
 	param += HexStr(hash1);
 	vInputParams.push_back(param);
 	vInputParams.push_back(nfee);
-	vInputParams.push_back("10");
+	vInputParams.push_back("0");
 	std::string strReturn("");
 	TestCallRPC("createcontracttx", vInputParams, strReturn);
 	return strReturn;
@@ -251,7 +251,7 @@ void Createanony(string addr)
 //	cout<<"cotx:"<<temp<<endl;
 	vInputParams.push_back(temp);
 	vInputParams.push_back("1000000");
-	vInputParams.push_back("10");
+	vInputParams.push_back("0");
 	std::string strReturn("");
 	TestCallRPC("createcontracttx", vInputParams, strReturn);
 //	cout<<strReturn<<endl;
