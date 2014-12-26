@@ -554,25 +554,9 @@ bool CheckTransaction(CBaseTransaction *ptx, CValidationState &state, CAccountVi
 	if( REWARD_TX == ptx->nTxType)
 		return true;
 
-//	if (0 == blockHeight) {
-//		if (!ptx->IsValidHeight(chainActive.Tip()->nHeight, SysCfg().GetTxCacheHeight())) {
-//			return state.DoS(100, ERROR("CheckTransaction() : txhash=%s beyond the scope of valid height ", ptx->GetHash().GetHex()), REJECT_INVALID,
-//					"bad-txns-oversize");
-//		}
-//	}
-//	else {
-//		if (!ptx->IsValidHeight(blockHeight, SysCfg().GetTxCacheHeight())) {
-//					return state.DoS(100, ERROR("CheckTransaction() : txhash=%s beyond the scope of valid height ", ptx->GetHash().GetHex()), REJECT_INVALID,
-//							"bad-txns-oversize");
-//		}
-//	}
-
 	// Size limits
 	if (::GetSerializeSize(ptx->GetNewInstance(), SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
 		return state.DoS(100, ERROR("CheckTransaction() : size limits failed"), REJECT_INVALID, "bad-txns-oversize");
-
-//	if(pTxCacheTip->IsContainTx(ptx->GetHash()))
-//		return state.DoS(100, ERROR("CheckTransaction() : tx hash %s has been confirmed", ptx->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
 
 	if(!ptx->CheckTransction(state, view))
 		return false;

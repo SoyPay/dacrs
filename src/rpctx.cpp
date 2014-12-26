@@ -361,13 +361,10 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		tx.get()->vAccountRegId = vaccountid;
 		tx.get()->llFees = fee;
 		tx.get()->vContract = vcontract;
-		if(height == 0){
-			tx.get()->nValidHeight = chainActive.Tip()->nHeight;
-		}else{
-			tx.get()->nValidHeight = height;
+		if( 0 == height) {
+			height = chainActive.Tip()->nHeight;
 		}
-//		tx.nValidHeight = height;
-
+		tx.get()->nValidHeight = height;
 
 		//get keyid by accountid
 		CKeyID keyid;

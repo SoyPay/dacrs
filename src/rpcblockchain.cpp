@@ -59,10 +59,11 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
     result.push_back(Pair("height", blockindex->nHeight));
     result.push_back(Pair("version", block.nVersion));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
+    result.push_back(Pair("txnumber", (int)block.vptx.size()));
     Array txs;
     for (const auto& ptx : block.vptx)
-    	txs.push_back(TxToJSON(ptx.get()));
-    //   txs.push_back(ptx->GetHash().GetHex());
+//    	txs.push_back(TxToJSON(ptx.get()));
+        txs.push_back(ptx->GetHash().GetHex());
     result.push_back(Pair("tx", txs));
     result.push_back(Pair("time", block.GetBlockTime()));
     result.push_back(Pair("nonce", (uint64_t)block.nNonce));

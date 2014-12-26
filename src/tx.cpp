@@ -576,10 +576,6 @@ bool CContractTransaction::CheckTransction(CValidationState &state, CAccountView
 		}
 	}
 
-//	//for VerifyDB checkblock return true
-//	if (pTxCacheTip->IsContainTx(GetHash())) {
-//		return true;
-//	}
 	return true;
 }
 
