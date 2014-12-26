@@ -301,7 +301,7 @@ public:
 	}
 	bool CreateScriptAndCheck()
 	{
-		CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","Dacrs_test.bin");
+		CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
 
 		CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","scripttest.bin");
 
@@ -657,7 +657,7 @@ public:
 	}
 	string CreatWriteTx(string &hash)
 	{
-		string shash = CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","Dacrs_test.bin");
+		string shash = CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
 		Value ret =GetScriptID(shash);
 		string scriptid;
 		BOOST_CHECK(GetHashFromCreatedTx(ret,scriptid));
@@ -811,12 +811,12 @@ BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 //	//// some debug
 	ResetEnv();
 	BOOST_CHECK(0==chainActive.Height());
-	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","Dacrs_test.bin");
+	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
 	CheckSdk();
 
 	ResetEnv();
 	BOOST_CHECK(0==chainActive.Height());
-	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","Dacrs_test.bin");
+	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
 	CheckRollBack();
 
 	ResetEnv();
