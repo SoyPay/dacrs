@@ -851,6 +851,7 @@ void static DacrsMiner(CWallet *pwallet) {
 		if (!pwalletMain->GetKeyIds(dummy, true)) {
 			LogPrint("INFO","DacrsMiner  terminated\n");
 		    ERROR("ERROR:%s ", "no key for minering\n");
+			SysCfg().SoftSetArgCover("-ismining", "0");
 		    throw ;
 		}
 
@@ -903,6 +904,7 @@ void static DacrsMiner(CWallet *pwallet) {
 					if (SysCfg().NetworkID() != CBaseParams::MAIN)
 						if(SysCfg().GetBoolArg("-iscutmine", false)== false)
 						{
+							SysCfg().SoftSetArgCover("-ismining", "0");
 						  throw boost::thread_interrupted();
 						}
 					break;
@@ -920,6 +922,7 @@ void static DacrsMiner(CWallet *pwallet) {
 		}
 	} catch (boost::thread_interrupted) {
 		LogPrint("INFO","DacrsMiner  terminated\n");
+		SysCfg().SoftSetArgCover("-ismining", "0");
 		throw;
 	}
 }

@@ -545,11 +545,6 @@ int64_t CWallet::GetRawBalance(int ncurhigh) const
 
 std::tuple<bool,string>  CWallet::SendMoney(const CRegID &send, const CUserID &rsv, int64_t nValue, int64_t nFee)
 {
-//	if (IsLocked())
-//	{
-//		return _("Error: Wallet locked, unable to create transaction!");
-//	}
-
 
 	CTransaction tx;
 	{
