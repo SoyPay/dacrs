@@ -627,13 +627,13 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
         return false;
     // is it already confirmed in block
     if(uint256(0) != pTxCacheTip->IsContainTx(hash))
-    	return state.Invalid(ERROR("AcceptToMemoryPool() : tx hash %s has been confirmed", hash.GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
+    	return state.Invalid(ERROR("AcceptToMemoryPool() : tx hash %s has been confirmed\n", hash.GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
 
     if (pBaseTx->IsCoinBase())
     	return state.Invalid(ERROR("AcceptToMemoryPool() : tx hash %s is coin base tx,can't put into mempool", hash.GetHex()), REJECT_INVALID, "tx-coinbase-to-mempool");
 	// is it in valid height
 	if (!pBaseTx->IsValidHeight(chainActive.Tip()->nHeight, SysCfg().GetTxCacheHeight())) {
-		return state.Invalid(ERROR("AcceptToMemoryPool() : txhash=%s beyond the scope of valid height ", hash.GetHex()),
+		return state.Invalid(ERROR("AcceptToMemoryPool() : txhash=%s beyond the scope of valid height\n ", hash.GetHex()),
 				REJECT_INVALID, "tx-invalid-height");
 	}
 
@@ -1882,12 +1882,12 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 			//校验交易是否在有效高度
 			if (!item->IsValidHeight(mapBlockIndex[view.GetBestBlock()]->nHeight, SysCfg().GetTxCacheHeight())) {
 				return state.DoS(100,
-						ERROR("CheckBlockProofWorkWithCoinDay() : txhash=%s beyond the scope of valid height ",
+						ERROR("CheckBlockProofWorkWithCoinDay() : txhash=%s beyond the scope of valid height\n ",
 								item->GetHash().GetHex()), REJECT_INVALID, "tx-invalid-height");
 			}
 			//校验是否有重复确认交易
 			if(uint256(0) != txCacheTemp.IsContainTx(item->GetHash()))
-				return state.DoS(100, ERROR("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed", item->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
+				return state.DoS(100, ERROR("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed\n", item->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
 			//校验合约是否能有效执行，因为合约的执行和系统环境有关系，必须在这里校验
 			if(CONTRACT_TX == item->nTxType) {
 				CVmScriptRun vmRun;
@@ -1918,12 +1918,12 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 			//校验交易是否在有效高度
 			if (!item->IsValidHeight(mapBlockIndex[view.GetBestBlock()]->nHeight, SysCfg().GetTxCacheHeight())) {
 				return state.DoS(100,
-						ERROR("CheckBlockProofWorkWithCoinDay() : txhash=%s beyond the scope of valid height ",
+						ERROR("CheckBlockProofWorkWithCoinDay() : txhash=%s beyond the scope of valid height\n ",
 								item->GetHash().GetHex()), REJECT_INVALID, "tx-invalid-height");
 			}
 			//校验是否有重复确认交易
 			if(uint256(0) != txCacheTemp.IsContainTx(item->GetHash()))
-				return state.DoS(100, ERROR("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed", item->GetHash().GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
+				return state.DoS(100, ERROR("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed\n", item->GetHash().GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
 
 			//校验合约是否能有效执行，因为合约的执行和系统环境有关系，必须在这里校验
 			if(CONTRACT_TX == item->nTxType) {
