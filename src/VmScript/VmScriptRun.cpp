@@ -31,22 +31,29 @@ bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& 
 	vector<unsigned char> vScript;
 
 	if (Tx.get()->nTxType != CONTRACT_TX) {
-		LogPrint("vm", "%s\r\n", "err param");
+		LogPrint("ERROR", "%s\r\n", "err param");
+		assert(0);
 		return false;
 	}
 
 	CContractTransaction* secure = static_cast<CContractTransaction*>(Tx.get());
-	if (m_ScriptDBTip->GetScript(boost::get<CRegID>(secure->scriptRegId), vScript)) {
-		CDataStream stream(vScript, SER_DISK, CLIENT_VERSION);
-		try {
-			stream >> vmScript;
-		} catch (exception& e) {
-			throw runtime_error("CVmScriptRun::intial() Unserialize to vmScript error:" + string(e.what()));
-		}
+	if (!m_ScriptDBTip->GetScript(boost::get<CRegID>(secure->scriptRegId), vScript)) {
+		LogPrint("ERROR", "Script is not Registed %s\r\n", boost::get<CRegID>(secure->scriptRegId).ToString());
+		return false;
 	}
 
-	if (vmScript.IsValid() == false)
+	CDataStream stream(vScript, SER_DISK, CLIENT_VERSION);
+	try {
+		stream >> vmScript;
+	} catch (exception& e) {
+		LogPrint("ERROR", "%s\r\n", "CVmScriptRun::intial() Unserialize to vmScript error");
+		throw runtime_error("CVmScriptRun::intial() Unserialize to vmScript error:" + string(e.what()));
+	}
+
+	if (vmScript.IsValid() == false){
+		LogPrint("ERROR", "%s\r\n", "CVmScriptRun::intial() vmScript.IsValid error");
 		return false;
+	}
 
 	for (auto& tx : secure->vAccountRegId) {
 		auto tem = make_shared<CAccount>();
@@ -80,11 +87,9 @@ tuple<bool, uint64_t, string> CVmScriptRun::run(shared_ptr<CBaseTransaction>& Tx
 	}
 	int64_t  step = pMcu.get()->run(maxstep,this);
 	if (0 == step) {
-		mytuple = std::make_tuple (false, 0, string("VmScript run Failed\n"));
-		return mytuple;
+		return std::make_tuple (false, 0, string("VmScript run Failed\n"));
 	}else if(-1 == step){
-		mytuple = std::make_tuple (false, 0, string("the fee not enough \n"));
-		return mytuple;
+		return  std::make_tuple (false, 0, string("the fee not enough \n"));
 	}
 
 	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();

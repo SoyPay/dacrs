@@ -88,9 +88,11 @@ uint64_t GetElementForBurn(CBlockIndex* pindex)
 			sumfee += pindex->GetBlockFee();
 			pindex = pindex->pprev;
 		}
-
-		return (sumfee / nBlock);
+		sumfee  = sumfee / nBlock;
+		if(sumfee < 100000) //如果平均值小于最小值 这取最小值
+			sumfee = 100000;
 	}
+	return sumfee;
 }
 
 // We want to sort transactions by priority and fee, so:
@@ -106,7 +108,7 @@ void GetPriorityTx(vector<TxPriority> &vecPriority, map<uint256, vector<COrphan*
 		int nTxHeight = mi->second.GetHeight();//get Chain height when the tx entering the mempool
 		CBaseTransaction *pBaseTx = mi->second.GetTx().get();
 
-		if (!pTxCacheTip->IsContainTx(pBaseTx->GetHash())) {
+		if (uint256(0) == pTxCacheTip->IsContainTx(pBaseTx->GetHash())) {
 			unsigned int nTxSize = ::GetSerializeSize(pBaseTx->GetNewInstance(), SER_NETWORK, PROTOCOL_VERSION);
 #if 0
 			{
@@ -404,7 +406,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 		{
 			for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
 				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
-				if (txCacheTemp.IsContainTx(pBaseTx->GetHash())) {
+				if (uint256(0) != txCacheTemp.IsContainTx(pBaseTx->GetHash())) {
 					LogPrint("ERROR","CreatePosTx duplicate tx hash:%s\n", pBaseTx->GetHash().GetHex());
 //					mempool.mapTx.erase(pBaseTx->GetHash());
 					return false;
@@ -569,8 +571,8 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 		{
 			for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
 				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
-				if (txCache.IsContainTx(pBaseTx->GetHash())) {
-					LogPrint("ERROR","VerifyPosTx duplicate tx\n");
+				if (uint256(0) != txCache.IsContainTx(pBaseTx->GetHash())) {
+					LogPrint("ERROR","VerifyPosTx duplicate tx hash:%s\n", pBaseTx->GetHash().GetHex());
 					return false;
 				}
 				CTxUndo txundo;
@@ -762,7 +764,7 @@ CBlockTemplate* CreateNewBlock() {
 				comparer = TxPriorityCompare(fSortedByFee);
 				make_heap(vecPriority.begin(), vecPriority.end(), comparer);
 			}
-			if(txCacheTemp.IsContainTx(pBaseTx->GetHash())) {
+			if(uint256(0) != txCacheTemp.IsContainTx(pBaseTx->GetHash())) {
 				LogPrint("INFO","CreatePosTx duplicate tx\n");
 				continue;
 			}
