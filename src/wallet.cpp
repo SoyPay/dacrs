@@ -75,9 +75,7 @@ bool CWallet::AddPubKey(const CPubKey& pk)
 	return db.WriteKeyStoreValue(tem.GetCKeyID(),tem);
 }
 
-bool CWallet::FushToDisk() const {
 
-}
 bool CWallet::AddKey(const CKey& secret) {
 	AssertLockHeld(cs_wallet);
 
