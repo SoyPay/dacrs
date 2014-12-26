@@ -402,6 +402,7 @@ Value getscriptid(const Array& params, bool fHelp)
 	CRegID striptID(BlockHeight, nIndex);
 
 	Object result;
+	result.push_back(Pair("regid:", striptID.ToString()));
 	result.push_back(Pair("script", HexStr(striptID.GetVec6())));
 	return result;
 }
