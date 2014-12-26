@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Dacrs developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -155,10 +155,10 @@ public:
 //		assert(hashGenesisBlock == uint256("0x0d48e88dca01697d10e0fe8f1981f94db1f5e525d5a0e0acf22919af23daed60"));
 //		assert(genesis.hashMerkleRoot == uint256("04b173fc873505d69f5f2a86aa8d7207abe7e0ffa63d786ff230f4a946f5a8255"));
 
-//		vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be"));
+//		vSeeds.push_back(CDNSSeedData("Dacrs.sipa.be", "seed.Dacrs.sipa.be"));
 //		vSeeds.push_back(CDNSSeedData("bluematt.me", "dnsseed.bluematt.me"));
-//		vSeeds.push_back(CDNSSeedData("dashjr.org", "dnsseed.bitcoin.dashjr.org"));
-//		vSeeds.push_back(CDNSSeedData("bitcoinstats.com", "seed.bitcoinstats.com"));
+//		vSeeds.push_back(CDNSSeedData("dashjr.org", "dnsseed.Dacrs.dashjr.org"));
+//		vSeeds.push_back(CDNSSeedData("Dacrsstats.com", "seed.Dacrsstats.com"));
 //		vSeeds.push_back(CDNSSeedData("bitnodes.io", "seed.bitnodes.io"));
 //		vSeeds.push_back(CDNSSeedData("xf2.org", "bitseed.xf2.org"));
 
@@ -255,7 +255,7 @@ public:
 
 		vFixedSeeds.clear();
 		vSeeds.clear();
-		vSeeds.push_back(CDNSSeedData("bitcoin.petertodd.org", "testnet-seed.bitcoin.petertodd.org"));
+		vSeeds.push_back(CDNSSeedData("Dacrs.petertodd.org", "testnet-seed.Dacrs.petertodd.org"));
 		vSeeds.push_back(CDNSSeedData("bluematt.me", "testnet-seed.bluematt.me"));
 
 		base58Prefixes[PUBKEY_ADDRESS] = {111};

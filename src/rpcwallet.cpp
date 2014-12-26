@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Dacrs developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -91,11 +91,11 @@ Value signmessage(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-            "signmessage \"bitcoinaddress\" \"message\"\n"
+            "signmessage \"Dacrsaddress\" \"message\"\n"
             "\nSign a message with the private key of an address"
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
-            "1. \"soypayaddress\"  (string, required) The soypay address to use for the private key.\n"
+            "1. \"Dacrsaddress\"  (string, required) The Dacrs address to use for the private key.\n"
             "2. \"message\"         (string, required) The message to create a signature of.\n"
             "\nResult:\n"
             "\"signature\"          (string) The signature of the message encoded in base 64\n"
@@ -140,10 +140,10 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 	int size = params.size();
 	if (fHelp || (!(size == 3 || size == 4)))
 		throw runtime_error(
-				"sendtoaddress \"bitcoinaddress\" amount "
+				"sendtoaddress \"Dacrsaddress\" amount "
 						"\nSent an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
 						+ HelpRequiringPassphrase() + "\nArguments:\n"
-								"1. \"bitcoinaddress\"  (string, required) The bitcoin address to send to.\n"
+								"1. \"Dacrsaddress\"  (string, required) The Dacrs address to send to.\n"
 
 								"\nResult:\n"
 								"\"transactionid\"  (string) The transaction id.\n"
@@ -239,10 +239,10 @@ Value sendtoaddress(const Array& params, bool fHelp)
 	int size = params.size();
 	if (fHelp || (!(size == 2 || size == 3)))
 		throw runtime_error(
-				"sendtoaddress \"bitcoinaddress\" amount "
+				"sendtoaddress \"Dacrsaddress\" amount "
 						"\nSent an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
 						+ HelpRequiringPassphrase() + "\nArguments:\n"
-								"1. \"bitcoinaddress\"  (string, required) The bitcoin address to send to.\n"
+								"1. \"Dacrsaddress\"  (string, required) The Dacrs address to send to.\n"
 
 								"\nResult:\n"
 								"\"transactionid\"  (string) The transaction id.\n"
@@ -375,7 +375,7 @@ Value walletpassphrase(const Array& params, bool fHelp)
         throw runtime_error(
             "walletpassphrase \"passphrase\" timeout\n"
             "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
-            "This is needed prior to performing transactions related to private keys such as sending soypays\n"
+            "This is needed prior to performing transactions related to private keys such as sending Dacrss\n"
             "\nArguments:\n"
             "1. \"passphrase\"     (string, required) The wallet passphrase\n"
             "2. timeout            (numeric, required) The time to keep the decryption key in seconds.\n"
@@ -524,10 +524,10 @@ Value encryptwallet(const Array& params, bool fHelp)
 //            "\nExamples:\n"
 //            "\nEncrypt you wallet\n"
 //            + HelpExampleCli("encryptwallet", "\"my pass phrase\"") +
-//            "\nNow set the passphrase to use the wallet, such as for signing or sending soypay\n"
+//            "\nNow set the passphrase to use the wallet, such as for signing or sending Dacrs\n"
 //            + HelpExampleCli("walletpassphrase", "\"my pass phrase\"") +
 //            "\nNow we can so something like sign\n"
-//            + HelpExampleCli("signmessage", "\"soypayaddress\" \"test message\"") +
+//            + HelpExampleCli("signmessage", "\"Dacrsaddress\" \"test message\"") +
 //            "\nNow lock the wallet again by removing the passphrase\n"
 //            + HelpExampleCli("walletlock", "") +
 //            "\nAs a json rpc call\n"
@@ -557,7 +557,7 @@ Value encryptwallet(const Array& params, bool fHelp)
     // slack space in .dat files; that is bad if the old data is
     // unencrypted private keys. So:
     StartShutdown();
-    return "wallet encrypted; soypay server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.";
+    return "wallet encrypted; Dacrs server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.";
 }
 
 Value settxfee(const Array& params, bool fHelp)
@@ -595,7 +595,7 @@ Value getwalletinfo(const Array& params, bool fHelp)
             "\nResult:\n"
             "{\n"
             "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
-            "  \"balance\": xxxxxxx,         (numeric) the total soypay balance of the wallet\n"
+            "  \"balance\": xxxxxxx,         (numeric) the total Dacrs balance of the wallet\n"
             "  \"txcount\": xxxxxxx,         (numeric) the total number of transactions in the wallet\n"
             "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since GMT epoch) of the oldest pre-generated key in the key pool\n"
             "  \"keypoolsize\": xxxx,        (numeric) how many new keys are pre-generated\n"

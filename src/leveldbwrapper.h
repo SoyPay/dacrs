@@ -1,9 +1,9 @@
-// Copyright (c) 2012-2013 The Bitcoin developers
+// Copyright (c) 2012-2013 The Dacrs developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_LEVELDBWRAPPER_H
-#define BITCOIN_LEVELDBWRAPPER_H
+#ifndef DACRS_LEVELDBWRAPPER_H
+#define DACRS_LEVELDBWRAPPER_H
 
 #include "serialize.h"
 #include "util.h"
@@ -171,4 +171,4 @@ public:
     int64_t GetDbCount();
 };
 
-#endif // BITCOIN_LEVELDBWRAPPER_H
+#endif // DACRS_LEVELDBWRAPPER_H

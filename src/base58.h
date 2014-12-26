@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2013 The Dacrs developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,8 +11,8 @@
 // - E-mail usually won't line-break if there's no punctuation to break at.
 // - Double-clicking selects the whole number as one word if it's all alphanumeric.
 //
-#ifndef BITCOIN_BASE58_H
-#define BITCOIN_BASE58_H
+#ifndef DACRS_BASE58_H
+#define DACRS_BASE58_H
 
 #include "chainparams.h"
 #include "key.h"
@@ -91,22 +91,22 @@ public:
     bool operator> (const CBase58Data& b58) const { return CompareTo(b58) >  0; }
 };
 
-/** base58-encoded Bitcoin addresses.
+/** base58-encoded Dacrs addresses.
  * Public-key-hash-addresses have version 0 (or 111 testnet).
  * The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key.
  * Script-hash-addresses have version 5 (or 196 testnet).
  * The data vector contains RIPEMD160(SHA256(cscript)), where cscript is the serialized redemption script.
  */
-class CSoyPayAddress : public CBase58Data {
+class CDacrsAddress : public CBase58Data {
 public:
     bool Set(const CKeyID &id);
     bool Set(const CTxDestination &dest);
     bool IsValid() const;
 
-    CSoyPayAddress() {}
-    CSoyPayAddress(const CTxDestination &dest) { Set(dest); }
-    CSoyPayAddress(const string& strAddress) { SetString(strAddress); }
-    CSoyPayAddress(const char* pszAddress) { SetString(pszAddress); }
+    CDacrsAddress() {}
+    CDacrsAddress(const CTxDestination &dest) { Set(dest); }
+    CDacrsAddress(const string& strAddress) { SetString(strAddress); }
+    CDacrsAddress(const char* pszAddress) { SetString(pszAddress); }
 
     CTxDestination Get() const;
     bool GetKeyID(CKeyID &keyID) const;
@@ -117,7 +117,7 @@ public:
 /**
  * A base58-encoded secret key
  */
-class CSoyPaySecret : public CBase58Data
+class CDacrsSecret : public CBase58Data
 {
 public:
     void SetKey(const CKey& vchSecret);
@@ -126,11 +126,11 @@ public:
     bool SetString(const char* pszSecret);
     bool SetString(const string& strSecret);
 
-    CSoyPaySecret(const CKey& vchSecret) { SetKey(vchSecret); }
-    CSoyPaySecret() {}
+    CDacrsSecret(const CKey& vchSecret) { SetKey(vchSecret); }
+    CDacrsSecret() {}
 };
 
-template<typename K, int Size, CBaseParams::Base58Type Type> class CBitcoinExtKeyBase : public CBase58Data
+template<typename K, int Size, CBaseParams::Base58Type Type> class CDacrsExtKeyBase : public CBase58Data
 {
 public:
     void SetKey(const K &key) {
@@ -145,14 +145,14 @@ public:
         return ret;
     }
 
-    CBitcoinExtKeyBase(const K &key) {
+    CDacrsExtKeyBase(const K &key) {
         SetKey(key);
     }
 
-    CBitcoinExtKeyBase() {}
+    CDacrsExtKeyBase() {}
 };
 
-typedef CBitcoinExtKeyBase<CExtKey, 74, CBaseParams::EXT_SECRET_KEY> CBitcoinExtKey;
-typedef CBitcoinExtKeyBase<CExtPubKey, 74, CBaseParams::EXT_PUBLIC_KEY> CBitcoinExtPubKey;
+typedef CDacrsExtKeyBase<CExtKey, 74, CBaseParams::EXT_SECRET_KEY> CDacrsExtKey;
+typedef CDacrsExtKeyBase<CExtPubKey, 74, CBaseParams::EXT_PUBLIC_KEY> CDacrsExtPubKey;
 
-#endif // BITCOIN_BASE58_H
+#endif // DACRS_BASE58_H

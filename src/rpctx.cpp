@@ -680,7 +680,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type));
 	CVmScript vmScript;
 	//get addresss
-//	CSoyPayAddress addr(params[0].get_str());
+//	CDacrsAddress addr(params[0].get_str());
 	vector<unsigned char> vscript;
 	int flag = params[1].get_int();
 	if (0 == flag) {
@@ -971,7 +971,7 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 //		vector<unsigned char> vscript = ParseHex(params[0].get_str());
 //		userId = CRegID(vscript);
 //	} else {
-//		CSoyPayAddress address(params[0].get_str());
+//		CDacrsAddress address(params[0].get_str());
 //		CKeyID keyid;
 //		if (!address.GetKeyID(keyid))
 //			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
@@ -1073,7 +1073,7 @@ Value sign(const Array& params, bool fHelp) {
 //		throw runtime_error(
 //				"getaccountinfo \"address \" dspay address ( \"comment\" \"comment-to\" )\n"
 //						"\nGet an account info with dspay address\n" + HelpRequiringPassphrase() + "\nArguments:\n"
-//						"1. \"address \"  (string, required) The soypay address.\n"
+//						"1. \"address \"  (string, required) The Dacrs address.\n"
 //						"\nResult:\n"
 //						"\"account info\"  (string) \n"
 //						"\nExamples:\n" + HelpExampleCli("getaccountinfo", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\"")
@@ -1085,10 +1085,10 @@ Value sign(const Array& params, bool fHelp) {
 //	string strParam = params[0].get_str();
 //	CAccount aAccount;
 //	if (strParam.length() != 12) {
-//		CSoyPayAddress address(params[0].get_str());
+//		CDacrsAddress address(params[0].get_str());
 //		CKeyID keyid;
 //		if (!address.GetKeyID(keyid))
-//			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+//			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dacrs address");
 //
 //		CUserID userId = keyid;
 //		if (!view.GetAccount(userId, aAccount)) {
@@ -1265,7 +1265,7 @@ Value disconnectblock(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
 		throw runtime_error("disconnectblock \"block numbers \n"
 				"\ndisconnect block\n" + HelpRequiringPassphrase() + "\nArguments:\n"
-				"1. \"numbers \"  (numeric, required) The soypay address.\n"
+				"1. \"numbers \"  (numeric, required) The Dacrs address.\n"
 				"\nResult:\n"
 				"\"disconnect result\"  (bool) \n"
 				"\nExamples:\n" + HelpExampleCli("disconnectblock", "\"1\""));
@@ -1417,7 +1417,7 @@ Value generateblock(const Array& params, bool fHelp) {
 Value getpublickey(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
 		throw runtime_error("getpublickey \"address \n" + HelpRequiringPassphrase() + "\nArguments:\n"
-				"1. \"address \"  (string, required) The soypay address.\n"
+				"1. \"address \"  (string, required) The Dacrs address.\n"
 				"\nResult:\n"
 				"\"publickey\"  (string) \n"
 				"\nExamples:\n" + HelpExampleCli("getpublickey", "mpif58ohTASDZNNXreFMFuNAHBfuDUXtjP")
@@ -1428,7 +1428,7 @@ Value getpublickey(const Array& params, bool fHelp) {
 	string address = params[0].get_str();
 	CKeyID keyid;
 	if (!GetKeyId(address, keyid)) {
-		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid SoyPay address");
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dacrs address");
 	}
 	CPubKey pubkey;
 	{

@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Dacrs developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -74,10 +74,10 @@ Value importprivkey(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
-            "importprivkey \"bitcoinprivkey\" ( \"label\" rescan )\n"
+            "importprivkey \"Dacrsprivkey\" ( \"label\" rescan )\n"
             "\nAdds a private key (as returned by dumpprivkey) to your wallet.\n"
             "\nArguments:\n"
-            "1. \"bitcoinprivkey\"   (string, required) The private key (see dumpprivkey)\n"
+            "1. \"Dacrsprivkey\"   (string, required) The private key (see dumpprivkey)\n"
             "2. \"label\"            (string, optional) an optional label\n"
             "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
             "\nExamples:\n"
@@ -103,7 +103,7 @@ Value importprivkey(const Array& params, bool fHelp)
     if (params.size() > 2)
         fRescan = params[2].get_bool();
 
-    CSoyPaySecret vchSecret;
+    CDacrsSecret vchSecret;
     bool fGood = vchSecret.SetString(strSecret);
 
     if (!fGood) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
@@ -204,11 +204,11 @@ Value dumpprivkey(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "dumpprivkey \"soypayaddress\"\n"
-            "\nReveals the private key corresponding to 'soypayaddress'.\n"
+            "dumpprivkey \"Dacrsaddress\"\n"
+            "\nReveals the private key corresponding to 'Dacrsaddress'.\n"
             "Then the importprivkey can be used with this output\n"
             "\nArguments:\n"
-            "1. \"soypayaddress\"   (string, required) The soypay address for the private key\n"
+            "1. \"Dacrsaddress\"   (string, required) The Dacrs address for the private key\n"
             "\nResult:\n"
             "\"key\"                (string) The private key\n"
             "\nExamples:\n"
@@ -220,9 +220,9 @@ Value dumpprivkey(const Array& params, bool fHelp)
     EnsureWalletIsUnlocked();
 
     string strAddress = params[0].get_str();
-    CSoyPayAddress address;
+    CDacrsAddress address;
     if (!address.SetString(strAddress))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dacrs address");
     CKeyID keyID;
     if (!address.GetKeyID(keyID))
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
@@ -233,9 +233,9 @@ Value dumpprivkey(const Array& params, bool fHelp)
     if (!pwalletMain->GetKey(keyID, minerkey,true))
            throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
     Object reply;
-    	reply.push_back(Pair("privkey", CSoyPaySecret(vchSecret).ToString()));
+    	reply.push_back(Pair("privkey", CDacrsSecret(vchSecret).ToString()));
     if(minerkey.ToString() != vchSecret.ToString())
-    	reply.push_back(Pair("minerkey", CSoyPaySecret(minerkey).ToString()));
+    	reply.push_back(Pair("minerkey", CDacrsSecret(minerkey).ToString()));
     else
     	reply.push_back(Pair("minerkey", " "));
     return reply;
@@ -259,7 +259,7 @@ Value dumpwallet(const Array& params, bool fHelp) {
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 
 	Object reply;
-	reply.push_back(Pair("created by Soypay", CLIENT_BUILD + CLIENT_DATE));
+	reply.push_back(Pair("created by Dacrs", CLIENT_BUILD + CLIENT_DATE));
 	reply.push_back(Pair("Created Time ", EncodeDumpTime(GetTime())));
 	reply.push_back(Pair("Best block index hight ", chainActive.Height()));
 	reply.push_back(Pair("Best block hash ", chainActive.Tip()->GetBlockHash().ToString()));

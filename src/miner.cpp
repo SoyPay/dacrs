@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Dacrs developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,7 +14,7 @@
 extern CWallet* pwalletMain;
 //////////////////////////////////////////////////////////////////////////////
 //
-// SoyPayMiner
+// DacrsMiner
 //
 
 int static FormatHashBlocks(void* pbuffer, unsigned int len) {
@@ -819,7 +819,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet) {
 	{
 		LOCK(cs_main);
 		if (pblock->hashPrevBlock != chainActive.Tip()->GetBlockHash())
-			return ERROR("SoypayMiner : generated block is stale");
+			return ERROR("DacrsMiner : generated block is stale");
 
 		// Remove key from key pool
 	//	reservekey.KeepKey();
@@ -833,23 +833,23 @@ bool CheckWork(CBlock* pblock, CWallet& wallet) {
 		// Process this block the same as if we had received it from another node
 		CValidationState state;
 		if (!ProcessBlock(state, NULL, pblock))
-			return ERROR("SoypayMiner : ProcessBlock, block not accepted");
+			return ERROR("DacrsMiner : ProcessBlock, block not accepted");
 	}
 
 	return true;
 }
 
-void static SoypayMiner(CWallet *pwallet) {
+void static DacrsMiner(CWallet *pwallet) {
 	LogPrint("INFO","Miner started\n");
 
 	SetThreadPriority(THREAD_PRIORITY_LOWEST);
-	RenameThread("soypay-miner");
+	RenameThread("Dacrs-miner");
 
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
 		set<CKeyID> dummy;
 		if (!pwalletMain->GetKeyIds(dummy, true)) {
-			LogPrint("INFO","SoypayMiner  terminated\n");
+			LogPrint("INFO","DacrsMiner  terminated\n");
 		    ERROR("ERROR:%s ", "no key for minering\n");
 		    throw ;
 		}
@@ -919,7 +919,7 @@ void static SoypayMiner(CWallet *pwallet) {
 			}
 		}
 	} catch (boost::thread_interrupted) {
-		LogPrint("INFO","SoypayMiner  terminated\n");
+		LogPrint("INFO","DacrsMiner  terminated\n");
 		throw;
 	}
 }
@@ -978,7 +978,7 @@ void GenerateSoys(bool fGenerate, CWallet* pwallet, int nThreads) {
 		return;
 	//in pos system one thread is enough  marked by ranger.shi
 	minerThreads = new boost::thread_group();
-	minerThreads->create_thread(boost::bind(&SoypayMiner, pwallet));
+	minerThreads->create_thread(boost::bind(&DacrsMiner, pwallet));
 
 	SysCfg().SoftSetArgCover("-ismining", "1");
 //	minerThreads->join_all();

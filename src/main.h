@@ -1,13 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Dacrs developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_MAIN_H
-#define BITCOIN_MAIN_H
+#ifndef DACRS_MAIN_H
+#define DACRS_MAIN_H
 
 #if defined(HAVE_CONFIG_H)
-#include "soypay-config.h"
+#include "dacrs-config.h"
 #endif
 
 #include "bignum.h"
@@ -1047,7 +1047,7 @@ extern CTransactionDBCache *pTxCacheTip;
 /** contract script data cache */
 extern CScriptDBViewCache *pScriptDBTip;
 
-extern std::tuple<bool, boost::thread*> RunSoyPay(int argc, char* argv[]);
+extern std::tuple<bool, boost::thread*> RunDacrs(int argc, char* argv[]);
 
 //extern set<uint256> setTxHashCache;
 //extern map<uint256, set<uint256> > mapTxHashCacheByPrev;

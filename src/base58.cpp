@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Bitcoin developers
+// Copyright (c) 2014 The Dacrs developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -190,11 +190,11 @@ int CBase58Data::CompareTo(const CBase58Data& b58) const {
 }
 
 namespace {
-class CSoyPayAddressVisitor: public boost::static_visitor<bool> {
+class CDacrsAddressVisitor: public boost::static_visitor<bool> {
 private:
-	CSoyPayAddress *addr;
+	CDacrsAddress *addr;
 public:
-	CSoyPayAddressVisitor(CSoyPayAddress *addrIn) :
+	CDacrsAddressVisitor(CDacrsAddress *addrIn) :
 			addr(addrIn) {
 	}
 
@@ -209,18 +209,18 @@ public:
 }
 ;
 
-bool CSoyPayAddress::Set(const CKeyID &id) {
+bool CDacrsAddress::Set(const CKeyID &id) {
 	SetData(SysCfg().Base58Prefix(CBaseParams::PUBKEY_ADDRESS), &id, 20);
 	return true;
 }
 
 
 
-bool CSoyPayAddress::Set(const CTxDestination &dest) {
-	return boost::apply_visitor(CSoyPayAddressVisitor(this), dest);
+bool CDacrsAddress::Set(const CTxDestination &dest) {
+	return boost::apply_visitor(CDacrsAddressVisitor(this), dest);
 }
 
-bool CSoyPayAddress::IsValid() const {
+bool CDacrsAddress::IsValid() const {
 
 	bool bvalid = false;
 	{
@@ -238,7 +238,7 @@ bool CSoyPayAddress::IsValid() const {
 	return bvalid;
 }
 
-CTxDestination CSoyPayAddress::Get() const {
+CTxDestination CDacrsAddress::Get() const {
 	if (!IsValid())
 		return CNoDestination();
 
@@ -255,7 +255,7 @@ CTxDestination CSoyPayAddress::Get() const {
 	}
 }
 
-bool CSoyPayAddress::GetKeyID(CKeyID &keyID) const {
+bool CDacrsAddress::GetKeyID(CKeyID &keyID) const {
 	uint160 id;
 
 	if (vchVersion == SysCfg().Base58Prefix(CBaseParams::PUBKEY_ADDRESS) && vchData.size() == 20) {
@@ -273,7 +273,7 @@ bool CSoyPayAddress::GetKeyID(CKeyID &keyID) const {
 	return false;
 }
 
-//bool CSoyPayAddress::GetRegID(CRegID &Regid) const {
+//bool CDacrsAddress::GetRegID(CRegID &Regid) const {
 //
 ////	vector<unsigned char> vid;
 ////	vid.push_back(CBaseParams::ACC_ADDRESS);
@@ -284,33 +284,33 @@ bool CSoyPayAddress::GetKeyID(CKeyID &keyID) const {
 //	return false;
 //}
 
-bool CSoyPayAddress::IsScript() const {
+bool CDacrsAddress::IsScript() const {
 	return IsValid() && vchVersion == SysCfg().Base58Prefix(CBaseParams::SCRIPT_ADDRESS);
 }
 
-void CSoyPaySecret::SetKey(const CKey& vchSecret) {
+void CDacrsSecret::SetKey(const CKey& vchSecret) {
 	assert(vchSecret.IsValid());
 	SetData(SysCfg().Base58Prefix(CBaseParams::SECRET_KEY), vchSecret.begin(), vchSecret.size());
 	if (vchSecret.IsCompressed())
 		vchData.push_back(1);
 }
 
-CKey CSoyPaySecret::GetKey() {
+CKey CDacrsSecret::GetKey() {
 	CKey ret;
 	ret.Set(&vchData[0], &vchData[32], vchData.size() > 32 && vchData[32] == 1);
 	return ret;
 }
 
-bool CSoyPaySecret::IsValid() const {
+bool CDacrsSecret::IsValid() const {
 	bool fExpectedFormat = vchData.size() == 32 || (vchData.size() == 33 && vchData[32] == 1);
 	bool fCorrectVersion = vchVersion == SysCfg().Base58Prefix(CBaseParams::SECRET_KEY);
 	return fExpectedFormat && fCorrectVersion;
 }
 
-bool CSoyPaySecret::SetString(const char* pszSecret) {
+bool CDacrsSecret::SetString(const char* pszSecret) {
 	return CBase58Data::SetString(pszSecret) && IsValid();
 }
 
-bool CSoyPaySecret::SetString(const string& strSecret) {
+bool CDacrsSecret::SetString(const string& strSecret) {
 	return SetString(strSecret.c_str());
 }
