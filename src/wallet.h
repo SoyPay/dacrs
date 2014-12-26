@@ -200,7 +200,7 @@ public:
 				}
 			}
 	)
-	bool FushToDisk()const;
+
 
 	int64_t GetRawBalance(int ncurhigh)const;
     bool SynchronizRegId(const CKeyID &keyid,const CAccountViewCache &inview);

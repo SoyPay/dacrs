@@ -64,6 +64,7 @@ soypay_test_SOURCES = \
   SysTestBase.cpp	\
   SysTestScript.cpp \
   SysRegisterAcc_test.cpp \
+  sesuretrade_test.cpp \
   p2pBet_test.cpp \
   p2plottery_test.cpp \
   pressure_tests.cpp \
