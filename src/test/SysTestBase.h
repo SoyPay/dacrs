@@ -140,6 +140,9 @@ public:
 	Value PCreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 			int nHeight,int nFee = 10000);
 
+	Value CreateContractTxEx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
+			int nHeight,int nFee = 10000);
+
 	bool CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 			int nHeight,int nFee = 10000);
 	Value CreateContractTx1(const std::string &scriptid, const std::string &addrs, const std::string &contract,
