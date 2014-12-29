@@ -988,6 +988,7 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 	Object obj;
 	{
 		CAccount account;
+
 		CAccountViewCache accView(*pAccountViewTip, true);
 		if (accView.GetAccount(userId, account)) {
 			account.CompactAccount(chainActive.Height());
