@@ -48,6 +48,7 @@ private:
 	CRegID mregId;
 	CPubKey mPKey;
 	CKey  mCkey;
+	CPubKey  mMinerPk; //only used for miner
 	CKey  mMinerCkey; //only used for miner
 	INT64 nCreationTime;
 public:
@@ -74,6 +75,7 @@ public:
 
 	bool CreateANewKey()
 	{
+		clean();
 		mCkey.MakeNewKey();
 		mPKey = mCkey.GetPubKey();
 		nCreationTime = GetTime();
@@ -99,6 +101,7 @@ public:
 
 	CKeyStoreValue(const CPubKey &pubkey) {
 		assert(mCkey.IsValid() == false && pubkey.IsFullyValid()); //the ckey mustbe unvalid
+		clean();
 		nCreationTime = GetTime();
 		mPKey = pubkey;
 	}
@@ -107,23 +110,35 @@ public:
 	{
 		assert(inkey.IsValid());
 		assert(minerKey.IsValid());
+		 clean();
 		mMinerCkey = minerKey;
 		mCkey = inkey ;
 		nCreationTime = GetTime();
 		mPKey = mCkey.GetPubKey();
+		mMinerPk = mMinerCkey.GetPubKey();
 	}
 
 	CKeyStoreValue(CKey const &inkey)
 	{
 		assert(inkey.IsValid());
+		 clean();
 		mCkey = inkey ;
 		nCreationTime = GetTime();
 		mPKey = mCkey.GetPubKey();
-	}
 
+	}
+   bool clean()
+   {
+		mCkey.Clear();
+		mPKey= CPubKey();
+		mMinerCkey.Clear();
+	    mMinerPk = CPubKey();
+		nCreationTime = 0 ;
+	    return true;
+   }
 	CKeyStoreValue()
 	{
-		nCreationTime = 0 ;
+		 clean();
 	}
 	bool IsCrypted() {
 		return mCkey.size() == 0;
@@ -141,6 +156,7 @@ public:
 			READWRITE(mregId);
 			READWRITE(mPKey);
 			READWRITE(mCkey);
+			READWRITE(mMinerPk);
 			READWRITE(mMinerCkey);
 			READWRITE(nCreationTime);
 	)

@@ -844,8 +844,18 @@ Object CKeyStoreValue::ToJsonObj()const {
 	Object reply;
 	reply.push_back(Pair("mregId",mregId.ToString()));
 	reply.push_back(Pair("mPKey",mPKey.ToString()));
+	reply.push_back(Pair("address",mPKey.GetKeyID().ToAddress()));
+
 	reply.push_back(Pair("mCkey",mCkey.ToString()));
+	if(mCkey.IsValid())
+	reply.push_back(Pair("mCkeyBase58",CDacrsSecret(mCkey).ToString()));
+
+
 	reply.push_back(Pair("mMinerCkey",mMinerCkey.ToString()));
+	if(mMinerCkey.IsValid()){
+	reply.push_back(Pair("mMinerCkeyBase58",CDacrsSecret(mMinerCkey).ToString()));
+	reply.push_back(Pair("mMinerPk",mMinerPk.ToString()));
+	}
 	reply.push_back(Pair("nCreationTime",nCreationTime));
     return std::move(reply);
 }
@@ -858,6 +868,9 @@ bool CKeyStoreValue::UnSersailFromJson(const Object& obj){
 		mCkey.Set(tem1.begin(),tem1.end(),true);
 		auto const &tem2=::ParseHex(find_value(obj, "mMinerCkey").get_str());
 		mMinerCkey.Set(tem2.begin(),tem2.end(),true);
+		if(mMinerCkey.IsValid()){
+		mMinerPk= ::ParseHex(find_value(obj, "mMinerPk").get_str());
+		}
 		nCreationTime =find_value(obj, "nCreationTime").get_int64();
 		assert(mCkey.GetPubKey() == mPKey);
 	} catch (...) {
@@ -876,9 +889,12 @@ bool CKeyStoreValue::SelfCheck()const {
 		  return false;
 	  }
   }
-  if(!mPKey.IsValid())
+  if(mMinerCkey.IsValid())
   {
-	  return false;
+	  if(mMinerCkey.GetPubKey() != mMinerPk)
+	  {
+		  return false;
+	  }
   }
   return true;
 }

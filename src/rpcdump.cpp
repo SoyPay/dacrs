@@ -137,7 +137,7 @@ Value importprivkey(const Array& params, bool fHelp)
         }
     }
     Object reply2;
-    reply2.push_back(Pair("Imorpt Key address",pubkey.GetKeyID().ToAddress()));
+    reply2.push_back(Pair("imorpt key address",pubkey.GetKeyID().ToAddress()));
     return reply2;
 }
 

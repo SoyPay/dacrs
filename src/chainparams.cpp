@@ -85,6 +85,7 @@ map<string, vector<string> > CBaseParams::m_mapMultiArgs;
 // Main network
 //
 string initPubKey[] = { //
+
 		"03d308757fc1f8efd69f2da329db560cd7d3cba951eb09786c375cf1709f9165ba",
 		"024126ccf4b5f6463a3f874f234b77d02e9f5c2057c6c382160dc17c7f9ba2b333",
 		"0221b571330617821e8c508416b90988e81e8dc8623576b8f6e942797e9f381111",
@@ -215,8 +216,9 @@ public:
 	virtual bool CreateGenesisRewardTx(vector<shared_ptr<CBaseTransaction> > &vRewardTx) {
 		int length = sizeof(initPubKey) / (sizeof(initPubKey[0]));
 		for (int i = 0; i < length; ++i) {
-			shared_ptr<CRewardTransaction> pRewardTx = shared_ptr<CRewardTransaction>(
-					new CRewardTransaction(ParseHex(initPubKey[i].c_str()), 10000000 * COIN, 0));
+			shared_ptr<CRewardTransaction> pRewardTx = make_shared<CRewardTransaction>(ParseHex(initPubKey[i].c_str()), 10000000 * COIN, 0);
+//		shared_ptr<CRewardTransaction>(
+//					new CRewardTransaction(ParseHex(initPubKey[i].c_str()), 10000000 * COIN, 0));
 			if (pRewardTx.get())
 				vRewardTx.push_back(pRewardTx);
 			else
