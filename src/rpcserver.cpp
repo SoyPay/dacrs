@@ -564,7 +564,6 @@ void StartRPCThreads()
     asio::ip::address bindAddress = loopback ? asio::ip::address_v6::loopback() : asio::ip::address_v6::any();
     ip::tcp::endpoint endpoint(bindAddress, SysCfg().GetArg("-rpcport", SysCfg().RPCPort()));
     boost::system::error_code v6_only_error;
-    cout<<"port is "<<SysCfg().GetArg("-rpcport", SysCfg().RPCPort())<<endl;
 
     bool fListening = false;
     string strerr;
