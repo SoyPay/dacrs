@@ -146,7 +146,7 @@ public:
 		sprintf(fee, "%d", nfee);
 
 		//新产生地址注册账户
-		char *argvReg[] = {"rpctest", "registeraccounttx", const_cast<char *>(newAddress.c_str()), fee, "false"};
+		char *argvReg[] = {"rpctest", "registaccounttx", const_cast<char *>(newAddress.c_str()), fee, "false"};
 		int argcReg = sizeof(argvReg) / sizeof(char *);
 		if(!CommandLineRPC_GetValue(argcReg, argvReg, value))
 		{

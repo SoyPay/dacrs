@@ -186,8 +186,8 @@ Array RPCConvertValues(const string &strMethod, const vector<string> &strParams)
 
     if (strMethod == "getnewaddress"       && n > 0) ConvertTo<bool>(params[0]);
 
-    if (strMethod == "registeraccounttx"          && n > 1) ConvertTo<int64_t>(params[1]);
-    if (strMethod == "registeraccounttx"          && n > 2) ConvertTo<bool>(params[2]);
+    if (strMethod == "registaccounttx"          && n > 1) ConvertTo<int64_t>(params[1]);
+    if (strMethod == "registaccounttx"          && n > 2) ConvertTo<bool>(params[2]);
 
     if (strMethod == "createnormaltx"          && n > 2) ConvertTo<int64_t>(params[2]);
     if (strMethod == "createnormaltx"          && n > 3) ConvertTo<int64_t>(params[3]);
@@ -234,7 +234,29 @@ Array RPCConvertValues(const string &strMethod, const vector<string> &strParams)
     if (strMethod == "listregscript"          && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "getblock"          && n > 0){ if(params[0].get_str().size()<32) ConvertTo<int>(params[0]);}
 
+    if (strMethod == "sendtoaddressraw"          && n > 0)ConvertTo<int>(params[0]);
+    if (strMethod == "sendtoaddressraw"          && n>1)ConvertTo<double>(params[1]);
+    if (strMethod == "sendtoaddressraw"          && n >2)ConvertTo<double>(params[2]);
 
+    if (strMethod == "registaccounttxraw"          && n >0)ConvertTo<int>(params[0]);
+    if (strMethod == "registaccounttxraw"          && n >1)ConvertTo<double>(params[1]);
+
+    if (strMethod == "createcontracttxraw"          && n >0)ConvertTo<int>(params[0]);
+    if (strMethod == "createcontracttxraw"          && n >1)ConvertTo<double>(params[1]);
+    if (strMethod == "createcontracttxraw"          && n >3) ConvertTo<Array>(params[3]);
+
+    if (strMethod == "createfreezetxraw"          && n > 0)ConvertTo<int>(params[0]);
+    if (strMethod == "createfreezetxraw"          && n>1)ConvertTo<double>(params[1]);
+    if (strMethod == "createfreezetxraw"          && n > 3)ConvertTo<int64_t>(params[3]);
+    if (strMethod == "createfreezetxraw"          && n>4)ConvertTo<int>(params[4]);
+
+    if (strMethod == "registerscripttxraw"          && n > 0)ConvertTo<int>(params[0]);
+    if (strMethod == "registerscripttxraw"          && n>1)ConvertTo<double>(params[1]);
+    if (strMethod == "registerscripttxraw"          && n>3)ConvertTo<bool>(params[3]);
+    if (strMethod == "registerscripttxraw"          && n > 6) ConvertTo<uint64_t>(params[6]);
+    if (strMethod == "registerscripttxraw"          && n > 7) ConvertTo<uint64_t>(params[7]);
+    if (strMethod == "registerscripttxraw"          && n > 8) ConvertTo<uint64_t>(params[8]);
+    if (strMethod == "registerscripttxraw"          && n > 9) ConvertTo<uint64_t>(params[9]);
     return params;
 }
 

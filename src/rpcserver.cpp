@@ -279,7 +279,7 @@ static const CRPCCommand vRPCCommands[] =
     { "importwallet",           &importwallet,           false,     false,      true },
     { "listaddr",               &listaddr,       	     true,      false,      true },
     { "listtx",                 &listtx,       	         true,      false,      true },
-    { "registeraccounttx",      &registeraccounttx,      true,      false,      true },
+    { "registaccounttx",        &registaccounttx,      true,      false,      true },
 //	{ "createnormaltx",         &createnormaltx,       	 true,      false,      true },
 	{ "createcontracttx",       &createcontracttx,       true,      false,      true },
 	{ "signcontracttx",         &signcontracttx,       	 true,      false,      true },
@@ -294,7 +294,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "setgenerate",            &setgenerate,            true,      true,      false },
 	{ "listregscript",          &listregscript,          true,      false,      true },
 	{ "generateblock",          &generateblock, 		 true,      true,      true },
-	{"getpublickey",            &getpublickey,           true,      false,      true },
+//	{"getpublickey",            &getpublickey,           true,      false,      true },
 //	{ "listscriptregid",        &listscriptregid,        true,      false,      true },
 	{ "listtxcache",            &listtxcache,            true,      false,      true },
 	{ "getscriptdata",          &getscriptdata,          true,      false,      true },
@@ -302,6 +302,13 @@ static const CRPCCommand vRPCCommands[] =
 	{ "sendtoaddress",          &sendtoaddress,          false,     false,      true },
 	{ "sendtoaddresswithfee",   &sendtoaddresswithfee,   false,     false,      true },
     { "getbalance",             &getbalance,             false,     false,      true },
+    { "sendtoaddressraw",       &sendtoaddressraw,       false,     false,      true },
+    { "registaccounttxraw",     &registaccounttxraw,     true,      false,      true },
+    { "submittx",      			&submittx,       	 	 true,      false,      false },
+    { "createcontracttxraw",    &createcontracttxraw,    true,      false,      true },
+    { "createfreezetxraw",      &createfreezetxraw,      true,      false,      true },
+    { "registerscripttxraw",    &registerscripttxraw,    true,      false,      true },
+    { "sigstr",    				&sigstr,    			 true,      false,      true },
 
 
 //for test code

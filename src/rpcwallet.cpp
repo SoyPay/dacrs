@@ -134,14 +134,7 @@ Value signmessage(const Array& params, bool fHelp)
 
     return EncodeBase64(&vchSig[0], vchSig.size());
 }
-bool buildsendtx(CTransaction &tx,const CUserID& send, const CUserID& rev,int64_t nAmount ,int high,int64_t Fee = 0) {
-		tx.srcUserId = send;
-		tx.desUserId = rev;
-		tx.llValues = nAmount;
-		tx.llFees = Fee;
-		tx.nValidHeight = high;
-		return true;
-}
+
 
 Value sendtoaddresswithfee(const Array& params, bool fHelp)
  {
@@ -242,7 +235,96 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 }
 
 
+Value sendtoaddressraw(const Array& params, bool fHelp)
+{
+	int size = params.size();
+	if (fHelp || size != 5 )
+		throw runtime_error(
+						"sendtoaddress \"Dacrsaddress\" amount "
+						"\nSent an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
+						+ HelpRequiringPassphrase() + "\nArguments:\n"
+						"1. \"height\"  (int) \n"
+						"2. \"fee\"  (int)  \n"
+						"3. \"srcaddress\"  (string, required) The Dacrs address to send to.\n"
+						"3. \"dessaddress\"  (string, required) The Dacrs address to send to.\n"
+						"\nResult:\n"
+						"\"transactionid\"  (string) The transaction id.\n"
+						"\nExamples:\n"
+						+ HelpExampleCli("createnormaltx", "100 1000 \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
+						+ HelpExampleCli("createnormaltx",
+						"100 1000 \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
+						+ HelpExampleRpc("createnormaltx",
+						"100 1000 \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\""
+						+ HelpExampleCli("createnormaltx", "\"0-6\" 10 ")
+						+ HelpExampleCli("createnormaltx", "100 1000 \"00000000000000000005\" 10 ")
+						+ HelpExampleCli("createnormaltx", "100 1000 \"0-6\" \"0-5\" 10 ")
+						+ HelpExampleCli("createnormaltx", "100 1000 \"00000000000000000005\" \"0-6\"10 ")));
 
+	CKeyID sendKeyId;
+	CKeyID RevKeyId;
+
+	auto GetUserID = [](string const &addr,CUserID &userid) {
+		CRegID te(addr);
+		if(!te.IsEmpty()) {
+			userid = te;
+			return true;
+		}
+		CKeyID kid(addr);
+		if(!kid.IsEmpty()) {
+			userid = kid;
+			return true;
+		}
+		return false;
+	};
+
+	int hight = params[0].get_int();
+
+	int64_t Fee = AmountToRawValue(params[1]);
+
+
+	int64_t nAmount = 0;
+
+    nAmount = AmountToRawValue(params[2]);
+	if(nAmount == 0){
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid nAmount == 0");
+	}
+
+	CUserID  send;
+	CUserID  rev;
+	if(!GetUserID(params[3].get_str(),send)){
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid send address");
+	}
+
+	if(send.type() == typeid(CKeyID)){
+		CRegID regId;
+		if(!pAccountViewTip->GetRegId(send,regId)){
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "CKeyID is not registed ");
+		}
+		send = regId;
+	}
+
+	if(!GetUserID(params[4].get_str(),rev)){
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid rev address");
+	}
+
+	if(rev.type() == typeid(CKeyID)){
+		CRegID regId;
+		if(!pAccountViewTip->GetRegId(rev,regId)){
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "CKeyID is not registed ");
+		}
+		rev = regId;
+	}
+
+
+	std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(send,rev,nAmount,hight,Fee);
+	CDataStream ds(SER_DISK, CLIENT_VERSION);
+	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
+	ds << pBaseTx;
+	Object obj;
+	obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
+	return obj;
+
+}
 Value sendtoaddress(const Array& params, bool fHelp)
  {
 	int size = params.size();
@@ -331,11 +413,9 @@ Value sendtoaddress(const Array& params, bool fHelp)
 		rev = RevKeyId;
 	}
 
-	CTransaction tx;
+	CTransaction tx(sendreg,rev,nAmount,chainActive.Height(),SysCfg().GetTxFee());
 
-	buildsendtx(tx,sendreg,rev,nAmount,chainActive.Height(),SysCfg().GetTxFee());
-
-	if (pwalletMain->Sign(sendreg,tx.SignatureHash(), tx.signature)) {
+	if (!pwalletMain->Sign(sendreg,tx.SignatureHash(), tx.signature)) {
 		throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
 	}
 

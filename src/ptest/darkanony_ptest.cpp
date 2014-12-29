@@ -109,7 +109,7 @@ string Parsejson(string str)
 		const json_spirit::Pair& pair = obj[i];
 		const std::string& str_name = pair.name_;
 		const json_spirit::Value& val_val = pair.value_;
-		if(str_name =="RawTx")
+		if(str_name =="rawtx")
 		{
 			if(val_val.get_str() != "")
 			{

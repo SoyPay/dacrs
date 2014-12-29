@@ -155,6 +155,15 @@ extern json_spirit::Value sendrawtransaction(const json_spirit::Array& params, b
 extern json_spirit::Value signmessage(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendtoaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendtoaddresswithfee(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendtoaddressraw(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value registaccounttxraw(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value submittx(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value createcontracttxraw(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value createfreezetxraw(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value registerscripttxraw(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sigstr(const json_spirit::Array& params, bool fHelp);
+
+
 
 extern json_spirit::Value getblockcount(const json_spirit::Array& params, bool fHelp); // in rpcblockchain.cpp
 extern json_spirit::Value getbestblockhash(const json_spirit::Array& params, bool fHelp);

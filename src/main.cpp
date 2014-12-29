@@ -2980,7 +2980,7 @@ void static ProcessGetData(CNode* pfrom)
                         	ss << *((CContractTransaction *)pBaseTx.get());
                         }
                         else if(REG_ACCT_TX == pBaseTx->nTxType) {
-                        	ss << *((CRegisterAccountTx *)pBaseTx.get());
+                        	ss << *((Cregistaccounttx *)pBaseTx.get());
                         }
                         else if(FREEZE_TX == pBaseTx->nTxType) {
                         	ss << *((CFreezeTransaction *)pBaseTx.get());
@@ -4095,7 +4095,7 @@ std::shared_ptr<CBaseTransaction> CreateNewEmptyTransaction(unsigned char uType)
 	case COMMON_TX:
 		return make_shared<CTransaction>();
 	case REG_ACCT_TX:
-		return make_shared<CRegisterAccountTx>();
+		return make_shared<Cregistaccounttx>();
 	case CONTRACT_TX:
 		return make_shared<CContractTransaction>();
 	case FREEZE_TX:

@@ -354,7 +354,7 @@ public:
 
 };
 
-class CRegisterAccountTx: public CBaseTransaction {
+class Cregistaccounttx: public CBaseTransaction {
 
 public:
 	mutable CUserID userId;      //pubkey
@@ -364,18 +364,25 @@ public:
 	vector<unsigned char> signature;
 
 public:
-	CRegisterAccountTx(const CBaseTransaction *pBaseTx) {
+	Cregistaccounttx(const CBaseTransaction *pBaseTx) {
 		assert(REG_ACCT_TX == pBaseTx->nTxType);
-		*this = *(CRegisterAccountTx *) pBaseTx;
+		*this = *(Cregistaccounttx *) pBaseTx;
 	}
-
-	CRegisterAccountTx() {
+	Cregistaccounttx(const CUserID &uId,const CUserID &minerID,int64_t fees,int height) {
+		nTxType = REG_ACCT_TX;
+		llFees = fees;
+		nValidHeight = height;
+		userId = uId;
+		minerId=minerID;
+		signature.clear();
+	}
+	Cregistaccounttx() {
 		nTxType = REG_ACCT_TX;
 		llFees = 0;
 		nValidHeight = 0;
 	}
 
-	~CRegisterAccountTx() {
+	~Cregistaccounttx() {
 	}
 
 //	unsigned int GetSerializeSize(int nType, int nVersion) const {
@@ -488,7 +495,7 @@ public:
 	}
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
-		return make_shared<CRegisterAccountTx>(this);
+		return make_shared<Cregistaccounttx>(this);
 	}
 
 	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view);
@@ -520,8 +527,19 @@ public:
 	CTransaction(const CBaseTransaction *pBaseTx) {
 		assert(COMMON_TX == pBaseTx->nTxType);
 		*this = *(CTransaction *) pBaseTx;
+		assert(srcUserId.type()==typeid(CRegID));
 	}
 
+	CTransaction(const CUserID& send, const CUserID& rev,int64_t nAmount ,int high,int64_t Fee)
+	{
+		assert(send.type()==typeid(CRegID));
+		srcUserId = send;
+		desUserId=rev;
+		llValues =nAmount;
+		nValidHeight = high;
+		llFees = Fee;
+		signature.clear();
+	}
 	CTransaction() {
 		signature.clear();
 		llValues = 0;
@@ -605,6 +623,16 @@ public:
 		*this = *(CContractTransaction *) pBaseTx;
 	}
 
+	CContractTransaction(const CUserID& sRegId, vector_unsigned_char& pContract,vector<CUserID>& vRegId,int high,int64_t Fee)
+	{
+		nTxType = CONTRACT_TX;
+		scriptRegId = sRegId;
+		vContract = pContract;
+		nValidHeight = high;
+		llFees = Fee;
+		vAccountRegId.assign(vRegId.begin(),vRegId.end());
+		vSignature.clear();
+	}
 	CContractTransaction() {
 		nTxType = CONTRACT_TX;
 		llFees = 0;
@@ -697,7 +725,15 @@ public:
 		assert(FREEZE_TX == pBaseTx->nTxType);
 		*this = *(CFreezeTransaction*) pBaseTx;
 	}
-
+	CFreezeTransaction(const CUserID& regId, uint64_t freeze,int unhight,int high,int64_t Fee)
+	{
+		regAccountId = regId;
+		nValidHeight = high;
+		llFees = Fee;
+		llFreezeFunds = freeze;
+		nUnfreezeHeight = unhight;
+		signature.clear();
+	}
 	CFreezeTransaction() {
 		nTxType = FREEZE_TX;
 		llFees = 0;
@@ -1469,7 +1505,7 @@ void Serialize(Stream& os, const std::shared_ptr<CBaseTransaction> &pa, int nTyp
 	unsigned char ntxType = pa->nTxType;
 	Serialize(os, ntxType, nType, nVersion);
 	if (pa->nTxType == REG_ACCT_TX) {
-		Serialize(os, *((CRegisterAccountTx *) (pa.get())), nType, nVersion);
+		Serialize(os, *((Cregistaccounttx *) (pa.get())), nType, nVersion);
 	}
 	else if (pa->nTxType == COMMON_TX) {
 		Serialize(os, *((CTransaction *) (pa.get())), nType, nVersion);
@@ -1497,8 +1533,8 @@ void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, i
 	char nTxType;
 	is.read((char*) &(nTxType), sizeof(nTxType));
 	if (nTxType == REG_ACCT_TX) {
-		pa = make_shared<CRegisterAccountTx>();
-		Unserialize(is, *((CRegisterAccountTx *) (pa.get())), nType, nVersion);
+		pa = make_shared<Cregistaccounttx>();
+		Unserialize(is, *((Cregistaccounttx *) (pa.get())), nType, nVersion);
 	}
 	else if (nTxType == COMMON_TX) {
 		pa = make_shared<CTransaction>();

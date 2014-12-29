@@ -156,7 +156,7 @@ public:
 		}
 
 		const Value& result = find_value(valueRes.get_obj(), "hash");
-		const Value& result1 = find_value(valueRes.get_obj(), "RawTx");
+		const Value& result1 = find_value(valueRes.get_obj(), "rawtx");
 		const Value& result3 = find_value(valueRes.get_obj(), "script");
 		if (result.type() == null_type && result1.type() == null_type && result3.type() == null_type){
 			return false;
@@ -786,7 +786,7 @@ public:
 			string hash = "";
 			BOOST_CHECK(GetHashFromCreatedTx(value,hash));
 			BOOST_CHECK(GenerateOneBlock());
-			char *argv1[] = { "rpctest", "registeraccounttx", (char*)newaddr.c_str(),fee,(char*)strflag.c_str()};
+			char *argv1[] = { "rpctest", "registaccounttx", (char*)newaddr.c_str(),fee,(char*)strflag.c_str()};
 			int argc1 = sizeof(argv1) / sizeof(char*);
 			Value value1;
 			BOOST_CHECK(CommandLineRPC_GetValue(argc1, argv1, value1));
