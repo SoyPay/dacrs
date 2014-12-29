@@ -1203,7 +1203,9 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
 	//load a block tx into cache transaction
 	CBlockIndex *pReLoadBlockIndex = pindex;
 	if(pindex->nHeight - SysCfg().GetTxCacheHeight()>0) {
-		pReLoadBlockIndex = chainActive[pindex->nHeight - SysCfg().GetTxCacheHeight()];
+		CChain chainTemp;
+		chainTemp.SetTip(pindex->pprev);
+		pReLoadBlockIndex = chainTemp[pindex->nHeight - SysCfg().GetTxCacheHeight()];
 		CBlock reLoadblock;
 		if (!ReadBlockFromDisk(reLoadblock, pReLoadBlockIndex))
 			return state.Abort(_("Failed to read block"));
@@ -1368,7 +1370,9 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 	if (!txCache.AddBlockToCache(block))
 			return state.Abort(_("Connect tip block failed add block tx to txcache"));
 	if(pindex->nHeight-SysCfg().GetTxCacheHeight() > 0) {
-		CBlockIndex *pDeleteBlockIndex = chainActive[pindex->nHeight - SysCfg().GetTxCacheHeight()];
+		CChain chainTemp;
+		chainTemp.SetTip(pindex);
+		CBlockIndex *pDeleteBlockIndex = chainTemp[pindex->nHeight - SysCfg().GetTxCacheHeight()];
 		CBlock deleteBlock;
 		if (!ReadBlockFromDisk(deleteBlock, pDeleteBlockIndex))
 			return state.Abort(_("Failed to read block"));

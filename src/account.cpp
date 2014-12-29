@@ -1034,6 +1034,7 @@ bool CTransactionDBCache::AddBlockToCache(const CBlock &block) {
 //	if (IsContainBlock(block)) {
 //		LogPrint("INFO", "the block hash:%s is in TxCache\n", block.GetHash().GetHex());
 	mapTxHashByBlockHash[block.GetHash()] = vTxHash;
+	LogPrint("INFO", "CTransactionDBCache::AddBlockToCache() blockhash=%s height=%d\n", block.GetHash().GetHex(), block.nHeight);
 //	} else {
 //		mapTxHashByBlockHash.insert(make_pair(block.GetHash(), vTxHash));
 //	}
@@ -1053,6 +1054,7 @@ bool CTransactionDBCache::AddBlockToCache(const CBlock &block) {
 }
 
 bool CTransactionDBCache::DeleteBlockFromCache(const CBlock &block) {
+	LogPrint("INFO", "CTransactionDBCache::DeleteBlockFromCache() blockhash=%s height=%d\n", block.GetHash().GetHex(), block.nHeight);
 	if (IsContainBlock(block)) {
 		vector<uint256> vTxHash;
 		vTxHash.clear();
