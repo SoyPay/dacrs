@@ -16,6 +16,11 @@ using namespace boost;
 #define SELLER_ID 		"000000000300"
 #define ARBIT_ID		"000000000400"
 
+#define VADDR_BUYER   	"[\"mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc\"]"
+#define VADDR_SELLER   	"[\"mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y\"]"
+#define VADDR_ARBIT   	"[\"moZJZgsGFC4qvwRdjzS7Bj3fHrtpUfEVEE\"]"
+
+#define MAX_ACCOUNT_LEN 20
 #define ACCOUNT_ID_SIZE 6
 #define MAX_ARBITRATOR 3
 #define HASH_SIZE		32
@@ -27,30 +32,30 @@ typedef struct tag_INT64 {
 
 typedef struct tagACCOUNT_ID
 {
-	char accounid[ACCOUNT_ID_SIZE];
+	char accounid[MAX_ACCOUNT_LEN];
 }ACCOUNT_ID;
 
 typedef struct  {
-	unsigned char nType;					//!<ÀàÐÍ
-	unsigned char nArbitratorCount;			//!<ÖÙ²ÃÕß¸öÊý
-	ACCOUNT_ID 	buyer;						//!<Âò¼ÒID£¨²ÉÓÃ6×Ö½ÚµÄÕË»§ID£©
-	ACCOUNT_ID seller;						//!<Âô¼ÒID£¨²ÉÓÃ6×Ö½ÚµÄÕË»§ID£©
-	ACCOUNT_ID arbitrator[MAX_ARBITRATOR];	//!<ÖÙ²ÃÕßID£¨²ÉÓÃ6×Ö½ÚµÄÕË»§ID£©
-	long nHeight;							//!<³¬Ê±¾ø¶Ô¸ß¶È
-	Int64 nFineMoney;						//!<Âô¼ÒÎ¥Ô¼ºó×î´ó·£¿î½ð¶î
-	Int64 nPayMoney;						//!<Âò¼ÒÏòÂô¼ÒÖ§¸¶µÄ½ð¶î
-	Int64 nFee;								//!<ÖÙ²ÃÊÖÐø·Ñ
-	Int64 ndeposit;							//!<ÖÙ²ÃÑº½ð,ÉêËßÊ±´ÓÖÙ²ÃÕß¿Û³ýµÄÑº½ð(Èç¹ûÖÙ²Ã²»ÏìÓ¦Ç®¹éÂò¼Ò·ñÔòÂò¼ÒÍË»¹¸øÖÙ²ÃÕß)
+	unsigned char nType;
+	unsigned char nArbitratorCount;
+	ACCOUNT_ID 	buyer;
+	ACCOUNT_ID seller;
+	ACCOUNT_ID arbitrator[MAX_ARBITRATOR];
+	long nHeight;
+	Int64 nFineMoney;
+	Int64 nPayMoney;
+	Int64 nFee;
+	Int64 ndeposit;
 }FIRST_CONTRACT;
 
 typedef struct {
-	unsigned char nType;					//!<½»Ò×ÀàÐÍ
-	unsigned char hash[HASH_SIZE];			//!<ÉÏÒ»¸ö½»Ò×°üµÄ¹þÏ£
+	unsigned char nType;
+	unsigned char hash[HASH_SIZE];
 } NEXT_CONTRACT;
 
 typedef struct {
-	unsigned char nType;					//!<½»Ò×ÀàÐÍ
-	unsigned char hash[HASH_SIZE];			//!<ÉÏÒ»¸ö½»Ò×µÄ¹þÏ£
+	unsigned char nType;
+	unsigned char hash[HASH_SIZE];
 	Int64 nMinus;
 }ARBIT_RES_CONTRACT;
 #pragma popup()
@@ -61,11 +66,13 @@ public:
 	bool GetHashFromCreatedTx(const Value& valueRes,string& strHash)
 	{
 		if (valueRes.type() == null_type) {
+			cout<<write_string(valueRes, true)<<endl;
 			return false;
 		}
 
 		const Value& result = find_value(valueRes.get_obj(), "hash");
 		if (result.type() == null_type){
+			cout<<write_string(valueRes, true)<<endl;
 			return false;
 		}
 
@@ -110,12 +117,12 @@ public:
 		}
 	}
 
-	bool ModifyAuthor(unsigned char nUserData,string& strTxHash) {
+	bool ModifyAuthor(unsigned char nUserData,const string& strSignAddr,string& strTxHash) {
 		vector<unsigned char> vUserDefine;
 		string strHash1, strHash2;
 		vUserDefine.push_back(nUserData);
-		CNetAuthorizate author(100, vUserDefine, 100000, 1000000, 1000000);
-		Value valueRes = SysTestBase::ModifyAuthor(BUYER_ADDR, strRegScriptID, 200, 10000, author);
+		CNetAuthorizate author(10000, vUserDefine, 100000, 1000000, 1000000);
+		Value valueRes = SysTestBase::ModifyAuthor(strSignAddr, strRegScriptID, 0, 10000, author);
 
 		if (!GetHashFromCreatedTx(valueRes,strTxHash)) {
 			return false;
@@ -142,6 +149,14 @@ public:
 		return true;
 	}
 
+	string GetReverseHash(const string& strTxHash) {
+		vector<unsigned char> vHash = ParseHex(strTxHash);
+		reverse(vHash.begin(), vHash.end());
+		string strHash;
+		strHash.assign(vHash.begin(), vHash.end());
+		return strHash;
+	}
+
 	void PacketFirstContract(const char*pBuyID,const char* pSellID,const char* pArID,
 		int nHeight,int nFine,int nPay,int nFee,int ndeposit,FIRST_CONTRACT* pContract)
 	{
@@ -166,28 +181,128 @@ public:
 		memcpy(&pContract->ndeposit,(const char*)&ndeposit,nSize);//20
 		memcpy(&pContract->nFee,(const char*)&nFee,nSize);//10
 	}
+
+	void PacketNextContract(unsigned char nStep, unsigned char* pHash, NEXT_CONTRACT* pNextContract) {
+		memset(pNextContract, 0, sizeof(NEXT_CONTRACT));
+		pNextContract->nType = nStep;
+		memcpy(pNextContract->hash, pHash, HASH_SIZE);
+	}
+
+	void PacketLastContract(unsigned char* pHash,int nFine,ARBIT_RES_CONTRACT* pLastContract)
+	{
+		memset(pLastContract,0,sizeof(ARBIT_RES_CONTRACT));
+		pLastContract->nType = 4;
+		memcpy(pLastContract->hash,pHash,HASH_SIZE);
+		memcpy(&pLastContract->nMinus,(const char*)&nFine,sizeof(int));
+	}
+
+	string PutDataIntoString(char* pData, int nDateLen) {
+		string strData;
+		strData.assign(pData, pData + nDateLen);
+		return strData;
+	}
+
+	void CreateFirstTx() {
+		string strTxHash;
+		Value valueRes = RegisterScriptTx(BUYER_ADDR, "SecuredTrade.bin", 0, 100000);
+		BOOST_CHECK(GetHashFromCreatedTx(valueRes, strTxHash));
+		BOOST_CHECK(GenerateOneBlock());
+		VerifyTxInBlock(strTxHash);
+		BOOST_CHECK(GetScriptID(strTxHash, strRegScriptID));
+
+		BOOST_CHECK(ModifyAuthor(1, BUYER_ADDR,strTxHash));
+		BOOST_CHECK(GenerateOneBlock());
+		VerifyTxInBlock(strTxHash);
+
+		PacketFirstContract(BUYER_ID, SELLER_ID, ARBIT_ID, 200, 100000, 100000, 100000, 100000, &firstConstract);
+		string strData = PutDataIntoString((char*) &firstConstract,sizeof(firstConstract));
+		valueRes = CreateContractTxEx(strRegScriptID, VADDR_BUYER, strData, 0, 100000);
+		BOOST_CHECK(GetHashFromCreatedTx(valueRes, strTxHash));
+		BOOST_CHECK(GenerateOneBlock());
+		VerifyTxInBlock(strTxHash);
+		strFirstTxHash = strTxHash;
+		//cout << "first tx hash:" << strTxHash << endl;
+	}
+
+	void CreateSecondTx() {
+		string strTxHash;
+		BOOST_CHECK(ModifyAuthor(2, SELLER_ADDR,strTxHash));
+		BOOST_CHECK(GenerateOneBlock());
+		VerifyTxInBlock(strTxHash);
+
+		string strReversFirstTxHash = GetReverseHash(strFirstTxHash);
+		PacketNextContract(2, (unsigned char*) strReversFirstTxHash.c_str(), &secondContract);
+		string strData = PutDataIntoString((char*) &secondContract, sizeof(secondContract));
+
+		Value valueRes = CreateContractTxEx(strRegScriptID, VADDR_SELLER, strData, 0, 100000);
+		BOOST_CHECK(GetHashFromCreatedTx(valueRes, strTxHash));
+		BOOST_CHECK(GenerateOneBlock());
+		VerifyTxInBlock(strTxHash);
+		strSecondTxHash = strTxHash;
+		//cout << "second tx hash:" << strTxHash << endl;
+	}
+
+	void CreateThirdTx() {
+		string strTxHash;
+		BOOST_CHECK(ModifyAuthor(1, ARBIT_ADDR,strTxHash));
+		BOOST_CHECK(GenerateOneBlock());
+		VerifyTxInBlock(strTxHash);
+
+		string strReversFirstTxHash = GetReverseHash(strSecondTxHash);
+		PacketNextContract(3, (unsigned char*) strReversFirstTxHash.c_str(), &thirdContract);
+		string strData = PutDataIntoString((char*) &thirdContract, sizeof(thirdContract));
+
+		Value valueRes = CreateContractTxEx(strRegScriptID, VADDR_ARBIT, strData, 0, 100000);
+		BOOST_CHECK(GetHashFromCreatedTx(valueRes, strTxHash));
+		BOOST_CHECK(GenerateOneBlock());
+		VerifyTxInBlock(strTxHash);
+		strThirdTxHash = strTxHash;
+		//cout << "Third tx hash:" << strTxHash << endl;
+	}
+
+	void CreateLastTx() {
+		string strTxHash;
+		BOOST_CHECK(ModifyAuthor(3, ARBIT_ADDR,strTxHash));
+		BOOST_CHECK(GenerateOneBlock());
+		VerifyTxInBlock(strTxHash);
+
+		string strReversFirstTxHash = GetReverseHash(strThirdTxHash);
+		PacketLastContract((unsigned char*) strReversFirstTxHash.c_str(), 100000,&arContract);
+		string strData = PutDataIntoString((char*) &arContract, sizeof(arContract));
+
+		Value valueRes = CreateContractTxEx(strRegScriptID, VADDR_ARBIT, strData, 0, 100000);
+		BOOST_CHECK(GetHashFromCreatedTx(valueRes, strTxHash));
+		BOOST_CHECK(GenerateOneBlock());
+		VerifyTxInBlock(strTxHash);
+		//cout << "last tx hash:" << strTxHash << endl;
+	}
+
 protected:
 	string 				strRegScriptID;
+	string 				strFirstTxHash;
+	string 				strSecondTxHash;
+	string 				strThirdTxHash;
 	FIRST_CONTRACT		firstConstract;
+	NEXT_CONTRACT 		secondContract;
+	NEXT_CONTRACT 		thirdContract;
+	ARBIT_RES_CONTRACT 	arContract;
 };
 
 BOOST_FIXTURE_TEST_SUITE(sesuretrade,CSesureTrade)
 BOOST_AUTO_TEST_CASE(test)
 {
-//	string strTxHash;
-//	Value valueRes = RegisterScriptTx(BUYER_ADDR,"SecuredTrade.bin",100,100000);
-//	BOOST_CHECK(GetHashFromCreatedTx(valueRes,strTxHash));
-//	BOOST_CHECK(GenerateOneBlock());
-//	VerifyTxInBlock(strTxHash);
-//	BOOST_CHECK(GetScriptID(strTxHash,strRegScriptID));
-//
-//	BOOST_CHECK(ModifyAuthor(1,strTxHash));
-//	BOOST_CHECK(GenerateOneBlock());
-//	VerifyTxInBlock(strTxHash);
-//
-//	PacketFirstContract(BUYER_ID,SELLER_ID,ARBIT_ID,100,10000,10000,10000,10000,&firstConstract);
-//	string strContract;
-//	BOOST_CHECK(CreateContractTx(strRegScriptID,BUYER_ADDR,strContract,100,10000));
+	while (1)
+	{
+		CreateFirstTx();
+
+		CreateSecondTx();
+
+		CreateThirdTx();
+
+		CreateLastTx();
+		break;
+	}
+
 }
 BOOST_AUTO_TEST_SUITE_END()
 
