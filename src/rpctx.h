@@ -19,8 +19,8 @@ using namespace json_spirit;
 
 
 
-extern Value registeraccounttx(const Array& params, bool fHelp);
-extern Value createnormaltx(const Array& params, bool fHelp);
+extern Value registaccounttx(const Array& params, bool fHelp);
+extern Value sendtoaddressraw(const Array& params, bool fHelp);
 extern Value createcontracttx(const Array& params, bool fHelp);
 extern Value signcontracttx(const Array& params, bool fHelp);
 extern Value createfreezetx(const Array& params, bool fHelp);

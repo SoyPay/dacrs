@@ -786,7 +786,7 @@ public:
 			string hash = "";
 			BOOST_CHECK(GetHashFromCreatedTx(value,hash));
 			BOOST_CHECK(GenerateOneBlock());
-			char *argv1[] = { "rpctest", "registeraccounttx", (char*)newaddr.c_str(),fee,(char*)strflag.c_str()};
+			char *argv1[] = { "rpctest", "registaccounttx", (char*)newaddr.c_str(),fee,(char*)strflag.c_str()};
 			int argc1 = sizeof(argv1) / sizeof(char*);
 			Value value1;
 			BOOST_CHECK(CommandLineRPC_GetValue(argc1, argv1, value1));

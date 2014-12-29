@@ -135,7 +135,7 @@ public:
 
 	bool CreateFreezeTx(const std::string &addr, const int nHeight);
 
-	bool RegisterAccountTx(const std::string &addr, const int nHeight);
+	bool registaccounttx(const std::string &addr, const int nHeight);
 
 	Value PCreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 			int nHeight,int nFee = 10000);

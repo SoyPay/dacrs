@@ -460,7 +460,7 @@ bool SysTestBase::CreateFreezeTx(const std::string &addr, const int nHeight) {
 	return false;
 }
 
-bool SysTestBase::RegisterAccountTx(const std::string &addr, const int nHeight) {
+bool SysTestBase::registaccounttx(const std::string &addr, const int nHeight) {
 	//CommanRpc
 	char caddr[64] = { 0 };
 	strncpy(caddr, addr.c_str(), sizeof(caddr) - 1);
@@ -473,7 +473,7 @@ bool SysTestBase::RegisterAccountTx(const std::string &addr, const int nHeight) 
 	char height[16] = { 0 };
 	sprintf(height, "%d", nHeight);
 
-	char *argv[] = { "rpctest", "registeraccounttx", caddr, fee, height };
+	char *argv[] = { "rpctest", "registaccounttx", caddr, fee, height };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
