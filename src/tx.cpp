@@ -1478,8 +1478,8 @@ Object CAccount::ToJosnObj() const
 
 string CAccount::ToString() const {
 	string str;
-	str += strprintf("keyID=%s, publicKey=%s, minerpubkey=%s, values=%ld\n",
-	HexStr(keyID).c_str(), HexStr(PublicKey).c_str(), HexStr(MinerPKey).c_str(), llValues);
+	str += strprintf("regID=%s, keyID=%s, publicKey=%s, minerpubkey=%s, values=%ld\n",
+	regID.ToString(), keyID.GetHex(), PublicKey.ToString(), MinerPKey.ToString(), llValues);
 	for (unsigned int i = 0; i < vRewardFund.size(); ++i) {
 		str += "    " + vRewardFund[i].ToString() + "\n";
 	}

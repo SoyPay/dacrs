@@ -122,28 +122,6 @@ Value getnetworkhashps(const Array& params, bool fHelp)
 }
 
 
-Value getgenerate(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 0)
-        throw runtime_error(
-            "getgenerate\n"
-            "\nReturn if the server is set to generate coins or not. The default is false.\n"
-            "It is set with the command line argument -gen (or Dacrs.conf setting gen)\n"
-            "It can also be set with the setgenerate call.\n"
-            "\nResult\n"
-            "true|false      (boolean) If the server is set to generate coins or not\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getgenerate", "")
-            + HelpExampleRpc("getgenerate", "")
-        );
-
-//    if (!pMiningKey)
-//        return false;
-
-
-    return SysCfg().GetBoolArg("-gen", false);
-}
-
 
 Value setgenerate(const Array& params, bool fHelp)
 {
@@ -160,8 +138,6 @@ Value setgenerate(const Array& params, bool fHelp)
             "\nExamples:\n"
             "\nSet the generation on with a limit of one processor\n"
             + HelpExampleCli("setgenerate", "true 1") +
-            "\nCheck the setting\n"
-            + HelpExampleCli("getgenerate", "") +
             "\nTurn off generation\n"
             + HelpExampleCli("setgenerate", "false") +
             "\nUsing json rpc\n"
@@ -223,25 +199,6 @@ Value setgenerate(const Array& params, bool fHelp)
     return Value::null;
 }
 
-//Value gethashespersec(const Array& params, bool fHelp)
-//{
-//    if (fHelp || params.size() != 0)
-//        throw runtime_error(
-//            "gethashespersec\n"
-//            "\nReturns a recent hashes per second performance measurement while generating.\n"
-//            "See the getgenerate and setgenerate calls to turn generation on and off.\n"
-//            "\nResult:\n"
-//            "n            (numeric) The recent hashes per second when generation is on (will return 0 if generation is off)\n"
-//            "\nExamples:\n"
-//            + HelpExampleCli("gethashespersec", "")
-//            + HelpExampleRpc("gethashespersec", "")
-//        );
-//
-//    if (GetTimeMillis() - nHPSTimerStart > 8000)
-//        return (int64_t)0;
-//    return (int64_t)dHashesPerSec;
-//}
-
 
 
 Value getmininginfo(const Array& params, bool fHelp)
@@ -285,132 +242,6 @@ Value getmininginfo(const Array& params, bool fHelp)
     return obj;
 }
 
-
-#if 0
-Value getwork(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() > 1)
-        throw runtime_error(
-            "getwork ( \"data\" )\n"
-            "\nIf 'data' is not specified, it returns the formatted hash data to work on.\n"
-            "If 'data' is specified, tries to solve the block and returns true if it was successful.\n"
-            "\nArguments:\n"
-            "1. \"data\"       (string, optional) The hex encoded data to solve\n"
-            "\nResult (when 'data' is not specified):\n"
-            "{\n"
-            "  \"midstate\" : \"xxxx\",   (string) The precomputed hash state after hashing the first half of the data (DEPRECATED)\n" // deprecated
-            "  \"data\" : \"xxxxx\",      (string) The block data\n"
-            "  \"hash1\" : \"xxxxx\",     (string) The formatted hash buffer for second hash (DEPRECATED)\n" // deprecated
-            "  \"target\" : \"xxxx\"      (string) The little endian hash target\n"
-            "}\n"
-            "\nResult (when 'data' is specified):\n"
-            "true|false       (boolean) If solving the block specified in the 'data' was successfull\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getwork", "")
-            + HelpExampleRpc("getwork", "")
-        );
-
-    if (vNodes.empty())
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Dacrs is not connected!");
-
-    if (IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Dacrs is downloading blocks...");
-
-    typedef map<uint256, pair<CBlock*, CScript> > mapNewBlock_t;
-    static mapNewBlock_t mapNewBlock;    // FIXME: thread safety
-    static vector<CBlockTemplate*> vNewBlockTemplate;
-
-    if (params.size() == 0)
-    {
-        // Update block
-        static unsigned int nTransactionsUpdatedLast;
-        static CBlockIndex* pindexPrev;
-        static int64_t nStart;
-        static CBlockTemplate* pblocktemplate;
-        if (pindexPrev != chainActive.Tip() ||
-            (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60))
-        {
-            if (pindexPrev != chainActive.Tip())
-            {
-                // Deallocate old blocks since they're obsolete now
-                mapNewBlock.clear();
-                BOOST_FOREACH(CBlockTemplate* pblocktemplate, vNewBlockTemplate)
-                    delete pblocktemplate;
-                vNewBlockTemplate.clear();
-            }
-
-            // Clear pindexPrev so future getworks make a new block, despite any failures from here on
-            pindexPrev = NULL;
-
-            // Store the pindexBest used before CreateNewBlock, to avoid races
-            nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
-            CBlockIndex* pindexPrevNew = chainActive.Tip();
-            nStart = GetTime();
-
-            // Create new block
-            pblocktemplate = CreateNewBlockWithKey(*pMiningKey);
-            if (!pblocktemplate)
-                throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
-            vNewBlockTemplate.push_back(pblocktemplate);
-
-            // Need to update only after we know CreateNewBlock succeeded
-            pindexPrev = pindexPrevNew;
-        }
-        CBlock* pblock = &pblocktemplate->block; // pointer for convenience
-
-        // Update nTime
-        UpdateTime(*pblock, pindexPrev);
-        pblock->nNonce = 0;
-
-        // Update nExtraNonce
-        static unsigned int nExtraNonce = 0;
-        IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
-
-        // Save
-        mapNewBlock[pblock->hashMerkleRoot] = make_pair(pblock, pblock->vtx[0].vin[0].scriptSig);
-
-        // Pre-build hash buffers
-        char pmidstate[32];
-        char pdata[128];
-        char phash1[64];
-        FormatHashBuffers(pblock, pmidstate, pdata, phash1);
-
-        uint256 hashTarget = CBigNum().SetCompact(pblock->nBits).getuint256();
-
-        Object result;
-        result.push_back(Pair("midstate", HexStr(BEGIN(pmidstate), END(pmidstate)))); // deprecated
-        result.push_back(Pair("data",     HexStr(BEGIN(pdata), END(pdata))));
-        result.push_back(Pair("hash1",    HexStr(BEGIN(phash1), END(phash1)))); // deprecated
-        result.push_back(Pair("target",   HexStr(BEGIN(hashTarget), END(hashTarget))));
-        return result;
-    }
-    else
-    {
-        // Parse parameters
-        vector<unsigned char> vchData = ParseHex(params[0].get_str());
-        if (vchData.size() != 128)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter");
-        CBlock* pdata = (CBlock*)&vchData[0];
-
-        // Byte reverse
-        for (int i = 0; i < 128/4; i++)
-            ((unsigned int*)pdata)[i] = ByteReverse(((unsigned int*)pdata)[i]);
-
-        // Get saved block
-        if (!mapNewBlock.count(pdata->hashMerkleRoot))
-            return false;
-        CBlock* pblock = mapNewBlock[pdata->hashMerkleRoot].first;
-
-        pblock->nTime = pdata->nTime;
-        pblock->nNonce = pdata->nNonce;
-        pblock->vtx[0].vin[0].scriptSig = mapNewBlock[pdata->hashMerkleRoot].second;
-        pblock->hashMerkleRoot = pblock->BuildMerkleTree();
-
-        assert(pwalletMain != NULL);
-        return CheckWork(pblock, *pwalletMain, *pMiningKey);
-    }
-}
-#endif
 
 
 Value submitblock(const Array& params, bool fHelp)
