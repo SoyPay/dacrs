@@ -348,7 +348,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
 //    Array inputs = params[0].get_array();
 //    Object sendTo = params[1].get_obj();
 //
-//    CTransaction rawTx;
+//    CTransaction rawtx;
 //
 //    for (const auto& input : inputs)
 //    {
@@ -364,7 +364,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
 //            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout must be positive");
 //
 ////        CTxIn in(COutPoint(txid, nOutput));
-////        rawTx.vin.push_back(in);
+////        rawtx.vin.push_back(in);
 //    }
 //
 //    set<CDacrsAddress> setAddress;
@@ -383,11 +383,11 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
 ////        int64_t nAmount = AmountFromValue(s.value_);
 //
 ////        CTxOut out(nAmount, scriptPubKey);
-////        rawTx.vout.push_back(out);
+////        rawtx.vout.push_back(out);
 //    }
 //
 //    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-//    ss << rawTx;
+//    ss << rawtx;
 //    return HexStr(ss.begin(), ss.end());
 //}
 

@@ -413,7 +413,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 		ds << pBaseTx;
 		Object obj;
-		obj.push_back(Pair("RawTx", HexStr(ds.begin(), ds.end())));
+		obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
 		return obj;
 	}
 }
@@ -526,7 +526,7 @@ Value signcontracttx(const Array& params, bool fHelp) {
 		std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 		ds << pBaseTx;
 		Object obj;
-		obj.push_back(Pair("RawTx", HexStr(ds.begin(), ds.end())));
+		obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
 		return obj;
 	}
 
@@ -987,14 +987,39 @@ Value getaccountinfo(const Array& params, bool fHelp) {
    	userId = keyid;
 	Object obj;
 	{
-		LOCK(cs_main);
 		CAccount account;
 		CAccountViewCache accView(*pAccountViewTip, true);
 		if (accView.GetAccount(userId, account)) {
 			account.CompactAccount(chainActive.Height());
+			if(!account.PublicKey.IsValid()){
+				CPubKey pk;
+				CPubKey minerpk;
+				if (pwalletMain->GetPubKey(keyid, pk)) {
+					pwalletMain->GetPubKey(keyid, minerpk, true);
+					account.PublicKey = pk;
+					if (minerpk != minerpk&&!account.MinerPKey.IsValid()) {
+						account.MinerPKey = minerpk;
+					}
+				}
+			}
 			return account.ToJosnObj();
+		} else {
+			CPubKey pk;
+			CPubKey minerpk;
+			if (pwalletMain->GetPubKey(keyid, pk)) {
+				pwalletMain->GetPubKey(keyid, minerpk, true);
+				account.PublicKey = pk;
+				if (minerpk != minerpk) {
+					account.MinerPKey = minerpk;
+				}
+				return account.ToJosnObj();
+			}
 		}
+
 	}
+
+
+
 	return obj;
 }
 
@@ -1414,34 +1439,7 @@ Value generateblock(const Array& params, bool fHelp) {
 	return obj;
 }
 
-Value getpublickey(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 1) {
-		throw runtime_error("getpublickey \"address \n" + HelpRequiringPassphrase() + "\nArguments:\n"
-				"1. \"address \"  (string, required) The Dacrs address.\n"
-				"\nResult:\n"
-				"\"publickey\"  (string) \n"
-				"\nExamples:\n" + HelpExampleCli("getpublickey", "mpif58ohTASDZNNXreFMFuNAHBfuDUXtjP")
-				+HelpExampleCli("getpublickey", "0-6")
-				+HelpExampleCli("getpublickey", "00000000000000000005"));
-	}
 
-	string address = params[0].get_str();
-	CKeyID keyid;
-	if (!GetKeyId(address, keyid)) {
-		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dacrs address");
-	}
-	CPubKey pubkey;
-	{
-
-		if (!pwalletMain->GetPubKey(keyid, pubkey))
-			throw JSONRPCError(RPC_MISC_ERROR,
-					tinyformat::format("Wallet do not contain address %s", params[0].get_str()));
-	}
-
-	Object obj;
-	obj.push_back(Pair("pubkey",pubkey.ToString()));
-	return obj;
-}
 
 Value listtxcache(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {
@@ -1662,18 +1660,13 @@ Value registaccounttxraw(const Array& params, bool fHelp) {
     int64_t Fee = AmountToRawValue(params[1]);
 
     CKeyID dummy;
-	if(!GetKeyId(params[2].get_str(),dummy))
-	{
-		throw JSONRPCError(RPC_INVALID_PARAMS, "the key is registed");
-	}
-
-
     CPubKey pubk =  CPubKey(ParseHex(params[2].get_str()));
     if(!pubk.IsCompressed()||!pubk.IsFullyValid())
     {
     	throw JSONRPCError(RPC_INVALID_PARAMS, "CPubKey err");
     }
     ukey = pubk;
+    dummy =pubk.GetKeyID();
 
 	if (params.size() == 4) {
 		CPubKey pubk = CPubKey(ParseHex(params[3].get_str()));
@@ -1741,7 +1734,7 @@ Value createcontracttxraw(const Array& params, bool fHelp) {
 	}
 
 
-	RPCTypeCheck(params, list_of(int_type)(int_type)(str_type)(array_type)(str_type));
+	RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(array_type)(str_type));
 
 	int hight = params[0].get_int();
     int64_t fee = AmountToRawValue(params[1]);
@@ -1798,7 +1791,7 @@ Value createcontracttxraw(const Array& params, bool fHelp) {
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 	ds << pBaseTx;
 	Object obj;
-	obj.push_back(Pair("RawTx", HexStr(ds.begin(), ds.end())));
+	obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
 	return obj;
 }
 Value createfreezetxraw(const Array& params, bool fHelp) {
@@ -1870,7 +1863,7 @@ Value createfreezetxraw(const Array& params, bool fHelp) {
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 	ds << pBaseTx;
 	Object obj;
-	obj.push_back(Pair("RawTx", HexStr(ds.begin(), ds.end())));
+	obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
 	return obj;
 }
 
@@ -1879,8 +1872,8 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 		string msg = "registerscripttx nrequired \"addr\" \"script\" fee height\n"
 				"\nregister script\n"
 				"\nArguments:\n"
-				"1.\"fee\": (numeric required) pay to miner\n"
-				"2.\"height\": (numeric required)valid height\n"
+				"1.\"height\": (numeric required)valid height\n"
+				"2.\"fee\": (numeric required) pay to miner\n"
 				"3.\"addr\": (string required)\n"
 				"4.\"flag\": (numeric, required)\n"
 				"5.\"script or scriptid\": (string required), if flag=0 is script's file path, else if flag=1 scriptid\n"
@@ -1900,15 +1893,15 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 
-	RPCTypeCheck(params, list_of(int_type)(int_type)(str_type)(int_type)(str_type));
 
+	RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(bool_type)(str_type));
 
-	uint64_t fee = params[0].get_uint64();
-	uint32_t height = params[1].get_int();
+	uint64_t fee = AmountToRawValue(params[1]);;
+	uint32_t height = params[0].get_int();
 
 	CVmScript vmScript;
 	vector<unsigned char> vscript;
-	int flag = params[3].get_int();
+	int flag = params[3].get_bool();
 	if (0 == flag) {
 		string path = params[4].get_str();
 		 FILE* file = fopen(path.c_str(), "rb+");
@@ -1955,28 +1948,28 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 	vector<unsigned char> vUserDefine;
 
 	if (params.size() > 5) {
-		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type));
+		RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(bool_type)(str_type)(str_type));
 		string scriptDesc = params[5].get_str();
 		vmScript.ScriptExplain.insert(vmScript.ScriptExplain.end(),scriptDesc.begin(), scriptDesc.end());
 	}
 	if (params.size() > 6) {
-		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type));
+		RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(bool_type)(str_type)(str_type)(int_type));
 		nAuthorizeTime = params[6].get_uint64();
 	}
 	if (params.size() > 7) {
-		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type)(int_type));
+		RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(bool_type)(str_type)(str_type)(int_type)(int_type));
 		nMaxMoneyPerTime = params[7].get_uint64();
 	}
 	if (params.size() > 8) {
-		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type)(int_type)(int_type));
+		RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(bool_type)(str_type)(int_type)(int_type)(int_type));
 		nMaxMoneyTotal = params[8].get_uint64();
 	}
 	if (params.size() > 9) {
-		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type)(int_type)(int_type)(int_type));
+		RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(bool_type)(str_type)(str_type)(int_type)(int_type)(int_type)(int_type));
 		nMaxMoneyPerDay = params[9].get_uint64();
 	}
 	if (params.size() > 10) {
-		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type)(int_type)(int_type)(int_type)(str_type));
+		RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(bool_type)(str_type)(str_type)(int_type)(int_type)(int_type)(int_type)(str_type));
 		vUserDefine = ParseHex(params[10].get_str());
 	}
 
@@ -2034,7 +2027,7 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 	ds << pBaseTx;
 	Object obj;
-	obj.push_back(Pair("RawTx", HexStr(ds.begin(), ds.end())));
+	obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
 	return obj;
 
 }
@@ -2078,7 +2071,7 @@ Value sigstr(const Array& params, bool fHelp)
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
 		std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 		ds << pBaseTx;
-		obj.push_back(Pair("RawTx", HexStr(ds.begin(), ds.end())));
+		obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
 	}
 		break;
 	case REG_ACCT_TX:
@@ -2090,7 +2083,7 @@ Value sigstr(const Array& params, bool fHelp)
 			CDataStream ds(SER_DISK, CLIENT_VERSION);
 			std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 			ds << pBaseTx;
-			obj.push_back(Pair("RawTx", HexStr(ds.begin(), ds.end())));
+			obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
 		}
 			break;
 	case CONTRACT_TX:{
@@ -2101,7 +2094,7 @@ Value sigstr(const Array& params, bool fHelp)
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
 			std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 			ds << pBaseTx;
-			obj.push_back(Pair("RawTx", HexStr(ds.begin(), ds.end())));
+			obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
 	}
 	break;
 	case FREEZE_TX:	{
@@ -2112,7 +2105,7 @@ Value sigstr(const Array& params, bool fHelp)
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
 			std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 			ds << pBaseTx;
-			obj.push_back(Pair("RawTx", HexStr(ds.begin(), ds.end())));
+			obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
 	}
 		break;
 	case REWARD_TX:
@@ -2125,7 +2118,7 @@ Value sigstr(const Array& params, bool fHelp)
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
 			std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 			ds << pBaseTx;
-			obj.push_back(Pair("RawTx", HexStr(ds.begin(), ds.end())));
+			obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
 	}
 		break;
 	default:

@@ -625,6 +625,7 @@ public:
 
 	CContractTransaction(const CUserID& sRegId, vector_unsigned_char& pContract,vector<CUserID>& vRegId,int high,int64_t Fee)
 	{
+		nTxType = CONTRACT_TX;
 		scriptRegId = sRegId;
 		vContract = pContract;
 		nValidHeight = high;

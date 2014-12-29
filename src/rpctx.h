@@ -43,7 +43,7 @@ extern Value listregscript(const Array& params, bool fHelp);
 
 extern Value getaddrbalance(const Array& params, bool fHelp);
 extern Value generateblock(const Array& params, bool fHelp);
-extern Value getpublickey(const Array& params, bool fHelp);
+//extern Value getpublickey(const Array& params, bool fHelp);
 extern Value listtxcache(const Array& params, bool fHelp);
 extern Value reloadtxcache(const Array& params, bool fHelp);
 extern Value getscriptdata(const Array& params, bool fHelp);

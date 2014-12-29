@@ -415,7 +415,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
 	CTransaction tx(sendreg,rev,nAmount,chainActive.Height(),SysCfg().GetTxFee());
 
-	if (pwalletMain->Sign(sendreg,tx.SignatureHash(), tx.signature)) {
+	if (!pwalletMain->Sign(sendreg,tx.SignatureHash(), tx.signature)) {
 		throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
 	}
 
