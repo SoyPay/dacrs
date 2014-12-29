@@ -340,6 +340,30 @@ unsigned int CAccountViewCache::GetCacheSize(){
 	return ::GetSerializeSize(cacheAccounts, SER_DISK, CLIENT_VERSION) + ::GetSerializeSize(cacheKeyIds, SER_DISK, CLIENT_VERSION);
 }
 
+Object CAccountViewCache::ToJosnObj() const {
+	Object obj;
+	obj.push_back(Pair("hashBlock", hashBlock.ToString()));
+
+	Array arrayObj;
+	for (auto& item : cacheAccounts) {
+		Object obj;
+		obj.push_back(Pair("keyID", item.first.ToString()));
+		obj.push_back(Pair("account", item.second.ToString()));
+		arrayObj.push_back(obj);
+	}
+	obj.push_back(Pair("cacheAccounts", arrayObj));
+
+	for (auto& item : cacheKeyIds) {
+		Object obj;
+		obj.push_back(Pair("accountID", HexStr(item.first)));
+		obj.push_back(Pair("keyID", item.second.ToString()));
+		arrayObj.push_back(obj);
+	}
+
+	obj.push_back(Pair("cacheKeyIds", arrayObj));
+	return obj;
+}
+
 bool CScriptDBView::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {	return false;}
 bool CScriptDBView::SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {return false;}
 bool CScriptDBView::BatchWrite(const map<vector<unsigned char>, vector<unsigned char> > &mapDatas) {return false;}
@@ -983,6 +1007,18 @@ bool CScriptDBViewCache::GetTxRelAccount(const uint256 &txHash, set<CKeyID> &rel
 	ds >> relAccount;
 	return true;
 }
+Object CScriptDBViewCache::ToJosnObj() const {
+	Object obj;
+	Array arrayObj;
+	for (auto& item : mapDatas) {
+		Object obj;
+		obj.push_back(Pair("key", HexStr(item.first)));
+		obj.push_back(Pair("value", HexStr(item.second)));
+		arrayObj.push_back(obj);
+	}
+	obj.push_back(Pair("mapDatas", arrayObj));
+	return obj;
+}
 
 uint256 CTransactionDBView::IsContainTx(const uint256 & txHash) { return false; }
 bool CTransactionDBView::IsContainBlock(const CBlock &block) { return false; }
@@ -1120,3 +1156,27 @@ bool CTransactionDBCache::LoadTransaction() {
 void CTransactionDBCache::Clear() {
 	mapTxHashByBlockHash.clear();
 }
+
+Object CTransactionDBCache::ToJosnObj() const {
+	Array objArray;
+	for (auto& item : mapTxHashByBlockHash) {
+		Object obj;
+		obj.push_back(Pair("blockhash", HexStr(item.first)));
+
+		Array objTxInBlock;
+		for (const auto& itemTx : item.second) {
+			Object objTxHash;
+			objTxHash.push_back(Pair("txhash", HexStr(itemTx)));
+			objTxInBlock.push_back(objTxHash);
+		}
+		obj.push_back(Pair("txHashs", objTxInBlock));
+
+		objArray.push_back(obj);
+	}
+
+	Object objReturn;
+	objReturn.push_back(Pair("mapTxHashByBlockHash", objArray));
+	return objReturn;
+
+}
+

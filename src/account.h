@@ -97,6 +97,7 @@ public:
 	bool SaveAccountInfo(const CRegID &accountId, const CKeyID &keyId, const CAccount &account);
 	bool Flush();
 	unsigned int GetCacheSize();
+	Object ToJosnObj() const;
 
 };
 
@@ -171,6 +172,7 @@ public:
 	 */
 	bool Flush();
 	unsigned int GetCacheSize();
+	Object ToJosnObj() const;
 
 private:
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
@@ -323,6 +325,7 @@ public:
 	bool Flush();
 	bool LoadTransaction();
 	void Clear();
+	Object ToJosnObj() const;
 };
 
 #endif
