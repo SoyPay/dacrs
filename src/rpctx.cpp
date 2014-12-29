@@ -997,22 +997,26 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 				if (pwalletMain->GetPubKey(keyid, pk)) {
 					pwalletMain->GetPubKey(keyid, minerpk, true);
 					account.PublicKey = pk;
-					if (minerpk != minerpk&&!account.MinerPKey.IsValid()) {
+					account.keyID=std::move(pk.GetKeyID());
+					if (pk != minerpk && !account.MinerPKey.IsValid()) {
 						account.MinerPKey = minerpk;
 					}
 				}
 			}
-			return account.ToJosnObj();
+			obj = std::move(account.ToJosnObj());
+			obj.push_back(Pair("postion","inblock"));
 		} else {
 			CPubKey pk;
 			CPubKey minerpk;
 			if (pwalletMain->GetPubKey(keyid, pk)) {
 				pwalletMain->GetPubKey(keyid, minerpk, true);
 				account.PublicKey = pk;
-				if (minerpk != minerpk) {
+				account.keyID=pk.GetKeyID();
+				if (minerpk != pk) {
 					account.MinerPKey = minerpk;
 				}
-				return account.ToJosnObj();
+				obj = std::move(account.ToJosnObj());
+			    obj.push_back(Pair("postion","inwallet"));
 			}
 		}
 

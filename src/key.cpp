@@ -437,7 +437,7 @@ bool CKey::Load(CPrivKey &privkey, CPubKey &vchPubKey, bool fSkipCheck=false) {
 }
 
 CKeyID CPubKey::GetKeyID() const {
-	return CKeyID(Hash160(vch, vch + size()));
+	return std::move(CKeyID(Hash160(vch, vch + size())));
 }
 
 uint256 CPubKey::GetHash() const {
