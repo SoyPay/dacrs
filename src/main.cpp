@@ -153,6 +153,44 @@ struct CMainSignals {
 } g_signals;
 }
 
+bool WriteBlockLog() {
+	if (NULL == chainActive.Tip()) {
+		return false;
+	}
+
+	boost::filesystem::path LogDirpath = GetDataDir() / "BlockLog";
+	if (!boost::filesystem::exists(LogDirpath)) {
+		boost::filesystem::create_directory(LogDirpath);
+	}
+
+	ofstream file;
+	string strLogFilePath = LogDirpath.string();
+	strLogFilePath += "\\" + chainActive.Tip()->GetBlockHash().ToString();
+
+	string strScriptLog = strLogFilePath + "_scriptDB.txt";
+	file.open(strScriptLog);
+	if (!file.is_open())
+		return false;
+	file << write_string(Value(pScriptDBTip->ToJosnObj()), true);
+	file.close();
+
+	string strAccountViewLog = strLogFilePath + "_AccountView.txt";
+	file.open(strAccountViewLog);
+	if (!file.is_open())
+		return false;
+	file << write_string(Value(pAccountViewTip->ToJosnObj()), true);
+	file.close();
+
+	string strCacheLog = strLogFilePath + "_Cache.txt";
+	file.open(strCacheLog);
+	if (!file.is_open())
+		return false;
+	file << write_string(Value(pTxCacheTip->ToJosnObj()), true);
+	file.close();
+	return true;
+}
+
+
 void RegisterWallet(CWalletInterface* pwalletIn) {
     g_signals.SyncTransaction.connect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3));
 //    g_signals.EraseTransaction.connect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
@@ -1530,6 +1568,12 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     }
     if (SysCfg().IsBenchmark())
         LogPrint("INFO","- Connect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
+
+    // Write new block info to log, if necessary.
+    if (SysCfg().GetArg("-blocklog", 0)) {
+    	WriteBlockLog();
+    }
+
     // Write the chain state to disk, if necessary.
     if (!WriteChainState(state))
         return false;
