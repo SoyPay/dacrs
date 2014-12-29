@@ -17,13 +17,13 @@ using namespace std;
 
 //static const string strSecret1C    ("Kwr371tjA9u2rFSMZjTNun2PXXP3WPZu2afRHTcta6KxEUdm1vEw");
 //static const string strSecret2C    ("L3Hq7a8FEQwJkW1M2GNKDW28546Vp5miewcCzSqUD9kCAXrJdS3g");
-//static const CSoyPayAddress addr1C("1NoJrossxPBKfCHuJXT4HadJrXRE9Fxiqs");
-//static const CSoyPayAddress addr2C("1CRj2HyM1CXWzHAXLQtiGLyggNT9WQqsDs");
+//static const CDacrsAddress addr1C("1NoJrossxPBKfCHuJXT4HadJrXRE9Fxiqs");
+//static const CDacrsAddress addr2C("1CRj2HyM1CXWzHAXLQtiGLyggNT9WQqsDs");
 
 //static const string strSecret1C    ("cPRVcTPYmbwiZaLt4mez6v2a3sHKL3np5pc781BYUTYQEUue1j4K");
 //static const string strSecret2C    ("cRNvsxg5RGLnp8UDf86TK4uRZZ2qZjNDFHSiAos3rdvB6SX2VC4G");
-//static const CSoyPayAddress addr1C("n4PwAoA9zQ3SrndjB4wp8QWb9xPpNdtLsW");
-//static const CSoyPayAddress addr2C("mfu2Z1UfUBkWQACSXVDr25h5UVU7LmC3xB");
+//static const CDacrsAddress addr1C("n4PwAoA9zQ3SrndjB4wp8QWb9xPpNdtLsW");
+//static const CDacrsAddress addr2C("mfu2Z1UfUBkWQACSXVDr25h5UVU7LmC3xB");
 
 
 static const string strAddressBad("1HV9Lc3sNHZxwj4Zk6fB38tEmBryq2cBiF");
@@ -44,14 +44,14 @@ void dumpKeyInfo(uint256 privkey)
     {
         bool fCompressed = nCompressed == 1;
         printf("  * %s:\n", fCompressed ? "compressed" : "uncompressed");
-        CSoyPaySecret bsecret;
+        CDacrsSecret bsecret;
         bsecret.SetSecret(secret, fCompressed);
         printf("    * secret (base58): %s\n", bsecret.ToString().c_str());
         CKey key;
         key.SetSecret(secret, fCompressed);
         vector<unsigned char> vchPubKey = key.GetPubKey();
         printf("    * pubkey (hex): %s\n", HexStr(vchPubKey).c_str());
-        printf("    * address (base58): %s\n", CSoyPayAddress(vchPubKey).ToString().c_str());
+        printf("    * address (base58): %s\n", CDacrsAddress(vchPubKey).ToString().c_str());
     }
 }
 #endif
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_SUITE(key_tests)
 BOOST_AUTO_TEST_CASE(key_test1)
 {
 #if 0
-    CSoyPaySecret bsecret1, bsecret2, bsecret1C, bsecret2C, baddress1;
+    CDacrsSecret bsecret1, bsecret2, bsecret1C, bsecret2C, baddress1;
     string strSecret1C, strSecret2C;
 
     bool fRegTest = SysCfg().GetBoolArg("-regtest", false);
@@ -105,14 +105,14 @@ BOOST_AUTO_TEST_CASE(key_test1)
 //    BOOST_CHECK(addr1C.Get() == CTxDestination(pubkey1C.GetID()));
 //    BOOST_CHECK(addr2C.Get() == CTxDestination(pubkey2C.GetID()));
 	if (fRegTest || fTestNet) {
-		CSoyPayAddress addr1Ct("n4PwAoA9zQ3SrndjB4wp8QWb9xPpNdtLsW");
-		CSoyPayAddress addr2Ct("mfu2Z1UfUBkWQACSXVDr25h5UVU7LmC3xB");
+		CDacrsAddress addr1Ct("n4PwAoA9zQ3SrndjB4wp8QWb9xPpNdtLsW");
+		CDacrsAddress addr2Ct("mfu2Z1UfUBkWQACSXVDr25h5UVU7LmC3xB");
 
 		BOOST_CHECK(addr1Ct.Get() == CTxDestination(pubkey1C.GetID()));
 		BOOST_CHECK(addr2Ct.Get() == CTxDestination(pubkey2C.GetID()));
 	} else {
-		CSoyPayAddress addr1Cm("1NoJrossxPBKfCHuJXT4HadJrXRE9Fxiqs");
-		CSoyPayAddress addr2Cm("1CRj2HyM1CXWzHAXLQtiGLyggNT9WQqsDs");
+		CDacrsAddress addr1Cm("1NoJrossxPBKfCHuJXT4HadJrXRE9Fxiqs");
+		CDacrsAddress addr2Cm("1CRj2HyM1CXWzHAXLQtiGLyggNT9WQqsDs");
 
 		BOOST_CHECK(addr1Cm.Get() == CTxDestination(pubkey1C.GetID()));
 		BOOST_CHECK(addr2Cm.Get() == CTxDestination(pubkey2C.GetID()));

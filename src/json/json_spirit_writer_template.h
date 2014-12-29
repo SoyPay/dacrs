@@ -28,7 +28,7 @@ namespace json_spirit
     template< class String_type >
     String_type non_printable_to_string( unsigned int c )
     {
-        // Silence the warning: typedef ‘Char_type’ locally defined but not used [-Wunused-local-typedefs]
+        // Silence the warning: typedef 鈥楥har_type鈥� locally defined but not used [-Wunused-local-typedefs]
         // typedef typename String_type::value_type Char_type;
 
         String_type result( 6, '\\' );
@@ -126,7 +126,7 @@ namespace json_spirit
                 case bool_type:  output( value.get_bool() );  break;
                 case int_type:   output_int( value );         break;
 
-                /// Bitcoin: Added std::fixed and changed precision from 16 to 8
+                /// Dacrs: Added std::fixed and changed precision from 16 to 8
                 case real_type:  os_ << std::showpoint << std::fixed << std::setprecision(8)
                                      << value.get_real();     break;
 

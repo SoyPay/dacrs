@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Dacrs developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -778,7 +778,7 @@ static string FormatException(exception* pex, const char* pszThread) {
 	char pszModule[MAX_PATH] = "";
 	GetModuleFileNameA(NULL, pszModule, sizeof(pszModule));
 #else
-	const char* pszModule = "soypay";
+	const char* pszModule = "Dacrs";
 #endif
 	if (pex)
 		return strprintf(
@@ -802,13 +802,13 @@ void PrintExceptionContinue(exception* pex, const char* pszThread) {
 
 boost::filesystem::path GetDefaultDataDir() {
 	namespace fs = boost::filesystem;
-	// Windows < Vista: C:\Documents and Settings\Username\Application Data\Bitcoin
-	// Windows >= Vista: C:\Users\Username\AppData\Roaming\Bitcoin
-	// Mac: ~/Library/Application Support/Bitcoin
-	// Unix: ~/.soypay
+	// Windows < Vista: C:\Documents and Settings\Username\Application Data\Dacrs
+	// Windows >= Vista: C:\Users\Username\AppData\Roaming\Dacrs
+	// Mac: ~/Library/Application Support/Dacrs
+	// Unix: ~/.Dacrs
 #ifdef WIN32
 	// Windows
-	return GetSpecialFolderPath(CSIDL_APPDATA) / "Soypay";
+	return GetSpecialFolderPath(CSIDL_APPDATA) / "Dacrs";
 #else
 	fs::path pathRet;
 	char* pszHome = getenv("HOME");
@@ -823,7 +823,7 @@ boost::filesystem::path GetDefaultDataDir() {
 	return pathRet / "Bitcoin";
 #else
 	// Unix
-	return pathRet / ".soypay";
+	return pathRet / ".Dacrs";
 #endif
 #endif
 }
@@ -869,7 +869,7 @@ void ClearDatadirCache() {
 }
 
 boost::filesystem::path GetConfigFile() {
-	boost::filesystem::path pathConfigFile(CBaseParams::GetArg("-conf", "soypay.conf"));
+	boost::filesystem::path pathConfigFile(CBaseParams::GetArg("-conf", "Dacrs.conf"));
 	if (!pathConfigFile.is_complete())
 		pathConfigFile = GetDataDir(false) / pathConfigFile;
 	return pathConfigFile;
@@ -878,13 +878,13 @@ boost::filesystem::path GetConfigFile() {
 void ReadConfigFile(map<string, string>& mapSettingsRet, map<string, vector<string> >& mapMultiSettingsRet) {
 	boost::filesystem::ifstream streamConfig(GetConfigFile());
 	if (!streamConfig.good())
-		return; // No soypay.conf file is OK
+		return; // No Dacrs.conf file is OK
 
 	set<string> setOptions;
 	setOptions.insert("*");
 
 	for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it) {
-		// Don't overwrite existing settings so command line settings override soypay.conf
+		// Don't overwrite existing settings so command line settings override Dacrs.conf
 		string strKey = string("-") + it->string_key;
 		if (mapSettingsRet.count(strKey) == 0) {
 			mapSettingsRet[strKey] = it->value[0];
@@ -1116,7 +1116,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nTime) {
 				if (!fMatch) {
 					fDone = true;
 					string strMessage = _("Warning: Please check that your computer's date and time "
-							"are correct! If your clock is wrong Bitcoin will not work properly.");
+							"are correct! If your clock is wrong Dacrs will not work properly.");
 					strMiscWarning = strMessage;
 					LogPrint("INFO", "*** %s\n", strMessage);
 					uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_WARNING);
@@ -1162,7 +1162,7 @@ string FormatFullVersion() {
 	return CLIENT_BUILD;
 }
 
-// Format the subversion field according to BIP 14 spec (https://en.bitcoin.it/wiki/BIP_0014)
+// Format the subversion field according to BIP 14 spec (https://en.Dacrs.it/wiki/BIP_0014)
 string FormatSubVersion(const string& name, int nClientVersion, const vector<string>& comments) {
 	ostringstream ss;
 	ss << "/";

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Dacrs developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -36,7 +36,7 @@ using namespace std;
 using namespace boost;
 
 #if defined(NDEBUG)
-# error "Bitcoin cannot be compiled without assertions."
+# error "Dacrs cannot be compiled without assertions."
 #endif
 
 //
@@ -74,7 +74,7 @@ map<uint256, set<uint256> > mapOrphanTransactionsByPrev;
 // Constant stuff for coinbase transactions we create:
 //CScript COINBASE_FLAGS;
 
-const string strMessageMagic = "Bitcoin Signed Message:\n";
+const string strMessageMagic = "Dacrs Signed Message:\n";
 
 // Internal stuff
 namespace {
@@ -611,13 +611,13 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
         return false;
     // is it already confirmed in block
     if(uint256(0) != pTxCacheTip->IsContainTx(hash))
-    	return state.Invalid(ERROR("AcceptToMemoryPool() : tx hash %s has been confirmed", hash.GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
+    	return state.Invalid(ERROR("AcceptToMemoryPool() : tx hash %s has been confirmed\n", hash.GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
 
     if (pBaseTx->IsCoinBase())
     	return state.Invalid(ERROR("AcceptToMemoryPool() : tx hash %s is coin base tx,can't put into mempool", hash.GetHex()), REJECT_INVALID, "tx-coinbase-to-mempool");
 	// is it in valid height
 	if (!pBaseTx->IsValidHeight(chainActive.Tip()->nHeight, SysCfg().GetTxCacheHeight())) {
-		return state.Invalid(ERROR("AcceptToMemoryPool() : txhash=%s beyond the scope of valid height ", hash.GetHex()),
+		return state.Invalid(ERROR("AcceptToMemoryPool() : txhash=%s beyond the scope of valid height\n ", hash.GetHex()),
 				REJECT_INVALID, "tx-invalid-height");
 	}
 
@@ -757,7 +757,6 @@ int GetTxComfirmHigh(const uint256 &hash) {
 // Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock
 bool GetTransaction(std::shared_ptr<CBaseTransaction> &pBaseTx, const uint256 &hash)
 {
-	CBlockIndex *pindexSlow = NULL;
     {
         LOCK(cs_main);
         {
@@ -1204,7 +1203,9 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
 	//load a block tx into cache transaction
 	CBlockIndex *pReLoadBlockIndex = pindex;
 	if(pindex->nHeight - SysCfg().GetTxCacheHeight()>0) {
-		pReLoadBlockIndex = chainActive[pindex->nHeight - SysCfg().GetTxCacheHeight()];
+		CChain chainTemp;
+		chainTemp.SetTip(pindex->pprev);
+		pReLoadBlockIndex = chainTemp[pindex->nHeight - SysCfg().GetTxCacheHeight()];
 		CBlock reLoadblock;
 		if (!ReadBlockFromDisk(reLoadblock, pReLoadBlockIndex))
 			return state.Abort(_("Failed to read block"));
@@ -1369,7 +1370,9 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 	if (!txCache.AddBlockToCache(block))
 			return state.Abort(_("Connect tip block failed add block tx to txcache"));
 	if(pindex->nHeight-SysCfg().GetTxCacheHeight() > 0) {
-		CBlockIndex *pDeleteBlockIndex = chainActive[pindex->nHeight - SysCfg().GetTxCacheHeight()];
+		CChain chainTemp;
+		chainTemp.SetTip(pindex);
+		CBlockIndex *pDeleteBlockIndex = chainTemp[pindex->nHeight - SysCfg().GetTxCacheHeight()];
 		CBlock deleteBlock;
 		if (!ReadBlockFromDisk(deleteBlock, pDeleteBlockIndex))
 			return state.Abort(_("Failed to read block"));
@@ -1866,12 +1869,12 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 			//校验交易是否在有效高度
 			if (!item->IsValidHeight(mapBlockIndex[view.GetBestBlock()]->nHeight, SysCfg().GetTxCacheHeight())) {
 				return state.DoS(100,
-						ERROR("CheckBlockProofWorkWithCoinDay() : txhash=%s beyond the scope of valid height ",
+						ERROR("CheckBlockProofWorkWithCoinDay() : txhash=%s beyond the scope of valid height\n ",
 								item->GetHash().GetHex()), REJECT_INVALID, "tx-invalid-height");
 			}
 			//校验是否有重复确认交易
 			if(uint256(0) != txCacheTemp.IsContainTx(item->GetHash()))
-				return state.DoS(100, ERROR("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed", item->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
+				return state.DoS(100, ERROR("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed\n", item->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
 			//校验合约是否能有效执行，因为合约的执行和系统环境有关系，必须在这里校验
 			if(CONTRACT_TX == item->nTxType) {
 				CVmScriptRun vmRun;
@@ -1902,12 +1905,12 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 			//校验交易是否在有效高度
 			if (!item->IsValidHeight(mapBlockIndex[view.GetBestBlock()]->nHeight, SysCfg().GetTxCacheHeight())) {
 				return state.DoS(100,
-						ERROR("CheckBlockProofWorkWithCoinDay() : txhash=%s beyond the scope of valid height ",
+						ERROR("CheckBlockProofWorkWithCoinDay() : txhash=%s beyond the scope of valid height\n ",
 								item->GetHash().GetHex()), REJECT_INVALID, "tx-invalid-height");
 			}
 			//校验是否有重复确认交易
 			if(uint256(0) != txCacheTemp.IsContainTx(item->GetHash()))
-				return state.DoS(100, ERROR("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed", item->GetHash().GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
+				return state.DoS(100, ERROR("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed\n", item->GetHash().GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
 
 			//校验合约是否能有效执行，因为合约的执行和系统环境有关系，必须在这里校验
 			if(CONTRACT_TX == item->nTxType) {
@@ -2977,7 +2980,7 @@ void static ProcessGetData(CNode* pfrom)
                         	ss << *((CContractTransaction *)pBaseTx.get());
                         }
                         else if(REG_ACCT_TX == pBaseTx->nTxType) {
-                        	ss << *((CRegisterAccountTx *)pBaseTx.get());
+                        	ss << *((Cregistaccounttx *)pBaseTx.get());
                         }
                         else if(FREEZE_TX == pBaseTx->nTxType) {
                         	ss << *((CFreezeTransaction *)pBaseTx.get());
@@ -4092,7 +4095,7 @@ std::shared_ptr<CBaseTransaction> CreateNewEmptyTransaction(unsigned char uType)
 	case COMMON_TX:
 		return make_shared<CTransaction>();
 	case REG_ACCT_TX:
-		return make_shared<CRegisterAccountTx>();
+		return make_shared<Cregistaccounttx>();
 	case CONTRACT_TX:
 		return make_shared<CContractTransaction>();
 	case FREEZE_TX:

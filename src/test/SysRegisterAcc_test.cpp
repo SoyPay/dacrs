@@ -27,7 +27,7 @@ public:
 			//return false;
 		}
 
-		CRegisterAccountTx rtx;
+		Cregistaccounttx rtx;
 		CNullID nullId;
 		rtx.minerId = nullId;
 

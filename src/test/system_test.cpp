@@ -317,7 +317,7 @@ public:
 	}
 
 	CAuthorizate GetAuthorByAddress(const string& strAddress, const string& strScriptID) {
-		CSoyPayAddress address(strAddress);
+		CDacrsAddress address(strAddress);
 		CKeyID keyID;
 		BOOST_CHECK(address.GetKeyID(keyID));
 		CUserID userId = keyID;

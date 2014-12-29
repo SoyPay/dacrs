@@ -30,13 +30,13 @@ bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {
 		SysCfg().InitalConfig();
 
 		if (SysCfg().IsArgCount("-?") || SysCfg().IsArgCount("--help")) {
-			// First part of help message is specific to soypayd / RPC client
+			// First part of help message is specific to Dacrsd / RPC client
 			std::string strUsage = _("Bitcoin Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n"
-					+ _("Usage:") + "\n" + "  soypayd [options]                     " + _("Start Bitcoin Core Daemon")
-					+ "\n" + _("Usage (deprecated, use soypay-cli):") + "\n"
-					+ "  soypayd [options] <command> [params]  " + _("Send command to Bitcoin Core") + "\n"
-					+ "  soypayd [options] help                " + _("List commands") + "\n"
-					+ "  soypayd [options] help <command>      " + _("Get help for a command") + "\n";
+					+ _("Usage:") + "\n" + "  Dacrsd [options]                     " + _("Start Bitcoin Core Daemon")
+					+ "\n" + _("Usage (deprecated, use Dacrs-cli):") + "\n"
+					+ "  Dacrsd [options] <command> [params]  " + _("Send command to Bitcoin Core") + "\n"
+					+ "  Dacrsd [options] help                " + _("List commands") + "\n"
+					+ "  Dacrsd [options] help <command>      " + _("Get help for a command") + "\n";
 
 			strUsage += "\n" + HelpMessage(HMM_BITCOIND);
 			strUsage += "\n" + HelpMessageCli(false);
@@ -48,7 +48,7 @@ bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {
 		// Command-line RPC
 		bool fCommandLine = false;
 		for (int i = 1; i < argc; i++)
-			if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "soypay:"))
+			if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "Dacrs:"))
 				fCommandLine = true;
 
 		if (fCommandLine) {
@@ -68,14 +68,14 @@ bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {
 	return fRet;
 }
 
-std::tuple<bool, boost::thread*> RunSoyPay(int argc, char* argv[]) {
+std::tuple<bool, boost::thread*> RunDacrs(int argc, char* argv[]) {
 	boost::thread* detectShutdownThread = NULL;
 	static boost::thread_group threadGroup;
 	SetupEnvironment();
 
 	bool fRet = false;
 
-	// Connect soypayd signal handlers
+	// Connect Dacrsd signal handlers
 	noui_connect();
 
 	fRet = AppInit(argc, argv, threadGroup);
@@ -460,7 +460,7 @@ bool SysTestBase::CreateFreezeTx(const std::string &addr, const int nHeight) {
 	return false;
 }
 
-bool SysTestBase::RegisterAccountTx(const std::string &addr, const int nHeight) {
+bool SysTestBase::registaccounttx(const std::string &addr, const int nHeight) {
 	//CommanRpc
 	char caddr[64] = { 0 };
 	strncpy(caddr, addr.c_str(), sizeof(caddr) - 1);
@@ -473,7 +473,7 @@ bool SysTestBase::RegisterAccountTx(const std::string &addr, const int nHeight) 
 	char height[16] = { 0 };
 	sprintf(height, "%d", nHeight);
 
-	char *argv[] = { "rpctest", "registeraccounttx", caddr, fee, height };
+	char *argv[] = { "rpctest", "registaccounttx", caddr, fee, height };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
@@ -759,10 +759,10 @@ Value SysTestBase::GetScriptID(string txhash)
 }
 void SysTestBase::StartServer(int argc,char* argv[]) {
 //		int argc = 2;
-//		char* argv[] = {"D:\\cppwork\\soypay\\src\\soypayd.exe","-datadir=d:\\bitcoin" };
+//		char* argv[] = {"D:\\cppwork\\Dacrs\\src\\Dacrsd.exe","-datadir=d:\\bitcoin" };
 	assert(pThreadShutdown == NULL);
 	{
-	std::tuple<bool, boost::thread*> ret = RunSoyPay(argc, argv);
+	std::tuple<bool, boost::thread*> ret = RunDacrs(argc, argv);
 	pThreadShutdown = std::get<1>(ret);
 	}
 }

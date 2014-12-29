@@ -1,10 +1,10 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The DACRS developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef _BITCOINRPC_SERVER_H_
-#define _BITCOINRPC_SERVER_H_ 1
+#ifndef _DACRSRPC_SERVER_H_
+#define _DACRSRPC_SERVER_H_ 1
 
 #include "uint256.h"
 #include "rpcprotocol.h"
@@ -63,7 +63,7 @@ public:
 };
 
 /**
- * Bitcoin RPC command dispatcher.
+ * DACRS RPC command dispatcher.
  */
 class CRPCTable
 {
@@ -155,6 +155,15 @@ extern json_spirit::Value sendrawtransaction(const json_spirit::Array& params, b
 extern json_spirit::Value signmessage(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendtoaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendtoaddresswithfee(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sendtoaddressraw(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value registaccounttxraw(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value submittx(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value createcontracttxraw(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value createfreezetxraw(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value registerscripttxraw(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value sigstr(const json_spirit::Array& params, bool fHelp);
+
+
 
 extern json_spirit::Value getblockcount(const json_spirit::Array& params, bool fHelp); // in rpcblockchain.cpp
 extern json_spirit::Value getbestblockhash(const json_spirit::Array& params, bool fHelp);

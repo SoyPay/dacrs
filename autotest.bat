@@ -28,7 +28,7 @@ if /i "%choice%"=="3" goto s2
 exit /b 0
 
 :s0
-copy  %curdir%\src\test\data\soypay.conf %targetdir%\soypay.conf
+copy  %curdir%\src\test\data\Dacrs.conf %targetdir%\Dacrs.conf
 
 :s1
 call :ClrEnvironment

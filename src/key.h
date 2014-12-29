@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2013 The DACRS developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_KEY_H
-#define BITCOIN_KEY_H
+#ifndef DACRS_KEY_H
+#define DACRS_KEY_H
 
 #define WRITEDATA(s, obj)   s.write((char*)&(obj), sizeof(obj))
 #define READDATA(s, obj)    s.read((char*)&(obj), sizeof(obj))
@@ -109,7 +109,7 @@ public:
 	// Simple read-only vector-like interface to the pubkey data.
 	unsigned int size() const {
 		unsigned int len = GetLen(vch[0]);
-		 if(len != 33) //only use 33 for soypay sys
+		 if(len != 33) //only use 33 for Dacrs sys
 			 return 0;
 		return len;
 	}
@@ -432,7 +432,7 @@ public:
  *  * CNoDestination: no destination set
  *  * CKeyID: TX_PUBKEYHASH destination
  *  * CScriptID: TX_SCRIPTHASH destination
- *  A CTxDestination is the internal data type encoded in a CSoyPayAddress
+ *  A CTxDestination is the internal data type encoded in a CDacrsAddress
  */
 typedef boost::variant<CNoDestination, CKeyID> CTxDestination;
 

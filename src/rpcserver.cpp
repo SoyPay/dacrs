@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Dacrs developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -206,10 +206,10 @@ Value stop(const Array& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "stop\n"
-            "\nStop Soypayd server.");
+            "\nStop Dacrsd server.");
     // Shutdown will take long enough that the response should get back
     StartShutdown();
-    return "Soypayd server stopping";
+    return "Dacrsd server stopping";
 }
 
 
@@ -279,7 +279,7 @@ static const CRPCCommand vRPCCommands[] =
     { "importwallet",           &importwallet,           false,     false,      true },
     { "listaddr",               &listaddr,       	     true,      false,      true },
     { "listtx",                 &listtx,       	         true,      false,      true },
-    { "registeraccounttx",      &registeraccounttx,      true,      false,      true },
+    { "registaccounttx",        &registaccounttx,      true,      false,      true },
 //	{ "createnormaltx",         &createnormaltx,       	 true,      false,      true },
 	{ "createcontracttx",       &createcontracttx,       true,      false,      true },
 	{ "signcontracttx",         &signcontracttx,       	 true,      false,      true },
@@ -294,7 +294,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "setgenerate",            &setgenerate,            true,      true,      false },
 	{ "listregscript",          &listregscript,          true,      false,      true },
 	{ "generateblock",          &generateblock, 		 true,      true,      true },
-	{"getpublickey",            &getpublickey,           true,      false,      true },
+//	{"getpublickey",            &getpublickey,           true,      false,      true },
 //	{ "listscriptregid",        &listscriptregid,        true,      false,      true },
 	{ "listtxcache",            &listtxcache,            true,      false,      true },
 	{ "getscriptdata",          &getscriptdata,          true,      false,      true },
@@ -302,6 +302,13 @@ static const CRPCCommand vRPCCommands[] =
 	{ "sendtoaddress",          &sendtoaddress,          false,     false,      true },
 	{ "sendtoaddresswithfee",   &sendtoaddresswithfee,   false,     false,      true },
     { "getbalance",             &getbalance,             false,     false,      true },
+    { "sendtoaddressraw",       &sendtoaddressraw,       false,     false,      true },
+    { "registaccounttxraw",     &registaccounttxraw,     true,      false,      true },
+    { "submittx",      			&submittx,       	 	 true,      false,      false },
+    { "createcontracttxraw",    &createcontracttxraw,    true,      false,      true },
+    { "createfreezetxraw",      &createfreezetxraw,      true,      false,      true },
+    { "registerscripttxraw",    &registerscripttxraw,    true,      false,      true },
+    { "sigstr",    				&sigstr,    			 true,      false,      true },
 
 
 //for test code
@@ -504,7 +511,7 @@ void StartRPCThreads()
     {
         unsigned char rand_pwd[32];
         RAND_bytes(rand_pwd, 32);
-        string strWhatAmI = "To use bitcoind";
+        string strWhatAmI = "To use Dacrsd";
         if (SysCfg().IsArgCount("-server"))
             strWhatAmI = strprintf(_("To use the %s option"), "\"-server\"");
         else if (SysCfg().IsArgCount("-daemon"))
@@ -513,13 +520,13 @@ void StartRPCThreads()
             _("%s, you must set a rpcpassword in the configuration file:\n"
               "%s\n"
               "It is recommended you use the following random password:\n"
-              "rpcuser=bitcoinrpc\n"
+              "rpcuser=Dacrsrpc\n"
               "rpcpassword=%s\n"
               "(you do not need to remember this password)\n"
               "The username and password MUST NOT be the same.\n"
               "If the file does not exist, create it with owner-readable-only file permissions.\n"
               "It is also recommended to set alertnotify so you are notified of problems;\n"
-              "for example: alertnotify=echo %%s | mail -s \"Bitcoin Alert\" admin@foo.com\n"),
+              "for example: alertnotify=echo %%s | mail -s \"Dacrs Alert\" admin@foo.com\n"),
                 strWhatAmI,
                 GetConfigFile().string(),
                 EncodeBase58(&rand_pwd[0],&rand_pwd[0]+32)),
@@ -777,24 +784,24 @@ void ServiceConnection(AcceptedConnection *conn)
             break;
         }
 
-        // Check authorization
-        if (mapHeaders.count("authorization") == 0)
-        {
-            conn->stream() << HTTPReply(HTTP_UNAUTHORIZED, "", false) << flush;
-            break;
-        }
-        if (!HTTPAuthorized(mapHeaders))
-        {
-            LogPrint("INFO","ThreadRPCServer incorrect password attempt from %s\n", conn->peer_address_to_string());
-            /* Deter brute-forcing short passwords.
-               If this results in a DoS the user really
-               shouldn't have their RPC port exposed. */
-            if (SysCfg().GetArg("-rpcpassword", "").size() < 20)
-                MilliSleep(250);
-
-            conn->stream() << HTTPReply(HTTP_UNAUTHORIZED, "", false) << flush;
-            break;
-        }
+//        // Check authorization
+//        if (mapHeaders.count("authorization") == 0)
+//        {
+//            conn->stream() << HTTPReply(HTTP_UNAUTHORIZED, "", false) << flush;
+//            break;
+//        }
+//        if (!HTTPAuthorized(mapHeaders))
+//        {
+//            LogPrint("INFO","ThreadRPCServer incorrect password attempt from %s\n", conn->peer_address_to_string());
+//            /* Deter brute-forcing short passwords.
+//               If this results in a DoS the user really
+//               shouldn't have their RPC port exposed. */
+//            if (SysCfg().GetArg("-rpcpassword", "").size() < 20)
+//                MilliSleep(250);
+//
+//            conn->stream() << HTTPReply(HTTP_UNAUTHORIZED, "", false) << flush;
+//            break;
+//        }
         if (mapHeaders["connection"] == "close")
             fRun = false;
 
@@ -879,7 +886,7 @@ json_spirit::Value CRPCTable::execute(const string &strMethod, const json_spirit
 }
 
 string HelpExampleCli(string methodname, string args){
-    return "> soypayd " + methodname + " " + args + "\n";
+    return "> Dacrsd " + methodname + " " + args + "\n";
 }
 
 string HelpExampleRpc(string methodname, string args){

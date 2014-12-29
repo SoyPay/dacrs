@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Dacrs developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -91,11 +91,11 @@ Value signmessage(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-            "signmessage \"bitcoinaddress\" \"message\"\n"
+            "signmessage \"Dacrsaddress\" \"message\"\n"
             "\nSign a message with the private key of an address"
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
-            "1. \"soypayaddress\"  (string, required) The soypay address to use for the private key.\n"
+            "1. \"Dacrsaddress\"  (string, required) The Dacrs address to use for the private key.\n"
             "2. \"message\"         (string, required) The message to create a signature of.\n"
             "\nResult:\n"
             "\"signature\"          (string) The signature of the message encoded in base 64\n"
@@ -135,28 +135,28 @@ Value signmessage(const Array& params, bool fHelp)
     return EncodeBase64(&vchSig[0], vchSig.size());
 }
 
+
 Value sendtoaddresswithfee(const Array& params, bool fHelp)
  {
 	int size = params.size();
 	if (fHelp || (!(size == 3 || size == 4)))
 		throw runtime_error(
-				"sendtoaddress \"bitcoinaddress\" amount "
+						"sendtoaddress \"Dacrsaddress\" amount "
 						"\nSent an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
 						+ HelpRequiringPassphrase() + "\nArguments:\n"
-								"1. \"bitcoinaddress\"  (string, required) The bitcoin address to send to.\n"
-
-								"\nResult:\n"
-								"\"transactionid\"  (string) The transaction id.\n"
-								"\nExamples:\n"
+						"1. \"Dacrsaddress\"  (string, required) The Dacrs address to send to.\n"
+						"\nResult:\n"
+						"\"transactionid\"  (string) The transaction id.\n"
+						"\nExamples:\n"
 						+ HelpExampleCli("sendtoaddressfee", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 10000000 1000")
 						+ HelpExampleCli("sendtoaddressfee",
-								"\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
+						"\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
 						+ HelpExampleRpc("sendtoaddress",
-								"\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\""
-										+ HelpExampleCli("sendtoaddress", "\"0-6\" 10 ")
-										+ HelpExampleCli("sendtoaddress", "\"00000000000000000005\" 10 ")
-										+ HelpExampleCli("sendtoaddress", "\"0-6\" \"0-5\" 10 ")
-										+ HelpExampleCli("sendtoaddress", "\"00000000000000000005\" \"0-6\"10 ")));
+						"\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\""
+						+ HelpExampleCli("sendtoaddress", "\"0-6\" 10 ")
+						+ HelpExampleCli("sendtoaddress", "\"00000000000000000005\" 10 ")
+						+ HelpExampleCli("sendtoaddress", "\"0-6\" \"0-5\" 10 ")
+						+ HelpExampleCli("sendtoaddress", "\"00000000000000000005\" \"0-6\"10 ")));
 
 	EnsureWalletIsUnlocked();
 	CKeyID sendKeyId;
@@ -234,28 +234,118 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 	return obj;
 }
 
+
+Value sendtoaddressraw(const Array& params, bool fHelp)
+{
+	int size = params.size();
+	if (fHelp || size != 5 )
+		throw runtime_error(
+						"sendtoaddress \"Dacrsaddress\" amount "
+						"\nSent an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
+						+ HelpRequiringPassphrase() + "\nArguments:\n"
+						"1. \"height\"  (int) \n"
+						"2. \"fee\"  (int)  \n"
+						"3. \"srcaddress\"  (string, required) The Dacrs address to send to.\n"
+						"3. \"dessaddress\"  (string, required) The Dacrs address to send to.\n"
+						"\nResult:\n"
+						"\"transactionid\"  (string) The transaction id.\n"
+						"\nExamples:\n"
+						+ HelpExampleCli("createnormaltx", "100 1000 \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
+						+ HelpExampleCli("createnormaltx",
+						"100 1000 \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
+						+ HelpExampleRpc("createnormaltx",
+						"100 1000 \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\""
+						+ HelpExampleCli("createnormaltx", "\"0-6\" 10 ")
+						+ HelpExampleCli("createnormaltx", "100 1000 \"00000000000000000005\" 10 ")
+						+ HelpExampleCli("createnormaltx", "100 1000 \"0-6\" \"0-5\" 10 ")
+						+ HelpExampleCli("createnormaltx", "100 1000 \"00000000000000000005\" \"0-6\"10 ")));
+
+	CKeyID sendKeyId;
+	CKeyID RevKeyId;
+
+	auto GetUserID = [](string const &addr,CUserID &userid) {
+		CRegID te(addr);
+		if(!te.IsEmpty()) {
+			userid = te;
+			return true;
+		}
+		CKeyID kid(addr);
+		if(!kid.IsEmpty()) {
+			userid = kid;
+			return true;
+		}
+		return false;
+	};
+
+	int hight = params[0].get_int();
+
+	int64_t Fee = AmountToRawValue(params[1]);
+
+
+	int64_t nAmount = 0;
+
+    nAmount = AmountToRawValue(params[2]);
+	if(nAmount == 0){
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid nAmount == 0");
+	}
+
+	CUserID  send;
+	CUserID  rev;
+	if(!GetUserID(params[3].get_str(),send)){
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid send address");
+	}
+
+	if(send.type() == typeid(CKeyID)){
+		CRegID regId;
+		if(!pAccountViewTip->GetRegId(send,regId)){
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "CKeyID is not registed ");
+		}
+		send = regId;
+	}
+
+	if(!GetUserID(params[4].get_str(),rev)){
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid rev address");
+	}
+
+	if(rev.type() == typeid(CKeyID)){
+		CRegID regId;
+		if(!pAccountViewTip->GetRegId(rev,regId)){
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "CKeyID is not registed ");
+		}
+		rev = regId;
+	}
+
+
+	std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(send,rev,nAmount,hight,Fee);
+	CDataStream ds(SER_DISK, CLIENT_VERSION);
+	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
+	ds << pBaseTx;
+	Object obj;
+	obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
+	return obj;
+
+}
 Value sendtoaddress(const Array& params, bool fHelp)
  {
 	int size = params.size();
 	if (fHelp || (!(size == 2 || size == 3)))
 		throw runtime_error(
-				"sendtoaddress \"bitcoinaddress\" amount "
+						"sendtoaddress \"Dacrsaddress\" amount "
 						"\nSent an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
 						+ HelpRequiringPassphrase() + "\nArguments:\n"
-								"1. \"bitcoinaddress\"  (string, required) The bitcoin address to send to.\n"
-
-								"\nResult:\n"
-								"\"transactionid\"  (string) The transaction id.\n"
-								"\nExamples:\n"
+						"1. \"Dacrsaddress\"  (string, required) The Dacrs address to send to.\n"
+						"\nResult:\n"
+						"\"transactionid\"  (string) The transaction id.\n"
+						"\nExamples:\n"
 						+ HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
 						+ HelpExampleCli("sendtoaddress",
-								"\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
+						"\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
 						+ HelpExampleRpc("sendtoaddress",
-								"\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\""
-										+ HelpExampleCli("sendtoaddress", "\"0-6\" 10 ")
-										+ HelpExampleCli("sendtoaddress", "\"00000000000000000005\" 10 ")
-										+ HelpExampleCli("sendtoaddress", "\"0-6\" \"0-5\" 10 ")
-										+ HelpExampleCli("sendtoaddress", "\"00000000000000000005\" \"0-6\"10 ")));
+						"\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\""
+						+ HelpExampleCli("sendtoaddress", "\"0-6\" 10 ")
+						+ HelpExampleCli("sendtoaddress", "\"00000000000000000005\" 10 ")
+						+ HelpExampleCli("sendtoaddress", "\"0-6\" \"0-5\" 10 ")
+						+ HelpExampleCli("sendtoaddress", "\"00000000000000000005\" \"0-6\"10 ")));
 
 	EnsureWalletIsUnlocked();
 	CKeyID sendKeyId;
@@ -311,22 +401,30 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
 	CRegID sendreg;
 	CRegID revreg;
-
+	CUserID rev;
 
 	if (!pwalletMain->GetRegId(sendKeyId, sendreg)) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 	}
 
-	std::tuple<bool,string> ret;
 	if (pAccountViewTip->GetRegId(CUserID(RevKeyId), revreg)) {
-		ret = pwalletMain->SendMoney(sendreg, revreg, nAmount);
-
+		rev = revreg;
 	} else {
-		ret = pwalletMain->SendMoney(sendreg, CUserID(RevKeyId), nAmount);
+		rev = RevKeyId;
 	}
 
+	CTransaction tx(sendreg,rev,nAmount,chainActive.Height(),SysCfg().GetTxFee());
+
+	if (!pwalletMain->Sign(sendreg,tx.SignatureHash(), tx.signature)) {
+		throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
+	}
+
+	std::tuple<bool,string> ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
+	if(!std::get<0>(ret))
+		 throw JSONRPCError(RPC_INVALID_PARAMETER,  std::get<1>(ret));
+
 	Object obj;
-	obj.push_back(Pair(std::get<0>(ret) ? "hash" : "error code", std::get<1>(ret)));
+	obj.push_back(Pair("hash" , std::get<1>(ret)));
 	return obj;
 }
 
@@ -375,7 +473,7 @@ Value walletpassphrase(const Array& params, bool fHelp)
         throw runtime_error(
             "walletpassphrase \"passphrase\" timeout\n"
             "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
-            "This is needed prior to performing transactions related to private keys such as sending soypays\n"
+            "This is needed prior to performing transactions related to private keys such as sending Dacrss\n"
             "\nArguments:\n"
             "1. \"passphrase\"     (string, required) The wallet passphrase\n"
             "2. timeout            (numeric, required) The time to keep the decryption key in seconds.\n"
@@ -524,10 +622,10 @@ Value encryptwallet(const Array& params, bool fHelp)
 //            "\nExamples:\n"
 //            "\nEncrypt you wallet\n"
 //            + HelpExampleCli("encryptwallet", "\"my pass phrase\"") +
-//            "\nNow set the passphrase to use the wallet, such as for signing or sending soypay\n"
+//            "\nNow set the passphrase to use the wallet, such as for signing or sending Dacrs\n"
 //            + HelpExampleCli("walletpassphrase", "\"my pass phrase\"") +
 //            "\nNow we can so something like sign\n"
-//            + HelpExampleCli("signmessage", "\"soypayaddress\" \"test message\"") +
+//            + HelpExampleCli("signmessage", "\"Dacrsaddress\" \"test message\"") +
 //            "\nNow lock the wallet again by removing the passphrase\n"
 //            + HelpExampleCli("walletlock", "") +
 //            "\nAs a json rpc call\n"
@@ -557,7 +655,7 @@ Value encryptwallet(const Array& params, bool fHelp)
     // slack space in .dat files; that is bad if the old data is
     // unencrypted private keys. So:
     StartShutdown();
-    return "wallet encrypted; soypay server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.";
+    return "wallet encrypted; Dacrs server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.";
 }
 
 Value settxfee(const Array& params, bool fHelp)
@@ -595,7 +693,7 @@ Value getwalletinfo(const Array& params, bool fHelp)
             "\nResult:\n"
             "{\n"
             "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
-            "  \"balance\": xxxxxxx,         (numeric) the total soypay balance of the wallet\n"
+            "  \"balance\": xxxxxxx,         (numeric) the total Dacrs balance of the wallet\n"
             "  \"txcount\": xxxxxxx,         (numeric) the total number of transactions in the wallet\n"
             "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since GMT epoch) of the oldest pre-generated key in the key pool\n"
             "  \"keypoolsize\": xxxx,        (numeric) how many new keys are pre-generated\n"

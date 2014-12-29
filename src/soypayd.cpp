@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2013 The Dacrs developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,8 +20,8 @@
  *
  * \section intro_sec Introduction
  *
- * This is the developer documentation of the reference client for an experimental new digital currency called Bitcoin (http://www.soypay.org/),
- * which enables instant payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
+ * This is the developer documentation of the reference client for an experimental new digital currency called Dacrs (http://www.Dacrs.org/),
+ * which enables instant payments to anyone, anywhere in the world. Dacrs uses peer-to-peer technology to operate
  * with no central authority: managing transactions and issuing money are carried out collectively by the network.
  *
  * The software is a community-driven open source project, released under the MIT license.
@@ -58,18 +58,18 @@ bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {
 		//
 		// Parameters
 		//
-		// If Qt is used, parameters/soypay.conf are parsed in qt/soypay.cpp's main()
+		// If Qt is used, parameters/Dacrs.conf are parsed in qt/Dacrs.cpp's main()
 		CBaseParams::IntialParams(argc, argv);
 		SysCfg().InitalConfig();
 
 		if (SysCfg().IsArgCount("-?") || SysCfg().IsArgCount("--help")) {
-			// First part of help message is specific to soypayd / RPC client
-			std::string strUsage = _("Bitcoin Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n"
-					+ _("Usage:") + "\n" + "  soypayd [options]                     " + _("Start Bitcoin Core Daemon")
-					+ "\n" + _("Usage (deprecated, use soypay-cli):") + "\n"
-					+ "  soypayd [options] <command> [params]  " + _("Send command to Bitcoin Core") + "\n"
-					+ "  soypayd [options] help                " + _("List commands") + "\n"
-					+ "  soypayd [options] help <command>      " + _("Get help for a command") + "\n";
+			// First part of help message is specific to Dacrsd / RPC client
+			std::string strUsage = _("Dacrs Core Daemon") + " " + _("version") + " " + FormatFullVersion() + "\n\n"
+					+ _("Usage:") + "\n" + "  Dacrsd [options]                     " + _("Start Dacrs Core Daemon")
+					+ "\n" + _("Usage (deprecated, use Dacrs-cli):") + "\n"
+					+ "  Dacrsd [options] <command> [params]  " + _("Send command to Dacrs Core") + "\n"
+					+ "  Dacrsd [options] help                " + _("List commands") + "\n"
+					+ "  Dacrsd [options] help <command>      " + _("Get help for a command") + "\n";
 
 			strUsage += "\n" + HelpMessage(HMM_BITCOIND);
 			strUsage += "\n" + HelpMessageCli(false);
@@ -81,7 +81,7 @@ bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {
 		// Command-line RPC
 		bool fCommandLine = false;
 		for (int i = 1; i < argc; i++)
-			if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "soypay:"))
+			if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "Dacrs:"))
 				fCommandLine = true;
 
 		if (fCommandLine) {
@@ -92,7 +92,7 @@ bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {
 		fDaemon = SysCfg().GetBoolArg("-daemon", false);
 		if (fDaemon)
 		{
-			fprintf(stdout, "Bitcoin server starting\n");
+			fprintf(stdout, "Dacrs server starting\n");
 
 			// Daemonize
 			pid_t pid = fork();
@@ -127,7 +127,7 @@ bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {
 
 	return fRet;
 }
-std::tuple<bool, boost::thread*> RunSoyPay(int argc, char* argv[])
+std::tuple<bool, boost::thread*> RunDacrs(int argc, char* argv[])
 {
 	boost::thread* detectShutdownThread = NULL;
 	static boost::thread_group threadGroup;
@@ -135,7 +135,7 @@ std::tuple<bool, boost::thread*> RunSoyPay(int argc, char* argv[])
 
 	bool fRet = false;
 
-	// Connect soypayd signal handlers
+	// Connect Dacrsd signal handlers
 	noui_connect();
 
 	fRet = AppInit(argc, argv,threadGroup);
@@ -157,7 +157,7 @@ std::tuple<bool, boost::thread*> RunSoyPay(int argc, char* argv[])
 
 int main(int argc, char* argv[]) {
 
-	std::tuple<bool, boost::thread*> ret = RunSoyPay(argc,argv);
+	std::tuple<bool, boost::thread*> ret = RunDacrs(argc,argv);
 
 	boost::thread* detectShutdownThread  = std::get<1>(ret);
 

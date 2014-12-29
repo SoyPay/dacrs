@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The Dacrs developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -545,11 +545,6 @@ int64_t CWallet::GetRawBalance(int ncurhigh) const
 
 std::tuple<bool,string>  CWallet::SendMoney(const CRegID &send, const CUserID &rsv, int64_t nValue, int64_t nFee)
 {
-//	if (IsLocked())
-//	{
-//		return _("Error: Wallet locked, unable to create transaction!");
-//	}
-
 
 	CTransaction tx;
 	{
