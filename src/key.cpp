@@ -638,15 +638,10 @@ string CKeyID::ToAddress() const {
 
 CKeyID::CKeyID(const string& strAddress) :
 		uint160(0) {
-<<<<<<< HEAD
 	if (strAddress.length() == 40) {
 		*this = uint160(strAddress);
 	} else {
-		CSoyPayAddress addr(strAddress);
+		CDacrsAddress addr(strAddress);
 		addr.GetKeyID(*this);
 	}
-=======
-	CDacrsAddress addr(strAddress);
-	addr.GetKeyID(*this);
->>>>>>> remotes/origin/master
 }

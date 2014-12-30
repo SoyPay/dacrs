@@ -169,7 +169,7 @@ void CRegID::SetRegIDByCompact(const vector<unsigned char> &vIn) {
 	}
 }
 
-bool Cregistaccounttx::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
+bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	CAccount account;
 	CRegID regId(nHeight, nIndex);
@@ -208,7 +208,7 @@ bool Cregistaccounttx::UpdateAccount(int nIndex, CAccountViewCache &view, CValid
 	txundo.txHash = GetHash();
 	return true;
 }
-bool Cregistaccounttx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
+bool CRegisterAccountTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
 		CTxUndo &txundo, int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	//drop account
 	CRegID accountId(nHeight, nIndex);
@@ -240,27 +240,27 @@ bool Cregistaccounttx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CV
 	view.EraseId(accountId);
 	return true;
 }
-bool Cregistaccounttx::IsValidHeight(int nCurHeight, int nTxCacheHeight) const {
+bool CRegisterAccountTx::IsValidHeight(int nCurHeight, int nTxCacheHeight) const {
 	if (nValidHeight > nCurHeight + nTxCacheHeight / 2)
 		return false;
 	if (nValidHeight < nCurHeight - nTxCacheHeight / 2)
 		return false;
 	return true;
 }
-bool Cregistaccounttx::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
+bool CRegisterAccountTx::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	if (!boost::get<CPubKey>(userId).IsFullyValid()) {
 		return false;
 	}
 	vAddr.insert(boost::get<CPubKey>(userId).GetKeyID());
 	return true;
 }
-string Cregistaccounttx::ToString(CAccountViewCache &view) const {
+string CRegisterAccountTx::ToString(CAccountViewCache &view) const {
 	string str;
 	str += strprintf("txType=%s, hash=%s, ver=%d, pubkey=%s, llFees=%ld, keyid=%s, nValidHeight=%d\n",
 	txTypeArray[nTxType],GetHash().ToString().c_str(), nVersion, boost::get<CPubKey>(userId).ToString(), llFees, boost::get<CPubKey>(userId).GetKeyID().ToAddress(), nValidHeight);
 	return str;
 }
-bool Cregistaccounttx::CheckTransction(CValidationState &state, CAccountViewCache &view) {
+bool CRegisterAccountTx::CheckTransction(CValidationState &state, CAccountViewCache &view) {
 	//check pubKey valid
 	if (!boost::get<CPubKey>(userId).IsFullyValid()) {
 		return state.DoS(100, ERROR("CheckTransaction() : register tx public key is invalid"), REJECT_INVALID,
@@ -737,7 +737,7 @@ bool CRewardTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 	return true;
 }
 
-bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view,CValidationState &state, CTxUndo &txundo,
+bool CRegisterScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view,CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 //	LogPrint("INFO" ,"registscript UpdateAccount\n");
 	CID id(regAccountId);
@@ -761,7 +761,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view,CValidat
 		CRegID regId(script);
 		if (!scriptCache.GetScript(regId, vScript)) {
 			return state.DoS(100,
-					ERROR("UpdateAccounts() : CRegistScriptTx UpdateAccount Get script id=%s hash=%s error", HexStr(script.begin(), script.end()), GetHash().ToString()),
+					ERROR("UpdateAccounts() : CRegisterScriptTx UpdateAccount Get script id=%s hash=%s error", HexStr(script.begin(), script.end()), GetHash().ToString()),
 					UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
 		}
 		if (!aAuthorizate.IsNull()) {
@@ -810,7 +810,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view,CValidat
 				"bad-save-accountdb");
 	return true;
 }
-bool CRegistScriptTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
+bool CRegisterScriptTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	CID id(regAccountId);
 	CAccount account;
@@ -852,21 +852,21 @@ bool CRegistScriptTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CVa
 				"bad-save-accountdb");
 	return true;
 }
-bool CRegistScriptTx::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
+bool CRegisterScriptTx::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	CKeyID keyId;
 	if (!view.GetKeyId(regAccountId, keyId))
 		return false;
 	vAddr.insert(keyId);
 	return true;
 }
-bool CRegistScriptTx::IsValidHeight(int nCurHeight, int nTxCacheHeight) const {
+bool CRegisterScriptTx::IsValidHeight(int nCurHeight, int nTxCacheHeight) const {
 	if (nValidHeight > nCurHeight + nTxCacheHeight / 2)
 		return false;
 	if (nValidHeight < nCurHeight - nTxCacheHeight / 2)
 		return false;
 	return true;
 }
-string CRegistScriptTx::ToString(CAccountViewCache &view) const {
+string CRegisterScriptTx::ToString(CAccountViewCache &view) const {
 	string str;
 	CKeyID keyId;
 	view.GetKeyId(regAccountId, keyId);
@@ -874,7 +874,7 @@ string CRegistScriptTx::ToString(CAccountViewCache &view) const {
 	txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion,boost::get<CRegID>(regAccountId).ToString(), keyId.GetHex(), llFees, nValidHeight);
 	return str;
 }
-bool CRegistScriptTx::CheckTransction(CValidationState &state, CAccountViewCache &view) {
+bool CRegisterScriptTx::CheckTransction(CValidationState &state, CAccountViewCache &view) {
 	CAccount  account;
 	if(!view.GetAccount(regAccountId, account)) {
 		return state.DoS(100, ERROR("CheckTransaction() : register script tx get registe account info error"), REJECT_INVALID,

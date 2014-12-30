@@ -53,7 +53,7 @@ Object TxToJSON(CBaseTransaction *pTx) {
 	result.push_back(Pair("hash", pTx->GetHash().GetHex()));
 	switch (pTx->nTxType) {
 	case REG_ACCT_TX: {
-		Cregistaccounttx *prtx = (Cregistaccounttx *) pTx;
+		CRegisterAccountTx *prtx = (CRegisterAccountTx *) pTx;
 		result.push_back(Pair("txtype", "RegisterAccTx"));
 		result.push_back(Pair("ver", prtx->nVersion));
 		result.push_back(Pair("addr", boost::get<CPubKey>(prtx->userId).GetKeyID().ToAddress()));
@@ -124,7 +124,7 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		break;
 	}
 	case REG_SCRIPT_TX: {
-		CRegistScriptTx *prtx = (CRegistScriptTx *) pTx;
+		CRegisterScriptTx *prtx = (CRegisterScriptTx *) pTx;
 		result.push_back(Pair("txtype", "RegScriptTx"));
 		result.push_back(Pair("ver", prtx->nVersion));
 		result.push_back(Pair("addr", RegIDToAddress(prtx->regAccountId)));
@@ -218,7 +218,7 @@ Value registaccounttx(const Array& params, bool fHelp) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "in registaccounttx :address err");
 	}
 
-	Cregistaccounttx rtx;
+	CRegisterAccountTx rtx;
 	assert(pwalletMain != NULL);
 	{
 	//	LOCK2(cs_main, pwalletMain->cs_wallet);
@@ -767,7 +767,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 
 
 	assert(pwalletMain != NULL);
-	CRegistScriptTx tx;
+	CRegisterScriptTx tx;
 	{
 	//	LOCK2(cs_main, pwalletMain->cs_wallet);
 		EnsureWalletIsUnlocked();
@@ -1681,7 +1681,7 @@ Value registaccounttxraw(const Array& params, bool fHelp) {
 		uminerkey = pubk;
 	}
 
-	std::shared_ptr<Cregistaccounttx> tx = make_shared<Cregistaccounttx>(ukey,uminerkey,Fee,hight);
+	std::shared_ptr<CRegisterAccountTx> tx = make_shared<CRegisterAccountTx>(ukey,uminerkey,Fee,hight);
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 	ds << pBaseTx;
@@ -2018,7 +2018,7 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 		throw runtime_error(
 						tinyformat::format("registerscripttxraw :account id %s is not exist\n", mkeyId.ToAddress()));
 	};
-	std::shared_ptr<CRegistScriptTx> tx =  make_shared<CRegistScriptTx>();
+	std::shared_ptr<CRegisterScriptTx> tx =  make_shared<CRegisterScriptTx>();
 	tx.get()->regAccountId = GetUserId(keyid);
 	tx.get()->script = vscript;
 	tx.get()->llFees = fee;
@@ -2081,7 +2081,7 @@ Value sigstr(const Array& params, bool fHelp)
 		break;
 	case REG_ACCT_TX:
 	{
-			std::shared_ptr<Cregistaccounttx> tx = make_shared<Cregistaccounttx>(pBaseTx.get());
+			std::shared_ptr<CRegisterAccountTx> tx = make_shared<CRegisterAccountTx>(pBaseTx.get());
 			if (!pwalletMain->Sign(keyid,tx.get()->SignatureHash(), tx.get()->signature)) {
 				throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
 			}
@@ -2116,7 +2116,7 @@ Value sigstr(const Array& params, bool fHelp)
 	case REWARD_TX:
 		break;
 	case REG_SCRIPT_TX:	{
-		std::shared_ptr<CRegistScriptTx> tx = make_shared<CRegistScriptTx>(pBaseTx.get());
+		std::shared_ptr<CRegisterScriptTx> tx = make_shared<CRegisterScriptTx>(pBaseTx.get());
 		if (!pwalletMain->Sign(keyid,tx.get()->SignatureHash(), tx.get()->signature)) {
 			throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
 		}

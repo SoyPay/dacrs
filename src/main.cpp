@@ -3043,13 +3043,13 @@ void static ProcessGetData(CNode* pfrom)
                         	ss << *((CContractTransaction *)pBaseTx.get());
                         }
                         else if(REG_ACCT_TX == pBaseTx->nTxType) {
-                        	ss << *((Cregistaccounttx *)pBaseTx.get());
+                        	ss << *((CRegisterAccountTx *)pBaseTx.get());
                         }
                         else if(FREEZE_TX == pBaseTx->nTxType) {
                         	ss << *((CFreezeTransaction *)pBaseTx.get());
                         }
                         else if(REG_SCRIPT_TX == pBaseTx->nTxType) {
-                        	ss << *((CRegistScriptTx *)pBaseTx.get());
+                        	ss << *((CRegisterScriptTx *)pBaseTx.get());
                         }
                         pfrom->PushMessage("tx", ss);
                         pushed = true;
@@ -4158,7 +4158,7 @@ std::shared_ptr<CBaseTransaction> CreateNewEmptyTransaction(unsigned char uType)
 	case COMMON_TX:
 		return make_shared<CTransaction>();
 	case REG_ACCT_TX:
-		return make_shared<Cregistaccounttx>();
+		return make_shared<CRegisterAccountTx>();
 	case CONTRACT_TX:
 		return make_shared<CContractTransaction>();
 	case FREEZE_TX:
@@ -4166,7 +4166,7 @@ std::shared_ptr<CBaseTransaction> CreateNewEmptyTransaction(unsigned char uType)
 	case REWARD_TX:
 		return make_shared<CRewardTransaction>();
 	case REG_SCRIPT_TX:
-		return make_shared<CRegistScriptTx>();
+		return make_shared<CRegisterScriptTx>();
 	default:
 		assert(0);
 		break;
