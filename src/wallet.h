@@ -1,9 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2013 The DACRS developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_WALLET_H
-#define BITCOIN_WALLET_H
+#ifndef DACRS_WALLET_H
+#define DACRS_WALLET_H
 
 #include "core.h"
 #include "crypter.h"
@@ -48,6 +48,7 @@ private:
 	CRegID mregId;
 	CPubKey mPKey;
 	CKey  mCkey;
+	CPubKey  mMinerPk; //only used for miner
 	CKey  mMinerCkey; //only used for miner
 	INT64 nCreationTime;
 public:
@@ -74,6 +75,7 @@ public:
 
 	bool CreateANewKey()
 	{
+		clean();
 		mCkey.MakeNewKey();
 		mPKey = mCkey.GetPubKey();
 		nCreationTime = GetTime();
@@ -99,6 +101,7 @@ public:
 
 	CKeyStoreValue(const CPubKey &pubkey) {
 		assert(mCkey.IsValid() == false && pubkey.IsFullyValid()); //the ckey mustbe unvalid
+		clean();
 		nCreationTime = GetTime();
 		mPKey = pubkey;
 	}
@@ -107,23 +110,35 @@ public:
 	{
 		assert(inkey.IsValid());
 		assert(minerKey.IsValid());
+		 clean();
 		mMinerCkey = minerKey;
 		mCkey = inkey ;
 		nCreationTime = GetTime();
 		mPKey = mCkey.GetPubKey();
+		mMinerPk = mMinerCkey.GetPubKey();
 	}
 
 	CKeyStoreValue(CKey const &inkey)
 	{
 		assert(inkey.IsValid());
+		 clean();
 		mCkey = inkey ;
 		nCreationTime = GetTime();
 		mPKey = mCkey.GetPubKey();
-	}
 
+	}
+   bool clean()
+   {
+		mCkey.Clear();
+		mPKey= CPubKey();
+		mMinerCkey.Clear();
+	    mMinerPk = CPubKey();
+		nCreationTime = 0 ;
+	    return true;
+   }
 	CKeyStoreValue()
 	{
-		nCreationTime = 0 ;
+		 clean();
 	}
 	bool IsCrypted() {
 		return mCkey.size() == 0;
@@ -141,6 +156,7 @@ public:
 			READWRITE(mregId);
 			READWRITE(mPKey);
 			READWRITE(mCkey);
+			READWRITE(mMinerPk);
 			READWRITE(mMinerCkey);
 			READWRITE(nCreationTime);
 	)
@@ -494,7 +510,7 @@ public:
 			mapAccountTx[hash] = make_shared<CTransaction>(pTx);
 			break;
 		case REG_ACCT_TX:
-			mapAccountTx[hash] = make_shared<CRegisterAccountTx>(pTx);
+			mapAccountTx[hash] = make_shared<Cregistaccounttx>(pTx);
 			break;
 		case CONTRACT_TX:
 			mapAccountTx[hash] = make_shared<CContractTransaction>(pTx);

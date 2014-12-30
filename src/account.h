@@ -59,7 +59,7 @@ class CAccountViewCache : public CAccountViewBacked
 public:
 	uint256 hashBlock;
     map<CKeyID, CAccount> cacheAccounts;
-    map<vector<unsigned char>, CKeyID> cacheKeyIds;
+	map<vector<unsigned char>, CKeyID> cacheKeyIds;
 
 private:
 	bool GetAccount(const CKeyID &keyId, CAccount &account);
@@ -97,6 +97,7 @@ public:
 	bool SaveAccountInfo(const CRegID &accountId, const CKeyID &keyId, const CAccount &account);
 	bool Flush();
 	unsigned int GetCacheSize();
+	Object ToJosnObj() const;
 
 };
 
@@ -172,6 +173,7 @@ public:
 	 */
 	bool Flush();
 	unsigned int GetCacheSize();
+	Object ToJosnObj() const;
 
 private:
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
@@ -312,6 +314,7 @@ class CTransactionDBCache : public CTransactionDBViewBacked{
 private:
 	CTransactionDBCache(CTransactionDBCache &transactionView);
 	map<uint256, vector<uint256> > mapTxHashByBlockHash;  // key:block hash  value:tx hash
+	bool IsInMap(const map<uint256, vector<uint256> >&mMap,const uint256&hash) const;
 public:
 	CTransactionDBCache(CTransactionDBView &pTxCacheDB, bool fDummy);
 	bool IsContainBlock(const CBlock &block);
@@ -324,6 +327,7 @@ public:
 	bool Flush();
 	bool LoadTransaction();
 	void Clear();
+	Object ToJosnObj() const;
 };
 
 #endif

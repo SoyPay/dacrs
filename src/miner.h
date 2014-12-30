@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2013 The Dacrs developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_MINER_H
-#define BITCOIN_MINER_H
+#ifndef DACRS_MINER_H
+#define DACRS_MINER_H
 
 #include <stdint.h>
 #include <vector>
@@ -79,4 +79,4 @@ void GetPriorityTx(vector<TxPriority> &vecPriority, map<uint256, vector<COrphan*
 
 extern uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID);
 
-#endif // BITCOIN_MINER_H
+#endif // DACRS_MINER_H

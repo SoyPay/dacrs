@@ -1,13 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2014 The DACRS developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_H
-#define BITCOIN_UTIL_H
+#ifndef DACRS_UTIL_H
+#define DACRS_UTIL_H
 
 #if defined(HAVE_CONFIG_H)
-#include "soypay-config.h"
+#include "dacrs-config.h"
 #endif
 
 #include "compat.h"

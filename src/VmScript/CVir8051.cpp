@@ -121,7 +121,7 @@ static bool GetData(unsigned char * ipara, vector<std::shared_ptr < std::vector<
 	return true;
 }
 /**
- *
+ *COMP_RET Int64Compare(const Int64* const pM1, const Int64* const pM2)
  * 这个函数式从中间层传了两个参数过来:
  * 1.第一个是int64_t类型的数据
  * 2.第一个是int64_t类型的数据
@@ -157,7 +157,7 @@ static RET_DEFINE ExInt64CompFunc(unsigned char *ipara,void * pVmScriptRun) {
 	return std::make_tuple (true, tem);
 }
 /**
- *
+ *bool Int64Mul(const Int64* const pM1, const Int64* const pM2, Int64* const pOutM)
  * 这个函数式从中间层传了两个参数过来:
  * 1.第一个是int64_t类型的数据
  * 2.第一个是int64_t类型的数据
@@ -186,7 +186,7 @@ static RET_DEFINE ExInt64MullFunc(unsigned char *ipara,void * pVmScriptRun) {
 	return std::make_tuple (true, tem);
 }
 /**
- *
+ *bool Int64Add(const Int64* const pM1, const Int64* const pM2, Int64* const pOutM)
  * 这个函数式从中间层传了两个参数过来:
  * 1.第一个是int64_t类型的数据
  * 2.第一个是int64_t类型的数据
@@ -215,7 +215,7 @@ static RET_DEFINE ExInt64AddFunc(unsigned char *ipara,void * pVmScriptRun) {
 	return std::make_tuple (true, tem);
 }
 /**
- *
+ *bool Int64Sub(const Int64* const pM1, const Int64* const pM2, Int64* const pOutM)
  * 这个函数式从中间层传了两个参数过来:
  * 1.第一个是int64_t类型的数据
  * 2.第一个是int64_t类型的数据
@@ -243,7 +243,7 @@ static RET_DEFINE ExInt64SubFunc(unsigned char *ipara,void * pVmScriptRun) {
 	return std::make_tuple (true, tem);
 }
 /**
- *
+ *bool Int64Div(const Int64* const pM1, const Int64* const pM2, Int64* const pOutM)
  * 这个函数式从中间层传了两个参数过来:
  * 1.第一个是int64_t类型的数据
  * 2.第一个是int64_t类型的数据
@@ -274,7 +274,7 @@ static RET_DEFINE ExInt64DivFunc(unsigned char *ipara,void * pVmScriptRun) {
 	return std::make_tuple (true, tem);
 }
 /**
- *
+ *bool SHA256(void const* pfrist, const unsigned short len, void * const pout)
  * 这个函数式从中间层传了一个参数过来:
  * 1.第一个是要被计算hash值的字符串
  */
@@ -298,7 +298,7 @@ static RET_DEFINE ExSha256Func(unsigned char *ipara,void * pVmScriptRun) {
 	return std::make_tuple (true, tem);
 }
 /**
- *
+ *unsigned short Des(void const* pdata, unsigned short len, void const* pkey, unsigned short keylen, bool IsEn, void * const pOut,unsigned short poutlen)
  * 这个函数式从中间层传了三个个参数过来:
  * 1.第一个是要被加密数据或者解密数据
  * 2.第二格式加密或者解密的key值
@@ -405,7 +405,8 @@ static RET_DEFINE ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 }
 
 /**
- *
+ *bool SignatureVerify(void const* data, unsigned short datalen, void const* key, unsigned short keylen,
+		void const* phash, unsigned short hashlen)
  * 这个函数式从中间层传了三个个参数过来:
  * 1.第一个是签名的数据
  * 2.第二个是用的签名的publickey
@@ -446,7 +447,7 @@ static RET_DEFINE ExSignatureFunc(unsigned char *ipara,void * pVmScriptRun) {
 	return std::make_tuple (true, tem);
 }
 /**
- *
+ *void LogPrint(const void *pdata, const unsigned short datalen,PRINT_FORMAT flag )
  * 这个函数式从中间层传了两个个参数过来:
  * 1.第一个是打印数据的表示符号，true是一十六进制打印,否则以字符串的格式打印
  * 2.第二个是打印的字符串
@@ -481,7 +482,7 @@ static RET_DEFINE ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
 
 
 /**
- *
+ *bool GetTxContacts(const unsigned char * const txhash,void* const pcotact,const unsigned short maxLen)
  * 这个函数式从中间层传了一个参数过来:
  * 1.第一个是 hash
  */
@@ -510,7 +511,7 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
 	return std::make_tuple (true, tem);
 }
 /**
- *
+ *unsigned short GetAccounts(const unsigned char *txhash,void* const paccoutn,unsigned short maxlen)
  * 这个函数式从中间层传了一个参数过来:
  * 1.第一个是 hash
  */
@@ -545,7 +546,7 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 	return std::make_tuple(true, tem);
 }
 /**
- *
+ *unsigned short GetAccountPublickey(const void* const accounid,void * const pubkey,const unsigned short maxlength)
  * 这个函数式从中间层传了一个参数过来:
  * 1.第一个是 账户id,六个字节
  */
@@ -578,7 +579,7 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 	return std::make_tuple (flag, tem);
 }
 /**
- *
+ *bool QueryAccountBalance(const unsigned char* const account,Int64* const pBalance)
  * 这个函数式从中间层传了一个参数过来:
  * 1.第一个是 账户id,六个字节
  */
@@ -607,7 +608,7 @@ static RET_DEFINE ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScri
 	return std::make_tuple (flag , tem);
 }
 /**
- *
+ *unsigned long GetTxConFirmHeight(const void * const txhash)
  * 这个函数式从中间层传了一个参数过来:
  * 1.第一个是 hash,六个字节
  */
@@ -651,7 +652,7 @@ static RET_DEFINE ExGetTipHeightFunc(unsigned char * ipara,void * pVmScriptRun) 
 	return std::make_tuple (true, tem);
 }
 /**
- *
+ *bool GetBlockHash(const unsigned long height,void * const pblochHash)
  * 这个函数式从中间层传了一个参数过来:
  * 1.第一个是 int类型的参数
  */
@@ -700,19 +701,8 @@ static RET_DEFINE ExGetCurRunEnvHeightFunc(unsigned char * ipara,void * pVmScrip
 
 	return std::make_tuple (true, tem);
 }
-static vector<unsigned char> AddChar(vector<unsigned char>&param)
-{
-	if(param.size() >= 8)
-		return param;
-	int count = 8-param.size();
-	while(count--)
-	{
-		param.push_back('\x0');
-	}
-	return param;
-}
 /**
- *
+ *bool WriteDataDB(const void* const key,const unsigned char keylen,const void * const value,const unsigned short valuelen,const unsigned long time)
  * 这个函数式从中间层传了三个个参数过来:
  * 1.第一个是 key值
  * 2.第二个是value值
@@ -749,7 +739,7 @@ static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	return std::make_tuple (true, tem);
 }
 /**
- *
+ *bool DeleteDataDB(const void* const key,const unsigned char keylen)
  * 这个函数式从中间层传了一个参数过来:
  * 1.第一个是 key值
  */
@@ -783,7 +773,7 @@ static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	return std::make_tuple (true, tem);
 }
 /**
- *
+ *unsigned short ReadDataValueDB(const void* const key,const unsigned char keylen, void* const value,unsigned short const maxbuffer)
  * 这个函数式从中间层传了一个参数过来:
  * 1.第一个是 key值
  */
@@ -820,7 +810,7 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) 
 	return std::make_tuple (flag, tem);
 }
 /**
- *
+ *bool ModifyDataDB(const void* const key,const unsigned char keylen, const void* const pvalue,const unsigned short valuelen,const unsigned long ptime)
  * 这个函数式从中间层传了三个个参数过来:
  * 1.第一个是 key值
  * 2.第二个是value值
@@ -886,7 +876,7 @@ static RET_DEFINE ExGetDBSizeFunc(unsigned char * ipara,void * pVmScript) {
 	return std::make_tuple (flag, tem);
 }
 /**
- *
+ *bool GetDBValue(const unsigned long index,void* const key,unsigned char * const keylen,unsigned short maxkeylen,void* const value,unsigned short* const maxbuffer, unsigned long* const ptime)
  * 当传的第一个参数index == 0，则传了一个参数过来
  * 1.第一个是 index值
  * 当传的第一个参数index == 1，则传了两个个参数过来
@@ -951,7 +941,7 @@ static RET_DEFINE ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
 	return std::make_tuple (true, tem);
 }
 /**
- *
+ *bool IsAuthorited(const void* const account,const Int64* const pmoney)
  * 中间层传了两个参数
  * 1.第一个是 账号的id
  * 2.第二个是int64_t类型的数据
@@ -992,7 +982,7 @@ static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 
 }
 /**
- *
+ *bool ReadDataDBTime(const void* const key,const unsigned char keylen, unsigned long * const ptime)
  * 中间层传了一个个参数
  * 1.第一个是 key
  */
@@ -1030,7 +1020,7 @@ static RET_DEFINE ExReadDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 	return std::make_tuple (flag, tem);
 }
 /**
- *
+ *bool ModifyDataDBTime(const void* const key,const unsigned char keylen, const unsigned long ptime)
  * 中间层传了两个参数
  * 1.第一个是 key
  * 2.第二个是 超时时间
@@ -1080,7 +1070,7 @@ static RET_DEFINE ExModifyDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
 	return std::make_tuple (ret , tem);
 }
 /**
- *
+ *bool ModifyDataDBVavle(const void* const key,const unsigned char keylen, const void* const pvalue,const unsigned short valuelen)
  * 中间层传了两个参数
  * 1.第一个是 key
  * 2.第二个是 value
@@ -1128,7 +1118,7 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript
 	return std::make_tuple (ret , tem);
 }
 /**
- *
+ *bool WriteOutput( const VM_OPERATE* data, const unsigned short conter)
  * 中间层传了一个参数
  * 1.第一个是输出指令
  */
@@ -1160,7 +1150,7 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmScript)
 	return std::make_tuple (true , tem);
 }
 /**
- *
+ *unsigned short GetAuthUserDefine(const void* const account,void *const pout,const unsigned short maxlen)
  * 中间层传了一个参数
  * 1.账户的id
  */
@@ -1197,7 +1187,7 @@ static RET_DEFINE ExGetAuthoritedDefineFunc(unsigned char * ipara,void * pVmScri
 	return std::make_tuple (flag, tem);
 }
 /**
- *
+ *bool GetScriptData(const void* const scriptID,void* const pkey,short len,void* const pvalve,short maxlen)
  * 中间层传了两个个参数
  * 1.脚本的id号
  * 2.数据库的key值

@@ -169,7 +169,7 @@ void CRegID::SetRegIDByCompact(const vector<unsigned char> &vIn) {
 	}
 }
 
-bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
+bool Cregistaccounttx::UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	CAccount account;
 	CRegID regId(nHeight, nIndex);
@@ -208,7 +208,7 @@ bool CRegisterAccountTx::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 	txundo.txHash = GetHash();
 	return true;
 }
-bool CRegisterAccountTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
+bool Cregistaccounttx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
 		CTxUndo &txundo, int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	//drop account
 	CRegID accountId(nHeight, nIndex);
@@ -240,27 +240,27 @@ bool CRegisterAccountTx::UndoUpdateAccount(int nIndex, CAccountViewCache &view, 
 	view.EraseId(accountId);
 	return true;
 }
-bool CRegisterAccountTx::IsValidHeight(int nCurHeight, int nTxCacheHeight) const {
+bool Cregistaccounttx::IsValidHeight(int nCurHeight, int nTxCacheHeight) const {
 	if (nValidHeight > nCurHeight + nTxCacheHeight / 2)
 		return false;
 	if (nValidHeight < nCurHeight - nTxCacheHeight / 2)
 		return false;
 	return true;
 }
-bool CRegisterAccountTx::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
+bool Cregistaccounttx::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	if (!boost::get<CPubKey>(userId).IsFullyValid()) {
 		return false;
 	}
 	vAddr.insert(boost::get<CPubKey>(userId).GetKeyID());
 	return true;
 }
-string CRegisterAccountTx::ToString(CAccountViewCache &view) const {
+string Cregistaccounttx::ToString(CAccountViewCache &view) const {
 	string str;
 	str += strprintf("txType=%s, hash=%s, ver=%d, pubkey=%s, llFees=%ld, keyid=%s, nValidHeight=%d\n",
 	txTypeArray[nTxType],GetHash().ToString().c_str(), nVersion, boost::get<CPubKey>(userId).ToString(), llFees, boost::get<CPubKey>(userId).GetKeyID().ToAddress(), nValidHeight);
 	return str;
 }
-bool CRegisterAccountTx::CheckTransction(CValidationState &state, CAccountViewCache &view) {
+bool Cregistaccounttx::CheckTransction(CValidationState &state, CAccountViewCache &view) {
 	//check pubKey valid
 	if (!boost::get<CPubKey>(userId).IsFullyValid()) {
 		return state.DoS(100, ERROR("CheckTransaction() : register tx public key is invalid"), REJECT_INVALID,

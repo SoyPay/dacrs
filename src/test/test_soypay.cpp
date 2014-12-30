@@ -2,7 +2,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#define BOOST_TEST_MODULE SoyPay Test Suite
+#define BOOST_TEST_MODULE Dacrs Test Suite
 
 
 
@@ -26,7 +26,7 @@ extern void noui_connect();
 struct TestingSetup {
 	TestingSetup() {
 			int argc = 2;
-			char* argv[] = { "D:\\cppwork\\soypay\\src\\soypayd.exe", "-datadir=d:\\bitcoin" };
+			char* argv[] = { "D:\\cppwork\\Dacrs\\src\\Dacrsd.exe", "-datadir=d:\\bitcoin" };
 			SysTestBase::StartServer(argc, argv);
 		}
 		~TestingSetup()

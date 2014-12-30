@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2013 The DACRS developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -437,7 +437,7 @@ bool CKey::Load(CPrivKey &privkey, CPubKey &vchPubKey, bool fSkipCheck=false) {
 }
 
 CKeyID CPubKey::GetKeyID() const {
-	return CKeyID(Hash160(vch, vch + size()));
+	return std::move(CKeyID(Hash160(vch, vch + size())));
 }
 
 uint256 CPubKey::GetHash() const {
@@ -633,15 +633,20 @@ string CPubKey::ToString() const {
 }
 
 string CKeyID::ToAddress() const {
-	return CSoyPayAddress(*this).ToString();
+	return CDacrsAddress(*this).ToString();
 }
 
 CKeyID::CKeyID(const string& strAddress) :
 		uint160(0) {
+<<<<<<< HEAD
 	if (strAddress.length() == 40) {
 		*this = uint160(strAddress);
 	} else {
 		CSoyPayAddress addr(strAddress);
 		addr.GetKeyID(*this);
 	}
+=======
+	CDacrsAddress addr(strAddress);
+	addr.GetKeyID(*this);
+>>>>>>> remotes/origin/master
 }

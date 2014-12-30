@@ -99,12 +99,13 @@ protected:
 
 	int GetRandomMoney();
 
-	Value CreateRegScriptTx(const string& strAddress, const string& strScript, bool bRigsterScript, int nFee,
-			int nHeight, const CNetAuthorizate& author);
+
 
 	Value GetAccountInfo(const string& strID);
 
 public:
+
+
 	SysTestBase();
 
 	~SysTestBase();
@@ -112,6 +113,53 @@ public:
 	static void StartServer(int argc,char* argv[]);
 
 	static void StopServer();
+
+	bool GetHashFromCreatedTx(const Value& valueRes,string& strHash)
+	{
+		if (valueRes.type() == null_type) {
+			cout<<write_string(valueRes, true)<<endl;
+			return false;
+		}
+
+		const Value& result = find_value(valueRes.get_obj(), "hash");
+		if (result.type() == null_type){
+			cout<<write_string(valueRes, true)<<endl;
+			return false;
+		}
+
+		strHash = result.get_str();
+		return true;
+	}
+
+	bool GetTxConfirmedRegID(const string& haseh,string& strRegID)
+	{
+		char *argv[] = { "rpctest", "getscriptid", (char*) strRegID.c_str() };
+		int argc = sizeof(argv) / sizeof(char*);
+
+		Value value;
+		if (!CommandLineRPC_GetValue(sizeof(argv) / sizeof(argv[0]), argv, value)) {
+			return false;
+		}
+
+		if (value.type() == null_type) {
+			cout<<write_string(value, true)<<endl;
+			return false;
+		}
+
+		const Value& result = find_value(value.get_obj(), "script");
+		if (result.type() == null_type){
+			cout<<write_string(value, true)<<endl;
+			return false;
+		}
+		strRegID = result.get_str();
+		return true;
+	}
+
+
+
+
+	Value CreateRegScriptTx(const string& strAddress, const string& strScript, bool bRigsterScript, int nFee,
+			int nHeight, const CNetAuthorizate& author);
 
 	bool ResetEnv();
 
@@ -135,9 +183,12 @@ public:
 
 	bool CreateFreezeTx(const std::string &addr, const int nHeight);
 
-	bool RegisterAccountTx(const std::string &addr, const int nHeight);
+	bool registaccounttx(const std::string &addr, const int nHeight);
 
 	Value PCreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
+			int nHeight,int nFee = 10000);
+
+	Value CreateContractTxEx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 			int nHeight,int nFee = 10000);
 
 	bool CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
