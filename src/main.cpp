@@ -166,22 +166,22 @@ bool WriteBlockLog() {
 	ofstream file;
 	string strLogFilePath = LogDirpath.string();
 	strLogFilePath += "\\" + chainActive.Tip()->GetBlockHash().ToString();
-
-	string strScriptLog = strLogFilePath + "_scriptDB.txt";
+    int high = chainActive.Height();
+	string strScriptLog = strLogFilePath + strprintf("_%d",high)+"_scriptDB.txt";
 	file.open(strScriptLog);
 	if (!file.is_open())
 		return false;
 	file << write_string(Value(pScriptDBTip->ToJosnObj()), true);
 	file.close();
 
-	string strAccountViewLog = strLogFilePath + "_AccountView.txt";
+	string strAccountViewLog = strLogFilePath + strprintf("_%d",high)+"_AccountView.txt";
 	file.open(strAccountViewLog);
 	if (!file.is_open())
 		return false;
 	file << write_string(Value(pAccountViewTip->ToJosnObj()), true);
 	file.close();
 
-	string strCacheLog = strLogFilePath + "_Cache.txt";
+	string strCacheLog = strLogFilePath + strprintf("_%d",high)+"_Cache.txt";
 	file.open(strCacheLog);
 	if (!file.is_open())
 		return false;

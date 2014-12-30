@@ -59,7 +59,7 @@ class CAccountViewCache : public CAccountViewBacked
 public:
 	uint256 hashBlock;
     map<CKeyID, CAccount> cacheAccounts;
-    map<vector<unsigned char>, CKeyID> cacheKeyIds;
+	map<vector<unsigned char>, CKeyID> cacheKeyIds;
 
 private:
 	bool GetAccount(const CKeyID &keyId, CAccount &account);
@@ -313,6 +313,7 @@ class CTransactionDBCache : public CTransactionDBViewBacked{
 private:
 	CTransactionDBCache(CTransactionDBCache &transactionView);
 	map<uint256, vector<uint256> > mapTxHashByBlockHash;  // key:block hash  value:tx hash
+	bool IsInMap(const map<uint256, vector<uint256> >&mMap,const uint256&hash) const;
 public:
 	CTransactionDBCache(CTransactionDBView &pTxCacheDB, bool fDummy);
 	bool IsContainBlock(const CBlock &block);

@@ -63,22 +63,6 @@ typedef struct {
 class CSesureTrade:public SysTestBase
 {
 public:
-	bool GetHashFromCreatedTx(const Value& valueRes,string& strHash)
-	{
-		if (valueRes.type() == null_type) {
-			cout<<write_string(valueRes, true)<<endl;
-			return false;
-		}
-
-		const Value& result = find_value(valueRes.get_obj(), "hash");
-		if (result.type() == null_type){
-			cout<<write_string(valueRes, true)<<endl;
-			return false;
-		}
-
-		strHash = result.get_str();
-		return true;
-	}
 
 	bool GetScriptID(const string& strTxHash, string& strScriptID) {
 		uint256 txhash(strTxHash);

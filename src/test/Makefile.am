@@ -17,7 +17,9 @@ JSON_TEST_FILES = \
   data/tx_invalid.json.h \
   data/tx_valid.json.h \
   data/sighash.json.h	\
-  SysTestBase.h
+  SysTestBase.h \
+  CycleTestBase.h \
+  CycleTestManger.h 
 
 RAW_TEST_FILES = data/alertTests.raw.h
 
@@ -68,6 +70,8 @@ soypay_test_SOURCES = \
   p2pBet_test.cpp \
   p2plottery_test.cpp \
   pressure_tests.cpp \
+  CycleTestBase.cpp \
+  CycleTestManger.cpp \
   $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 
 #if ENABLE_WALLET
