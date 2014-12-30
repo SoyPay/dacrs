@@ -1057,7 +1057,8 @@ CTransactionDBCache::CTransactionDBCache(CTransactionDBView &txCacheDB, bool fDu
 }
 
 bool CTransactionDBCache::IsContainBlock(const CBlock &block) {
-	return ((mapTxHashByBlockHash.count(block.GetHash()) > 0 && mapTxHashByBlockHash[block.GetHash()].size() > 0)
+	//(mapTxHashByBlockHash.count(block.GetHash()) > 0 && mapTxHashByBlockHash[block.GetHash()].size() > 0)
+	return (IsInMap(mapTxHashByBlockHash,block.GetHash())
 			|| pBase->IsContainBlock(block));
 }
 
@@ -1112,7 +1113,7 @@ uint256 CTransactionDBCache::IsContainTx(const uint256 & txHash) {
 		}
 	}
 	uint256 blockHash = pBase->IsContainTx(txHash);
-	if(mapTxHashByBlockHash.count(blockHash)>0 && !mapTxHashByBlockHash[blockHash].empty()) {
+	if(IsInMap(mapTxHashByBlockHash,blockHash)){//mapTxHashByBlockHash[blockHash].empty()) { // [] 运算符防止不小心加入了垃圾数据
 		return blockHash;
 	}
 	return uint256(0);
@@ -1157,26 +1158,44 @@ void CTransactionDBCache::Clear() {
 	mapTxHashByBlockHash.clear();
 }
 
+bool CTransactionDBCache::IsInMap(const map<uint256, vector<uint256> >& mMap, const uint256 &hash) const {
+	if (hash == 0)
+		return false;
+	auto te =mMap.find(hash);
+	if(te != mMap.end()){
+		return !te->second.empty();
+	}
+
+	return false;
+}
+
 Object CTransactionDBCache::ToJosnObj() const {
-	Array objArray;
+	Array deletedobjArray;
+	Array InobjArray;
 	for (auto& item : mapTxHashByBlockHash) {
 		Object obj;
-		obj.push_back(Pair("blockhash", HexStr(item.first)));
+		obj.push_back(Pair("blockhash", item.first.ToString()));
 
 		Array objTxInBlock;
 		for (const auto& itemTx : item.second) {
 			Object objTxHash;
-			objTxHash.push_back(Pair("txhash", HexStr(itemTx)));
+			objTxHash.push_back(Pair("txhash", itemTx.ToString()));
 			objTxInBlock.push_back(objTxHash);
 		}
 		obj.push_back(Pair("txHashs", objTxInBlock));
-
-		objArray.push_back(obj);
+       if(item.second.size() > 0) {
+		InobjArray.push_back(std::move(obj));
+       }
+       else{
+    	   deletedobjArray.push_back(std::move(obj));
+       }
 	}
-
-	Object objReturn;
-	objReturn.push_back(Pair("mapTxHashByBlockHash", objArray));
-	return objReturn;
+	Object temobj;
+	temobj.push_back(Pair("incachblock", std::move(InobjArray)));
+//	temobj.push_back(Pair("removecachblock", std::move(deletedobjArray)));
+	Object retobj;
+	retobj.push_back(Pair("mapTxHashByBlockHash", std::move(temobj)));
+	return std::move(retobj);
 
 }
 
