@@ -418,9 +418,7 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 		boost::this_thread::interruption_point();
 		try {
 			leveldb::Slice slKey = pcursor->key();
-//			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
 			string strScriptKey(slKey.data(), 0, slKey.size());
-//			ssKey >> strScriptKey;
 			string strPrefix = strScriptKey.substr(0, 4);
 			if (strPrefix == "data") {
 				if (-1 == i) {

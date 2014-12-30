@@ -1029,6 +1029,30 @@ bool CScriptDBViewCache::GetTxRelAccount(const uint256 &txHash, set<CKeyID> &rel
 	return true;
 }
 
+
+bool CScriptDBViewCache::GetAuthorizate(const CRegID &acctRegId, const CRegID &scriptId, CAuthorizate &authorizate) {
+	vector<unsigned char> vKey = {'a','u','t','h','o','r'};
+	vector<unsigned char> vValue;
+	vKey.insert(vKey.end(), acctRegId.GetVec6().begin(), scriptId.GetVec6().end());
+	vKey.push_back('_');
+	vKey.insert(vKey.end(), scriptId.GetVec6().begin(), scriptId.GetVec6().end());
+	if(!GetData(vKey, vValue))
+		return false;
+	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
+	ds >> authorizate;
+	return true;
+}
+bool CScriptDBViewCache::SetAuthorizate(const CRegID &acctRegId, const CRegID &scriptId, const CAuthorizate &authorizate) {
+	vector<unsigned char> vKey = {'a','u','t','h','o','r'};
+	vector<unsigned char> vValue;
+	vKey.insert(vKey.end(), acctRegId.GetVec6().begin(), scriptId.GetVec6().end());
+	vKey.push_back('_');
+	vKey.insert(vKey.end(), scriptId.GetVec6().begin(), scriptId.GetVec6().end());
+	CDataStream ds(SER_DISK, CLIENT_VERSION);
+	ds << authorizate;
+	vValue.assign(ds.begin(), ds.end());
+	return SetData(vKey, vValue);
+}
 uint256 CTransactionDBView::IsContainTx(const uint256 & txHash) { return false; }
 bool CTransactionDBView::IsContainBlock(const CBlock &block) { return false; }
 bool CTransactionDBView::AddBlockToCache(const CBlock &block) { return false; }
