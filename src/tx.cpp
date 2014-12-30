@@ -728,8 +728,9 @@ string CRewardTransaction::ToString(CAccountViewCache &view) const {
 	string str;
 	CKeyID keyId;
 	view.GetKeyId(account, keyId);
-	CID id(account);
-	str += strprintf("txType=%s, hash=%s, ver=%d, account=%s, keyid=%s, rewardValue=%ld\n", txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, HexStr(id.GetID()).c_str(), keyId.GetHex(), rewardValue);
+	CRegID regId;
+	view.GetRegId(account, regId);
+	str += strprintf("txType=%s, hash=%s, ver=%d, account=%s, keyid=%s, rewardValue=%ld\n", txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, regId.ToString(), keyId.GetHex(), rewardValue);
 	return str;
 }
 bool CRewardTransaction::CheckTransction(CValidationState &state, CAccountViewCache &view) {
@@ -760,7 +761,7 @@ bool CRegistScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view,CValidat
 		CRegID regId(script);
 		if (!scriptCache.GetScript(regId, vScript)) {
 			return state.DoS(100,
-					ERROR("UpdateAccounts() : Get script id=%s error", HexStr(script.begin(), script.end())),
+					ERROR("UpdateAccounts() : CRegistScriptTx UpdateAccount Get script id=%s hash=%s error", HexStr(script.begin(), script.end()), GetHash().ToString()),
 					UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
 		}
 		if (!aAuthorizate.IsNull()) {
@@ -1435,6 +1436,7 @@ Object CAccount::ToJosnObj() const
 	Object obj;
 	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "IN_FREEZD_FUND",
 			"OUT_FREEZD_FUND", "SELF_FREEZD_FUND" };
+	obj.push_back(Pair("height", chainActive.Height()));
 	obj.push_back(Pair("Address",     keyID.ToAddress()));
 	obj.push_back(Pair("KeyID",     keyID.ToString()));
 	obj.push_back(Pair("RegID",     regID.ToString()));
@@ -1478,8 +1480,8 @@ Object CAccount::ToJosnObj() const
 
 string CAccount::ToString() const {
 	string str;
-	str += strprintf("keyID=%s, publicKey=%s, minerpubkey=%s, values=%ld\n",
-	HexStr(keyID).c_str(), HexStr(PublicKey).c_str(), HexStr(MinerPKey).c_str(), llValues);
+	str += strprintf("regID=%s, keyID=%s, publicKey=%s, minerpubkey=%s, values=%ld\n",
+	regID.ToString(), keyID.GetHex().c_str(), PublicKey.ToString().c_str(), MinerPKey.ToString().c_str(), llValues);
 	for (unsigned int i = 0; i < vRewardFund.size(); ++i) {
 		str += "    " + vRewardFund[i].ToString() + "\n";
 	}

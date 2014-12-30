@@ -635,40 +635,8 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 	postxinfo.nNonce = pBlock->nNonce;
 	uint256 curhash = postxinfo.GetHash();
 
-//	string str("");
-//	LogPrint("Hash", "PosTxInfo size:%d, Hash Input:%s\n", sizeof(PosTxInfo), str.c_str());
-//	str = "";
-//	for (char *pCh = BEGIN(postxinfo.nVersion); pCh != END(postxinfo.nVersion); ++pCh) {
-//		str += strprintf("%02X", *(unsigned char*)pCh);
-//	}
-//	LogPrint("Hash", "nVersion:%s\n", str.c_str());
-//	str = "";
-//	for (char *pCh = BEGIN(postxinfo.hashPrevBlock); pCh != END(postxinfo.hashPrevBlock); ++pCh) {
-//		str += strprintf("%02X", *(unsigned char*)pCh);
-//	}
-//	LogPrint("Hash", "hashPrevBlock:%s\n", str.c_str());
-//	str = "";
-//	for (char *pCh = BEGIN(postxinfo.hashMerkleRoot); pCh != END(postxinfo.hashMerkleRoot); ++pCh) {
-//		str += strprintf("%02X", *(unsigned char*)pCh);
-//	}
-//	LogPrint("Hash", "hashMerkleRoot:%s\n", str.c_str());
-//	str = "";
-//	for (char *pCh = BEGIN(postxinfo.nValues); pCh != END(postxinfo.nValues); ++pCh) {
-//		str += strprintf("%02X", *(unsigned char*)pCh);
-//	}
-//	LogPrint("Hash", "nValues:%s\n", str.c_str());
-//	str = "";
-//	for (char *pCh = BEGIN(postxinfo.nTime); pCh != END(postxinfo.nTime); ++pCh) {
-//		str += strprintf("%02X", *(unsigned char*)pCh);
-//	}
-//	LogPrint("Hash", "nTime:%s\n", str.c_str());
-//	str = "";
-//	for (char *pCh = BEGIN(postxinfo.nNonce); pCh != END(postxinfo.nNonce); ++pCh) {
-//		str += strprintf("%02X", *(unsigned char*)pCh);
-//	}
-//	LogPrint("Hash", "nNonce:%s\n", str.c_str());
-
-	LogPrint("INFO", "nVersion=%d, hashPreBlock=%s, hashMerkleRoot=%s, nValue=%ld, nTime=%ld, nNonce=%ld, blockHash=%s\n",
+	LogPrint("INFO", "account detail:%s\n", account.ToString());
+	LogPrint("INFO", "postxinfo.nVersion=%d, postxinfo.hashPreBlock=%s, postxinfo.hashMerkleRoot=%s, postxinfo.nValue=%ld, postxinfo.nTime=%ld, postxinfo.nNonce=%ld, postxinfo.blockHash=%s\n",
 			postxinfo.nVersion, postxinfo.hashPrevBlock.GetHex(), postxinfo.hashMerkleRoot.GetHex(), postxinfo.nValues,
 			postxinfo.nTime, postxinfo.nNonce, pBlock->GetHash().GetHex());
 	if (curhash > adjusthash) {
@@ -812,7 +780,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet) {
 
 	//// debug print
 //	LogPrint("INFO","proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
-//	pblock->print(*pAccountViewTip);
+	pblock->print(*pAccountViewTip);
 	// LogPrint("INFO","generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
 
 	// Found a solution

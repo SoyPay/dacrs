@@ -1500,6 +1500,25 @@ bool static DisconnectTip(CValidationState &state) {
     return true;
 }
 
+void PrintInfo(const uint256 &hash, const int &nCurHeight, CScriptDBViewCache &scriptDBView, const string &scriptId) {
+	vector<unsigned char> vScriptKey;
+	vector<unsigned char> vScriptData;
+	int nHeight;
+	set<CScriptDBOperLog> setOperLog;
+	CRegID regId(scriptId);
+	int nCount(0);
+	scriptDBView.GetScriptDataCount(scriptId, nCount);
+	bool ret = scriptDBView.GetScriptData(nCurHeight, regId, 0, vScriptKey, vScriptData, nHeight, setOperLog);
+	LogPrint("scriptdbview","\n\n\n");
+	LogPrint("scriptdbview","blockhash=%s,curHeight=%d\n",hash.GetHex(), nCurHeight);
+	LogPrint("scriptdbview", "sriptid ID:%s key:%s value:%s height:%d, nCount:%d\n", scriptId.c_str(), HexStr(vScriptKey), HexStr(vScriptData), nHeight, nCount);
+	while(ret) {
+		ret = scriptDBView.GetScriptData(nCurHeight, regId, 1, vScriptKey, vScriptData, nHeight, setOperLog);
+		scriptDBView.GetScriptDataCount(scriptId, nCount);
+		if(ret)
+			LogPrint("scriptdbview", "sriptid ID:%s key:%s value:%s height:%d, nCount:%d\n", scriptId.c_str(), HexStr(vScriptKey), HexStr(vScriptData), nHeight, nCount);
+	}
+}
 // Connect a new block to chainActive.
 bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     assert(pindexNew->pprev == chainActive.Tip());

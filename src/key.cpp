@@ -638,6 +638,10 @@ string CKeyID::ToAddress() const {
 
 CKeyID::CKeyID(const string& strAddress) :
 		uint160(0) {
-	CSoyPayAddress addr(strAddress);
-	addr.GetKeyID(*this);
+	if (strAddress.length() == 40) {
+		*this = uint160(strAddress);
+	} else {
+		CSoyPayAddress addr(strAddress);
+		addr.GetKeyID(*this);
+	}
 }
