@@ -635,7 +635,7 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 	postxinfo.nNonce = pBlock->nNonce;
 	uint256 curhash = postxinfo.GetHash();
 
-	LogPrint("INFO", "account detail:%s\n", account.ToString());
+//	LogPrint("INFO", "account detail:%s\n", account.ToString());
 	LogPrint("INFO", "postxinfo.nVersion=%d, postxinfo.hashPreBlock=%s, postxinfo.hashMerkleRoot=%s, postxinfo.nValue=%ld, postxinfo.nTime=%ld, postxinfo.nNonce=%ld, postxinfo.blockHash=%s\n",
 			postxinfo.nVersion, postxinfo.hashPrevBlock.GetHex(), postxinfo.hashMerkleRoot.GetHex(), postxinfo.nValues,
 			postxinfo.nTime, postxinfo.nNonce, pBlock->GetHash().GetHex());
