@@ -132,6 +132,10 @@ bool SysTestBase::ResetEnv() {
 					/*for ranger test*/
 					"cR5wPiv3Vp4sQmww2gWzShkDUaamYrJ6QHHtDd1Pm4nVJFTxnksC",// addr:  mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA
 					"cT1BuRbx5Cvmvic2dX2aq3ep2fu75CDwYk8fCQPtrftKiBEQiPJm",// addr:  msdDQ1SXNmknrLuTDivmJiavu5J9VyX9fV
+					/*for server 169 */
+					"cQXpVRxwXqeh8FjSxkGE7sYrzXLXPdoHeUQCdJk9uLy17F3WKbPM",//"address" : "mx8yEhL6DCo7WFkpn4gTW2dqoWB7oXpvfV",
+					"cVNeGiYHhtaVSvmCswUs8jootYPFJisVwx6gqBbkeWSftkXeaHbC",//"address" : "mfe3zNfFTkeD9JSzmgidihv1tb8AxLVtRT",
+					"cNjb55M6fqNVuhKmNE95C8weWYr6iD2yW6QqifYWSvuVGKUJRTt9",//"address" : "mfXrwgAt5LezYerS9NRCiPUxtHNChrxyiT",
 
 					/*remain for test*/
 					"cNcJkU44oG3etbWoEvY46i5qWPeE8jVb7K44keXxEQxsXUZ85MKU",//"address" : "mnnS4upLeY7RZpNnvoGMZzs9ELscQjtvqy",
@@ -140,9 +144,6 @@ bool SysTestBase::ResetEnv() {
 					"cU8kr9JvCXotPoBQZ4TPxkD2S98ZFz2AKLDupMt8hgNG4JLQ1b2x",//"address" : "mx5j59nsCVBVNs8zqeAE6rM1JEELRnY3KX",
 					"cSvRSiQGS6d11CbY4Mac1sCN84YHyNsFvNZ5xgBM1FHUSi7fgcaA",//"address" : "mxu7hQuPeV1Lom3NaHfLh8oe2J6z3dKB22",
 					"cMv5HP4EPsX4Fmvj2Zgtpq5MfAbVRxwunqNtK2qjVrMdfvv36Zr3",//"address" : "mron8pog28KpwFjsEgmQ2jEg3UiRkEwqyV",
-					"cQXpVRxwXqeh8FjSxkGE7sYrzXLXPdoHeUQCdJk9uLy17F3WKbPM",//"address" : "mx8yEhL6DCo7WFkpn4gTW2dqoWB7oXpvfV",
-					"cVNeGiYHhtaVSvmCswUs8jootYPFJisVwx6gqBbkeWSftkXeaHbC",//"address" : "mfe3zNfFTkeD9JSzmgidihv1tb8AxLVtRT",
-					"cNjb55M6fqNVuhKmNE95C8weWYr6iD2yW6QqifYWSvuVGKUJRTt9",//"address" : "mfXrwgAt5LezYerS9NRCiPUxtHNChrxyiT",
 
 	};
 
