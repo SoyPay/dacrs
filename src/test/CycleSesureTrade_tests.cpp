@@ -195,6 +195,7 @@ bool CTestSesureTrade::Step4SendContract() {
 
 bool CTestSesureTrade::CheckLastSendTx() {
 	if (VerifyTxInBlock(strStep4SendHash)) {
+		mCurStep = 0;
 		return true;
 	}
 	return false;
