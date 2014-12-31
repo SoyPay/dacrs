@@ -67,7 +67,7 @@ BOOST_FIXTURE_TEST_SUITE(CycleTest,CycleTestManger)
 
 BOOST_FIXTURE_TEST_CASE(Cycle,CycleTestManger)
 {
-	//run();
+//	run();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

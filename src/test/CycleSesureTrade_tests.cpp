@@ -48,9 +48,9 @@ TEST_STATE CTestSesureTrade::run() {
 		break;
 	}
 
-	if (9 == mCurStep && bRes) {
-		return end_state;
-	}
+//	if (9 == mCurStep && bRes) {
+//		return end_state;
+//	}
 	return this_state;
 }
 
@@ -195,6 +195,7 @@ bool CTestSesureTrade::Step4SendContract() {
 
 bool CTestSesureTrade::CheckLastSendTx() {
 	if (VerifyTxInBlock(strStep4SendHash)) {
+		mCurStep = 0;
 		return true;
 	}
 	return false;
