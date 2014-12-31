@@ -25,6 +25,7 @@ vector<shared_ptr<CAccount> > &CVmScriptRun::GetNewAccont() {
 
 bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& view, int nheight) {
 
+	m_output.clear();
 	listTx = Tx;
 	height = nheight;
 	m_view = &view;
@@ -71,6 +72,7 @@ CVmScriptRun::~CVmScriptRun() {
 tuple<bool, uint64_t, string> CVmScriptRun::run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view, CScriptDBViewCache& VmDB, int nheight,
 		uint64_t nBurnFactor) {
 
+
 	if(nBurnFactor == 0)
 	{
 		assert(0);
@@ -85,6 +87,33 @@ tuple<bool, uint64_t, string> CVmScriptRun::run(shared_ptr<CBaseTransaction>& Tx
 		return std::make_tuple (false, 0, string("VmScript inital Failed\n"));
 
 	}
+
+	if(nheight == 2736)
+	{
+		int dbsize;
+		CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
+		CRegID regid(boost::get<CRegID>(tx->scriptRegId).GetVec6());
+		VmDB.GetScriptDataCount(regid, dbsize);
+		cout<<"scriptsize:"<<dbsize<<endl;
+		vector<unsigned char> key;
+		vector<unsigned char> value;
+		int nHeight = 0;
+		cout << "scriptDb addr:" << &VmDB << endl;
+		cout << "scriptId:" << HexStr(regid.GetVec6()) << endl;
+ 		set<CScriptDBOperLog> setOperLog;
+		if (VmDB.GetScriptData(height,regid, 0, key, value, nHeight, setOperLog)) {
+			cout<<"key:"<<HexStr(key)<<"value:"<<HexStr(value)<<"height:"<<nHeight<<endl;
+		}
+		dbsize = dbsize - 1;
+		while(dbsize){
+			if (!VmDB.GetScriptData(height,regid, 1, key, value, nHeight, setOperLog)) {
+			break;
+			}
+			cout<<"key:"<<HexStr(key)<<"value:"<<HexStr(value)<<"height:"<<nHeight<<endl;
+		}
+
+	}
+
 	int64_t  step = pMcu.get()->run(maxstep,this);
 	if (0 == step) {
 		return std::make_tuple (false, 0, string("VmScript run Failed\n"));

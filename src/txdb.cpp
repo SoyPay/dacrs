@@ -398,22 +398,27 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 	vector<char> vId(vScriptId.begin(), vScriptId.end());
 	ssKeySet.insert(ssKeySet.end(), vId.begin(), vId.end());
 	ssKeySet.insert(ssKeySet.end(),'_');
+	int i(0);
 	if (1 == nIndex) {
 		if(vScriptKey.empty()) {
 			return ERROR("GetScriptData() : nIndex is 1, and vScriptKey is empty");
 		}
 		vector<char> vsKey(vScriptKey.begin(), vScriptKey.end());
 		ssKeySet.insert(ssKeySet.end(), vsKey.begin(), vsKey.end());
+		vector<unsigned char> vKey(ssKeySet.begin(), ssKeySet.end());
+		if(HaveData(vKey)) {   //判断传过来的key,数据库中是否已经存在
+			pcursor->Seek(ssKeySet.str());
+			i = nIndex;
+		}
+		else {
+			pcursor->Seek(ssKeySet.str());
+		}
 	}
-	pcursor->Seek(ssKeySet.str());
-	int i = nIndex;
 	while (pcursor->Valid() && i-- >= 0) {
 		boost::this_thread::interruption_point();
 		try {
 			leveldb::Slice slKey = pcursor->key();
-//			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
 			string strScriptKey(slKey.data(), 0, slKey.size());
-//			ssKey >> strScriptKey;
 			string strPrefix = strScriptKey.substr(0, 4);
 			if (strPrefix == "data") {
 				if (-1 == i) {

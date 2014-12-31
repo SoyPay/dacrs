@@ -510,7 +510,7 @@ public:
 			mapAccountTx[hash] = make_shared<CTransaction>(pTx);
 			break;
 		case REG_ACCT_TX:
-			mapAccountTx[hash] = make_shared<Cregistaccounttx>(pTx);
+			mapAccountTx[hash] = make_shared<CRegisterAccountTx>(pTx);
 			break;
 		case CONTRACT_TX:
 			mapAccountTx[hash] = make_shared<CContractTransaction>(pTx);
@@ -522,7 +522,7 @@ public:
 			mapAccountTx[hash] = make_shared<CRewardTransaction>(pTx);
 			break;
 		case REG_SCRIPT_TX:
-			mapAccountTx[hash] = make_shared<CRegistScriptTx>(pTx);
+			mapAccountTx[hash] = make_shared<CRegisterScriptTx>(pTx);
 			break;
 		default:
 			assert(0);

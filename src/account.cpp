@@ -318,6 +318,10 @@ bool CAccountViewCache::GetRegId(const CUserID& userId, CRegID& regId) const{
 
 	CAccountViewCache tempView(*this);
 	CAccount account;
+	if(userId.type() == typeid(CRegID)) {
+		regId = boost::get<CRegID>(userId);
+		return true;
+	}
 	if(tempView.GetAccount(userId,account))
 	{
 		regId =  account.regID;
@@ -531,22 +535,26 @@ bool CScriptDBViewCache::GetScript(const int nIndex, vector<unsigned char> &vScr
 		vector<unsigned char> vKey = { 'd','e','f' };
 		vKey.insert(vKey.end(), vScriptId.begin(), vScriptId.end());
 		vector<unsigned char> vPreKey(vKey);
-		map<vector<unsigned char>, vector<unsigned char> >::iterator iterFindKey = mapDatas.find(vPreKey);
+		map<vector<unsigned char>, vector<unsigned char> >::iterator iterFindKey = mapDatas.upper_bound(vPreKey);
 		vector<unsigned char> vDataKey;
 		vector<unsigned char> vDataValue;
  		vDataKey.clear();
  		vDataValue.clear();
 		vector<unsigned char> vKeyTemp={'d','e','f'};
-		while (iterFindKey != mapDatas.end() && ++iterFindKey != mapDatas.end()) {
+		while (iterFindKey != mapDatas.end()) {
 			vector<unsigned char> vTemp(iterFindKey->first.begin(), iterFindKey->first.begin() + 3);
 			if (vKeyTemp == vTemp) {
-				if (iterFindKey->second.empty())
+				if (iterFindKey->second.empty()){
+					++iterFindKey;
 					continue;
+				}
 				else {
 					vDataKey = iterFindKey->first;
 					vDataValue = iterFindKey->second;
 					break;
 				}
+			}else {
+				++iterFindKey;
 			}
 		}
 		if (!pBase->GetScript(nIndex, vScriptId, vValue)) { //从BASE获取指定键值之后的下一个值
@@ -674,6 +682,14 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 			}
 		}
 		if(!pBase->GetScriptData(nCurBlockHeight, vScriptId, nIndex, vScriptKey, vScriptData, nHeight, setOperLog)) { //上级没有获取符合条件的key值
+			set<CScriptDBOperLog>::iterator iterOperLog = setOperLog.begin();
+			for(;iterOperLog != setOperLog.end();) { //防止由于没有flush cache，对数据库中超时的脚本数据项，在cache中多次删除，引起删除失败
+				if (mapDatas.count(iterOperLog->vKey) > 0 && mapDatas[iterOperLog->vKey].empty()) {
+					setOperLog.erase(iterOperLog++);
+				}else {
+					++iterOperLog;
+				}
+			}
 			if (vDataKey.empty())
 				return false;
 			else {
@@ -690,6 +706,14 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 			}
 		}
 		else {
+			set<CScriptDBOperLog>::iterator iterOperLog = setOperLog.begin();
+			for (; iterOperLog != setOperLog.end();) { //防止由于没有flush cache，对数据库中超时的脚本数据项，在cache中多次删除，引起删除失败
+				if (mapDatas.count(iterOperLog->vKey) > 0 && mapDatas[iterOperLog->vKey].empty()) {
+					setOperLog.erase(iterOperLog++);
+				}else{
+					++iterOperLog;
+				}
+			}
 			if(vDataKey.empty()) {  //缓存中没有符合条件的key，直接返回上级的查询结果
 				return true;
 			}
@@ -722,15 +746,17 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 		vKey.push_back('_');
 		vector<unsigned char> vPreKey(vKey);
 		vPreKey.insert(vPreKey.end(), vScriptKey.begin(), vScriptKey.end());
-		map<vector<unsigned char>, vector<unsigned char> >::iterator iterFindKey = mapDatas.find(vPreKey);
+		map<vector<unsigned char>, vector<unsigned char> >::iterator iterFindKey = mapDatas.upper_bound(vPreKey);
 		vector<unsigned char> vDataKey;
 		vDataKey.clear();
-		while (iterFindKey != mapDatas.end() && ++iterFindKey != mapDatas.end()) {
+		while (iterFindKey != mapDatas.end()) {
 			vector<unsigned char> vKeyTemp(vKey.begin(), vKey.begin() + vScriptId.size() + 5);
 			vector<unsigned char> vTemp(iterFindKey->first.begin(), iterFindKey->first.begin() + vScriptId.size() + 5);
 			if (vKeyTemp == vTemp) {
-				if (iterFindKey->second.empty())
+				if (iterFindKey->second.empty()) {
+					++iterFindKey;
 					continue;
+				}
 				else {
 					vDataKey = iterFindKey->first;
 					CDataStream ds(mapDatas[vDataKey], SER_DISK, CLIENT_VERSION);
@@ -739,13 +765,23 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 						CScriptDBOperLog operLog(vDataKey, iterFindKey->second);
 						vDataKey.clear();
 						setOperLog.insert(operLog);
+						++iterFindKey;
 						continue;
 					}
 					break;
 				}
-			}
+			}else
+				++iterFindKey;
 		}
 		if (!pBase->GetScriptData(nCurBlockHeight, vScriptId, nIndex, vScriptKey, vScriptData, nHeight, setOperLog)) { //从BASE获取指定键值之后的下一个值
+			set<CScriptDBOperLog>::iterator iterOperLog = setOperLog.begin();
+			for (; iterOperLog != setOperLog.end();) { //防止由于没有flush cache，对数据库中超时的脚本数据项，在cache中多次删除，引起删除失败
+				if (mapDatas.count(iterOperLog->vKey) > 0 && mapDatas[iterOperLog->vKey].empty()) {
+					setOperLog.erase(iterOperLog++);
+				}else{
+					++iterOperLog;
+				}
+			}
 			if (vDataKey.empty())
 				return false;
 			else {
@@ -761,6 +797,14 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 				return true;
 			}
 		} else {
+			set<CScriptDBOperLog>::iterator iterOperLog = setOperLog.begin();
+			for (; iterOperLog != setOperLog.end();) { //防止由于没有flush cache，对数据库中超时的脚本数据项，在cache中多次删除，引起删除失败
+				if (mapDatas.count(iterOperLog->vKey) > 0 && mapDatas[iterOperLog->vKey].empty()) {
+					setOperLog.erase(iterOperLog++);
+				}else {
+					++iterOperLog;
+				}
+			}
 			if (vDataKey.empty())    //缓存中没有符合条件的key，直接返回上级的查询结果
 				return true;
 			vector<unsigned char> dataKeyTemp(vKey.begin(), vKey.end());
@@ -781,8 +825,8 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 				ds >> vScriptData;
 				return true;
 			}
-		}
 
+		}
 	}
 	else {
 		assert(0);
@@ -811,6 +855,7 @@ bool CScriptDBViewCache::SetScriptData(const vector<unsigned char> &vScriptId, c
 	oldValue.clear();
 	GetData(vKey, oldValue);
 	operLog = CScriptDBOperLog(vKey, oldValue);
+
 	return SetData(vKey, vValue);
 }
 
@@ -957,7 +1002,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const CRegID &
 		int &nHeight, set<CScriptDBOperLog> &setOperLog) {
 	bool bRet = GetScriptData(nCurBlockHeight, scriptId.GetVec6(), nIndex, vScriptKey, vScriptData, nHeight, setOperLog);
 	if(!setOperLog.empty()) {    //删除已经超时的数据项
-		for(auto &item : setOperLog) {
+		for (auto &item : setOperLog) {
 			if(!EraseScriptData(item.vKey)) {
 //				CDataStream ds(item.vValue, SER_DISK, CLIENT_VERSION);
 //				int nHeight;
@@ -1020,6 +1065,30 @@ Object CScriptDBViewCache::ToJosnObj() const {
 	return obj;
 }
 
+
+bool CScriptDBViewCache::GetAuthorizate(const CRegID &acctRegId, const CRegID &scriptId, CAuthorizate &authorizate) {
+	vector<unsigned char> vKey = {'a','u','t','h','o','r'};
+	vector<unsigned char> vValue;
+	vKey.insert(vKey.end(), acctRegId.GetVec6().begin(), scriptId.GetVec6().end());
+	vKey.push_back('_');
+	vKey.insert(vKey.end(), scriptId.GetVec6().begin(), scriptId.GetVec6().end());
+	if(!GetData(vKey, vValue))
+		return false;
+	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
+	ds >> authorizate;
+	return true;
+}
+bool CScriptDBViewCache::SetAuthorizate(const CRegID &acctRegId, const CRegID &scriptId, const CAuthorizate &authorizate) {
+	vector<unsigned char> vKey = {'a','u','t','h','o','r'};
+	vector<unsigned char> vValue;
+	vKey.insert(vKey.end(), acctRegId.GetVec6().begin(), scriptId.GetVec6().end());
+	vKey.push_back('_');
+	vKey.insert(vKey.end(), scriptId.GetVec6().begin(), scriptId.GetVec6().end());
+	CDataStream ds(SER_DISK, CLIENT_VERSION);
+	ds << authorizate;
+	vValue.assign(ds.begin(), ds.end());
+	return SetData(vKey, vValue);
+}
 uint256 CTransactionDBView::IsContainTx(const uint256 & txHash) { return false; }
 bool CTransactionDBView::IsContainBlock(const CBlock &block) { return false; }
 bool CTransactionDBView::AddBlockToCache(const CBlock &block) { return false; }
