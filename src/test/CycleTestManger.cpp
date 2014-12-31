@@ -22,13 +22,14 @@ using namespace boost;
 using namespace json_spirit;
 #include "CycleTestBase.h"
 #include "CycleTestManger.h"
+#include "CycleSesureTrade_tests.h"
 class CycleTestManger {
 
 	vector<std::shared_ptr<CycleTestBase> > vTest;
 
 public:
 	CycleTestManger(){
-
+		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
 		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
 	};
 	void run()
@@ -46,7 +47,9 @@ public:
 		 vTest.erase(remove.begin(),remove.end());
 	   }
 	}
-	virtual ~CycleTestManger(){};
+	virtual ~CycleTestManger(){
+
+	};
 
 };
 

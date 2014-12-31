@@ -19,7 +19,8 @@ JSON_TEST_FILES = \
   data/sighash.json.h	\
   SysTestBase.h \
   CycleTestBase.h \
-  CycleTestManger.h 
+  CycleTestManger.h \
+  CycleSesureTrade_tests.h
 
 RAW_TEST_FILES = data/alertTests.raw.h
 
@@ -73,6 +74,7 @@ soypay_test_SOURCES = \
   CycleTestBase.cpp \
   CycleTestManger.cpp \
   scriptdbex_tests.cpp	\
+  CycleSesureTrade_tests.cpp \
   $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 
 #if ENABLE_WALLET
