@@ -414,6 +414,9 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 			pcursor->Seek(ssKeySet.str());
 		}
 	}
+	else {
+		pcursor->Seek(ssKeySet.str());
+	}
 	while (pcursor->Valid() && i-- >= 0) {
 		boost::this_thread::interruption_point();
 		try {

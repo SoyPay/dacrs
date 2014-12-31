@@ -35,23 +35,28 @@ public:
 //	vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
 //
 	};
-	void run()
-	{
-	   while(vTest.size() > 0)
-	   {
-		 vector<std::shared_ptr<CycleTestBase> >remove;
-		 for(auto &it :vTest)
-		 {
-			try {
-				if(it->run()==end_state) {
-					remove.push_back(it);
+	void run() {
+
+		while (vTest.size() > 0) {
+			for (auto it = vTest.begin(); it != vTest.end();) {
+				bool flag = false;
+				try {
+					if (it->get()->run() == end_state) {
+						flag = true;
 					};
-			} catch (...) {
-				remove.push_back(it);
+				} catch (...) {
+					flag = true;
+				}
+
+				if (flag)
+					it = vTest.erase(it);
+				else
+					++it;
+
 			}
-		 }
-		 vTest.erase(remove.begin(),remove.end());
-	   }
+			MilliSleep(1000);
+
+		}
 	}
 	virtual ~CycleTestManger(){};
 
