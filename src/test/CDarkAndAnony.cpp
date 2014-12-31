@@ -11,9 +11,9 @@ CDarkAndAnony::CDarkAndAnony() {
 	step  = 0;
 	 darkhash = "";
 	 anonyhahs= "";
-	 dest1[0] ="000000000600";
-	dest1[1] ="000000000100";
-	 dest1[2] ="000000000a00";
+	 dest1[0] ="000000001400";
+	dest1[1] ="000000000e00";
+	 dest1[2] ="000000000100";
 }
 
 CDarkAndAnony::~CDarkAndAnony() {

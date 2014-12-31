@@ -133,7 +133,7 @@ public:
 
 	bool GetTxConfirmedRegID(const string& haseh,string& strRegID)
 	{
-		char *argv[] = { "rpctest", "getscriptid", (char*) strRegID.c_str() };
+		char *argv[] = { "rpctest", "getscriptid", (char*) haseh.c_str() };
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
