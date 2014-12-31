@@ -661,6 +661,8 @@ public:
 		Value ret =GetScriptID(shash);
 		string scriptid;
 		BOOST_CHECK(GetHashFromCreatedTx(ret,scriptid));
+		GetTxConfirmedRegID(shash, scriptid);
+		BOOST_CHECK(scriptid !="");
 		//// first tx
 		string phash = CreateContactTx(15);
 		int  height = chainActive.Height();

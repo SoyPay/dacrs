@@ -137,3 +137,4 @@ void CTestSesureTrade::PacketFirstContract(const char* pBuyID, const char* pSell
 
 CTestSesureTrade::~CTestSesureTrade() {
 }
+

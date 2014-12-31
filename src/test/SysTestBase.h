@@ -133,7 +133,7 @@ public:
 
 	bool GetTxConfirmedRegID(const string& haseh,string& strRegID)
 	{
-		char *argv[] = { "rpctest", "getscriptid", (char*) strRegID.c_str() };
+		char *argv[] = { "rpctest", "getscriptid", (char*) haseh.c_str() };
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
@@ -154,9 +154,6 @@ public:
 		strRegID = result.get_str();
 		return true;
 	}
-
-
-
 
 	Value CreateRegScriptTx(const string& strAddress, const string& strScript, bool bRigsterScript, int nFee,
 			int nHeight, const CNetAuthorizate& author);
