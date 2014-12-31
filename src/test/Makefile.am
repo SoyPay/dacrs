@@ -74,6 +74,7 @@ soypay_test_SOURCES = \
   CycleTestBase.cpp \
   CycleTestManger.cpp \
   CDarkAndAnony.cpp \
+  scriptdbex_tests.cpp	\
   $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 
 #if ENABLE_WALLET

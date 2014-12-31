@@ -117,13 +117,13 @@ public:
 	bool GetHashFromCreatedTx(const Value& valueRes,string& strHash)
 	{
 		if (valueRes.type() == null_type) {
-			cout<<write_string(valueRes, true)<<endl;
+			//cout<<write_string(valueRes, true)<<endl;
 			return false;
 		}
 
 		const Value& result = find_value(valueRes.get_obj(), "hash");
 		if (result.type() == null_type){
-			cout<<write_string(valueRes, true)<<endl;
+			//cout<<write_string(valueRes, true)<<endl;
 			return false;
 		}
 
@@ -142,13 +142,13 @@ public:
 		}
 
 		if (value.type() == null_type) {
-			cout<<write_string(value, true)<<endl;
+			//cout<<write_string(value, true)<<endl;
 			return false;
 		}
 
 		const Value& result = find_value(value.get_obj(), "script");
 		if (result.type() == null_type){
-			cout<<write_string(value, true)<<endl;
+			//cout<<write_string(value, true)<<endl;
 			return false;
 		}
 		strRegID = result.get_str();
