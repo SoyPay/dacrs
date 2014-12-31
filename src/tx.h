@@ -1349,7 +1349,7 @@ public:
 	vector<CFund> vFreedomFund;								//!< freedom money
 	vector<CFund> vFreeze;									//!< freezed money
 	vector<CFund> vSelfFreeze;								//!< self-freeze money
-	std::shared_ptr<map<vector_unsigned_char,CAuthorizate> > pMapAuthorizate;	//!< Key:scriptID,value :CAuthorizate
+	map<vector_unsigned_char,CAuthorizate> mapAuthorizate;	//!< Key:scriptID,value :CAuthorizate
 	CAccountOperLog accountOperLog;							//!< record operlog, write at undoinfo
 
 public :
@@ -1389,7 +1389,7 @@ public:
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
 		vSelfFreeze.clear();
-		pMapAuthorizate.reset(new map<vector_unsigned_char,CAuthorizate>());
+		mapAuthorizate.clear();
 	}
 	CAccount() :
 			keyID(uint160(0)), llValues(0) {
@@ -1398,7 +1398,7 @@ public:
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
 		vSelfFreeze.clear();
-		pMapAuthorizate.reset(new map<vector_unsigned_char,CAuthorizate>());
+		mapAuthorizate.clear();
 	}
 	CAccount(const CAccount & other) {
 		this->regID = other.regID;
@@ -1410,7 +1410,7 @@ public:
 		this->vFreedomFund = other.vFreedomFund;
 		this->vFreeze = other.vFreeze;
 		this->vSelfFreeze = other.vSelfFreeze;
-     	this->pMapAuthorizate = other.pMapAuthorizate;
+     	this->mapAuthorizate = other.mapAuthorizate;
 		this->accountOperLog = other.accountOperLog;
 	}
 	CAccount &operator=(const CAccount & other) {
@@ -1425,7 +1425,7 @@ public:
 		this->vFreedomFund = other.vFreedomFund;
 		this->vFreeze = other.vFreeze;
 		this->vSelfFreeze = other.vSelfFreeze;
-		this->pMapAuthorizate = other.pMapAuthorizate;
+		this->mapAuthorizate = other.mapAuthorizate;
 		this->accountOperLog = other.accountOperLog;
 		return *this;
 	}
@@ -1476,7 +1476,7 @@ public:
 			READWRITE(vFreedomFund);
 			READWRITE(vFreeze);
 			READWRITE(vSelfFreeze);
-			READWRITE(pMapAuthorizate);
+			READWRITE(mapAuthorizate);
 	)
 
 private:

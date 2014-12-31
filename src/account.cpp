@@ -756,8 +756,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 				if (iterFindKey->second.empty()) {
 					++iterFindKey;
 					continue;
-				}
-				else {
+				} else {
 					vDataKey = iterFindKey->first;
 					CDataStream ds(mapDatas[vDataKey], SER_DISK, CLIENT_VERSION);
 					ds >> nHeight;
@@ -770,8 +769,9 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 					}
 					break;
 				}
-			}else
+			} else {
 				++iterFindKey;
+			}
 		}
 		if (!pBase->GetScriptData(nCurBlockHeight, vScriptId, nIndex, vScriptKey, vScriptData, nHeight, setOperLog)) { //从BASE获取指定键值之后的下一个值
 			set<CScriptDBOperLog>::iterator iterOperLog = setOperLog.begin();
