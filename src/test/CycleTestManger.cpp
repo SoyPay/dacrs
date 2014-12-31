@@ -14,8 +14,8 @@
 #include "util.h"
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
-
 #include "json/json_spirit_writer_template.h"
+#include "CDarkAndAnony.h"
 #include "rpcclient.h"
 using namespace std;
 using namespace boost;
@@ -28,8 +28,12 @@ class CycleTestManger {
 
 public:
 	CycleTestManger(){
-
-		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
+	vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
+	vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
+//	vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
+//	vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
+//	vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
+//
 	};
 	void run()
 	{
@@ -38,9 +42,13 @@ public:
 		 vector<std::shared_ptr<CycleTestBase> >remove;
 		 for(auto &it :vTest)
 		 {
-			 if(it->run()==end_state) {
-				 remove.push_back(it);
-				 };
+			try {
+				if(it->run()==end_state) {
+					remove.push_back(it);
+					};
+			} catch (...) {
+				remove.push_back(it);
+			}
 		 }
 		 vTest.erase(remove.begin(),remove.end());
 	   }
