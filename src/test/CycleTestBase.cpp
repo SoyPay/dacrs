@@ -56,7 +56,7 @@ TEST_STATE CTestSesureTrade::run() {
 			assert(0);
 			break;
 	}
-
+	 return end_state;
 }
 
 bool CTestSesureTrade::Step0RegisterScript() {
