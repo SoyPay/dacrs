@@ -36,9 +36,27 @@ CTestSesureTrade::CTestSesureTrade() {
 }
 
 TEST_STATE CTestSesureTrade::run() {
-	cout << "hellow word ! step " << mCurStep << endl;
-	return  ++mCurStep > 5 ? end_state :next_state;
+//	cout << "hellow word ! step " << mCurStep << endl;
+//	return  ++mCurStep > 5 ? end_state :next_state;
+	switch (mCurStep) {
+		case 0:
+			Step0RegisterScript();
+			break;
+		case 1:
+			Step1ModifyAuthor();
+				break;
+		case 2:
+			Step2SendContract();
+				break;
+		case 3:
+			Step3ModifyAuthor();
+				break;
 
+		default:
+			assert(0);
+			break;
+	}
+	 return end_state;
 }
 
 bool CTestSesureTrade::Step0RegisterScript() {

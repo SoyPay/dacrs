@@ -41,6 +41,7 @@ public:
 			 if(it->run()==end_state) {
 				 remove.push_back(it);
 				 };
+			 Sleep(500);
 		 }
 		 vTest.erase(remove.begin(),remove.end());
 	   }
