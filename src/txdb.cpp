@@ -343,15 +343,24 @@ bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, v
 	string strPrefixTemp("def");
 	//ssKeySet.insert(ssKeySet.end(), 9);
 	ssKeySet.insert(ssKeySet.end(), &strPrefixTemp[0], &strPrefixTemp[3]);
+	int i(0);
 	if(1 == nIndex ) {
 		if(vScriptId.empty()) {
 			return ERROR("GetScript() : nIndex is 1, and vScriptId is empty");
 		}
 		vector<char> vId(vScriptId.begin(), vScriptId.end());
 		ssKeySet.insert(ssKeySet.end(), vId.begin(), vId.end());
+		vector<unsigned char> vKey(ssKeySet.begin(), ssKeySet.end());
+		if(HaveData(vKey)) {   //判断传过来的key,数据库中是否已经存在
+			pcursor->Seek(ssKeySet.str());
+			i = nIndex;
+		}
+		else {
+			pcursor->Seek(ssKeySet.str());
+		}
+	} else {
+		pcursor->Seek(ssKeySet.str());
 	}
-	pcursor->Seek(ssKeySet.str());
-	int i = nIndex;
 	while(pcursor->Valid() && i-->=0) {
 		boost::this_thread::interruption_point();
 		try {
@@ -413,6 +422,8 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 		else {
 			pcursor->Seek(ssKeySet.str());
 		}
+	}else {
+		pcursor->Seek(ssKeySet.str());
 	}
 	while (pcursor->Valid() && i-- >= 0) {
 		boost::this_thread::interruption_point();
