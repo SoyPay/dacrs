@@ -31,7 +31,7 @@ class CAutoFile;
 class CDataStream;
 //class CScript;
 class CBaseTransaction;
-class Cregistaccounttx;
+class CRegisterAccountTx;
 class CTransaction;
 class CFreezeTransaction;
 class CRewardTransaction;

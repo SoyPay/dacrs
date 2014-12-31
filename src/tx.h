@@ -354,7 +354,7 @@ public:
 
 };
 
-class Cregistaccounttx: public CBaseTransaction {
+class CRegisterAccountTx: public CBaseTransaction {
 
 public:
 	mutable CUserID userId;      //pubkey
@@ -364,11 +364,11 @@ public:
 	vector<unsigned char> signature;
 
 public:
-	Cregistaccounttx(const CBaseTransaction *pBaseTx) {
+	CRegisterAccountTx(const CBaseTransaction *pBaseTx) {
 		assert(REG_ACCT_TX == pBaseTx->nTxType);
-		*this = *(Cregistaccounttx *) pBaseTx;
+		*this = *(CRegisterAccountTx *) pBaseTx;
 	}
-	Cregistaccounttx(const CUserID &uId,const CUserID &minerID,int64_t fees,int height) {
+	CRegisterAccountTx(const CUserID &uId,const CUserID &minerID,int64_t fees,int height) {
 		nTxType = REG_ACCT_TX;
 		llFees = fees;
 		nValidHeight = height;
@@ -376,13 +376,13 @@ public:
 		minerId=minerID;
 		signature.clear();
 	}
-	Cregistaccounttx() {
+	CRegisterAccountTx() {
 		nTxType = REG_ACCT_TX;
 		llFees = 0;
 		nValidHeight = 0;
 	}
 
-	~Cregistaccounttx() {
+	~CRegisterAccountTx() {
 	}
 
 //	unsigned int GetSerializeSize(int nType, int nVersion) const {
@@ -495,7 +495,7 @@ public:
 	}
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
-		return make_shared<Cregistaccounttx>(this);
+		return make_shared<CRegisterAccountTx>(this);
 	}
 
 	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view);
@@ -887,7 +887,7 @@ public:
 
 #define SCRIPT_ID_SIZE (6)
 
-class CRegistScriptTx: public CBaseTransaction {
+class CRegisterScriptTx: public CBaseTransaction {
 
 public:
 	mutable CUserID regAccountId;         //regid
@@ -897,18 +897,18 @@ public:
 	CNetAuthorizate aAuthorizate;
 	vector_unsigned_char signature;
 public:
-	CRegistScriptTx(const CBaseTransaction *pBaseTx) {
+	CRegisterScriptTx(const CBaseTransaction *pBaseTx) {
 		assert(REG_SCRIPT_TX == pBaseTx->nTxType);
-		*this = *(CRegistScriptTx*) pBaseTx;
+		*this = *(CRegisterScriptTx*) pBaseTx;
 	}
 
-	CRegistScriptTx() {
+	CRegisterScriptTx() {
 		nTxType = REG_SCRIPT_TX;
 		llFees = 0;
 		nValidHeight = 0;
 	}
 
-	~CRegistScriptTx() {
+	~CRegisterScriptTx() {
 	}
 
 	IMPLEMENT_SERIALIZE
@@ -932,7 +932,7 @@ public:
 	}
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
-		return make_shared<CRegistScriptTx>(this);
+		return make_shared<CRegisterScriptTx>(this);
 	}
 
 	uint256 SignatureHash() const {
@@ -1505,7 +1505,7 @@ void Serialize(Stream& os, const std::shared_ptr<CBaseTransaction> &pa, int nTyp
 	unsigned char ntxType = pa->nTxType;
 	Serialize(os, ntxType, nType, nVersion);
 	if (pa->nTxType == REG_ACCT_TX) {
-		Serialize(os, *((Cregistaccounttx *) (pa.get())), nType, nVersion);
+		Serialize(os, *((CRegisterAccountTx *) (pa.get())), nType, nVersion);
 	}
 	else if (pa->nTxType == COMMON_TX) {
 		Serialize(os, *((CTransaction *) (pa.get())), nType, nVersion);
@@ -1520,7 +1520,7 @@ void Serialize(Stream& os, const std::shared_ptr<CBaseTransaction> &pa, int nTyp
 		Serialize(os, *((CRewardTransaction *) (pa.get())), nType, nVersion);
 	}
 	else if (pa->nTxType == REG_SCRIPT_TX) {
-		Serialize(os, *((CRegistScriptTx *) (pa.get())), nType, nVersion);
+		Serialize(os, *((CRegisterScriptTx *) (pa.get())), nType, nVersion);
 	}
 	else {
 		assert(0);
@@ -1533,8 +1533,8 @@ void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, i
 	char nTxType;
 	is.read((char*) &(nTxType), sizeof(nTxType));
 	if (nTxType == REG_ACCT_TX) {
-		pa = make_shared<Cregistaccounttx>();
-		Unserialize(is, *((Cregistaccounttx *) (pa.get())), nType, nVersion);
+		pa = make_shared<CRegisterAccountTx>();
+		Unserialize(is, *((CRegisterAccountTx *) (pa.get())), nType, nVersion);
 	}
 	else if (nTxType == COMMON_TX) {
 		pa = make_shared<CTransaction>();
@@ -1553,8 +1553,8 @@ void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, i
 		Unserialize(is, *((CRewardTransaction *) (pa.get())), nType, nVersion);
 	}
 	else if (nTxType == REG_SCRIPT_TX) {
-		pa = make_shared<CRegistScriptTx>();
-		Unserialize(is, *((CRegistScriptTx *) (pa.get())), nType, nVersion);
+		pa = make_shared<CRegisterScriptTx>();
+		Unserialize(is, *((CRegisterScriptTx *) (pa.get())), nType, nVersion);
 	}
 	else {
 		assert(0);

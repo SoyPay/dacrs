@@ -166,22 +166,22 @@ bool WriteBlockLog() {
 	ofstream file;
 	string strLogFilePath = LogDirpath.string();
 	strLogFilePath += "\\" + chainActive.Tip()->GetBlockHash().ToString();
-
-	string strScriptLog = strLogFilePath + "_scriptDB.txt";
+    int high = chainActive.Height();
+	string strScriptLog = strLogFilePath + strprintf("_%d",high)+"_scriptDB.txt";
 	file.open(strScriptLog);
 	if (!file.is_open())
 		return false;
 	file << write_string(Value(pScriptDBTip->ToJosnObj()), true);
 	file.close();
 
-	string strAccountViewLog = strLogFilePath + "_AccountView.txt";
+	string strAccountViewLog = strLogFilePath + strprintf("_%d",high)+"_AccountView.txt";
 	file.open(strAccountViewLog);
 	if (!file.is_open())
 		return false;
 	file << write_string(Value(pAccountViewTip->ToJosnObj()), true);
 	file.close();
 
-	string strCacheLog = strLogFilePath + "_Cache.txt";
+	string strCacheLog = strLogFilePath + strprintf("_%d",high)+"_Cache.txt";
 	file.open(strCacheLog);
 	if (!file.is_open())
 		return false;
@@ -1542,6 +1542,25 @@ bool static DisconnectTip(CValidationState &state) {
     return true;
 }
 
+void PrintInfo(const uint256 &hash, const int &nCurHeight, CScriptDBViewCache &scriptDBView, const string &scriptId) {
+	vector<unsigned char> vScriptKey;
+	vector<unsigned char> vScriptData;
+	int nHeight;
+	set<CScriptDBOperLog> setOperLog;
+	CRegID regId(scriptId);
+	int nCount(0);
+	scriptDBView.GetScriptDataCount(scriptId, nCount);
+	bool ret = scriptDBView.GetScriptData(nCurHeight, regId, 0, vScriptKey, vScriptData, nHeight, setOperLog);
+	LogPrint("scriptdbview","\n\n\n");
+	LogPrint("scriptdbview","blockhash=%s,curHeight=%d\n",hash.GetHex(), nCurHeight);
+	LogPrint("scriptdbview", "sriptid ID:%s key:%s value:%s height:%d, nCount:%d\n", scriptId.c_str(), HexStr(vScriptKey), HexStr(vScriptData), nHeight, nCount);
+	while(ret) {
+		ret = scriptDBView.GetScriptData(nCurHeight, regId, 1, vScriptKey, vScriptData, nHeight, setOperLog);
+		scriptDBView.GetScriptDataCount(scriptId, nCount);
+		if(ret)
+			LogPrint("scriptdbview", "sriptid ID:%s key:%s value:%s height:%d, nCount:%d\n", scriptId.c_str(), HexStr(vScriptKey), HexStr(vScriptData), nHeight, nCount);
+	}
+}
 // Connect a new block to chainActive.
 bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     assert(pindexNew->pprev == chainActive.Tip());
@@ -3024,13 +3043,13 @@ void static ProcessGetData(CNode* pfrom)
                         	ss << *((CContractTransaction *)pBaseTx.get());
                         }
                         else if(REG_ACCT_TX == pBaseTx->nTxType) {
-                        	ss << *((Cregistaccounttx *)pBaseTx.get());
+                        	ss << *((CRegisterAccountTx *)pBaseTx.get());
                         }
                         else if(FREEZE_TX == pBaseTx->nTxType) {
                         	ss << *((CFreezeTransaction *)pBaseTx.get());
                         }
                         else if(REG_SCRIPT_TX == pBaseTx->nTxType) {
-                        	ss << *((CRegistScriptTx *)pBaseTx.get());
+                        	ss << *((CRegisterScriptTx *)pBaseTx.get());
                         }
                         pfrom->PushMessage("tx", ss);
                         pushed = true;
@@ -4139,7 +4158,7 @@ std::shared_ptr<CBaseTransaction> CreateNewEmptyTransaction(unsigned char uType)
 	case COMMON_TX:
 		return make_shared<CTransaction>();
 	case REG_ACCT_TX:
-		return make_shared<Cregistaccounttx>();
+		return make_shared<CRegisterAccountTx>();
 	case CONTRACT_TX:
 		return make_shared<CContractTransaction>();
 	case FREEZE_TX:
@@ -4147,7 +4166,7 @@ std::shared_ptr<CBaseTransaction> CreateNewEmptyTransaction(unsigned char uType)
 	case REWARD_TX:
 		return make_shared<CRewardTransaction>();
 	case REG_SCRIPT_TX:
-		return make_shared<CRegistScriptTx>();
+		return make_shared<CRegisterScriptTx>();
 	default:
 		assert(0);
 		break;
