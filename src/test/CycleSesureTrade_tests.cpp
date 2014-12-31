@@ -5,7 +5,7 @@ CTestSesureTrade::CTestSesureTrade() {
 
 	mCurStep = 0;
 	strStep1RegHash ="";
-	GenerateOneBlock();
+//	GenerateOneBlock();
 }
 
 TEST_STATE CTestSesureTrade::run() {
