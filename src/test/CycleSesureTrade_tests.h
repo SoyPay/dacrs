@@ -46,12 +46,12 @@ typedef struct  {
 	Int64 nPayMoney;
 	Int64 nFee;
 	Int64 ndeposit;
-}FIRST_CONTRACT;
+}FIRST_TRADE_CONTRACT;
 
 typedef struct {
 	unsigned char nType;
 	unsigned char hash[HASH_SIZE];
-} NEXT_CONTRACT;
+} NEXT_TRADE_CONTRACT;
 
 typedef struct {
 	unsigned char nType;
@@ -70,8 +70,8 @@ public:
 	//bool GetScriptID(const string& strTxHash, string& strScriptID);
 
 	void PacketFirstContract(const char*pBuyID, const char* pSellID, const char* pArID, int nHeight, int nFine,
-			int nPay, int nFee, int ndeposit, FIRST_CONTRACT* pContract);
-	void PacketNextContract(unsigned char nStep, unsigned char* pHash, NEXT_CONTRACT* pNextContract);
+			int nPay, int nFee, int ndeposit, FIRST_TRADE_CONTRACT* pContract);
+	void PacketNextContract(unsigned char nStep, unsigned char* pHash, NEXT_TRADE_CONTRACT* pNextContract);
 	void PacketLastContract(unsigned char* pHash, int nFine, ARBIT_RES_CONTRACT* pLastContract);
 
 protected:

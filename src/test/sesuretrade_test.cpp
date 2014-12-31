@@ -38,7 +38,7 @@ public:
 		BOOST_CHECK(GenerateOneBlock());
 		VerifyTxInBlock(strTxHash,true);
 
-		FIRST_CONTRACT firstConstract;
+		FIRST_TRADE_CONTRACT firstConstract;
 		PacketFirstContract(BUYER_ID, SELLER_ID, ARBIT_ID, 200, 100000, 100000, 100000, 100000, &firstConstract);
 		string strData = PutDataIntoString((char*) &firstConstract,sizeof(firstConstract));
 		valueRes = CreateContractTxEx(strRegScriptID, VADDR_BUYER, strData, 0, 100000);
@@ -56,7 +56,7 @@ public:
 		VerifyTxInBlock(strTxHash,true);
 
 		string strReversFirstTxHash = GetReverseHash(strFirstTxHash);
-		NEXT_CONTRACT secondContract;
+		NEXT_TRADE_CONTRACT secondContract;
 		PacketNextContract(2, (unsigned char*) strReversFirstTxHash.c_str(), &secondContract);
 		string strData = PutDataIntoString((char*) &secondContract, sizeof(secondContract));
 
@@ -75,7 +75,7 @@ public:
 		VerifyTxInBlock(strTxHash,true);
 
 		string strReversFirstTxHash = GetReverseHash(strSecondTxHash);
-		NEXT_CONTRACT thirdContract;
+		NEXT_TRADE_CONTRACT thirdContract;
 		PacketNextContract(3, (unsigned char*) strReversFirstTxHash.c_str(), &thirdContract);
 		string strData = PutDataIntoString((char*) &thirdContract, sizeof(thirdContract));
 

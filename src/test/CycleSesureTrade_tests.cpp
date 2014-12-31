@@ -94,7 +94,7 @@ bool CTestSesureTrade::Step1ModifyAuthor() {
 
 bool CTestSesureTrade::Step1SendContract() {
 	if (VerifyTxInBlock(strStep1ModifyHash)) {
-		FIRST_CONTRACT firstConstract;
+		FIRST_TRADE_CONTRACT firstConstract;
 		PacketFirstContract(BUYER_ID, SELLER_ID, ARBIT_ID, 200, 100000, 100000, 100000, 100000,&firstConstract);
      	string strData = PutDataIntoString((char*) &firstConstract, sizeof(firstConstract));
      	strData.assign((char*) &firstConstract, (char*) &firstConstract +  sizeof(firstConstract));
@@ -123,7 +123,7 @@ bool CTestSesureTrade::Step2ModifyAuthor() {
 bool CTestSesureTrade::Step2SendContract() {
 	if (VerifyTxInBlock(strStep2ModifyHash)) {
 		string strReversFirstTxHash = GetReverseHash(strStep1SendHash);
-		NEXT_CONTRACT secondContract;
+		NEXT_TRADE_CONTRACT secondContract;
 		PacketNextContract(2, (unsigned char*) strReversFirstTxHash.c_str(), &secondContract);
 		string strData = PutDataIntoString((char*) &secondContract, sizeof(secondContract));
 
@@ -152,7 +152,7 @@ bool CTestSesureTrade::Step3ModifyAuthor() {
 bool CTestSesureTrade::Step3SendContract() {
 	if (VerifyTxInBlock(strStep3ModifyHash)) {
 		string strReversFirstTxHash = GetReverseHash(strStep2SendHash);
-		NEXT_CONTRACT thirdContract;
+		NEXT_TRADE_CONTRACT thirdContract;
 		PacketNextContract(3, (unsigned char*) strReversFirstTxHash.c_str(), &thirdContract);
 		string strData = PutDataIntoString((char*) &thirdContract, sizeof(thirdContract));
 
@@ -201,10 +201,10 @@ bool CTestSesureTrade::CheckLastSendTx() {
 }
 
 void CSesureTradeHelp::PacketFirstContract(const char* pBuyID, const char* pSellID, const char* pArID, int nHeight,
-		int nFine, int nPay, int nFee, int ndeposit, FIRST_CONTRACT* pContract) {
+		int nFine, int nPay, int nFee, int ndeposit, FIRST_TRADE_CONTRACT* pContract) {
 
 		BOOST_CHECK(pContract);
-		memset(pContract,0,sizeof(FIRST_CONTRACT));
+		memset(pContract,0,sizeof(FIRST_TRADE_CONTRACT));
 		pContract->nType = 1;
 		pContract->nArbitratorCount = 1;
 		pContract->nHeight = nHeight;
@@ -255,8 +255,8 @@ string CSesureTradeHelp::GetReverseHash(const string& strTxHash) {
 	return strHash;
 }
 
-void CSesureTradeHelp::PacketNextContract(unsigned char nStep, unsigned char* pHash, NEXT_CONTRACT* pNextContract) {
-	memset(pNextContract, 0, sizeof(NEXT_CONTRACT));
+void CSesureTradeHelp::PacketNextContract(unsigned char nStep, unsigned char* pHash, NEXT_TRADE_CONTRACT* pNextContract) {
+	memset(pNextContract, 0, sizeof(NEXT_TRADE_CONTRACT));
 	pNextContract->nType = nStep;
 	memcpy(pNextContract->hash, pHash, HASH_SIZE);
 }
