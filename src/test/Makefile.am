@@ -20,6 +20,7 @@ JSON_TEST_FILES = \
   SysTestBase.h \
   CycleTestBase.h \
   CycleTestManger.h \
+  CDarkAndAnony.h  \
   CycleSesureTrade_tests.h
 
 RAW_TEST_FILES = data/alertTests.raw.h
@@ -73,8 +74,9 @@ soypay_test_SOURCES = \
   pressure_tests.cpp \
   CycleTestBase.cpp \
   CycleTestManger.cpp \
+  CDarkAndAnony.cpp \
   scriptdbex_tests.cpp	\
-  CycleSesureTrade_tests.cpp \
+  CycleSesureTrade_tests.cpp \	
   $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 
 #if ENABLE_WALLET

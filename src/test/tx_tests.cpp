@@ -93,7 +93,7 @@ struct CTxTest :public SysTestBase{
 		author.SetLastOperHeight(1);
 		author.SetMaxMoneyPerTime(37);
 		author.SetMaxMoneyTotal(10 * TEST_SIZE);
-		(*(accOperate.pMapAuthorizate))[authorScript] = author;
+		accOperate.mapAuthorizate[authorScript] = author;
 		accOperate.keyID = uint160(1);
 
 //		authorScript = v[0];
@@ -119,8 +119,8 @@ struct CTxTest :public SysTestBase{
 
 		BOOST_CHECK(pAccountViewTip->GetAccount(userId, account));
 		vector<unsigned char> vScriptID = ParseHex(strScriptID);
-		auto it = (*(account.pMapAuthorizate)).find(vScriptID);
-		BOOST_CHECK(it != (*(account.pMapAuthorizate)).end());
+		auto it = account.mapAuthorizate.find(vScriptID);
+		BOOST_CHECK(it != account.mapAuthorizate.end());
 		return it->second;
 	}
 
@@ -232,11 +232,11 @@ struct CTxTest :public SysTestBase{
 	}
 
 	void IsAuthorityEqual(const vector_unsigned_char& scriptID) {
-		auto itBefore = (*accBeforOperate.pMapAuthorizate).find(scriptID);
-		BOOST_CHECK((*accBeforOperate.pMapAuthorizate).end() != itBefore);
+		auto itBefore = accBeforOperate.mapAuthorizate.find(scriptID);
+		BOOST_CHECK(accBeforOperate.mapAuthorizate.end() != itBefore);
 
-		auto it = (*accOperate.pMapAuthorizate).find(scriptID);
-		BOOST_CHECK((*accBeforOperate.pMapAuthorizate).end() != it);
+		auto it = accOperate.mapAuthorizate.find(scriptID);
+		BOOST_CHECK(accBeforOperate.mapAuthorizate.end() != it);
 
 		CAuthorizate& authorizate = it->second;
 		CAuthorizate& authorizateBefor = itBefore->second;
@@ -281,7 +281,7 @@ struct CTxTest :public SysTestBase{
 
 	void CheckAuthorization(const CAuthorizate OldAuth, uint64_t nMoney, int nHeight,
 			const vector<unsigned char>& scriptID) {
-		CAuthorizate newAuthor = (*accOperate.pMapAuthorizate)[scriptID];
+		CAuthorizate newAuthor = accOperate.mapAuthorizate[scriptID];
 		BOOST_CHECK(OldAuth.GetMaxMoneyTotal() == newAuthor.GetMaxMoneyTotal() + nMoney);
 
 		const uint64_t nBlocksPerDay = 24 * 60 / 10;	//amount of blocks that connected into chain per day
@@ -346,7 +346,7 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_free,CTxTest) {
 			uint64_t nOldValue = accOperate.llValues;
 			uint64_t minusValue = random(40) + 1;
 			CFund fund(REWARD_FUND, minusValue, random(20));
-			CAuthorizate OldAuthor = (*accOperate.pMapAuthorizate)[authorScript];
+			CAuthorizate OldAuthor = accOperate.mapAuthorizate[authorScript];
 
 			if (nOldVectorSum >= minusValue) {
 				if (bCheckAuthority) {
@@ -469,7 +469,7 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_self,CTxTest) {
 			uint64_t nOldVectorSum = GetTotalValue(accOperate.vSelfFreeze);
 			uint64_t randValue = random(40);
 			CFund fund(REWARD_FUND, randValue, random(20));
-			CAuthorizate OldAuthor = (*accOperate.pMapAuthorizate)[authorScript];
+			CAuthorizate OldAuthor = accOperate.mapAuthorizate[authorScript];
 
 			if (nOldVectorSum >= randValue) {
 				if (bCheckAuthority) {

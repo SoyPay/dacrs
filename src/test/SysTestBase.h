@@ -155,9 +155,6 @@ public:
 		return true;
 	}
 
-
-
-
 	Value CreateRegScriptTx(const string& strAddress, const string& strScript, bool bRigsterScript, int nFee,
 			int nHeight, const CNetAuthorizate& author);
 

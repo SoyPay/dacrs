@@ -325,8 +325,8 @@ public:
 
 		BOOST_CHECK(pAccountViewTip->GetAccount(userId, account));
 		vector<unsigned char> vScriptID = ParseHex(strScriptID);
-		auto it = (*account.pMapAuthorizate).find(vScriptID);
-		BOOST_CHECK(it != (*account.pMapAuthorizate).end());
+		auto it = account.mapAuthorizate.find(vScriptID);
+		BOOST_CHECK(it != account.mapAuthorizate.end());
 		return it->second;
 	}
 

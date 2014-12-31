@@ -1328,7 +1328,7 @@ Value resetclient(const Array& params, bool fHelp) {
 		}
 		pAccountViewTip->Flush();
 		pScriptDBTip->Flush();
-       if(SysCfg().Network::TESTNET == SysCfg().NetworkID())
+       if(SysCfg().Network::TESTNET == SysCfg().NetworkID()|| SysCfg().Network::TESTNET==SysCfg().NetworkID())
        assert(pAccountViewDB->GetDbCount() == 22);
 //       assert(pScriptDB->GetDbCount() == 0);
 
@@ -1630,11 +1630,16 @@ Value getscriptdbsize(const Array& params, bool fHelp) {
 						"1.\"scriptid\": (string, required)\n";
 				throw runtime_error(msg);
 			}
-	string strScriptId = params[0].get_str();
-	CRegID scriptRegId;
-	scriptRegId.SetRegID(strScriptId);
+	CRegID regid(params[0].get_str());
+	if (regid.IsEmpty() == true) {
+		throw runtime_error("in getscriptdata :vscriptid is error!\n");
+	}
+
+	if (!pScriptDBTip->HaveScript(regid)) {
+		throw runtime_error("in getscriptdata :vscriptid id is not exist!\n");
+	}
 	int nDataCount = 0;
-	if(!pScriptDBTip->GetScriptDataCount(scriptRegId, nDataCount)) {
+	if(!pScriptDBTip->GetScriptDataCount(regid, nDataCount)) {
 		throw runtime_error("GetScriptDataCount error!");
 	}
 	return nDataCount;
@@ -1652,9 +1657,9 @@ Value registaccounttxraw(const Array& params, bool fHelp) {
 				"4.minerpublickey: (string)create height\n"
 				"\nResult:\n"
 				"\"txhash\": (string)\n"
-				"\nExamples:\n" + HelpExampleCli("registaccounttx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 true")
+				"\nExamples:\n" + HelpExampleCli("registaccounttxraw", "10 10000 n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj true")
 				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("registaccounttx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 false");
+				+ HelpExampleRpc("registaccounttxraw", "10 1000000 n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj false");
 		throw runtime_error(msg);
 	}
     CUserID ukey;
@@ -1710,7 +1715,7 @@ Value submittx(const Array& params, bool fHelp) {
 	std::tuple<bool, string> ret;
 	ret = pwalletMain->CommitTransaction((CBaseTransaction *) tx.get());
 	if (!std::get<0>(ret)) {
-		throw JSONRPCError(RPC_WALLET_ERROR, "registerscripttx Error:" + std::get<1>(ret));
+		throw JSONRPCError(RPC_WALLET_ERROR, "submittx Error:" + std::get<1>(ret));
 	}
 	Object obj;
 	obj.push_back(Pair("hash", std::get<1>(ret)));
@@ -1891,9 +1896,9 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 				"\nResult:\n"
 				"\"txhash\": (string)\n"
 				"\nExamples:\n"
-				+ HelpExampleCli("registerscripttx",
+				+ HelpExampleCli("registerscripttxraw",
 						"10 10000 \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" 010203040506 ") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("registerscripttx",
+				+ HelpExampleRpc("registerscripttxraw",
 						"10 10000 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 010203040506 ");
 		throw runtime_error(msg);
 	}
@@ -2043,13 +2048,13 @@ Value sigstr(const Array& params, bool fHelp)
 		string msg = "registerscripttx nrequired \"addr\" \"script\" fee height\n"
 				"\nregister script\n"
 				"\nArguments:\n"
-				"1.\"str\": (str) pay to miner\n"
-				"2.\"addr\": (str)valid height\n"
+				"1.\"str\": (str) sig str\n"
+				"2.\"addr\": (str)\n"
 				"\nExamples:\n"
-				+ HelpExampleCli("registerscripttx",
-						"10 10000 \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" 010203040506 ") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("registerscripttx",
-						"10 10000 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 010203040506 ");
+				+ HelpExampleCli("sigstr",
+						"1010000010203040506 \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" ") + "\nAs json rpc call\n"
+				+ HelpExampleRpc("sigstr",
+						"1010000010203040506 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 010203040506 ");
 		throw runtime_error(msg);
 	}
 	vector<unsigned char> vch(ParseHex(params[0].get_str()));
@@ -2121,9 +2126,9 @@ Value sigstr(const Array& params, bool fHelp)
 			throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
 		}
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
-			std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
-			ds << pBaseTx;
-			obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
+		std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
+		ds << pBaseTx;
+		obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
 	}
 		break;
 	default:
