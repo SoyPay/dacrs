@@ -110,18 +110,40 @@ bool SysTestBase::ResetEnv() {
 	}
 
 	char* pKey[] = {
-					"cUa4v77hiXteMFkHoyuPVVbCCULS1CnFBhU1MhgKHEGRTHmd4BC5",// addr:  mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz
-					"cTAqnCwjuLwXqHxGe5c6KrGqQw5yjHH6Na6yYRQCgKKnf6cJBPxF",// addr:  mfzdtseoKfMpTd8V9N2xETEqUSWRujndgZ
+			        /*for bess test*/
+					//"cUa4v77hiXteMFkHoyuPVVbCCULS1CnFBhU1MhgKHEGRTHmd4BC5",// addr:  mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz
+					//"cTAqnCwjuLwXqHxGe5c6KrGqQw5yjHH6Na6yYRQCgKKnf6cJBPxF",// addr:  mfzdtseoKfMpTd8V9N2xETEqUSWRujndgZ
 					"cVFWoy8jmJVVSNnMs3YRizkR7XEekMTta4MzvuRshKuQEEJ4kbNg",// addr:  mjSwCwMsvtKczMfta1tvr78z2FTsZA1JKw
+					"cNcJkU44oG3etbWoEvY46i5qWPeE8jVb7K44keXxEQxsXUZ85MKU",//"address" : "mnnS4upLeY7RZpNnvoGMZzs9ELscQjtvqy",
+					"cStrXy6NowsDyaLRJMhQCJu4WnP6WR6SMC1c3dmxDeeLKFcYHDsQ",//"address" : "mscmxFbxRfBUiH4drYNA2nCoFXuausKjd7",
+
+
+					/*for yang test*/
 					"cSu84vACzZkWqnP2LUdJQLX3M1PYYXo2gEDDCEKLWNWfM7B4zLiP",// addr:  mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc
 					"cSVY69D9aUo4MugzUG9rM14DtV21cBAbZUVXmgAC2RpJwtZRUbsM",// addr:  mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y
 					"cTCcDyQvX6ucP9NEjhyHfTixamKQHQkFiSyfupm4CGZZYV7YYnf8",// addr:  moZJZgsGFC4qvwRdjzS7Bj3fHrtpUfEVEE
+
+					/*for franklin test*/
 					"cUwPkEYdg3d3CmNctg2aegdyeq7dbLta1HAVHcGQTp33kWqzMSuT ",//addr:  mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5
+					/*for spark test*/
 					"cPqVgscsWpPgkLHZP3pKJVSU5ZTCCvVhkd5cmXVWVydXdMTtBGj7",// addr:  mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v
 					"cU1dxQgvyKt8yEqqkKiNLK9jfyW498RKi8y2evqzjtLXrLD4fBMs",// addr:  mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7
 					"cRYYMN1EFd9X4sGqEkUkWLi38GCFyAccKQEuF1WiYFwUWsqBGwHe",// addr:  n4muwAThwzWvuLUh74nL3KYwujhihke1Kb
+					/*for ranger test*/
 					"cR5wPiv3Vp4sQmww2gWzShkDUaamYrJ6QHHtDd1Pm4nVJFTxnksC",// addr:  mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA
 					"cT1BuRbx5Cvmvic2dX2aq3ep2fu75CDwYk8fCQPtrftKiBEQiPJm",// addr:  msdDQ1SXNmknrLuTDivmJiavu5J9VyX9fV
+
+					/*remain for test*/
+					"cNcJkU44oG3etbWoEvY46i5qWPeE8jVb7K44keXxEQxsXUZ85MKU",//"address" : "mnnS4upLeY7RZpNnvoGMZzs9ELscQjtvqy",
+					"cStrXy6NowsDyaLRJMhQCJu4WnP6WR6SMC1c3dmxDeeLKFcYHDsQ",//"address" : "mscmxFbxRfBUiH4drYNA2nCoFXuausKjd7",
+					"cN2xNMvvNCtqh1K87J9o35cHHQttdZi1MYgUj8FYZPdtaFTtxbtd",//"address" : "mg7xvMhw9Jt7Rys8nWhjXujbGNaeFn3x4L",
+					"cU8kr9JvCXotPoBQZ4TPxkD2S98ZFz2AKLDupMt8hgNG4JLQ1b2x",//"address" : "mx5j59nsCVBVNs8zqeAE6rM1JEELRnY3KX",
+					"cSvRSiQGS6d11CbY4Mac1sCN84YHyNsFvNZ5xgBM1FHUSi7fgcaA",//"address" : "mxu7hQuPeV1Lom3NaHfLh8oe2J6z3dKB22",
+					"cMv5HP4EPsX4Fmvj2Zgtpq5MfAbVRxwunqNtK2qjVrMdfvv36Zr3",//"address" : "mron8pog28KpwFjsEgmQ2jEg3UiRkEwqyV",
+					"cQXpVRxwXqeh8FjSxkGE7sYrzXLXPdoHeUQCdJk9uLy17F3WKbPM",//"address" : "mx8yEhL6DCo7WFkpn4gTW2dqoWB7oXpvfV",
+					"cVNeGiYHhtaVSvmCswUs8jootYPFJisVwx6gqBbkeWSftkXeaHbC",//"address" : "mfe3zNfFTkeD9JSzmgidihv1tb8AxLVtRT",
+					"cNjb55M6fqNVuhKmNE95C8weWYr6iD2yW6QqifYWSvuVGKUJRTt9",//"address" : "mfXrwgAt5LezYerS9NRCiPUxtHNChrxyiT",
+
 	};
 
 	int nCount = sizeof(pKey) / sizeof(char*);
