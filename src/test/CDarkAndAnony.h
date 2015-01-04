@@ -137,6 +137,7 @@ public:
 		darkhash = Parsejson(darkhash);
 	    anonyhahs = Parsejson(anonyhahs);
 	    step++;
+	    BOOST_CHECK(basetest.GenerateOneBlock());
 	    return true;
 	}
 	bool step1RegistScript() {
