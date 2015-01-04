@@ -1208,9 +1208,10 @@ public:
 		unsigned int nSerSize = 0;
 		ser_streamplaceholder s;
 		s.nType = nType;
+		s.nVersion = nVersion;
 		vector<unsigned char> vData;
 		vData.clear();
-		if(bValid) {
+		if (bValid) {
 			CDataStream ds(SER_DISK, CLIENT_VERSION);
 			ds << bValid;
 			ds << VARINT(nLastOperHeight);
@@ -1218,10 +1219,9 @@ public:
 			ds << VARINT(nLastMaxMoneyTotal);
 			ds << scriptID;
 			vData.insert(vData.end(), ds.begin(), ds.end());
-		}
-		s.nVersion = nVersion;
-		{
 			(nSerSize += ::SerReadWrite(s, (vData), nType, nVersion, ser_action));
+		} else {
+			(nSerSize += ::SerReadWrite(s, (bValid), nType, nVersion, ser_action));
 		}
 		return nSerSize;
 	}
@@ -1231,7 +1231,7 @@ public:
 		unsigned int nSerSize = 0;
 		vector<unsigned char> vData;
 		vData.clear();
-		if(bValid) {
+		if (bValid) {
 			CDataStream ds(SER_DISK, CLIENT_VERSION);
 			ds << bValid;
 			ds << VARINT(nLastOperHeight);
@@ -1239,8 +1239,8 @@ public:
 			ds << VARINT(nLastMaxMoneyTotal);
 			ds << scriptID;
 			vData.insert(vData.end(), ds.begin(), ds.end());
-		}
-		{
+			(nSerSize += ::SerReadWrite(s, (vData), nType, nVersion, ser_action));
+		} else {
 			(nSerSize += ::SerReadWrite(s, (bValid), nType, nVersion, ser_action));
 		}
 	}
@@ -1250,9 +1250,7 @@ public:
 		unsigned int nSerSize = 0;
 		vector<unsigned char> vData;
 		vData.clear();
-		{
-			(nSerSize += ::SerReadWrite(s, (vData), nType, nVersion, ser_action));
-		}
+		(nSerSize += ::SerReadWrite(s, (vData), nType, nVersion, ser_action));
 		if (!vData.empty()) {
 			CDataStream ds(vData, SER_DISK, CLIENT_VERSION);
 			ds >> bValid;
