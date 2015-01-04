@@ -3869,6 +3869,7 @@ bool ProcessMessages(CNode* pfrom)
             {
                 // Allow exceptions from under-length message on vRecv
                 LogPrint("INFO","ProcessMessages(%s, %u bytes) : Exception '%s' caught, normally caused by a message being shorter than its stated length\n", strCommand, nMessageSize, e.what());
+                LogPrint("INFO","ProcessMessages(%s, %u bytes) : %s\n",strCommand,  nMessageSize, HexStr(vRecv.begin(), vRecv.end()).c_str());
             }
             else if (strstr(e.what(), "size too large"))
             {
