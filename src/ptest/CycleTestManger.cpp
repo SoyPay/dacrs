@@ -30,9 +30,10 @@ class CycleTestManger {
 
 public:
 	CycleTestManger(){
-		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
-		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
-		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
+//		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
+//		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
+//		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
+		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
 		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
 	};
 	void run() {
@@ -67,7 +68,7 @@ BOOST_FIXTURE_TEST_SUITE(CycleTest,CycleTestManger)
 
 BOOST_FIXTURE_TEST_CASE(Cycle,CycleTestManger)
 {
-//	run();
+	run();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
