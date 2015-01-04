@@ -1,7 +1,7 @@
 #ifndef CYCLESESURETRADE_H_
 #define CYCLESESURETRADE_H_
 
-#include "SysTestBase.h"
+#include "../test/SysTestBase.h"
 #include "CycleTestBase.h"
 
 #define BUYER	"01"

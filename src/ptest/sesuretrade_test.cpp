@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include "SysTestBase.h"
+#include "../test/SysTestBase.h"
 #include "CycleSesureTrade_tests.h"
 using namespace std;
 using namespace boost;

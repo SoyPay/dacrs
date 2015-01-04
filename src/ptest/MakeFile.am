@@ -29,4 +29,16 @@ soypay_ptest_SOURCES = \
   mining_tests.cpp	\
   regscript_test.cpp \
   darkanony_ptest.cpp \
-  create_tx_tests.cpp 
+  create_tx_tests.cpp \
+  CDarkAndAnony.cpp	\
+  ../test/SysTestBase.cpp \
+  CycleSesureTrade_tests.cpp	\
+  CycleTestBase.cpp	\
+  CycleTestManger.cpp \
+  sesuretrade_test.cpp	\
+  CycleTestManger.h	\
+  CycleTestBase.h	\
+  CycleSesureTrade_tests.h	\
+  CDarkAndAnony.h	\
+  ../test/SysTestBase.h
+  

@@ -18,11 +18,6 @@ JSON_TEST_FILES = \
   data/tx_valid.json.h \
   data/sighash.json.h	\
   SysTestBase.h \
-  CycleTestBase.h \
-  CycleTestManger.h \
-  CDarkAndAnony.h  \
-  CycleSesureTrade_tests.h
-
 RAW_TEST_FILES = data/alertTests.raw.h
 
 #BUILT_SOURCES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
@@ -68,15 +63,10 @@ soypay_test_SOURCES = \
   SysTestBase.cpp	\
   SysTestScript.cpp \
   SysRegisterAcc_test.cpp \
-  sesuretrade_test.cpp \
   p2pBet_test.cpp \
   p2plottery_test.cpp \
   pressure_tests.cpp \
-  CycleTestBase.cpp \
-  CycleTestManger.cpp \
-  CDarkAndAnony.cpp \
   scriptdbex_tests.cpp	\
-  CycleSesureTrade_tests.cpp \	
   $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 
 #if ENABLE_WALLET
