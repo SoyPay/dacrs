@@ -59,6 +59,7 @@ CUserID CID::GetUserId() {
 		return CNullID();
 	}
 	else {
+		LogPrint("ERROR", "vchData:%s, len:%d\n", HexStr(vchData).c_str(), vchData.size());
 		assert(0);
 	}
 	return CNullID();

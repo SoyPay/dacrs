@@ -50,7 +50,7 @@ private:
 	CKey  mCkey;
 	CPubKey  mMinerPk; //only used for miner
 	CKey  mMinerCkey; //only used for miner
-	INT64 nCreationTime;
+	int64_t nCreationTime;
 public:
 
 	bool SelfCheck() const;
@@ -60,7 +60,7 @@ public:
 	}
 	Object ToJsonObj()const;
 	bool UnSersailFromJson(const Object&);
-	INT64 getBirthDay()const
+	int64_t getBirthDay()const
 	{
 		return nCreationTime;
 	}
