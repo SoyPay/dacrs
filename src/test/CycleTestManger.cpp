@@ -14,6 +14,7 @@
 #include "util.h"
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
+
 #include "json/json_spirit_writer_template.h"
 #include "CDarkAndAnony.h"
 #include "rpcclient.h"
@@ -22,19 +23,17 @@ using namespace boost;
 using namespace json_spirit;
 #include "CycleTestBase.h"
 #include "CycleTestManger.h"
+#include "CycleSesureTrade_tests.h"
 class CycleTestManger {
 
 	vector<std::shared_ptr<CycleTestBase> > vTest;
 
 public:
 	CycleTestManger(){
-		MilliSleep(10000);
-//	vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
-	vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
-//	vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
-//	vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
-//	vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
-//
+		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
+		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
+		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
+		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
 	};
 	void run() {
 
@@ -68,7 +67,6 @@ BOOST_FIXTURE_TEST_SUITE(CycleTest,CycleTestManger)
 
 BOOST_FIXTURE_TEST_CASE(Cycle,CycleTestManger)
 {
-
 //	run();
 }
 
