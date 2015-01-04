@@ -28,7 +28,8 @@ class CycleTestManger {
 
 public:
 	CycleTestManger(){
-	vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
+		MilliSleep(10000);
+//	vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
 	vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
 //	vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
 //	vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
@@ -67,6 +68,7 @@ BOOST_FIXTURE_TEST_SUITE(CycleTest,CycleTestManger)
 
 BOOST_FIXTURE_TEST_CASE(Cycle,CycleTestManger)
 {
+
 //	run();
 }
 

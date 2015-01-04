@@ -23,11 +23,29 @@ void DetectShutdownThread(boost::thread_group* threadGroup) {
 	}
 }
 
+bool PrintTestNotSetPara()
+{
+	bool flag = false;
+	if(SysCfg().GetArg("-listen",flag))
+	{
+		cout<<"the test of config file the listen param must be false"<<endl;
+	}
+	if(SysCfg().GetArg("-connect",flag))
+	{
+		cout<<"the test of the config file the connect param must be false"<<endl;
+	}
+	if(SysCfg().GetArg("-iscutmine",flag))
+	{
+		cout<<"the test of config file the connect param must be false"<<endl;
+	}
+}
 bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {
 	bool fRet = false;
 	try {
 		CBaseParams::IntialParams(argc, argv);
 		SysCfg().InitalConfig();
+
+		PrintTestNotSetPara();
 
 		if (SysCfg().IsArgCount("-?") || SysCfg().IsArgCount("--help")) {
 			// First part of help message is specific to Dacrsd / RPC client
