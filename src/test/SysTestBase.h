@@ -166,8 +166,6 @@ public:
 
 	uint64_t GetFreeMoney(const string& strID);
 
-	bool GetOneAddr(std::string &addr, char *pStrMinMoney, char *bpBoolReg);
-
 	bool GetOneScriptId(std::string &regscriptid);
 
 	bool GetNewAddr(std::string &addr,bool flag);
@@ -178,9 +176,9 @@ public:
 
 	bool CreateNormalTx(const std::string &srcAddr, const std::string &desAddr, const int nHeight);
 
-	bool CreateFreezeTx(const std::string &addr, const int nHeight);
+	Value CreateFreezeTx(const std::string &addr, const int nHeight);
 
-	bool registaccounttx(const std::string &addr, const int nHeight);
+	Value registaccounttx(const std::string &addr, const int nHeight);
 
 	Value PCreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 			int nHeight,int nFee = 10000);
@@ -196,9 +194,6 @@ public:
 
 	Value ModifyAuthor(const string& strAddress, const string& strScript, int nHeight, int nFee,
 			const CNetAuthorizate& author);
-
-	bool CreateSecureTx(const string &scriptid, const vector<string> &obaddrs, const vector<string> &addrs,
-			const string&contract, const int nHeight);
 
 	Value SignSecureTx(const string &securetx);
 

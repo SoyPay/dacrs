@@ -344,20 +344,6 @@ uint64_t SysTestBase::GetFreeMoney(const string& strID) {
 	return nMoney;
 }
 
-bool SysTestBase::GetOneAddr(std::string &addr, char *pStrMinMoney, char *bpBoolReg) {
-	//CommanRpc
-	char *argv[] = { "rpctest", "getoneaddr", pStrMinMoney, bpBoolReg };
-	int argc = sizeof(argv) / sizeof(char*);
-
-	Value value;
-	if (CommandLineRPC_GetValue(sizeof(argv) / sizeof(argv[0]), argv, value)) {
-		addr = value.get_str();
-		LogPrint("test_miners", "GetOneAddr:%s\r\n", addr.c_str());
-		return true;
-	}
-	return false;
-}
-
 bool SysTestBase::GetOneScriptId(std::string &regscriptid) {
 	//CommanRpc
 	char *argv[] = { "rpctest", "listregscript","false" };
@@ -469,7 +455,7 @@ bool SysTestBase::CreateNormalTx(const std::string &srcAddr, const std::string &
 	return false;
 }
 
-bool SysTestBase::CreateFreezeTx(const std::string &addr, const int nHeight) {
+Value SysTestBase::CreateFreezeTx(const std::string &addr, const int nHeight) {
 	//CommanRpc
 	char caddr[64] = { 0 };
 	strncpy(caddr, addr.c_str(), sizeof(caddr) - 1);
@@ -495,13 +481,13 @@ bool SysTestBase::CreateFreezeTx(const std::string &addr, const int nHeight) {
 
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		LogPrint("test_miners", "CreateFreezeTx:%s\r\n", value.get_str().c_str());
-		return true;
+	//	LogPrint("test_miners", "CreateFreezeTx:%s\r\n", value.get_str().c_str());
+		return value;
 	}
-	return false;
+	return value;
 }
 
-bool SysTestBase::registaccounttx(const std::string &addr, const int nHeight) {
+Value SysTestBase::registaccounttx(const std::string &addr, const int nHeight) {
 	//CommanRpc
 	char caddr[64] = { 0 };
 	strncpy(caddr, addr.c_str(), sizeof(caddr) - 1);
@@ -520,10 +506,10 @@ bool SysTestBase::registaccounttx(const std::string &addr, const int nHeight) {
 	Value value;
 
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		LogPrint("test_miners", "RegisterSecureTx:%s\r\n", value.get_str().c_str());
-		return true;
+	//	LogPrint("test_miners", "RegisterSecureTx:%s\r\n", value.get_str().c_str());
+		return value;
 	}
-	return false;
+	return value;
 }
 Value SysTestBase::CreateContractTx1(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 			const int nHeight)
@@ -544,11 +530,9 @@ Value SysTestBase::CreateContractTx1(const std::string &scriptid, const std::str
 
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
-	//	LogPrint("test_miners", "createcontracttx:%s\r\n", value.get_str().c_str());
 		const Value& result = find_value(value.get_obj(), "hash");
 		return value;
 	}
-//	LogPrint("test_miners", "createcontracttx:%s\r\n", value.get_str().c_str());
 	return value;
 }
 bool SysTestBase::CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
@@ -651,51 +635,6 @@ Value SysTestBase::RegisterScriptTx(const string& strAddress, const string& strS
 Value SysTestBase::ModifyAuthor(const string& strAddress, const string& strScript, int nHeight, int nFee,
 		const CNetAuthorizate& author) {
 	return CreateRegScriptTx(strAddress, strScript, false, nFee, nHeight, author);
-}
-
-bool SysTestBase::CreateSecureTx(const string &scriptid, const vector<string> &obaddrs, const vector<string> &addrs,
-		const string&contract, const int nHeight) {
-	//CommanRpc
-	char cscriptid[64] = { 0 };
-	strncpy(cscriptid, scriptid.c_str(), sizeof(cscriptid) - 1);
-
-	char cobstr[512] = { 0 };
-	{
-		Array array;
-		array.clear();
-		for (const auto &str : obaddrs) {
-			array.push_back(str);
-		}
-		string arraystr = write_string(Value(array), false);
-		strncpy(cobstr, arraystr.c_str(), sizeof(cobstr) - 1);
-	}
-	char addrstr[512] = { 0 };
-	{
-		Array array;
-		array.clear();
-		for (const auto &str : addrs) {
-			array.push_back(str);
-		}
-		string arraystr = write_string(Value(array), false);
-		strncpy(addrstr, arraystr.c_str(), sizeof(addrstr) - 1);
-	}
-
-	char ccontract[10 * 1024] = { 0 };
-	strncpy(ccontract, contract.c_str(), sizeof(ccontract) - 1);
-
-	char height[16] = { 0 };
-	sprintf(height, "%d", nHeight);
-
-	char *argv[] = { "rpctest", "createsecuretx", cscriptid, cobstr, addrstr, ccontract, "1000000", height };
-	int argc = sizeof(argv) / sizeof(char*);
-
-	Value value;
-	int ret = CommandLineRPC_GetValue(argc, argv, value);
-	if (!ret) {
-		LogPrint("test_miners", "CreateSecureTx:%s\r\n", value.get_str().c_str());
-		return true;
-	}
-	return false;
 }
 
 Value SysTestBase::SignSecureTx(const string &securetx) {
