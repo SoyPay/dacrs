@@ -1089,7 +1089,7 @@ bool CScriptDBViewCache::SetAuthorizate(const CRegID &acctRegId, const CRegID &s
 	vValue.assign(ds.begin(), ds.end());
 	return SetData(vKey, vValue);
 }
-uint256 CTransactionDBView::IsContainTx(const uint256 & txHash) { return false; }
+uint256 CTransactionDBView::IsContainTx(const uint256 & txHash) { return std::move(uint256(0)); }
 bool CTransactionDBView::IsContainBlock(const CBlock &block) { return false; }
 bool CTransactionDBView::AddBlockToCache(const CBlock &block) { return false; }
 bool CTransactionDBView::DeleteBlockFromCache(const CBlock &block) { return false; }
@@ -1102,7 +1102,7 @@ CTransactionDBViewBacked::CTransactionDBViewBacked(CTransactionDBView &transacti
 	pBase = &transactionView;
 }
 uint256 CTransactionDBViewBacked::IsContainTx(const uint256 & txHash) {
-	return pBase->IsContainTx(txHash);
+	return std::move(pBase->IsContainTx(txHash));
 }
 bool CTransactionDBViewBacked::IsContainBlock(const CBlock &block) {
 	return pBase->IsContainBlock(block);
@@ -1183,9 +1183,9 @@ uint256 CTransactionDBCache::IsContainTx(const uint256 & txHash) {
 	}
 	uint256 blockHash = pBase->IsContainTx(txHash);
 	if(IsInMap(mapTxHashByBlockHash,blockHash)){//mapTxHashByBlockHash[blockHash].empty()) { // [] 运算符防止不小心加入了垃圾数据
-		return blockHash;
+		return std::move(blockHash);
 	}
-	return uint256(0);
+	return std::move(uint256(0));
 }
 
 map<uint256, vector<uint256> > CTransactionDBCache::GetTxHashCache(void) {

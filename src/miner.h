@@ -73,7 +73,7 @@ void SHA256Transform(void* pstate, void* pinput, const void* pinit);
 /** Get burn element */
 uint64_t GetElementForBurn(CBlockIndex *pindex);
 
-void GetPriorityTx(vector<TxPriority> &vecPriority, map<uint256, vector<COrphan*> > &mapDependers);
+void GetPriorityTx(vector<TxPriority> &vecPriority);
 //extern double dHashesPerSec;
 //extern int64_t nHPSTimerStart;
 

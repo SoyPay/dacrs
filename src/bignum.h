@@ -239,7 +239,7 @@ public:
         uint256 n = 0;
         for (unsigned int i = 0, j = vch.size()-1; i < sizeof(n) && j >= 4; i++, j--)
             ((unsigned char*)&n)[i] = vch[j];
-        return n;
+        return std::move(n);
     }
 
     void setvch(const vector<unsigned char>& vch)
