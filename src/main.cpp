@@ -1217,19 +1217,24 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
 
 //    LogPrint("INFO","%s", blockUndo.ToString());
 
+//    int64_t llTime = GetTimeMillis();
     //undo reward tx
     std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[0];
 	CTxUndo txundo = blockUndo.vtxundo.back();
 	if(!pBaseTx->UndoUpdateAccount(0, view, state, txundo, pindex->nHeight, txCache, scriptCache))
 		return false;
+//	LogPrint("INFO", "reward tx undo elapse:%lld ms\n", GetTimeMillis() - llTime);
 
     // undo transactions in reverse order
     for (int i = block.vptx.size() - 1; i >= 1; i--) {
+//    	llTime = GetTimeMillis();
         std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[i];
         CTxUndo txundo = blockUndo.vtxundo[i-1];
         if(!pBaseTx->UndoUpdateAccount(i, view, state, txundo, pindex->nHeight, txCache, scriptCache))
         	return false;
+//        LogPrint("INFO", "tx type:%d, undo elapse:%lld ms\n", pBaseTx->nTxType, GetTimeMillis() - llTime);
     }
+
 
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
@@ -2587,8 +2592,10 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth)
     CBlockIndex* pindexFailure = NULL;
     int nGoodTransactions = 0;
     CValidationState state;
+ //   int64_t llTime = 0;
     for (CBlockIndex* pindex = chainActive.Tip(); pindex && pindex->pprev; pindex = pindex->pprev)
     {
+//    	llTime = GetTimeMillis();
         boost::this_thread::interruption_point();
         if (pindex->nHeight < chainActive.Height()-nCheckDepth)
             break;
@@ -2622,6 +2629,7 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth)
             } else
                 nGoodTransactions += block.vptx.size();
         }
+//        LogPrint("INFO", "VerifyDB block height:%d, hash:%s ,elapse time:%lld ms\n", pindex->nHeight, pindex->GetBlockHash().GetHex(), GetTimeMillis() - llTime);
     }
     if (pindexFailure)
         return ERROR("VerifyDB() : *** coin database inconsistencies found (last %i blocks, %i good transactions before that)\n", chainActive.Height() - pindexFailure->nHeight + 1, nGoodTransactions);
@@ -2693,11 +2701,6 @@ bool InitBlockIndex() {
     }
 
     return true;
-}
-
-bool LoadTransactionCacheDB() {
-
-
 }
 
 void PrintBlockTree()

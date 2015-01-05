@@ -319,19 +319,22 @@ bool CTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValid
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	CAccount sourceAccount;
 	CAccount desAccount;
+//	int64_t llTime = GetTimeMillis();
 	CID srcId(srcUserId);
 	if (!view.GetAccount(srcUserId, sourceAccount))
 		return state.DoS(100,
 				ERROR("UpdateAccounts() : read source addr %s account info error", HexStr(srcId.GetID())),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
-
+//	LogPrint("INFO", "get src account elapse:%lld\n", GetTimeMillis()-llTime);
+//	llTime = GetTimeMillis();
 	CID destId(desUserId);
 	if (!view.GetAccount(desUserId, desAccount)) {
 		return state.DoS(100,
 				ERROR("UpdateAccounts() : read destination addr %s account info error", HexStr(destId.GetID())),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	}
-
+//	LogPrint("INFO", "get des account elapse:%lld\n", GetTimeMillis() - llTime);
+//	llTime = GetTimeMillis();
 	for(auto &itemLog : txundo.vAccountOperLog){
 		if(itemLog.keyID == sourceAccount.keyID) {
 			sourceAccount.UndoOperateAccount(itemLog);
@@ -339,13 +342,17 @@ bool CTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValid
 			desAccount.UndoOperateAccount(itemLog);
 		}
 	}
+//	LogPrint("INFO", "undo account elapse:%lld \n", GetTimeMillis() - llTime);
+//	llTime = GetTimeMillis();
 	vector<CAccount> vAccounts;
 	vAccounts.push_back(sourceAccount);
 	vAccounts.push_back(desAccount);
-
+//	LogPrint("INFO", "push back account into vector elapse:%lld \n", GetTimeMillis() - llTime);
+//	llTime = GetTimeMillis();
 	if (!view.BatchWrite(vAccounts))
 		return state.DoS(100, ERROR("UpdateAccounts() : batch save accounts info error"), UPDATE_ACCOUNT_FAIL,
 				"bad-read-accountdb");
+//	LogPrint("INFO", "save account elapse:%lld \n", GetTimeMillis() - llTime);
 	return true;
 }
 bool CTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {

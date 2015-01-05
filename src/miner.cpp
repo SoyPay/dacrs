@@ -877,7 +877,6 @@ void static DacrsMiner(CWallet *pwallet) {
 						}
 					break;
 				}
-
 				// Check for stop or if block needs to be rebuilt
 				boost::this_thread::interruption_point();
 				if (vNodes.empty() && SysCfg().NetworkID() != CBaseParams::REGTEST)
