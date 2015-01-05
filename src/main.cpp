@@ -3441,6 +3441,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 		vector<uint256> vEraseQueue;
 		std::shared_ptr<CBaseTransaction> pBaseTx = CreateNewEmptyTransaction(vRecv[0]);
 
+		if(REWARD_TX == pBaseTx->nTxType)
+			return ERROR("reward tx can't be transfer in network,Hex:%s",HexStr(vRecv.begin(), vRecv.end()));
+
 		vRecv >> pBaseTx;
 
 		CInv inv(MSG_TX, pBaseTx->GetHash());
