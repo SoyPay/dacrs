@@ -283,7 +283,7 @@ private:
 	INT8U m_ChipSfr[256];
 	INT8U m_ExRam[65536];
 	INT8U m_ExeFile[65536];
-	INT8U m_ChipRamoper[256];
+//	INT8U m_ChipRamoper[256];
 
 	template<class T> friend class CUPReg;
 	friend class CUPReg_a;

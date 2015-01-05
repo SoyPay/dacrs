@@ -6330,19 +6330,7 @@ bool CTestMcu::IsOdd(unsigned char un) {
 	}
 }
 
-string CTestMcu::PrintCMDUntested(void) {
-	int kk = 0;
-	for (int ii = 0; ii <= 0xff; ii++) {
-		if (pCVir8051->m_ChipRamoper[ii] == 0) {
-			kk++;
-			if (kk % 5 == 0) {
-				LogPrint("\r\n");
-			}
-			LogPrint("%x ", ii);
-		}
-	}
-	return "OK";
-}
+
 void CTestMcu::TestRun() {
 	pCVir8051->StepRun(pCVir8051->GetOpcode());
 }

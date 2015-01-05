@@ -24,7 +24,7 @@ uint256 CBlock::BuildMerkleTree() const
 {
     vMerkleTree.clear();
 	for (const auto& ptx : vptx) {
-		vMerkleTree.push_back(ptx->GetHash());
+		vMerkleTree.push_back(std::move(ptx->GetHash()));
 	}
     int j = 0;
     for (int nSize = vptx.size(); nSize > 1; nSize = (nSize + 1) / 2)
@@ -32,12 +32,12 @@ uint256 CBlock::BuildMerkleTree() const
         for (int i = 0; i < nSize; i += 2)
         {
             int i2 = min(i+1, nSize-1);
-            vMerkleTree.push_back(Hash(BEGIN(vMerkleTree[j+i]),  END(vMerkleTree[j+i]),
-                                       BEGIN(vMerkleTree[j+i2]), END(vMerkleTree[j+i2])));
+            vMerkleTree.push_back(std::move(Hash(BEGIN(vMerkleTree[j+i]),  END(vMerkleTree[j+i]),
+                                       BEGIN(vMerkleTree[j+i2]), END(vMerkleTree[j+i2]))));
         }
         j += nSize;
     }
-    return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
+    return (vMerkleTree.empty() ? std::move(uint256(0)) : std::move(vMerkleTree.back()));
 }
 
 vector<uint256> CBlock::GetMerkleBranch(int nIndex) const
@@ -88,11 +88,11 @@ void CBlock::print(CAccountViewCache &view) const
         hashMerkleRoot.ToString(),
         nTime, nBits, nNonce,
         vptx.size());
-	LogPrint("INFO","list transactions: \n");
-    for (unsigned int i = 0; i < vptx.size(); i++)
-    {
-    	LogPrint("INFO","%s ", vptx[i]->ToString(view));
-    }
+//	LogPrint("INFO","list transactions: \n");
+//    for (unsigned int i = 0; i < vptx.size(); i++)
+//    {
+//    	LogPrint("INFO","%s ", vptx[i]->ToString(view));
+//    }
 //    LogPrint("INFO","  vMerkleTree: ");
 //    for (unsigned int i = 0; i < vMerkleTree.size(); i++)
 //    	LogPrint("INFO","%s ", vMerkleTree[i].ToString());

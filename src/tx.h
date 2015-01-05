@@ -479,7 +479,7 @@ public:
 	}
 
 	uint256 GetHash() const {
-		return SerializeHash(*this);
+		return std::move(SerializeHash(*this));
 	}
 
 	double GetPriority() const {
@@ -575,7 +575,7 @@ public:
 	}
 
 	uint256 GetHash() const {
-		return SerializeHash(*this);
+		return std::move(SerializeHash(*this));
 	}
 
 	double GetPriority() const {
@@ -747,7 +747,7 @@ public:
 	}
 
 	uint256 GetHash() const {
-		return SerializeHash(*this);
+		return std::move(SerializeHash(*this));
 	}
 
 	IMPLEMENT_SERIALIZE
@@ -846,7 +846,7 @@ public:
 	)
 
 	uint256 GetHash() const {
-		return SerializeHash(*this);
+		return std::move(SerializeHash(*this));
 	}
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
@@ -928,7 +928,7 @@ public:
 	)
 
 	uint256 GetHash() const {
-		return SerializeHash(*this);
+		return std::move(SerializeHash(*this));
 	}
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {

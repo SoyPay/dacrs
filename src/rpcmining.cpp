@@ -125,7 +125,7 @@ Value getnetworkhashps(const Array& params, bool fHelp)
 
 Value setgenerate(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 1 || params.size() > 2)
+    if (fHelp || (params.size() != 1 && params.size() != 2))
         throw runtime_error(
             "setgenerate generate ( genproclimit )\n"
             "\nSet 'generate' true or false to turn generation on or off.\n"
@@ -148,48 +148,45 @@ Value setgenerate(const Array& params, bool fHelp)
     set<CKeyID>dmuy;
     if(!pwalletMain->GetKeyIds(dmuy,true))
     	throw JSONRPCError(RPC_INVALID_PARAMS, "no key for mining");
-    bool fGenerate = true;
+    bool fGenerate = false;
     if (params.size() > 0)
         fGenerate = params[0].get_bool();
 
-    int nGenProcLimit = -1;
-    if (params.size() > 1)
+    int nGenProcLimit = 1;
+    if (params.size() == 2)
     {
         nGenProcLimit = params[1].get_int();
-        if (nGenProcLimit == 0)
-            fGenerate = false;
+        if (nGenProcLimit > 1000)
+        	throw JSONRPCError(RPC_INVALID_PARAMS, "mining block > 1000 is INVALID");
     }
 
     // -regtest mode: don't return until nGenProcLimit blocks are generated
-    if (fGenerate && SysCfg().NetworkID() != CBaseParams::MAIN)
-    {
-        int nHeightStart = 0;
-        int nHeightEnd = 0;
-        int nHeight = 0;
-        int nGenerate = (nGenProcLimit > 0 ? nGenProcLimit : 1);
-        {   // Don't keep cs_main locked
-            LOCK(cs_main);
-            nHeightStart = chainActive.Height();
-            nHeight = nHeightStart;
-            nHeightEnd = nHeightStart+nGenerate;
-        }
-        int nHeightLast = -1;
-        while (nHeight < nHeightEnd)
-        {
-            if (nHeightLast != nHeight)
-            {
-                nHeightLast = nHeight;
-                GenerateSoys(fGenerate, pwalletMain, 1);
-            }
-            MilliSleep(1);
-            {   // Don't keep cs_main locked
-                LOCK(cs_main);
-                nHeight = chainActive.Height();
-            }
-            //break;//leo
-        }
+	if (SysCfg().NetworkID() != CBaseParams::MAIN) {
+		if (SysCfg().GetBoolArg("-iscutmine", false) == true) //如果是持续挖矿
+				{
+			GenerateSoys(fGenerate, pwalletMain, 1);
+		} else {//如果是一个一个地挖
 
-    }
+			int nHeightEnd = 0;
+			auto getcurhigh = [&]() {
+				LOCK(cs_main);
+				return chainActive.Height();
+			};
+			int curhigh = getcurhigh();
+			nHeightEnd = curhigh + nGenProcLimit;
+
+			int high =-1;
+
+			while (getcurhigh()  < nHeightEnd) {
+				if (getcurhigh() != high) {
+					high = getcurhigh();
+					GenerateSoys(true, pwalletMain, 1);
+				}
+				MilliSleep(100);
+			}
+		}
+
+	}
     else // Not -regtest: start generate thread, return immediately
     {
     	SysCfg().SoftSetArgCover("-gen", fGenerate ?"1" : "0");

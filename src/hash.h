@@ -24,7 +24,7 @@ inline uint256 Hash(const T1 pbegin, const T1 pend)
     SHA256((pbegin == pend ? pblank : (unsigned char*)&pbegin[0]), (pend - pbegin) * sizeof(pbegin[0]), (unsigned char*)&hash1);
     uint256 hash2;
     SHA256((unsigned char*)&hash1, sizeof(hash1), (unsigned char*)&hash2);
-    return hash2;
+    return std::move(hash2);
 }
 
 class CHashWriter
@@ -55,7 +55,7 @@ public:
         SHA256_Final((unsigned char*)&hash1, &ctx);
         uint256 hash2;
         SHA256((unsigned char*)&hash1, sizeof(hash1), (unsigned char*)&hash2);
-        return hash2;
+        return std::move(hash2);
     }
 
     template<typename T>
@@ -80,7 +80,7 @@ inline uint256 Hash(const T1 p1begin, const T1 p1end,
     SHA256_Final((unsigned char*)&hash1, &ctx);
     uint256 hash2;
     SHA256((unsigned char*)&hash1, sizeof(hash1), (unsigned char*)&hash2);
-    return hash2;
+    return std::move(hash2);
 }
 
 template<typename T1, typename T2, typename T3>
@@ -106,7 +106,7 @@ uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL
 {
     CHashWriter ss(nType, nVersion);
     ss << obj;
-    return ss.GetHash();
+    return std::move(ss.GetHash());
 }
 
 template<typename T1>

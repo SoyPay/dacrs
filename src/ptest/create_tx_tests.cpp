@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(tests)
 		default:
 			assert(0);
 		}
-		MilliSleep(500);
+//		MilliSleep(500);
 	}
 }
 BOOST_AUTO_TEST_SUITE_END()

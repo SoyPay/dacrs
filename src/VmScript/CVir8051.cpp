@@ -26,7 +26,7 @@ void CVir8051::InitalReg() {
 	memset(m_ChipRam, 0, sizeof(m_ChipRam));
 	memset(m_ChipSfr, 0, sizeof(m_ChipSfr));
 	memset(m_ExRam, 0, sizeof(m_ExRam));
-	memset(m_ChipRamoper, 0, sizeof(m_ChipRamoper));
+//	memset(m_ChipRamoper, 0, sizeof(m_ChipRamoper));
 
 	Sys.a.SetAddr(a_addr);
 	Sys.b.SetAddr(b_addr);
@@ -1406,21 +1406,22 @@ int64_t CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 bool CVir8051::run() {
 
 	INT8U code = 0;
-	INT16U flag;
+//	INT16U flag;
 	while (1) {
 		code = GetOpcode();
 		StepRun(code);
-		UpDataDebugInfo();
+//		UpDataDebugInfo();
 
 		//call func out of 8051
 		if (Sys.PC == 0x0012) {
 			//get what func will be called
 			INT16U method = ((INT16U) GetExRam(VM_FUN_CALL_ADDR) | ((INT16U) GetExRam(VM_FUN_CALL_ADDR+1) << 8));
-			flag = method;
+//			flag = method;
 			unsigned char *ipara = (unsigned char *) GetExRamAddr(VM_SHARE_ADDR);		//input para
 			CVmScriptRun *pVmScript = NULL;
 			RET_DEFINE retdata = CallExternalFunc(method, ipara, pVmScript);
-			memset(ipara, 0, MAX_SHARE_RAM);
+			//memset(ipara, 0, MAX_SHARE_RAM);
+			memset(ipara, 0, 8);
 			if (std::get<0>(retdata)) {
 				auto tem = std::get<1>(retdata);
 				int pos = 0;
@@ -1458,7 +1459,7 @@ void CVir8051::SetExRamData(INT16U addr, const vector<unsigned char> data) {
 }
 void CVir8051::StepRun(INT8U code) {
 //		INT8U tempa = Sys.a();
-	m_ChipRamoper[code] = 1;
+//	m_ChipRamoper[code] = 1;
 //	char temp[1024];
 //	sprintf(temp, "pc--->%x,code:%x \r\n", Sys.PC, code);
 //	cout << "before" << temp << endl;
