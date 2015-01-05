@@ -97,7 +97,7 @@ uint64_t GetElementForBurn(CBlockIndex* pindex)
 
 // We want to sort transactions by priority and fee, so:
 
-void GetPriorityTx(vector<TxPriority> &vecPriority, map<uint256, vector<COrphan*> > &mapDependers) {
+void GetPriorityTx(vector<TxPriority> &vecPriority) {
 	vecPriority.reserve(mempool.mapTx.size());
 	CBlockIndex* pindexPrev = chainActive.Tip();
 
@@ -108,7 +108,7 @@ void GetPriorityTx(vector<TxPriority> &vecPriority, map<uint256, vector<COrphan*
 		int nTxHeight = mi->second.GetHeight();//get Chain height when the tx entering the mempool
 		CBaseTransaction *pBaseTx = mi->second.GetTx().get();
 
-		if (uint256(0) == pTxCacheTip->IsContainTx(pBaseTx->GetHash())) {
+		if (uint256(0) == std::move(pTxCacheTip->IsContainTx(std::move(pBaseTx->GetHash())))) {
 			unsigned int nTxSize = ::GetSerializeSize(pBaseTx->GetNewInstance(), SER_NETWORK, PROTOCOL_VERSION);
 #if 0
 			{
@@ -383,12 +383,12 @@ uint256 GetAdjustHash(const uint256 TargetHash, const uint64_t nPos) {
 		}
 	}
 
-	return adjusthash;
+	return std::move(adjusthash);
 }
 
 bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCreateKey) {
 	set<CKeyID> setKeyID;
-	CAccount acctInfo;
+
 	set<CAccount, CAccountComparator> setAcctInfo;
 
 	LogPrint("INFO","CreatePosTx block time:%d\n",  pBlock->nTime);
@@ -406,7 +406,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 		{
 			for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
 				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
-				if (uint256(0) != txCacheTemp.IsContainTx(pBaseTx->GetHash())) {
+				if (uint256(0) != txCacheTemp.IsContainTx(std::move(pBaseTx->GetHash()))) {
 					LogPrint("ERROR","CreatePosTx duplicate tx hash:%s\n", pBaseTx->GetHash().GetHex());
 //					mempool.mapTx.erase(pBaseTx->GetHash());
 					return false;
@@ -435,10 +435,11 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 				if(!bfind) continue;
 			}
 			CUserID userId = keyid;
+			CAccount acctInfo;
 			if (accView.GetAccount(userId, acctInfo)) {
 				//available
 				if (acctInfo.IsRegister() && acctInfo.GetAccountPos(pPrevIndex->nHeight) > 0) {
-					setAcctInfo.insert(acctInfo);
+					setAcctInfo.insert(std::move(acctInfo));
 				}
 			}
 		}
@@ -684,14 +685,14 @@ CBlockTemplate* CreateNewBlock() {
 	{
 		LOCK2(cs_main, mempool.cs);
 		CBlockIndex* pIndexPrev = chainActive.Tip();
-		CAccountViewCache accview(*pAccountViewTip, true);
+//		CAccountViewCache accview(*pAccountViewTip, true);
 
 		bool fPrintPriority = SysCfg().GetBoolArg("-printpriority", false);
 
 		// This vector will be sorted into a priority queue:
 		vector<TxPriority> vecPriority;
-		map<uint256, vector<COrphan*> > mapDependers;
-		GetPriorityTx(vecPriority, mapDependers);
+
+		GetPriorityTx(vecPriority);
 
 		// Collect transactions into block
 		uint64_t nBlockSize = ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
@@ -701,7 +702,7 @@ CBlockTemplate* CreateNewBlock() {
 
 		TxPriorityCompare comparer(fSortedByFee);
 		make_heap(vecPriority.begin(), vecPriority.end(), comparer);
-		CAccountViewCache accviewtemp(accview, true);
+		CAccountViewCache accviewtemp(*pAccountViewTip, true);
 		CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
 		CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 
@@ -717,7 +718,7 @@ CBlockTemplate* CreateNewBlock() {
 			vecPriority.pop_back();
 
 			// Size limits
-			unsigned int nTxSize = ::GetSerializeSize(pBaseTx->GetNewInstance(), SER_NETWORK, PROTOCOL_VERSION);
+			unsigned int nTxSize = ::GetSerializeSize(*pBaseTx, SER_NETWORK, PROTOCOL_VERSION);
 			if (nBlockSize + nTxSize >= nBlockMaxSize)
 				continue;
 
@@ -732,7 +733,7 @@ CBlockTemplate* CreateNewBlock() {
 				comparer = TxPriorityCompare(fSortedByFee);
 				make_heap(vecPriority.begin(), vecPriority.end(), comparer);
 			}
-			if(uint256(0) != txCacheTemp.IsContainTx(pBaseTx->GetHash())) {
+			if(uint256(0) != std::move(txCacheTemp.IsContainTx(std::move(pBaseTx->GetHash())))) {
 				LogPrint("INFO","CreatePosTx duplicate tx\n");
 				continue;
 			}
@@ -780,7 +781,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet) {
 
 	//// debug print
 //	LogPrint("INFO","proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
-	pblock->print(*pAccountViewTip);
+//	pblock->print(*pAccountViewTip);
 	// LogPrint("INFO","generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
 
 	// Found a solution
@@ -841,7 +842,9 @@ void static DacrsMiner(CWallet *pwallet) {
 			unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
 			CBlockIndex* pindexPrev = chainActive.Tip();
 
+			int64_t lasttime1 = GetTimeMillis();
 			auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock());
+			LogPrint("MINER","CreateNewBlock blocksize%d used time :%d ms\n",pblocktemplate.get()->block.vptx.size(),GetTimeMillis() - lasttime1);
 			if (!pblocktemplate.get())
 				return;
 			CBlock *pblock = &pblocktemplate.get()->block;
@@ -863,10 +866,19 @@ void static DacrsMiner(CWallet *pwallet) {
 				pblock->nTime = GetNextTimeAndSleep();	// max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
 				set<CKeyID> setCreateKey;
 				setCreateKey.clear();
-				if (CreatePosTx(pindexPrev, pblock, setCreateKey)) {
+
+				int64_t lasttime = GetTimeMillis();
+				bool increatedfalg =CreatePosTx(pindexPrev, pblock, setCreateKey);
+				LogPrint("MINER","CreatePosTx used time :%d ms\n",   GetTimeMillis() - lasttime);
+				if (increatedfalg == true) {
 
 					SetThreadPriority(THREAD_PRIORITY_NORMAL);
+					{
+					int64_t lasttime1 = GetTimeMillis();
 					CheckWork(pblock, *pwallet);
+				    LogPrint("MINER","CheckWork used time :%d ms\n",   GetTimeMillis() - lasttime1);
+					}
+
 					SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
 					if (SysCfg().NetworkID() != CBaseParams::MAIN)
