@@ -174,14 +174,15 @@ Value setgenerate(const Array& params, bool fHelp)
 			};
 			int curhigh = getcurhigh();
 			nHeightEnd = curhigh + nGenProcLimit;
-			GenerateSoys(true, pwalletMain, 1);
 
-			while (curhigh < nHeightEnd) {
-				if (getcurhigh() != curhigh) {
-					curhigh = getcurhigh();
+			int high =-1;
+
+			while (getcurhigh()  < nHeightEnd) {
+				if (getcurhigh() != high) {
+					high = getcurhigh();
 					GenerateSoys(true, pwalletMain, 1);
 				}
-				MilliSleep(1000);
+				MilliSleep(100);
 			}
 		}
 

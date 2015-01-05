@@ -58,12 +58,14 @@ void GenerateSoys(bool fGenerate, CWallet* pwallet, int nThreads);
 //CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey);
 
 CBlockTemplate* CreateNewBlock();
+CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 /** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 /** Do mining precalculation */
 void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash1);
 
 bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCreateKey);
+bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCreateKey,CAccountViewCache &view, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool bJustCheckSign = false);
 /** Check mined block */
