@@ -88,11 +88,11 @@ void CBlock::print(CAccountViewCache &view) const
         hashMerkleRoot.ToString(),
         nTime, nBits, nNonce,
         vptx.size());
-	LogPrint("INFO","list transactions: \n");
-    for (unsigned int i = 0; i < vptx.size(); i++)
-    {
-    	LogPrint("INFO","%s ", vptx[i]->ToString(view));
-    }
+//	LogPrint("INFO","list transactions: \n");
+//    for (unsigned int i = 0; i < vptx.size(); i++)
+//    {
+//    	LogPrint("INFO","%s ", vptx[i]->ToString(view));
+//    }
 //    LogPrint("INFO","  vMerkleTree: ");
 //    for (unsigned int i = 0; i < vMerkleTree.size(); i++)
 //    	LogPrint("INFO","%s ", vMerkleTree[i].ToString());

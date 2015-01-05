@@ -109,7 +109,7 @@ void GetPriorityTx(vector<TxPriority> &vecPriority) {
 		CBaseTransaction *pBaseTx = mi->second.GetTx().get();
 
 		if (uint256(0) == std::move(pTxCacheTip->IsContainTx(std::move(pBaseTx->GetHash())))) {
-			unsigned int nTxSize = ::GetSerializeSize(pBaseTx->GetNewInstance(), SER_NETWORK, PROTOCOL_VERSION);
+			unsigned int nTxSize = ::GetSerializeSize(*pBaseTx, SER_NETWORK, PROTOCOL_VERSION);
 #if 0
 			{
 				uint64_t element = GetElementForBurn();
@@ -781,7 +781,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet) {
 
 	//// debug print
 //	LogPrint("INFO","proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
-//	pblock->print(*pAccountViewTip);
+	pblock->print(*pAccountViewTip);
 	// LogPrint("INFO","generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
 
 	// Found a solution
@@ -894,8 +894,10 @@ void static DacrsMiner(CWallet *pwallet) {
 				boost::this_thread::interruption_point();
 				if (vNodes.empty() && SysCfg().NetworkID() != CBaseParams::REGTEST)
 					break;
+
 				if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
 					break;
+
 				if (pindexPrev != chainActive.Tip())
 					break;
 			}
