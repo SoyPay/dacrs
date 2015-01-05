@@ -12,7 +12,8 @@
 #include <boost/filesystem/path.hpp>
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
-
+#include "json/json_spirit_value.h"
+using namespace json_spirit;
 class leveldb_error : public runtime_error
 {
 public:
@@ -169,6 +170,7 @@ public:
         return pdb->NewIterator(iteroptions);
     }
     int64_t GetDbCount();
+    Object ToJosnObj();
 };
 
 #endif // DACRS_LEVELDBWRAPPER_H
