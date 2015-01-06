@@ -126,5 +126,8 @@ public:
 	{
 		return db.GetDbCount();
 	}
+	Object ToJosnObj(){
+		return db.ToJosnObj();
+	}
 };
 #endif // DACRS_TXDB_LEVELDB_H

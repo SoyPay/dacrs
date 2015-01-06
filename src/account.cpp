@@ -379,7 +379,10 @@ bool CScriptDBView::GetScriptData(const int nCurBlockHeight, const vector<unsign
 		set<CScriptDBOperLog> &setOperLog) {
 	return false;
 }
-
+Object CScriptDBView:: ToJosnObj(){
+	Object obj;
+	return obj;
+}
 CScriptDBViewBacked::CScriptDBViewBacked(CScriptDBView &dataBaseView) {pBase = &dataBaseView;}
 bool CScriptDBViewBacked::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {return pBase->GetData(vKey, vValue);}
 bool CScriptDBViewBacked::SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {return pBase->SetData(vKey, vValue);}
@@ -392,7 +395,9 @@ bool CScriptDBViewBacked::GetScriptData(const int nCurBlockHeight, const vector<
 		set<CScriptDBOperLog> &setOperLog) {
 	return pBase->GetScriptData(nCurBlockHeight, vScriptId, nIndex, vScriptKey, vScriptData, nHeight, setOperLog);
 }
-
+Object CScriptDBViewBacked::ToJosnObj(){
+	return pBase->ToJosnObj();
+}
 CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScriptDBViewBacked(base) {
 	mapDatas.clear();
 }
@@ -1053,16 +1058,16 @@ bool CScriptDBViewCache::GetTxRelAccount(const uint256 &txHash, set<CKeyID> &rel
 	return true;
 }
 Object CScriptDBViewCache::ToJosnObj() const {
-	Object obj;
-	Array arrayObj;
-	for (auto& item : mapDatas) {
-		Object obj;
-		obj.push_back(Pair("key", HexStr(item.first)));
-		obj.push_back(Pair("value", HexStr(item.second)));
-		arrayObj.push_back(obj);
-	}
-	obj.push_back(Pair("mapDatas", arrayObj));
-	return obj;
+//	Object obj;
+//	Array arrayObj;
+//	for (auto& item : mapDatas) {
+//		Object obj;
+//		obj.push_back(Pair("key", HexStr(item.first)));
+//		obj.push_back(Pair("value", HexStr(item.second)));
+//		arrayObj.push_back(obj);
+//	}
+//	obj.push_back(Pair("mapDatas", arrayObj));
+	return pBase->ToJosnObj();
 }
 
 

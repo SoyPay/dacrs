@@ -1595,6 +1595,12 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
 
     // Write new block info to log, if necessary.
     if (SysCfg().GetArg("-blocklog", 0)) {
+//	  if (!pAccountViewTip->Flush())
+//		return state.Abort(_("Failed to write to account database"));
+//	if (!pTxCacheTip->Flush())
+//		return state.Abort(_("Failed to write to tx cache database"));
+	if (! pScriptDBTip->Flush())
+		return state.Abort(_("Failed to write to script db database"));
     	WriteBlockLog();
     }
 
