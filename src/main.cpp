@@ -1153,7 +1153,7 @@ void static InvalidChainFound(CBlockIndex* pindexNew)
         // the block database anymore, as it is derived from the flags in block
         // index entry. We only write it for backward compatibility.
         pblocktree->WriteBestInvalidWork(CBigNum(pindexBestInvalid->nChainWork));
-        uiInterface.NotifyBlocksChanged();
+        uiInterface.NotifyBlocksChanged(strprintf("block changed:%d",chainActive.Height()));
     }
     LogPrint("INFO","InvalidChainFound: invalid block=%s  height=%d  log2_work=%.8g  date=%s\n",
       pindexNew->GetBlockHash().ToString(), pindexNew->nHeight,
@@ -1788,7 +1788,7 @@ bool AddToBlockIndex(CBlock& block, CValidationState& state, const CDiskBlockPos
     if (!pblocktree->Flush())
         return state.Abort(_("Failed to sync block index"));
 
-    uiInterface.NotifyBlocksChanged();
+    uiInterface.NotifyBlocksChanged(strprintf("block changed:%d",chainActive.Height()));
     return true;
 }
 
