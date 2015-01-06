@@ -49,9 +49,16 @@ static void noui_InitMessage(const std::string &message)
 	}
 }
 
+static void noui_BlockChanged(const std::string &message) {
+	if (CUIServer::HasConnection()) {
+		CUIServer::Send(message);
+	}
+}
+
 void noui_connect()
 {
     // Connect Dacrsd signal handlers
     uiInterface.ThreadSafeMessageBox.connect(noui_ThreadSafeMessageBox);
     uiInterface.InitMessage.connect(noui_InitMessage);
+    uiInterface.NotifyBlocksChanged.connect(noui_BlockChanged);
 }
