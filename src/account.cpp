@@ -22,7 +22,10 @@ bool CAccountView::EraseKeyId(const vector<unsigned char> &accountId){
 	return false;
 }
 bool CAccountView::SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &account) {return false;}
-
+Object CAccountView::ToJosnObj(){
+	Object obj;
+	return obj;
+}
 
 CAccountViewBacked::CAccountViewBacked(CAccountView &accountView):pBase(&accountView) {}
 bool CAccountViewBacked::GetAccount(const CKeyID &keyId, CAccount &account) {
@@ -347,24 +350,26 @@ unsigned int CAccountViewCache::GetCacheSize(){
 Object CAccountViewCache::ToJosnObj() const {
 	Object obj;
 	obj.push_back(Pair("hashBlock", hashBlock.ToString()));
+	Object obj1 = pBase->ToJosnObj();
 
-	Array arrayObj;
-	for (auto& item : cacheAccounts) {
-		Object obj;
-		obj.push_back(Pair("keyID", item.first.ToString()));
-		obj.push_back(Pair("account", item.second.ToString()));
-		arrayObj.push_back(obj);
-	}
-	obj.push_back(Pair("cacheAccounts", arrayObj));
-
-	for (auto& item : cacheKeyIds) {
-		Object obj;
-		obj.push_back(Pair("accountID", HexStr(item.first)));
-		obj.push_back(Pair("keyID", item.second.ToString()));
-		arrayObj.push_back(obj);
-	}
-
-	obj.push_back(Pair("cacheKeyIds", arrayObj));
+	obj.push_back(Pair("cacheView", obj1));
+//	Array arrayObj;
+//	for (auto& item : cacheAccounts) {
+//		Object obj;
+//		obj.push_back(Pair("keyID", item.first.ToString()));
+//		obj.push_back(Pair("account", item.second.ToString()));
+//		arrayObj.push_back(obj);
+//	}
+//	obj.push_back(Pair("cacheAccounts", arrayObj));
+//
+//	for (auto& item : cacheKeyIds) {
+//		Object obj;
+//		obj.push_back(Pair("accountID", HexStr(item.first)));
+//		obj.push_back(Pair("keyID", item.second.ToString()));
+//		arrayObj.push_back(obj);
+//	}
+//
+//	obj.push_back(Pair("cacheKeyIds", arrayObj));
 	return obj;
 }
 

@@ -81,6 +81,9 @@ public:
 	{
 		return db.GetDbCount();
 	}
+	Object ToJosnObj(){
+		return db.ToJosnObj();
+	}
 };
 
 class CTransactionDB: public CTransactionDBView{

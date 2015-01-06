@@ -29,6 +29,7 @@ public:
 	virtual bool EraseKeyId(const vector<unsigned char> &accountId);
 	virtual bool GetAccount(const vector<unsigned char> &accountId, CAccount &account);
 	virtual bool SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &account);
+	virtual Object ToJosnObj();
 	virtual ~CAccountView(){};
 };
 
