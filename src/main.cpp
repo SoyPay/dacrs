@@ -1949,17 +1949,6 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 			//校验是否有重复确认交易
 			if(uint256(0) != txCacheTemp.IsContainTx(item->GetHash()))
 				return state.DoS(100, ERROR("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed\n", item->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
-			//校验合约是否能有效执行，因为合约的执行和系统环境有关系，必须在这里校验
-			if(CONTRACT_TX == item->nTxType) {
-				CVmScriptRun vmRun;
-				uint64_t el = GetElementForBurn(mapBlockIndex[view.GetBestBlock()]);
-				std::shared_ptr<CBaseTransaction> pTx = item->GetNewInstance();
-				std::tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptDBTemp, mapBlockIndex[view.GetBestBlock()]->nHeight +1, el);
-				if (!std::get<0>(ret))
-					return state.DoS(100,
-							ERROR("CheckBlockProofWorkWithCoinDay() : ContractTransaction txhash=%s run script error,%s",
-									item->GetHash().GetHex(), std::get<2>(ret)), REJECT_INVALID, "run-script-error");
-			}
 		}
 	} else {
 		uint64_t nInterest = 0;
@@ -1986,17 +1975,6 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 			if(uint256(0) != txCacheTemp.IsContainTx(item->GetHash()))
 				return state.DoS(100, ERROR("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed\n", item->GetHash().GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
 
-			//校验合约是否能有效执行，因为合约的执行和系统环境有关系，必须在这里校验
-			if(CONTRACT_TX == item->nTxType) {
-				CVmScriptRun vmRun;
-				uint64_t el = GetElementForBurn(mapBlockIndex[view.GetBestBlock()]);
-				std::shared_ptr<CBaseTransaction> pTx = item->GetNewInstance();
-				std::tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptDBTemp, mapBlockIndex[view.GetBestBlock()]->nHeight +1, el);
-				if (!std::get<0>(ret))
-					return state.DoS(100,
-							ERROR("CheckBlockProofWorkWithCoinDay() : ContractTransaction txhash=%s run script error,%s",
-									item->GetHash().GetHex(), std::get<2>(ret)), REJECT_INVALID, "run-script-error");
-			}
 		}
 		return true;
 	}
