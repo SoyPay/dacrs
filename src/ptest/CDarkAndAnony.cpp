@@ -129,12 +129,14 @@ TEST_STATE CDarkAndAnony::run()
      switch(step)
      {
      case 0:
+    	 ImportWalletKey();
+     case 1:
     	 step0RegistScript();
     	 break;
-     case 1:
+     case 2:
     	 step1RegistScript();
     	 break;
-     case 2:
+     case 3:
           step2RegistScript();
           break;
      }
@@ -261,4 +263,29 @@ void CDarkAndAnony::SendanonyTx(string scriptid) {
 	txhash = Parsejson(txhash);
 	BOOST_CHECK(txhash != "");
 
+}
+
+bool CDarkAndAnony::ImportWalletKey() {
+	char* pKey[] = {
+			        /*for bess test*/
+					"cUa4v77hiXteMFkHoyuPVVbCCULS1CnFBhU1MhgKHEGRTHmd4BC5",// addr:  mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz
+					"cTAqnCwjuLwXqHxGe5c6KrGqQw5yjHH6Na6yYRQCgKKnf6cJBPxF",// addr:  mfzdtseoKfMpTd8V9N2xETEqUSWRujndgZ
+					"cVFWoy8jmJVVSNnMs3YRizkR7XEekMTta4MzvuRshKuQEEJ4kbNg",// addr:  mjSwCwMsvtKczMfta1tvr78z2FTsZA1JKw
+					"cNcJkU44oG3etbWoEvY46i5qWPeE8jVb7K44keXxEQxsXUZ85MKU",//"address" : "mnnS4upLeY7RZpNnvoGMZzs9ELscQjtvqy",
+					"cStrXy6NowsDyaLRJMhQCJu4WnP6WR6SMC1c3dmxDeeLKFcYHDsQ",//"address" : "mscmxFbxRfBUiH4drYNA2nCoFXuausKjd7",
+
+	};
+
+	int nCount = sizeof(pKey) / sizeof(char*);
+	for (int i = 0; i < nCount; i++) {
+		char *argv2[] = { "rpctest", "importprivkey", pKey[i]};
+		int argc2 = sizeof(argv2) / sizeof(char*);
+
+		Value value;
+		if (!basetest.CommandLineRPC_GetValue(sizeof(argv2) / sizeof(argv2[0]), argv2, value)) {
+			return false;
+		}
+	}
+	step++;
+	return true;
 }

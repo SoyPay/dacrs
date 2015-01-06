@@ -400,9 +400,6 @@ bool CScriptDBViewBacked::GetScriptData(const int nCurBlockHeight, const vector<
 		set<CScriptDBOperLog> &setOperLog) {
 	return pBase->GetScriptData(nCurBlockHeight, vScriptId, nIndex, vScriptKey, vScriptData, nHeight, setOperLog);
 }
-Object CScriptDBViewBacked::ToJosnObj(){
-	return pBase->ToJosnObj();
-}
 CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScriptDBViewBacked(base) {
 	mapDatas.clear();
 }

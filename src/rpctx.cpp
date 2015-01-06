@@ -1328,9 +1328,9 @@ Value resetclient(const Array& params, bool fHelp) {
 		}
 		pAccountViewTip->Flush();
 		pScriptDBTip->Flush();
-       if(SysCfg().Network::TESTNET == SysCfg().NetworkID()|| SysCfg().Network::TESTNET==SysCfg().NetworkID())
+       if(SysCfg().Network::TESTNET == SysCfg().NetworkID()|| SysCfg().Network::TESTNET==SysCfg().NetworkID()){
        assert(pAccountViewDB->GetDbCount() == 22);
-//       assert(pScriptDB->GetDbCount() == 0);
+       assert(pScriptDB->GetDbCount() == 0);}
 
 		CBlock firs = SysCfg().GenesisBlock();
 		pwalletMain->SyncTransaction(0,NULL,&firs);

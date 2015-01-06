@@ -156,8 +156,8 @@ bool SysTestBase::ResetEnv() {
 					"cNjb55M6fqNVuhKmNE95C8weWYr6iD2yW6QqifYWSvuVGKUJRTt9",//"address" : "mfXrwgAt5LezYerS9NRCiPUxtHNChrxyiT",
 
 					/*remain for test*/
-					"cNcJkU44oG3etbWoEvY46i5qWPeE8jVb7K44keXxEQxsXUZ85MKU",//"address" : "mnnS4upLeY7RZpNnvoGMZzs9ELscQjtvqy",
-					"cStrXy6NowsDyaLRJMhQCJu4WnP6WR6SMC1c3dmxDeeLKFcYHDsQ",//"address" : "mscmxFbxRfBUiH4drYNA2nCoFXuausKjd7",
+				//	"cNcJkU44oG3etbWoEvY46i5qWPeE8jVb7K44keXxEQxsXUZ85MKU",//"address" : "mnnS4upLeY7RZpNnvoGMZzs9ELscQjtvqy",
+				//	"cStrXy6NowsDyaLRJMhQCJu4WnP6WR6SMC1c3dmxDeeLKFcYHDsQ",//"address" : "mscmxFbxRfBUiH4drYNA2nCoFXuausKjd7",
 					"cN2xNMvvNCtqh1K87J9o35cHHQttdZi1MYgUj8FYZPdtaFTtxbtd",//"address" : "mg7xvMhw9Jt7Rys8nWhjXujbGNaeFn3x4L",
 					"cU8kr9JvCXotPoBQZ4TPxkD2S98ZFz2AKLDupMt8hgNG4JLQ1b2x",//"address" : "mx5j59nsCVBVNs8zqeAE6rM1JEELRnY3KX",
 					"cSvRSiQGS6d11CbY4Mac1sCN84YHyNsFvNZ5xgBM1FHUSi7fgcaA",//"address" : "mxu7hQuPeV1Lom3NaHfLh8oe2J6z3dKB22",
@@ -700,7 +700,7 @@ bool SysTestBase::GetBlockMinerAddr(const std::string &blockhash, std::string &a
 }
 boost::thread*SysTestBase::pThreadShutdown = NULL;
 bool SysTestBase::GenerateOneBlock() {
-	char *argv[] = { "rpctest", "setgenerate", "true" };
+	char *argv[] = { "rpctest", "setgenerate", "true" ,"1"};
 	int argc = sizeof(argv) / sizeof(char*);
     int high= chainActive.Height();
 	Value value;

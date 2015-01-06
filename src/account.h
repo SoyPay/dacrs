@@ -132,7 +132,6 @@ public:
 	bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex,
 			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight,
 			set<CScriptDBOperLog> &setOperLog);
-	Object ToJosnObj();
 };
 
 class CScriptDBViewCache : public CScriptDBViewBacked {

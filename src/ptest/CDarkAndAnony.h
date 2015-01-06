@@ -199,7 +199,7 @@ public:
 	void SendDarkTx(string scriptid);
 
 	void SendanonyTx(string scriptid);
-
+	bool ImportWalletKey();
 };
 
 #endif /* CDARKANDANONY_H_ */

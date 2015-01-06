@@ -1594,7 +1594,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
         LogPrint("INFO","- Connect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
 
     // Write new block info to log, if necessary.
-    if (SysCfg().GetArg("-blocklog", 0)) {
+    if (SysCfg().GetArg("-blocklog", 0) && chainActive.Height()%100 == 0) {
 	  if (!pAccountViewTip->Flush())
 		return state.Abort(_("Failed to write to account database"));
 //	if (!pTxCacheTip->Flush())
