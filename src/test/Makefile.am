@@ -2,7 +2,7 @@ include $(top_srcdir)/src/Makefile.include
 
 AM_CPPFLAGS += -I$(top_srcdir)/src
 
-bin_PROGRAMS = soypay_test
+bin_PROGRAMS = dacrs_test
 
 TESTS = test
 
@@ -23,15 +23,15 @@ RAW_TEST_FILES = data/alertTests.raw.h
 #BUILT_SOURCES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 
 # test_dspay binary #
-soypay_test_CPPFLAGS = $(AM_CPPFLAGS) $(TESTDEFS)
-soypay_test_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_WALLET) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
+dacrs_test_CPPFLAGS = $(AM_CPPFLAGS) $(TESTDEFS)
+dacrs_test_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_WALLET) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
 #if ENABLE_WALLET
-#soypay_test_LDADD += $(LIBBITCOIN_WALLET)
+#dacrs_test_LDADD += $(LIBBITCOIN_WALLET)
 #endif
-soypay_test_LDADD += $(BDB_LIBS)
+dacrs_test_LDADD += $(BDB_LIBS)
 
-soypay_test_SOURCES = \
+dacrs_test_SOURCES = \
   allocator_tests.cpp \
   base32_tests.cpp \
   base58_tests.cpp \
@@ -49,7 +49,7 @@ soypay_test_SOURCES = \
   netbase_tests.cpp \
   serialize_tests.cpp \
   sigopcount_tests.cpp \
-  test_soypay.cpp \
+  test_dacrs.cpp \
   uint256_tests.cpp \
   util_tests.cpp \
   sighash_tests.cpp \
@@ -70,10 +70,10 @@ soypay_test_SOURCES = \
   $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 
 #if ENABLE_WALLET
-#soypay_test_SOURCES += 
+#dacrs_test_SOURCES += 
 #endif
 
-#nodist_soypay_test_SOURCES = $(BUILT_SOURCES)
+#nodist_dacrs_test_SOURCES = $(BUILT_SOURCES)
 
 #CLEANFILES = *.gcda *.gcno $(BUILT_SOURCES)
 CLEANFILES = *.gcda *.gcno
