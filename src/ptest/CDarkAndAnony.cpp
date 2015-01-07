@@ -130,6 +130,7 @@ TEST_STATE CDarkAndAnony::run()
      {
      case 0:
     	 ImportWalletKey();
+    	 break;
      case 1:
     	 step0RegistScript();
     	 break;
@@ -283,6 +284,7 @@ bool CDarkAndAnony::ImportWalletKey() {
 
 		Value value;
 		if (!basetest.CommandLineRPC_GetValue(sizeof(argv2) / sizeof(argv2[0]), argv2, value)) {
+			step++;
 			return false;
 		}
 	}
