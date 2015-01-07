@@ -491,169 +491,6 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 
 	return false;
 }
-bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCreateKey) {
-	set<CKeyID> setKeyID;
-
-	set<CAccount, CAccountComparator> setAcctInfo;
-
-	LogPrint("INFO","CreatePosTx block time:%d\n",  pBlock->nTime);
-
-	{
-		LOCK2(cs_main, pwalletMain->cs_wallet);
-		if (!pwalletMain->GetKeyIds(setKeyID,true)) {
-			LogPrint("ERROR","CreatePosTx setKeyID empty\n");
-			return false;
-		}
-
-		CAccountViewCache accView(*pAccountViewTip, true);
-		CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
-		CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
-		{
-			for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
-				shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
-				if (uint256(0) != txCacheTemp.IsContainTx(std::move(pBaseTx->GetHash()))) {
-					LogPrint("ERROR","CreatePosTx duplicate tx hash:%s\n", pBaseTx->GetHash().GetHex());
-//					mempool.mapTx.erase(pBaseTx->GetHash());
-					return false;
-				}
-				CTxUndo txundo;
-				CValidationState state;
-
-				if (!pBaseTx->UpdateAccount(i, accView, state, txundo, pPrevIndex->nHeight + 1, txCacheTemp, contractScriptTemp)) {
-					LogPrint("ERROR","tx hash:%s transaction is invalid\n", pBaseTx->GetHash().GetHex());
-//					mempool.mapTx.erase(pBaseTx->GetHash());
-					return false;
-				}
-			}
-		}
-
-		for(const auto &keyid:setKeyID) {
-			//find CAccount info by keyid
-			if(setCreateKey.size()) {
-				bool bfind = false;
-				for(auto &item: setCreateKey){
-					if(item == keyid){
-						bfind = true;
-						break;
-					}
-				}
-				if(!bfind) continue;
-			}
-			CUserID userId = keyid;
-			CAccount acctInfo;
-			if (accView.GetAccount(userId, acctInfo)) {
-				//available
-				if (acctInfo.IsRegister() && acctInfo.GetAccountPos(pPrevIndex->nHeight) > 0) {
-					setAcctInfo.insert(std::move(acctInfo));
-				}
-			}
-		}
-	}
-
-	if (setAcctInfo.empty()) {
-		setCreateKey.clear();
-		LogPrint("ERROR","CreatePosTx setSecureAcc empty\n");
-		return false;
-	}
-
-	uint64_t maxNonce = SysCfg().GetBlockMaxNonce(); //cacul times
-
-	uint256 prevblockhash = pPrevIndex->GetBlockHash();
-	const uint256 targetHash = CBigNum().SetCompact(pBlock->nBits).getuint256(); //target hash difficult
-
-	for(const auto &item: setAcctInfo) {
-
-		uint64_t posacc = item.GetAccountPos(pPrevIndex->nHeight);
-		if (posacc == 0) //have no pos
-				{
-			LogPrint("ERROR","CreatePosTx posacc zero\n");
-			continue;
-		}
-
-		uint256 adjusthash = GetAdjustHash(targetHash, posacc); //adjust nbits
-
-//need compute this block proofofwork
-		struct PosTxInfo postxinfo;
-		postxinfo.nVersion = pPrevIndex->nVersion;
-		postxinfo.hashPrevBlock = prevblockhash;
-		postxinfo.hashMerkleRoot = item.BuildMerkleTree(pPrevIndex->nHeight);
-		postxinfo.nValues = item.llValues;
-		postxinfo.nTime = pBlock->nTime; //max(pPrevIndex->GetMedianTimePast() + 1, GetAdjustedTime());
-		for (pBlock->nNonce = 0; pBlock->nNonce < maxNonce; ++pBlock->nNonce) {
-			postxinfo.nNonce = pBlock->nNonce;
-			uint256 curhash = postxinfo.GetHash();
-
-			if (curhash <= adjusthash) {
-//				string str("");
-//				for (char *pCh = BEGIN(postxinfo.nVersion); pCh != END(postxinfo.nVersion); ++pCh) {
-//					str += strprintf("%02X", *(unsigned char*)pCh);
-//				}
-//				LogPrint("Hash", "nVersion:%s\n", str.c_str());
-//				str = "";
-//				for (char *pCh = BEGIN(postxinfo.hashPrevBlock); pCh != END(postxinfo.hashPrevBlock); ++pCh) {
-//					str += strprintf("%02X", *(unsigned char*)pCh);
-//				}
-//				LogPrint("Hash", "hashPrevBlock:%s\n", str.c_str());
-//				str = "";
-//				for (char *pCh = BEGIN(postxinfo.hashMerkleRoot); pCh != END(postxinfo.hashMerkleRoot); ++pCh) {
-//					str += strprintf("%02X", *(unsigned char*)pCh);
-//				}
-//				LogPrint("Hash", "hashMerkleRoot:%s\n", str.c_str());
-//				str = "";
-//				for (char *pCh = BEGIN(postxinfo.nValues); pCh != END(postxinfo.nValues); ++pCh) {
-//					str += strprintf("%02X", *(unsigned char*)pCh);
-//				}
-//				LogPrint("Hash", "nValues:%s\n", str.c_str());
-//				str = "";
-//				for (char *pCh = BEGIN(postxinfo.nTime); pCh != END(postxinfo.nTime); ++pCh) {
-//					str += strprintf("%02X", *(unsigned char*)pCh);
-//				}
-//				LogPrint("Hash", "nTime:%s\n", str.c_str());
-//				str = "";
-//				for (char *pCh = BEGIN(postxinfo.nNonce); pCh != END(postxinfo.nNonce); ++pCh) {
-//					str += strprintf("%02X", *(unsigned char*)pCh);
-//				}
-//				LogPrint("Hash", "nNonce:%s\n", str.c_str());
-//				printf("curhash smaller then adjusthash\r\n");
-				CRegID regid;
-
-				if (pAccountViewTip->GetRegId(item.keyID, regid)) {
-					CRewardTransaction *prtx = (CRewardTransaction *) pBlock->vptx[0].get();
-					prtx->rewardValue += item.GetInterest();
-					prtx->account = regid;
-					prtx->nHeight = pPrevIndex->nHeight+1;
-					pBlock->hashMerkleRoot = pBlock->BuildMerkleTree();
-					LogPrint("MINER","Miner hight:%d time:%s addr = %s \r\n",prtx->nHeight,DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()),item.keyID.ToAddress());
-					LogPrint("INFO", "find pos tx hash succeed: \n"
-									  "   pos hash:%s \n"
-									  "adjust hash:%s \r\n", curhash.GetHex(), adjusthash.GetHex());
-					LogPrint("INFO",
-							"nVersion=%d, hashPreBlock=%s, hashMerkleRoot=%s, nValue=%ld, nTime=%ld, nNonce=%ld\n",
-							postxinfo.nVersion, postxinfo.hashPrevBlock.GetHex(), postxinfo.hashMerkleRoot.GetHex(),
-							postxinfo.nValues, postxinfo.nTime, postxinfo.nNonce);
-//					cout << "miner block hash:" << pBlock->SignatureHash().GetHex() << endl;
-//					cout << "miner regId :" << regid.ToString() << endl;
-//					cout << "miner keyid's pubkey:" << HexStr(tep.begin(),tep.end()) << endl;
-//					cout << "miner item's accont:" << item.ToString() << endl;
-
-					if (pwalletMain->Sign(item.keyID,pBlock->SignatureHash(), pBlock->vSignature,item.MinerPKey.IsValid())) {
-//						cout << "miner signature:" << HexStr(pBlock->vSignature) << endl;
-						LogPrint("INFO","Create new block,hash:%s\n", pBlock->GetHash().GetHex());
-						return true;
-					} else {
-						LogPrint("ERROR", "sign fail\r\n");
-					}
-
-				} else {
-					LogPrint("ERROR", "GetKey fail or GetVec6 fail\r\n");
-				}
-
-			}
-		}
-	}
-
-	return false;
-}
 
 bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool bJustCheckSign) {
 
@@ -876,127 +713,6 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 
 		return pblocktemplate.release();
 }
-CBlockTemplate* CreateNewBlock() {
-//    // Create new block
-	auto_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
-	if (!pblocktemplate.get())
-		return NULL;
-	CBlock *pblock = &pblocktemplate->block; // pointer for convenience
-
-	// Create coinbase tx
-	CRewardTransaction rtx;
-
-	// Add our coinbase tx as first transaction
-	pblock->vptx.push_back(make_shared<CRewardTransaction>(rtx));
-	pblocktemplate->vTxFees.push_back(-1); // updated at end
-	pblocktemplate->vTxSigOps.push_back(-1); // updated at end
-
-	// Largest block you're willing to create:
-	unsigned int nBlockMaxSize = SysCfg().GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
-	// Limit to betweeen 1K and MAX_BLOCK_SIZE-1K for sanity:
-	nBlockMaxSize = max((unsigned int) 1000, min((unsigned int) (MAX_BLOCK_SIZE - 1000), nBlockMaxSize));
-
-	// How much of the block should be dedicated to high-priority transactions,
-	// included regardless of the fees they pay
-	unsigned int nBlockPrioritySize = SysCfg().GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE);
-	nBlockPrioritySize = min(nBlockMaxSize, nBlockPrioritySize);
-
-	// Minimum block size you want to create; block will be filled with free transactions
-	// until there are no more or the block reaches this size:
-	unsigned int nBlockMinSize = SysCfg().GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE);
-	nBlockMinSize = min(nBlockMaxSize, nBlockMinSize);
-
-	// Collect memory pool transactions into the block
-	int64_t nFees = 0;
-	{
-		LOCK2(cs_main, mempool.cs);
-		CBlockIndex* pIndexPrev = chainActive.Tip();
-//		CAccountViewCache accview(*pAccountViewTip, true);
-
-		bool fPrintPriority = SysCfg().GetBoolArg("-printpriority", false);
-
-		// This vector will be sorted into a priority queue:
-		vector<TxPriority> vecPriority;
-
-		GetPriorityTx(vecPriority);
-
-		// Collect transactions into block
-		uint64_t nBlockSize = ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
-		uint64_t nBlockTx = 0;
-		int nBlockSigOps = 100;
-		bool fSortedByFee = true;
-
-		TxPriorityCompare comparer(fSortedByFee);
-		make_heap(vecPriority.begin(), vecPriority.end(), comparer);
-		CAccountViewCache accviewtemp(*pAccountViewTip, true);
-		CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
-		CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
-
-		while (!vecPriority.empty()) {
-			// Take highest priority transaction off the priority queue:
-			double dPriority = vecPriority.front().get<0>();
-			double dFeePerKb = vecPriority.front().get<1>();
-			shared_ptr<CBaseTransaction> stx = vecPriority.front().get<2>();
-			CBaseTransaction *pBaseTx = stx.get();
-			//const CTransaction& tx = *(vecPriority.front().get<2>());
-
-			pop_heap(vecPriority.begin(), vecPriority.end(), comparer);
-			vecPriority.pop_back();
-
-			// Size limits
-			unsigned int nTxSize = ::GetSerializeSize(*pBaseTx, SER_NETWORK, PROTOCOL_VERSION);
-			if (nBlockSize + nTxSize >= nBlockMaxSize)
-				continue;
-
-			// Skip free transactions if we're past the minimum block size:
-			if (fSortedByFee && (dFeePerKb < CTransaction::nMinRelayTxFee) && (nBlockSize + nTxSize >= nBlockMinSize))
-				continue;
-
-			// Prioritize by fee once past the priority size or we run out of high-priority
-			// transactions:
-			if (!fSortedByFee && ((nBlockSize + nTxSize >= nBlockPrioritySize) || !AllowFree(dPriority))) {
-				fSortedByFee = true;
-				comparer = TxPriorityCompare(fSortedByFee);
-				make_heap(vecPriority.begin(), vecPriority.end(), comparer);
-			}
-			if(uint256(0) != std::move(txCacheTemp.IsContainTx(std::move(pBaseTx->GetHash())))) {
-				LogPrint("INFO","CreatePosTx duplicate tx\n");
-				continue;
-			}
-
-			CTxUndo txundo;
-			CValidationState state;
-			if(pBaseTx->IsCoinBase()){
-				assert(0); //never come here
-			}
-			if (!pBaseTx->UpdateAccount(nBlockTx + 1, accviewtemp, state, txundo, pIndexPrev->nHeight + 1,
-					txCacheTemp, contractScriptTemp)) {
-				continue;
-			}
-			nBlockTx++;
-			pblock->vptx.push_back(stx);
-			nFees += pBaseTx->GetFee();
-			nBlockSize += stx->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
-
-		}
-
-		nLastBlockTx = nBlockTx;
-		nLastBlockSize = nBlockSize;
-		LogPrint("INFO","CreateNewBlock(): total size %u\n", nBlockSize);
-
-		((CRewardTransaction*) pblock->vptx[0].get())->rewardValue = nFees;
-
-		// Fill in header
-		pblock->hashPrevBlock = pIndexPrev->GetBlockHash();
-		UpdateTime(*pblock, pIndexPrev);
-		pblock->nBits = GetNextWorkRequired(pIndexPrev, pblock);
-		pblock->nNonce = 0;
-		pblock->nHeight = pIndexPrev->nHeight + 1;
-
-	}
-
-	return pblocktemplate.release();
-}
 
 bool CheckWork(CBlock* pblock, CWallet& wallet) {
 //	uint256 hash = pblock->GetHash();
@@ -1153,7 +869,10 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 		unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
 		CBlockIndex* pindexPrev = chainActive.Tip();
 
-		auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock());
+		CAccountViewCache accview(*pAccountViewTip, true);
+		CTransactionDBCache txCache(*pTxCacheTip, true);
+		CScriptDBViewCache ScriptDbTemp(*pScriptDBTip, true);
+		auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock(accview,txCache,ScriptDbTemp));
 		if (!pblocktemplate.get())
 			return false;
 		CBlock *pblock = &pblocktemplate.get()->block;
@@ -1167,7 +886,7 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 			set<CKeyID> setCreateKey;
 			setCreateKey.clear();
 			setCreateKey.insert(keyID);
-			if (CreatePosTx(pindexPrev, pblock,setCreateKey)) {
+			if (CreatePosTx(pindexPrev, pblock,setCreateKey,accview,txCache,ScriptDbTemp)) {
 				CheckWork(pblock, *pwalletMain);
 				int nBlockSize = pblock->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
 			}
