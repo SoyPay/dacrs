@@ -2175,7 +2175,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     int64_t llBeginCheckBlockTime = GetTimeMillis();
     // Preliminary checks
     if (!CheckBlock(*pblock, state)) {
-    	LogPrint("INFO", "CheckBlock() id: %d elapse time:%lld ms\n",chainActive.Tip(),GetTimeMillis() - llBeginCheckBlockTime);
+    	LogPrint("INFO", "CheckBlock() id: %d elapse time:%lld ms\n",chainActive.Height(),GetTimeMillis() - llBeginCheckBlockTime);
         return ERROR("ProcessBlock() : CheckBlock FAILED");
     }
     LogPrint("INFO", "CheckBlock() elapse time:%lld ms\n", GetTimeMillis() - llBeginCheckBlockTime);
