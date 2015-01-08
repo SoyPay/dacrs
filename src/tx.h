@@ -1442,7 +1442,7 @@ public:
 		return (PublicKey.IsFullyValid() && PublicKey.GetKeyID() == keyID);
 	}
 	bool SetRegId(const CRegID &regID){this->regID = regID;return true;};
-	bool GetRegId(CRegID &regID)const {regID = this->regID;return regID.IsEmpty();};
+	bool GetRegId(CRegID &regID)const {regID = this->regID;return !regID.IsEmpty();};
 	uint64_t GetRewardAmount(int nCurHeight);
 	uint64_t GetSripteFreezeAmount(int nCurHeight);
 	uint64_t GetSelfFreezeAmount(int nCurHeight);

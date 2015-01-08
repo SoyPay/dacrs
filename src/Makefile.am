@@ -3,21 +3,21 @@ include Makefile.include
 AM_CPPFLAGS += -I$(builddir)
 
 noinst_LIBRARIES = \
-  libsoypay_server.a \
-  libsoypay_common.a \
-  libsoypay_cli.a
+  libdacrs_server.a \
+  libdacrs_common.a \
+  libdacrs_cli.a
 if ENABLE_WALLET
-noinst_LIBRARIES += libsoypay_wallet.a
+noinst_LIBRARIES += libdacrs_wallet.a
 endif
 
 bin_PROGRAMS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += soypayd
+  bin_PROGRAMS += dacrs-d
 endif
 
 if BUILD_BITCOIN_CLI
-  bin_PROGRAMS += soypay-cli
+  bin_PROGRAMS += dacrs-cli
 endif
 
 SUBDIRS = . $(BUILD_QT) $(BUILD_P_TEST) $(BUILD_TEST)
@@ -101,7 +101,7 @@ obj/build.h: FORCE
 	  $(abs_top_srcdir)
 version.o: obj/build.h
 
-libsoypay_server_a_SOURCES = \
+libdacrs_server_a_SOURCES = \
   tx.cpp \
   addrman.cpp \
   alert.cpp \
@@ -129,7 +129,7 @@ libsoypay_server_a_SOURCES = \
   $(JSON_H) \
   $(BITCOIN_CORE_H)
 
-libsoypay_wallet_a_SOURCES = \
+libdacrs_wallet_a_SOURCES = \
   crypter.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \
@@ -138,7 +138,7 @@ libsoypay_wallet_a_SOURCES = \
   rpctx.cpp \
   $(BITCOIN_CORE_H)
 
-libsoypay_common_a_SOURCES = \
+libdacrs_common_a_SOURCES = \
   base58.cpp \
   allocators.cpp \
   chainparams.cpp \
@@ -157,48 +157,48 @@ libsoypay_common_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
-libsoypay_common_a_SOURCES += compat/glibc_compat.cpp
-libsoypay_common_a_SOURCES += compat/glibcxx_compat.cpp
+libdacrs_common_a_SOURCES += compat/glibc_compat.cpp
+libdacrs_common_a_SOURCES += compat/glibcxx_compat.cpp
 endif
 
-libsoypay_cli_a_SOURCES = \
+libdacrs_cli_a_SOURCES = \
   rpcclient.cpp \
   $(BITCOIN_CORE_H)
 
-nodist_libsoypay_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
+nodist_libdacrs_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
 #
 
 # bitcoind binary #
-soypayd_LDADD = \
-  libsoypay_server.a \
-  libsoypay_wallet.a \
-  libsoypay_cli.a \
-  libsoypay_common.a \
+dacrs_d_LDADD = \
+  libdacrs_server.a \
+  libdacrs_wallet.a \
+  libdacrs_cli.a \
+  libdacrs_common.a \
   $(LIBLEVELDB) \
   $(LIBMEMENV)
 #if ENABLE_WALLET
-#soypayd_LDADD += libsoypay_wallet.a
+#dacrs_d_LDADD += libdacrs_wallet.a
 #endif
-soypayd_SOURCES = soypayd.cpp
+dacrs_d_SOURCES = dacrsd.cpp
 #
 
 if TARGET_WINDOWS
-soypayd_SOURCES += soypayd-res.rc
+dacrs_d_SOURCES += dacrsd-res.rc
 endif
 
 AM_CPPFLAGS += $(BDB_CPPFLAGS)
-soypayd_LDADD += $(BOOST_LIBS) $(BDB_LIBS)
+dacrs_d_LDADD += $(BOOST_LIBS) $(BDB_LIBS)
 
 # bitcoin-cli binary #
-soypay_cli_LDADD = \
-  libsoypay_cli.a \
-  libsoypay_common.a \
+dacrs_cli_LDADD = \
+  libdacrs_cli.a \
+  libdacrs_common.a \
   $(BOOST_LIBS)
-soypay_cli_SOURCES = soypayd-cli.cpp
+dacrs_cli_SOURCES = dacrsd-cli.cpp
 #
 
 if TARGET_WINDOWS
-soypay_cli_SOURCES += soypay-cli-res.rc
+dacrs_cli_SOURCES += dacrs-cli-res.rc
 endif
 
 # NOTE: This dependency is not strictly necessary, but without it make may try to build both in parallel, which breaks the LevelDB build system in a race
@@ -209,7 +209,7 @@ leveldb/%.a:
 	  CC="$(CC)" PLATFORM=$(TARGET_OS) AR="$(AR)" $(LEVELDB_TARGET_FLAGS) \
 	  OPT="$(CXXFLAGS) $(CPPFLAGS)"
 
-qt/bitcoinstrings.cpp: $(libsoypay_server_a_SOURCES) $(libsoypay_common_a_SOURCES) $(libsoypay_cli_a_SOURCES)
+qt/bitcoinstrings.cpp: $(libdacrs_server_a_SOURCES) $(libdacrs_common_a_SOURCES) $(libdacrs_cli_a_SOURCES)
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
 	@cd $(top_srcdir); XGETTEXT=$(XGETTEXT) share/qt/extract_strings_qt.py
 
