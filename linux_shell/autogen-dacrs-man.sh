@@ -5,25 +5,25 @@ if [ $# = 0 ]; then
   	echo -e "\033[40;33m"
 		echo warming  your had not inputed assemble model
 		echo "$PWD"
-		echo autogen-dspay-man [MODEL NAME]
+		echo autogen-dacrs-man [MODEL NAME]
 		echo
 		echo	EXAMPLE:
 		echo
-		echo	autogen-dspay-man ["soypayd|soypay-cli|soypay-test|soypay-ptest"]
+		echo	autogen-dacrs-man ["dacrs-d|dacrs-cli|dacrs-test|dacrs-ptest"]
 	echo -e "\033[40;37m"
 		exit 1
 elif [ $# = 1 ]; then
 	case $1 in 
-		soypayd)
+		dacrs-d)
 		flag1=--with-daemon
 		;;
-		soypay-cli)
+		dacrs-cli)
 		flag1=--with-cli
 		;;
-		soypay-test)
+		dacrs-test)
 		flag1=--enable-tests
 		;;
-		soypay-ptest)
+		dacrs-ptest)
 		flag1=--enable-ptests
 		;;
 		*)
@@ -35,16 +35,16 @@ elif [ $# = 1 ]; then
 	esac
 elif [ $# = 2 ]; then
 	case $1 in 
-		soypayd)
+		dacrs-d)
 		flag1=--with-daemon
 		;;
-		soypay-cli)
+		dacrs-cli)
 		flag1=--with-cli
 		;;
-		soypay-test)
+		dacrs-test)
 		flag1=--enable-tests
 		;;
-		soypay-ptest)
+		dacrs-ptest)
 		flag1=--enable-ptests
 		;;
 		*)
@@ -55,16 +55,16 @@ elif [ $# = 2 ]; then
 		;;
 	esac
 	case $2 in 
-		soypayd)
+		dacrs-d)
 		flag2=--with-daemon
 		;;
-		soypay-cli)
+		dacrs-cli)
 		flag2=--with-cli
 		;;
-		soypay-test)
+		dacrs-test)
 		flag2=--enable-tests
 		;;
-		soypay-ptest)
+		dacrs-ptest)
 		flag2=--enable-ptests
 		;;
 		*)
@@ -76,16 +76,16 @@ elif [ $# = 2 ]; then
 	esac
 elif [ $# = 3 ]; then
 	case $1 in 
-		soypayd)
+		dacrs-d)
 		flag1=--with-daemon
 		;;
-		soypay-cli)
+		dacrs-cli)
 		flag1=--with-cli
 		;;
-		soypay-test)
+		dacrs-test)
 		flag1=--enable-tests
 		;;
-		soypay-ptest)
+		dacrs-ptest)
 		flag1=--enable-ptests
 		;;
 		*)
@@ -96,16 +96,16 @@ elif [ $# = 3 ]; then
 		;;
 	esac
 	case $2 in 
-		soypayd)
+		dacrs-d)
 		flag2=--with-daemon
 		;;
-		soypay-cli)
+		dacrs-cli)
 		flag2=--with-cli
 		;;
-		soypay-test)
+		dacrs-test)
 		flag2=--enable-tests
 		;;
-		soypay-ptest)
+		dacrs-ptest)
 		flag2=--enable-ptests
 		;;
 		*)
@@ -116,16 +116,16 @@ elif [ $# = 3 ]; then
 		;;
 	esac
 	case $3 in 
-		soypayd)
+		dacrs-d)
 		flag3=--with-daemon
 		;;
-		soypay-cli)
+		dacrs-cli)
 		flag3=--with-cli
 		;;
-		soypay-test)
+		dacrs-test)
 		flag3=--enable-tests
 		;;
-		soypay-ptest)
+		dacrs-ptest)
 		flag3=--enable-ptests
 		;;
 		*)
@@ -137,16 +137,16 @@ elif [ $# = 3 ]; then
 	esac
 elif [ $# = 4 ]; then
 	case $1 in 
-		soypayd)
+		dacrs-d)
 		flag1=--with-daemon
 		;;
-		soypay-cli)
+		dacrs-cli)
 		flag1=--with-cli
 		;;
-		soypay-test)
+		dacrs-test)
 		flag1=--enable-tests
 		;;
-		soypay-ptest)
+		dacrs-ptest)
 		flag1=--enable-ptests
 		;;
 		*)
@@ -157,16 +157,16 @@ elif [ $# = 4 ]; then
 		;;
 	esac
 	case $2 in 
-		soypayd)
+		dacrs-d)
 		flag2=--with-daemon
 		;;
-		soypay-cli)
+		dacrs-cli)
 		flag2=--with-cli
 		;;
-		soypay-test)
+		dacrs-test)
 		flag2=--enable-tests
 		;;
-		soypay-ptest)
+		dacrs-ptest)
 		flag2=--enable-ptests
 		;;
 		*)
@@ -177,16 +177,16 @@ elif [ $# = 4 ]; then
 		;;
 	esac
 	case $3 in 
-		soypayd)
+		dacrs-d)
 		flag3=--with-daemon
 		;;
-		soypay-cli)
+		dacrs-cli)
 		flag3=--with-cli
 		;;
-		soypay-test)
+		dacrs-test)
 		flag3=--enable-tests
 		;;
-		soypay-ptest)
+		dacrs-ptest)
 		flag3=--enable-ptests
 		;;
 		*)
@@ -197,16 +197,16 @@ elif [ $# = 4 ]; then
 		;;
 	esac
 	case $4 in 
-		soypayd)
+		dacrs-d)
 		flag4=--with-daemon
 		;;
-		soypay-cli)
+		dacrs-cli)
 		flag4=--with-cli
 		;;
-		soypay-test)
+		dacrs-test)
 		flag4=--enable-tests
 		;;
-		soypay-ptest)
+		dacrs-ptest)
 		flag4=--enable-ptests
 		;;
 		*)
@@ -219,7 +219,7 @@ elif [ $# = 4 ]; then
 else
 	echo -e "\033[40;32m"
 	echo warming  your had inputed illegal params
-   	echo please insure the params in [dspayd|dspay-cli|dspay-test|dspay-ptest]
+   	echo please insure the params in [dacrs-d|dacrs-cli|dacrs-test|dacrs-ptest]
 	echo -e "\033[40;37m" 
 	exit 1
 fi
