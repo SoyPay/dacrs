@@ -1245,6 +1245,7 @@ bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 						return true;
 					});
 					assert(it != vFreedomFund.end());
+
 					it->value -= iterFund->value;
 					if (!it->value)
 						vFreedomFund.erase(it);
