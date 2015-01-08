@@ -22,7 +22,7 @@ endif
 
 SUBDIRS = . $(BUILD_QT) $(BUILD_P_TEST) $(BUILD_TEST)
 #DIST_SUBDIRS = . qt test
-DIST_SUBDIRS = . test
+DIST_SUBDIRS = . test ptest
 .PHONY: FORCE
 # bitcoin core #
 BITCOIN_CORE_H = \
