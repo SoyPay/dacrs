@@ -2137,3 +2137,23 @@ Value sigstr(const Array& params, bool fHelp)
 	}
 	return obj;
 }
+Value printblokdbinfo(const Array& params, bool fHelp){
+	if (fHelp || params.size() != 0) {
+		string msg = "registerscripttx nrequired \"addr\" \"script\" fee height\n"
+				"\nregister script\n"
+				"\nArguments:\n"
+				"\nExamples:\n"
+				+ HelpExampleCli("printblokdbinfo",
+						"") + "\nAs json rpc call\n"
+				+ HelpExampleRpc("printblokdbinfo",
+						"");
+		throw runtime_error(msg);
+	}
+
+	if (!pAccountViewTip->Flush())
+	  throw runtime_error("Failed to write to account database\n");
+	if (! pScriptDBTip->Flush())
+		 throw runtime_error("Failed to write to account database\n");
+		WriteBlockLog(false);
+		return Value::null;
+}

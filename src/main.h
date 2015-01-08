@@ -1048,7 +1048,7 @@ extern CTransactionDBCache *pTxCacheTip;
 extern CScriptDBViewCache *pScriptDBTip;
 
 extern std::tuple<bool, boost::thread*> RunDacrs(int argc, char* argv[]);
-
+extern bool WriteBlockLog(bool falg);
 //extern set<uint256> setTxHashCache;
 //extern map<uint256, set<uint256> > mapTxHashCacheByPrev;
 

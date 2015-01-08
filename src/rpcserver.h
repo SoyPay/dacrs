@@ -162,7 +162,7 @@ extern json_spirit::Value createcontracttxraw(const json_spirit::Array& params, 
 extern json_spirit::Value createfreezetxraw(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value registerscripttxraw(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sigstr(const json_spirit::Array& params, bool fHelp);
-
+extern json_spirit::Value printblokdbinfo(const json_spirit::Array& params, bool fHelp);
 
 
 extern json_spirit::Value getblockcount(const json_spirit::Array& params, bool fHelp); // in rpcblockchain.cpp
