@@ -175,7 +175,7 @@ bool WriteBlockLog(bool falg) {
 	file.open(strScriptLog);
 	if (!file.is_open())
 		return false;
-	file << write_string(Value(pScriptDBTip->ToJosnObj()), true);
+	file << write_string(Value(pScriptDBTip->ToJosnObj("def")), true);
 	file.close();
 
 	string strAccountViewLog = strLogFilePath + strprintf("_%d",high)+"_AccountView.txt";

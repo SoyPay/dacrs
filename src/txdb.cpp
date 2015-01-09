@@ -467,3 +467,98 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 	return true;
 }
 
+Object CScriptDB::ToJosnObj(string Prefix) {
+
+	Object obj;
+	Array arrayObj;
+
+	leveldb::Iterator *pcursor = db.NewIterator();
+	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+	ssKeySet.insert(ssKeySet.end(), &Prefix[0], &Prefix[3]);
+	pcursor->Seek(ssKeySet.str());
+	vector<unsigned char> vScriptId;
+	vector<unsigned char> vValue;
+	while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		try {
+			leveldb::Slice slKey = pcursor->key();
+			string strScriptKey(slKey.data(), 0, slKey.size());
+			string strPrefix = strScriptKey.substr(0,Prefix.length());
+			if (strPrefix == Prefix) {
+				leveldb::Slice slValue = pcursor->value();
+				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+				ssValue >> vValue;
+				vScriptId.clear();
+				vScriptId.insert(vScriptId.end(), slKey.data()+3, slKey.data()+slKey.size());
+				Object obj;
+				if(Prefix == "def"){
+				obj.push_back(Pair("scriptid", HexStr(vScriptId)));
+				obj.push_back(Pair("value", HexStr(vValue)));
+				}
+				else{
+					obj.push_back(Pair("key", HexStr(vScriptId)));
+					obj.push_back(Pair("value", HexStr(vValue)));
+				}
+				arrayObj.push_back(obj);
+				pcursor->Next();
+			} else {
+				break;
+			}
+		} catch (std::exception &e) {
+			return ERROR(" Deserialize or I/O error ");
+		}
+	}
+	delete pcursor;
+
+	arrayObj.push_back(ToJosnObj("data"));
+	return obj;
+}
+
+Object CAccountViewDB::ToJosnObj(char Prefix) {
+		Object obj;
+		Array arrayObj;
+		leveldb::Iterator *pcursor =db.NewIterator();
+		CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+		if(Prefix == 'a'){
+			vector<unsigned char>account;
+			ssKeySet << make_pair('a',account);
+		}else{
+			CKeyID keyid;
+			ssKeySet << make_pair('k',keyid);
+		}
+		pcursor->Seek(ssKeySet.str());
+		vector<unsigned char> key;
+		vector<unsigned char> vValue;
+		// Load mapBlockIndex
+		while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		try {
+			leveldb::Slice slKey = pcursor->key();
+			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+			char chType;
+			ssKey >> chType;
+			if (chType == Prefix) {
+				leveldb::Slice slValue = pcursor->value();
+				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+				ssValue >> vValue;
+				key.clear();
+				key.insert(key.end(), slKey.data()+3, slKey.data()+slKey.size());
+				Object obj;
+				if(Prefix == 'a'){
+					obj.push_back(Pair("accountid:", HexStr(key)));
+					obj.push_back(Pair("keyid", HexStr(vValue)));
+				}else{
+					obj.push_back(Pair("keyid:", HexStr(key)));
+					obj.push_back(Pair("account", HexStr(vValue)));
+				}
+				arrayObj.push_back(obj);
+			} else {
+				break; // if shutdown requested or finished loading block index
+			}
+		} catch (std::exception &e) {
+			return ERROR("Deserialize or I/O error");
+			}
+		}
+		delete pcursor;
+		ToJosnObj('k');
+}

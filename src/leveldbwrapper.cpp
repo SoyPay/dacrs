@@ -98,34 +98,34 @@ int64_t CLevelDBWrapper::GetDbCount()
    	delete pcursor;
    	return ret == -1 ? 0 : ret;
    }
-Object CLevelDBWrapper::ToJosnObj()
-{
-	Object obj;
-	Array arrayObj;
-	leveldb::Iterator *pcursor = NewIterator();
-	int64_t ret = -1;
-	pcursor->SeekToFirst();
-	while (pcursor->Valid()) {
-		boost::this_thread::interruption_point();
-		try {
-			leveldb::Slice slKey = pcursor->key();
-			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
-			leveldb::Slice slValue = pcursor->value();
-			CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-			Object obj;
-			obj.push_back(Pair("key", HexStr(ssKey)));
-			obj.push_back(Pair("value", HexStr(ssValue)));
-			arrayObj.push_back(obj);
-			pcursor->Next();
-
-		} catch (std::exception &e) {
-			 if(pcursor)
-			 delete pcursor;
-			 ERROR("%s : Deserialize or I/O error - %s", __func__, e.what());
-			 return obj;
-		}
-	}
-	delete pcursor;
-	obj.push_back(Pair("scriptdb", arrayObj));
-	return obj;
-}
+//Object CLevelDBWrapper::ToJosnObj()
+//{
+//	Object obj;
+//	Array arrayObj;
+//	leveldb::Iterator *pcursor = NewIterator();
+//	int64_t ret = -1;
+//	pcursor->SeekToFirst();
+//	while (pcursor->Valid()) {
+//		boost::this_thread::interruption_point();
+//		try {
+//			leveldb::Slice slKey = pcursor->key();
+//			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+//			leveldb::Slice slValue = pcursor->value();
+//			CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+//			Object obj;
+//			obj.push_back(Pair("key", HexStr(ssKey)));
+//			obj.push_back(Pair("value", HexStr(ssValue)));
+//			arrayObj.push_back(obj);
+//			pcursor->Next();
+//
+//		} catch (std::exception &e) {
+//			 if(pcursor)
+//			 delete pcursor;
+//			 ERROR("%s : Deserialize or I/O error - %s", __func__, e.what());
+//			 return obj;
+//		}
+//	}
+//	delete pcursor;
+//	obj.push_back(Pair("scriptdb", arrayObj));
+//	return obj;
+//}

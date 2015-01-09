@@ -29,7 +29,7 @@ public:
 	virtual bool EraseKeyId(const vector<unsigned char> &accountId);
 	virtual bool GetAccount(const vector<unsigned char> &accountId, CAccount &account);
 	virtual bool SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &account);
-	virtual Object ToJosnObj();
+	virtual Object ToJosnObj(char Prefix);
 	virtual ~CAccountView(){};
 };
 
@@ -114,7 +114,7 @@ public:
 	virtual bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex,
 			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight,
 			set<CScriptDBOperLog> &setOperLog);
-	virtual Object ToJosnObj();
+	virtual Object ToJosnObj(string Prefix);
 	virtual ~CScriptDBView(){};
 };
 
@@ -173,7 +173,7 @@ public:
 	 */
 	bool Flush();
 	unsigned int GetCacheSize();
-	Object ToJosnObj() const;
+	Object ToJosnObj(string Prefix) const;
 
 private:
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);

@@ -458,7 +458,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 			if (curhash <= adjusthash) {
 				CRegID regid;
 
-				if (item.GetRegId(regid)) {
+				if (pAccountViewTip->GetRegId(item.keyID, regid)) {
 					CRewardTransaction *prtx = (CRewardTransaction *) pBlock->vptx[0].get();
 					prtx->rewardValue += item.GetInterest();
 					prtx->account = regid;

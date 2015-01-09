@@ -22,7 +22,7 @@ bool CAccountView::EraseKeyId(const vector<unsigned char> &accountId){
 	return false;
 }
 bool CAccountView::SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &account) {return false;}
-Object CAccountView::ToJosnObj(){
+Object CAccountView::ToJosnObj(char Prefix){
 	Object obj;
 	return obj;
 }
@@ -350,7 +350,7 @@ unsigned int CAccountViewCache::GetCacheSize(){
 Object CAccountViewCache::ToJosnObj() const {
 	Object obj;
 	obj.push_back(Pair("hashBlock", hashBlock.ToString()));
-	Object obj1 = pBase->ToJosnObj();
+	Object obj1 = pBase->ToJosnObj('a');
 
 	obj.push_back(Pair("cacheView", obj1));
 //	Array arrayObj;
@@ -384,7 +384,7 @@ bool CScriptDBView::GetScriptData(const int nCurBlockHeight, const vector<unsign
 		set<CScriptDBOperLog> &setOperLog) {
 	return false;
 }
-Object CScriptDBView:: ToJosnObj(){
+Object CScriptDBView:: ToJosnObj(string Prefix){
 	Object obj;
 	return obj;
 }
@@ -1059,7 +1059,7 @@ bool CScriptDBViewCache::GetTxRelAccount(const uint256 &txHash, set<CKeyID> &rel
 	ds >> relAccount;
 	return true;
 }
-Object CScriptDBViewCache::ToJosnObj() const {
+Object CScriptDBViewCache::ToJosnObj(string Prefix) const {
 //	Object obj;
 //	Array arrayObj;
 //	for (auto& item : mapDatas) {
@@ -1069,7 +1069,7 @@ Object CScriptDBViewCache::ToJosnObj() const {
 //		arrayObj.push_back(obj);
 //	}
 //	obj.push_back(Pair("mapDatas", arrayObj));
-	return pBase->ToJosnObj();
+	return pBase->ToJosnObj(Prefix);
 }
 
 
