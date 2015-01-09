@@ -505,12 +505,10 @@ Object CScriptDB::ToJosnObj(string Prefix) {
 				break;
 			}
 		} catch (std::exception &e) {
-			return ERROR(" Deserialize or I/O error ");
+			LogPrint("ERROR","line:%d,%s : Deserialize or I/O error - %s\n",__LINE__, __func__, e.what());
 		}
 	}
 	delete pcursor;
-
-	arrayObj.push_back(ToJosnObj("data"));
 	return obj;
 }
 
@@ -531,34 +529,34 @@ Object CAccountViewDB::ToJosnObj(char Prefix) {
 		vector<unsigned char> vValue;
 		// Load mapBlockIndex
 		while (pcursor->Valid()) {
-		boost::this_thread::interruption_point();
-		try {
-			leveldb::Slice slKey = pcursor->key();
-			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
-			char chType;
-			ssKey >> chType;
-			if (chType == Prefix) {
-				leveldb::Slice slValue = pcursor->value();
-				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-				ssValue >> vValue;
-				key.clear();
-				key.insert(key.end(), slKey.data()+3, slKey.data()+slKey.size());
-				Object obj;
-				if(Prefix == 'a'){
-					obj.push_back(Pair("accountid:", HexStr(key)));
-					obj.push_back(Pair("keyid", HexStr(vValue)));
-				}else{
-					obj.push_back(Pair("keyid:", HexStr(key)));
-					obj.push_back(Pair("account", HexStr(vValue)));
+			boost::this_thread::interruption_point();
+			try {
+				leveldb::Slice slKey = pcursor->key();
+				CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+				char chType;
+				ssKey >> chType;
+				if (chType == Prefix) {
+					leveldb::Slice slValue = pcursor->value();
+					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+					ssValue >> vValue;
+					key.clear();
+					key.insert(key.end(), slKey.data()+3, slKey.data()+slKey.size());
+					Object obj;
+					if(Prefix == 'a'){
+						obj.push_back(Pair("accountid:", HexStr(key)));
+						obj.push_back(Pair("keyid", HexStr(vValue)));
+					}else{
+						obj.push_back(Pair("keyid:", HexStr(key)));
+						obj.push_back(Pair("account", HexStr(vValue)));
+					}
+					arrayObj.push_back(obj);
+					} else {
+					break; // if shutdown requested or finished loading block index
 				}
-				arrayObj.push_back(obj);
-			} else {
-				break; // if shutdown requested or finished loading block index
-			}
-		} catch (std::exception &e) {
-			return ERROR("Deserialize or I/O error");
-			}
+			} catch (std::exception &e) {
+				LogPrint("ERROR","line:%d,%s : Deserialize or I/O error - %s\n",__LINE__, __func__, e.what());
+			 }
 		}
 		delete pcursor;
-		ToJosnObj('k');
+		return obj;
 }

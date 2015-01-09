@@ -349,10 +349,11 @@ unsigned int CAccountViewCache::GetCacheSize(){
 
 Object CAccountViewCache::ToJosnObj() const {
 	Object obj;
+	Array arrayObj;
 	obj.push_back(Pair("hashBlock", hashBlock.ToString()));
-	Object obj1 = pBase->ToJosnObj('a');
-
-	obj.push_back(Pair("cacheView", obj1));
+	arrayObj.push_back(pBase->ToJosnObj('a'));
+	arrayObj.push_back(pBase->ToJosnObj('k'));
+	obj.push_back(Pair("cacheView", arrayObj));
 //	Array arrayObj;
 //	for (auto& item : cacheAccounts) {
 //		Object obj;
@@ -1059,9 +1060,9 @@ bool CScriptDBViewCache::GetTxRelAccount(const uint256 &txHash, set<CKeyID> &rel
 	ds >> relAccount;
 	return true;
 }
-Object CScriptDBViewCache::ToJosnObj(string Prefix) const {
-//	Object obj;
-//	Array arrayObj;
+Object CScriptDBViewCache::ToJosnObj() const {
+	Object obj;
+	Array arrayObj;
 //	for (auto& item : mapDatas) {
 //		Object obj;
 //		obj.push_back(Pair("key", HexStr(item.first)));
@@ -1069,7 +1070,10 @@ Object CScriptDBViewCache::ToJosnObj(string Prefix) const {
 //		arrayObj.push_back(obj);
 //	}
 //	obj.push_back(Pair("mapDatas", arrayObj));
-	return pBase->ToJosnObj(Prefix);
+	arrayObj.push_back(pBase->ToJosnObj("def"));
+	arrayObj.push_back(pBase->ToJosnObj("data"));
+	obj.push_back(Pair("mapDatas", arrayObj));
+	return obj;
 }
 
 
