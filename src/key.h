@@ -273,7 +273,7 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
-			int len = 0;
+			unsigned int len = 0;
 			while(len < sizeof(vch))
 			{
 				READWRITE(vch[len++]);
@@ -299,6 +299,7 @@ public:
 	{
 		fValid = false;
 		memset(vch,0,sizeof(vch));
+		return true;
 	}
 
 	// Copy constructor. This is necessary because of memlocking.

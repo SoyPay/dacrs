@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ $# == 0 ]; then	
-  	echo -e "\033[40;33m"
+  	echo -e "\033[40;37m"
 		echo warming  your had not inputed assemble file
    		echo useing the deflaut folder $Folder 
 		echo "$PWD"
@@ -10,12 +10,12 @@ if [ $# == 0 ]; then
 		echo	EXAMPLE:
 		echo
 		echo	MakeShell main.cpp
-	echo -e "\033[40;37m"
+	echo -e "\033[0m"
 		exit 1
 	
 	
 else
-	echo -e "\033[40;32m"
+	echo -e "\033[41;37m"
 	if [ -f $1 ]; then	  
 		echo compile Start ...
 		echo compiling $1.
@@ -23,20 +23,27 @@ else
 			-I"$PWD"/leveldb/include -I"$PWD"/leveldb/helpers/memenv  -I"$PWD"/lotto -I"$PWD" \
 			-I/c/deps/boost_1_55_0/boost/thread -DHAVE_CONFIG_H\
 			-I/c/deps -I/c/deps/protobuf-2.5.0/src -I/c/deps/libpng-1.6.9 -I/c/deps/qrencode-3.4.3 -DBOOST_SPIRIT_THREADSAFE -DHAVE_BUILD_INFO \
-			-D__STDC_FORMAT_MACROS -D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -D_FILE_OFFSET_BITS=64  -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -DSTATICLIB \
-			-g3 -O0 -DDEBUG -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter -w  -Wstack-protector -fstack-protector-all -fPIE
+			-D__STDC_FORMAT_MACROS -D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -D_FILE_OFFSET_BITS=64 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -DSTATICLIB \
+			-g3 -O0 -Wextra -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector -fstack-protector-all -fPIE -fPIC \
+			-Waddress -Warray-bounds -Wc++0x-compat \
+           -Wchar-subscripts -Wimplicit-int -Wimplicit-function-declaration \ 
+           -Wnonnull -Wparentheses \
+           -Wreturn-type -Wsequence-point \
+           -Wsign-compare -Wstrict-aliasing -Wstrict-overflow=1 \
+           -Wswitch -Wtrigraphs -Wuninitialized \
+           -Wunknown-pragmas -Wunused-function -Wunused-label -Wunused-value
 
 		temp_var=$?
 			if [ $temp_var != 0 ]; then
 			echo -e "\033[40;31m"
 			echo "MAKE ERROR" 
-			echo -e "\033[40;37m"	
+			echo -e "\033[0m"	
         fi		
 		echo compiling End.
 	else
 		echo File $1 does not exists
 	fi
-	echo -e "\033[40;37m" 
+	echo -e "\033[0m" 
 fi
 
 
