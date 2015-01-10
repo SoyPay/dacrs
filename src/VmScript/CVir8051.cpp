@@ -77,7 +77,7 @@ struct __MapExterFun {
 };
 
 static unsigned short GetParaLen(unsigned char * &pbuf) {
-	unsigned char tem[5];
+//	unsigned char tem[5];
 	unsigned short ret = 0;
 	memcpy(&ret, pbuf, 2);
 	pbuf += 2;
@@ -94,10 +94,10 @@ static unsigned short GetParaLen(unsigned char * &pbuf) {
 	return ret;
 }
 
-static void GetParaData(unsigned char * &pbuf, unsigned char * &pdata, unsigned short datalen) {
-	pdata = pbuf;
-	pbuf += datalen;
-}
+//static void GetParaData(unsigned char * &pbuf, unsigned char * &pdata, unsigned short datalen) {
+//	pdata = pbuf;
+//	pbuf += datalen;
+//}
 static bool GetData(unsigned char * ipara, vector<std::shared_ptr < std::vector<unsigned char> > > &ret) {
 	int totallen = GetParaLen(ipara);
 	//assert(totallen >= 0);
@@ -334,7 +334,7 @@ static RET_DEFINE ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 //			printf("the des encrypt\r\n");
 			memcpy(key, &retdata.at(1).get()->at(0), sizeof(DES_cblock));
 			DES_set_key_unchecked(&key, &deskey1);
-			for (int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
+			for (unsigned int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
 				memcpy(&in, &desdata[ii * sizeof(DES_cblock)], sizeof(in));
 //				printf("in :%s\r\n", HexStr(in, in + 8, true).c_str());
 				DES_ecb_encrypt(&in, &out, &deskey1, DES_ENCRYPT);
@@ -350,7 +350,7 @@ static RET_DEFINE ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 			DES_set_key_unchecked(&key, &deskey3);
 			memcpy(key, &retdata.at(1).get()->at(0) + sizeof(DES_cblock), sizeof(DES_cblock));
 			DES_set_key_unchecked(&key, &deskey2);
-			for (int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
+			for (unsigned int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
 				memcpy(&in, &desdata[ii * sizeof(DES_cblock)], sizeof(in));
 				DES_ecb3_encrypt(&in, &out, &deskey1, &deskey2, &deskey3, DES_ENCRYPT);
 				memcpy(&desout[ii * sizeof(DES_cblock)], &out, sizeof(out));
@@ -368,7 +368,7 @@ static RET_DEFINE ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 //			printf("the des decrypt\r\n");
 			memcpy(key, &retdata.at(1).get()->at(0), sizeof(DES_cblock));
 			DES_set_key_unchecked(&key, &deskey1);
-			for (int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
+			for (unsigned int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
 				memcpy(&in, &desdata[ii * sizeof(DES_cblock)], sizeof(in));
 //				printf("in :%s\r\n", HexStr(in, in + 8, true).c_str());
 				DES_ecb_encrypt(&in, &out, &deskey1, DES_DECRYPT);
@@ -384,7 +384,7 @@ static RET_DEFINE ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 			DES_set_key_unchecked(&key, &deskey3);
 			memcpy(key, &retdata.at(1).get()->at(0) + sizeof(DES_cblock), sizeof(DES_cblock));
 			DES_set_key_unchecked(&key, &deskey2);
-			for (int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
+			for (unsigned int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
 				memcpy(&in, &desdata[ii * sizeof(DES_cblock)], sizeof(in));
 				DES_ecb3_encrypt(&in, &out, &deskey1, &deskey2, &deskey3, DES_DECRYPT);
 				memcpy(&desout[ii * sizeof(DES_cblock)], &out, sizeof(out));
@@ -1172,7 +1172,7 @@ static RET_DEFINE ExGetAuthoritedDefineFunc(unsigned char * ipara,void * pVmScri
 	}
 
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptRegID().GetVec6();
-	int height = pVmScriptRun->GetComfirHeight();
+//	int height = pVmScriptRun->GetComfirHeight();
 
 	vector<unsigned char> vData;
 	if(!aAccount.GetUserData(scriptid,vData))
@@ -2567,7 +2567,7 @@ INT8U CVir8051::GetOpcode(void) const {
 
 INT8U& CVir8051::GetRamRef(INT8U addr) {
 
-	static const INT8U sfrarry[] = { a_addr, b_addr, dptrl, dptrh, psw_addr, sp_addr };
+//	static const INT8U sfrarry[] = { a_addr, b_addr, dptrl, dptrh, psw_addr, sp_addr };
 //	if (find(sfrarry, sfrarry + sizeof(sfrarry), addr) != sfrarry + sizeof(sfrarry)) {
 	if (addr > 0x7F) {
 		return m_ChipSfr[addr];
@@ -2974,9 +2974,9 @@ INT16U CVir8051::GetLcallAddr(void) {
 //    }
 
 void CVir8051::Opcode_12_LCALL_Addr16(void) {
-	INT8U temp = 0;
+//	INT8U temp = 0;
 	INT16U addr = 0;
-	void *p = NULL;
+//	void *p = NULL;
 
 	GetOpcodeData((INT8U*) &addr, 2);
 	Sys.PC += 3;
@@ -3008,7 +3008,7 @@ void CVir8051::Opcode_14_DEC_A(void) {
 void CVir8051::Opcode_15_DEC_Direct(void) {
 	INT8U temp = 0;
 	INT8U addr = 0;
-	void *p = NULL;
+//	void *p = NULL;
 	GetOpcodeData(&addr, 1);
 //	p = GetPointRamAddr(addr);
 
@@ -3341,7 +3341,7 @@ void CVir8051::Opcode_30_JNB_Bit_Rel(void) {
 
 void CVir8051::Opcode_32_RETI(void) {
 	INT8U temp = 0;
-	void *p = NULL;
+//	void *p = NULL;
 //	p = GetPointRamAddr(Sys.sp());
 //	memcpy(&temp, p, sizeof(temp));
 	temp = GetRamData(Sys.sp());
@@ -3662,7 +3662,7 @@ void CVir8051::Opcode_60_JZ_Rel(void) {
 void CVir8051::Opcode_62_XRL_Direct_A(void) {
 	INT8U temp;
 	INT8U addr;
-	void *p = NULL;
+//	void *p = NULL;
 	GetOpcodeData(&addr, 1);
 //	p = GetPointRamAddr(addr);
 //	memcpy(&temp, p, sizeof(temp));
@@ -3676,7 +3676,7 @@ void CVir8051::Opcode_62_XRL_Direct_A(void) {
 void CVir8051::Opcode_63_XRL_Direct_Data(void) {
 	INT8U temp[2] = { 0 };
 	INT8U data;
-	void *p = NULL;
+//	void *p = NULL;
 	GetOpcodeData(&temp[0], 2);
 //	p = GetPointRamAddr(temp[0]);
 //	memcpy(&data, p, 1);
@@ -3696,7 +3696,7 @@ void CVir8051::Opcode_64_XRL_A_Data(void) {
 void CVir8051::Opcode_65_XRL_A_Direct(void) {
 	INT8U temp;
 	INT8U addr;
-	void *p = NULL;
+//	void *p = NULL;
 	GetOpcodeData(&addr, 1);
 //	p = GetPointRamAddr(addr);
 //	memcpy(&temp, p, 1);
@@ -3796,8 +3796,8 @@ void CVir8051::Opcode_74_MOV_A_Data(void) {
 }
 void CVir8051::Opcode_75_MOV_Direct_Data(void) {
 	INT8U temp[2] = { 0 };
-	INT8U data;
-	void *p = NULL;
+//	INT8U data;
+//	void *p = NULL;
 	GetOpcodeData(&temp[0], 2);
 //	p = GetPointRamAddr(temp[0]);
 
@@ -3914,7 +3914,7 @@ void CVir8051::Opcode_84_DIV_AB(void) {
 }
 void CVir8051::Opcode_85_MOV_Direct_Direct(void) {
 	INT8U temp[2];
-	INT8U data[2];
+//	INT8U data[2];
 //	void *p0 = NULL;
 //	void *p1 = NULL;
 	INT8U tem;

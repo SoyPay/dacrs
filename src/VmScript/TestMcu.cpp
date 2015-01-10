@@ -5088,7 +5088,7 @@ string CTestMcu::MOVC_A_DPTR_Test(int space) {
 string CTestMcu::SUBB_A_RnTest(int space) {
 	byte code;
 	int PC = 0, aa = 0, rr = 0;
-	byte expect;
+	int expect;
 	byte cc;
 
 	auto checkresult = [&]()

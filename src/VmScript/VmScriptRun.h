@@ -39,7 +39,7 @@ class CVmScriptRun {
 	/**
 	 * the block height
 	 */
-	int height;
+	unsigned int height;
 	CScriptDBViewCache *m_ScriptDBTip;
 	CAccountViewCache *m_view;
 	vector<CVmOperate> m_output;
