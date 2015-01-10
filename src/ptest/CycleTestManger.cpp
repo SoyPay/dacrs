@@ -30,10 +30,10 @@ class CycleTestManger {
 
 public:
 	CycleTestManger(){
+		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
 //		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
 //		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
-//		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
-		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
+//		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
 		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
 	};
 	void run() {

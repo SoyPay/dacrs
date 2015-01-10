@@ -81,9 +81,7 @@ public:
 	{
 		return db.GetDbCount();
 	}
-	Object ToJosnObj(){
-		return db.ToJosnObj();
-	}
+	Object ToJosnObj(char Prefix);
 };
 
 class CTransactionDB: public CTransactionDBView{
@@ -129,8 +127,6 @@ public:
 	{
 		return db.GetDbCount();
 	}
-	Object ToJosnObj(){
-		return db.ToJosnObj();
-	}
+	Object ToJosnObj(string Prefix);
 };
 #endif // DACRS_TXDB_LEVELDB_H

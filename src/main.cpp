@@ -153,12 +153,16 @@ struct CMainSignals {
 } g_signals;
 }
 
-bool WriteBlockLog() {
+bool WriteBlockLog(bool falg) {
 	if (NULL == chainActive.Tip()) {
 		return false;
 	}
 
+
 	boost::filesystem::path LogDirpath = GetDataDir() / "BlockLog";
+	if(!falg){
+		LogDirpath = GetDataDir() / "BlockLog1";
+	}
 	if (!boost::filesystem::exists(LogDirpath)) {
 		boost::filesystem::create_directory(LogDirpath);
 	}
@@ -186,6 +190,19 @@ bool WriteBlockLog() {
 	if (!file.is_open())
 		return false;
 	file << write_string(Value(pTxCacheTip->ToJosnObj()), true);
+	file.close();
+
+	string strundoLog = strLogFilePath + strprintf("_%d",high)+"_undo.txt";
+	file.open(strundoLog);
+	if (!file.is_open())
+		return false;
+    CBlockUndo blockUndo;
+    CDiskBlockPos pos =chainActive.Tip()->GetUndoPos();
+    if (!pos.IsNull()){
+    	 if (blockUndo.ReadFromDisk(pos, chainActive.Tip()->pprev->GetBlockHash()))
+    		file << blockUndo.ToString();
+    }
+
 	file.close();
 	return true;
 }
@@ -1593,16 +1610,6 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     if (SysCfg().IsBenchmark())
         LogPrint("INFO","- Connect: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
 
-    // Write new block info to log, if necessary.
-    if (SysCfg().GetArg("-blocklog", 0) && chainActive.Height()%100 == 0) {
-	  if (!pAccountViewTip->Flush())
-		return state.Abort(_("Failed to write to account database"));
-//	if (!pTxCacheTip->Flush())
-//		return state.Abort(_("Failed to write to tx cache database"));
-	if (! pScriptDBTip->Flush())
-		return state.Abort(_("Failed to write to script db database"));
-    	WriteBlockLog();
-    }
 
     // Write the chain state to disk, if necessary.
     if (!WriteChainState(state))
@@ -1626,6 +1633,20 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
 //    }
     // Update chainActive & related variables.
     UpdateTip(pindexNew, block);
+
+    // Write new block info to log, if necessary.
+      if(SysCfg().GetArg("-blocklog", 0) !=0 )
+      {
+  		if (chainActive.Height()%SysCfg().GetArg("-blocklog", 0) == 0) {
+  		  if (!pAccountViewTip->Flush())
+  			return state.Abort(_("Failed to write to account database"));
+  	//	if (!pTxCacheTip->Flush())
+  	//		return state.Abort(_("Failed to write to tx cache database"));
+  		if (! pScriptDBTip->Flush())
+  			return state.Abort(_("Failed to write to script db database"));
+  			WriteBlockLog(true);
+  		}
+      }
 
     mempool.ReScanMemPoolTx(block, pAccountViewTip, pScriptDBTip);
     return true;

@@ -22,7 +22,7 @@ bool CAccountView::EraseKeyId(const vector<unsigned char> &accountId){
 	return false;
 }
 bool CAccountView::SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &account) {return false;}
-Object CAccountView::ToJosnObj(){
+Object CAccountView::ToJosnObj(char Prefix){
 	Object obj;
 	return obj;
 }
@@ -134,6 +134,9 @@ bool CAccountViewCache::BatchWrite(const map<CKeyID, CAccount> &mapAccounts, con
 }
 bool CAccountViewCache::BatchWrite(const vector<CAccount> &vAccounts) {
 	for (vector<CAccount>::const_iterator it = vAccounts.begin(); it != vAccounts.end(); ++it) {
+		if (it->keyID.ToString() == "4fb64dd1d825bb6812a7090a1d0dd2c75b55242e") {
+			LogPrint("INFO", "get account info:%s\n", it->ToString());
+		}
 		if (it->IsEmptyValue() && !it->IsRegister()) {
 			cacheAccounts[it->keyID] = *it;
 			cacheAccounts[it->keyID].keyID = uint160(0);
@@ -349,10 +352,11 @@ unsigned int CAccountViewCache::GetCacheSize(){
 
 Object CAccountViewCache::ToJosnObj() const {
 	Object obj;
+	Array arrayObj;
 	obj.push_back(Pair("hashBlock", hashBlock.ToString()));
-	Object obj1 = pBase->ToJosnObj();
-
-	obj.push_back(Pair("cacheView", obj1));
+	arrayObj.push_back(pBase->ToJosnObj('a'));
+	arrayObj.push_back(pBase->ToJosnObj('k'));
+	obj.push_back(Pair("cacheView", arrayObj));
 //	Array arrayObj;
 //	for (auto& item : cacheAccounts) {
 //		Object obj;
@@ -384,7 +388,7 @@ bool CScriptDBView::GetScriptData(const int nCurBlockHeight, const vector<unsign
 		set<CScriptDBOperLog> &setOperLog) {
 	return false;
 }
-Object CScriptDBView:: ToJosnObj(){
+Object CScriptDBView:: ToJosnObj(string Prefix){
 	Object obj;
 	return obj;
 }
@@ -1060,8 +1064,8 @@ bool CScriptDBViewCache::GetTxRelAccount(const uint256 &txHash, set<CKeyID> &rel
 	return true;
 }
 Object CScriptDBViewCache::ToJosnObj() const {
-//	Object obj;
-//	Array arrayObj;
+	Object obj;
+	Array arrayObj;
 //	for (auto& item : mapDatas) {
 //		Object obj;
 //		obj.push_back(Pair("key", HexStr(item.first)));
@@ -1069,7 +1073,10 @@ Object CScriptDBViewCache::ToJosnObj() const {
 //		arrayObj.push_back(obj);
 //	}
 //	obj.push_back(Pair("mapDatas", arrayObj));
-	return pBase->ToJosnObj();
+	arrayObj.push_back(pBase->ToJosnObj("def"));
+	arrayObj.push_back(pBase->ToJosnObj("data"));
+	obj.push_back(Pair("mapDatas", arrayObj));
+	return obj;
 }
 
 

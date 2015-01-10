@@ -702,14 +702,14 @@ bool CWallet::GetRegId(const CUserID& address, CRegID& IdOut) const  {
 	AssertLockHeld(cs_wallet);
 	if (address.type() == typeid(CRegID)) {
 		IdOut = boost::get<CRegID>(address);
-		return true;
+		return !IdOut.IsEmpty();
 	} else if (address.type() == typeid(CKeyID)) {
 		CKeyID te = boost::get<CKeyID>(address);
 		if (count(te)) {
 			auto tep = mKeyPool.find(te);
 			if (tep != mKeyPool.end()) {
 				IdOut = tep->second.GetRegID();
-				return true;
+				return !IdOut.IsEmpty();
 			}
 		}
 

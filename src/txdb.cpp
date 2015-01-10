@@ -467,3 +467,93 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 	return true;
 }
 
+Object CScriptDB::ToJosnObj(string Prefix) {
+
+	Object obj;
+	Array arrayObj;
+
+	leveldb::Iterator *pcursor = db.NewIterator();
+	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+	ssKeySet.insert(ssKeySet.end(), &Prefix[0], &Prefix[3]);
+	pcursor->Seek(ssKeySet.str());
+
+	while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		try {
+			leveldb::Slice slKey = pcursor->key();
+			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+			string strScriptKey(slKey.data(), 0, slKey.size());
+			string strPrefix = strScriptKey.substr(0,Prefix.length());
+			if (strPrefix == Prefix) {
+				leveldb::Slice slValue = pcursor->value();
+				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+				Object obj;
+				if(Prefix == "def"){
+				obj.push_back(Pair("scriptid", HexStr(ssKey)));
+				obj.push_back(Pair("value", HexStr(ssValue)));
+				}
+				else{
+					obj.push_back(Pair("key", HexStr(ssKey)));
+					obj.push_back(Pair("value", HexStr(ssValue)));
+				}
+				arrayObj.push_back(obj);
+				pcursor->Next();
+			} else {
+				break;
+			}
+		} catch (std::exception &e) {
+			LogPrint("ERROR","line:%d,%s : Deserialize or I/O error - %s\n",__LINE__, __func__, e.what());
+		}
+	}
+	delete pcursor;
+	obj.push_back(Pair("scriptdb", arrayObj));
+	return obj;
+}
+
+Object CAccountViewDB::ToJosnObj(char Prefix) {
+		Object obj;
+		Array arrayObj;
+		leveldb::Iterator *pcursor =db.NewIterator();
+		CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+		if(Prefix == 'a'){
+			vector<unsigned char>account;
+			ssKeySet << make_pair('a',account);
+		}else{
+			CKeyID keyid;
+			ssKeySet << make_pair('k',keyid);
+		}
+		pcursor->Seek(ssKeySet.str());
+		// Load mapBlockIndex
+		while (pcursor->Valid()) {
+			boost::this_thread::interruption_point();
+			try {
+				leveldb::Slice slKey = pcursor->key();
+				CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+				char chType;
+				ssKey >> chType;
+				if (chType == Prefix) {
+					leveldb::Slice slValue = pcursor->value();
+					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+					Object obj;
+					if(Prefix == 'a'){
+						obj.push_back(Pair("accountid:", HexStr(ssKey)));
+						obj.push_back(Pair("keyid", HexStr(ssValue)));
+					}else{
+						obj.push_back(Pair("keyid:", HexStr(ssKey)));
+						CAccount account;
+						ssValue >> account;
+						obj.push_back(Pair("account", account.ToJosnObj()));
+					}
+					arrayObj.push_back(obj);
+					pcursor->Next();
+					} else {
+					break; // if shutdown requested or finished loading block index
+				}
+			} catch (std::exception &e) {
+				LogPrint("ERROR","line:%d,%s : Deserialize or I/O error - %s\n",__LINE__, __func__, e.what());
+			 }
+		}
+		delete pcursor;
+		obj.push_back(Pair("scriptdb", arrayObj));
+		return obj;
+}

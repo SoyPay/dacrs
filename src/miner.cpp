@@ -458,7 +458,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 			if (curhash <= adjusthash) {
 				CRegID regid;
 
-				if (item.GetRegId(regid)) {
+				if (pAccountViewTip->GetRegId(item.keyID, regid)) {
 					CRewardTransaction *prtx = (CRewardTransaction *) pBlock->vptx[0].get();
 					prtx->rewardValue += item.GetInterest();
 					prtx->account = regid;
@@ -472,7 +472,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 							"nVersion=%d, hashPreBlock=%s, hashMerkleRoot=%s, nValue=%ld, nTime=%ld, nNonce=%ld\n",
 							postxinfo.nVersion, postxinfo.hashPrevBlock.GetHex(), postxinfo.hashMerkleRoot.GetHex(),
 							postxinfo.nValues, postxinfo.nTime, postxinfo.nNonce);
-
+					LogPrint("INFO", "Miner account info:%s\n", item.ToString());
 					if (pwalletMain->Sign(item.keyID,pBlock->SignatureHash(), pBlock->vSignature,item.MinerPKey.IsValid())) {
 //						cout << "miner signature:" << HexStr(pBlock->vSignature) << endl;
 						LogPrint("INFO","Create new block,hash:%s\n", pBlock->GetHash().GetHex());
@@ -493,7 +493,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCr
 }
 
 bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool bJustCheckSign) {
-
+	LogPrint("INFO", "VerifyPoxTx begin\n");
 	uint64_t maxNonce = SysCfg().GetBlockMaxNonce(); //cacul times
 
 	if (pBlock->nNonce > maxNonce) {
@@ -525,6 +525,7 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 					LogPrint("ERROR","transaction UpdateAccount account error\n");
 					return false;
 				}
+//				LogPrint("INFO", "VerifyPosTx UpdataAccount tx hash:%s\n", pBaseTx->GetHash().GetHex());
 			}
 		}
 
@@ -582,6 +583,7 @@ bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, cons
 	LogPrint("INFO", "postxinfo.nVersion=%d, postxinfo.hashPreBlock=%s, postxinfo.hashMerkleRoot=%s, postxinfo.nValue=%ld, postxinfo.nTime=%ld, postxinfo.nNonce=%ld, postxinfo.blockHash=%s\n",
 			postxinfo.nVersion, postxinfo.hashPrevBlock.GetHex(), postxinfo.hashMerkleRoot.GetHex(), postxinfo.nValues,
 			postxinfo.nTime, postxinfo.nNonce, pBlock->GetHash().GetHex());
+//	LogPrint("INFO", "Miner account info:%s\n", account.ToString());
 	if (curhash > adjusthash) {
 		LogPrint("ERROR", "Account ProofOfWorkLimit error: \n"
 				           "   pos hash:%s \n"
@@ -685,10 +687,14 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 				if(pBaseTx->IsCoinBase()){
 					assert(0); //never come here
 				}
-				if (!pBaseTx->UpdateAccount(nBlockTx + 1, view, state, txundo, pIndexPrev->nHeight + 1,
-						txCache, scriptCache)) {
+				CAccountViewCache viewTemp(view, true);
+				CScriptDBViewCache scriptCacheTemp(scriptCache, true);
+				if (!pBaseTx->UpdateAccount(nBlockTx + 1, viewTemp, state, txundo, pIndexPrev->nHeight + 1,
+						txCache, scriptCacheTemp)) {
 					continue;
 				}
+				assert(viewTemp.Flush());
+				assert(scriptCacheTemp.Flush());
 				nBlockTx++;
 				pblock->vptx.push_back(stx);
 				nFees += pBaseTx->GetFee();

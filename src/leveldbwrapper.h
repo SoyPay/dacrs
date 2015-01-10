@@ -170,7 +170,7 @@ public:
         return pdb->NewIterator(iteroptions);
     }
     int64_t GetDbCount();
-    Object ToJosnObj();
+   // Object ToJosnObj();
 };
 
 #endif // DACRS_LEVELDBWRAPPER_H
