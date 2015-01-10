@@ -53,7 +53,7 @@ CChain chainActive;
 CChain chainMostWork;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
-int64_t CBaseTransaction::nMinTxFee = 10000;  // Override with -mintxfee
+uint64_t CBaseTransaction::nMinTxFee = 10000;  // Override with -mintxfee
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 int64_t CBaseTransaction::nMinRelayTxFee = 1000;
 
@@ -1353,7 +1353,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 //									pRewardTx->rewardValue, nInterest + block.GetFee()),
 //							   REJECT_INVALID, "bad-cb-amount");
 
-    bool fScriptChecks = pindex->nHeight >= Checkpoints::GetTotalBlocksEstimate();
+//    bool fScriptChecks = pindex->nHeight >= Checkpoints::GetTotalBlocksEstimate();
     CBlockUndo blockundo;
 
     int64_t nStart = GetTimeMicros();
@@ -1446,7 +1446,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 // Update the on-disk chain state.
 bool static WriteChainState(CValidationState &state) {
     static int64_t nLastWrite = 0;
-    int cachesize = pAccountViewTip->GetCacheSize()+pScriptDBTip->GetCacheSize();
+    unsigned int cachesize = pAccountViewTip->GetCacheSize()+pScriptDBTip->GetCacheSize();
     if (!IsInitialBlockDownload() || cachesize > SysCfg().GetViewCacheSize() || GetTimeMicros() > nLastWrite + 600*1000000) {
         // Typical CCoins structures on disk are around 100 bytes in size.
         // Pushing a new one to the database can cause it to be written
@@ -2008,7 +2008,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // These are checks that are independent of context
     // that can be verified before saving an orphan block.
 
-	int nBlockSize = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
+	unsigned int nBlockSize = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
     // Size limits
     if (block.vptx.empty() || block.vptx.size() > MAX_BLOCK_SIZE ||  nBlockSize > MAX_BLOCK_SIZE)
         return state.DoS(100, ERROR("CheckBlock() : size limits failed"),
@@ -3004,7 +3004,7 @@ void static ProcessGetData(CNode* pfrom)
                             // they must either disconnect and retry or request the full block.
                             // Thus, the protocol spec specified allows for us to provide duplicate txn here,
                             // however we MUST always provide at least what the remote peer needs
-                            typedef pair<unsigned int, uint256> PairType;
+//                            typedef pair<unsigned int, uint256> PairType;
 							for (auto& pair : merkleBlock.vMatchedTxn)
 								if (!pfrom->setInventoryKnown.count(CInv(MSG_TX, pair.second)))
 									pfrom->PushMessage("tx", block.vptx[pair.first]);

@@ -281,7 +281,7 @@ const vector<CUserID>& CVmScriptRun::GetTxAccount()
 	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
 		return tx->vAccountRegId;
 }
-const bool CVmScriptRun::IsSignatureAccount(CRegID account)
+bool CVmScriptRun::IsSignatureAccount(CRegID account)
 {
 	vector<CUserID> regid =GetTxAccount();
 

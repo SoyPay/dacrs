@@ -577,7 +577,7 @@ bool CContractTransaction::CheckTransction(CValidationState &state, CAccountView
 				"bad-vpre-size ");
 	}
 
-	for (int i = 0; i < vAccountRegId.size(); i++) {
+	for (unsigned int i = 0; i < vAccountRegId.size(); i++) {
 		if (!CheckSignScript(boost::get<CRegID>(vAccountRegId[i]), SignatureHash(), vSignature[i], state, view)) {
 			return state.DoS(100, ERROR("CheckTransaction() :CheckSignScript failed"), REJECT_INVALID,
 					"bad-signscript-check");
@@ -1277,7 +1277,8 @@ bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 
 				break;
 			case SELF_FREEZD_FUND:
-				if (ADD_FUND == iterOperFundLog->operType) {
+				if (ADD_FUND == iterOperFundLog->operType)
+				{
 					auto it = find_if(vSelfFreeze.begin(), vSelfFreeze.end(), [&](const CFund& fundInVector) {
 						if (fundInVector.nFundType== iterFund->nFundType &&
 								fundInVector.nHeight == iterFund->nHeight&&
@@ -1644,7 +1645,7 @@ bool CAccount::IsAuthorized(uint64_t nMoney, int nHeight, const vector_unsigned_
 		return false;
 
 	CAuthorizate& authorizate = it->second;
-	if (authorizate.GetAuthorizeTime() < nHeight || authorizate.GetLastOperHeight() >nHeight)
+	if (authorizate.GetAuthorizeTime() < (unsigned int)nHeight || authorizate.GetLastOperHeight() > (unsigned int)nHeight)
 		return false;
 
 	//amount of blocks that connected into chain per day
@@ -1734,7 +1735,7 @@ bool CAccount::OperateAccount(OperType type, const CFund &fund, int nHeight,
 		return true;
 
 	bool bRet = true;
-	uint64_t nOperateValue = 0;
+//	uint64_t nOperateValue = 0;
 	switch (type) {
 	case ADD_FREE: {
 		if (REWARD_FUND == fund.nFundType) {

@@ -145,7 +145,7 @@ Object TxToJSON(CBaseTransaction *pTx) {
 Value gettxdetail(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
 		string msg =
-				"gettxdetail \"txhash\"\n\gettxdetail\n\nArguments:\n1.\"txhash\":\nResult:\n\"txhash\"\n\nExamples:\n"
+				"gettxdetail \"txhash\"\ngettxdetail\n\nArguments:\n1.\"txhash\":\nResult:\n\"txhash\"\n\nExamples:\n"
 						+ HelpExampleCli("gettxdetail",
 								"c5287324b89793fdf7fa97b6203dfd814b8358cfa31114078ea5981916d7a8ac\n")
 						+ "\nAs json rpc call\n"
@@ -228,10 +228,11 @@ Value registaccounttx(const Array& params, bool fHelp) {
 		CAccountViewCache view(*pAccountViewTip, true);
 		CAccount account;
 
-		uint64_t balance = 0;
+//		uint64_t balance;
 		CUserID userId = keyid;
 		if (view.GetAccount(userId, account)) {
-			balance = account.GetRawBalance(chainActive.Tip()->nHeight);
+//			balance = account.GetRawBalance(chainActive.Tip()->nHeight);
+			account.GetRawBalance(chainActive.Tip()->nHeight);
 		}
 
 		if (account.IsRegister()) {
@@ -481,7 +482,7 @@ Value signcontracttx(const Array& params, bool fHelp) {
 		}
 
 		//verify sig
-		for (int ii = 0; ii < tx.get()->vSignature.size(); ii++) {
+		for (unsigned int ii = 0; ii < tx.get()->vSignature.size(); ii++) {
 			CAccount account;
 			if (!view.GetAccount(tx.get()->vAccountRegId.at(ii), account)) {
 				CID id(tx.get()->vAccountRegId.at(ii));
@@ -690,7 +691,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 			 throw runtime_error("create registerscripttx open script file"+path+"error");
 		 }
 		 long lSize;
-		 size_t nSize = 1;
+//		 size_t nSize = 1;
 		 fseek(file , 0 , SEEK_END);
 		 lSize = ftell (file);
 		 rewind (file);
@@ -701,7 +702,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 			throw runtime_error("allocate memory failed");
 		 }
 
-		 if(fread(buffer, 1, lSize, file) != lSize) {
+		 if(fread(buffer, 1, lSize, file) != (size_t)lSize) {
 			 	if(buffer)
 			 		free(buffer);
 				throw runtime_error("read script file error");
@@ -888,7 +889,7 @@ Value listaddr(const Array& params, bool fHelp) {
 		for (const auto &tem : pool) {
 			//find CAccount info by keyid
 
-			double dbalance = 0.0;
+//			double dbalance = 0.0;
 			CUserID userId = tem.first;
 
 
@@ -918,7 +919,7 @@ Value listaddr(const Array& params, bool fHelp) {
 Value listtx(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {
 		string msg = "listaddrtx \"addr\" showtxdetail\n"
-				"\listaddrtx\n"
+				"\nlistaddrtx\n"
 				"\nArguments:\n"
 				"\nResult:\n"
 				"\"txhash\"\n"
@@ -951,7 +952,7 @@ Value listtx(const Array& params, bool fHelp) {
 Value getaccountinfo(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
 		string msg = "getaddramount \"addr\"\n"
-				"\getaddramount\n"
+				"\ngetaddramount\n"
 				"\nArguments:\n"
 				"1.\"addr\": (string)"
 				"\nResult:\n"
@@ -1033,7 +1034,7 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 Value listunconfirmedtx(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {
 		string msg = "listunconfirmedtx  bshowtxdetail\n"
-				"\listunconfirmedtx\n"
+				"\nlistunconfirmedtx\n"
 				"\nArguments:\n"
 				"1.bshowtxdetail: default false\n"
 				"\nResult:\n"
@@ -1248,7 +1249,7 @@ Value gettxoperationlog(const Array& params, bool fHelp)
 }
 static Value TestDisconnectBlock(int number)
 {
-		CBlockIndex* pindex = chainActive.Tip();
+//		CBlockIndex* pindex = chainActive.Tip();
 		CBlock block;
 		CValidationState state;
 		if((chainActive.Tip()->nHeight - number) < 0)
@@ -1418,7 +1419,7 @@ Value getaddrbalance(const Array& params, bool fHelp) {
 Value generateblock(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
 		string msg = "generateblock nrequired (\"addr\")\n"
-				"\generateblock\n"
+				"\ngenerateblock\n"
 				"\nArguments:\n"
 				"1.\"addr\": (str)\n"
 				"\nResult:\n"
@@ -1747,7 +1748,7 @@ Value createcontracttxraw(const Array& params, bool fHelp) {
 	RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(array_type)(str_type));
 
 	int hight = params[0].get_int();
-    int64_t fee = AmountToRawValue(params[1]);
+	uint64_t fee = AmountToRawValue(params[1]);
 	CRegID vscriptid(params[2].get_str()) ;
 	Array addr = params[3].get_array();
 	vector<unsigned char> vcontract = ParseHex(params[4].get_str());
@@ -1832,7 +1833,7 @@ Value createfreezetxraw(const Array& params, bool fHelp) {
 
 	//get addresss
 	int height = params[0].get_int();
-    int64_t fee = AmountToRawValue(params[1]);
+	uint64_t fee = AmountToRawValue(params[1]);
 	string addr = params[2].get_str();
 	uint64_t frozenmoney = params[3].get_uint64();
 	uint32_t freeheight = params[4].get_int();
@@ -1919,7 +1920,7 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 			 throw runtime_error("create registerscripttx open script file"+path+"error");
 		 }
 		 long lSize;
-		 size_t nSize = 1;
+//		 size_t nSize = 1;
 		 fseek(file , 0 , SEEK_END);
 		 lSize = ftell (file);
 		 rewind (file);
@@ -1930,7 +1931,7 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 			throw runtime_error("allocate memory failed");
 		 }
 
-		 if(fread(buffer, 1, lSize, file) != lSize) {
+		 if(fread(buffer, 1, lSize, file) != (size_t)lSize) {
 			 	if(buffer)
 			 		free(buffer);
 				throw runtime_error("read script file error");
@@ -1996,7 +1997,7 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 	CAccountViewCache view(*pAccountViewTip, true);
 	CAccount account;
 
-	uint64_t balance = 0;
+//	uint64_t balance = 0;
 	CUserID userId = keyid;
 	if (!view.GetAccount(userId, account)) {
 		throw JSONRPCError(RPC_WALLET_ERROR, "in registerscripttxraw Error: Account is not exist.");

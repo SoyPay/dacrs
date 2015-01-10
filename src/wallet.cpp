@@ -318,7 +318,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 				//confirm the tx GenesisBlock
 				CRewardTransaction* prtx = (CRewardTransaction*) sptx.get();
 				CPubKey pubkey = boost::get<CPubKey>(prtx->account);
-				CKeyID keyid = pubkey.GetKeyID();
+//				CKeyID keyid = pubkey.GetKeyID();
 				CRegID regid(0, i);
 				CAccount account;
 				if (IsMine(sptx.get())) {
@@ -521,7 +521,7 @@ std::tuple<bool, string> CWallet::CommitTransaction(CBaseTransaction *pTx) {
 }
 
 DBErrors CWallet::LoadWallet(bool fFirstRunRet) {
-	  fFirstRunRet = false;
+//	  fFirstRunRet = false;
 	  return db.LoadWallet(this);
 
 }
@@ -596,7 +596,7 @@ bool CWallet::StartUp() {
 	};
 
 	 defaultFilename = SysCfg().GetArg("-wallet", "wallet");
-	  bool fDisableWallet = SysCfg().GetBoolArg("-disablewallet", false);
+//	  bool fDisableWallet = SysCfg().GetBoolArg("-disablewallet", false);
     string strDataDir = GetDataDir().string();
 
 	    // Wallet file must be a plain filename without a directory

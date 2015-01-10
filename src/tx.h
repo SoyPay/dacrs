@@ -291,7 +291,7 @@ private:
 
 class CBaseTransaction {
 public:
-	static int64_t nMinTxFee;
+	static uint64_t nMinTxFee;
 	static int64_t nMinRelayTxFee;
 	static const int CURRENT_VERSION = 1;
 
@@ -304,11 +304,11 @@ public:
 	}
 
 	CBaseTransaction(int _nVersion, unsigned char _nTxType) :
-			nVersion(_nVersion), nTxType(_nTxType) {
+			nTxType(_nTxType), nVersion(_nVersion){
 	}
 
 	CBaseTransaction() :
-			nVersion(CURRENT_VERSION), nTxType(COMMON_TX) {
+			nTxType(COMMON_TX) ,nVersion(CURRENT_VERSION) {
 	}
 
 	virtual ~CBaseTransaction() {

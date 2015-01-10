@@ -778,7 +778,8 @@ bool AppInit2(boost::thread_group& threadGroup)
     try {
         pwalletMain = CWallet::getinstance();
         RegisterWallet(pwalletMain);
-        DBErrors nLoadWalletRet = pwalletMain->LoadWallet(false);
+//        DBErrors nLoadWalletRet = pwalletMain->LoadWallet(false);
+        pwalletMain->LoadWallet(false);
     	} catch (...) {
     		cout<< "pwalletMain error!"<< endl;
     	}

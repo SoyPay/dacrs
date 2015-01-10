@@ -13,9 +13,9 @@
 using namespace std;
 
 
-void static BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash) {
-	batch.Write('B', hash);
-}
+//void static BatchWriteHashBestChain(CLevelDBBatch &batch, const uint256 &hash) {
+//	batch.Write('B', hash);
+//}
 
 
 CBlockTreeDB::CBlockTreeDB(size_t nCacheSize, bool fMemory, bool fWipe) :

@@ -257,7 +257,7 @@ public:
 	int SubsidyHalvingInterval() const {
 		return nSubsidyHalvingInterval;
 	}
-	virtual const int64_t GetMaxFee()const {return 1000000000;};
+	virtual int64_t GetMaxFee()const {return 1000000000;}
 	virtual const CBlock& GenesisBlock() const = 0;
 	virtual bool RequireRPCPassword() const {
 		return true;
