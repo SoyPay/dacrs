@@ -86,7 +86,7 @@ private:
 	 * @return:Return account id
 	 */
 	vector_unsigned_char GetAccountID(CVmOperate value);
-	const bool IsSignatureAccount(CRegID account);
+	bool IsSignatureAccount(CRegID account);
 
 public:
 	/**

@@ -253,6 +253,11 @@ CTxDestination CDacrsAddress::Get() const {
 		else
 			return CNoDestination();
 	}
+	else
+	{
+		assert(0);
+		return CNoDestination();
+	}
 }
 
 bool CDacrsAddress::GetKeyID(CKeyID &keyID) const {

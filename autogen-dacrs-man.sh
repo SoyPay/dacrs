@@ -236,10 +236,8 @@ CPPFLAGS="-I/c/deps/boost_1_55_0 \
 -I/c/deps/libpng-1.6.9 \
 -I/c/deps/qrencode-3.4.3 \
 -std=c++11 \
--Wall \
 -DHAVE_CONFIG_H" \
-CXXFLAGS="-Wall \
-" \
+CXXFLAGS="-Wall" \
 LDFLAGS="-L/c/deps/boost_1_55_0/stage/lib \
 -L/c/deps/db-4.8.30.NC/build_unix \
 -L/c/deps/openssl-1.0.1g \

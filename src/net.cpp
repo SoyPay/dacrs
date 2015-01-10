@@ -357,7 +357,7 @@ bool GetMyExternalIP(CNetAddr& ipRet)
 {
     CService addrConnect;
     string strszGet;
-    const char* pszGet;
+//    const char* pszGet;
     const char* pszKeyword;
 
     for (int nLookup = 0; nLookup <= 1; nLookup++)

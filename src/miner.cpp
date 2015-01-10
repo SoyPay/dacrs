@@ -17,19 +17,19 @@ extern CWallet* pwalletMain;
 // DacrsMiner
 //
 
-int static FormatHashBlocks(void* pbuffer, unsigned int len) {
-	unsigned char* pdata = (unsigned char*) pbuffer;
-	unsigned int blocks = 1 + ((len + 8) / 64);
-	unsigned char* pend = pdata + 64 * blocks;
-	memset(pdata + len, 0, 64 * blocks - len);
-	pdata[len] = 0x80;
-	unsigned int bits = len * 8;
-	pend[-1] = (bits >> 0) & 0xff;
-	pend[-2] = (bits >> 8) & 0xff;
-	pend[-3] = (bits >> 16) & 0xff;
-	pend[-4] = (bits >> 24) & 0xff;
-	return blocks;
-}
+//int static FormatHashBlocks(void* pbuffer, unsigned int len) {
+//	unsigned char* pdata = (unsigned char*) pbuffer;
+//	unsigned int blocks = 1 + ((len + 8) / 64);
+//	unsigned char* pend = pdata + 64 * blocks;
+//	memset(pdata + len, 0, 64 * blocks - len);
+//	pdata[len] = 0x80;
+//	unsigned int bits = len * 8;
+//	pend[-1] = (bits >> 0) & 0xff;
+//	pend[-2] = (bits >> 8) & 0xff;
+//	pend[-3] = (bits >> 16) & 0xff;
+//	pend[-4] = (bits >> 24) & 0xff;
+//	return blocks;
+//}
 
 static const unsigned int pSHA256InitState[8] = { 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f,
 		0x9b05688c, 0x1f83d9ab, 0x5be0cd19 };
@@ -79,7 +79,7 @@ uint64_t nLastBlockSize = 0;
 uint64_t GetElementForBurn(CBlockIndex* pindex)
 {
 	uint64_t sumfee;
-	unsigned int nBlock = SysCfg().GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
+	int nBlock = SysCfg().GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
 //	CBlockIndex* pindex = chainActive.Tip();
 	if (nBlock > pindex->nHeight) {
 		return 100000;
@@ -99,13 +99,13 @@ uint64_t GetElementForBurn(CBlockIndex* pindex)
 
 void GetPriorityTx(vector<TxPriority> &vecPriority) {
 	vecPriority.reserve(mempool.mapTx.size());
-	CBlockIndex* pindexPrev = chainActive.Tip();
+//	CBlockIndex* pindexPrev = chainActive.Tip();
 
 	// Priority order to process transactions
 	list<COrphan> vOrphan; // list memory doesn't move
 	double dPriority = 0;
 	for (map<uint256, CTxMemPoolEntry>::iterator mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi) {
-		int nTxHeight = mi->second.GetHeight();//get Chain height when the tx entering the mempool
+//		int nTxHeight = mi->second.GetHeight();//get Chain height when the tx entering the mempool
 		CBaseTransaction *pBaseTx = mi->second.GetTx().get();
 
 		if (uint256(0) == std::move(pTxCacheTip->IsContainTx(std::move(pBaseTx->GetHash())))) {
@@ -325,7 +325,7 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
 		hashPrevBlock = pblock->hashPrevBlock;
 	}
 	++nExtraNonce;
-	unsigned int nHeight = pindexPrev->nHeight + 1; // Height first in coinbase required for block.version=2
+//	unsigned int nHeight = pindexPrev->nHeight + 1; // Height first in coinbase required for block.version=2
 //    pblock->vtx[0].vin[0].scriptSig = (CScript() << nHeight << CBigNum(nExtraNonce)) + COINBASE_FLAGS;
 //    assert(pblock->vtx[0].vin[0].scriptSig.size() <= 100);
 
@@ -629,7 +629,7 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 			CBlockIndex* pIndexPrev = chainActive.Tip();
 	//		CAccountViewCache accview(*pAccountViewTip, true);
 
-			bool fPrintPriority = SysCfg().GetBoolArg("-printpriority", false);
+//			bool fPrintPriority = SysCfg().GetBoolArg("-printpriority", false);
 
 			// This vector will be sorted into a priority queue:
 			vector<TxPriority> vecPriority;
@@ -639,7 +639,7 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 			// Collect transactions into block
 			uint64_t nBlockSize = ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
 			uint64_t nBlockTx = 0;
-			int nBlockSigOps = 100;
+//			int nBlockSigOps = 100;
 			bool fSortedByFee = true;
 
 			TxPriorityCompare comparer(fSortedByFee);
@@ -866,7 +866,8 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 {
 	if (SysCfg().NetworkID() == CBaseParams::REGTEST)
 	{
-		unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
+//		unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
+		mempool.GetTransactionsUpdated();
 		CBlockIndex* pindexPrev = chainActive.Tip();
 
 		CAccountViewCache accview(*pAccountViewTip, true);
@@ -877,9 +878,10 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 			return false;
 		CBlock *pblock = &pblocktemplate.get()->block;
 
-		int nBlockSize = pblock->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
+//		int nBlockSize = pblock->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
+		pblock->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
 
-		int64_t nStart = GetTime();
+//		int64_t nStart = GetTime();
 		while (true) {
 
 			pblock->nTime = max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
@@ -888,7 +890,7 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 			setCreateKey.insert(keyID);
 			if (CreatePosTx(pindexPrev, pblock,setCreateKey,accview,txCache,ScriptDbTemp)) {
 				CheckWork(pblock, *pwalletMain);
-				int nBlockSize = pblock->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
+//				int nBlockSize = pblock->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
 			}
 			if(setCreateKey.empty())
 			{

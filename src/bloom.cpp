@@ -88,15 +88,15 @@ bool CBloomFilter::IsWithinSizeConstraints() const
 
 bool CBloomFilter::IsRelevantAndUpdate(CBaseTransaction *pBaseTx, const uint256& hash)
 {
-    bool fFound = false;
+//    bool fFound = false;
     // Match if the filter contains the hash of tx
     //  for finding tx when they appear in a block
     if (isFull)
         return true;
     if (isEmpty)
         return false;
-    if (contains(hash))
-        fFound = true;
+//    if (contains(hash))
+//        fFound = true;
 
 //    for (unsigned int i = 0; i < tx.vout.size(); i++)
 //    {

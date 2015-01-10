@@ -103,7 +103,7 @@ Object CLevelDBWrapper::ToJosnObj()
 	Object obj;
 	Array arrayObj;
 	leveldb::Iterator *pcursor = NewIterator();
-	int64_t ret = -1;
+//	int64_t ret = -1;
 	pcursor->SeekToFirst();
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();

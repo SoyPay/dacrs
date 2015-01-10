@@ -93,7 +93,7 @@ bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,str
 DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 {
     pwallet->vchDefaultKey = CPubKey();
-    bool fNoncriticalErrors = false;
+//    bool fNoncriticalErrors = false;
     DBErrors result = DB_LOAD_OK;
 
     try {

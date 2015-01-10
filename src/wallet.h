@@ -549,7 +549,7 @@ public:
 
 		vector<uint256> vhash;
 		for (auto& item : mapAccountTx) {
-			const uint256& txid = item.first;
+//			const uint256& txid = item.first;
 			CValidationState state;
 			if (item.second->nTxType != REWARD_TX) {
 				if (!::AcceptToMemoryPool(mempool, state, const_cast<CBaseTransaction*>(item.second.get()), false, NULL,

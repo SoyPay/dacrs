@@ -31,30 +31,30 @@ string static EncodeDumpTime(int64_t nTime) {
     return DateTimeStrFormat("%Y-%m-%dT%H:%M:%SZ", nTime);
 }
 
-int64_t static DecodeDumpTime(const string &str) {
-    static const boost::posix_time::ptime epoch = boost::posix_time::from_time_t(0);
-    static const locale loc(locale::classic(),
-        new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%SZ"));
-    istringstream iss(str);
-    iss.imbue(loc);
-    boost::posix_time::ptime ptime(boost::date_time::not_a_date_time);
-    iss >> ptime;
-    if (ptime.is_not_a_date_time())
-        return 0;
-    return (ptime - epoch).total_seconds();
-}
+//int64_t static DecodeDumpTime(const string &str) {
+//    static const boost::posix_time::ptime epoch = boost::posix_time::from_time_t(0);
+//    static const locale loc(locale::classic(),
+//        new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%SZ"));
+//    istringstream iss(str);
+//    iss.imbue(loc);
+//    boost::posix_time::ptime ptime(boost::date_time::not_a_date_time);
+//    iss >> ptime;
+//    if (ptime.is_not_a_date_time())
+//        return 0;
+//    return (ptime - epoch).total_seconds();
+//}
 
-string static EncodeDumpString(const string &str) {
-    stringstream ret;
-    for (auto c : str) {
-        if (c <= 32 || c >= 128 || c == '%') {
-            ret << '%' << HexStr(&c, &c + 1);
-        } else {
-            ret << c;
-        }
-    }
-    return ret.str();
-}
+//string static EncodeDumpString(const string &str) {
+//    stringstream ret;
+//    for (auto c : str) {
+//        if (c <= 32 || c >= 128 || c == '%') {
+//            ret << '%' << HexStr(&c, &c + 1);
+//        } else {
+//            ret << c;
+//        }
+//    }
+//    return ret.str();
+//}
 
 string DecodeDumpString(const string &str) {
     stringstream ret;
@@ -166,10 +166,10 @@ Value importwallet(const Array& params, bool fHelp)
     if (!file.is_open())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 
-    int64_t nTimeBegin = chainActive.Tip()->nTime;
+//    int64_t nTimeBegin = chainActive.Tip()->nTime;
 
-    bool fGood = true;
-    int64_t nFilesize = max((int64_t)1, (int64_t)file.tellg());
+//    bool fGood = true;
+//    int64_t nFilesize = max((int64_t)1, (int64_t)file.tellg());
     file.seekg(0, file.beg);
     int inmsizeport = 0;
     pwalletMain->ShowProgress(_("Importing..."), 0); // show progress dialog in GUI
@@ -265,7 +265,7 @@ Value dumpwallet(const Array& params, bool fHelp) {
 	reply.push_back(Pair("Best block hash ", chainActive.Tip()->GetBlockHash().ToString()));
 
 	map<CKeyID, CKeyStoreValue> tepmKeyPool = pwalletMain->GetKeyPool();
-	int index = 0;
+//	int index = 0;
 	Array key;
 	for (auto &te : tepmKeyPool) {
 		key.push_back(te.second.ToJsonObj());
