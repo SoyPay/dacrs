@@ -228,22 +228,7 @@ srcdir="$(dirname $0)"
 cd "$srcdir"
 autoreconf --install --force
 
-CPPFLAGS="-I/c/deps/boost_1_55_0 \
--I/c/deps/db-4.8.30.NC/build_unix \
--I/c/deps/openssl-1.0.1g/include \
--I/c/deps \
--I/c/deps/protobuf-2.5.0/src \
--I/c/deps/libpng-1.6.9 \
--I/c/deps/qrencode-3.4.3 \
--std=c++11 \
--DHAVE_CONFIG_H" \
-LDFLAGS="-L/c/deps/boost_1_55_0/stage/lib \
--L/c/deps/db-4.8.30.NC/build_unix \
--L/c/deps/openssl-1.0.1g \
--L/c/deps/miniupnpc \
--L/c/deps/protobuf-2.5.0/src/.libs \
--L/c/deps/libpng-1.6.9/.libs \
--L/c/deps/qrencode-3.4.3/.libs" \
+CPPFLAGS="-std=c++11" \
 ./configure \
 --disable-upnp-default \
 --enable-debug \
