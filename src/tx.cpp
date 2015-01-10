@@ -774,6 +774,7 @@ bool CRegisterScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view,CValid
 		}
 		if (!aAuthorizate.IsNull()) {
 			acctInfo.mapAuthorizate[regId.GetVec6()] = aAuthorizate;
+
 		}
 	}
 	else {
@@ -1437,9 +1438,19 @@ uint256 CAccount::BuildMerkleTree(int prevBlockHeight) const {
 	}
 	return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
 }
+bool compare(CFund i,CFund j){
+	if(i.nHeight<j.nHeight){
+		return true;
+	}
+	if(i.value<j.value){
+		return true;
+	}
 
+	return false;
+}
 Object CAccount::ToJosnObj() const
 {
+
 
 	using namespace json_spirit;
 	Object obj;
@@ -1453,27 +1464,40 @@ Object CAccount::ToJosnObj() const
 	obj.push_back(Pair("MinerPKey",  MinerPKey.ToString()));
 	obj.push_back(Pair("FreeValues",     llValues));
 
+
+
 	Array RewardFund;
-	for (auto& rew:vRewardFund) {
+
+	auto sortfund = [&](const vector<CFund> &te)
+	{
+		vector<CFund> temp =te ;
+		std::sort(temp.begin(),temp.end(),compare);
+		return std::move(temp);
+	};
+	vector<CFund> te=sortfund(vRewardFund);
+	for (auto const & rew:te) {
 		RewardFund.push_back(rew.ToJosnObj());
 	}
 	obj.push_back(Pair("RewardFund",     RewardFund));
 
 
 	Array FreedomFund;
-	for (auto& rew:vFreedomFund) {
+	te=sortfund(vFreedomFund);
+	for (auto& rew:te) {
 		FreedomFund.push_back(rew.ToJosnObj());
 	}
 	obj.push_back(Pair("FreedomFund",     FreedomFund));
 
 	Array Freeze;
-	for (auto& rew:vFreeze) {
+	te=sortfund(vFreeze);
+	for (auto& rew:te) {
 		Freeze.push_back(rew.ToJosnObj());
 	}
 	obj.push_back(Pair("Freeze",     Freeze));
 
 	Array SelfFreeze;
-	for (auto& rew:vSelfFreeze) {
+	te=sortfund(vSelfFreeze);
+	for (auto& rew:te) {
 		SelfFreeze.push_back(rew.ToJosnObj());
 	}
 	obj.push_back(Pair("SelfFreeze",     SelfFreeze));

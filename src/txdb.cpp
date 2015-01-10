@@ -476,28 +476,25 @@ Object CScriptDB::ToJosnObj(string Prefix) {
 	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
 	ssKeySet.insert(ssKeySet.end(), &Prefix[0], &Prefix[3]);
 	pcursor->Seek(ssKeySet.str());
-	vector<unsigned char> vScriptId;
-	vector<unsigned char> vValue;
+
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
 		try {
 			leveldb::Slice slKey = pcursor->key();
+			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
 			string strScriptKey(slKey.data(), 0, slKey.size());
 			string strPrefix = strScriptKey.substr(0,Prefix.length());
 			if (strPrefix == Prefix) {
 				leveldb::Slice slValue = pcursor->value();
 				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-				ssValue >> vValue;
-				vScriptId.clear();
-				vScriptId.insert(vScriptId.end(), slKey.data()+3, slKey.data()+slKey.size());
 				Object obj;
 				if(Prefix == "def"){
-				obj.push_back(Pair("scriptid", HexStr(vScriptId)));
-				obj.push_back(Pair("value", HexStr(vValue)));
+				obj.push_back(Pair("scriptid", HexStr(ssKey)));
+				obj.push_back(Pair("value", HexStr(ssValue)));
 				}
 				else{
-					obj.push_back(Pair("key", HexStr(vScriptId)));
-					obj.push_back(Pair("value", HexStr(vValue)));
+					obj.push_back(Pair("key", HexStr(ssKey)));
+					obj.push_back(Pair("value", HexStr(ssValue)));
 				}
 				arrayObj.push_back(obj);
 				pcursor->Next();
@@ -509,6 +506,7 @@ Object CScriptDB::ToJosnObj(string Prefix) {
 		}
 	}
 	delete pcursor;
+	obj.push_back(Pair("scriptdb", arrayObj));
 	return obj;
 }
 
@@ -525,8 +523,6 @@ Object CAccountViewDB::ToJosnObj(char Prefix) {
 			ssKeySet << make_pair('k',keyid);
 		}
 		pcursor->Seek(ssKeySet.str());
-		vector<unsigned char> key;
-		vector<unsigned char> vValue;
 		// Load mapBlockIndex
 		while (pcursor->Valid()) {
 			boost::this_thread::interruption_point();
@@ -538,18 +534,18 @@ Object CAccountViewDB::ToJosnObj(char Prefix) {
 				if (chType == Prefix) {
 					leveldb::Slice slValue = pcursor->value();
 					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-					ssValue >> vValue;
-					key.clear();
-					key.insert(key.end(), slKey.data()+3, slKey.data()+slKey.size());
 					Object obj;
 					if(Prefix == 'a'){
-						obj.push_back(Pair("accountid:", HexStr(key)));
-						obj.push_back(Pair("keyid", HexStr(vValue)));
+						obj.push_back(Pair("accountid:", HexStr(ssKey)));
+						obj.push_back(Pair("keyid", HexStr(ssValue)));
 					}else{
-						obj.push_back(Pair("keyid:", HexStr(key)));
-						obj.push_back(Pair("account", HexStr(vValue)));
+						obj.push_back(Pair("keyid:", HexStr(ssKey)));
+						CAccount account;
+						ssValue >> account;
+						obj.push_back(Pair("account", account.ToJosnObj()));
 					}
 					arrayObj.push_back(obj);
+					pcursor->Next();
 					} else {
 					break; // if shutdown requested or finished loading block index
 				}
@@ -558,5 +554,6 @@ Object CAccountViewDB::ToJosnObj(char Prefix) {
 			 }
 		}
 		delete pcursor;
+		obj.push_back(Pair("scriptdb", arrayObj));
 		return obj;
 }

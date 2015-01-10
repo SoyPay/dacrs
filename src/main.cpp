@@ -191,6 +191,19 @@ bool WriteBlockLog(bool falg) {
 		return false;
 	file << write_string(Value(pTxCacheTip->ToJosnObj()), true);
 	file.close();
+
+	string strundoLog = strLogFilePath + strprintf("_%d",high)+"_undo.txt";
+	file.open(strundoLog);
+	if (!file.is_open())
+		return false;
+    CBlockUndo blockUndo;
+    CDiskBlockPos pos =chainActive.Tip()->GetUndoPos();
+    if (!pos.IsNull()){
+    	 if (blockUndo.ReadFromDisk(pos, chainActive.Tip()->pprev->GetBlockHash()))
+    		file << blockUndo.ToString();
+    }
+
+	file.close();
 	return true;
 }
 

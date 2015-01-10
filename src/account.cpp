@@ -134,6 +134,9 @@ bool CAccountViewCache::BatchWrite(const map<CKeyID, CAccount> &mapAccounts, con
 }
 bool CAccountViewCache::BatchWrite(const vector<CAccount> &vAccounts) {
 	for (vector<CAccount>::const_iterator it = vAccounts.begin(); it != vAccounts.end(); ++it) {
+		if (it->keyID.ToString() == "4fb64dd1d825bb6812a7090a1d0dd2c75b55242e") {
+			LogPrint("INFO", "get account info:%s\n", it->ToString());
+		}
 		if (it->IsEmptyValue() && !it->IsRegister()) {
 			cacheAccounts[it->keyID] = *it;
 			cacheAccounts[it->keyID].keyID = uint160(0);
