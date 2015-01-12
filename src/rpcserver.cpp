@@ -320,6 +320,7 @@ static const CRPCCommand vRPCCommands[] =
     { "getscriptid",  			&getscriptid,            true,      false,      false},
     { "getscriptdbsize",        &getscriptdbsize,        true,      false,      false},
     { "printblokdbinfo",        &printblokdbinfo,        true,      false,      false},
+    { "getalltxinfo",			&getalltxinfo,			 true,      false,      true},
 };
 
 CRPCTable::CRPCTable()
