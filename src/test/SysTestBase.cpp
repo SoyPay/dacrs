@@ -776,3 +776,16 @@ bool SysTestBase::GetStrFromObj(const Value& valueRes,string& str)
 				}
 			return true;
 }
+bool SysTestBase::ImportWalletKey(char**address,int nCount){
+	for (int i = 0; i < nCount; i++) {
+		char *argv2[] = { "rpctest", "importprivkey", address[i]};
+		int argc2 = sizeof(argv2) / sizeof(char*);
+
+		Value value;
+		if (!CommandLineRPC_GetValue(sizeof(argv2) / sizeof(argv2[0]), argv2, value)) {
+			continue;
+		}
+	}
+
+	return true;
+}

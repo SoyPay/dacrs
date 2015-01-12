@@ -69,6 +69,16 @@ bool CSesureTradeHelp::ModifyAuthor(unsigned char nUserData, const string& strSi
 }
 
 bool CTestSesureTrade::Step1RegisterScript() {
+
+	char* pKey[] = {
+			        /*for yang test*/
+					"cSu84vACzZkWqnP2LUdJQLX3M1PYYXo2gEDDCEKLWNWfM7B4zLiP",// addr:  mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc
+					"cSVY69D9aUo4MugzUG9rM14DtV21cBAbZUVXmgAC2RpJwtZRUbsM",// addr:  mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y
+					"cTCcDyQvX6ucP9NEjhyHfTixamKQHQkFiSyfupm4CGZZYV7YYnf8",// addr:  moZJZgsGFC4qvwRdjzS7Bj3fHrtpUfEVEE
+	};
+	int nCount = sizeof(pKey) / sizeof(char*);
+	basetest.ImportWalletKey(pKey,nCount);
+
 	Value valueRes = RegisterScriptTx(BUYER_ADDR, "SecuredTrade.bin", 0, 100000);
 	if (GetHashFromCreatedTx(valueRes, strStep1RegHash)) {
 		mCurStep++;

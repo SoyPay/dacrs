@@ -1439,20 +1439,9 @@ uint256 CAccount::BuildMerkleTree(int prevBlockHeight) const {
 	}
 	return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
 }
-bool compare(CFund i,CFund j){
-	if(i.nHeight<j.nHeight){
-		return true;
-	}
-	if(i.value<j.value){
-		return true;
-	}
 
-	return false;
-}
 Object CAccount::ToJosnObj() const
 {
-
-
 	using namespace json_spirit;
 	Object obj;
 	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "IN_FREEZD_FUND",
@@ -1469,13 +1458,8 @@ Object CAccount::ToJosnObj() const
 
 	Array RewardFund;
 
-	auto sortfund = [&](const vector<CFund> &te)
-	{
-		vector<CFund> temp =te ;
-		std::sort(temp.begin(),temp.end(),compare);
-		return std::move(temp);
-	};
-	vector<CFund> te=sortfund(vRewardFund);
+	vector<CFund> te=vRewardFund;
+	stable_sort(te.begin(), te.end(), greater<CFund>());
 	for (auto const & rew:te) {
 		RewardFund.push_back(rew.ToJosnObj());
 	}
@@ -1483,21 +1467,27 @@ Object CAccount::ToJosnObj() const
 
 
 	Array FreedomFund;
-	te=sortfund(vFreedomFund);
+	te.clear();
+	te=vFreedomFund;
+	stable_sort(te.begin(), te.end(), greater<CFund>());
 	for (auto& rew:te) {
 		FreedomFund.push_back(rew.ToJosnObj());
 	}
 	obj.push_back(Pair("FreedomFund",     FreedomFund));
 
 	Array Freeze;
-	te=sortfund(vFreeze);
+	te=vFreeze;
+	te.clear();
+	stable_sort(te.begin(), te.end(), greater<CFund>());
 	for (auto& rew:te) {
 		Freeze.push_back(rew.ToJosnObj());
 	}
 	obj.push_back(Pair("Freeze",     Freeze));
 
 	Array SelfFreeze;
-	te=sortfund(vSelfFreeze);
+	te=vSelfFreeze;
+	te.clear();
+	stable_sort(te.begin(), te.end(), greater<CFund>());
 	for (auto& rew:te) {
 		SelfFreeze.push_back(rew.ToJosnObj());
 	}
@@ -1508,7 +1498,8 @@ Object CAccount::ToJosnObj() const
 		authorizateObj.push_back(Pair(HexStr(item.first), item.second.ToJosnObj()));
 		listAuthorize.push_back(authorizateObj);
 	}
-	obj.push_back(Pair("Authorizates", listAuthorize));
+	//// untodo
+//	obj.push_back(Pair("Authorizates", listAuthorize));
 	return obj;
 }
 

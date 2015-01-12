@@ -278,16 +278,18 @@ bool CDarkAndAnony::ImportWalletKey() {
 	};
 
 	int nCount = sizeof(pKey) / sizeof(char*);
-	for (int i = 0; i < nCount; i++) {
-		char *argv2[] = { "rpctest", "importprivkey", pKey[i]};
-		int argc2 = sizeof(argv2) / sizeof(char*);
+//	for (int i = 0; i < nCount; i++) {
+//		char *argv2[] = { "rpctest", "importprivkey", pKey[i]};
+//		int argc2 = sizeof(argv2) / sizeof(char*);
+//
+//		Value value;
+//		if (!basetest.CommandLineRPC_GetValue(sizeof(argv2) / sizeof(argv2[0]), argv2, value)) {
+//			step++;
+//			return false;
+//		}
+//	}
 
-		Value value;
-		if (!basetest.CommandLineRPC_GetValue(sizeof(argv2) / sizeof(argv2[0]), argv2, value)) {
-			step++;
-			return false;
-		}
-	}
+	basetest.ImportWalletKey(pKey,nCount);
 	step++;
 	return true;
 }

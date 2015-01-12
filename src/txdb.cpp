@@ -509,7 +509,7 @@ Object CScriptDB::ToJosnObj(string Prefix) {
 	obj.push_back(Pair("scriptdb", arrayObj));
 	return obj;
 }
-
+static int n = 0;
 Object CAccountViewDB::ToJosnObj(char Prefix) {
 		Object obj;
 		Array arrayObj;
@@ -531,6 +531,9 @@ Object CAccountViewDB::ToJosnObj(char Prefix) {
 				CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
 				char chType;
 				ssKey >> chType;
+				if(n == 101){
+					int c =5;
+				}
 				if (chType == Prefix) {
 					leveldb::Slice slValue = pcursor->value();
 					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
@@ -538,11 +541,12 @@ Object CAccountViewDB::ToJosnObj(char Prefix) {
 					if(Prefix == 'a'){
 						obj.push_back(Pair("accountid:", HexStr(ssKey)));
 						obj.push_back(Pair("keyid", HexStr(ssValue)));
-					}else{
+					}else if(Prefix == 'k'){
 						obj.push_back(Pair("keyid:", HexStr(ssKey)));
 						CAccount account;
 						ssValue >> account;
 						obj.push_back(Pair("account", account.ToJosnObj()));
+						n++;
 					}
 					arrayObj.push_back(obj);
 					pcursor->Next();
@@ -550,7 +554,7 @@ Object CAccountViewDB::ToJosnObj(char Prefix) {
 					break; // if shutdown requested or finished loading block index
 				}
 			} catch (std::exception &e) {
-				LogPrint("ERROR","line:%d,%s : Deserialize or I/O error - %s\n",__LINE__, __func__, e.what());
+				LogPrint("ERROR","line:%d,coutn:%d,%s : Deserialize or I/O error - %s\n",__LINE__, n,__func__, e.what());
 			 }
 		}
 		delete pcursor;
