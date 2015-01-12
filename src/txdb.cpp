@@ -124,14 +124,14 @@ bool CBlockTreeDB::LoadBlockIndexGuts() {
 				pindexNew->vSignature = diskindex.vSignature;
 
 				if (!pindexNew->CheckIndex())
-					return ERROR("LoadBlockIndex() : CheckIndex failed: %s", pindexNew->ToString());
+					return ERRORMSG("LoadBlockIndex() : CheckIndex failed: %s", pindexNew->ToString());
 
 				pcursor->Next();
 			} else {
 				break; // if shutdown requested or finished loading block index
 			}
 		} catch (std::exception &e) {
-			return ERROR("%s : Deserialize or I/O error - %s", __func__, e.what());
+			return ERRORMSG("%s : Deserialize or I/O error - %s", __func__, e.what());
 		}
 	}
 	delete pcursor;
@@ -299,7 +299,7 @@ bool CTransactionDB::LoadTransaction(map<uint256, vector<uint256> > &mapTxHashBy
 				break; // if shutdown requested or finished loading block index
 			}
 		} catch (std::exception &e) {
-			return ERROR("%s : Deserialize or I/O error - %s", __func__, e.what());
+			return ERRORMSG("%s : Deserialize or I/O error - %s", __func__, e.what());
 		}
 	}
 	delete pcursor;
@@ -346,7 +346,7 @@ bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, v
 	int i(0);
 	if(1 == nIndex ) {
 		if(vScriptId.empty()) {
-			return ERROR("GetScript() : nIndex is 1, and vScriptId is empty");
+			return ERRORMSG("GetScript() : nIndex is 1, and vScriptId is empty");
 		}
 		vector<char> vId(vScriptId.begin(), vScriptId.end());
 		ssKeySet.insert(ssKeySet.end(), vId.begin(), vId.end());
@@ -385,7 +385,7 @@ bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, v
 				return false;
 			}
 		}catch (std::exception &e) {
-				return ERROR("%s : Deserialize or I/O error - %s", __func__, e.what());
+				return ERRORMSG("%s : Deserialize or I/O error - %s", __func__, e.what());
 		}
 	}
 	delete pcursor;
@@ -410,7 +410,7 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 	int i(0);
 	if (1 == nIndex) {
 		if(vScriptKey.empty()) {
-			return ERROR("GetScriptData() : nIndex is 1, and vScriptKey is empty");
+			return ERRORMSG("GetScriptData() : nIndex is 1, and vScriptKey is empty");
 		}
 		vector<char> vsKey(vScriptKey.begin(), vScriptKey.end());
 		ssKeySet.insert(ssKeySet.end(), vsKey.begin(), vsKey.end());
@@ -458,7 +458,7 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 				return false;
 			}
 		} catch (std::exception &e) {
-			return ERROR("%s : Deserialize or I/O error - %s\n", __func__, e.what());
+			return ERRORMSG("%s : Deserialize or I/O error - %s\n", __func__, e.what());
 		}
 	}
 	delete pcursor;
@@ -509,7 +509,7 @@ Object CScriptDB::ToJosnObj(string Prefix) {
 	obj.push_back(Pair("scriptdb", arrayObj));
 	return obj;
 }
-static int n = 0;
+
 Object CAccountViewDB::ToJosnObj(char Prefix) {
 		Object obj;
 		Array arrayObj;
@@ -531,9 +531,6 @@ Object CAccountViewDB::ToJosnObj(char Prefix) {
 				CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
 				char chType;
 				ssKey >> chType;
-				if(n == 101){
-					int c =5;
-				}
 				if (chType == Prefix) {
 					leveldb::Slice slValue = pcursor->value();
 					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
@@ -546,7 +543,6 @@ Object CAccountViewDB::ToJosnObj(char Prefix) {
 						CAccount account;
 						ssValue >> account;
 						obj.push_back(Pair("account", account.ToJosnObj()));
-						n++;
 					}
 					arrayObj.push_back(obj);
 					pcursor->Next();
@@ -554,7 +550,7 @@ Object CAccountViewDB::ToJosnObj(char Prefix) {
 					break; // if shutdown requested or finished loading block index
 				}
 			} catch (std::exception &e) {
-				LogPrint("ERROR","line:%d,coutn:%d,%s : Deserialize or I/O error - %s\n",__LINE__, n,__func__, e.what());
+				LogPrint("ERROR","line:%d,%s : Deserialize or I/O error - %s\n",__LINE__, __func__, e.what());
 			 }
 		}
 		delete pcursor;

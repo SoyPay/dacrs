@@ -303,7 +303,7 @@ bool GetMyExternalIP2(const CService& addrConnect, const char* pszGet, const cha
 	LogPrint("GETMYIP", "GetMyExternalIP2 addrConnect:%s \n", addrConnect.ToString());
     SOCKET hSocket;
     if (!ConnectSocket(addrConnect, hSocket))
-        return ERROR("GetMyExternalIP() : connection to %s failed", addrConnect.ToString());
+        return ERRORMSG("GetMyExternalIP() : connection to %s failed", addrConnect.ToString());
 
     send(hSocket, pszGet, strlen(pszGet), MSG_NOSIGNAL);
     LogPrint("GETMYIP", "GetMyExternalIP2 SendData:%s\n", pszGet);
@@ -350,7 +350,7 @@ bool GetMyExternalIP2(const CService& addrConnect, const char* pszGet, const cha
         }
     }
     closesocket(hSocket);
-    return ERROR("GetMyExternalIP() : connection closed");
+    return ERRORMSG("GetMyExternalIP() : connection closed");
 }
 
 bool GetMyExternalIP(CNetAddr& ipRet)
@@ -1956,21 +1956,21 @@ bool CAddrDB::Write(const CAddrMan& addr)
     FILE *file = fopen(pathTmp.string().c_str(), "wb");
     CAutoFile fileout = CAutoFile(file, SER_DISK, CLIENT_VERSION);
     if (!fileout)
-        return ERROR("%s : Failed to open file %s", __func__, pathTmp.string());
+        return ERRORMSG("%s : Failed to open file %s", __func__, pathTmp.string());
 
     // Write and commit header, data
     try {
         fileout << ssPeers;
     }
     catch (std::exception &e) {
-        return ERROR("%s : Serialize or I/O error - %s", __func__, e.what());
+        return ERRORMSG("%s : Serialize or I/O error - %s", __func__, e.what());
     }
     FileCommit(fileout);
     fileout.fclose();
 
     // replace existing peers.dat, if any, with new peers.dat.XXXX
     if (!RenameOver(pathTmp, pathAddr))
-        return ERROR("%s : Rename-into-place failed", __func__);
+        return ERRORMSG("%s : Rename-into-place failed", __func__);
 
     return true;
 }
@@ -1981,7 +1981,7 @@ bool CAddrDB::Read(CAddrMan& addr)
     FILE *file = fopen(pathAddr.string().c_str(), "rb");
     CAutoFile filein = CAutoFile(file, SER_DISK, CLIENT_VERSION);
     if (!filein)
-        return ERROR("%s : Failed to open file %s", __func__, pathAddr.string());
+        return ERRORMSG("%s : Failed to open file %s", __func__, pathAddr.string());
 
     // use file size to size memory buffer
     int fileSize = boost::filesystem::file_size(pathAddr);
@@ -1999,7 +1999,7 @@ bool CAddrDB::Read(CAddrMan& addr)
         filein >> hashIn;
     }
     catch (std::exception &e) {
-        return ERROR("%s : Deserialize or I/O error - %s", __func__, e.what());
+        return ERRORMSG("%s : Deserialize or I/O error - %s", __func__, e.what());
     }
     filein.fclose();
 
@@ -2008,7 +2008,7 @@ bool CAddrDB::Read(CAddrMan& addr)
     // verify stored checksum matches input data
     uint256 hashTmp = Hash(ssPeers.begin(), ssPeers.end());
     if (hashIn != hashTmp)
-        return ERROR("%s : Checksum mismatch, data corrupted", __func__);
+        return ERRORMSG("%s : Checksum mismatch, data corrupted", __func__);
 
     unsigned char pchMsgTmp[4];
     try {
@@ -2017,13 +2017,13 @@ bool CAddrDB::Read(CAddrMan& addr)
 
         // ... verify the network matches ours
         if (memcmp(pchMsgTmp, SysCfg().MessageStart(), sizeof(pchMsgTmp)))
-            return ERROR("%s : Invalid network magic number", __func__);
+            return ERRORMSG("%s : Invalid network magic number", __func__);
 
         // de-serialize address data into one CAddrMan object
         ssPeers >> addr;
     }
     catch (std::exception &e) {
-        return ERROR("%s : Deserialize or I/O error - %s", __func__, e.what());
+        return ERRORMSG("%s : Deserialize or I/O error - %s", __func__, e.what());
     }
 
     return true;

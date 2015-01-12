@@ -154,7 +154,8 @@ public:
 		genesis.nTime = 1231006505;
 		genesis.nBits = 0x1e0fffff;        //00 00 0f ff
 		genesis.nNonce = 888;
-
+		genesis.nHeight = 0;
+		genesis.vSignature.clear();
 		hashGenesisBlock = genesis.GetHash();
 //		{
 //			CBigNum bnTarget;

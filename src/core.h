@@ -66,6 +66,8 @@ public:
         nTime = 0;
         nBits = 0;
         nNonce = 0;
+        nHeight = 0;
+        vSignature.clear();
     }
 
     bool IsNull() const

@@ -308,6 +308,9 @@ private:
 	void SetBitFlag(INT8U addr);
 	void ClrBitFlag(INT8U addr);
 	void GetOpcodeData(void * const p, INT8U len) const;
+	INT8U Get1Opcode() const {  //先取高位字节
+		return m_ExeFile[Sys.PC + 1];
+	}
 	void AJMP(INT8U opCode, INT8U data);
 	void ACALL(INT8U opCode);
 
@@ -316,197 +319,573 @@ private:
 	void MD_SUBB(INT8U data);
 
 	void Updata_A_P_Flag(void);
-	void Opcode_00_NOP(void);
-	void Opcode_01_AJMP_Addr11(void);
+	void Opcode_00_NOP(void){++Sys.PC;};
+	void Opcode_01_AJMP_Addr11(void){AJMP(0x01, Get1Opcode());};
 	void Opcode_02_LJMP_Addr16(void);
 	void Opcode_03_RR_A(void);
-	void Opcode_04_INC_A(void);
+	void Opcode_04_INC_A(void){	Sys.a = Sys.a() + 1;++Sys.PC;};
 	void Opcode_05_INC_Direct(void);
 	void Opcode_06_INC_R0_1(void);
 	void Opcode_07_INC_R1_1(void);
-	void Opcode_08_INC_R0(void);
-	void Opcode_09_INC_R1(void);
-	void Opcode_0A_INC_R2(void);
-	void Opcode_0B_INC_R3(void);
-	void Opcode_0C_INC_R4(void);
-	void Opcode_0D_INC_R5(void);
-	void Opcode_0E_INC_R6(void);
-	void Opcode_0F_INC_R7(void);
+	void Opcode_08_INC_R0(void){
+		Rges.R0 = Rges.R0() + 1;
+		++Sys.PC;
+	};
+	void Opcode_09_INC_R1(void){	Rges.R1 = Rges.R1() + 1;
+	++Sys.PC;};
+	void Opcode_0A_INC_R2(void){	Rges.R2 = Rges.R2() + 1;
+	++Sys.PC;};
+	void Opcode_0B_INC_R3(void){
+		Rges.R3 = Rges.R3() + 1;
+		++Sys.PC;
+	};
+	void Opcode_0C_INC_R4(void){
+		Rges.R4 = Rges.R4() + 1;
+		++Sys.PC;
+	};
+	void Opcode_0D_INC_R5(void){
+		Rges.R5 = Rges.R5() + 1;
+		++Sys.PC;
+	};
+	void Opcode_0E_INC_R6(void){
+		Rges.R6 = Rges.R6() + 1;
+		++Sys.PC;
+	};
+	void Opcode_0F_INC_R7(void){
+		Rges.R7 = Rges.R7() + 1;
+		++Sys.PC;
+	};
 
 	void Opcode_10_JBC_Bit_Rel(void);
-	void Opcode_11_ACALL_Addr11(void);
+	void Opcode_11_ACALL_Addr11(void){ACALL(0x11);};
 	void Opcode_12_LCALL_Addr16(void);
 	void Opcode_13_RRC_A(void);
 	void Opcode_14_DEC_A(void);
 	void Opcode_15_DEC_Direct(void);
 	void Opcode_16_DEC_R0_1(void);
 	void Opcode_17_DEC_R1_1(void);
-	void Opcode_18_DEC_R0(void);
-	void Opcode_19_DEC_R1(void);
-	void Opcode_1A_DEC_R2(void);
-	void Opcode_1B_DEC_R3(void);
-	void Opcode_1C_DEC_R4(void);
-	void Opcode_1D_DEC_R5(void);
-	void Opcode_1E_DEC_R6(void);
-	void Opcode_1F_DEC_R7(void);
+	void Opcode_18_DEC_R0(void){
+		Rges.R0 = Rges.R0() - 1;
+		++Sys.PC;
+	};
+	void Opcode_19_DEC_R1(void){
+		Rges.R1 = Rges.R1() - 1;
+		++Sys.PC;
+	};
+	void Opcode_1A_DEC_R2(void)
+	{
+		Rges.R2 = Rges.R2() - 1;
+		++Sys.PC;
+	};
+	void Opcode_1B_DEC_R3(void){
+		Rges.R3 = Rges.R3() - 1;
+		++Sys.PC;
+	};
+	void Opcode_1C_DEC_R4(void)
+	{
+		Rges.R4 = Rges.R4() - 1;
+		++Sys.PC;
+	};
+	void Opcode_1D_DEC_R5(void)
+	{
+		Rges.R5 = Rges.R5() - 1;
+		++Sys.PC;
+	};
+	void Opcode_1E_DEC_R6(void){
+		Rges.R6 = Rges.R6() - 1;
+		++Sys.PC;
+	};
+	void Opcode_1F_DEC_R7(void){
+		Rges.R7 = Rges.R7() - 1;
+		++Sys.PC;
+	};
 
 	void Opcode_20_JB_Bit_Rel(void);
-	void Opcode_21_AJMP_Addr11(void);
+	void Opcode_21_AJMP_Addr11(void){AJMP(0x21, Get1Opcode());};
 	void Opcode_22_RET(void);
 	void Opcode_23_RL_A(void);
-	void Opcode_24_ADD_A_Data(void);
-	void Opcode_25_ADD_A_Direct(void);
-	void Opcode_26_ADD_A_R0_1(void);
-	void Opcode_27_ADD_A_R1_1(void);
-	void Opcode_28_ADD_A_R0(void);
-	void Opcode_29_ADD_A_R1(void);
-	void Opcode_2A_ADD_A_R2(void);
-	void Opcode_2B_ADD_A_R3(void);
-	void Opcode_2C_ADD_A_R4(void);
-	void Opcode_2D_ADD_A_R5(void);
-	void Opcode_2E_ADD_A_R6(void);
-	void Opcode_2F_ADD_A_R7(void);
+	void Opcode_24_ADD_A_Data(void){
+		MD_ADD(Get1Opcode());
+			Sys.PC += 2;
+	};
+	void Opcode_25_ADD_A_Direct(void){
+		MD_ADD(GetRamData(Get1Opcode()));
+		Sys.PC += 2;
+	};
+	void Opcode_26_ADD_A_R0_1(void){
+		MD_ADD(GetRamDataAt(Rges.R0()));
+		++Sys.PC;
+	};
+	void Opcode_27_ADD_A_R1_1(void){
+		MD_ADD(GetRamDataAt(Rges.R1()));
+		++Sys.PC;
+	};
+	void Opcode_28_ADD_A_R0(void){
+		MD_ADD(Rges.R0());
+		++Sys.PC;
+	};
+	void Opcode_29_ADD_A_R1(void){
+		MD_ADD(Rges.R1());
+		++Sys.PC;
+	};
+	void Opcode_2A_ADD_A_R2(void){
+		MD_ADD(Rges.R2());
+		++Sys.PC;
+	};
+	void Opcode_2B_ADD_A_R3(void){
+		MD_ADD(Rges.R3());
+		++Sys.PC;
+	};
+	void Opcode_2C_ADD_A_R4(void){
+		MD_ADD(Rges.R4());
+		++Sys.PC;
+	};
+	void Opcode_2D_ADD_A_R5(void)
+	{
+		MD_ADD(Rges.R5());
+		++Sys.PC;
+	};
+	void Opcode_2E_ADD_A_R6(void){
+		MD_ADD(Rges.R6());
+		++Sys.PC;
+	};
+	void Opcode_2F_ADD_A_R7(void){
+		MD_ADD(Rges.R7());
+			++Sys.PC;
+	};
 
 	void Opcode_30_JNB_Bit_Rel(void);
-	void Opcode_31_ACALL_Addr11(void);
+	void Opcode_31_ACALL_Addr11(void){	ACALL(0x31);};
 	void Opcode_32_RETI(void);
 	void Opcode_33_RLC_A(void);
-	void Opcode_34_ADDC_A_Data(void);
-	void Opcode_35_ADDC_A_Direct(void);
-	void Opcode_36_ADDC_A_R0_1(void);
-	void Opcode_37_ADDC_A_R1_1(void);
-	void Opcode_38_ADDC_A_R0(void);
-	void Opcode_39_ADDC_A_R1(void);
-	void Opcode_3A_ADDC_A_R2(void);
-	void Opcode_3B_ADDC_A_R3(void);
-	void Opcode_3C_ADDC_A_R4(void);
-	void Opcode_3D_ADDC_A_R5(void);
-	void Opcode_3E_ADDC_A_R6(void);
-	void Opcode_3F_ADDC_A_R7(void);
+	void Opcode_34_ADDC_A_Data(void){
+		MD_ADDC(Get1Opcode());   //加上
+
+		Sys.PC += 2;
+	};
+	void Opcode_35_ADDC_A_Direct(void){
+		MD_ADDC(GetRamData(Get1Opcode()));
+		Sys.PC += 2;
+	};
+	void Opcode_36_ADDC_A_R0_1(void){
+		MD_ADDC(GetRamDataAt(Rges.R0()));
+		++Sys.PC;
+	};
+	void Opcode_37_ADDC_A_R1_1(void){
+		MD_ADDC(GetRamDataAt(Rges.R1()));
+		++Sys.PC;
+	};
+	void Opcode_38_ADDC_A_R0(void){
+		MD_ADDC(Rges.R0());
+		++Sys.PC;
+	};
+	void Opcode_39_ADDC_A_R1(void){
+		MD_ADDC(Rges.R1());
+			++Sys.PC;
+	};
+	void Opcode_3A_ADDC_A_R2(void){
+		MD_ADDC(Rges.R2());
+		++Sys.PC;
+	};
+	void Opcode_3B_ADDC_A_R3(void){
+		MD_ADDC(Rges.R3());
+		++Sys.PC;
+	};
+	void Opcode_3C_ADDC_A_R4(void){
+		MD_ADDC(Rges.R4());
+		++Sys.PC;
+	};
+	void Opcode_3D_ADDC_A_R5(void){
+		MD_ADDC(Rges.R5());
+		++Sys.PC;
+	};
+	void Opcode_3E_ADDC_A_R6(void){
+		MD_ADDC(Rges.R6());
+			++Sys.PC;
+	};
+	void Opcode_3F_ADDC_A_R7(void){
+		MD_ADDC(Rges.R7());
+		++Sys.PC;
+	};
 
 	void Opcode_40_JC_Rel(void);
-	void Opcode_41_AJMP_Addr11(void);
+	void Opcode_41_AJMP_Addr11(void){AJMP(0x41, Get1Opcode());};
 	void Opcode_42_ORL_Direct_A(void);
 	void Opcode_43_ORL_Direct_Data(void);
 	void Opcode_44_ORL_A_Data(void);
 	void Opcode_45_ORL_A_Direct(void);
-	void Opcode_46_ORL_A_R0_1(void);
-	void Opcode_47_ORL_A_R1_1(void);
-	void Opcode_48_ORL_A_R0(void);
-	void Opcode_49_ORL_A_R1(void);
-	void Opcode_4A_ORL_A_R2(void);
-	void Opcode_4B_ORL_A_R3(void);
-	void Opcode_4C_ORL_A_R4(void);
-	void Opcode_4D_ORL_A_R5(void);
-	void Opcode_4E_ORL_A_R6(void);
-	void Opcode_4F_ORL_A_R7(void);
+	void Opcode_46_ORL_A_R0_1(void){
+		Sys.a = Sys.a() | GetRamDataAt(Rges.R0());
+		++Sys.PC;
+	};
+	void Opcode_47_ORL_A_R1_1(void){
+		Sys.a = Sys.a() | GetRamDataAt(Rges.R1());
+		++Sys.PC;
+	};
+	void Opcode_48_ORL_A_R0(void){
+		Sys.a = Sys.a() | Rges.R0();
+		++Sys.PC;
+	};
+	void Opcode_49_ORL_A_R1(void){
+		Sys.a = Sys.a() | Rges.R1();
+		++Sys.PC;
+	};
+	void Opcode_4A_ORL_A_R2(void){
+		Sys.a = Sys.a() | Rges.R2();
+		++Sys.PC;
+	};
+	void Opcode_4B_ORL_A_R3(void)
+	{
+		Sys.a = Sys.a() | Rges.R3();
+		++Sys.PC;
+	};
+	void Opcode_4C_ORL_A_R4(void){
+		Sys.a = Sys.a() | Rges.R4();
+		++Sys.PC;
+	};
+	void Opcode_4D_ORL_A_R5(void){
+		Sys.a = Sys.a() | Rges.R5();
+		++Sys.PC;
+	};
+	void Opcode_4E_ORL_A_R6(void){
+		Sys.a = Sys.a() | Rges.R6();
+		++Sys.PC;
+	};
+	void Opcode_4F_ORL_A_R7(void){
+		Sys.a = Sys.a() | Rges.R7();
+		++Sys.PC;
+	};
 
 	void Opcode_50_JNC_Rel(void);
-	void Opcode_51_ACALL_Addr11(void);
+	void Opcode_51_ACALL_Addr11(void){ACALL(0x51);};
 	void Opcode_52_ANL_Direct_A(void);
 	void Opcode_53_ANL_Direct_Data(void);
-	void Opcode_54_ANL_A_Data(void);
-	void Opcode_55_ANL_A_Direct(void);
-	void Opcode_56_ANL_A_R0_1(void);
-	void Opcode_57_ANL_A_R1_1(void);
-	void Opcode_58_ANL_A_R0(void);
-	void Opcode_59_ANL_A_R1(void);
-	void Opcode_5A_ANL_A_R2(void);
-	void Opcode_5B_ANL_A_R3(void);
-	void Opcode_5C_ANL_A_R4(void);
-	void Opcode_5D_ANL_A_R5(void);
-	void Opcode_5E_ANL_A_R6(void);
-	void Opcode_5F_ANL_A_R7(void);
+	void Opcode_54_ANL_A_Data(void){
+		Sys.a = Sys.a() & Get1Opcode();
+		Sys.PC += 2;
+	};
+	void Opcode_55_ANL_A_Direct(void){
+		Sys.a = Sys.a() & GetRamData(Get1Opcode());
+			Sys.PC += 2;
+	};
+	void Opcode_56_ANL_A_R0_1(void){
+		Sys.a = Sys.a() & GetRamDataAt(Rges.R0());
+		++Sys.PC;
+	};
+	void Opcode_57_ANL_A_R1_1(void){
+		Sys.a = Sys.a() & GetRamDataAt(Rges.R1());
+		++Sys.PC;
+	};
+	void Opcode_58_ANL_A_R0(void){
+		Sys.a = Sys.a() & Rges.R0();
+		++Sys.PC;
+	};
+	void Opcode_59_ANL_A_R1(void){
+		Sys.a = Sys.a() & Rges.R1();
+		++Sys.PC;
+	};
+	void Opcode_5A_ANL_A_R2(void){
+		Sys.a = Sys.a() & Rges.R2();
+		++Sys.PC;
+	};
+	void Opcode_5B_ANL_A_R3(void){
+		Sys.a = Sys.a() & Rges.R3();
+		++Sys.PC;
+	};
+	void Opcode_5C_ANL_A_R4(void){
+		Sys.a = Sys.a() & Rges.R4();
+			++Sys.PC;
+	};
+	void Opcode_5D_ANL_A_R5(void){
+		Sys.a = Sys.a() & Rges.R5();
+		++Sys.PC;
+	};
+	void Opcode_5E_ANL_A_R6(void){
+		Sys.a = Sys.a() & Rges.R6();
+		++Sys.PC;
+	};
+	void Opcode_5F_ANL_A_R7(void){
+		Sys.a = Sys.a() & Rges.R7();
+		++Sys.PC;
+	};
 
 	void Opcode_60_JZ_Rel(void);
-	void Opcode_61_AJMP_Addr11(void);
+	void Opcode_61_AJMP_Addr11(void){	AJMP(0x61, Get1Opcode());};
 	void Opcode_62_XRL_Direct_A(void);
 	void Opcode_63_XRL_Direct_Data(void);
-	void Opcode_64_XRL_A_Data(void);
-	void Opcode_65_XRL_A_Direct(void);
-	void Opcode_66_XRL_A_R0_1(void);
-	void Opcode_67_XRL_A_R1_1(void);
-	void Opcode_68_XRL_A_R0(void);
-	void Opcode_69_XRL_A_R1(void);
-	void Opcode_6A_XRL_A_R2(void);
-	void Opcode_6B_XRL_A_R3(void);
-	void Opcode_6C_XRL_A_R4(void);
-	void Opcode_6D_XRL_A_R5(void);
-	void Opcode_6E_XRL_A_R6(void);
-	void Opcode_6F_XRL_A_R7(void);
+	void Opcode_64_XRL_A_Data(void){
+		Sys.a = Sys.a() ^  Get1Opcode();
+		Sys.PC += 2;
+	};
+	void Opcode_65_XRL_A_Direct(void){
+		Sys.a = Sys.a() ^ GetRamData(Get1Opcode());
+		Sys.PC += 2;
+	};
+	void Opcode_66_XRL_A_R0_1(void){
+		Sys.a = Sys.a() ^ GetRamDataAt(Rges.R0());
+		++Sys.PC;
+	};
+	void Opcode_67_XRL_A_R1_1(void){
+		Sys.a = Sys.a() ^ GetRamDataAt(Rges.R1());
+		++Sys.PC;
+	};
+	void Opcode_68_XRL_A_R0(void){
+		Sys.a = Sys.a() ^ Rges.R0();
+		++Sys.PC;
+	};
+	void Opcode_69_XRL_A_R1(void){
+		Sys.a = Sys.a() ^ Rges.R1();
+		++Sys.PC;
+	};
+	void Opcode_6A_XRL_A_R2(void){
+		Sys.a = Sys.a() ^ Rges.R2();
+		++Sys.PC;
+	};
+	void Opcode_6B_XRL_A_R3(void){
+		Sys.a = Sys.a() ^ Rges.R3();
+		++Sys.PC;
+	};
+	void Opcode_6C_XRL_A_R4(void){
+		Sys.a = Sys.a() ^ Rges.R4();
+		++Sys.PC;
+	};
+	void Opcode_6D_XRL_A_R5(void){
+		Sys.a = Sys.a() ^ Rges.R5();
+			++Sys.PC;
+	};
+	void Opcode_6E_XRL_A_R6(void){
+		Sys.a = Sys.a() ^ Rges.R6();
+		++Sys.PC;
+	};
+	void Opcode_6F_XRL_A_R7(void){
+		Sys.a = Sys.a() ^ Rges.R7();
+		++Sys.PC;
+	};
 
 	void Opcode_70_JNZ_Rel(void);
-	void Opcode_71_ACALL_Addr11(void);
-	void Opcode_72_ORL_C_Direct(void);
-	void Opcode_73_JMP_A_DPTR(void);
-	void Opcode_74_MOV_A_Data(void);
+	void Opcode_71_ACALL_Addr11(void){ACALL(0x71);};
+	void Opcode_72_ORL_C_Direct(void){
+		Sys.psw().cy = Sys.psw().cy | GetBitFlag(Get1Opcode());
+		Sys.PC += 2;
+	};
+	void Opcode_73_JMP_A_DPTR(void){
+		++Sys.PC;
+		Sys.PC = (INT16U) Sys.a() + Sys.dptr();
+	};
+	void Opcode_74_MOV_A_Data(void){
+		Sys.a = Get1Opcode();;
+		Sys.PC += 2;
+	};
 	void Opcode_75_MOV_Direct_Data(void);
-	void Opcode_76_MOV_R0_1_Data(void);
-	void Opcode_77_MOV_R1_1_Data(void);
-	void Opcode_78_MOV_R0_Data(void);
-	void Opcode_79_MOV_R1_Data(void);
-	void Opcode_7A_MOV_R2_Data(void);
-	void Opcode_7B_MOV_R3_Data(void);
-	void Opcode_7C_MOV_R4_Data(void);
-	void Opcode_7D_MOV_R5_Data(void);
-	void Opcode_7E_MOV_R6_Data(void);
-	void Opcode_7F_MOV_R7_Data(void);
+	void Opcode_76_MOV_R0_1_Data(void){
+		m_ChipRam[Rges.R0()] = Get1Opcode();
+		Sys.PC += 2;
+	};
+	void Opcode_77_MOV_R1_1_Data(void){
+		m_ChipRam[Rges.R1()] = Get1Opcode();
+		Sys.PC += 2;
+	};
+	void Opcode_78_MOV_R0_Data(void){
+		Rges.R0 = Get1Opcode();;
+		Sys.PC += 2;
+	};
+	void Opcode_79_MOV_R1_Data(void){
+		Rges.R1 = Get1Opcode();
+		Sys.PC += 2;
+	};
+	void Opcode_7A_MOV_R2_Data(void){
+		Rges.R2 = Get1Opcode();
+		Sys.PC += 2;
+	};
+	void Opcode_7B_MOV_R3_Data(void){
+		Rges.R3 = Get1Opcode();
+			Sys.PC += 2;
+	};
+	void Opcode_7C_MOV_R4_Data(void){
+		Rges.R4 =  Get1Opcode();
+		Sys.PC += 2;
+	};
+	void Opcode_7D_MOV_R5_Data(void){
+		Rges.R5 =  Get1Opcode();
+		Sys.PC += 2;
+	};
+	void Opcode_7E_MOV_R6_Data(void){
+		Rges.R6 =  Get1Opcode();
+		Sys.PC += 2;
+	};
+	void Opcode_7F_MOV_R7_Data(void){
+		Rges.R7 =  Get1Opcode();
+		Sys.PC += 2;
+	};
 
 	void Opcode_80_SJMP_Rel(void);
-	void Opcode_81_AJMP_Addr11(void);
-	void Opcode_82_ANL_C_Bit(void);
+	void Opcode_81_AJMP_Addr11(void){AJMP(0x81, Get1Opcode());};
+	void Opcode_82_ANL_C_Bit(void){
+		Sys.psw().cy = Sys.psw().cy & GetBitFlag(m_ExeFile[Sys.PC + 1]);
+		Sys.PC += 2;
+	};
 	void Opcode_83_MOVC_A_PC(void);
 	void Opcode_84_DIV_AB(void);
 	void Opcode_85_MOV_Direct_Direct(void);
-	void Opcode_86_MOV_Direct_R0_1(void);
-	void Opcode_87_MOV_Direct_R1_1(void);
-	void Opcode_88_MOV_Direct_R0(void);
-	void Opcode_89_MOV_Direct_R1(void);
-	void Opcode_8A_MOV_Direct_R2(void);
-	void Opcode_8B_MOV_Direct_R3(void);
-	void Opcode_8C_MOV_Direct_R4(void);
-	void Opcode_8D_MOV_Direct_R5(void);
-	void Opcode_8E_MOV_Direct_R6(void);
-	void Opcode_8F_MOV_Direct_R7(void);
+	void Opcode_86_MOV_Direct_R0_1(void){
+		SetRamData( Get1Opcode(), GetRamDataAt(Rges.R0()));
+		Sys.PC += 2;
+	};
+	void Opcode_87_MOV_Direct_R1_1(void){
+		SetRamData(Get1Opcode(), GetRamDataAt(Rges.R1()));
+		Sys.PC += 2;
+	};
+	void Opcode_88_MOV_Direct_R0(void){
+		SetRamData(Get1Opcode(), Rges.R0());
+		Sys.PC += 2;
+	};
+	void Opcode_89_MOV_Direct_R1(void){
+		SetRamData(Get1Opcode(), Rges.R1());
+		Sys.PC += 2;
+	};
+	void Opcode_8A_MOV_Direct_R2(void){
+		SetRamData(Get1Opcode(), Rges.R2());
+		Sys.PC += 2;
+	};
+	void Opcode_8B_MOV_Direct_R3(void){
+		SetRamData(Get1Opcode(), Rges.R3());
+		Sys.PC += 2;
+	};
+	void Opcode_8C_MOV_Direct_R4(void){
+		SetRamData(Get1Opcode(), Rges.R4());
+		Sys.PC += 2;
+	};
+	void Opcode_8D_MOV_Direct_R5(void){
+		SetRamData(Get1Opcode(), Rges.R5());
+		Sys.PC += 2;
+	};
+	void Opcode_8E_MOV_Direct_R6(void){
+		SetRamData(Get1Opcode(), Rges.R6());
+		Sys.PC += 2;
+	};
+	void Opcode_8F_MOV_Direct_R7(void){
+		SetRamData(Get1Opcode(), Rges.R7());
+		Sys.PC += 2;
+	};
 
 	void Opcode_90_MOV_DPTR_Data(void);
-	void Opcode_91_ACALL_Addr11(void);
+	void Opcode_91_ACALL_Addr11(void){ACALL(0x91);};
 	void Opcode_92_MOV_Bit_C(void);
 	void Opcode_93_MOVC_A_DPTR(void);
-	void Opcode_94_SUBB_A_Data(void);
-	void Opcode_95_SUBB_A_Direct(void);
-	void Opcode_96_SUBB_A_R0_1(void);
-	void Opcode_97_SUBB_A_R1_1(void);
-	void Opcode_98_SUBB_A_R0(void);
-	void Opcode_99_SUBB_A_R1(void);
-	void Opcode_9A_SUBB_A_R2(void);
-	void Opcode_9B_SUBB_A_R3(void);
-	void Opcode_9C_SUBB_A_R4(void);
-	void Opcode_9D_SUBB_A_R5(void);
-	void Opcode_9E_SUBB_A_R6(void);
-	void Opcode_9F_SUBB_A_R7(void);
+	void Opcode_94_SUBB_A_Data(void){
+		MD_SUBB(Get1Opcode());
+		Sys.PC += 2;
+	};
+	void Opcode_95_SUBB_A_Direct(void){
+		MD_SUBB(GetRamData(Get1Opcode()));
+		Sys.PC += 2;
+	};
+	void Opcode_96_SUBB_A_R0_1(void){
+		MD_SUBB(GetRamDataAt(Rges.R0()));
+		++Sys.PC;
+	};
+	void Opcode_97_SUBB_A_R1_1(void){
+		MD_SUBB(GetRamDataAt(Rges.R1()));
+		++Sys.PC;
+	};
+	void Opcode_98_SUBB_A_R0(void){
+		MD_SUBB(Rges.R0());
+		++Sys.PC;
+	};
+	void Opcode_99_SUBB_A_R1(void){
+		MD_SUBB(Rges.R1());
+		++Sys.PC;
+	};
+	void Opcode_9A_SUBB_A_R2(void){
+		MD_SUBB(Rges.R2());
+		++Sys.PC;
+	};
+	void Opcode_9B_SUBB_A_R3(void){
+		MD_SUBB(Rges.R3());
+		++Sys.PC;
+	};
+	void Opcode_9C_SUBB_A_R4(void){
+		MD_SUBB(Rges.R4());
+		++Sys.PC;
+	};
+	void Opcode_9D_SUBB_A_R5(void){
+		MD_SUBB(Rges.R5());
+		++Sys.PC;
+	};
+	void Opcode_9E_SUBB_A_R6(void){
+		MD_SUBB(Rges.R6());
+		++Sys.PC;
+	};
+	void Opcode_9F_SUBB_A_R7(void){
+		MD_SUBB(Rges.R7());
+		++Sys.PC;
+	};
 
-	void Opcode_A0_ORL_C_Bit(void);
-	void Opcode_A1_AJMP_Addr11(void);
-	void Opcode_A2_MOV_C_Bit(void);
-	void Opcode_A3_INC_DPTR(void);
+	void Opcode_A0_ORL_C_Bit(void){
+		Sys.psw().cy = Sys.psw().cy | (!GetBitFlag(Get1Opcode()));
+		Sys.PC += 2;
+	};
+	void Opcode_A1_AJMP_Addr11(void){	AJMP(0xA1, Get1Opcode());};
+	void Opcode_A2_MOV_C_Bit(void){
+		Sys.psw().cy = GetBitFlag(Get1Opcode());
+		Sys.PC += 2;
+	};
+	void Opcode_A3_INC_DPTR(void){
+		Sys.dptr = Sys.dptr() + 1;
+		++Sys.PC;
+	};
 	void Opcode_A4_MUL_AB(void);
-	void Opcode_A5(void);
-	void Opcode_A6_MOV_R0_1_Direct(void);
-	void Opcode_A7_MOV_R1_1_Direct(void);
-	void Opcode_A8_MOV_R0_Direct(void);
-	void Opcode_A9_MOV_R1_Direct(void);
-	void Opcode_AA_MOV_R2_Direct(void);
-	void Opcode_AB_MOV_R3_Direct(void);
-	void Opcode_AC_MOV_R4_Direct(void);
-	void Opcode_AD_MOV_R5_Direct(void);
-	void Opcode_AE_MOV_R6_Direct(void);
-	void Opcode_AF_MOV_R7_Direct(void);
+	void Opcode_A5(void){};
+	void Opcode_A6_MOV_R0_1_Direct(void){
+		SetRamDataAt(Rges.R0(), GetRamData(Get1Opcode()));
+		Sys.PC += 2;
+	};
+	void Opcode_A7_MOV_R1_1_Direct(void){
+		SetRamDataAt(Rges.R1(), GetRamData( Get1Opcode()));
+		Sys.PC += 2;
+	};
+	void Opcode_A8_MOV_R0_Direct(void){
+		Rges.R0 = GetRamData( Get1Opcode());
+		Sys.PC += 2;
+	};
+	void Opcode_A9_MOV_R1_Direct(void){
+		Rges.R1 = GetRamData( Get1Opcode());
+		Sys.PC += 2;
+	};
+	void Opcode_AA_MOV_R2_Direct(void){
+		Rges.R2 = GetRamData(Get1Opcode());
+		Sys.PC += 2;
+	};
+	void Opcode_AB_MOV_R3_Direct(void){
+		Rges.R3 = GetRamData(Get1Opcode());
+		Sys.PC += 2;
+	};
+	void Opcode_AC_MOV_R4_Direct(void){
+		Rges.R4 = GetRamData(Get1Opcode());
+		Sys.PC += 2;
+	};
+	void Opcode_AD_MOV_R5_Direct(void){
+		Rges.R5 = GetRamData(Get1Opcode());
+		Sys.PC += 2;
+	};
+	void Opcode_AE_MOV_R6_Direct(void){
+		Rges.R6 = GetRamData(Get1Opcode());
+		Sys.PC += 2;
+	};
+	void Opcode_AF_MOV_R7_Direct(void){
+		Rges.R7 = GetRamData(Get1Opcode());
+		Sys.PC += 2;
+	};
 
-	void Opcode_B0_ANL_C_Bit_1(void);
-	void Opcode_B1_ACALL_Addr11(void);
+	void Opcode_B0_ANL_C_Bit_1(void){
+		Sys.psw().cy = Sys.psw().cy & (!GetBitFlag(Get1Opcode()));
+		Sys.PC += 2;
+	};
+	void Opcode_B1_ACALL_Addr11(void){	ACALL(0xB1);};
 	void Opcode_B2_CPL_Bit(void);
-	void Opcode_B3_CPL_C(void);
+	void Opcode_B3_CPL_C(void){
+		Sys.psw().cy = ~Sys.psw().cy;
+	++Sys.PC;};
 	void Opcode_B4_CJNE_A_Data_Rel(void);
 	void Opcode_B5_CJNE_A_Direct_Rel(void);
 	void Opcode_B6_CJNE_R0_1_Data_Rel(void);
@@ -520,11 +899,25 @@ private:
 	void Opcode_BE_CJNE_R6_Data_Rel(void);
 	void Opcode_BF_CJNE_R7_Data_Rel(void);
 
-	void Opcode_C0_PUSH_Direct(void);
-	void Opcode_C1_AJMP_Addr11(void);
-	void Opcode_C2_CLR_Bit(void);
-	void Opcode_C3_CLR_C(void);
-	void Opcode_C4_SWAP_A(void);
+	void Opcode_C0_PUSH_Direct(void){
+		Sys.sp = Sys.sp() + 1;
+		SetRamDataAt(Sys.sp(), GetRamData(Get1Opcode()));
+		Sys.PC += 2;
+	};
+	void Opcode_C1_AJMP_Addr11(void){AJMP(0xC1,  Get1Opcode());};
+	void Opcode_C2_CLR_Bit(void){
+		ClrBitFlag(Get1Opcode());
+		Sys.PC += 2;
+	};
+	void Opcode_C3_CLR_C(void){
+		Sys.psw().cy = 0;
+		++Sys.PC;
+	};
+	void Opcode_C4_SWAP_A(void){
+		INT8U temp = Sys.a() & 0x0F;
+		Sys.a = (Sys.a() >> 4) | (temp << 4);
+		++Sys.PC;
+	};
 	void Opcode_C5_XCH_A_Direct(void);
 	void Opcode_C6_XCH_A_R0_1(void);
 	void Opcode_C7_XCH_A_R1_1(void);
@@ -538,9 +931,15 @@ private:
 	void Opcode_CF_XCH_A_R7(void);
 
 	void Opcode_D0_POP_Direct(void);
-	void Opcode_D1_ACALL_Addr11(void);
-	void Opcode_D2_SETB_Bit(void);
-	void Opcode_D3_SETB_C(void);
+	void Opcode_D1_ACALL_Addr11(void){ACALL(0xD1);};
+	void Opcode_D2_SETB_Bit(void){
+		SetBitFlag(Get1Opcode());
+		Sys.PC += 2;
+	};
+	void Opcode_D3_SETB_C(void){
+		Sys.psw().cy = 1;
+		++Sys.PC;
+	};
 	void Opcode_D4_DA_A(void);
 	void Opcode_D5_DJNZ_Direct_Rel(void);
 	void Opcode_D6_XCHD_A_R0_1(void);
@@ -555,38 +954,125 @@ private:
 	void Opcode_DF_DJNZ_R7_Rel(void);
 
 	void Opcode_E0_MOVX_A_DPTR(void);
-	void Opcode_E1_AJMP_Addr11(void);
-	void Opcode_E2_MOVX_A_R0_1(void);
-	void Opcode_E3_MOVX_A_R1_1(void);
-	void Opcode_E4_CLR_A(void);
-	void Opcode_E5_MOV_A_Direct(void);
-	void Opcode_E6_MOV_A_R0_1(void);
-	void Opcode_E7_MOV_A_R1_1(void);
-	void Opcode_E8_MOV_A_R0(void);
-	void Opcode_E9_MOV_A_R1(void);
-	void Opcode_EA_MOV_A_R2(void);
-	void Opcode_EB_MOV_A_R3(void);
-	void Opcode_EC_MOV_A_R4(void);
-	void Opcode_ED_MOV_A_R5(void);
-	void Opcode_EE_MOV_A_R6(void);
-	void Opcode_EF_MOV_A_R7(void);
+	void Opcode_E1_AJMP_Addr11(void){AJMP(0xE1,  Get1Opcode());};
+	void Opcode_E2_MOVX_A_R0_1(void){
+		Sys.a =  m_ExRam[Rges.R0()];
+		++Sys.PC;
+	};
+	void Opcode_E3_MOVX_A_R1_1(void){
+		Sys.a = m_ExRam[Rges.R1()];
+		++Sys.PC;
+	};
+	void Opcode_E4_CLR_A(void){
+		Sys.a = 0;
+		++Sys.PC;
+	};
+	void Opcode_E5_MOV_A_Direct(void){
+		Sys.a = GetRamData(Get1Opcode());
+		Sys.PC += 2;
+	};
+	void Opcode_E6_MOV_A_R0_1(void){
+		Sys.a = GetRamDataAt(Rges.R0());
+		++Sys.PC;
+	};
+	void Opcode_E7_MOV_A_R1_1(void){
+		Sys.a = GetRamDataAt(Rges.R1());
+			++Sys.PC;
+	};
+	void Opcode_E8_MOV_A_R0(void){
+		Sys.a = Rges.R0();
+		++Sys.PC;
+	};
+	void Opcode_E9_MOV_A_R1(void){
+		Sys.a = Rges.R1();
+		++Sys.PC;
+	};
+	void Opcode_EA_MOV_A_R2(void){
+		Sys.a = Rges.R2();
+		++Sys.PC;
+	};
+	void Opcode_EB_MOV_A_R3(void){
+		Sys.a = Rges.R3();
+		++Sys.PC;
+	};
+	void Opcode_EC_MOV_A_R4(void){
+		Sys.a = Rges.R4();
+		++Sys.PC;
+	};
+	void Opcode_ED_MOV_A_R5(void){
+		Sys.a = Rges.R5();
+		++Sys.PC;
+	};
+	void Opcode_EE_MOV_A_R6(void){
+		Sys.a = Rges.R6();
+		++Sys.PC;
+	};
+	void Opcode_EF_MOV_A_R7(void){
+		Sys.a = Rges.R7();
+		++Sys.PC;
+	};
 
-	void Opcode_F0_MOVX_DPTR_A(void);
-	void Opcode_F1_ACALL_Addr11(void);
-	void Opcode_F2_MOVX_R0_1_A(void);
-	void Opcode_F3_MOVX_R1_1_A(void);
-	void Opcode_F4_CPL_A(void);
-	void Opcode_F5_MOV_Direct_A(void);
-	void Opcode_F6_MOV_R0_1_A(void);
-	void Opcode_F7_MOV_R1_1_A(void);
-	void Opcode_F8_MOV_R0_A(void);
-	void Opcode_F9_MOV_R1_A(void);
-	void Opcode_FA_MOV_R2_A(void);
-	void Opcode_FB_MOV_R3_A(void);
-	void Opcode_FC_MOV_R4_A(void);
-	void Opcode_FD_MOV_R5_A(void);
-	void Opcode_FE_MOV_R6_A(void);
-	void Opcode_FF_MOV_R7_A(void);
+	void Opcode_F0_MOVX_DPTR_A(void){
+		SetExRam(Sys.dptr(), Sys.a());
+		++Sys.PC;
+	};
+	void Opcode_F1_ACALL_Addr11(void){ACALL(0xF1);};
+	void Opcode_F2_MOVX_R0_1_A(void){
+		SetExRam(Rges.R0(), Sys.a());
+		++Sys.PC;
+	};
+	void Opcode_F3_MOVX_R1_1_A(void){
+		SetExRam(Rges.R1(), Sys.a());
+		++Sys.PC;
+	};
+	void Opcode_F4_CPL_A(void){
+		Sys.a = ~(Sys.a());
+		++Sys.PC;
+	};
+	void Opcode_F5_MOV_Direct_A(void){
+		SetRamData(Get1Opcode(), Sys.a());
+		Sys.PC += 2;
+	};
+	void Opcode_F6_MOV_R0_1_A(void){
+		SetRamDataAt(Rges.R0(), Sys.a());
+		++Sys.PC;
+	};
+	void Opcode_F7_MOV_R1_1_A(void){
+		SetRamDataAt(Rges.R1(), Sys.a());
+		++Sys.PC;
+	};
+	void Opcode_F8_MOV_R0_A(void){
+		Rges.R0 = Sys.a();
+		++Sys.PC;
+	};
+	void Opcode_F9_MOV_R1_A(void){
+		Rges.R1 = Sys.a();
+		++Sys.PC;
+	};
+	void Opcode_FA_MOV_R2_A(void){
+		Rges.R2 = Sys.a();
+		++Sys.PC;
+	};
+	void Opcode_FB_MOV_R3_A(void){
+		Rges.R3 = Sys.a();
+		++Sys.PC;
+	};
+	void Opcode_FC_MOV_R4_A(void){
+		Rges.R4 = Sys.a();
+		++Sys.PC;
+	};
+	void Opcode_FD_MOV_R5_A(void){
+		Rges.R5 = Sys.a();
+		++Sys.PC;
+	};
+	void Opcode_FE_MOV_R6_A(void){
+		Rges.R6 = Sys.a();
+		++Sys.PC;
+	};
+	void Opcode_FF_MOV_R7_A(void){
+		Rges.R7 = Sys.a();
+		++Sys.PC;
+	};
 
 };
 

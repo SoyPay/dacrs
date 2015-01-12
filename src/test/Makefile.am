@@ -54,7 +54,6 @@ dacrs_test_SOURCES = \
   util_tests.cpp \
   sighash_tests.cpp \
   chainparams_tests.cpp \
-  tx_tests.cpp \
   CVir8051_test.cpp \
   accountview_tests.cpp \
   scriptdb_tests.cpp \

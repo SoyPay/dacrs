@@ -29,14 +29,21 @@ bool PrintTestNotSetPara()
 	if(SysCfg().GetArg("-listen",flag))
 	{
 		cout<<"Waring the test of config file the listen param must be false"<<endl;
+		MilliSleep(500);
+		exit(0);
 	}
 	if(SysCfg().GetArg("-connect",flag))
 	{
 		cout<<"Waring the test of the config file the connect param must be false"<<endl;
+		MilliSleep(500);
+		exit(0);
+
 	}
 	if(SysCfg().GetArg("-iscutmine",flag))
 	{
 		cout<<"Waring the test of config file the connect param must be false"<<endl;
+		MilliSleep(500);
+		exit(0);
 	}
 }
 bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {

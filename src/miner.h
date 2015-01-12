@@ -65,7 +65,7 @@ void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash
 
 bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCreateKey,CAccountViewCache &view, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
-bool VerifyPosTx(const CBlockIndex *pPrevIndex, CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool bJustCheckSign = false);
+bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool bNeedRunTx = false);
 /** Check mined block */
 bool CheckWork(CBlock* pblock, CWallet& wallet);
 /** Base sha256 mining transform */

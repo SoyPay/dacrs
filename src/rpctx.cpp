@@ -1276,7 +1276,7 @@ Value gettxoperationlog(const Array& params, bool fHelp)
 			  array.push_back(COperFundToJson(teOperFund));
 			}
 			obj.push_back(Pair("vOperFund",array));
-			obj.push_back(Pair("authorLog",te.authorLog.ToString()));
+//			obj.push_back(Pair("authorLog",te.authorLog.ToString()));
 			arrayvLog.push_back(obj);
         }
         retobj.push_back(Pair("AccountOperLog",  arrayvLog));
@@ -1309,13 +1309,13 @@ static Value TestDisconnectBlock(int number)
 		      mapBlockIndex.erase(pTipIndex->GetBlockHash());
 
 //			if (!ReadBlockFromDisk(block, pindex))
-//				throw ERROR("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
+//				throw ERRORMSG("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
 //						pindex->GetBlockHash().ToString());
 //			bool fClean = true;
 //			CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
 //			CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 //			if (!DisconnectBlock(block, state, view, pindex, txCacheTemp, contractScriptTemp, &fClean))
-//				throw ERROR("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
+//				throw ERRORMSG("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
 //						pindex->GetBlockHash().ToString());
 //			CBlockIndex *pindexDelete = pindex;
 //			pindex = pindex->pprev;
@@ -1526,7 +1526,7 @@ Value reloadtxcache(const Array& params, bool fHelp) {
 	CBlock block;
 	do {
 		if (!ReadBlockFromDisk(block, pIndex))
-			return ERROR("reloadtxcache() : *** ReadBlockFromDisk failed at %d, hash=%s", pIndex->nHeight,
+			return ERRORMSG("reloadtxcache() : *** ReadBlockFromDisk failed at %d, hash=%s", pIndex->nHeight,
 					pIndex->GetBlockHash().ToString());
 		pTxCacheTip->AddBlockToCache(block);
 		pIndex = chainActive.Next(pIndex);
