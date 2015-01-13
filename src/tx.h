@@ -348,7 +348,7 @@ public:
 			int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) = 0;
 
 	virtual bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-			int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) = 0;
+			int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 	virtual bool CheckTransction(CValidationState &state, CAccountViewCache &view) = 0;
 
@@ -603,8 +603,8 @@ public:
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
 			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
-	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
+//	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
+//			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
@@ -704,8 +704,8 @@ public:
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
 			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
-	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
+//	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
+//			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 
@@ -794,8 +794,8 @@ public:
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
 			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
-	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
+//	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
+//			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
@@ -879,8 +879,8 @@ public:
 	bool UpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
 			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
-	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
+//	bool UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
+//			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
@@ -1274,7 +1274,7 @@ public:
 
 	mutable CKeyID keyID;
 	mutable vector<COperFund> vOperFund;
-	mutable CAuthorizateLog   authorLog;
+//	mutable CAuthorizateLog   authorLog;
 	IMPLEMENT_SERIALIZE
 	(
 		vector<unsigned char> vData;
@@ -1286,7 +1286,7 @@ public:
 				CDataStream ds(SER_DISK, CLIENT_VERSION);
 				ds << keyID;
 				ds << vOperFund;
-				ds << authorLog;
+	//			ds << authorLog;
 				vData.insert(vData.end(), ds.begin(), ds.end());
 			}
 		}
@@ -1296,7 +1296,7 @@ public:
 				CDataStream ds(vData, SER_DISK, CLIENT_VERSION);
 				ds >> keyID;
 				ds >> vOperFund;
-				ds >> authorLog;
+//				ds >> authorLog;
 			}
 		}
 
@@ -1307,7 +1307,7 @@ public:
 	}
 
 	void InsertAuthorLog(const CAuthorizateLog& log) {
-		authorLog = log;
+//		authorLog = log;
 	}
 
 	string ToString() const;
@@ -1347,9 +1347,7 @@ public:
 	vector<CFund> vFreedomFund;								//!< freedom money
 	vector<CFund> vFreeze;									//!< freezed money
 	vector<CFund> vSelfFreeze;								//!< self-freeze money
-	map<vector_unsigned_char,CAuthorizate> mapAuthorizate;	//!< Key:scriptID,value :CAuthorizate
 	CAccountOperLog accountOperLog;							//!< record operlog, write at undoinfo
-
 public :
 	/**
 	 * @brief operate account
@@ -1360,8 +1358,8 @@ public :
 	 * @param bCheckAuthorized
 	 * @return if operate successfully return ture,otherwise return false
 	 */
-	bool OperateAccount(OperType type, const CFund &fund, int nHeight = 0,
-			const vector_unsigned_char* pscriptID = NULL,bool bCheckAuthorized = false );
+	bool OperateAccount(OperType type, const CFund &fund, CScriptDBViewCache &scriptCache, vector<CScriptDBOperLog> &vAuthorLog, int nHeight = 0,
+			const vector_unsigned_char* pscriptID = NULL,bool bCheckAuthorized = false);
 
 	/**
 	 * @brief:	test whether  can minus money  from the account by the script
@@ -1370,7 +1368,7 @@ public :
 	 * @param scriptID:
 	 * @return if we can minus the money then return ture,otherwise return false
 	 */
-	bool IsAuthorized(uint64_t nMoney,int nHeight,const vector_unsigned_char& scriptID);
+	bool IsAuthorized(uint64_t nMoney,int nHeight,const vector_unsigned_char& scriptID, CScriptDBViewCache &scriptCache);
 
 	/**
 	 * @brief get user defined data in authorizate class by scriptID
@@ -1378,7 +1376,7 @@ public :
 	 * @param vData user defined data
 	 * @return true if success,otherwise false
 	 */
-	bool GetUserData(const vector_unsigned_char& scriptID,vector<unsigned char> & vData);
+	bool GetUserData(const vector_unsigned_char& scriptID,vector<unsigned char> & vData, CScriptDBViewCache &scriptCache);
 public:
 	CAccount(CKeyID &keyId, CPubKey &pubKey) :
 			keyID(keyId), PublicKey(pubKey) {
@@ -1387,7 +1385,7 @@ public:
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
 		vSelfFreeze.clear();
-		mapAuthorizate.clear();
+//		mapAuthorizate.clear();
 	}
 	CAccount() :
 			keyID(uint160(0)), llValues(0) {
@@ -1396,7 +1394,7 @@ public:
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
 		vSelfFreeze.clear();
-		mapAuthorizate.clear();
+//		mapAuthorizate.clear();
 	}
 	CAccount(const CAccount & other) {
 		this->regID = other.regID;
@@ -1408,7 +1406,7 @@ public:
 		this->vFreedomFund = other.vFreedomFund;
 		this->vFreeze = other.vFreeze;
 		this->vSelfFreeze = other.vSelfFreeze;
-     	this->mapAuthorizate = other.mapAuthorizate;
+//     	this->mapAuthorizate = other.mapAuthorizate;
 		this->accountOperLog = other.accountOperLog;
 	}
 	CAccount &operator=(const CAccount & other) {
@@ -1423,7 +1421,7 @@ public:
 		this->vFreedomFund = other.vFreedomFund;
 		this->vFreeze = other.vFreeze;
 		this->vSelfFreeze = other.vSelfFreeze;
-		this->mapAuthorizate = other.mapAuthorizate;
+//		this->mapAuthorizate = other.mapAuthorizate;
 		this->accountOperLog = other.accountOperLog;
 		return *this;
 	}
@@ -1474,21 +1472,21 @@ public:
 			READWRITE(vFreedomFund);
 			READWRITE(vFreeze);
 			READWRITE(vSelfFreeze);
-			READWRITE(mapAuthorizate);
+//			READWRITE(mapAuthorizate);
 	)
 
 private:
 	bool MergerFund(vector<CFund> &vFund, int nCurHeight);
 	void WriteOperLog(AccountOper emOperType, const CFund &fund,bool bAuthorizated = false);
 	void WriteOperLog(const COperFund &operLog);
-	bool IsFundValid(OperType type, const CFund &fund, int nHeight, const vector_unsigned_char* pscriptID = NULL,
+	bool IsFundValid(OperType type, const CFund &fund, CScriptDBViewCache &scriptCache, int nHeight, const vector_unsigned_char* pscriptID = NULL,
 			bool bCheckAuthorized = false);
 
 	bool MinusFreezed(const CFund& fund);
 	bool MinusFree(const CFund &fund,bool bAuthorizated);
 	bool MinusSelf(const CFund &fund,bool bAuthorizated);
 	bool IsMoneyOverflow(uint64_t nAddMoney);
-	void UpdateAuthority(int nHeight,uint64_t nMoney, const vector_unsigned_char& scriptID);
+	void UpdateAuthority(int nHeight,uint64_t nMoney, const vector_unsigned_char& scriptID, CScriptDBViewCache &scriptCache, vector<CScriptDBOperLog> &vAuthorLog);
 	void UndoAuthorityOnDay(uint64_t nUndoMoney,const CAuthorizateLog& log);
 	void UndoAuthorityOverDay(const CAuthorizateLog& log);
 	uint64_t GetVecMoney(const vector<CFund>& vFund);

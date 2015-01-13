@@ -166,9 +166,9 @@ bool CAccountViewCache::SetKeyId(const vector<unsigned char> &accountId, const C
 }
 bool CAccountViewCache::GetKeyId(const vector<unsigned char> &accountId, CKeyID &keyId) {
 	if(cacheKeyIds.count(accountId)){
-		if(cacheKeyIds[accountId] != uint160(0))
+		keyId = cacheKeyIds[accountId];
+		if(keyId != uint160(0))
 		{
-			keyId = cacheKeyIds[accountId];
 			return true;
 		}
 		else {
@@ -194,24 +194,30 @@ bool CAccountViewCache::EraseKeyId(const vector<unsigned char> &accountId) {
 	return true;
 }
 bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAccount &account) {
-	if(cacheKeyIds.count(accountId) && cacheKeyIds[accountId] !=uint160(0)) {
-		if(cacheAccounts.count(cacheKeyIds[accountId])){
-			if(cacheAccounts[cacheKeyIds[accountId]].keyID != uint160(0)) {  // 判断此帐户是否被删除了
-				account = cacheAccounts[cacheKeyIds[accountId]];
-				return true;
+	if(cacheKeyIds.count(accountId)) {
+		CKeyID keyId(cacheKeyIds[accountId]);
+		if(keyId != uint160(0)) {
+			if(cacheAccounts.count(keyId)){
+				account = cacheAccounts[keyId];
+				if(account.keyID != uint160(0)) {  // 判断此帐户是否被删除了
+					return true;
+				}else {
+					return false;   //已删除返回false
+				}
 			}else {
-				return false;   //已删除返回false
+				return pBase->GetAccount(keyId, account); //缓存map中没有，从上级存取
 			}
-		}else {
-			return pBase->GetAccount(cacheKeyIds[accountId], account);
+		}
+		else {
+			return false;  //accountId已删除说明账户信息也已删除
 		}
 	}else {
 		CKeyID keyId;
 		if(pBase->GetKeyId(accountId, keyId)) {
 			cacheKeyIds[accountId] = keyId;
 			if (cacheAccounts.count(keyId) > 0 ) {
-				if (cacheAccounts[cacheKeyIds[accountId]].keyID != uint160(0)) { // 判断此帐户是否被删除了
-					account = cacheAccounts[keyId];
+				account = cacheAccounts[keyId];
+				if (account.keyID != uint160(0)) { // 判断此帐户是否被删除了
 					return true;
 				} else {
 					return false;   //已删除返回false
@@ -426,38 +432,40 @@ bool CScriptDBViewCache::SetData(const vector<unsigned char> &vKey, const vector
 	return true;
 }
 bool CScriptDBViewCache::UndoScriptData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {
-	assert(vKey.size() > 10);
-	if(vKey.size()<10) {
-		return ERROR("UndoScriptData(): vKey=%s error!\n", HexStr(vKey));
-	}
-	vector<unsigned char> vScriptCountKey = {'s', 'd', 'n', 'u','m'};
-	vector<unsigned char> vScriptId(vKey.begin()+4, vKey.begin()+10);
-	vector<unsigned char> vOldValue;
-	if(mapDatas.count(vKey)) {
-		vOldValue = mapDatas[vKey];
-	}
-	else {
-		GetData(vKey, vOldValue);
-	}
-	vScriptCountKey.insert(vScriptCountKey.end(), vScriptId.begin(), vScriptId.end());
-	CDataStream ds(SER_DISK, CLIENT_VERSION);
+	vector<unsigned char> vPrefix(vKey.begin(), vKey.begin() + 4);
+	vector<unsigned char> vScriptDataPrefix = { 'd', 'a', 't', 'a' };
+	if (vPrefix == vScriptDataPrefix) {
+		assert(vKey.size() > 10);
+		if (vKey.size() < 10) {
+			return ERRORMSG("UndoScriptData(): vKey=%s error!\n", HexStr(vKey));
+		}
+		vector<unsigned char> vScriptCountKey = { 's', 'd', 'n', 'u', 'm' };
+		vector<unsigned char> vScriptId(vKey.begin() + 4, vKey.begin() + 10);
+		vector<unsigned char> vOldValue;
+		if (mapDatas.count(vKey)) {
+			vOldValue = mapDatas[vKey];
+		} else {
+			GetData(vKey, vOldValue);
+		}
+		vScriptCountKey.insert(vScriptCountKey.end(), vScriptId.begin(), vScriptId.end());
+		CDataStream ds(SER_DISK, CLIENT_VERSION);
 
-	int nCount(0);
-	if(vValue.empty()) {   //key所对应的值由非空设置为空，计数减1
-			if(!vOldValue.empty()) {
-			if(!GetScriptDataCount(vScriptId, nCount))
-				return false;
-			--nCount;
-			if(!SetScriptDataCount(vScriptId, nCount))
-				return false;
+		int nCount(0);
+		if (vValue.empty()) {   //key所对应的值由非空设置为空，计数减1
+			if (!vOldValue.empty()) {
+				if (!GetScriptDataCount(vScriptId, nCount))
+					return false;
+				--nCount;
+				if (!SetScriptDataCount(vScriptId, nCount))
+					return false;
 			}
-	}
-	else {    //key所对应的值由空设置为非空，计数加1
-		if(vOldValue.empty()) {
-			GetScriptDataCount(vScriptId, nCount);
-			++nCount;
-			if(!SetScriptDataCount(vScriptId, nCount))
-				return false;
+		} else {    //key所对应的值由空设置为非空，计数加1
+			if (vOldValue.empty()) {
+				GetScriptDataCount(vScriptId, nCount);
+				++nCount;
+				if (!SetScriptDataCount(vScriptId, nCount))
+					return false;
+			}
 		}
 	}
 	mapDatas[vKey] = vValue;
@@ -999,7 +1007,6 @@ bool CScriptDBViewCache::GetScriptDataCount(const CRegID &scriptId, int &nCount)
 }
 bool CScriptDBViewCache::EraseScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey, CScriptDBOperLog &operLog) {
 	bool  temp = EraseScriptData(scriptId.GetVec6(), vScriptKey, operLog);
-//	LogPrint("SetScriptData","EraseScriptData sriptid ID:%s key:%s ret:%d %p \r\n",scriptId.ToString(),HexStr(vScriptKey),temp,this);
 	return temp;
 }
 bool CScriptDBViewCache::HaveScriptData(const CRegID &scriptId, const vector<unsigned char > &vScriptKey) {
@@ -1015,17 +1022,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const CRegID &
 	if(!setOperLog.empty()) {    //删除已经超时的数据项
 		for (auto &item : setOperLog) {
 			if(!EraseScriptData(item.vKey)) {
-//				CDataStream ds(item.vValue, SER_DISK, CLIENT_VERSION);
-//				int nHeight;
-//				vector<unsigned char> vScriptData;
-//				ds >> nHeight;
-//				ds >> vScriptData;
-//				vector<unsigned char> vScriptId(item.vKey.begin()+4, item.vKey.begin()+10);
-//				vector<unsigned char> vDefineKey(item.vKey.begin()+11, item.vKey.end());
-//				CRegID regId;
-//				regId.SetRegID(vScriptId);
-//				LogPrint("ERROR", "vScriptId:%s, vScriptKey:%s, nHeight:%d  vScriptData:%s\n", regId.ToString(), HexStr(vDefineKey), nHeight, HexStr(vScriptData));
-				return ERROR("GetScriptData() delete timeout script data item of super level db error");
+				return ERRORMSG("GetScriptData() delete timeout script data item of super level db error");
 			}
 		}
 	}
@@ -1034,7 +1031,6 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const CRegID &
 bool CScriptDBViewCache::SetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
 			const vector<unsigned char> &vScriptData, const int nHeight, CScriptDBOperLog &operLog) {
 	bool  temp =SetScriptData(scriptId.GetVec6(), vScriptKey, vScriptData, nHeight, operLog);
-//	LogPrint("SetScriptData","SetScriptData sriptid ID:%s key:%s value:%s height:%d, ret: %d %p \r\n",scriptId.ToString(), HexStr(vScriptKey), HexStr(vScriptData), nHeight, temp, this);
 	return temp;
 }
 bool CScriptDBViewCache::SetTxRelAccout(const uint256 &txHash, const set<CKeyID> &relAccount) {
@@ -1083,7 +1079,7 @@ Object CScriptDBViewCache::ToJosnObj() const {
 bool CScriptDBViewCache::GetAuthorizate(const CRegID &acctRegId, const CRegID &scriptId, CAuthorizate &authorizate) {
 	vector<unsigned char> vKey = {'a','u','t','h','o','r'};
 	vector<unsigned char> vValue;
-	vKey.insert(vKey.end(), acctRegId.GetVec6().begin(), scriptId.GetVec6().end());
+	vKey.insert(vKey.end(), acctRegId.GetVec6().begin(), acctRegId.GetVec6().end());
 	vKey.push_back('_');
 	vKey.insert(vKey.end(), scriptId.GetVec6().begin(), scriptId.GetVec6().end());
 	if(!GetData(vKey, vValue))
@@ -1092,15 +1088,19 @@ bool CScriptDBViewCache::GetAuthorizate(const CRegID &acctRegId, const CRegID &s
 	ds >> authorizate;
 	return true;
 }
-bool CScriptDBViewCache::SetAuthorizate(const CRegID &acctRegId, const CRegID &scriptId, const CAuthorizate &authorizate) {
+bool CScriptDBViewCache::SetAuthorizate(const CRegID &acctRegId, const CRegID &scriptId, const CAuthorizate &authorizate,  CScriptDBOperLog &operLog) {
 	vector<unsigned char> vKey = {'a','u','t','h','o','r'};
 	vector<unsigned char> vValue;
-	vKey.insert(vKey.end(), acctRegId.GetVec6().begin(), scriptId.GetVec6().end());
+	vKey.insert(vKey.end(), acctRegId.GetVec6().begin(), acctRegId.GetVec6().end());
 	vKey.push_back('_');
 	vKey.insert(vKey.end(), scriptId.GetVec6().begin(), scriptId.GetVec6().end());
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	ds << authorizate;
 	vValue.assign(ds.begin(), ds.end());
+	vector<unsigned char> oldValue;
+	oldValue.clear();
+	GetData(vKey, oldValue);
+	operLog = CScriptDBOperLog(vKey, oldValue);
 	return SetData(vKey, vValue);
 }
 uint256 CTransactionDBView::IsContainTx(const uint256 & txHash) { return std::move(uint256(0)); }
@@ -1203,15 +1203,7 @@ uint256 CTransactionDBCache::IsContainTx(const uint256 & txHash) {
 }
 
 map<uint256, vector<uint256> > CTransactionDBCache::GetTxHashCache(void) {
-//	map<uint256, vector<uint256> > mapTemp;
-//	if(NULL != pBase) {
-//		map<uint256, vector<uint256> > mapTemp2 =((CTransactionDBCache *) pBase)->GetTxHashCache();
-//		std::merge(mapTxHashByBlockHash.begin(), mapTxHashByBlockHash.end(),
-//				mapTemp2.begin(), mapTemp2.end(), mapTemp.begin());
-//		return mapTemp;
-//	}
-//	else
-		return mapTxHashByBlockHash;
+	return mapTxHashByBlockHash;
 }
 
 bool CTransactionDBCache::BatchWrite(const map<uint256, vector<uint256> > &mapTxHashByBlockHashIn) {

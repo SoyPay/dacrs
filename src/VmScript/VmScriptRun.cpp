@@ -254,11 +254,12 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 //		LogPrint("vm", "befer account:%s\r\n", vmAccount.get()->ToString().c_str());
 //		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
 		bool ret = false;
+		vector<CScriptDBOperLog> vAuthorLog;
 		if(IsSignatureAccount(vmAccount.get()->regID) || vmAccount.get()->regID == boost::get<CRegID>(tx->scriptRegId))
 		{
-			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype,fund,height);
+			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype, fund, *m_ScriptDBTip, vAuthorLog, height);
 		}else{
-			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype,fund,height,&GetScriptRegID().GetVec6(),true);
+			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype, fund, *m_ScriptDBTip, vAuthorLog,  height, &GetScriptRegID().GetVec6(), true);
 		}
 
 //		LogPrint("vm", "after account:%s\r\n", vmAccount.get()->ToString().c_str());
@@ -266,6 +267,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 			return false;
 		}
 		NewAccont.push_back(vmAccount);
+		m_dblog->insert(m_dblog->end(), vAuthorLog.begin(), vAuthorLog.end());
 
 	}
 	return true;

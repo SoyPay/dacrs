@@ -91,7 +91,7 @@ int64_t CLevelDBWrapper::GetDbCount()
    		} catch (std::exception &e) {
    			 if(pcursor)
    			 delete pcursor;
-   			 ERROR("%s : Deserialize or I/O error - %s", __func__, e.what());
+   			 ERRORMSG("%s : Deserialize or I/O error - %s", __func__, e.what());
    			 return 0;
    		}
    	}

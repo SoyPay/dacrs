@@ -48,7 +48,7 @@ static  bool GetKeyId(string const &addr,CKeyID &KeyId) {
 	}
 	return true;
 };
-Object TxToJSON(CBaseTransaction *pTx) {
+Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 	Object result;
 	result.push_back(Pair("hash", pTx->GetHash().GetHex()));
 	switch (pTx->nTxType) {
@@ -128,7 +128,12 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		result.push_back(Pair("txtype", "RegScriptTx"));
 		result.push_back(Pair("ver", prtx->nVersion));
 		result.push_back(Pair("addr", RegIDToAddress(prtx->regAccountId)));
-		result.push_back(Pair("script", HexStr(prtx->script)));
+		if (!bPrintScriptContent && prtx->script.size() != SCRIPT_ID_SIZE) {
+			result.push_back(Pair("script", "script_content"));
+		} else {
+			result.push_back(Pair("script", HexStr(prtx->script)));
+		}
+
 		result.push_back(Pair("fees", prtx->llFees));
 		result.push_back(Pair("height", prtx->nValidHeight));
 		result.push_back(Pair("authorizate", prtx->aAuthorizate.ToJosnObj()));
@@ -141,6 +146,39 @@ Object TxToJSON(CBaseTransaction *pTx) {
 	return result;
 }
 
+Object GetTxDetail(const uint256& txhash,bool bPrintScriptContent = true ) {
+	Object obj;
+	std::shared_ptr<CBaseTransaction> pBaseTx;
+	{
+		LOCK(cs_main);
+		{
+			pBaseTx = mempool.lookup(txhash);
+			if (pBaseTx.get()) {
+				obj = TxToJSON(pBaseTx.get(),bPrintScriptContent);
+				return obj;
+			}
+		}
+		if (SysCfg().IsTxIndex()) {
+			CDiskTxPos postx;
+			if (pblocktree->ReadTxIndex(txhash, postx)) {
+				CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
+				CBlockHeader header;
+				try {
+					file >> header;
+					fseek(file, postx.nTxOffset, SEEK_CUR);
+					file >> pBaseTx;
+					obj = TxToJSON(pBaseTx.get(),bPrintScriptContent);
+					obj.push_back(Pair("blockhash", header.GetHash().GetHex()));
+					obj.push_back(Pair("confirmHeight", (int) header.nHeight));
+				} catch (std::exception &e) {
+					throw runtime_error(tfm::format("%s : Deserialize or I/O error - %s", __func__, e.what()).c_str());
+				}
+				return obj;
+			}
+		}
+	}
+	return obj;
+}
 
 Value gettxdetail(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
@@ -154,37 +192,38 @@ Value gettxdetail(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 	uint256 txhash(params[0].get_str());
-	Object obj;
-	std::shared_ptr<CBaseTransaction> pBaseTx;
-	{
-		LOCK(cs_main);
-		{
-			pBaseTx = mempool.lookup(txhash);
-			if (pBaseTx.get()) {
-				obj = TxToJSON(pBaseTx.get());
-				return obj;
-			}
-		}
-		if (SysCfg().IsTxIndex()) {
-			CDiskTxPos postx;
-			if (pblocktree->ReadTxIndex(txhash, postx)) {
-				CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
-				CBlockHeader header;
-				try {
-					file >> header;
-					fseek(file, postx.nTxOffset, SEEK_CUR);
-					file >> pBaseTx;
-					obj = TxToJSON(pBaseTx.get());
-					obj.push_back(Pair("blockhash", header.GetHash().GetHex()));
-					obj.push_back(Pair("confirmHeight", (int)header.nHeight));
-				} catch (std::exception &e) {
-					throw runtime_error(tfm::format("%s : Deserialize or I/O error - %s", __func__, e.what()).c_str());
-				}
-				return obj;
-			}
-		}
-	}
-	return obj;
+//	Object obj;
+//	std::shared_ptr<CBaseTransaction> pBaseTx;
+//	{
+//		LOCK(cs_main);
+//		{
+//			pBaseTx = mempool.lookup(txhash);
+//			if (pBaseTx.get()) {
+//				obj = TxToJSON(pBaseTx.get());
+//				return obj;
+//			}
+//		}
+//		if (SysCfg().IsTxIndex()) {
+//			CDiskTxPos postx;
+//			if (pblocktree->ReadTxIndex(txhash, postx)) {
+//				CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
+//				CBlockHeader header;
+//				try {
+//					file >> header;
+//					fseek(file, postx.nTxOffset, SEEK_CUR);
+//					file >> pBaseTx;
+//					obj = TxToJSON(pBaseTx.get());
+//					obj.push_back(Pair("blockhash", header.GetHash().GetHex()));
+//					obj.push_back(Pair("confirmHeight", (int)header.nHeight));
+//				} catch (std::exception &e) {
+//					throw runtime_error(tfm::format("%s : Deserialize or I/O error - %s", __func__, e.what()).c_str());
+//				}
+//				return obj;
+//			}
+//		}
+//	}
+//	return obj;
+	return GetTxDetail(txhash);
 }
 
 
@@ -1237,7 +1276,7 @@ Value gettxoperationlog(const Array& params, bool fHelp)
 			  array.push_back(COperFundToJson(teOperFund));
 			}
 			obj.push_back(Pair("vOperFund",array));
-			obj.push_back(Pair("authorLog",te.authorLog.ToString()));
+//			obj.push_back(Pair("authorLog",te.authorLog.ToString()));
 			arrayvLog.push_back(obj);
         }
         retobj.push_back(Pair("AccountOperLog",  arrayvLog));
@@ -1270,13 +1309,13 @@ static Value TestDisconnectBlock(int number)
 		      mapBlockIndex.erase(pTipIndex->GetBlockHash());
 
 //			if (!ReadBlockFromDisk(block, pindex))
-//				throw ERROR("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
+//				throw ERRORMSG("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight,
 //						pindex->GetBlockHash().ToString());
 //			bool fClean = true;
 //			CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
 //			CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 //			if (!DisconnectBlock(block, state, view, pindex, txCacheTemp, contractScriptTemp, &fClean))
-//				throw ERROR("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
+//				throw ERRORMSG("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight,
 //						pindex->GetBlockHash().ToString());
 //			CBlockIndex *pindexDelete = pindex;
 //			pindex = pindex->pprev;
@@ -1487,7 +1526,7 @@ Value reloadtxcache(const Array& params, bool fHelp) {
 	CBlock block;
 	do {
 		if (!ReadBlockFromDisk(block, pIndex))
-			return ERROR("reloadtxcache() : *** ReadBlockFromDisk failed at %d, hash=%s", pIndex->nHeight,
+			return ERRORMSG("reloadtxcache() : *** ReadBlockFromDisk failed at %d, hash=%s", pIndex->nHeight,
 					pIndex->GetBlockHash().ToString());
 		pTxCacheTip->AddBlockToCache(block);
 		pIndex = chainActive.Next(pIndex);
@@ -2138,23 +2177,59 @@ Value sigstr(const Array& params, bool fHelp)
 	}
 	return obj;
 }
-Value printblokdbinfo(const Array& params, bool fHelp){
+
+Value getalltxinfo(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 0) {
+		string msg = "getalltxinfo \"addr\" showtxdetail\n"
+				"\nlistaddrtx\n"
+				"\nArguments:\n"
+				"\nResult:\n"
+				"\"txhash\"\n"
+				"\nExamples:\n" + HelpExampleCli("getalltxinfo", "") + "\nAs json rpc call\n"
+				+ HelpExampleRpc("getalltxinfo", "");
+		throw runtime_error(msg);
+	}
+
+	Object retObj;
+	Array AllTx;
+	vector<uint256> vAllTxHash;
+	assert(pwalletMain != NULL);
+	{
+		for (auto const &wtx : pwalletMain->mapInBlockTx) {
+			for (auto const & item : wtx.second.mapAccountTx) {
+				vAllTxHash.push_back(item.first);
+			}
+		}
+
+		CAccountViewCache view(*pAccountViewTip, true);
+		for (auto const &wtx : pwalletMain->UnConfirmTx) {
+			vAllTxHash.push_back(wtx.first);
+		}
+
+		for (auto const& item : vAllTxHash) {
+			Object objtx = GetTxDetail(item, false);
+			AllTx.push_back(objtx);
+		}
+	}
+
+	retObj.push_back(Pair("AllTxInfo", AllTx));
+	return retObj;
+}
+
+Value printblokdbinfo(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {
 		string msg = "registerscripttx nrequired \"addr\" \"script\" fee height\n"
 				"\nregister script\n"
 				"\nArguments:\n"
-				"\nExamples:\n"
-				+ HelpExampleCli("printblokdbinfo",
-						"") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("printblokdbinfo",
-						"");
+				"\nExamples:\n" + HelpExampleCli("printblokdbinfo", "") + "\nAs json rpc call\n"
+				+ HelpExampleRpc("printblokdbinfo", "");
 		throw runtime_error(msg);
 	}
 
 	if (!pAccountViewTip->Flush())
-	  throw runtime_error("Failed to write to account database\n");
-	if (! pScriptDBTip->Flush())
-		 throw runtime_error("Failed to write to account database\n");
-		WriteBlockLog(false);
-		return Value::null;
+		throw runtime_error("Failed to write to account database\n");
+	if (!pScriptDBTip->Flush())
+		throw runtime_error("Failed to write to account database\n");
+	WriteBlockLog(false);
+	return Value::null;
 }

@@ -29,14 +29,21 @@ bool PrintTestNotSetPara()
 	if(SysCfg().GetArg("-listen",flag))
 	{
 		cout<<"Waring the test of config file the listen param must be false"<<endl;
+		MilliSleep(500);
+		exit(0);
 	}
 	if(SysCfg().GetArg("-connect",flag))
 	{
 		cout<<"Waring the test of the config file the connect param must be false"<<endl;
+		MilliSleep(500);
+		exit(0);
+
 	}
 	if(SysCfg().GetArg("-iscutmine",flag))
 	{
 		cout<<"Waring the test of config file the connect param must be false"<<endl;
+		MilliSleep(500);
+		exit(0);
 	}
 }
 bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {
@@ -775,4 +782,17 @@ bool SysTestBase::GetStrFromObj(const Value& valueRes,string& str)
 				str = result.get_str();
 				}
 			return true;
+}
+bool SysTestBase::ImportWalletKey(char**address,int nCount){
+	for (int i = 0; i < nCount; i++) {
+		char *argv2[] = { "rpctest", "importprivkey", address[i]};
+		int argc2 = sizeof(argv2) / sizeof(char*);
+
+		Value value;
+		if (!CommandLineRPC_GetValue(sizeof(argv2) / sizeof(argv2[0]), argv2, value)) {
+			continue;
+		}
+	}
+
+	return true;
 }

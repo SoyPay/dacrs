@@ -342,7 +342,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 //						if (GetTxOperLog(hashtx, Log) == true) {
 //							assert(newtx.AddOperLog(hashtx, Log));
 //						} else {
-//							ERROR("GetTxOperLog  error %s", hashtx.GetHex());
+//							ERRORMSG("GetTxOperLog  error %s", hashtx.GetHex());
 //						}
 					}
 					newtx.AddTx(hashtx,sptx.get());
@@ -874,7 +874,7 @@ bool CKeyStoreValue::UnSersailFromJson(const Object& obj){
 		nCreationTime =find_value(obj, "nCreationTime").get_int64();
 		assert(mCkey.GetPubKey() == mPKey);
 	} catch (...) {
-		ERROR("UnSersailFromJson Failed !");
+		ERRORMSG("UnSersailFromJson Failed !");
 		return false;
 	}
 
@@ -910,7 +910,7 @@ bool CKeyStoreValue::SynchronizSys(CAccountViewCache& view){
 		mregId = account.regID;
 		if(account.PublicKey != mPKey)
 			{
-				ERROR("shit %s acc %s mPKey:%s\r\n","not fix the bug",account.ToString(),this->ToString());
+				ERRORMSG("shit %s acc %s mPKey:%s\r\n","not fix the bug",account.ToString(),this->ToString());
 				assert(0);
 			}
 		if(account.MinerPKey.IsValid())

@@ -166,7 +166,7 @@ public:
 	bool SetTxRelAccout(const uint256 &txHash, const set<CKeyID> &relAccount);
 	bool GetTxRelAccount(const uint256 &txHash, set<CKeyID> &relAccount);
 	bool GetAuthorizate(const CRegID &acctRegId, const CRegID &scriptId, CAuthorizate &authorizate);
-	bool SetAuthorizate(const CRegID &acctRegId, const CRegID &scriptId, const CAuthorizate &authorizate);
+	bool SetAuthorizate(const CRegID &acctRegId, const CRegID &scriptId, const CAuthorizate &authorizate, CScriptDBOperLog &operLog);
 	/**
 	 * @brief write all data in the caches to script db
 	 * @return
