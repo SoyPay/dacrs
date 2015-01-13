@@ -471,7 +471,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 							"nVersion=%d, hashPreBlock=%s, hashMerkleRoot=%s, nValue=%ld, nTime=%ld, nNonce=%ld\n",
 							postxinfo.nVersion, postxinfo.hashPrevBlock.GetHex(), postxinfo.hashMerkleRoot.GetHex(),
 							postxinfo.nValues, postxinfo.nTime, postxinfo.nNonce);
-					LogPrint("INFO", "Miner account info:%s\n", item.ToString());
+//					LogPrint("INFO", "Miner account info:%s\n", item.ToString());
 					if (pwalletMain->Sign(item.keyID, pBlock->SignatureHash(), pBlock->vSignature,
 							item.MinerPKey.IsValid())) {
 						LogPrint("INFO", "Create new block,hash:%s\n", pBlock->GetHash().GetHex());
