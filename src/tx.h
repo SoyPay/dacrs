@@ -1160,14 +1160,24 @@ public:
 		nLastOperHeight = 0;
 		nLastCurMaxMoneyPerDay = 0;
 		nLastMaxMoneyTotal = 0;
+		nLastMaxMoneyPerTime = 0;
+		nLastMaxMoneyPerDay = 0;
+		nLastAuthorizeTime = 0;
 		scriptID.clear();
 	}
 
-	CAuthorizateLog(int nHeight,uint64_t nMoneyPerDay, uint64_t nTotalMoney, bool _bValid,const vector_unsigned_char& _scriptID) {
+	CAuthorizateLog(uint32_t nTime,uint64_t nMaxPerTime,uint64_t nMaxPerDay,uint64_t nMaxTotal,int nHeight,uint64_t nMoneyPerDay,
+			uint64_t nTotalMoney, bool _bValid,vector<unsigned char> vData,const vector_unsigned_char& _scriptID) {
+		nLastAuthorizeTime = nTime;
+		nLastMaxMoneyPerDay = nMaxPerDay;
+		nLastMaxMoneyPerTime = nMaxPerTime;
+		nLastMaxMoneyTotal = nMaxTotal;
+
 		bValid = _bValid;
 		nLastOperHeight = nHeight;
 		nLastCurMaxMoneyPerDay = nMoneyPerDay;
 		nLastMaxMoneyTotal = nTotalMoney;
+		nUserDefine = vData;
 		scriptID = _scriptID;
 	}
 
@@ -1217,6 +1227,10 @@ public:
 			ds << VARINT(nLastOperHeight);
 			ds << VARINT(nLastCurMaxMoneyPerDay);
 			ds << VARINT(nLastMaxMoneyTotal);
+			ds << VARINT(nLastAuthorizeTime);
+			ds << VARINT(nLastMaxMoneyPerTime);
+			ds << VARINT(nLastMaxMoneyPerDay);
+			ds << nUserDefine;
 			ds << scriptID;
 			vData.insert(vData.end(), ds.begin(), ds.end());
 			(nSerSize += ::SerReadWrite(s, (vData), nType, nVersion, ser_action));
@@ -1237,6 +1251,10 @@ public:
 			ds << VARINT(nLastOperHeight);
 			ds << VARINT(nLastCurMaxMoneyPerDay);
 			ds << VARINT(nLastMaxMoneyTotal);
+			ds << VARINT(nLastAuthorizeTime);
+			ds << VARINT(nLastMaxMoneyPerTime);
+			ds << VARINT(nLastMaxMoneyPerDay);
+			ds << nUserDefine;
 			ds << scriptID;
 			vData.insert(vData.end(), ds.begin(), ds.end());
 			(nSerSize += ::SerReadWrite(s, (vData), nType, nVersion, ser_action));
@@ -1257,15 +1275,43 @@ public:
 			ds >> VARINT(nLastOperHeight);
 			ds >> VARINT(nLastCurMaxMoneyPerDay);
 			ds >> VARINT(nLastMaxMoneyTotal);
+			ds >> VARINT(nLastAuthorizeTime);
+			ds >> VARINT(nLastMaxMoneyPerTime);
+			ds >> VARINT(nLastMaxMoneyPerDay);
+			ds >> nUserDefine;
 			ds >> scriptID;
 		}
 	}
 
+	void SetLastAuthorTime(uint32_t nTime) {
+		nLastAuthorizeTime = nTime;
+	}
+
+	uint32_t GetLastAuthorTime() const {
+		return nLastAuthorizeTime;
+	}
+
+	uint64_t GetLastMoneyPerTime() const {
+		return nLastMaxMoneyPerTime;
+	}
+
+	uint64_t GetLastMaxMoneyPerDay() const {
+		return nLastMaxMoneyPerDay;
+	}
+
+	const vector<unsigned char>& GetUserData() const {
+		return nUserDefine;
+	}
 private:
 	bool bValid;
 	int nLastOperHeight;
 	uint64_t nLastCurMaxMoneyPerDay;
 	uint64_t nLastMaxMoneyTotal;
+	uint32_t nLastAuthorizeTime;
+	uint64_t nLastMaxMoneyPerTime;
+	uint64_t nLastMaxMoneyPerDay;
+
+	vector<unsigned char> nUserDefine;
 	vector_unsigned_char scriptID;
 };
 
@@ -1306,7 +1352,7 @@ public:
 		vOperFund.push_back(op);
 	}
 
-	void InsertAuthorLog(const CAuthorizateLog& log) {
+	void WriteAuthorLog(const CAuthorizateLog& log) {
 		authorLog = log;
 	}
 

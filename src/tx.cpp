@@ -1800,9 +1800,12 @@ void CAccount::UpdateAuthority(int nHeight, uint64_t nMoney, const vector_unsign
 	//update authority after current operate
 	const uint64_t nBlocksPerDay = 24 * 60 * 60 / SysCfg().GetTargetSpacing();
 	if (authorizate.GetLastOperHeight() / nBlocksPerDay < nHeight / nBlocksPerDay) {
-		CAuthorizateLog log(authorizate.GetLastOperHeight(), authorizate.GetCurMaxMoneyPerDay(),
-				authorizate.GetMaxMoneyTotal(), true, scriptID);
-		accountOperLog.InsertAuthorLog(log);
+		CAuthorizateLog log(authorizate.GetAuthorizeTime(),authorizate.GetMaxMoneyPerTime(),authorizate.GetMaxMoneyPerDay(),
+				authorizate.GetMaxMoneyTotal(),
+				authorizate.GetLastOperHeight(),
+				authorizate.GetCurMaxMoneyPerDay(),
+				authorizate.GetMaxMoneyTotal(), true, authorizate.GetUserData(),scriptID);
+		accountOperLog.WriteAuthorLog(log);
 		authorizate.SetCurMaxMoneyPerDay(authorizate.GetMaxMoneyPerDay());
 	}
 
@@ -1825,6 +1828,11 @@ void CAccount::UndoAuthorityOverDay(const CAuthorizateLog& log) {
 	authorizate.SetMaxMoneyTotal(log.GetLastMaxMoneyTotal());
 	authorizate.SetCurMaxMoneyPerDay(log.GetLastCurMaxMoneyPerDay());
 	authorizate.SetLastOperHeight(log.GetLastOperHeight());
+	authorizate.SetAuthorizeTime(log.GetLastAuthorTime());
+
+	authorizate.SetMaxMoneyPerDay(log.GetLastMaxMoneyPerDay());
+	authorizate.SetMaxMoneyPerTime(log.GetLastMoneyPerTime());
+	authorizate.SetUserData(log.GetUserData());
 }
 
 void CAccount::UndoAuthorityOnDay(uint64_t nUndoMoney, const CAuthorizateLog& log) {
@@ -1843,6 +1851,11 @@ void CAccount::UndoAuthorityOnDay(uint64_t nUndoMoney, const CAuthorizateLog& lo
 	authorizate.SetCurMaxMoneyPerDay(nNewMaxMoneyPerDay);
 	authorizate.SetMaxMoneyTotal(nNewMaxMoneyTotal);
 	authorizate.SetLastOperHeight(accountOperLog.authorLog.GetLastOperHeight());
+	authorizate.SetAuthorizeTime(accountOperLog.authorLog.GetLastAuthorTime());
+
+	authorizate.SetMaxMoneyPerDay(accountOperLog.authorLog.GetLastMaxMoneyPerDay());
+	authorizate.SetMaxMoneyPerTime(accountOperLog.authorLog.GetLastMoneyPerTime());
+	authorizate.SetUserData(accountOperLog.authorLog.GetUserData());
 }
 
 bool CAccount::GetUserData(const vector_unsigned_char& scriptID, vector<unsigned char> & vData) {
