@@ -427,9 +427,10 @@ static RET_DEFINE ExVerifySignatureFunc(unsigned char *ipara,void * pVmScriptRun
 	uint256 hash(*retdata.at(2).get());
 
 	bool rlt;
-	if (pk.Verify(hash, *retdata.at(0))) {
+	if(CheckSignScript(hash, *retdata.at(0), pk)) {
 		rlt = true;
-	} else {
+	}
+	else {
 		rlt = false;
 	}
 
@@ -970,7 +971,7 @@ static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 
 	CRegID scriptid = pVmScriptRun->GetScriptRegID();
 	int height = pVmScriptRun->GetComfirHeight();
-	bool ret = aAccount.IsAuthorized(money,height,scriptid.GetVec6());
+	bool ret = aAccount.IsAuthorized(money,height,scriptid.GetVec6(), *pVmScriptRun->GetScriptDB());
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -1175,7 +1176,7 @@ static RET_DEFINE ExGetAuthoritedDefineFunc(unsigned char * ipara,void * pVmScri
 //	int height = pVmScriptRun->GetComfirHeight();
 
 	vector<unsigned char> vData;
-	if(!aAccount.GetUserData(scriptid,vData))
+	if(!aAccount.GetUserData(scriptid, vData, *pVmScriptRun->GetScriptDB()))
 	{
 		flag = false;
 	}
@@ -2598,8 +2599,8 @@ void CVir8051::AJMP(INT8U opCode, INT8U data) {
 	Sys.PC = tmppc;
 }
 void CVir8051::ACALL(INT8U opCode) {
-	INT8U data = 0;
-	GetOpcodeData(&data, sizeof(data));
+	INT8U data = Get1Opcode();
+//	GetOpcodeData(&data, sizeof(data));
 
 	Sys.PC += 2;
 	Sys.sp = Sys.sp() + 1;
@@ -2639,19 +2640,19 @@ void CVir8051::UpDataDebugInfo(void) {
 }
 
 void * CVir8051::GetExRamAddr(INT16U addr) const {
-	Assert(addr < sizeof(m_ExRam));
+//	Assert(addr < sizeof(m_ExRam));
 	return (void *) &m_ExRam[addr];
 }
 INT8U CVir8051::GetExRam(INT16U addr) const {
-	Assert(addr < sizeof(m_ExRam));
+//	Assert(addr < sizeof(m_ExRam));
 	return m_ExRam[addr];
 }
 INT8U CVir8051::SetExRam(INT16U addr, INT8U data) {
-	Assert(addr < sizeof(m_ExRam));
+//	Assert(addr < sizeof(m_ExRam));
 	return m_ExRam[addr] = data;
 }
 void * CVir8051::GetPointRamAddr(INT16U addr) const {
-	Assert(addr < sizeof(m_ChipRam));
+//	Assert(addr < sizeof(m_ChipRam));
 	return (void *) &m_ChipRam[addr];
 }
 
@@ -2674,51 +2675,51 @@ void* CVir8051::GetPointFileAddr(INT16U addr) const {
 	return (void*) &m_ExeFile[addr];
 }
 
-void CVir8051::Opcode_00_NOP(void) {
-	Sys.PC++;
-}
+//void CVir8051::Opcode_00_NOP(void) {
+//	++Sys.PC;
+//}
 
-void CVir8051::Opcode_01_AJMP_Addr11(void) {
-	INT8U temp = 0;
-	GetOpcodeData(&temp, 1);
-	AJMP(0x01, temp);
-}
+//void CVir8051::Opcode_01_AJMP_Addr11(void) {
+////	INT8U temp = 0;
+////	GetOpcodeData(&temp, 1);
+//	AJMP(0x01, Get1Opcode());
+//}
 
-void CVir8051::Opcode_21_AJMP_Addr11(void) {
-	INT8U temp = 0;
-	GetOpcodeData(&temp, 1);
-	AJMP(0x21, temp);
-}
-void CVir8051::Opcode_41_AJMP_Addr11(void) {
-	INT8U temp = 0;
-	GetOpcodeData(&temp, 1);
-	AJMP(0x41, temp);
-}
-void CVir8051::Opcode_61_AJMP_Addr11(void) {
-	INT8U temp = 0;
-	GetOpcodeData(&temp, 1);
-	AJMP(0x61, temp);
-}
-void CVir8051::Opcode_81_AJMP_Addr11(void) {
-	INT8U temp = 0;
-	GetOpcodeData(&temp, 1);
-	AJMP(0x81, temp);
-}
-void CVir8051::Opcode_A1_AJMP_Addr11(void) {
-	INT8U temp = 0;
-	GetOpcodeData(&temp, 1);
-	AJMP(0xA1, temp);
-}
-void CVir8051::Opcode_C1_AJMP_Addr11(void) {
-	INT8U temp = 0;
-	GetOpcodeData(&temp, 1);
-	AJMP(0xC1, temp);
-}
-void CVir8051::Opcode_E1_AJMP_Addr11(void) {
-	INT8U temp = 0;
-	GetOpcodeData(&temp, 1);
-	AJMP(0xE1, temp);
-}
+//void CVir8051::Opcode_21_AJMP_Addr11(void) {
+////	INT8U temp = 0;
+////	GetOpcodeData(&temp, 1);
+//	AJMP(0x21, Get1Opcode());
+//}
+//void CVir8051::Opcode_41_AJMP_Addr11(void) {
+////	INT8U temp = 0;
+////	GetOpcodeData(&temp, 1);
+//	AJMP(0x41, Get1Opcode());
+//}
+//void CVir8051::Opcode_61_AJMP_Addr11(void) {
+////	INT8U temp = 0;
+////	GetOpcodeData(&temp, 1);
+//	AJMP(0x61, Get1Opcode());
+//}
+//void CVir8051::Opcode_81_AJMP_Addr11(void) {
+////	INT8U temp = 0;
+////	GetOpcodeData(&temp, 1);
+//	AJMP(0x81, Get1Opcode());
+//}
+//void CVir8051::Opcode_A1_AJMP_Addr11(void) {
+////	INT8U temp = 0;
+////	GetOpcodeData(&temp, 1);
+//	AJMP(0xA1, Get1Opcode());
+//}
+//void CVir8051::Opcode_C1_AJMP_Addr11(void) {
+////	INT8U temp = 0;
+////	GetOpcodeData(&temp, 1);
+//	AJMP(0xC1,  Get1Opcode());
+//}
+//void CVir8051::Opcode_E1_AJMP_Addr11(void) {
+////	INT8U temp = 0;
+////	GetOpcodeData(&temp, 1);
+//	AJMP(0xE1,  Get1Opcode());
+//}
 void CVir8051::Opcode_02_LJMP_Addr16(void) {
 	INT8U temp[2];
 	INT16U data;
@@ -2733,17 +2734,17 @@ void CVir8051::Opcode_03_RR_A(void) {
 	Sys.a = Sys.a() | (temp << 7);
 //	Sys.a =Sys.a() | (temp << 7);
 
-	Sys.PC++;
+	++Sys.PC;
 }
-void CVir8051::Opcode_04_INC_A(void) {
-	Sys.a = Sys.a() + 1;
-	Sys.PC++;
-}
+//void CVir8051::Opcode_04_INC_A(void) {
+//	Sys.a = Sys.a() + 1;
+//	++Sys.PC;
+//}
 void CVir8051::Opcode_05_INC_Direct(void) {
 	INT8U temp = 0;
-	INT8U addr = 0;
+	INT8U addr = Get1Opcode();
 //	void *p = NULL;
-	GetOpcodeData(&addr, 1);
+//	GetOpcodeData(&addr, 1);
 //	p = GetPointRamAddr(addr);
 //	memcpy(&temp, p, sizeof(temp));
 	temp = GetRamData(addr);
@@ -2764,7 +2765,7 @@ void CVir8051::Opcode_06_INC_R0_1(void) {
 //	memcpy(&temp, p, sizeof(temp));
 //	temp++;
 //	memcpy(p, &temp, sizeof(temp));
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_07_INC_R1_1(void) {
 //	INT8U temp = 0;
@@ -2779,41 +2780,41 @@ void CVir8051::Opcode_07_INC_R1_1(void) {
 	++data;
 	SetRamDataAt(addr, data);
 //	++m_ChipRam[Rges.R1()];
-	Sys.PC++;
+	++Sys.PC;
 }
 
-void CVir8051::Opcode_08_INC_R0(void) {
-	Rges.R0 = Rges.R0() + 1;
-	Sys.PC++;
-}
-void CVir8051::Opcode_09_INC_R1(void) {
-	Rges.R1 = Rges.R1() + 1;
-	Sys.PC++;
-}
-void CVir8051::Opcode_0A_INC_R2(void) {
-	Rges.R2 = Rges.R2() + 1;
-	Sys.PC++;
-}
-void CVir8051::Opcode_0B_INC_R3(void) {
-	Rges.R3 = Rges.R3() + 1;
-	Sys.PC++;
-}
-void CVir8051::Opcode_0C_INC_R4(void) {
-	Rges.R4 = Rges.R4() + 1;
-	Sys.PC++;
-}
-void CVir8051::Opcode_0D_INC_R5(void) {
-	Rges.R5 = Rges.R5() + 1;
-	Sys.PC++;
-}
-void CVir8051::Opcode_0E_INC_R6(void) {
-	Rges.R6 = Rges.R6() + 1;
-	Sys.PC++;
-}
-void CVir8051::Opcode_0F_INC_R7(void) {
-	Rges.R7 = Rges.R7() + 1;
-	Sys.PC++;
-}
+//void CVir8051::Opcode_08_INC_R0(void) {
+//	Rges.R0 = Rges.R0() + 1;
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_09_INC_R1(void) {
+//	Rges.R1 = Rges.R1() + 1;
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_0A_INC_R2(void) {
+//	Rges.R2 = Rges.R2() + 1;
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_0B_INC_R3(void) {
+//	Rges.R3 = Rges.R3() + 1;
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_0C_INC_R4(void) {
+//	Rges.R4 = Rges.R4() + 1;
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_0D_INC_R5(void) {
+//	Rges.R5 = Rges.R5() + 1;
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_0E_INC_R6(void) {
+//	Rges.R6 = Rges.R6() + 1;
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_0F_INC_R7(void) {
+//	Rges.R7 = Rges.R7() + 1;
+//	++Sys.PC;
+//}
 void CVir8051::Opcode_10_JBC_Bit_Rel(void) {
 	INT8U temp[2];
 	char tem2;
@@ -2837,30 +2838,30 @@ void CVir8051::Opcode_10_JBC_Bit_Rel(void) {
 //	}
 }
 
-void CVir8051::Opcode_11_ACALL_Addr11(void) {
-	ACALL(0x11);
-}
-void CVir8051::Opcode_31_ACALL_Addr11(void) {
-	ACALL(0x31);
-}
-void CVir8051::Opcode_51_ACALL_Addr11(void) {
-	ACALL(0x51);
-}
-void CVir8051::Opcode_71_ACALL_Addr11(void) {
-	ACALL(0x71);
-}
-void CVir8051::Opcode_91_ACALL_Addr11(void) {
-	ACALL(0x91);
-}
-void CVir8051::Opcode_B1_ACALL_Addr11(void) {
-	ACALL(0xB1);
-}
-void CVir8051::Opcode_D1_ACALL_Addr11(void) {
-	ACALL(0xD1);
-}
-void CVir8051::Opcode_F1_ACALL_Addr11(void) {
-	ACALL(0xF1);
-}
+//void CVir8051::Opcode_11_ACALL_Addr11(void) {
+//	ACALL(0x11);
+//}
+//void CVir8051::Opcode_31_ACALL_Addr11(void) {
+//	ACALL(0x31);
+//}
+//void CVir8051::Opcode_51_ACALL_Addr11(void) {
+//	ACALL(0x51);
+//}
+//void CVir8051::Opcode_71_ACALL_Addr11(void) {
+//	ACALL(0x71);
+//}
+//void CVir8051::Opcode_91_ACALL_Addr11(void) {
+//	ACALL(0x91);
+//}
+//void CVir8051::Opcode_B1_ACALL_Addr11(void) {
+//	ACALL(0xB1);
+//}
+//void CVir8051::Opcode_D1_ACALL_Addr11(void) {
+//	ACALL(0xD1);
+//}
+//void CVir8051::Opcode_F1_ACALL_Addr11(void) {
+//	ACALL(0xF1);
+//}
 
 INT16U CVir8051::GetLcallAddr(void) {
 	INT16U addr = 0;
@@ -2999,22 +3000,22 @@ void CVir8051::Opcode_13_RRC_A(void) {
 	Sys.a = ((Sys.a() >> 1) | (Sys.psw().cy << 7));
 
 	Sys.psw().cy = (temp == 0) ? 0 : 1;
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_14_DEC_A(void) {
 	Sys.a = Sys.a() - 1;
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_15_DEC_Direct(void) {
 	INT8U temp = 0;
-	INT8U addr = 0;
+	INT8U addr = Get1Opcode();
 //	void *p = NULL;
-	GetOpcodeData(&addr, 1);
+//	GetOpcodeData(&addr, 1);
 //	p = GetPointRamAddr(addr);
 
 //	memcpy(&temp, p, sizeof(temp));
 	temp = GetRamData(addr);
-	temp--;
+	--temp;
 //	memcpy(p, &temp, sizeof(temp));
 	SetRamData(addr, temp);
 	Sys.PC = Sys.PC + 2;
@@ -3025,9 +3026,9 @@ void CVir8051::Opcode_16_DEC_R0_1(void) {
 //	void *p = GetPointRamAddr(Rges.R0());
 //	memcpy(&temp, p, sizeof(temp));
 	temp = GetRamDataAt(addr);
-	temp--;
+	--temp;
 	SetRamDataAt(addr, temp);
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_17_DEC_R1_1(void) {
 //	INT8U temp = 0;
@@ -3044,50 +3045,43 @@ void CVir8051::Opcode_17_DEC_R1_1(void) {
 	temp = GetRamDataAt(addr);
 	temp--;
 	SetRamDataAt(addr, temp);
-	Sys.PC++;
+	++Sys.PC;
 
 }
-void CVir8051::Opcode_18_DEC_R0(void) {
-//	Rges.R0--;
-	Rges.R0 = Rges.R0() - 1;
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_19_DEC_R1(void) {
-	Rges.R1 = Rges.R1() - 1;
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_1A_DEC_R2(void) {
-	Rges.R2 = Rges.R2() - 1;
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_1B_DEC_R3(void) {
-	Rges.R3 = Rges.R3() - 1;
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_1C_DEC_R4(void) {
-	Rges.R4 = Rges.R4() - 1;
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_1D_DEC_R5(void) {
-	Rges.R5 = Rges.R5() - 1;
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_1E_DEC_R6(void) {
-	Rges.R6 = Rges.R6() - 1;
-	;
-	Sys.PC++;
-}
-void CVir8051::Opcode_1F_DEC_R7(void) {
-	Rges.R7 = Rges.R7() - 1;
-	;
-	Sys.PC++;
-}
+//void CVir8051::Opcode_18_DEC_R0(void) {
+////	Rges.R0--;
+//	Rges.R0 = Rges.R0() - 1;
+//
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_19_DEC_R1(void) {
+//	Rges.R1 = Rges.R1() - 1;
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_1A_DEC_R2(void) {
+//	Rges.R2 = Rges.R2() - 1;
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_1B_DEC_R3(void) {
+//	Rges.R3 = Rges.R3() - 1;
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_1C_DEC_R4(void) {
+//	Rges.R4 = Rges.R4() - 1;
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_1D_DEC_R5(void) {
+//	Rges.R5 = Rges.R5() - 1;
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_1E_DEC_R6(void) {
+//	Rges.R6 = Rges.R6() - 1;
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_1F_DEC_R7(void) {
+//	Rges.R7 = Rges.R7() - 1;
+//	++Sys.PC;
+//}
 void CVir8051::Opcode_20_JB_Bit_Rel(void) {
 	INT8U temp[2];
 
@@ -3133,7 +3127,7 @@ void CVir8051::Opcode_23_RL_A(void) {
 	INT8U temp = Sys.a() & 0x80;
 	INT8U tem2 = Sys.a();
 	Sys.a = (INT8U) ((tem2 << 1) | (temp >> 7));
-	Sys.PC++;
+	++Sys.PC;
 }
 
 void CVir8051::MD_ADDC(INT8U data) {
@@ -3246,74 +3240,74 @@ void CVir8051::MD_ADD(INT8U data) {
 
 }
 
-void CVir8051::Opcode_24_ADD_A_Data(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, 1);
-	MD_ADD(temp);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_25_ADD_A_Direct(void) {
-	INT8U temp;
-	INT8U addr;
-//	void *p = NULL;
-	GetOpcodeData(&addr, 1);
-//	p = GetPointRamAddr(addr);
-//	memcpy(&temp, p, sizeof(temp));
-
-	temp = GetRamData(addr);
-	MD_ADD(temp);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_26_ADD_A_R0_1(void) {
-	INT8U temp = 0;
-//	void *p = GetPointRamAddr(Rges.R0());
-	temp = GetRamDataAt(Rges.R0());
-//	memcpy(&temp, p, sizeof(temp));
-	MD_ADD(temp);
-//Sys.a +=temp;
-	Sys.PC++;
-}
-void CVir8051::Opcode_27_ADD_A_R1_1(void) {
-	INT8U temp = 0;
-//	void *p = GetPointRamAddr(Rges.R1());
-//	memcpy(&temp, p, sizeof(temp));
-	temp = GetRamDataAt(Rges.R1());
-	MD_ADD(temp);
-//Sys.a +=temp;
-	Sys.PC++;
-}
-void CVir8051::Opcode_28_ADD_A_R0(void) {
-	MD_ADD(Rges.R0());
-	Sys.PC++;
-}
-void CVir8051::Opcode_29_ADD_A_R1(void) {
-	MD_ADD(Rges.R1());
-	Sys.PC++;
-}
-void CVir8051::Opcode_2A_ADD_A_R2(void) {
-	MD_ADD(Rges.R2());
-	Sys.PC++;
-}
-void CVir8051::Opcode_2B_ADD_A_R3(void) {
-	MD_ADD(Rges.R3());
-	Sys.PC++;
-}
-void CVir8051::Opcode_2C_ADD_A_R4(void) {
-	MD_ADD(Rges.R4());
-	Sys.PC++;
-}
-void CVir8051::Opcode_2D_ADD_A_R5(void) {
-	MD_ADD(Rges.R5());
-	Sys.PC++;
-}
-void CVir8051::Opcode_2E_ADD_A_R6(void) {
-	MD_ADD(Rges.R6());
-	Sys.PC++;
-}
-void CVir8051::Opcode_2F_ADD_A_R7(void) {
-	MD_ADD(Rges.R7());
-	Sys.PC++;
-}
+//void CVir8051::Opcode_24_ADD_A_Data(void) {
+////	INT8U temp=Get1Opcode();
+////	GetOpcodeData(&temp, 1);
+//	MD_ADD(Get1Opcode());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_25_ADD_A_Direct(void) {
+////	INT8U temp;
+////	INT8U addr;
+////	void *p = NULL;
+////	GetOpcodeData(&addr, 1);
+////	p = GetPointRamAddr(addr);
+////	memcpy(&temp, p, sizeof(temp));
+//
+////	temp = GetRamData(Get1Opcode());
+//	MD_ADD(GetRamData(Get1Opcode()));
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_26_ADD_A_R0_1(void) {
+////	INT8U temp = 0;
+////	void *p = GetPointRamAddr(Rges.R0());
+////	temp = GetRamDataAt(Rges.R0());
+////	memcpy(&temp, p, sizeof(temp));
+//	MD_ADD(GetRamDataAt(Rges.R0()));
+////Sys.a +=temp;
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_27_ADD_A_R1_1(void) {
+//	INT8U temp = 0;
+////	void *p = GetPointRamAddr(Rges.R1());
+////	memcpy(&temp, p, sizeof(temp));
+//	temp = GetRamDataAt(Rges.R1());
+//	MD_ADD(GetRamDataAt(Rges.R1()));
+////Sys.a +=temp;
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_28_ADD_A_R0(void) {
+//	MD_ADD(Rges.R0());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_29_ADD_A_R1(void) {
+//	MD_ADD(Rges.R1());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_2A_ADD_A_R2(void) {
+//	MD_ADD(Rges.R2());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_2B_ADD_A_R3(void) {
+//	MD_ADD(Rges.R3());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_2C_ADD_A_R4(void) {
+//	MD_ADD(Rges.R4());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_2D_ADD_A_R5(void) {
+//	MD_ADD(Rges.R5());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_2E_ADD_A_R6(void) {
+//	MD_ADD(Rges.R6());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_2F_ADD_A_R7(void) {
+//	MD_ADD(Rges.R7());
+//	++Sys.PC;
+//}
 void CVir8051::Opcode_30_JNB_Bit_Rel(void) {
 	INT8U temp[2];
 
@@ -3354,99 +3348,90 @@ void CVir8051::Opcode_32_RETI(void) {
 	Sys.PC = (Sys.PC & 0xFF00) | temp;
 //memcpy((INT8U*)(&Sys.PC),&temp,1);
 	Sys.sp = Sys.sp() - 1;
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_33_RLC_A(void) {
 	INT8U temp = Sys.a() & 0x80;
 	Sys.a = ((Sys.a() << 1) | Sys.psw().cy);
 	Sys.psw().cy = temp == 0 ? 0 : 1;
 
-	Sys.PC++;
+	++Sys.PC;
 }
-void CVir8051::Opcode_34_ADDC_A_Data(void) {
-	INT8U data;
-	GetOpcodeData(&data, 1);
-	MD_ADDC(data);   //加上
-
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_35_ADDC_A_Direct(void) {
-	INT8U data;
-	INT8U addr;
-//	void *p = NULL;
-	GetOpcodeData(&addr, 1);
-//	p = GetPointRamAddr(addr);
-//	memcpy(&temp, p, sizeof(temp));
-	data = GetRamData(addr);
-	MD_ADDC(data);
-
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_36_ADDC_A_R0_1(void) {
-	INT8U temp = 0;
-//	void *p = GetPointRamAddr(Rges.R0());
-//	memcpy(&temp, p, sizeof(temp));
-	temp = GetRamDataAt(Rges.R0());
-	MD_ADDC(temp);
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_37_ADDC_A_R1_1(void) {
-	INT8U temp = 0;
-//	void *p = GetPointRamAddr(Rges.R1());
-//	memcpy(&temp, p, sizeof(temp));
-	temp = GetRamDataAt(Rges.R1());
-
-// GetOpcodeData(&temp,1);
-	MD_ADDC(temp);
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_38_ADDC_A_R0(void) {
-
-//GetOpcodeData(&temp,1);
-	MD_ADDC(Rges.R0());
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_39_ADDC_A_R1(void) {
-	MD_ADDC(Rges.R1());
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_3A_ADDC_A_R2(void) {
-	MD_ADDC(Rges.R2());
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_3B_ADDC_A_R3(void) {
-	MD_ADDC(Rges.R3());
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_3C_ADDC_A_R4(void) {
-	MD_ADDC(Rges.R4());
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_3D_ADDC_A_R5(void) {
-	MD_ADDC(Rges.R5());
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_3E_ADDC_A_R6(void) {
-	MD_ADDC(Rges.R6());
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_3F_ADDC_A_R7(void) {
-	MD_ADDC(Rges.R7());
-
-	Sys.PC++;
-}
+//void CVir8051::Opcode_34_ADDC_A_Data(void) {
+////	INT8U data;
+////	GetOpcodeData(&data, 1);
+//	MD_ADDC(Get1Opcode());   //加上
+//
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_35_ADDC_A_Direct(void) {
+////	INT8U data;
+////	INT8U addr;
+////	void *p = NULL;
+////	GetOpcodeData(&addr, 1);
+////	p = GetPointRamAddr(addr);
+////	memcpy(&temp, p, sizeof(temp));
+////	data = GetRamData(Get1Opcode());
+//	MD_ADDC(GetRamData(Get1Opcode()));
+//
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_36_ADDC_A_R0_1(void) {
+////	INT8U temp = 0;
+////	void *p = GetPointRamAddr(Rges.R0());
+////	memcpy(&temp, p, sizeof(temp));
+////	temp = GetRamDataAt(Rges.R0());
+//	MD_ADDC(GetRamDataAt(Rges.R0()));
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_37_ADDC_A_R1_1(void) {
+////	INT8U temp = 0;
+////	void *p = GetPointRamAddr(Rges.R1());
+////	memcpy(&temp, p, sizeof(temp));
+////	temp = GetRamDataAt(Rges.R1());
+//
+//// GetOpcodeData(&temp,1);
+//	MD_ADDC(GetRamDataAt(Rges.R1()));
+//
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_38_ADDC_A_R0(void) {
+//
+////GetOpcodeData(&temp,1);
+//	MD_ADDC(Rges.R0());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_39_ADDC_A_R1(void) {
+//	MD_ADDC(Rges.R1());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_3A_ADDC_A_R2(void) {
+//	MD_ADDC(Rges.R2());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_3B_ADDC_A_R3(void) {
+//	MD_ADDC(Rges.R3());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_3C_ADDC_A_R4(void) {
+//	MD_ADDC(Rges.R4());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_3D_ADDC_A_R5(void) {
+//	MD_ADDC(Rges.R5());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_3E_ADDC_A_R6(void) {
+//	MD_ADDC(Rges.R6());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_3F_ADDC_A_R7(void) {
+//	MD_ADDC(Rges.R7());
+//	++Sys.PC;
+//}
 void CVir8051::Opcode_40_JC_Rel(void) {
-	char tem2;
-	GetOpcodeData(&tem2, 1);
+	char tem2= Get1Opcode();
+//	GetOpcodeData(&tem2, 1);
 	Sys.PC += 2;
 	if (Sys.psw().cy) {
 		memcpy(&tem2, &tem2, sizeof(tem2));
@@ -3457,9 +3442,9 @@ void CVir8051::Opcode_40_JC_Rel(void) {
 
 void CVir8051::Opcode_42_ORL_Direct_A(void) {
 	INT8U temp;
-	INT8U addr;
+	INT8U addr = Get1Opcode();
 //	void *p = NULL;
-	GetOpcodeData(&addr, 1);
+//	GetOpcodeData(&addr, 1);
 //	p = GetPointRamAddr(addr);
 //	memcpy(&temp, p, sizeof(temp));
 	temp = GetRamData(addr);
@@ -3490,69 +3475,69 @@ void CVir8051::Updata_A_P_Flag(void) {
 
 }
 void CVir8051::Opcode_44_ORL_A_Data(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, 1);
+	INT8U temp = Get1Opcode();
+//	GetOpcodeData(&temp, 1);
 	Sys.a = Sys.a() | temp;
 	Sys.PC += 2;
 }
 void CVir8051::Opcode_45_ORL_A_Direct(void) {
 	INT8U data;
-	INT8U addr;
-	GetOpcodeData(&addr, 1);
+	INT8U addr = Get1Opcode();
+//	GetOpcodeData(&addr, 1);
 	data = GetRamData(addr);
 	Sys.a = Sys.a() | data;
 	Sys.PC += 2;
 }
-void CVir8051::Opcode_46_ORL_A_R0_1(void) {
-//	INT8U temp = 0;
-//	void *p = GetPointRamAddr(Rges.R0());
-//	memcpy(&temp, p, sizeof(temp));
-	Sys.a = Sys.a() | GetRamDataAt(Rges.R0());
-	Sys.PC++;
-}
-void CVir8051::Opcode_47_ORL_A_R1_1(void) {
-	INT8U temp = 0;
-//	void *p = GetPointRamAddr(Rges.R1());
-//	memcpy(&temp, p, sizeof(temp));
-	temp = GetRamDataAt(Rges.R1());
-	Sys.a = Sys.a() | temp;
-	Sys.PC++;
-}
-void CVir8051::Opcode_48_ORL_A_R0(void) {
-	Sys.a = Sys.a() | Rges.R0();
-	Sys.PC++;
-}
-void CVir8051::Opcode_49_ORL_A_R1(void) {
-	Sys.a = Sys.a() | Rges.R1();
-	Sys.PC++;
-}
-void CVir8051::Opcode_4A_ORL_A_R2(void) {
-	Sys.a = Sys.a() | Rges.R2();
-	Sys.PC++;
-}
-void CVir8051::Opcode_4B_ORL_A_R3(void) {
-	Sys.a = Sys.a() | Rges.R3();
-	Sys.PC++;
-}
-void CVir8051::Opcode_4C_ORL_A_R4(void) {
-	Sys.a = Sys.a() | Rges.R4();
-	Sys.PC++;
-}
-void CVir8051::Opcode_4D_ORL_A_R5(void) {
-	Sys.a = Sys.a() | Rges.R5();
-	Sys.PC++;
-}
-void CVir8051::Opcode_4E_ORL_A_R6(void) {
-	Sys.a = Sys.a() | Rges.R6();
-	Sys.PC++;
-}
-void CVir8051::Opcode_4F_ORL_A_R7(void) {
-	Sys.a = Sys.a() | Rges.R7();
-	Sys.PC++;
-}
+//void CVir8051::Opcode_46_ORL_A_R0_1(void) {
+////	INT8U temp = 0;
+////	void *p = GetPointRamAddr(Rges.R0());
+////	memcpy(&temp, p, sizeof(temp));
+//	Sys.a = Sys.a() | GetRamDataAt(Rges.R0());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_47_ORL_A_R1_1(void) {
+////	INT8U temp = 0;
+////	void *p = GetPointRamAddr(Rges.R1());
+////	memcpy(&temp, p, sizeof(temp));
+////	temp = GetRamDataAt(Rges.R1());
+//	Sys.a = Sys.a() | GetRamDataAt(Rges.R1());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_48_ORL_A_R0(void) {
+//	Sys.a = Sys.a() | Rges.R0();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_49_ORL_A_R1(void) {
+//	Sys.a = Sys.a() | Rges.R1();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_4A_ORL_A_R2(void) {
+//	Sys.a = Sys.a() | Rges.R2();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_4B_ORL_A_R3(void) {
+//	Sys.a = Sys.a() | Rges.R3();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_4C_ORL_A_R4(void) {
+//	Sys.a = Sys.a() | Rges.R4();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_4D_ORL_A_R5(void) {
+//	Sys.a = Sys.a() | Rges.R5();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_4E_ORL_A_R6(void) {
+//	Sys.a = Sys.a() | Rges.R6();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_4F_ORL_A_R7(void) {
+//	Sys.a = Sys.a() | Rges.R7();
+//	++Sys.PC;
+//}
 void CVir8051::Opcode_50_JNC_Rel(void) {
-	char tem2;
-	GetOpcodeData(&tem2, 1);
+	char tem2 = Get1Opcode();
+//	GetOpcodeData(&tem2, 1);
 	Sys.PC += 2;
 	if (Sys.psw().cy == 0) {
 		Sys.PC += tem2;
@@ -3560,7 +3545,7 @@ void CVir8051::Opcode_50_JNC_Rel(void) {
 }
 void CVir8051::Opcode_52_ANL_Direct_A(void) {
 	INT8U temp;
-	INT8U addr;
+	INT8U addr =Get1Opcode();
 //	void *p = NULL;
 	GetOpcodeData(&addr, 1);
 //	p = GetPointRamAddr(addr);
@@ -3585,74 +3570,74 @@ void CVir8051::Opcode_53_ANL_Direct_Data(void) {
 	SetRamData(temp[0], data);
 	Sys.PC += 3;
 }
-void CVir8051::Opcode_54_ANL_A_Data(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, 1);
-	Sys.a = Sys.a() & temp;
-	Sys.PC += 2;
-}
+//void CVir8051::Opcode_54_ANL_A_Data(void) {
+////	INT8U temp= Get1Opcode();
+////	GetOpcodeData(&temp, 1);
+//	Sys.a = Sys.a() & Get1Opcode();
+//	Sys.PC += 2;
+//}
 
-void CVir8051::Opcode_55_ANL_A_Direct(void) {
-	INT8U temp;
-	INT8U addr;
-//	void *p = NULL;
-	GetOpcodeData(&addr, 1);
-//	p = GetPointRamAddr(addr);
-//	memcpy(&temp, p, 1);
-	temp = GetRamData(addr);
-	Sys.a = Sys.a() & temp;
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_56_ANL_A_R0_1(void) {
-//	INT8U temp = 0;
-//	void *p = GetPointRamAddr(Rges.R0());
-//	memcpy(&temp, p, sizeof(temp));
-	Sys.a = Sys.a() & GetRamDataAt(Rges.R0());
-	Sys.PC++;
-}
-void CVir8051::Opcode_57_ANL_A_R1_1(void) {
-	INT8U temp = 0;
-//	void *p = GetPointRamAddr(Rges.R1());
-//	memcpy(&temp, p, sizeof(temp));
-	temp = GetRamDataAt(Rges.R1());
-	Sys.a = Sys.a() & temp;
-	Sys.PC++;
-}
-void CVir8051::Opcode_58_ANL_A_R0(void) {
-	Sys.a = Sys.a() & Rges.R0();
-	Sys.PC++;
-}
-void CVir8051::Opcode_59_ANL_A_R1(void) {
-	Sys.a = Sys.a() & Rges.R1();
-	Sys.PC++;
-}
-void CVir8051::Opcode_5A_ANL_A_R2(void) {
-	Sys.a = Sys.a() & Rges.R2();
-	Sys.PC++;
-}
-void CVir8051::Opcode_5B_ANL_A_R3(void) {
-	Sys.a = Sys.a() & Rges.R3();
-	Sys.PC++;
-}
-void CVir8051::Opcode_5C_ANL_A_R4(void) {
-	Sys.a = Sys.a() & Rges.R4();
-	Sys.PC++;
-}
-void CVir8051::Opcode_5D_ANL_A_R5(void) {
-	Sys.a = Sys.a() & Rges.R5();
-	Sys.PC++;
-}
-void CVir8051::Opcode_5E_ANL_A_R6(void) {
-	Sys.a = Sys.a() & Rges.R6();
-	Sys.PC++;
-}
-void CVir8051::Opcode_5F_ANL_A_R7(void) {
-	Sys.a = Sys.a() & Rges.R7();
-	Sys.PC++;
-}
+//void CVir8051::Opcode_55_ANL_A_Direct(void) {
+////	INT8U temp;
+////	INT8U addr = ;
+////	void *p = NULL;
+////	GetOpcodeData(&addr, 1);
+////	p = GetPointRamAddr(addr);
+////	memcpy(&temp, p, 1);
+////	temp = GetRamData(Get1Opcode());
+//	Sys.a = Sys.a() & GetRamData(Get1Opcode());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_56_ANL_A_R0_1(void) {
+////	INT8U temp = 0;
+////	void *p = GetPointRamAddr(Rges.R0());
+////	memcpy(&temp, p, sizeof(temp));
+//	Sys.a = Sys.a() & GetRamDataAt(Rges.R0());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_57_ANL_A_R1_1(void) {
+////	INT8U temp = 0;
+////	void *p = GetPointRamAddr(Rges.R1());
+////	memcpy(&temp, p, sizeof(temp));
+////	temp = GetRamDataAt(Rges.R1());
+//	Sys.a = Sys.a() & GetRamDataAt(Rges.R1());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_58_ANL_A_R0(void) {
+//	Sys.a = Sys.a() & Rges.R0();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_59_ANL_A_R1(void) {
+//	Sys.a = Sys.a() & Rges.R1();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_5A_ANL_A_R2(void) {
+//	Sys.a = Sys.a() & Rges.R2();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_5B_ANL_A_R3(void) {
+//	Sys.a = Sys.a() & Rges.R3();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_5C_ANL_A_R4(void) {
+//	Sys.a = Sys.a() & Rges.R4();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_5D_ANL_A_R5(void) {
+//	Sys.a = Sys.a() & Rges.R5();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_5E_ANL_A_R6(void) {
+//	Sys.a = Sys.a() & Rges.R6();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_5F_ANL_A_R7(void) {
+//	Sys.a = Sys.a() & Rges.R7();
+//	++Sys.PC;
+//}
 void CVir8051::Opcode_60_JZ_Rel(void) {
-	char temp;
-	GetOpcodeData(&temp, 1);
+	char temp= Get1Opcode();
+//	GetOpcodeData(&temp, 1);
 	Sys.PC += 2;
 	if (Sys.a() == 0) {
 //		Sys.PC = GetTargPC(temp);
@@ -3661,9 +3646,9 @@ void CVir8051::Opcode_60_JZ_Rel(void) {
 }
 void CVir8051::Opcode_62_XRL_Direct_A(void) {
 	INT8U temp;
-	INT8U addr;
+	INT8U addr = Get1Opcode();
 //	void *p = NULL;
-	GetOpcodeData(&addr, 1);
+//	GetOpcodeData(&addr, 1);
 //	p = GetPointRamAddr(addr);
 //	memcpy(&temp, p, sizeof(temp));
 	temp = GetRamData(addr);
@@ -3686,114 +3671,114 @@ void CVir8051::Opcode_63_XRL_Direct_Data(void) {
 	SetRamData(temp[0], data);
 	Sys.PC += 3;
 }
-void CVir8051::Opcode_64_XRL_A_Data(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, 1);
-	Sys.a = Sys.a() ^ temp;
-	Sys.PC += 2;
-}
+//void CVir8051::Opcode_64_XRL_A_Data(void) {
+////	INT8U temp = Get1Opcode();
+////	GetOpcodeData(&temp, 1);
+//	Sys.a = Sys.a() ^  Get1Opcode();
+//	Sys.PC += 2;
+//}
 
-void CVir8051::Opcode_65_XRL_A_Direct(void) {
-	INT8U temp;
-	INT8U addr;
-//	void *p = NULL;
-	GetOpcodeData(&addr, 1);
-//	p = GetPointRamAddr(addr);
-//	memcpy(&temp, p, 1);
-	temp = GetRamData(addr);
-	Sys.a = Sys.a() ^ temp;
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_66_XRL_A_R0_1(void) {
-	INT8U temp = 0;
-//	void *p = GetPointRamAddr(Rges.R0());
-//	memcpy(&temp, p, sizeof(temp));
-	temp = GetRamDataAt(Rges.R0());
-	Sys.a = Sys.a() ^ temp;
-	Sys.PC++;
-}
-void CVir8051::Opcode_67_XRL_A_R1_1(void) {
-	INT8U temp = 0;
-//	void *p = GetPointRamAddr(Rges.R1());
-//	memcpy(&temp, p, sizeof(temp));
-	temp = GetRamDataAt(Rges.R1());
-	Sys.a = Sys.a() ^ temp;
-	Sys.PC++;
-}
-void CVir8051::Opcode_68_XRL_A_R0(void) {
-	Sys.a = Sys.a() ^ Rges.R0();
-	Sys.PC++;
-}
-void CVir8051::Opcode_69_XRL_A_R1(void) {
-	Sys.a = Sys.a() ^ Rges.R1();
-	Sys.PC++;
-}
-void CVir8051::Opcode_6A_XRL_A_R2(void) {
-	Sys.a = Sys.a() ^ Rges.R2();
-	Sys.PC++;
-}
-void CVir8051::Opcode_6B_XRL_A_R3(void) {
-	Sys.a = Sys.a() ^ Rges.R3();
-	Sys.PC++;
-}
-void CVir8051::Opcode_6C_XRL_A_R4(void) {
-	Sys.a = Sys.a() ^ Rges.R4();
-	Sys.PC++;
-}
-void CVir8051::Opcode_6D_XRL_A_R5(void) {
-	Sys.a = Sys.a() ^ Rges.R5();
-	Sys.PC++;
-}
-void CVir8051::Opcode_6E_XRL_A_R6(void) {
-	Sys.a = Sys.a() ^ Rges.R6();
-	Sys.PC++;
-}
-void CVir8051::Opcode_6F_XRL_A_R7(void) {
-	Sys.a = Sys.a() ^ Rges.R7();
-	Sys.PC++;
-}
+//void CVir8051::Opcode_65_XRL_A_Direct(void) {
+////	INT8U temp;
+////	INT8U addr= Get1Opcode();
+////	void *p = NULL;
+////	GetOpcodeData(&addr, 1);
+////	p = GetPointRamAddr(addr);
+////	memcpy(&temp, p, 1);
+////	temp = GetRamData(Get1Opcode());
+//	Sys.a = Sys.a() ^ GetRamData(Get1Opcode());
+////	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_66_XRL_A_R0_1(void) {
+////	INT8U temp = 0;
+////	void *p = GetPointRamAddr(Rges.R0());
+////	memcpy(&temp, p, sizeof(temp));
+////	temp = GetRamDataAt(Rges.R0());
+//	Sys.a = Sys.a() ^ GetRamDataAt(Rges.R0());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_67_XRL_A_R1_1(void) {
+////	INT8U temp = 0;
+////	void *p = GetPointRamAddr(Rges.R1());
+////	memcpy(&temp, p, sizeof(temp));
+////	temp = GetRamDataAt(Rges.R1());
+//	Sys.a = Sys.a() ^ GetRamDataAt(Rges.R1());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_68_XRL_A_R0(void) {
+//	Sys.a = Sys.a() ^ Rges.R0();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_69_XRL_A_R1(void) {
+//	Sys.a = Sys.a() ^ Rges.R1();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_6A_XRL_A_R2(void) {
+//	Sys.a = Sys.a() ^ Rges.R2();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_6B_XRL_A_R3(void) {
+//	Sys.a = Sys.a() ^ Rges.R3();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_6C_XRL_A_R4(void) {
+//	Sys.a = Sys.a() ^ Rges.R4();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_6D_XRL_A_R5(void) {
+//	Sys.a = Sys.a() ^ Rges.R5();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_6E_XRL_A_R6(void) {
+//	Sys.a = Sys.a() ^ Rges.R6();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_6F_XRL_A_R7(void) {
+//	Sys.a = Sys.a() ^ Rges.R7();
+//	++Sys.PC;
+//}
 void CVir8051::Opcode_70_JNZ_Rel(void) {
-	char temp;
-	GetOpcodeData(&temp, 1);
+	char temp = Get1Opcode();
+//	GetOpcodeData(&temp, 1);
 	Sys.PC += 2;
 	if (Sys.a() != 0) {
 //		Sys.PC = GetTargPC(temp);
 		Sys.PC += temp;
 	}
 }
-void CVir8051::Opcode_72_ORL_C_Direct(void) {
-	INT8U addr, data;
-	GetOpcodeData(&addr, 1);
-
-	data = GetBitFlag(addr);
-//	Assert(temp<0xF7);
-//	if (temp <= 0x7F) {
-//		data = (GetBitFlag((temp / 8) + 0x20, temp % 8)) ? 1 : 0;
-//	} else {
-//		data = (GetBitFlag(ChangeBitAddr(temp), temp % 8)) ? 1 : 0;
-//	}
-//	temp = 0;
-//	if (Sys.psw().cy) {
-//		temp++;
-//	}
-//	if (data) {
-//		temp++;
-//	}
-	Sys.psw().cy = Sys.psw().cy | data;
-
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_73_JMP_A_DPTR(void) {
-	Sys.PC++;
-	Sys.PC = (INT16U) Sys.a() + Sys.dptr();
-}
-void CVir8051::Opcode_74_MOV_A_Data(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, 1);
-	Sys.a = temp;
-
-	Sys.PC += 2;
-}
+//void CVir8051::Opcode_72_ORL_C_Direct(void) {
+////	INT8U addr= Get1Opcode(),
+////	INT8U data;
+////	GetOpcodeData(&addr, 1);
+//
+////	data = GetBitFlag(Get1Opcode());
+////	Assert(temp<0xF7);
+////	if (temp <= 0x7F) {
+////		data = (GetBitFlag((temp / 8) + 0x20, temp % 8)) ? 1 : 0;
+////	} else {
+////		data = (GetBitFlag(ChangeBitAddr(temp), temp % 8)) ? 1 : 0;
+////	}
+////	temp = 0;
+////	if (Sys.psw().cy) {
+////		temp++;
+////	}
+////	if (data) {
+////		temp++;
+////	}
+//	Sys.psw().cy = Sys.psw().cy | GetBitFlag(Get1Opcode());
+//
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_73_JMP_A_DPTR(void) {
+//	++Sys.PC;
+//	Sys.PC = (INT16U) Sys.a() + Sys.dptr();
+//}
+//void CVir8051::Opcode_74_MOV_A_Data(void) {
+////	INT8U temp = Get1Opcode();
+////	GetOpcodeData(&temp, 1);
+//	Sys.a = Get1Opcode();
+//	Sys.PC += 2;
+//}
 void CVir8051::Opcode_75_MOV_Direct_Data(void) {
 	INT8U temp[2] = { 0 };
 //	INT8U data;
@@ -3806,87 +3791,89 @@ void CVir8051::Opcode_75_MOV_Direct_Data(void) {
 //	memcpy(p, &data, 1);
 	Sys.PC += 3;
 }
-void CVir8051::Opcode_76_MOV_R0_1_Data(void) {
-//	INT8U temp;
-//	INT8U data;
-//	void *p = GetPointRamAddr(Rges.R0());
-	GetOpcodeData(&m_ChipRam[Rges.R0()], 1);
-//	data = temp;
-//	memcpy(p, &data, sizeof(data));
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_77_MOV_R1_1_Data(void) {
-//	INT8U temp;
-//	INT8U data;
-//	void *p = GetPointRamAddr(Rges.R1());
-//	GetOpcodeData(&temp, 1);
-//	data = temp;
-//	memcpy(p, &data, sizeof(data));
-	GetOpcodeData(&m_ChipRam[Rges.R1()], 1);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_78_MOV_R0_Data(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, 1);
-	Rges.R0 = temp;
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_79_MOV_R1_Data(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, 1);
-	Rges.R1 = temp;
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_7A_MOV_R2_Data(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, 1);
-	Rges.R2 = temp;
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_7B_MOV_R3_Data(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, 1);
-	Rges.R3 = temp;
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_7C_MOV_R4_Data(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, 1);
-	Rges.R4 = temp;
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_7D_MOV_R5_Data(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, 1);
-	Rges.R5 = temp;
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_7E_MOV_R6_Data(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, 1);
-	Rges.R6 = temp;
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_7F_MOV_R7_Data(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, 1);
-	Rges.R7 = temp;
-	Sys.PC += 2;
-}
+//void CVir8051::Opcode_76_MOV_R0_1_Data(void) {
+////	INT8U temp;
+////	INT8U data;
+////	void *p = GetPointRamAddr(Rges.R0());
+////	GetOpcodeData(&m_ChipRam[Rges.R0()], 1);
+//	m_ChipRam[Rges.R0()] = Get1Opcode();
+////	data = temp;
+////	memcpy(p, &data, sizeof(data));
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_77_MOV_R1_1_Data(void) {
+////	INT8U temp;
+////	INT8U data;
+////	void *p = GetPointRamAddr(Rges.R1());
+////	GetOpcodeData(&temp, 1);
+////	data = temp;
+////	memcpy(p, &data, sizeof(data));
+////	GetOpcodeData(&m_ChipRam[Rges.R1()], 1);
+//	m_ChipRam[Rges.R1()] = Get1Opcode();
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_78_MOV_R0_Data(void) {
+////	INT8U temp;
+////	GetOpcodeData(&temp, 1);
+//	Rges.R0 = Get1Opcode();;
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_79_MOV_R1_Data(void) {
+////	INT8U temp;
+////	GetOpcodeData(&temp, 1);
+//	Rges.R1 = Get1Opcode();
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_7A_MOV_R2_Data(void) {
+////	INT8U temp;
+////	GetOpcodeData(&temp, 1);
+//	Rges.R2 = Get1Opcode();
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_7B_MOV_R3_Data(void) {
+////	INT8U temp;
+////	GetOpcodeData(&temp, 1);
+//	Rges.R3 = Get1Opcode();
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_7C_MOV_R4_Data(void) {
+////	INT8U temp;
+////	GetOpcodeData(&temp, 1);
+//	Rges.R4 =  Get1Opcode();
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_7D_MOV_R5_Data(void) {
+////	INT8U temp;
+////	GetOpcodeData(&temp, 1);
+//	Rges.R5 =  Get1Opcode();
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_7E_MOV_R6_Data(void) {
+////	INT8U temp;
+////	GetOpcodeData(&temp, 1);
+//	Rges.R6 =  Get1Opcode();
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_7F_MOV_R7_Data(void) {
+////	INT8U temp;
+////	GetOpcodeData(&temp, 1);
+//	Rges.R7 =  Get1Opcode();
+//	Sys.PC += 2;
+//}
 void CVir8051::Opcode_80_SJMP_Rel(void) {
-	char temp;
-	GetOpcodeData(&temp, 1);
+	char temp=  Get1Opcode();
+//	GetOpcodeData(&temp, 1);
 //	printf("temp hex %d \r\n",temp);
 	Sys.PC += 2;
 //	Sys.PC = GetTargPC(temp);
 	Sys.PC += temp;
 }
-void CVir8051::Opcode_82_ANL_C_Bit(void) {
-//	INT8U temp;
-//	GetOpcodeData(&temp, 1);
-	Sys.psw().cy = Sys.psw().cy & GetBitFlag(m_ExeFile[Sys.PC + 1]);
-	Sys.PC += 2;
-}
+//void CVir8051::Opcode_82_ANL_C_Bit(void) {
+////	INT8U temp;
+////	GetOpcodeData(&temp, 1);
+//	Sys.psw().cy = Sys.psw().cy & GetBitFlag(m_ExeFile[Sys.PC + 1]);
+//	Sys.PC += 2;
+//}
 void CVir8051::Opcode_83_MOVC_A_PC(void) {
 //	INT8U temp;
 	INT16U addr;
@@ -3910,7 +3897,7 @@ void CVir8051::Opcode_84_DIV_AB(void) {
 	Sys.b = data1 % data2;
 	Sys.psw().ov = 0;
 	Ret: Sys.psw().cy = 0;
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_85_MOV_Direct_Direct(void) {
 	INT8U temp[2];
@@ -3927,120 +3914,120 @@ void CVir8051::Opcode_85_MOV_Direct_Direct(void) {
 	SetRamData(temp[1], tem);
 	Sys.PC += 3;
 }
-void CVir8051::Opcode_86_MOV_Direct_R0_1(void) {
-	INT8U addr;
-	INT8U data;
-//	void*p0 = NULL;
-//	void *p1 = NULL;
-	GetOpcodeData(&addr, 1);
-//	p0 = GetPointRamAddr(temp);
-//	p1 = GetPointRamAddr(Rges.R0());
-	data = GetRamDataAt(Rges.R0());
-//	memcpy(&data, p1, 1);
-//	memcpy(p0, &data, 1);
-	SetRamData(addr, data);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_87_MOV_Direct_R1_1(void) {
-	INT8U addr;
-	INT8U data;
-//	void*p0 = NULL;
-//	void *p1 = NULL;
-	GetOpcodeData(&addr, 1);
-//	p0 = GetPointRamAddr(temp);
-//	p1 = GetPointRamAddr(Rges.R1());
-	data = GetRamDataAt(Rges.R1());
-//	memcpy(&data, p1, 1);
-//	memcpy(p0, &data, 1);
-	SetRamData(addr, data);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_88_MOV_Direct_R0(void) {
-	INT8U addr;
-//	void*p = NULL;
-	GetOpcodeData(&addr, 1);
-	SetRamData(addr, Rges.R0());
-
-//	temp = Rges.R0();
-//	memcpy(p, &temp, 1);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_89_MOV_Direct_R1(void) {
-	INT8U addr;
-//	void*p = NULL;
-	GetOpcodeData(&addr, 1);
-	SetRamData(addr, Rges.R1());
-//	p = GetPointRamAddr(temp);
-//	temp = Rges.R1();
-//	memcpy(p, &temp, 1);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_8A_MOV_Direct_R2(void) {
-	INT8U temp;
-//	void *p = NULL;
-	GetOpcodeData(&temp, 1);
-//temp = Rges.R2();
-//	p = GetPointRamAddr(temp);
-//	temp = Rges.R2();
-//	memcpy(p, &temp, 1);
-	SetRamData(temp, Rges.R2());
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_8B_MOV_Direct_R3(void) {
-	INT8U temp;
-//	void *p = NULL;
-	GetOpcodeData(&temp, 1);
-//temp = Rges.R2();
-//	p = GetPointRamAddr(temp);
-//	temp = Rges.R2();
-//	memcpy(p, &temp, 1);
-	SetRamData(temp, Rges.R3());
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_8C_MOV_Direct_R4(void) {
-	INT8U temp;
-//	void *p = NULL;
-	GetOpcodeData(&temp, 1);
-//temp = Rges.R2();
-//	p = GetPointRamAddr(temp);
-//	temp = Rges.R2();
-//	memcpy(p, &temp, 1);
-	SetRamData(temp, Rges.R4());
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_8D_MOV_Direct_R5(void) {
-	INT8U temp;
-//	void *p = NULL;
-	GetOpcodeData(&temp, 1);
-//temp = Rges.R2();
-//	p = GetPointRamAddr(temp);
-//	temp = Rges.R2();
-//	memcpy(p, &temp, 1);
-	SetRamData(temp, Rges.R5());
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_8E_MOV_Direct_R6(void) {
-	INT8U temp;
-//	void *p = NULL;
-	GetOpcodeData(&temp, 1);
-//temp = Rges.R2();
-//	p = GetPointRamAddr(temp);
-//	temp = Rges.R2();
-//	memcpy(p, &temp, 1);
-	SetRamData(temp, Rges.R6());
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_8F_MOV_Direct_R7(void) {
-	INT8U temp;
-//	void *p = NULL;
-	GetOpcodeData(&temp, 1);
-//temp = Rges.R2();
-//	p = GetPointRamAddr(temp);
-//	temp = Rges.R2();
-//	memcpy(p, &temp, 1);
-	SetRamData(temp, Rges.R7());
-	Sys.PC += 2;
-}
+//void CVir8051::Opcode_86_MOV_Direct_R0_1(void) {
+////	INT8U addr = Get1Opcode();
+////	INT8U data;
+////	void*p0 = NULL;
+////	void *p1 = NULL;
+////	GetOpcodeData(&addr, 1);
+////	p0 = GetPointRamAddr(temp);
+////	p1 = GetPointRamAddr(Rges.R0());
+////	data = GetRamDataAt(Rges.R0());
+////	memcpy(&data, p1, 1);
+////	memcpy(p0, &data, 1);
+//	SetRamData( Get1Opcode(), GetRamDataAt(Rges.R0()));
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_87_MOV_Direct_R1_1(void) {
+////	INT8U addr =  Get1Opcode();
+////	INT8U data;
+////	void*p0 = NULL;
+////	void *p1 = NULL;
+////	GetOpcodeData(&addr, 1);
+////	p0 = GetPointRamAddr(temp);
+////	p1 = GetPointRamAddr(Rges.R1());
+////	data = GetRamDataAt(Rges.R1());
+////	memcpy(&data, p1, 1);
+////	memcpy(p0, &data, 1);
+//	SetRamData(Get1Opcode(), GetRamDataAt(Rges.R1()));
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_88_MOV_Direct_R0(void) {
+////	INT8U addr =  Get1Opcode();
+////	void*p = NULL;
+////	GetOpcodeData(&addr, 1);
+//	SetRamData(Get1Opcode(), Rges.R0());
+//
+////	temp = Rges.R0();
+////	memcpy(p, &temp, 1);
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_89_MOV_Direct_R1(void) {
+////	INT8U addr=  Get1Opcode();
+////	void*p = NULL;
+////	GetOpcodeData(&addr, 1);
+//	SetRamData(Get1Opcode(), Rges.R1());
+////	p = GetPointRamAddr(temp);
+////	temp = Rges.R1();
+////	memcpy(p, &temp, 1);
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_8A_MOV_Direct_R2(void) {
+////	INT8U temp =  Get1Opcode();
+////	void *p = NULL;
+////	GetOpcodeData(&temp, 1);
+////temp = Rges.R2();
+////	p = GetPointRamAddr(temp);
+////	temp = Rges.R2();
+////	memcpy(p, &temp, 1);
+//	SetRamData(Get1Opcode(), Rges.R2());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_8B_MOV_Direct_R3(void) {
+////	INT8U temp =  Get1Opcode();
+////	void *p = NULL;
+////	GetOpcodeData(&temp, 1);
+////temp = Rges.R2();
+////	p = GetPointRamAddr(temp);
+////	temp = Rges.R2();
+////	memcpy(p, &temp, 1);
+//	SetRamData(Get1Opcode(), Rges.R3());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_8C_MOV_Direct_R4(void) {
+////	INT8U temp =  Get1Opcode();
+////	void *p = NULL;
+////	GetOpcodeData(&temp, 1);
+////temp = Rges.R2();
+////	p = GetPointRamAddr(temp);
+////	temp = Rges.R2();
+////	memcpy(p, &temp, 1);
+//	SetRamData(Get1Opcode(), Rges.R4());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_8D_MOV_Direct_R5(void) {
+////	INT8U temp;
+////	void *p = NULL;
+////	GetOpcodeData(&temp, 1);
+////temp = Rges.R2();
+////	p = GetPointRamAddr(temp);
+////	temp = Rges.R2();
+////	memcpy(p, &temp, 1);
+//	SetRamData(Get1Opcode(), Rges.R5());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_8E_MOV_Direct_R6(void) {
+////	INT8U temp;
+////	void *p = NULL;
+////	GetOpcodeData(&temp, 1);
+////temp = Rges.R2();
+////	p = GetPointRamAddr(temp);
+////	temp = Rges.R2();
+////	memcpy(p, &temp, 1);
+//	SetRamData(Get1Opcode(), Rges.R6());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_8F_MOV_Direct_R7(void) {
+////	INT8U temp;
+////	void *p = NULL;
+////	GetOpcodeData(&temp, 1);
+////temp = Rges.R2();
+////	p = GetPointRamAddr(temp);
+////	temp = Rges.R2();
+////	memcpy(p, &temp, 1);
+//	SetRamData(Get1Opcode(), Rges.R7());
+//	Sys.PC += 2;
+//}
 void CVir8051::Opcode_90_MOV_DPTR_Data(void) {
 	INT16U temp;
 	GetOpcodeData(&temp, 2);
@@ -4049,8 +4036,8 @@ void CVir8051::Opcode_90_MOV_DPTR_Data(void) {
 	Sys.PC += 3;
 }
 void CVir8051::Opcode_92_MOV_Bit_C(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, 1);
+	INT8U temp = Get1Opcode();
+//	GetOpcodeData(&temp, 1);
 //	Assert(temp<=0xF7);
 	if (Sys.psw().cy) {
 //		if (temp <= 0x7F) {
@@ -4075,233 +4062,226 @@ void CVir8051::Opcode_93_MOVC_A_DPTR(void) {
 	p = GetPointFileAddr((INT16U) (Sys.a() + Sys.dptr()));
 	memcpy(&temp, p, sizeof(temp));
 	Sys.a = (Sys.dptr() > CVir8051::MAX_ROM - Sys.a()) ? (0x00) : (temp);
-	Sys.PC++;
+	++Sys.PC;
 }
 
-void CVir8051::Opcode_94_SUBB_A_Data(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, 1);
-	MD_SUBB(temp);
-
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_95_SUBB_A_Direct(void) {
-	INT8U addr;
-	INT8U data;
-//	void *p = NULL;
-
-	GetOpcodeData(&addr, 1);
-//	p = GetPointRamAddr(addr);
-//	memcpy(&data, p, 1);
-	data = GetRamData(addr);
-	MD_SUBB(data);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_96_SUBB_A_R0_1(void) {
-//	INT8U temp;
-//	void *p = NULL;
-//	p = GetPointRamAddr(Rges.R0());
-//	memcpy(&temp, p, sizeof(temp));
-	MD_SUBB(GetRamDataAt(Rges.R0()));
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_97_SUBB_A_R1_1(void) {
-//	INT8U temp;
-//	void *p = NULL;
-//	p = GetPointRamAddr(Rges.R1());
-//	memcpy(&temp, p, sizeof(temp));
-	MD_SUBB(GetRamDataAt(Rges.R1()));
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_98_SUBB_A_R0(void) {
-	MD_SUBB(Rges.R0());
-	Sys.PC++;
-}
-void CVir8051::Opcode_99_SUBB_A_R1(void) {
-	MD_SUBB(Rges.R1());
-	Sys.PC++;
-}
-void CVir8051::Opcode_9A_SUBB_A_R2(void) {
-	MD_SUBB(Rges.R2());
-	Sys.PC++;
-}
-void CVir8051::Opcode_9B_SUBB_A_R3(void) {
-	MD_SUBB(Rges.R3());
-	Sys.PC++;
-}
-void CVir8051::Opcode_9C_SUBB_A_R4(void) {
-	MD_SUBB(Rges.R4());
-	Sys.PC++;
-}
-void CVir8051::Opcode_9D_SUBB_A_R5(void) {
-	MD_SUBB(Rges.R5());
-	Sys.PC++;
-}
-void CVir8051::Opcode_9E_SUBB_A_R6(void) {
-	MD_SUBB(Rges.R6());
-	Sys.PC++;
-}
-void CVir8051::Opcode_9F_SUBB_A_R7(void) {
-	MD_SUBB(Rges.R7());
-	Sys.PC++;
-}
-void CVir8051::Opcode_A0_ORL_C_Bit(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, 1);
-//	;
+//void CVir8051::Opcode_94_SUBB_A_Data(void) {
+////	INT8U temp;
+////	GetOpcodeData(&temp, 1);
+//	MD_SUBB(Get1Opcode());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_95_SUBB_A_Direct(void) {
+////	INT8U addr;
+////	INT8U data;
+////	void *p = NULL;
 //
-//	Assert(temp<0xF7);
-//	if (temp <= 0x7F) {
-//		data = (GetBitFlag((temp / 8) + 0x20, temp % 8)) ? 1 : 0;
-//	} else {
-//		data = (GetBitFlag(ChangeBitAddr(temp), temp % 8)) ? 1 : 0;
-//	}
-//	temp = 0;
-//	if (Sys.psw().cy) {
-//		temp++;
-//	}
-//	if (!data) //把反
-//	{
-//		temp++;
-//	}
-	Sys.psw().cy = Sys.psw().cy | (!GetBitFlag(temp));
-
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_A2_MOV_C_Bit(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, sizeof(temp));
-//	Assert(temp<=0xF7);
-//	if (temp <= 0x7F) {
-//		Sys.psw().cy = (GetBitFlag((temp / 8) + 0x20, temp % 8)) ? 1 : 0;
-//	} else {
-//		Sys.psw().cy = (GetBitFlag(ChangeBitAddr(temp), temp % 8)) ? 1 : 0;
-//	}
-	Sys.psw().cy = GetBitFlag(temp);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_A3_INC_DPTR(void) {
-	Sys.dptr = Sys.dptr() + 1;
-	;
-
-	Sys.PC++;
-}
+////	GetOpcodeData(&addr, 1);
+////	p = GetPointRamAddr(addr);
+////	memcpy(&data, p, 1);
+////	data = GetRamData(Get1Opcode());
+//	MD_SUBB(GetRamData(Get1Opcode()));
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_96_SUBB_A_R0_1(void) {
+////	INT8U temp;
+////	void *p = NULL;
+////	p = GetPointRamAddr(Rges.R0());
+////	memcpy(&temp, p, sizeof(temp));
+//	MD_SUBB(GetRamDataAt(Rges.R0()));
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_97_SUBB_A_R1_1(void) {
+////	INT8U temp;
+////	void *p = NULL;
+////	p = GetPointRamAddr(Rges.R1());
+////	memcpy(&temp, p, sizeof(temp));
+//	MD_SUBB(GetRamDataAt(Rges.R1()));
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_98_SUBB_A_R0(void) {
+//	MD_SUBB(Rges.R0());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_99_SUBB_A_R1(void) {
+//	MD_SUBB(Rges.R1());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_9A_SUBB_A_R2(void) {
+//	MD_SUBB(Rges.R2());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_9B_SUBB_A_R3(void) {
+//	MD_SUBB(Rges.R3());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_9C_SUBB_A_R4(void) {
+//	MD_SUBB(Rges.R4());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_9D_SUBB_A_R5(void) {
+//	MD_SUBB(Rges.R5());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_9E_SUBB_A_R6(void) {
+//	MD_SUBB(Rges.R6());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_9F_SUBB_A_R7(void) {
+//	MD_SUBB(Rges.R7());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_A0_ORL_C_Bit(void) {
+////	INT8U temp;
+////	GetOpcodeData(&temp, 1);
+////	;
+////
+////	Assert(temp<0xF7);
+////	if (temp <= 0x7F) {
+////		data = (GetBitFlag((temp / 8) + 0x20, temp % 8)) ? 1 : 0;
+////	} else {
+////		data = (GetBitFlag(ChangeBitAddr(temp), temp % 8)) ? 1 : 0;
+////	}
+////	temp = 0;
+////	if (Sys.psw().cy) {
+////		temp++;
+////	}
+////	if (!data) //把反
+////	{
+////		temp++;
+////	}
+//	Sys.psw().cy = Sys.psw().cy | (!GetBitFlag(Get1Opcode()));
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_A2_MOV_C_Bit(void) {
+////	INT8U temp;
+////	GetOpcodeData(&temp, sizeof(temp));
+////	Assert(temp<=0xF7);
+////	if (temp <= 0x7F) {
+////		Sys.psw().cy = (GetBitFlag((temp / 8) + 0x20, temp % 8)) ? 1 : 0;
+////	} else {
+////		Sys.psw().cy = (GetBitFlag(ChangeBitAddr(temp), temp % 8)) ? 1 : 0;
+////	}
+//	Sys.psw().cy = GetBitFlag(Get1Opcode());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_A3_INC_DPTR(void) {
+//	Sys.dptr = Sys.dptr() + 1;
+//	++Sys.PC;
+//}
 void CVir8051::Opcode_A4_MUL_AB(void) {
 	INT16U temp;
 	temp = (INT16U) Sys.a() * (INT16U) Sys.b();
 	Sys.psw().ov = (temp > 255) ? 1 : 0;
 	Sys.a = (INT8U) temp;
 	Sys.b = (INT8U) (temp >> 8);
-
-	Sys.PC++;
+	++Sys.PC;
 }
 
-void CVir8051::Opcode_A5(void) {
-}
+//void CVir8051::Opcode_A5(void) {
+//}
 
-void CVir8051::Opcode_A6_MOV_R0_1_Direct(void) {
-	INT8U addr;
-	INT8U data;
-//	void*p0 = NULL;
-//	void *p1 = NULL;
-
-//	p0 = GetPointRamAddr(Rges.R0());
-	GetOpcodeData(&addr, 1);
-	data = GetRamData(addr);
-//	p1 = GetPointRamAddr(addr);
-//	memcpy(&data, p1, 1);
-//	memcpy(p0, &data, 1);
-	SetRamDataAt(Rges.R0(), data);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_A7_MOV_R1_1_Direct(void) {
-	INT8U addr;
-	INT8U data;
-	GetOpcodeData(&addr, 1);
-	data = GetRamData(addr);
-	SetRamDataAt(Rges.R1(), data);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_A8_MOV_R0_Direct(void) {
-	INT8U Addr;
-
-	GetOpcodeData(&Addr, 1);
-	Rges.R0 = GetRamData(Addr);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_A9_MOV_R1_Direct(void) {
-	INT8U Addr;
-
-	GetOpcodeData(&Addr, 1);
-	Rges.R1 = GetRamData(Addr);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_AA_MOV_R2_Direct(void) {
-
-	INT8U Addr;
-	GetOpcodeData(&Addr, 1);
-	Rges.R2 = GetRamData(Addr);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_AB_MOV_R3_Direct(void) {
-	INT8U Addr;
-
-	GetOpcodeData(&Addr, 1);
-	Rges.R3 = GetRamData(Addr);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_AC_MOV_R4_Direct(void) {
-	INT8U Addr;
-
-	GetOpcodeData(&Addr, 1);
-	Rges.R4 = GetRamData(Addr);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_AD_MOV_R5_Direct(void) {
-	INT8U Addr;
-	GetOpcodeData(&Addr, 1);
-	Rges.R5 = GetRamData(Addr);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_AE_MOV_R6_Direct(void) {
-	INT8U Addr;
-	GetOpcodeData(&Addr, 1);
-	Rges.R6 = GetRamData(Addr);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_AF_MOV_R7_Direct(void) {
-	INT8U Addr;
-
-	GetOpcodeData(&Addr, 1);
-	Rges.R7 = GetRamData(Addr);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_B0_ANL_C_Bit_1(void) {  // ANL C ~Bit
-	INT8U temp;
+//void CVir8051::Opcode_A6_MOV_R0_1_Direct(void) {
+////	INT8U addr;
 //	INT8U data;
-	GetOpcodeData(&temp, 1);
-//	Assert(temp<=0xF7);
-//	if (temp <= 0x7F) {
-//		data = (GetBitFlag((temp / 8) + 0x20, temp % 8)) ? 1 : 0;
-//	} else {
-//		data = (GetBitFlag(ChangeBitAddr(temp), temp % 8)) ? 1 : 0;
-//	}
-//	if (Sys.psw().cy) {
-//		temp++;
-//	}
+////	void*p0 = NULL;
+////	void *p1 = NULL;
 //
-//	if (!data)  //取反
-//	{
-//		temp++;
-//	}
-	Sys.psw().cy = Sys.psw().cy & (!GetBitFlag(temp));
-	Sys.PC += 2;
-}
+////	p0 = GetPointRamAddr(Rges.R0());
+////	GetOpcodeData(&addr, 1);
+//	data = GetRamData(Get1Opcode());
+////	p1 = GetPointRamAddr(addr);
+////	memcpy(&data, p1, 1);
+////	memcpy(p0, &data, 1);
+//	SetRamDataAt(Rges.R0(), GetRamData(Get1Opcode()));
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_A7_MOV_R1_1_Direct(void) {
+////	INT8U addr;
+////	INT8U data;
+////	GetOpcodeData(&addr, 1);
+////	data = GetRamData( Get1Opcode());
+//	SetRamDataAt(Rges.R1(), GetRamData( Get1Opcode()));
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_A8_MOV_R0_Direct(void) {
+////	INT8U Addr;
+//
+////	GetOpcodeData(&Addr, 1);
+//	Rges.R0 = GetRamData( Get1Opcode());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_A9_MOV_R1_Direct(void) {
+////	INT8U Addr;
+//
+////	GetOpcodeData(&Addr, 1);
+//	Rges.R1 = GetRamData( Get1Opcode());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_AA_MOV_R2_Direct(void) {
+//
+////	INT8U Addr;
+////	GetOpcodeData(&Addr, 1);
+//	Rges.R2 = GetRamData(Get1Opcode());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_AB_MOV_R3_Direct(void) {
+////	INT8U Addr;
+//
+////	GetOpcodeData(&Addr, 1);
+//	Rges.R3 = GetRamData(Get1Opcode());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_AC_MOV_R4_Direct(void) {
+////	INT8U Addr;
+//
+////	GetOpcodeData(&Addr, 1);
+//	Rges.R4 = GetRamData(Get1Opcode());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_AD_MOV_R5_Direct(void) {
+////	INT8U Addr;
+////	GetOpcodeData(&Addr, 1);
+//	Rges.R5 = GetRamData(Get1Opcode());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_AE_MOV_R6_Direct(void) {
+////	INT8U Addr;
+////	GetOpcodeData(&Addr, 1);
+//	Rges.R6 = GetRamData(Get1Opcode());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_AF_MOV_R7_Direct(void) {
+////	INT8U Addr;
+//
+////	GetOpcodeData(&Addr, 1);
+//	Rges.R7 = GetRamData(Get1Opcode());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_B0_ANL_C_Bit_1(void) {  // ANL C ~Bit
+////	INT8U temp;
+////	INT8U data;
+////	GetOpcodeData(&temp, 1);
+////	Assert(temp<=0xF7);
+////	if (temp <= 0x7F) {
+////		data = (GetBitFlag((temp / 8) + 0x20, temp % 8)) ? 1 : 0;
+////	} else {
+////		data = (GetBitFlag(ChangeBitAddr(temp), temp % 8)) ? 1 : 0;
+////	}
+////	if (Sys.psw().cy) {
+////		temp++;
+////	}
+////
+////	if (!data)  //取反
+////	{
+////		temp++;
+////	}
+//	Sys.psw().cy = Sys.psw().cy & (!GetBitFlag(Get1Opcode()));
+//	Sys.PC += 2;
+//}
 void CVir8051::Opcode_B2_CPL_Bit(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, sizeof(temp));
+	INT8U temp=Get1Opcode();
+//	GetOpcodeData(&temp, sizeof(temp));
 //	Assert(temp<=0xF7);
 	if (GetBitFlag(temp)) {
 		ClrBitFlag(temp);
@@ -4323,10 +4303,10 @@ void CVir8051::Opcode_B2_CPL_Bit(void) {
 //	}
 	Sys.PC += 2;
 }
-void CVir8051::Opcode_B3_CPL_C(void) {
-	Sys.psw().cy = ~Sys.psw().cy;
-	Sys.PC++;
-}
+//void CVir8051::Opcode_B3_CPL_C(void) {
+//	Sys.psw().cy = ~Sys.psw().cy;
+//	++Sys.PC;
+//}
 
 //INT16U CVir8051::GetTargPC(INT8U rel) {
 //
@@ -4390,9 +4370,9 @@ void CVir8051::Opcode_B7_CJNE_R1_1_Data_Rel(void) {
 	Sys.PC += 3;
 
 	if (data != temp[0]) {
-		char tem;
-		memcpy(&tem, &temp[1], 1);
-		Sys.PC += tem;
+	//	char tem;
+	//	memcpy(&tem, &temp[1], 1);
+		Sys.PC += (char)temp[1];
 	}
 	Sys.psw().cy = (data < temp[0]) ? 1 : 0;
 }
@@ -4402,9 +4382,9 @@ void CVir8051::Opcode_B8_CJNE_R0_Data_Rel(void) {
 	GetOpcodeData(&temp[0], sizeof(temp));
 	Sys.PC += 3;
 	if (Rges.R0() != temp[0]) {
-		char tem;
-		memcpy(&tem, &temp[1], 1);
-		Sys.PC += tem;
+	//	char tem;
+	//	memcpy(&tem, &temp[1], 1);
+		Sys.PC += (char)temp[1];
 	}
 	Sys.psw().cy = (Rges.R0() < temp[0]) ? 1 : 0;
 }
@@ -4415,9 +4395,9 @@ void CVir8051::Opcode_B9_CJNE_R1_Data_Rel(void) {
 
 	if (Rges.R1() != temp[0]) {
 //		Sys.PC = GetTargPC(temp[1]);
-		char tem;
-		memcpy(&tem, &temp[1], 1);
-		Sys.PC += tem;
+//		char tem;
+//		memcpy(&tem, &temp[1], 1);
+		Sys.PC += (char)temp[1];
 	}
 	Sys.psw().cy = (Rges.R1() < temp[0]) ? 1 : 0;
 }
@@ -4427,9 +4407,9 @@ void CVir8051::Opcode_BA_CJNE_R2_Data_Rel(void) {
 	Sys.PC += 3;
 	if (Rges.R2() != temp[0]) {
 //		Sys.PC = GetTargPC(temp[1]);
-		char tem;
-		memcpy(&tem, &temp[1], 1);
-		Sys.PC += tem;
+//		char tem;
+//		memcpy(&tem, &temp[1], 1);
+		Sys.PC += (char)temp[1];
 	}
 	Sys.psw().cy = (Rges.R2() < temp[0]) ? 1 : 0;
 }
@@ -4439,9 +4419,9 @@ void CVir8051::Opcode_BB_CJNE_R3_Data_Rel(void) {
 	Sys.PC += 3;
 	if (Rges.R3() != temp[0]) {
 //		Sys.PC = GetTargPC(temp[1]);
-		char tem;
-		memcpy(&tem, &temp[1], 1);
-		Sys.PC += tem;
+//		char tem;
+//		memcpy(&tem, &temp[1], 1);
+		Sys.PC += (char)temp[1];
 	}
 	Sys.psw().cy = (Rges.R3() < temp[0]) ? 1 : 0;
 }
@@ -4452,9 +4432,9 @@ void CVir8051::Opcode_BC_CJNE_R4_Data_Rel(void) {
 
 	if (Rges.R4() != temp[0]) {
 //		Sys.PC = GetTargPC(temp[1]);
-		char tem;
-		memcpy(&tem, &temp[1], 1);
-		Sys.PC += tem;
+//		char tem;
+//		memcpy(&tem, &temp[1], 1);
+		Sys.PC += (char)temp[1];
 	}
 	Sys.psw().cy = (Rges.R4() < temp[0]) ? 1 : 0;
 }
@@ -4464,9 +4444,9 @@ void CVir8051::Opcode_BD_CJNE_R5_Data_Rel(void) {
 	Sys.PC += 3;
 	if (Rges.R5() != temp[0]) {
 //		Sys.PC = GetTargPC(temp[1]);
-		char tem;
-		memcpy(&tem, &temp[1], 1);
-		Sys.PC += tem;
+//		char tem;
+//		memcpy(&tem, &temp[1], 1);
+		Sys.PC += (char)temp[1];
 	}
 	Sys.psw().cy = (Rges.R5() < temp[0]) ? 1 : 0;
 }
@@ -4476,9 +4456,9 @@ void CVir8051::Opcode_BE_CJNE_R6_Data_Rel(void) {
 	Sys.PC += 3;
 	if (Rges.R6() != temp[0]) {
 //		Sys.PC = GetTargPC(temp[1]);
-		char tem;
-		memcpy(&tem, &temp[1], 1);
-		Sys.PC += tem;
+//		char tem;
+//		memcpy(&tem, &temp[1], 1);
+		Sys.PC += (char)temp[1];
 	}
 	Sys.psw().cy = (Rges.R6() < temp[0]) ? 1 : 0;
 }
@@ -4488,43 +4468,43 @@ void CVir8051::Opcode_BF_CJNE_R7_Data_Rel(void) {
 	Sys.PC += 3;
 	if (Rges.R7() != temp[0]) {
 //		Sys.PC = GetTargPC(temp[1]);
-		char tem;
-		memcpy(&tem, &temp[1], 1);
-		Sys.PC += tem;
+//		char tem;
+//		memcpy(&tem, &temp[1], 1);
+		Sys.PC += (char)temp[1];
 	}
 	Sys.psw().cy = (Rges.R7() < temp[0]) ? 1 : 0;
 }
-void CVir8051::Opcode_C0_PUSH_Direct(void) {
-	INT8U addr;
-	INT8U data = 0;
-	GetOpcodeData(&addr, sizeof(addr));
-	data = GetRamData(addr);
-	Sys.sp = Sys.sp() + 1;
-	SetRamDataAt(Sys.sp(), data);
-	Sys.PC += 2;
-}
+//void CVir8051::Opcode_C0_PUSH_Direct(void) {
+////	INT8U addr;
+////	INT8U data = 0;
+////	GetOpcodeData(&addr, sizeof(addr));
+////	data = GetRamData(Get1Opcode());
+//	Sys.sp = Sys.sp() + 1;
+//	SetRamDataAt(Sys.sp(), GetRamData(Get1Opcode()));
+//	Sys.PC += 2;
+//}
 
-void CVir8051::Opcode_C2_CLR_Bit(void) { // 位寻址
-	INT8U temp;
-	GetOpcodeData(&temp, sizeof(temp));
-//	Assert(temp<=0xF7);
-//	if (temp <= 0x7F) {
-//		ClrBitFlag((temp / 8) + 0x20, temp % 8);
-//	} else {
-//		ClrBitFlag(ChangeBitAddr(temp), temp % 8);
-//	}
-	ClrBitFlag(temp);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_C3_CLR_C(void) {
-	Sys.psw().cy = 0;
-	Sys.PC++;
-}
-void CVir8051::Opcode_C4_SWAP_A(void) {
-	INT8U temp = Sys.a() & 0x0F;
-	Sys.a = (Sys.a() >> 4) | (temp << 4);
-	Sys.PC++;
-}
+//void CVir8051::Opcode_C2_CLR_Bit(void) { // 位寻址
+////	INT8U temp;
+////	GetOpcodeData(&temp, sizeof(temp));
+////	Assert(temp<=0xF7);
+////	if (temp <= 0x7F) {
+////		ClrBitFlag((temp / 8) + 0x20, temp % 8);
+////	} else {
+////		ClrBitFlag(ChangeBitAddr(temp), temp % 8);
+////	}
+//	ClrBitFlag(Get1Opcode());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_C3_CLR_C(void) {
+//	Sys.psw().cy = 0;
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_C4_SWAP_A(void) {
+//	INT8U temp = Sys.a() & 0x0F;
+//	Sys.a = (Sys.a() >> 4) | (temp << 4);
+//	++Sys.PC;
+//}
 void CVir8051::Opcode_C5_XCH_A_Direct(void) {
 	INT8U addr;
 	INT8U data;
@@ -4537,105 +4517,105 @@ void CVir8051::Opcode_C5_XCH_A_Direct(void) {
 	Sys.PC += 2;
 }
 void CVir8051::Opcode_C6_XCH_A_R0_1(void) {
-	INT8U data;
+//	INT8U data;
 	INT8U TT;
-	data = GetRamDataAt(Rges.R0());
+//	data = GetRamDataAt(Rges.R0());
 	TT = Sys.a();
-	Sys.a = data;
+	Sys.a = GetRamDataAt(Rges.R0());
 	SetRamDataAt(Rges.R0(), TT);
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_C7_XCH_A_R1_1(void) {
-	INT8U data;
+//	INT8U data;
 	INT8U TT;
-	data = GetRamDataAt(Rges.R1());
+//	data = GetRamDataAt(Rges.R1());
 	TT = Sys.a();
-	Sys.a = data;
+	Sys.a = GetRamDataAt(Rges.R1());
 	SetRamDataAt(Rges.R1(), TT);
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_C8_XCH_A_R0(void) {
 	INT8U temp;
 	temp = Sys.a();
 	Sys.a = Rges.R0();
 	Rges.R0 = temp;
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_C9_XCH_A_R1(void) {
 	INT8U temp;
 	temp = Sys.a();
 	Sys.a = Rges.R1();
 	Rges.R1 = temp;
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_CA_XCH_A_R2(void) {
 	INT8U temp;
 	temp = Sys.a();
 	Sys.a = Rges.R2();
 	Rges.R2 = temp;
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_CB_XCH_A_R3(void) {
 	INT8U temp;
 	temp = Sys.a();
 	Sys.a = Rges.R3();
 	Rges.R3 = temp;
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_CC_XCH_A_R4(void) {
 	INT8U temp;
 	temp = Sys.a();
 	Sys.a = Rges.R4();
 	Rges.R4 = temp;
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_CD_XCH_A_R5(void) {
 	INT8U temp;
 	temp = Sys.a();
 	Sys.a = Rges.R5();
 	Rges.R5 = temp;
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_CE_XCH_A_R6(void) {
 	INT8U temp;
 	temp = Sys.a();
 	Sys.a = Rges.R6();
 	Rges.R6 = temp;
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_CF_XCH_A_R7(void) {
 	INT8U temp;
 	temp = Sys.a();
 	Sys.a = Rges.R7();
 	Rges.R7 = temp;
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_D0_POP_Direct(void) {
-	INT8U addr;
-	INT8U data;
-	GetOpcodeData(&addr, sizeof(addr));
-	data = GetRamDataAt(Sys.sp());
-	SetRamData(addr, data);
+//	INT8U addr;
+//	INT8U data;
+//	GetOpcodeData(&addr, sizeof(addr));
+//	data = GetRamDataAt(Sys.sp());
+	SetRamData(Get1Opcode(), GetRamDataAt(Sys.sp()));
 	Sys.sp = Sys.sp() - 1;
 	Sys.PC += 2;
 }
 
-void CVir8051::Opcode_D2_SETB_Bit(void) {
-	INT8U temp;
-	GetOpcodeData(&temp, sizeof(temp));  //bit
-	SetBitFlag(temp);
-//	Assert(temp<=0xF7);
-//	if (temp <= 0x7F) {
-//		SetBitFlag((temp / 8) + 0x20, temp % 8);
-//	} else {
-//		SetBitFlag(ChangeBitAddr(temp), temp % 8);
-//	}
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_D3_SETB_C(void) {
-	Sys.psw().cy = 1;
-	Sys.PC++;
-}
+//void CVir8051::Opcode_D2_SETB_Bit(void) {
+////	INT8U temp;
+////	GetOpcodeData(&temp, sizeof(temp));  //bit
+//	SetBitFlag(Get1Opcode());
+////	Assert(temp<=0xF7);
+////	if (temp <= 0x7F) {
+////		SetBitFlag((temp / 8) + 0x20, temp % 8);
+////	} else {
+////		SetBitFlag(ChangeBitAddr(temp), temp % 8);
+////	}
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_D3_SETB_C(void) {
+//	Sys.psw().cy = 1;
+//	++Sys.PC;
+//}
 void CVir8051::Opcode_D4_DA_A(void) {
 	INT8U temp;
 	if (((Sys.a() & 0x0f) > 9) || (Sys.psw().ac == 1)) {
@@ -4649,7 +4629,7 @@ void CVir8051::Opcode_D4_DA_A(void) {
 		Sys.a = Sys.a() & 0x0F;
 		Sys.a = Sys.a() | (temp << 4);
 	}
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_D5_DJNZ_Direct_Rel(void) {
 	INT8U temp[2];
@@ -4679,7 +4659,7 @@ void CVir8051::Opcode_D6_XCHD_A_R0_1(void) {
 	data &= 0xF0;
 	data |= temp;
 	SetRamDataAt(Rges.R0(), data);
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_D7_XCHD_A_R1_1(void) {
 	INT8U temp = 0;
@@ -4691,11 +4671,11 @@ void CVir8051::Opcode_D7_XCHD_A_R1_1(void) {
 	data &= 0xF0;
 	data |= temp;
 	SetRamDataAt(Rges.R1(), data);
-	Sys.PC++;
+	++Sys.PC;
 }
 void CVir8051::Opcode_D8_DJNZ_R0_Rel(void) {
-	char temp;
-	GetOpcodeData(&temp, sizeof(temp));
+	char temp = Get1Opcode();
+//	GetOpcodeData(&temp, sizeof(temp));
 	Sys.PC += 2;
 	Rges.R0 = Rges.R0() - 1;
 	if (Rges.R0() != 0) {
@@ -4707,8 +4687,9 @@ void CVir8051::Opcode_D8_DJNZ_R0_Rel(void) {
 	}
 }
 void CVir8051::Opcode_D9_DJNZ_R1_Rel(void) {
-	char temp;
-	GetOpcodeData(&temp, sizeof(temp));
+//	char temp;
+//	GetOpcodeData(&temp, sizeof(temp));
+	char temp = Get1Opcode();
 	Sys.PC += 2;
 	Rges.R1 = Rges.R1() - 1;
 	if (Rges.R1() != 0) {
@@ -4717,8 +4698,9 @@ void CVir8051::Opcode_D9_DJNZ_R1_Rel(void) {
 	}
 }
 void CVir8051::Opcode_DA_DJNZ_R2_Rel(void) {
-	char temp;
-	GetOpcodeData(&temp, sizeof(temp));
+//	char temp;
+//	GetOpcodeData(&temp, sizeof(temp));
+	char temp = Get1Opcode();
 	Sys.PC += 2;
 	Rges.R2 = Rges.R2() - 1;
 	if (Rges.R2() != 0) {
@@ -4727,8 +4709,9 @@ void CVir8051::Opcode_DA_DJNZ_R2_Rel(void) {
 	}
 }
 void CVir8051::Opcode_DB_DJNZ_R3_Rel(void) {
-	char temp;
-	GetOpcodeData(&temp, sizeof(temp));
+//	char temp;
+//	GetOpcodeData(&temp, sizeof(temp));
+	char temp = Get1Opcode();
 	Sys.PC += 2;
 	Rges.R3 = Rges.R3() - 1;
 	if (Rges.R3() != 0) {
@@ -4737,8 +4720,9 @@ void CVir8051::Opcode_DB_DJNZ_R3_Rel(void) {
 	}
 }
 void CVir8051::Opcode_DC_DJNZ_R4_Rel(void) {
-	char temp;
-	GetOpcodeData(&temp, sizeof(temp));
+//	char temp;
+//	GetOpcodeData(&temp, sizeof(temp));
+	char temp = Get1Opcode();
 	Sys.PC += 2;
 	Rges.R4 = Rges.R4() - 1;
 	if (Rges.R4() != 0) {
@@ -4747,8 +4731,9 @@ void CVir8051::Opcode_DC_DJNZ_R4_Rel(void) {
 	}
 }
 void CVir8051::Opcode_DD_DJNZ_R5_Rel(void) {
-	char temp;
-	GetOpcodeData(&temp, sizeof(temp));
+//	char temp;
+//	GetOpcodeData(&temp, sizeof(temp));
+	char temp = Get1Opcode();
 	Sys.PC += 2;
 	Rges.R5 = Rges.R5() - 1;
 	if (Rges.R5() != 0) {
@@ -4757,8 +4742,9 @@ void CVir8051::Opcode_DD_DJNZ_R5_Rel(void) {
 	}
 }
 void CVir8051::Opcode_DE_DJNZ_R6_Rel(void) {
-	char temp;
-	GetOpcodeData(&temp, sizeof(temp));
+//	char temp;
+//	GetOpcodeData(&temp, sizeof(temp));
+	char temp = Get1Opcode();
 	Sys.PC += 2;
 	Rges.R6 = Rges.R6() - 1;
 	if (Rges.R6() != 0) {
@@ -4767,8 +4753,9 @@ void CVir8051::Opcode_DE_DJNZ_R6_Rel(void) {
 	}
 }
 void CVir8051::Opcode_DF_DJNZ_R7_Rel(void) {
-	char temp;
-	GetOpcodeData(&temp, sizeof(temp));
+//	char temp;
+//	GetOpcodeData(&temp, sizeof(temp));
+	char temp = Get1Opcode();
 	Sys.PC += 2;
 	Rges.R7 = Rges.R7() - 1;
 	if (Rges.R7() != 0) {
@@ -4777,165 +4764,164 @@ void CVir8051::Opcode_DF_DJNZ_R7_Rel(void) {
 	}
 }
 void CVir8051::Opcode_E0_MOVX_A_DPTR(void) {
-	INT8U temp = m_ExRam[Sys.dptr()];
+//	INT8U temp = m_ExRam[Sys.dptr()];
 //	void*p = GetExRamAddr(Sys.dptr());
 //	memcpy(&temp, p, sizeof(temp));
-	Sys.a = temp;
-	Sys.PC++;
+	Sys.a = m_ExRam[Sys.dptr()];
+	++Sys.PC;
 }
-void CVir8051::Opcode_E2_MOVX_A_R0_1(void) {
-	INT8U temp = m_ExRam[Rges.R0()];
-	Sys.a = temp;
-	Sys.PC++;
-}
-void CVir8051::Opcode_E3_MOVX_A_R1_1(void) {
-	INT8U temp = m_ExRam[Rges.R1()];
-	Sys.a = temp;
-	Sys.PC++;
-}
-void CVir8051::Opcode_E4_CLR_A(void) {
-	Sys.a = 0;
-	Sys.PC++;
-}
-void CVir8051::Opcode_E5_MOV_A_Direct(void) {
-	INT8U addr;
-	GetOpcodeData(&addr, sizeof(addr));
-	Sys.a = GetRamData(addr);
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_E6_MOV_A_R0_1(void) {
-	Sys.a = GetRamDataAt(Rges.R0());
-	Sys.PC++;
-}
-void CVir8051::Opcode_E7_MOV_A_R1_1(void) {
-	Sys.a = GetRamDataAt(Rges.R1());
-	Sys.PC++;
-}
-void CVir8051::Opcode_E8_MOV_A_R0(void) {
-	Sys.a = Rges.R0();
-
-	Sys.PC++;
-}
-void CVir8051::Opcode_E9_MOV_A_R1(void) {
-	Sys.a = Rges.R1();
-	Sys.PC++;
-}
-void CVir8051::Opcode_EA_MOV_A_R2(void) {
-	Sys.a = Rges.R2();
-	Sys.PC++;
-}
-void CVir8051::Opcode_EB_MOV_A_R3(void) {
-	Sys.a = Rges.R3();
-	Sys.PC++;
-}
-void CVir8051::Opcode_EC_MOV_A_R4(void) {
-	Sys.a = Rges.R4();
-	Sys.PC++;
-}
-void CVir8051::Opcode_ED_MOV_A_R5(void) {
-	Sys.a = Rges.R5();
-	Sys.PC++;
-}
-void CVir8051::Opcode_EE_MOV_A_R6(void) {
-	Sys.a = Rges.R6();
-	Sys.PC++;
-}
-void CVir8051::Opcode_EF_MOV_A_R7(void) {
-	Sys.a = Rges.R7();
-	Sys.PC++;
-}
-void CVir8051::Opcode_F0_MOVX_DPTR_A(void) {
-//	INT8U data;
-//	void*p = GetExRamAddr(Sys.dptr());
-//	data = Sys.a();
-//	memcpy(p, &data, sizeof(data));
-	SetExRam(Sys.dptr(), Sys.a());
-	Sys.PC++;
-}
-void CVir8051::Opcode_F2_MOVX_R0_1_A(void) {
-//	INT8U data;
-//	void*p = GetExRamAddr(Rges.R0());
-//	data = Sys.a();
-//	memcpy(p, &data, sizeof(data));
-	SetExRam(Rges.R0(), Sys.a());
-	Sys.PC++;
-}
-void CVir8051::Opcode_F3_MOVX_R1_1_A(void) {
-//	INT8U data;
-//	void*p = GetExRamAddr(Rges.R1());
-//	data = Sys.a();
-//	memcpy(p, &data, sizeof(data));
-	SetExRam(Rges.R1(), Sys.a());
-	Sys.PC++;
-}
-void CVir8051::Opcode_F4_CPL_A(void) {
-	Sys.a = ~(Sys.a());
-	Sys.PC++;
-}
-void CVir8051::Opcode_F5_MOV_Direct_A(void) {
-	INT8U addr;
-//	INT8U data;
-//	void * p = NULL;
-
-	GetOpcodeData(&addr, sizeof(addr));
-//	p = GetPointRamAddr(addr);
-//	data = Sys.a();
-//	memcpy(p, &data, sizeof(data));
-	SetRamData(addr, Sys.a());
-	Sys.PC += 2;
-}
-void CVir8051::Opcode_F6_MOV_R0_1_A(void) {
-//	INT8U addr;
-//	void *p = NULL;
-
-//	p = GetPointRamAddr(Rges.R0());
-//	addr = Sys.a();
-//	memcpy(p, &addr, sizeof(addr));
-	SetRamDataAt(Rges.R0(), Sys.a());
-	Sys.PC++;
-}
-void CVir8051::Opcode_F7_MOV_R1_1_A(void) {
-//	INT8U data;
-//	void *p = NULL;
+//void CVir8051::Opcode_E2_MOVX_A_R0_1(void) {
+////	INT8U temp = m_ExRam[Rges.R0()];
+//	Sys.a =  m_ExRam[Rges.R0()];
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_E3_MOVX_A_R1_1(void) {
+////	INT8U temp = m_ExRam[Rges.R1()];
+//	Sys.a = m_ExRam[Rges.R1()];
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_E4_CLR_A(void) {
+//	Sys.a = 0;
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_E5_MOV_A_Direct(void) {
+////	INT8U addr;
+////	GetOpcodeData(&addr, sizeof(addr));
+//	Sys.a = GetRamData(Get1Opcode());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_E6_MOV_A_R0_1(void) {
+//	Sys.a = GetRamDataAt(Rges.R0());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_E7_MOV_A_R1_1(void) {
+//	Sys.a = GetRamDataAt(Rges.R1());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_E8_MOV_A_R0(void) {
+//	Sys.a = Rges.R0();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_E9_MOV_A_R1(void) {
+//	Sys.a = Rges.R1();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_EA_MOV_A_R2(void) {
+//	Sys.a = Rges.R2();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_EB_MOV_A_R3(void) {
+//	Sys.a = Rges.R3();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_EC_MOV_A_R4(void) {
+//	Sys.a = Rges.R4();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_ED_MOV_A_R5(void) {
+//	Sys.a = Rges.R5();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_EE_MOV_A_R6(void) {
+//	Sys.a = Rges.R6();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_EF_MOV_A_R7(void) {
+//	Sys.a = Rges.R7();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_F0_MOVX_DPTR_A(void) {
+////	INT8U data;
+////	void*p = GetExRamAddr(Sys.dptr());
+////	data = Sys.a();
+////	memcpy(p, &data, sizeof(data));
+//	SetExRam(Sys.dptr(), Sys.a());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_F2_MOVX_R0_1_A(void) {
+////	INT8U data;
+////	void*p = GetExRamAddr(Rges.R0());
+////	data = Sys.a();
+////	memcpy(p, &data, sizeof(data));
+//	SetExRam(Rges.R0(), Sys.a());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_F3_MOVX_R1_1_A(void) {
+////	INT8U data;
+////	void*p = GetExRamAddr(Rges.R1());
+////	data = Sys.a();
+////	memcpy(p, &data, sizeof(data));
+//	SetExRam(Rges.R1(), Sys.a());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_F4_CPL_A(void) {
+//	Sys.a = ~(Sys.a());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_F5_MOV_Direct_A(void) {
+////	INT8U addr;
+////	INT8U data;
+////	void * p = NULL;
 //
-//	p = GetPointRamAddr(Rges.R1());
-//	data = Sys.a();
-//	memcpy(p, &data, sizeof(data));
-	SetRamDataAt(Rges.R1(), Sys.a());
-	Sys.PC++;
-}
-void CVir8051::Opcode_F8_MOV_R0_A(void) {
-	Rges.R0 = Sys.a();
-	Sys.PC++;
-}
-void CVir8051::Opcode_F9_MOV_R1_A(void) {
-	Rges.R1 = Sys.a();
-	Sys.PC++;
-}
-void CVir8051::Opcode_FA_MOV_R2_A(void) {
-	Rges.R2 = Sys.a();
-	Sys.PC++;
-}
-void CVir8051::Opcode_FB_MOV_R3_A(void) {
-	Rges.R3 = Sys.a();
-	Sys.PC++;
-}
-void CVir8051::Opcode_FC_MOV_R4_A(void) {
-	Rges.R4 = Sys.a();
-	Sys.PC++;
-}
-void CVir8051::Opcode_FD_MOV_R5_A(void) {
-	Rges.R5 = Sys.a();
-	Sys.PC++;
-}
-void CVir8051::Opcode_FE_MOV_R6_A(void) {
-	Rges.R6 = Sys.a();
-	Sys.PC++;
-}
-void CVir8051::Opcode_FF_MOV_R7_A(void) {
-	Rges.R7 = Sys.a();
-	Sys.PC++;
-}
+////	GetOpcodeData(&addr, sizeof(addr));
+////	p = GetPointRamAddr(addr);
+////	data = Sys.a();
+////	memcpy(p, &data, sizeof(data));
+//	SetRamData(Get1Opcode(), Sys.a());
+//	Sys.PC += 2;
+//}
+//void CVir8051::Opcode_F6_MOV_R0_1_A(void) {
+////	INT8U addr;
+////	void *p = NULL;
+//
+////	p = GetPointRamAddr(Rges.R0());
+////	addr = Sys.a();
+////	memcpy(p, &addr, sizeof(addr));
+//	SetRamDataAt(Rges.R0(), Sys.a());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_F7_MOV_R1_1_A(void) {
+////	INT8U data;
+////	void *p = NULL;
+////
+////	p = GetPointRamAddr(Rges.R1());
+////	data = Sys.a();
+////	memcpy(p, &data, sizeof(data));
+//	SetRamDataAt(Rges.R1(), Sys.a());
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_F8_MOV_R0_A(void) {
+//	Rges.R0 = Sys.a();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_F9_MOV_R1_A(void) {
+//	Rges.R1 = Sys.a();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_FA_MOV_R2_A(void) {
+//	Rges.R2 = Sys.a();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_FB_MOV_R3_A(void) {
+//	Rges.R3 = Sys.a();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_FC_MOV_R4_A(void) {
+//	Rges.R4 = Sys.a();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_FD_MOV_R5_A(void) {
+//	Rges.R5 = Sys.a();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_FE_MOV_R6_A(void) {
+//	Rges.R6 = Sys.a();
+//	++Sys.PC;
+//}
+//void CVir8051::Opcode_FF_MOV_R7_A(void) {
+//	Rges.R7 = Sys.a();
+//	++Sys.PC;
+//}
 shared_ptr<vector<unsigned char>> CVir8051::GetRetData(void) const {
 	auto tem = make_shared<vector<unsigned char>>();
 

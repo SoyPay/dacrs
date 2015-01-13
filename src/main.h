@@ -187,8 +187,7 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Increase a node's misbehavior score. */
 void Misbehaving(NodeId nodeid, int howmuch);
 
-bool CheckSignScript(const CRegID &regId, const uint256& sighash,
-		const vector_unsigned_char &signatrue, CValidationState &state, CAccountViewCache &view);
+bool CheckSignScript(const uint256 & sigHash, const std::vector<unsigned char> signatrue, const CPubKey pubKey);
 
 /** (try to) add transaction to memory pool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransaction *pBaseTx,
@@ -307,7 +306,7 @@ public:
         // Open history file to append
         CAutoFile fileout = CAutoFile(OpenUndoFile(pos), SER_DISK, CLIENT_VERSION);
         if (!fileout)
-            return ERROR("CBlockUndo::WriteToDisk : OpenUndoFile failed");
+            return ERRORMSG("CBlockUndo::WriteToDisk : OpenUndoFile failed");
 
         // Write index header
         unsigned int nSize = fileout.GetSerializeSize(*this);
@@ -316,7 +315,7 @@ public:
         // Write undo data
         long fileOutPos = ftell(fileout);
         if (fileOutPos < 0)
-            return ERROR("CBlockUndo::WriteToDisk : ftell failed");
+            return ERRORMSG("CBlockUndo::WriteToDisk : ftell failed");
         pos.nPos = (unsigned int)fileOutPos;
         fileout << *this;
 
@@ -339,7 +338,7 @@ public:
         // Open history file to read
         CAutoFile filein = CAutoFile(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION);
         if (!filein)
-            return ERROR("CBlockUndo::ReadFromDisk : OpenBlockFile failed");
+            return ERRORMSG("CBlockUndo::ReadFromDisk : OpenBlockFile failed");
 
         // Read block
         uint256 hashChecksum;
@@ -348,7 +347,7 @@ public:
             filein >> hashChecksum;
         }
         catch (std::exception &e) {
-            return ERROR("%s : Deserialize or I/O error - %s", __func__, e.what());
+            return ERRORMSG("%s : Deserialize or I/O error - %s", __func__, e.what());
         }
 
         // Verify checksum
@@ -356,7 +355,7 @@ public:
         hasher << hashBlock;
         hasher << *this;
         if (hashChecksum != hasher.GetHash())
-            return ERROR("CBlockUndo::ReadFromDisk : Checksum mismatch");
+            return ERRORMSG("CBlockUndo::ReadFromDisk : Checksum mismatch");
         return true;
     }
 
@@ -1106,5 +1105,59 @@ protected:
     friend void ::UnregisterWallet(CWalletInterface*);
     friend void ::UnregisterAllWallets();
 };
+
+class CSignatureCache
+{
+private:
+     // sigdata_type is (signature hash, signature, public key):
+    typedef std::tuple<uint256, std::vector<unsigned char>, CPubKey> sigdata_type;
+    std::set< sigdata_type> setValid;
+    boost::shared_mutex cs_sigcache;
+
+public:
+    bool
+    Get(const uint256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubKey)
+    {
+        boost::shared_lock<boost::shared_mutex> lock(cs_sigcache);
+
+        sigdata_type k(hash, vchSig, pubKey);
+        std::set<sigdata_type>::iterator mi = setValid.find(k);
+        if (mi != setValid.end())
+            return true;
+        return false;
+    }
+
+    void Set(const uint256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubKey)
+    {
+        // DoS prevention: limit cache size to less than 10MB
+        // (~200 bytes per cache entry times 50,000 entries)
+        // Since there are a maximum of 20,000 signature operations per block
+        // 50,000 is a reasonable default.
+        int64_t nMaxCacheSize = SysCfg().GetArg("-maxsigcachesize", 50000);
+        if (nMaxCacheSize <= 0) return;
+
+        boost::unique_lock<boost::shared_mutex> lock(cs_sigcache);
+
+        while (static_cast<int64_t>(setValid.size()) > nMaxCacheSize)
+        {
+            // Evict a random entry. Random because that helps
+            // foil would-be DoS attackers who might try to pre-generate
+            // and re-use a set of valid signatures just-slightly-greater
+            // than our cache size.
+            uint256 randomHash = GetRandHash();
+            std::vector<unsigned char> unused;
+            std::set<sigdata_type>::iterator it =
+                setValid.lower_bound(sigdata_type(randomHash, unused, unused));
+            if (it == setValid.end())
+                it = setValid.begin();
+            setValid.erase(*it);
+        }
+
+        sigdata_type k(hash, vchSig, pubKey);
+        setValid.insert(k);
+    }
+};
+
+extern CSignatureCache signatureCache;
 
 #endif

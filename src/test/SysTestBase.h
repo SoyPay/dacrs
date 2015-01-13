@@ -208,6 +208,7 @@ public:
 	bool DisConnectBlock(int nNum);
 	Value GetScriptID(string txhash);
 	bool GetStrFromObj(const Value& valueRes,string& str);
+	bool ImportWalletKey(char**address,int nCount);
 protected:
 	static boost::thread* pThreadShutdown ;
 	std::map<string, AccState> mapAccState;

@@ -120,7 +120,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     			}
     	 catch (std::exception &e) {
     			delete pcursor;
-    			 ERROR("%s : Deserialize or I/O error - %s", __func__, e.what());
+    			 ERRORMSG("%s : Deserialize or I/O error - %s", __func__, e.what());
     			 return DB_CORRUPT;
     		}
     	}

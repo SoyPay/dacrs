@@ -322,12 +322,12 @@ public:
 		BOOST_CHECK(address.GetKeyID(keyID));
 		CUserID userId = keyID;
 		CAccount account;
-
+		CRegID scriptId(strScriptID);
+		CAuthorizate authorizate;
 		BOOST_CHECK(pAccountViewTip->GetAccount(userId, account));
-		vector<unsigned char> vScriptID = ParseHex(strScriptID);
-		auto it = account.mapAuthorizate.find(vScriptID);
-		BOOST_CHECK(it != account.mapAuthorizate.end());
-		return it->second;
+		BOOST_CHECK(pScriptDBTip->GetAuthorizate(account.regID, scriptId, authorizate));
+
+		return std::move(authorizate);
 	}
 
 	void Transfer_Authorizated(const string& strScriptID, const string& strSignAddr, const string& strOperAddr,

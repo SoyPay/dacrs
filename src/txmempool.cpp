@@ -54,8 +54,8 @@ void CTxMemPool::SetScriptDBViewDB(CScriptDBViewCache *pScriptDBViewCacheIn) {
 }
 
 void CTxMemPool::ReScanMemPoolTx(const CBlock &block, CAccountViewCache *pAccountViewCacheIn, CScriptDBViewCache *pScriptDBViewCacheIn) {
-	pAccountViewCache.reset(new CAccountViewCache(*pAccountViewCacheIn, false));
-	pScriptDBViewCache.reset(new CScriptDBViewCache(*pScriptDBViewCacheIn, false));
+	pAccountViewCache.reset(new CAccountViewCache(*pAccountViewCacheIn, true));
+	pScriptDBViewCache.reset(new CScriptDBViewCache(*pScriptDBViewCacheIn, true));
 	{
 		LOCK(cs);
 		for(auto &pTxItem : block.vptx){
@@ -106,10 +106,10 @@ bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &en
 	CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
 	// is it already confirmed in block
 	if(uint256(0) != pTxCacheTip->IsContainTx(hash))
-		return state.Invalid(ERROR("CheckTxInMemPool() : tx hash %s has been confirmed", hash.GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
+		return state.Invalid(ERRORMSG("CheckTxInMemPool() : tx hash %s has been confirmed", hash.GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
 	// is it in valid height
 	if (!entry.GetTx()->IsValidHeight(chainActive.Tip()->nHeight, SysCfg().GetTxCacheHeight())) {
-		return state.Invalid(ERROR("CheckTxInMemPool() : txhash=%s beyond the scope of valid height ", hash.GetHex()),
+		return state.Invalid(ERRORMSG("CheckTxInMemPool() : txhash=%s beyond the scope of valid height ", hash.GetHex()),
 				REJECT_INVALID, "tx-invalid-height");
 	}
 	if (!entry.GetTx()->UpdateAccount(0, *pAccountViewCache, state, txundo, chainActive.Tip()->nHeight + 1,

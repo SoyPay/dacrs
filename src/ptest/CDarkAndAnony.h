@@ -152,7 +152,7 @@ public:
 	}
 	bool step2RegistScript() {
 		SendDarkTx(darkRegId);
-	//	SendanonyTx(anonyRegId);
+		SendanonyTx(anonyRegId);
 		return false;
 	}
 

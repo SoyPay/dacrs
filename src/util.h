@@ -109,7 +109,7 @@ int LogPrintStr(const char* category, const string &str);
 
 #define strprintf tfm::format
 
-#define ERROR(...)  error2(__LINE__, __FILE__, __VA_ARGS__)
+#define ERRORMSG(...)  error2(__LINE__, __FILE__, __VA_ARGS__)
 #define LogPrint(tag, ...) LogTrace(tag, __LINE__, __FILE__, __VA_ARGS__)
 
 

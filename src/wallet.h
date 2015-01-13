@@ -217,7 +217,7 @@ public:
 			}
 	)
 
-
+	virtual ~CWallet(){};
 	int64_t GetRawBalance(int ncurhigh)const;
     bool SynchronizRegId(const CKeyID &keyid,const CAccountViewCache &inview);
     bool Sign(const CUserID &keyID,const uint256 &hash,vector<unsigned char> &signature,bool IsMiner=false)const;

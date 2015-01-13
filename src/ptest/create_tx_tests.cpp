@@ -2,6 +2,7 @@
 #include "rpcclient.h"
 #include "util.h"
 #include "chainparams.h"
+#include "tx.h"
 #include "../json/json_spirit_value.h"
 #include <boost/test/unit_test.hpp>
 using namespace json_spirit;
@@ -181,6 +182,33 @@ BOOST_AUTO_TEST_CASE(tests)
 			assert(0);
 		}
 		MilliSleep(500);
+	}
+}
+BOOST_AUTO_TEST_CASE(test1) {
+	CAccount account;
+	try {
+			boost::filesystem::path workpath = GetDataDir() / "accountdata.txt";
+			FILE* fp = fopen(workpath.string().c_str(), "rb");
+			fseek(fp, 0, SEEK_SET);
+			CAutoFile fileout = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
+			if (!fileout)
+				return;
+			vector<char> vCh;
+			fileout >> vCh;
+			CDataStream ds1(vCh, SER_DISK, CLIENT_VERSION);
+			ds1 >> account;
+			fclose(fp);
+		} catch (std::exception &e) {
+			LogPrint("INFO", "save account error:%s\n", e.what());
+		}
+	cout << account.ToString() << endl;
+	cout << "size:" << account.GetSerializeSize(SER_DISK,CLIENT_VERSION) << endl;
+	int64_t llTime(0);
+	for(int i=0; i<10000; ++i) {
+		CAccount accountTemp;
+		llTime = GetTimeMillis();
+		accountTemp = account;
+		cout << "assigned account elapse time: " << GetTimeMillis() - llTime << "ms" << endl;
 	}
 }
 BOOST_AUTO_TEST_SUITE_END()
