@@ -1428,11 +1428,6 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
         if (!pblocktree->WriteTxIndex(vPos))
             return state.Abort(_("Failed to write transaction index"));
 
-    // add this block to the view's block chain
-    bool ret;
-    ret = view.SetBestBlock(pindex->GetBlockHash());
-    assert(ret);
-
 	if (!txCache.AddBlockToCache(block))
 			return state.Abort(_("Connect tip block failed add block tx to txcache"));
 	if(pindex->nHeight-SysCfg().GetTxCacheHeight() > 0) {
@@ -1446,6 +1441,8 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 			return state.Abort(_("Connect tip block failed delete block tx to txcache"));
 	}
 
+	// add this block to the view's block chain
+	assert(view.SetBestBlock(pindex->GetBlockHash()));
     return true;
 }
 
@@ -1646,8 +1643,8 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
   		if (chainActive.Height()%SysCfg().GetArg("-blocklog", 0) == 0) {
   		  if (!pAccountViewTip->Flush())
   			return state.Abort(_("Failed to write to account database"));
-  	//	if (!pTxCacheTip->Flush())
-  	//		return state.Abort(_("Failed to write to tx cache database"));
+  		if (!pTxCacheTip->Flush())
+  			return state.Abort(_("Failed to write to tx cache database"));
   		if (! pScriptDBTip->Flush())
   			return state.Abort(_("Failed to write to script db database"));
   			WriteBlockLog(true);

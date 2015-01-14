@@ -474,7 +474,7 @@ Object CScriptDB::ToJosnObj(string Prefix) {
 
 	leveldb::Iterator *pcursor = db.NewIterator();
 	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
-	ssKeySet.insert(ssKeySet.end(), &Prefix[0], &Prefix[3]);
+	ssKeySet.insert(ssKeySet.end(), &Prefix[0], &Prefix[Prefix.length()]);
 	pcursor->Seek(ssKeySet.str());
 
 	while (pcursor->Valid()) {
@@ -492,9 +492,16 @@ Object CScriptDB::ToJosnObj(string Prefix) {
 				obj.push_back(Pair("scriptid", HexStr(ssKey)));
 				obj.push_back(Pair("value", HexStr(ssValue)));
 				}
-				else{
+				else if(Prefix == "data"){
 					obj.push_back(Pair("key", HexStr(ssKey)));
 					obj.push_back(Pair("value", HexStr(ssValue)));
+				}
+				else if(Prefix == "author"){
+					obj.push_back(Pair("accountid", HexStr(ssKey)));
+					CAuthorizate author;
+					ssValue >> author;
+					obj.push_back(Pair("account", author.ToJosnObj()));
+
 				}
 				arrayObj.push_back(obj);
 				pcursor->Next();

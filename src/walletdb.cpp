@@ -133,6 +133,16 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     catch (...) {
         result = DB_CORRUPT;
     }
+    /// if the wallet not address ,create a new address
+    if(pwallet->mKeyPool.size() == 0){
+        CKey  mCkey;
+        mCkey.MakeNewKey();
+        CPubKey newKey = mCkey.GetPubKey();
+         if (!pwallet->AddKey(mCkey)) {
+       		throw runtime_error("add key failed ");
+       	}
+    }
+
     return result;
 
 }
