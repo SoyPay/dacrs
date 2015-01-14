@@ -3325,7 +3325,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             if(mapBlockIndex.count(inv.hash) && inv.type == MSG_BLOCK) {
             	nBlockHeight = mapBlockIndex[inv.hash]->nHeight;
             }
-            LogPrint("net", "  got inventory: %s  %s %d\n", inv.ToString(), fAlreadyHave ? "have" : "new", nBlockHeight);
+            LogPrint("net", "  got inventory: %s  %s %d from node:%s\n", inv.ToString(), fAlreadyHave ? "have" : "new", nBlockHeight, pfrom->addr.ToString());
 
             if (!fAlreadyHave) {
                 if (!SysCfg().IsImporting() && !SysCfg().IsReindex()) {

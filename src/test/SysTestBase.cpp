@@ -26,12 +26,6 @@ void DetectShutdownThread(boost::thread_group* threadGroup) {
 bool PrintTestNotSetPara()
 {
 	bool flag = false;
-	if(SysCfg().GetArg("-listen",flag))
-	{
-		cout<<"Waring the test of config file the listen param must be false"<<endl;
-		MilliSleep(500);
-		exit(0);
-	}
 	if(SysCfg().GetArg("-connect",flag))
 	{
 		cout<<"Waring the test of the config file the connect param must be false"<<endl;
