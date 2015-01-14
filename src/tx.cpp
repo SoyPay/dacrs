@@ -473,7 +473,7 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 		return state.DoS(100,
 				ERRORMSG("UpdateAccounts() : ContractTransaction UpdateAccount txhash=%s run script error:%s",
 						GetHash().GetHex(), std::get<2>(ret)), UPDATE_ACCOUNT_FAIL, "run-script-error");
-	LogPrint("Contract_Tx", "execute contract elapse:%lld, txhash=%s\n", GetTimeMillis()-llTime, GetHash().GetHex());
+	LogPrint("CONTRACT_TX", "execute contract elapse:%lld, txhash=%s\n", GetTimeMillis()-llTime, GetHash().GetHex());
 	set<CKeyID> vAddress;
 	vector<std::shared_ptr<CAccount> > &vAccount = vmRun.GetNewAccont();
 	for (auto & itemAccount : vAccount) {

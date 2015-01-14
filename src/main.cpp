@@ -446,9 +446,6 @@ CBlockLocator CChain::GetLocator(const CBlockIndex *pindex) const {
         if (vHave.size() > 10)
             nStep *= 2;
     }
-    for(auto & blockHash : vHave) {
-    	LogPrint("net", "GetLocator block hash:%s\n", blockHash.GetHex());
-    }
     return CBlockLocator(vHave);
 }
 
@@ -2177,8 +2174,12 @@ void PushGetBlocks(CNode* pnode, CBlockIndex* pindexBegin, uint256 hashEnd)
         return;
     pnode->pindexLastGetBlocksBegin = pindexBegin;
     pnode->hashLastGetBlocksEnd = hashEnd;
-
-    pnode->PushMessage("getblocks", chainActive.GetLocator(pindexBegin), hashEnd);
+    CBlockLocator blockLocator = chainActive.GetLocator(pindexBegin);
+	for (auto & blockHash : blockLocator.vHave) {
+		LogPrint("net", "GetLocator block hash:%s\n", blockHash.GetHex());
+	}
+    pnode->PushMessage("getblocks", blockLocator, hashEnd);
+    LogPrint("net", "getblocks from peer %s, hashEnd:%s\n", pnode->addr.ToString(), hashEnd.GetHex());
 }
 
 bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
@@ -2225,7 +2226,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     // If we don't already have its previous block, shunt it off to holding area until we get it
     if (pblock->hashPrevBlock != 0 && !mapBlockIndex.count(pblock->hashPrevBlock))
     {
-        LogPrint("INFO","ProcessBlock: ORPHAN BLOCK %lu, prev=%s\n", (unsigned long)mapOrphanBlocks.size(), pblock->hashPrevBlock.ToString());
+        LogPrint("INFO","ProcessBlock: ORPHAN BLOCK %lu hash=%s, prev=%s\n", (unsigned long)mapOrphanBlocks.size(), pblock->GetHash().GetHex(), pblock->hashPrevBlock.ToString());
 
         // Accept orphans as long as there is a node to request its parents from
         if (pfrom) {
@@ -3373,7 +3374,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         // Find the last block the caller has in the main chain
         CBlockIndex* pindex = chainActive.FindFork(locator);
         CBlockIndex* pContinueIndex = mapBlockIndex[pfrom->hashContinue];
-        if(pContinueIndex && (pContinueIndex->nHeight > pindex->nHeight)) {
+        if(pContinueIndex && (pContinueIndex->nHeight > pindex->nHeight) && (uint256(0) == hashStop)) {
         	pindex = pContinueIndex;
         }
         // Send the rest of the chain
@@ -3395,7 +3396,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 // When this block is requested, we'll send an inv that'll make them
                 // getblocks the next batch of inventory.
                 LogPrint("net", "  getblocks stopping at limit %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
-                pfrom->hashContinue = pindex->GetBlockHash();
+                if(pindex->nHeight > pContinueIndex->nHeight)
+                	pfrom->hashContinue = pindex->GetBlockHash();
                 break;
             }
         }
