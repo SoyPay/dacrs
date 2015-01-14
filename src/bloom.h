@@ -6,7 +6,7 @@
 #define DACRS_BLOOM_H
 
 #include "serialize.h"
-
+#include "tx.h"
 #include <vector>
 
 class CBaseTransaction;

@@ -797,7 +797,6 @@ bool CRegisterScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view,CValid
 		txundo.vAccountOperLog.push_back(acctInfo.accountOperLog);
 	}
 	txundo.txHash = GetHash();
-
 	if(script.size() == SCRIPT_ID_SIZE) {
 		vector<unsigned char> vScript;
 		CRegID regId(script);
@@ -940,15 +939,6 @@ bool CRegisterScriptTx::CheckTransction(CValidationState &state, CAccountViewCac
 	if(!view.GetAccount(regAccountId, account)) {
 		return state.DoS(100, ERRORMSG("CheckTransaction() : register script tx get registe account info error"), REJECT_INVALID,
 				"bad-read-account-info");
-	}
-	if(script.size() == SCRIPT_ID_SIZE) {
-		vector<unsigned char> vScriptContent;
-		CRegID retId(script);
-		if(!pScriptDBTip->GetScript(retId, vScriptContent)) {
-			return state.DoS(100,
-					ERRORMSG("CheckTransaction() : register script tx get exit script content by script reg id:%s error",
-							HexStr(script.begin(), script.end())), REJECT_INVALID, "bad-read-script-info");
-		}
 	}
 
 	if (!MoneyRange(llFees)) {
