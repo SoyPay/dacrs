@@ -24,7 +24,7 @@
 
 struct TestingSetup {
 	TestingSetup() {
-		char *argv[] = {"progname", "-datadir=D:\\bitcoin"};
+		const char *argv[] = {"progname", "-datadir=D:\\bitcoin"};
 		int argc = sizeof(argv) / sizeof(char*);
 		CBaseParams::IntialParams(argc, argv);
 	}

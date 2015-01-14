@@ -111,7 +111,7 @@ public:
 		}
 		json_spirit::Value::Object obj=  val.get_obj();
 		string ret;
-		for(int i = 0; i < obj.size(); ++i)
+		for(size_t i = 0; i < obj.size(); ++i)
 		{
 			const json_spirit::Pair& pair = obj[i];
 			const std::string& str_name = pair.name_;
@@ -130,7 +130,7 @@ public:
 						if(narray.size() == 0)
 							return false;
 						json_spirit::Value::Object obj1 = narray[0].get_obj();
-						for(int j = 0; j < obj1.size(); ++j)
+						for(size_t j = 0; j < obj1.size(); ++j)
 						{
 							const json_spirit::Pair& pair = obj1[j];
 							const std::string& str_name = pair.name_;
@@ -177,7 +177,7 @@ public:
 
 	void CheckSdk()
 	{
-		int nHeight = 0;
+//		int nHeight = 0;
 		string param ="01";
 		Value resut =CreateContractTx1("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,TxHash));
@@ -211,7 +211,7 @@ public:
 		BOOST_CHECK(GenerateOneBlock());
 	}
 
-	string CreateRegScript(char*strAddr,char*sourceCode)
+	string CreateRegScript(const char* strAddr, const char* sourceCode)
 	{
 		int nFee = 10000000;
 		string strTxHash;
@@ -236,10 +236,10 @@ public:
 	void disblock1()
 	{
 		int argc = 3;
-		char *argv[3] = { "rpctest", "disconnectblock", "1" };
+		const char *argv[3] = { "rpctest", "disconnectblock", "1" };
 	//	sprintf(argv[2], "%d", number);
 		Value dummy;
-		CommandLineRPC_GetValue(argc, argv,dummy);
+		CommandLineRPC_GetValue(argc, argv, dummy);
 	}
 
 	void CheckRollBack()
@@ -273,7 +273,7 @@ public:
 		const Value& value = val.get_obj();
 
 		json_spirit::Value::Object obj= value.get_obj();
-		for(int i = 0; i < obj.size(); ++i)
+		for(size_t i = 0; i < obj.size(); ++i)
 		{
 			const json_spirit::Pair& pair = obj[i];
 			const std::string& str_name = pair.name_;
@@ -319,7 +319,7 @@ public:
 		{
 			return false;
 		}
-
+		return true;
 	}
 
 	void CreateOperateSelfScriptTx(int param)
@@ -342,9 +342,9 @@ public:
 		Value resut =CreateContractTx1("020000000100", "[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\"]", temp,10);
 		return resut;
 	}
-	bool SetBlockGenerte(char *addr)
+	bool SetBlockGenerte(const char *addr)
 	{
-		char *argv[] = { "rpctest", "generateblock", addr };
+		const char *argv[] = { "rpctest", "generateblock", addr };
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
@@ -462,7 +462,7 @@ public:
 	}
 
 	void GetScriptDataSize() {
-		char *param[] = { "rpctest",
+		const char *param[] = { "rpctest",
 					"getscriptdbsize",
 					"010000000100"};
 //		CommandLineRPC(3, param);
@@ -471,7 +471,7 @@ public:
 	}
 
 	void ListScriptData() {
-		char *param[] = {
+		const char *param[] = {
 				"rpctest",
 				"getscriptdata",
 				"010000000100",
@@ -695,7 +695,7 @@ public:
 				CreateTx(temp,"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
 
 				vector<unsigned char> key;
-				char *key1="2_error";
+				const char *key1="2_error";
 				key.insert(key.begin(),key1, key1 + strlen(key1) +1);
 				BOOST_CHECK(!GetScriptData(scriptid,key));
 
@@ -726,7 +726,7 @@ public:
 		temp += tinyformat::format("%02x%02x",param,11);
 		CreateTx(temp,"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
 		vector<unsigned char> key;
-		char *key1="3_error";
+		const char *key1="3_error";
 		key.insert(key.begin(),key1, key1 + strlen(key1) +1);
 		BOOST_CHECK(!GetScriptData(scriptid,key));
 		CheckScriptDB((height+5),scriptid,height,writetxhash,true);
@@ -780,7 +780,7 @@ public:
 			int nfee = GetRandomFee();
 			sprintf(fee, "%d", nfee);
 
-			char *argv[] = { "rpctest", "sendtoaddress", (char*)newaddr.c_str(),fee};
+			const char *argv[] = { "rpctest", "sendtoaddress", (char*)newaddr.c_str(), fee};
 			int argc = sizeof(argv) / sizeof(char*);
 
 			Value value;
@@ -788,7 +788,7 @@ public:
 			string hash = "";
 			BOOST_CHECK(GetHashFromCreatedTx(value,hash));
 			BOOST_CHECK(GenerateOneBlock());
-			char *argv1[] = { "rpctest", "registaccounttx", (char*)newaddr.c_str(),fee,(char*)strflag.c_str()};
+			const char *argv1[] = { "rpctest", "registaccounttx", (char*)newaddr.c_str(), fee, (char*)strflag.c_str()};
 			int argc1 = sizeof(argv1) / sizeof(char*);
 			Value value1;
 			BOOST_CHECK(CommandLineRPC_GetValue(argc1, argv1, value1));

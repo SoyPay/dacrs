@@ -26,6 +26,14 @@ void DetectShutdownThread(boost::thread_group* threadGroup) {
 bool PrintTestNotSetPara()
 {
 	bool flag = false;
+	if(1 == SysCfg().GetArg("-listen",flag))
+	{
+		if (SysCfg().GetDefaultPort() == SysCfg().GetArg("-port", SysCfg().GetDefaultPort())) {
+			cout << "Waring the test of config file the listen param must be false" << endl;
+			MilliSleep(500);
+			exit(0);
+		}
+	}
 	if(SysCfg().GetArg("-connect",flag))
 	{
 		cout<<"Waring the test of the config file the connect param must be false"<<endl;
@@ -39,6 +47,7 @@ bool PrintTestNotSetPara()
 		MilliSleep(500);
 		exit(0);
 	}
+	return true;
 }
 bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {
 	bool fRet = false;
@@ -121,14 +130,14 @@ SysTestBase::~SysTestBase() {
 }
 
 bool SysTestBase::ResetEnv() {
-	char *argv[] = { "rpctest", "resetclient" };
+	const char *argv[] = { "rpctest", "resetclient"};
 
 	Value value;
 	if (!CommandLineRPC_GetValue(sizeof(argv) / sizeof(argv[0]), argv, value)) {
 		return false;
 	}
 
-	char* pKey[] = {
+	const char* pKey[] = {
 			        /*for bess test*/
 					"cUa4v77hiXteMFkHoyuPVVbCCULS1CnFBhU1MhgKHEGRTHmd4BC5",// addr:  mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz
 					"cTAqnCwjuLwXqHxGe5c6KrGqQw5yjHH6Na6yYRQCgKKnf6cJBPxF",// addr:  mfzdtseoKfMpTd8V9N2xETEqUSWRujndgZ
@@ -168,8 +177,7 @@ bool SysTestBase::ResetEnv() {
 
 	int nCount = sizeof(pKey) / sizeof(char*);
 	for (int i = 0; i < nCount; i++) {
-		char *argv2[] = { "rpctest", "importprivkey", pKey[i]};
-		int argc2 = sizeof(argv2) / sizeof(char*);
+		const char *argv2[] = { "rpctest", "importprivkey", pKey[i]};
 
 		Value value;
 		if (!CommandLineRPC_GetValue(sizeof(argv2) / sizeof(argv2[0]), argv2, value)) {
@@ -218,7 +226,7 @@ Value SysTestBase::CreateRegScriptTx(const string& strAddress, const string& str
 	string strMoneyPerDay = strprintf("%d",author.GetMaxMoneyPerDay());
 
 	string strUserData = HexStr(author.GetUserData());
-	char *argv[13] = {						//
+	const char *argv[13] = {						//
 			"rpctest",						//
 					"registerscripttx",				//
 					(char*) strAddress.c_str(), 	//
@@ -243,8 +251,7 @@ Value SysTestBase::CreateRegScriptTx(const string& strAddress, const string& str
 }
 
 Value SysTestBase::GetAccountInfo(const string& strID) {
-	char *argv[] = { "rpctest", "getaccountinfo", (char*) strID.c_str() };
-	int argc = sizeof(argv) / sizeof(char*);
+	const char *argv[] = { "rpctest", "getaccountinfo", strID.c_str()};
 
 	Value value;
 	if (CommandLineRPC_GetValue(sizeof(argv) / sizeof(argv[0]), argv, value)) {
@@ -253,7 +260,7 @@ Value SysTestBase::GetAccountInfo(const string& strID) {
 	return value;
 }
 
-bool SysTestBase::CommandLineRPC_GetValue(int argc, char *argv[], Value &value) {
+bool SysTestBase::CommandLineRPC_GetValue(int argc, const char *argv[], Value &value) {
 	string strPrint;
 	bool nRes = false;
 	try {
@@ -282,7 +289,7 @@ bool SysTestBase::CommandLineRPC_GetValue(int argc, char *argv[], Value &value) 
 		if (error.type() != null_type) {
 			// Error
 			strPrint = "error: " + write_string(error, false);
-			int code = find_value(error.get_obj(), "code").get_int();
+//			int code = find_value(error.get_obj(), "code").get_int();
 		} else {
 			value = result;
 			// Result
@@ -347,7 +354,7 @@ uint64_t SysTestBase::GetFreeMoney(const string& strID) {
 
 bool SysTestBase::GetOneScriptId(std::string &regscriptid) {
 	//CommanRpc
-	char *argv[] = { "rpctest", "listregscript","false" };
+	const char *argv[] = { "rpctest", "listregscript","false" };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
@@ -373,7 +380,7 @@ bool SysTestBase::GetNewAddr(std::string &addr,bool flag) {
 	{
 		param = "true";
 	}
-	char *argv[] = { "rpctest", "getnewaddress",(char*)param.c_str() };
+	const char *argv[] = { "rpctest", "getnewaddress",param.c_str()};
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
@@ -390,7 +397,7 @@ bool SysTestBase::GetAccState(const std::string &addr, AccState &accstate) {
 	char temp[64] = { 0 };
 	strncpy(temp, addr.c_str(), sizeof(temp) - 1);
 
-	char *argv[] = { "rpctest", "getaddramount", temp };
+	const char *argv[] = { "rpctest", "getaddramount", temp };
 	int argc = sizeof(argv) / sizeof(char*);
 	Value value;
 
@@ -410,7 +417,7 @@ bool SysTestBase::GetAccState(const std::string &addr, AccState &accstate) {
 }
 
 bool SysTestBase::GetBlockHeight(int &nHeight) {
-	char *argv[] = { "rpctest", "getinfo", };
+	const char *argv[] = { "rpctest", "getinfo"};
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
@@ -445,7 +452,7 @@ bool SysTestBase::CreateNormalTx(const std::string &srcAddr, const std::string &
 	char height[16] = { 0 };
 	sprintf(height, "%d", nHeight);
 
-	char *argv[] = { "rpctest", "createnormaltx", src, dest, money, fee, height };
+	const char *argv[] = { "rpctest", "createnormaltx", src, dest, money, fee, height };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
@@ -477,7 +484,7 @@ Value SysTestBase::CreateFreezeTx(const std::string &addr, const int nHeight) {
 	char freeheight[16] = { 0 };
 	sprintf(freeheight, "%d", nHeight + 100);
 
-	char *argv[] = { "rpctest", "createfreezetx", caddr, money, fee, height, freeheight };
+	const char *argv[] = { "rpctest", "createfreezetx", caddr, money, fee, height, freeheight };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
@@ -501,7 +508,7 @@ Value SysTestBase::registaccounttx(const std::string &addr, const int nHeight) {
 	char height[16] = { 0 };
 	sprintf(height, "%d", nHeight);
 
-	char *argv[] = { "rpctest", "registaccounttx", caddr, fee, height };
+	const char *argv[] = { "rpctest", "registaccounttx", caddr, fee, height };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
@@ -515,7 +522,7 @@ Value SysTestBase::registaccounttx(const std::string &addr, const int nHeight) {
 Value SysTestBase::CreateContractTx1(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 			const int nHeight)
 {
-	char cscriptid[1024] = { 0 };
+//	char cscriptid[1024] = { 0 };
 
 	char fee[64] = { 0 };
 	int nfee =1000000;
@@ -525,20 +532,19 @@ Value SysTestBase::CreateContractTx1(const std::string &scriptid, const std::str
 	char height[16] = { 0 };
 	sprintf(height, "%d", nHeight);
 
-	char *argv[] = { "rpctest", "createcontracttx", (char *) (scriptid.c_str()), (char *) (addrs.c_str()),
-			(char *) (contract.c_str()), fee, height };
+	const char *argv[] = { "rpctest", "createcontracttx", scriptid.c_str(), addrs.c_str(), contract.c_str(), fee, height };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		const Value& result = find_value(value.get_obj(), "hash");
+//		const Value& result = find_value(value.get_obj(), "hash");
 		return value;
 	}
 	return value;
 }
 bool SysTestBase::CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 		int nHeight,int nFee) {
-	char cscriptid[1024] = { 0 };
+//	char cscriptid[1024] = { 0 };
 
 	string strFee;
 	if (0 == nFee) {
@@ -557,7 +563,7 @@ bool SysTestBase::CreateContractTx(const std::string &scriptid, const std::strin
 	vTemp.assign(contract.begin(),contract.end());
 	string strContractData = HexStr(vTemp);
 
-	char *argv[] = { "rpctest", "createcontracttx", (char *) (scriptid.c_str()), (char *) (addrs.c_str()),
+	const char *argv[] = { "rpctest", "createcontracttx", (char *) (scriptid.c_str()), (char *) (addrs.c_str()),
 			(char *) (strContractData.c_str()), (char*)strFee.c_str(), height };
 	int argc = sizeof(argv) / sizeof(char*);
 
@@ -570,7 +576,7 @@ bool SysTestBase::CreateContractTx(const std::string &scriptid, const std::strin
 
 Value SysTestBase::CreateContractTxEx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 		int nHeight,int nFee) {
-	char cscriptid[1024] = { 0 };
+//	char cscriptid[1024] = { 0 };
 
 	string strFee;
 	if (0 == nFee) {
@@ -589,7 +595,7 @@ Value SysTestBase::CreateContractTxEx(const std::string &scriptid, const std::st
 	vTemp.assign(contract.begin(),contract.end());
 	string strContractData = HexStr(vTemp);
 
-	char *argv[] = { "rpctest", "createcontracttx", (char *) (scriptid.c_str()), (char *) (addrs.c_str()),
+	const char *argv[] = { "rpctest", "createcontracttx", (char *) (scriptid.c_str()), (char *) (addrs.c_str()),
 			(char *) (strContractData.c_str()), (char*)strFee.c_str(), height };
 	int argc = sizeof(argv) / sizeof(char*);
 
@@ -603,7 +609,7 @@ Value SysTestBase::CreateContractTxEx(const std::string &scriptid, const std::st
 //注意，此函数为彩票测试专用，其他滥用后果自负
 Value SysTestBase::PCreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 		int nHeight,int nFee) {
-	char cscriptid[1024] = { 0 };
+//	char cscriptid[1024] = { 0 };
 
 	string strFee;
 	if (0 == nFee) {
@@ -618,7 +624,7 @@ Value SysTestBase::PCreateContractTx(const std::string &scriptid, const std::str
 	char height[16] = { 0 };
 	sprintf(height, "%d", nHeight);
 
-	char *argv[] = { "rpctest", "createcontracttx", (char *) (scriptid.c_str()), (char *) (addrs.c_str()),
+	const char *argv[] = { "rpctest", "createcontracttx", (char *) (scriptid.c_str()), (char *) (addrs.c_str()),
 			(char *) (contract.c_str()), (char*)strFee.c_str(), height };
 	int argc = sizeof(argv) / sizeof(char*);
 
@@ -643,7 +649,7 @@ Value SysTestBase::SignSecureTx(const string &securetx) {
 	char csecuretx[10 * 1024] = { 0 };
 	strncpy(csecuretx, securetx.c_str(), sizeof(csecuretx) - 1);
 
-	char *argv[] = { "rpctest", "signcontracttx", csecuretx };
+	const char *argv[] = { "rpctest", "signcontracttx", csecuretx };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
@@ -655,7 +661,7 @@ Value SysTestBase::SignSecureTx(const string &securetx) {
 }
 
 bool SysTestBase::IsAllTxInBlock() {
-	char *argv[] = { "rpctest", "listunconfirmedtx" };
+	const char *argv[] = { "rpctest", "listunconfirmedtx" };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
@@ -671,7 +677,7 @@ bool SysTestBase::GetBlockHash(const int nHeight, std::string &blockhash) {
 	char height[16] = { 0 };
 	sprintf(height, "%d", nHeight);
 
-	char *argv[] = { "rpctest", "getblockhash", height };
+	const char *argv[] = { "rpctest", "getblockhash", height };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
@@ -687,7 +693,7 @@ bool SysTestBase::GetBlockMinerAddr(const std::string &blockhash, std::string &a
 	char cblockhash[80] = { 0 };
 	strncpy(cblockhash, blockhash.c_str(), sizeof(cblockhash) - 1);
 
-	char *argv[] = { "rpctest", "getblock", cblockhash };
+	const char *argv[] = { "rpctest", "getblock", cblockhash };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
@@ -701,7 +707,7 @@ bool SysTestBase::GetBlockMinerAddr(const std::string &blockhash, std::string &a
 }
 boost::thread*SysTestBase::pThreadShutdown = NULL;
 bool SysTestBase::GenerateOneBlock() {
-	char *argv[] = { "rpctest", "setgenerate", "true" ,"1"};
+	const char *argv[] = { "rpctest", "setgenerate", "true" ,"1"};
 	int argc = sizeof(argv) / sizeof(char*);
     int high= chainActive.Height();
 	Value value;
@@ -717,7 +723,7 @@ bool SysTestBase::DisConnectBlock(int nNum) {
 	BOOST_CHECK(nNum>0 && nNum<=nFirstHeight);
 
 	string strNum = strprintf("%d",nNum);
-	char *argv[3] = { "rpctest", "disconnectblock", (char*)strNum.c_str() };
+    const char *argv[3] = { "rpctest", "disconnectblock", strNum.c_str()};
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
@@ -730,7 +736,7 @@ bool SysTestBase::DisConnectBlock(int nNum) {
 }
 Value SysTestBase::GetScriptID(string txhash)
 {
-	char *argv[3] = { "rpctest", "getscriptid", (char*)txhash.c_str() };
+	const char *argv[3] = { "rpctest", "getscriptid", txhash.c_str()};
 	int argc = sizeof(argv) / sizeof(char*);
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
@@ -738,12 +744,12 @@ Value SysTestBase::GetScriptID(string txhash)
 	}
 	return value;
 }
-void SysTestBase::StartServer(int argc,char* argv[]) {
+void SysTestBase::StartServer(int argc,const char* argv[]) {
 //		int argc = 2;
 //		char* argv[] = {"D:\\cppwork\\Dacrs\\src\\Dacrsd.exe","-datadir=d:\\bitcoin" };
 	assert(pThreadShutdown == NULL);
 	{
-	std::tuple<bool, boost::thread*> ret = RunDacrs(argc, argv);
+	std::tuple<bool, boost::thread*> ret = RunDacrs(argc, const_cast<char **>(argv));
 	pThreadShutdown = std::get<1>(ret);
 	}
 }
@@ -777,10 +783,9 @@ bool SysTestBase::GetStrFromObj(const Value& valueRes,string& str)
 				}
 			return true;
 }
-bool SysTestBase::ImportWalletKey(char**address,int nCount){
+bool SysTestBase::ImportWalletKey(const char**address, int nCount){
 	for (int i = 0; i < nCount; i++) {
-		char *argv2[] = { "rpctest", "importprivkey", address[i]};
-		int argc2 = sizeof(argv2) / sizeof(char*);
+		const char *argv2[] = { "rpctest", "importprivkey", address[i]};
 
 		Value value;
 		if (!CommandLineRPC_GetValue(sizeof(argv2) / sizeof(argv2[0]), argv2, value)) {

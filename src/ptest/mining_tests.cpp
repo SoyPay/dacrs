@@ -77,8 +77,7 @@ void SubmitBlock(vector<string> &param) {
 	param.insert(param.begin(), "rpctest");
 
 	char *argv[param.size()];
-	int i=0;
-	for(auto & item : param) {
+	for(size_t i=0; i<param.size(); ++i) {
 		argv[i] = const_cast<char *>(param[i].c_str());
 		++i;
 	}
@@ -187,10 +186,8 @@ void CreateNormalTx(vector<string> &param) {
 	param.insert(param.begin(), "sendtoaddress");
 	param.insert(param.begin(), "rpctest");
 	char *argv[param.size()];
-	int i=0;
-	for(auto & item : param) {
-		argv[i] = const_cast<char *>(param[i].c_str());
-		++i;
+	for(size_t i=0; i<param.size();++i) {
+	     argv[i] = const_cast<char *>(param[i].c_str());
 	}
 	CommandLineRPC(param.size(), argv);
 }
@@ -210,10 +207,8 @@ void CreateContractTx(vector<string> &param) {
 	param.insert(param.begin(), "createcontracttx");
 	param.insert(param.begin(), "rpctest");
 	char *argv[param.size()];
-	int i=0;
-	for(auto & item : param) {
-		argv[i] = const_cast<char *>(param[i].c_str());
-		++i;
+	for(size_t i=0; i<param.size();++i) {
+	     argv[i] = const_cast<char *>(param[i].c_str());
 	}
 	CommandLineRPC(param.size(), argv);
 }
@@ -242,10 +237,8 @@ void CreateRegScriptTx(vector<string> &param) {
 	param.insert(param.begin(), "rpctest");
 
 	char *argv[param.size()];
-	int i=0;
-	for(auto & item : param) {
-		argv[i] = const_cast<char *>(param[i].c_str());
-		++i;
+	for(size_t i=0; i<param.size();++i) {
+	     argv[i] = const_cast<char *>(param[i].c_str());
 	}
 	CommandLineRPC(param.size(), argv);
 }
@@ -278,7 +271,7 @@ BOOST_AUTO_TEST_CASE(regscript) {
 	param.push_back("test");
 	int64_t curTime = GetTime();
 	char charTime[20] = {0};
-	sprintf(charTime, "%ld", curTime);
+	sprintf(charTime, "%lld", curTime);
 	param.push_back(charTime);
 	param.push_back("1000000000000");
 	param.push_back("100000000000000");
@@ -288,7 +281,7 @@ BOOST_AUTO_TEST_CASE(regscript) {
 }
 BOOST_FIXTURE_TEST_CASE(test1, CSendItem)
 {
-	char *argv[] = {"progname", "-datadir=D:\\bitcoin\\1"};
+	const char *argv[] = {"progname", "-datadir=D:\\bitcoin\\1"};
 	int argc = sizeof(argv) / sizeof(char*);
 	CBaseParams::IntialParams(argc, argv);
 //	time_t t1 = string2time("2014-12-01 17:30:00","%d-%d-%d %d:%d:%d");
@@ -303,7 +296,7 @@ BOOST_FIXTURE_TEST_CASE(test1, CSendItem)
 		param.push_back(recItem.GetAddress());    	    //目的地址
 		param.push_back(recItem.GetSendValue());	    //转账金额
 		CreateNormalTx(param);                          //创建普通交易
-		Sleep(sleepTime);
+		MilliSleep(sleepTime);
 
 		//创建客户端1->客户端2的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(1);
@@ -329,12 +322,12 @@ BOOST_FIXTURE_TEST_CASE(test1, CSendItem)
 		param.push_back("100000000");					//手续费
 		param.push_back("0");                           //有效高度
 		CreateContractTx(param);                        //创建合约交易
-		Sleep(sleepTime);
+		MilliSleep(sleepTime);
 	}
 }
 BOOST_AUTO_TEST_CASE(test2)
 {
-	char *argv[] = {"progname", "-datadir=D:\\bitcoin\\2"};
+	const char *argv[] = {"progname", "-datadir=D:\\bitcoin\\2"};
 	int argc = sizeof(argv) / sizeof(char*);
 	CBaseParams::IntialParams(argc, argv);
 	int64_t runTime = GetTime()+llTime;
@@ -348,7 +341,7 @@ BOOST_AUTO_TEST_CASE(test2)
 		param.push_back(recItem.GetAddress());    	    //目的地址
 		param.push_back(recItem.GetSendValue());	    //转账金额
 		CreateNormalTx(param);                          //创建普通交易
-		Sleep(sleepTime);
+		MilliSleep(sleepTime);
 
 		//创建客户端2->客户端3的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(2);
@@ -373,13 +366,13 @@ BOOST_AUTO_TEST_CASE(test2)
 		param.push_back("100000000");					//手续费
 		param.push_back("0");                           //有效高度
 		CreateContractTx(param);                        //创建合约交易
-		Sleep(sleepTime);
+		MilliSleep(sleepTime);
 	}
 
 }
 BOOST_AUTO_TEST_CASE(test3)
 {
-	char *argv[] = {"progname", "-datadir=D:\\bitcoin\\3"};
+	const char *argv[] = {"progname", "-datadir=D:\\bitcoin\\3"};
 	int argc = sizeof(argv) / sizeof(char*);
 	CBaseParams::IntialParams(argc, argv);
 	int64_t runTime = GetTime()+llTime;
@@ -393,7 +386,7 @@ BOOST_AUTO_TEST_CASE(test3)
 		param.push_back(recItem.GetAddress());    	    //目的地址
 		param.push_back(recItem.GetSendValue());	    //转账金额
 		CreateNormalTx(param);                          //创建普通交易
-		Sleep(sleepTime);
+		MilliSleep(sleepTime);
 
 		//创建客户端3->客户端4的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(3);
@@ -418,14 +411,14 @@ BOOST_AUTO_TEST_CASE(test3)
 		param.push_back("100000000");					//手续费
 		param.push_back("0");                           //有效高度
 		CreateContractTx(param);                        //创建合约交易
-		Sleep(sleepTime);
+		MilliSleep(sleepTime);
 	}
 }
 
 BOOST_AUTO_TEST_CASE(test4)
 {
 
-	char *argv[] = {"progname", "-datadir=D:\\bitcoin\\4"};
+	const char *argv[] = {"progname", "-datadir=D:\\bitcoin\\4"};
 	int argc = sizeof(argv) / sizeof(char*);
 	CBaseParams::IntialParams(argc, argv);
 	int64_t runTime = GetTime()+llTime;
@@ -439,7 +432,7 @@ BOOST_AUTO_TEST_CASE(test4)
 		param.push_back(recItem.GetAddress());    	    //目的地址
 		param.push_back(recItem.GetSendValue());	    //转账金额
 		CreateNormalTx(param);                          //创建普通交易
-		Sleep(sleepTime);
+		MilliSleep(sleepTime);
 
 		//创建客户端4->客户端5的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(4);
@@ -464,13 +457,13 @@ BOOST_AUTO_TEST_CASE(test4)
 		param.push_back("100000000");					//手续费
 		param.push_back("0");                           //有效高度
 		CreateContractTx(param);                        //创建合约交易
-		Sleep(sleepTime);
+		MilliSleep(sleepTime);
 	}
 }
 BOOST_AUTO_TEST_CASE(test5)
 {
 
-	char *argv[] = {"progname", "-datadir=D:\\bitcoin\\5"};
+	const char *argv[] = {"progname", "-datadir=D:\\bitcoin\\5"};
 	int argc = sizeof(argv) / sizeof(char*);
 	CBaseParams::IntialParams(argc, argv);
 
@@ -485,7 +478,7 @@ BOOST_AUTO_TEST_CASE(test5)
 		param.push_back(recItem.GetAddress());    	    //目的地址
 		param.push_back(recItem.GetSendValue());	    //转账金额
 		CreateNormalTx(param);                          //创建普通交易
-		Sleep(sleepTime);
+		MilliSleep(sleepTime);
 
 		//创建客户端5->客户端1的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(5);
@@ -510,7 +503,7 @@ BOOST_AUTO_TEST_CASE(test5)
 		param.push_back("100000000");					//手续费
 		param.push_back("0");                           //有效高度
 		CreateContractTx(param);                        //创建合约交易
-		Sleep(sleepTime);
+		MilliSleep(sleepTime);
 	}
 
 }

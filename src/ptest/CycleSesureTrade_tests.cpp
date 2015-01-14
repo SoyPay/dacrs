@@ -11,7 +11,7 @@ CTestSesureTrade::CTestSesureTrade() {
 TEST_STATE CTestSesureTrade::run() {
 //	cout << "CTestSesureTrade::run  step: " << mCurStep << endl;
 //	return  ++mCurStep > 5 ? end_state :next_state;
-	bool bRes = false;
+//	bool bRes = false;
 	switch (mCurStep) {
 	case 0:
 		Step1RegisterScript();
@@ -41,7 +41,8 @@ TEST_STATE CTestSesureTrade::run() {
 		Step4SendContract();
 		break;
 	case 9:
-		bRes = CheckLastSendTx();
+//		bRes = CheckLastSendTx();
+		CheckLastSendTx();
 		break;
 	default:
 		assert(0);
@@ -70,7 +71,7 @@ bool CSesureTradeHelp::ModifyAuthor(unsigned char nUserData, const string& strSi
 
 bool CTestSesureTrade::Step1RegisterScript() {
 
-	char* pKey[] = {
+	const char* pKey[] = {
 			        /*for yang test*/
 					"cSu84vACzZkWqnP2LUdJQLX3M1PYYXo2gEDDCEKLWNWfM7B4zLiP",// addr:  mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc
 					"cSVY69D9aUo4MugzUG9rM14DtV21cBAbZUVXmgAC2RpJwtZRUbsM",// addr:  mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y

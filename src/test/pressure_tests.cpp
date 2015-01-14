@@ -43,7 +43,7 @@ map<string, string>::iterator GetRandAddress() {
 /**
  * 获取随机的交易类型
  */
-const int GetRandTxType() {
+int GetRandTxType() {
 	unsigned char cType;
 	RAND_bytes(&cType, sizeof(cType));
 	//srand(time(NULL));
@@ -55,7 +55,6 @@ const int GetRandTxType() {
 class PressureTest: public SysTestBase {
 public:
 	bool GetContractData(string regId, vector<unsigned char> &vContract) {
-		char money[64] = {0};
 		for(auto &addr : mapAddress) {
 			if(addr.first == regId)
 				continue;
@@ -96,7 +95,7 @@ public:
 		char money[64] = {0};
 		int nmoney = GetRandomMoney();
 		sprintf(money, "%d00000000", nmoney);
-		char *argv[] = { "rpctest", "sendtoaddresswithfee", const_cast<char *>(srcAddr.c_str()), const_cast<char *>(desAddr.c_str()), money, fee};
+		const char *argv[] = { "rpctest", "sendtoaddresswithfee", srcAddr.c_str(), desAddr.c_str(), money, fee};
 		int argc = sizeof(argv) / sizeof(char*);
 		Value value;
 		if (!CommandLineRPC_GetValue(argc, argv, value)) {
@@ -124,7 +123,7 @@ public:
 	 */
 	bool CreateRegAcctTx() {
 		//获取一个新的地址
-		char *argv[] = {"rpctest", "getnewaddress"};
+		const char *argv[] = {"rpctest", "getnewaddress"};
 		int argc = sizeof(argv) /sizeof(char *);
 		Value value;
 		if(!CommandLineRPC_GetValue(argc, argv, value))
@@ -146,7 +145,7 @@ public:
 		sprintf(fee, "%d", nfee);
 
 		//新产生地址注册账户
-		char *argvReg[] = {"rpctest", "registaccounttx", const_cast<char *>(newAddress.c_str()), fee, "false"};
+		const char *argvReg[] = {"rpctest", "registaccounttx", newAddress.c_str(), fee, "false"};
 		int argcReg = sizeof(argvReg) / sizeof(char *);
 		if(!CommandLineRPC_GetValue(argcReg, argvReg, value))
 		{
@@ -180,7 +179,7 @@ public:
 		char fee[64] = {0};
 		int nfee = GetRandomFee();
 		sprintf(fee, "%d", nfee);
-		char *argv[] = { "rpctest", "createcontracttx", const_cast<char *>(regScriptId.c_str()), const_cast<char *>(srcAddr.c_str()), const_cast<char *>(HexStr(vContract).c_str()), fee, "0"};
+		const char *argv[] = { "rpctest", "createcontracttx", regScriptId.c_str(), srcAddr.c_str(), HexStr(vContract).c_str(), fee, "0"};
 		int argc = sizeof(argv) / sizeof(char *);
 		Value value;
 		if (!CommandLineRPC_GetValue(argc, argv, value)) {
@@ -220,7 +219,7 @@ public:
 		char free[64] = {0};
 		sprintf(free, "%d", freeHeight);
 //		cout << "freeHeight:" << freeHeight << endl;
-		char *argv[] = {"rpctest", "createfreezetx", const_cast<char *>(addr.c_str()), money, fee, "100", free};
+		const char *argv[] = {"rpctest", "createfreezetx", const_cast<char *>(addr.c_str()), money, fee, "100", free};
 		int argc = sizeof(argv) / sizeof(char *);
 		Value value;
 		if (!CommandLineRPC_GetValue(argc, argv, value)) {
@@ -364,7 +363,7 @@ public:
 
 	bool SetBlockGenerte(const char *addr)
 	{
-		char *argv[] = { "rpctest", "generateblock", const_cast<char *>(addr) };
+		const char *argv[] = { "rpctest", "generateblock", const_cast<char *>(addr) };
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
@@ -396,7 +395,7 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 			BOOST_CHECK(pwalletMain->UnConfirmTx.count(uint256(item)) > 0);
 		}
 	}
-	int nSize = mempool.mapTx.size();
+	unsigned int nSize = mempool.mapTx.size();
 	int nConfirmTxCount(0);
 	uint64_t llRegAcctFee(0);
 	uint64_t llSendValue(0);

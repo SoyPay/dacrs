@@ -9,11 +9,11 @@
 
 CDarkAndAnony::CDarkAndAnony() {
 	step  = 0;
-	 darkhash = "";
-	 anonyhahs= "";
-	 dest1[0] ="000000001400";
+	darkhash = "";
+	anonyhahs= "";
+	dest1[0] ="000000001400";
 	dest1[1] ="000000000e00";
-	 dest1[2] ="000000000100";
+	dest1[2] ="000000000100";
 }
 
 CDarkAndAnony::~CDarkAndAnony() {
@@ -165,7 +165,7 @@ string CDarkAndAnony::Parsejson(string str) 	{
 	}
 	json_spirit::Value::Object obj=  val.get_obj();
 	string ret;
-	for(int i = 0; i < obj.size(); ++i)
+	for(size_t i = 0; i < obj.size(); ++i)
 	{
 		const json_spirit::Pair& pair = obj[i];
 		const std::string& str_name = pair.name_;
@@ -188,7 +188,7 @@ string CDarkAndAnony::Parsejson(string str) 	{
 	return ret;
 }
 
-string CDarkAndAnony::CreateScript(char* vmpath, string addr, string nfee)	{
+string CDarkAndAnony::CreateScript(const char* vmpath, string addr, string nfee)	{
 	std::vector<std::string> vInputParams;
 	vInputParams.push_back(addr);
 	vInputParams.push_back("0");
@@ -267,7 +267,7 @@ void CDarkAndAnony::SendanonyTx(string scriptid) {
 }
 
 bool CDarkAndAnony::ImportWalletKey() {
-	char* pKey[] = {
+	const char* pKey[] = {
 			        /*for bess test*/
 					"cUa4v77hiXteMFkHoyuPVVbCCULS1CnFBhU1MhgKHEGRTHmd4BC5",// addr:  mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz
 					"cTAqnCwjuLwXqHxGe5c6KrGqQw5yjHH6Na6yYRQCgKKnf6cJBPxF",// addr:  mfzdtseoKfMpTd8V9N2xETEqUSWRujndgZ
