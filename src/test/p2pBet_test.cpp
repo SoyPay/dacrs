@@ -315,7 +315,7 @@ typedef struct {
 	unsigned char type;
 	uint64_t money;
 	unsigned char targetkey[32];		//发起对赌的哈希，也是对赌数据的关键字
-	unsigned char dhash[32];IMPLEMENT_SERIALIZE
+	unsigned char data[5];IMPLEMENT_SERIALIZE
 	(
 			READWRITE(type);
 			READWRITE(money);
@@ -323,9 +323,9 @@ typedef struct {
 			{
 				READWRITE(targetkey[i]);
 			}
-			for(int ii = 0; ii < 32; ii++)
+			for(int ii = 0; ii < 5; ii++)
 			{
-				READWRITE(dhash[ii]);
+				READWRITE(data[ii]);
 			}
 	)
 } ACCEPT_DATA;
@@ -476,7 +476,7 @@ static bool BAcceptP2PBet(void) {
 	acceptdata.type = 2;
 	acceptdata.money = gTestValue.betamount;
 	memcpy(acceptdata.targetkey, uint256(gTestValue.sendtxhash).begin(), sizeof(acceptdata.targetkey));
-	memcpy(acceptdata.dhash, Hash(gTestValue.rdata, gTestValue.rdata + sizeof(gTestValue.rdata)).begin(), sizeof(acceptdata.dhash));
+	memcpy(acceptdata.data, gTestValue.rdata, sizeof(gTestValue.rdata));
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << acceptdata;
 	string acceptcontract = HexStr(scriptData);
@@ -489,6 +489,8 @@ static bool BAcceptP2PBet(void) {
 
 	OperateAccount(ADDR_B, MINUSFREE, acceptdata.money, acceptfee);
 	OperateAccount(ADDR_B, ADDFREEZD, acceptdata.money, 0);
+	OperateAccount(ADDR_B, ADDFREEZD, acceptdata.money, 0);
+	OperateAccount(ADDR_A, MINUSFREEZD, acceptdata.money, 0);
 
 	do {
 		BOOST_CHECK(gTestValue.SetAddrGenerteBlock(MINERADDR));
@@ -523,7 +525,7 @@ static bool IsSendIDWin(void)
 	return (rslt%2 == 1)?(true):(false);
 }
 
-static bool AOpenP2PBet(const bool isfistopen) {
+static bool AOpenP2PBet(void) {
 	OPEN_DATA openA;
 	openA.type = 3;
 	memcpy(openA.targetkey, uint256(gTestValue.sendtxhash).begin(), sizeof(openA.targetkey));
@@ -537,23 +539,15 @@ static bool AOpenP2PBet(const bool isfistopen) {
 	string openATxHash;
 	BOOST_CHECK(gTestValue.GetHashFromCreatedTx(vopenA, openATxHash));
 
-	if(!isfistopen)
+	if (!IsSendIDWin())		//B win
 	{
-		if (!IsSendIDWin())		//B win
-		{
-			OperateAccount(ADDR_A, MINUSFREEZD, 2*gTestValue.betamount, 0);
-			OperateAccount(ADDR_B, ADDFREE, 2*gTestValue.betamount, 0);
-			OperateAccount(ADDR_A, MINUSFREE, 0, openfee);
-		} else {
-			OperateAccount(ADDR_A, MINUSFREEZD, 2*gTestValue.betamount, 0);
-			OperateAccount(ADDR_A, ADDFREE, 2*gTestValue.betamount, 0);
-			OperateAccount(ADDR_A, MINUSFREE, 0, openfee);
-		}
-	}
-	else
-	{
-		OperateAccount(ADDR_A, ADDFREEZD, gTestValue.betamount, openfee);
-		OperateAccount(ADDR_B, MINUSFREEZD, gTestValue.betamount, 0);
+		OperateAccount(ADDR_B, MINUSFREEZD, 2*gTestValue.betamount, 0);
+		OperateAccount(ADDR_B, ADDFREE, 2*gTestValue.betamount, 0);
+		OperateAccount(ADDR_A, MINUSFREE, 0, openfee);
+	} else {
+		OperateAccount(ADDR_B, MINUSFREEZD, 2*gTestValue.betamount, 0);
+		OperateAccount(ADDR_A, ADDFREE, 2*gTestValue.betamount, 0);
+		OperateAccount(ADDR_A, MINUSFREE, 0, openfee);
 	}
 
 	do {
@@ -564,48 +558,48 @@ static bool AOpenP2PBet(const bool isfistopen) {
 	return true;
 }
 
-static bool BOpenP2PBet(const bool isfistopen) {
-	OPEN_DATA openB;
-	openB.type = 3;
-	memcpy(openB.targetkey, uint256(gTestValue.sendtxhash).begin(), sizeof(openB.targetkey));
-	memcpy(openB.dhash, gTestValue.rdata, sizeof(gTestValue.rdata));
-	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
-	scriptData << openB;
-	string openBcontract = HexStr(scriptData);
-	uint64_t openfee = gTestValue.GetRandomBetfee();
-	Value vopenB = gTestValue.PCreateContractTx(gTestValue.scriptid, VADDR_B, openBcontract,
-			gTestValue.GetBlockHeight(), openfee);
-	string openBTxHash;
-	BOOST_CHECK(gTestValue.GetHashFromCreatedTx(vopenB, openBTxHash));
-
-	if(!isfistopen)
-	{
-		if (!IsSendIDWin())		//B win
-		{
-			LogPrint("p2p", "\r\nB WIN\r\n");
-			OperateAccount(ADDR_A, MINUSFREEZD, 2*gTestValue.betamount, 0);
-			OperateAccount(ADDR_B, ADDFREE, 2*gTestValue.betamount, 0);
-			OperateAccount(ADDR_B, MINUSFREE, 0, openfee);
-		} else {
-			LogPrint("p2p", "\r\nA WIN\r\n");
-			OperateAccount(ADDR_A, MINUSFREEZD, 2*gTestValue.betamount, 0);
-			OperateAccount(ADDR_A, ADDFREE, 2*gTestValue.betamount, 0);
-			OperateAccount(ADDR_B, MINUSFREE, 0, openfee);
-		}
-	}
-	else
-	{
-		OperateAccount(ADDR_B, ADDFREEZD, gTestValue.betamount, openfee);
-		OperateAccount(ADDR_A, MINUSFREEZD, gTestValue.betamount, 0);
-	}
-
-	do {
-		BOOST_CHECK(gTestValue.SetAddrGenerteBlock(MINERADDR));
-	} while (!pwalletMain->UnConfirmTx.empty());
-
-	CheckAccountInfo();
-	return true;
-}
+//static bool BOpenP2PBet(const bool isfistopen) {
+//	OPEN_DATA openB;
+//	openB.type = 3;
+//	memcpy(openB.targetkey, uint256(gTestValue.sendtxhash).begin(), sizeof(openB.targetkey));
+//	memcpy(openB.dhash, gTestValue.rdata, sizeof(gTestValue.rdata));
+//	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
+//	scriptData << openB;
+//	string openBcontract = HexStr(scriptData);
+//	uint64_t openfee = gTestValue.GetRandomBetfee();
+//	Value vopenB = gTestValue.PCreateContractTx(gTestValue.scriptid, VADDR_B, openBcontract,
+//			gTestValue.GetBlockHeight(), openfee);
+//	string openBTxHash;
+//	BOOST_CHECK(gTestValue.GetHashFromCreatedTx(vopenB, openBTxHash));
+//
+//	if(!isfistopen)
+//	{
+//		if (!IsSendIDWin())		//B win
+//		{
+//			LogPrint("p2p", "\r\nB WIN\r\n");
+//			OperateAccount(ADDR_A, MINUSFREEZD, 2*gTestValue.betamount, 0);
+//			OperateAccount(ADDR_B, ADDFREE, 2*gTestValue.betamount, 0);
+//			OperateAccount(ADDR_B, MINUSFREE, 0, openfee);
+//		} else {
+//			LogPrint("p2p", "\r\nA WIN\r\n");
+//			OperateAccount(ADDR_A, MINUSFREEZD, 2*gTestValue.betamount, 0);
+//			OperateAccount(ADDR_A, ADDFREE, 2*gTestValue.betamount, 0);
+//			OperateAccount(ADDR_B, MINUSFREE, 0, openfee);
+//		}
+//	}
+//	else
+//	{
+//		OperateAccount(ADDR_B, ADDFREEZD, gTestValue.betamount, openfee);
+//		OperateAccount(ADDR_A, MINUSFREEZD, gTestValue.betamount, 0);
+//	}
+//
+//	do {
+//		BOOST_CHECK(gTestValue.SetAddrGenerteBlock(MINERADDR));
+//	} while (!pwalletMain->UnConfirmTx.empty());
+//
+//	CheckAccountInfo();
+//	return true;
+//}
 
 static bool TestTimeOut(int hight)
 {
@@ -634,25 +628,12 @@ BOOST_AUTO_TEST_CASE(normal0)
 	//A、B揭赌
 	ASendP2PBet(15);
 	BAcceptP2PBet();
-	AOpenP2PBet(true);
-	BOpenP2PBet(false);
+	AOpenP2PBet();
+//	BOpenP2PBet(false);
 }
 
 //账户冻结金额合并尚未解决，以下代码暂时屏蔽
 #if 1
-BOOST_AUTO_TEST_CASE(normal1)
-{
-	gTestValue.ResetEnv();
-	gTestValue.clear();
-	RegScript();
-	//A揭赌
-	ASendP2PBet(15);
-	BAcceptP2PBet();
-	AOpenP2PBet(true);
-	TestTimeOut(15);
-	AccountNotTimeOut(ADDR_A);
-}
-
 BOOST_AUTO_TEST_CASE(normal2)
 {
 	gTestValue.ResetEnv();
@@ -661,7 +642,7 @@ BOOST_AUTO_TEST_CASE(normal2)
 	//B揭赌
 	ASendP2PBet(15);
 	BAcceptP2PBet();
-	BOpenP2PBet(true);
+//	BOpenP2PBet(true);
 	TestTimeOut(15);
 	AccountNotTimeOut(ADDR_B);
 }
