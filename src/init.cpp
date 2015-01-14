@@ -865,6 +865,8 @@ bool AppInit2(boost::thread_group& threadGroup)
             fLoaded = true;
         } while(false);
 
+        uiInterface.InitMessage(_("Verifying Finished"));
+
         if (!fLoaded) {
             // first suggest a reindex
             if (!fReset) {
