@@ -1071,6 +1071,7 @@ Object CScriptDBViewCache::ToJosnObj() const {
 //	obj.push_back(Pair("mapDatas", arrayObj));
 	arrayObj.push_back(pBase->ToJosnObj("def"));
 	arrayObj.push_back(pBase->ToJosnObj("data"));
+	arrayObj.push_back(pBase->ToJosnObj("author"));
 	obj.push_back(Pair("mapDatas", arrayObj));
 	return obj;
 }
