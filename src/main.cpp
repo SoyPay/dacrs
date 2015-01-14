@@ -3375,7 +3375,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         // Find the last block the caller has in the main chain
         CBlockIndex* pindex = chainActive.FindFork(locator);
         CBlockIndex* pContinueIndex = mapBlockIndex[pfrom->hashContinue];
-        if(pContinueIndex && (pContinueIndex->nHeight > pindex->nHeight) && (uint256(0) == hashStop)) {
+        if(NULL != pContinueIndex && (pContinueIndex->nHeight > pindex->nHeight) && (uint256(0) == hashStop)) {
         	pindex = pContinueIndex;
         }
         // Send the rest of the chain
@@ -3397,7 +3397,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 // When this block is requested, we'll send an inv that'll make them
                 // getblocks the next batch of inventory.
                 LogPrint("net", "  getblocks stopping at limit %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
-                if(pindex->nHeight > pContinueIndex->nHeight)
+                if(NULL != pContinueIndex && (pindex->nHeight > pContinueIndex->nHeight))
                 	pfrom->hashContinue = pindex->GetBlockHash();
                 break;
             }
