@@ -1155,15 +1155,15 @@ void Misbehaving(NodeId pnode, int howmuch)
 
 void static InvalidChainFound(CBlockIndex* pindexNew)
 {
-    if (!pindexBestInvalid || pindexNew->nChainWork > pindexBestInvalid->nChainWork)
-    {
-        pindexBestInvalid = pindexNew;
-        // The current code doesn't actually read the BestInvalidWork entry in
-        // the block database anymore, as it is derived from the flags in block
-        // index entry. We only write it for backward compatibility.
-        pblocktree->WriteBestInvalidWork(CBigNum(pindexBestInvalid->nChainWork));
-        uiInterface.NotifyBlocksChanged(strprintf("block changed:%d",chainActive.Height()));
-    }
+	if (!pindexBestInvalid || pindexNew->nChainWork > pindexBestInvalid->nChainWork) {
+		pindexBestInvalid = pindexNew;
+		// The current code doesn't actually read the BestInvalidWork entry in
+		// the block database anymore, as it is derived from the flags in block
+		// index entry. We only write it for backward compatibility.
+		pblocktree->WriteBestInvalidWork(CBigNum(pindexBestInvalid->nChainWork));
+		uiInterface.NotifyBlocksChanged(strprintf("block changed:%d %s",chainActive.Height(),
+		DateTimeStrFormat("%Y-%m-%d %H:%M:%S",pindexNew->GetBlockTime())));
+	}
     LogPrint("INFO","InvalidChainFound: invalid block=%s  height=%d  log2_work=%.8g  date=%s\n",
       pindexNew->GetBlockHash().ToString(), pindexNew->nHeight,
       log(pindexNew->nChainWork.getdouble())/log(2.0), DateTimeStrFormat("%Y-%m-%d %H:%M:%S",
@@ -1812,7 +1812,8 @@ bool AddToBlockIndex(CBlock& block, CValidationState& state, const CDiskBlockPos
     if (!pblocktree->Flush())
         return state.Abort(_("Failed to sync block index"));
 
-    uiInterface.NotifyBlocksChanged(strprintf("block changed:%d",chainActive.Height()));
+    uiInterface.NotifyBlocksChanged(strprintf("block changed:%d %s",chainActive.Height(),
+    		DateTimeStrFormat("%Y-%m-%d %H:%M:%S",pindexNew->GetBlockTime())));
     return true;
 }
 
