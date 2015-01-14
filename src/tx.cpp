@@ -1537,8 +1537,8 @@ Object CAccount::ToJosnObj() const
 	obj.push_back(Pair("FreedomFund",     FreedomFund));
 
 	Array Freeze;
-	te=vFreeze;
 	te.clear();
+	te=vFreeze;
 	stable_sort(te.begin(), te.end(), greater<CFund>());
 	for (auto& rew:te) {
 		Freeze.push_back(rew.ToJosnObj());
@@ -1546,8 +1546,8 @@ Object CAccount::ToJosnObj() const
 	obj.push_back(Pair("Freeze",     Freeze));
 
 	Array SelfFreeze;
-	te=vSelfFreeze;
 	te.clear();
+	te=vSelfFreeze;
 	stable_sort(te.begin(), te.end(), greater<CFund>());
 	for (auto& rew:te) {
 		SelfFreeze.push_back(rew.ToJosnObj());

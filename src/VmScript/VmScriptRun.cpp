@@ -94,6 +94,7 @@ tuple<bool, uint64_t, string> CVmScriptRun::run(shared_ptr<CBaseTransaction>& Tx
 		return  std::make_tuple (false, 0, string("the fee not enough \n"));
 	}
 
+	LogPrint("tx_info","tx:%s,step:%ld\n",tx->ToString(view),step);
 	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
 	CDataStream Contractstream(*retData.get(), SER_DISK, CLIENT_VERSION);
 	vector<CVmOperate> retvmcode;
