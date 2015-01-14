@@ -2191,28 +2191,29 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 	}
 
 	Object retObj;
-	Array AllTx;
+
 	vector<uint256> vAllTxHash;
 	assert(pwalletMain != NULL);
 	{
+		Array ComfirmTx;
 		for (auto const &wtx : pwalletMain->mapInBlockTx) {
 			for (auto const & item : wtx.second.mapAccountTx) {
-				vAllTxHash.push_back(item.first);
+				Object objtx = GetTxDetail(item.first, false);
+				ComfirmTx.push_back(objtx);
 			}
 		}
+		retObj.push_back(Pair("Confirmed", ComfirmTx));
 
+		Array UnComfirmTx;
 		CAccountViewCache view(*pAccountViewTip, true);
 		for (auto const &wtx : pwalletMain->UnConfirmTx) {
 			vAllTxHash.push_back(wtx.first);
+			Object objtx = GetTxDetail(wtx.first, false);
+			UnComfirmTx.push_back(objtx);
 		}
-
-		for (auto const& item : vAllTxHash) {
-			Object objtx = GetTxDetail(item, false);
-			AllTx.push_back(objtx);
-		}
+		retObj.push_back(Pair("UnConfirmed", UnComfirmTx));
 	}
 
-	retObj.push_back(Pair("AllTxInfo", AllTx));
 	return retObj;
 }
 
