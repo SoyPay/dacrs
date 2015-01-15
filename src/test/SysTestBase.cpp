@@ -29,7 +29,7 @@ bool PrintTestNotSetPara()
 	if(1 == SysCfg().GetArg("-listen",flag))
 	{
 		if (SysCfg().GetDefaultPort() == SysCfg().GetArg("-port", SysCfg().GetDefaultPort())) {
-			cout << "Waring the test of config file the listen param must be false" << endl;
+			cout << "Waring if config file seted the listen param must be true, and port can't be default port" << endl;
 			MilliSleep(500);
 			exit(0);
 		}
