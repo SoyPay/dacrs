@@ -718,7 +718,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
                          nFees, SysCfg().GetMaxFee());
 
         // Store transaction in memory
-         if(!pool.addUnchecked(hash, entry))
+         if(!pool.addUnchecked(hash, entry, state))
         	 return ERRORMSG("AcceptToMemoryPool: : addUnchecked failed hash:%s \r\n",
                      hash.ToString());
     }
@@ -1351,6 +1351,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
     vPos.push_back(make_pair(block.GetTxHash(0), pos));
     pos.nTxOffset += ::GetSerializeSize(block.vptx[0], SER_DISK, CLIENT_VERSION);
 
+    uint64_t nTotalRunStep(0);
     if (block.vptx.size() > 1) {
 		for (unsigned int i = 1; i < block.vptx.size(); i++) {
 			std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[i];
@@ -1361,14 +1362,19 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 			}
 			if (!pBaseTx->IsValidHeight(mapBlockIndex[view.GetBestBlock()]->nHeight, SysCfg().GetTxCacheHeight())) {
 				return state.DoS(100,
-						ERRORMSG("ConnectBlock() : txhash=%s beyond the scope of valid height\n ",
+						ERRORMSG("ConnectBlock() : txhash=%s beyond the scope of valid height",
 								pBaseTx->GetHash().GetHex()), REJECT_INVALID, "tx-invalid-height");
 			}
 			CTxUndo txundo;
 			if(!pBaseTx->UpdateAccount(i, view, state, txundo, pindex->nHeight, txCache, scriptDBCache)) {
 				return false;
 			}
-
+			nTotalRunStep += pBaseTx->nRunStep;
+			if (nTotalRunStep > MAX_BLOCK_RUN_STEP) {
+				return state.DoS(100,
+						ERRORMSG("block hash=%s total run steps exceed max run step", block.GetHash().GetHex()),
+						REJECT_INVALID, "exeed-max_step");
+			}
 			vPos.push_back(make_pair(block.GetTxHash(i), pos));
 			pos.nTxOffset += ::GetSerializeSize(pBaseTx, SER_DISK, CLIENT_VERSION);
 			blockundo.vtxundo.push_back(txundo);
@@ -3186,7 +3192,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             }
 
             // Get recent addresses
-            if (pfrom->fOneShot || pfrom->nVersion >= CADDR_TIME_VERSION || addrman.size() < 1000)
+            if (pfrom->fOneShot || /*pfrom->nVersion >= CADDR_TIME_VERSION || */addrman.size() < 1000)
             {
                 pfrom->PushMessage("getaddr");
                 pfrom->fGetAddr = true;
@@ -3238,8 +3244,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         vRecv >> vAddr;
 
         // Don't want addr from older versions unless seeding
-        if (pfrom->nVersion < CADDR_TIME_VERSION && addrman.size() > 1000)
-            return true;
+//        if (pfrom->nVersion < CADDR_TIME_VERSION && addrman.size() > 1000)
+//            return true;
         if (vAddr.size() > 1000)
         {
             Misbehaving(pfrom->GetId(), 20);
@@ -3274,8 +3280,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     multimap<uint256, CNode*> mapMix;
                     for(auto pnode:vNodes)
                     {
-                        if (pnode->nVersion < CADDR_TIME_VERSION)
-                            continue;
+//                        if (pnode->nVersion < CADDR_TIME_VERSION)
+//                            continue;
                         unsigned int nPointer;
                         memcpy(&nPointer, &pnode, sizeof(nPointer));
                         uint256 hashKey = hashRand ^ nPointer;
@@ -3596,8 +3602,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "ping")
     {
-        if (pfrom->nVersion > BIP0031_VERSION)
-        {
+//        if (pfrom->nVersion > BIP0031_VERSION)
+//        {
             uint64_t nonce = 0;
             vRecv >> nonce;
             // Echo the message back with the nonce. This allows for two useful features:
@@ -3612,7 +3618,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             // seconds to respond to each, the 5th ping the remote sends would appear to
             // return very quickly.
             pfrom->PushMessage("pong", nonce);
-        }
+//        }
     }
 
 
@@ -3944,15 +3950,15 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             }
             pto->nPingNonceSent = nonce;
             pto->fPingQueued = false;
-            if (pto->nVersion > BIP0031_VERSION) {
+//            if (pto->nVersion > BIP0031_VERSION) {
                 // Take timestamp as close as possible before transmitting ping
                 pto->nPingUsecStart = GetTimeMicros();
                 pto->PushMessage("ping", nonce);
-            } else {
-                // Peer is too old to support ping command with nonce, pong will never arrive, disable timing
-                pto->nPingUsecStart = 0;
-                pto->PushMessage("ping");
-            }
+//            } else {
+//                // Peer is too old to support ping command with nonce, pong will never arrive, disable timing
+//                pto->nPingUsecStart = 0;
+//                pto->PushMessage("ping");
+//            }
         }
 
         TRY_LOCK(cs_main, lockMain); // Acquire cs_main for IsInitialBlockDownload() and CNodeState()

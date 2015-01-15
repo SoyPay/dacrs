@@ -19,6 +19,7 @@ static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
 class CAccountViewCache;
 class CScriptDBViewCache;
+class CValidationState;
 
 /*
  * CTxMemPool stores these:
@@ -72,7 +73,7 @@ public:
 
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
-    bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry);
+    bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, CValidationState &state);
 
     void remove(CBaseTransaction *pBaseTx, list<std::shared_ptr<CBaseTransaction> >& removed, bool fRecursive = false);
 
@@ -100,7 +101,7 @@ public:
 
     void SetScriptDBViewDB(CScriptDBViewCache *pScriptDBViewCacheIn);
 
-    bool CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &entry);
+    bool CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &entry, CValidationState &state);
 
     void ReScanMemPoolTx(const CBlock &block, CAccountViewCache *pAccountViewCacheIn, CScriptDBViewCache *pScriptDBViewCacheIn);
 };
