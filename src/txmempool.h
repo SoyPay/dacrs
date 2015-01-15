@@ -19,6 +19,7 @@ static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
 class CAccountViewCache;
 class CScriptDBViewCache;
+class CValidationState;
 
 /*
  * CTxMemPool stores these:
