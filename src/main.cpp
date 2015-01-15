@@ -718,7 +718,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
                          nFees, SysCfg().GetMaxFee());
 
         // Store transaction in memory
-         if(!pool.addUnchecked(hash, entry))
+         if(!pool.addUnchecked(hash, entry, state))
         	 return ERRORMSG("AcceptToMemoryPool: : addUnchecked failed hash:%s \r\n",
                      hash.ToString());
     }
