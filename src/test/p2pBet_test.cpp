@@ -180,7 +180,7 @@ public:
 		char temp[64] = { 0 };
 		strncpy(temp, addr.c_str(), sizeof(temp) - 1);
 
-		char *argv[] = { "rpctest", "getaccountinfo", temp };
+		const char *argv[] = { "rpctest", "getaccountinfo", temp };
 		int argc = sizeof(argv) / sizeof(char*);
 		Value value;
 
@@ -279,8 +279,8 @@ public:
 		return (int) chainActive.Height();
 	}
 
-	bool SetAddrGenerteBlock(char *addr) {
-		char *argv[] = { "rpctest", "generateblock", addr };
+	bool SetAddrGenerteBlock(const char *addr) {
+		const char *argv[] = { "rpctest", "generateblock", addr };
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
@@ -417,7 +417,9 @@ static bool OperateAccount(const string &addr, const OperAccountType &operate, c
 	case MINUSSELF:
 		acc.SetInfo(0, -fee, 0, -amount);
 		break;
-		defualt: break;
+	case NULLOPERTYPE:
+	    break;
+	default: break;
 	}
 
 	operlog.Add(gTestValue.operatetimes, acc);

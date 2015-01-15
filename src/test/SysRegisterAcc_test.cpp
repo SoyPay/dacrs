@@ -243,7 +243,7 @@ BOOST_FIXTURE_TEST_CASE(sysonly_test,CSysRegisterAccTest)
 	CRegID regID;
 	string strRegAddr1("mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz");
 	string strRegAddr2("mydRNvqewpZt9tyNtBSmBCrKr1NTiii5JH");
-	int64_t nFee = 10000;
+	uint64_t nFee = 10000;
 	vector<string> vFailedTxHash;
 
 	//无效的高度

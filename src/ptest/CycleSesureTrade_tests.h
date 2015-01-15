@@ -25,6 +25,7 @@
 #define MAX_ARBITRATOR 3
 #define HASH_SIZE		32
 
+#pragma pack(push) 
 #pragma pack(1)
 typedef struct tag_INT64 {
 	unsigned char data[8];
@@ -58,7 +59,7 @@ typedef struct {
 	unsigned char hash[HASH_SIZE];
 	Int64 nMinus;
 }ARBIT_RES_CONTRACT;
-#pragma popup()
+#pragma pack(pop) 
 
 class CSesureTradeHelp :public SysTestBase{
 public:

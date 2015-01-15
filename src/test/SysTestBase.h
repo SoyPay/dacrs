@@ -76,6 +76,7 @@ struct AccOperLog {
 	}
 	bool Add(int &nHeight, AccState &accstate) {
 		mapAccState[nHeight] = accstate;
+		return true;
 	}
 
 	void MergeAcc(int nHeight) {
@@ -110,7 +111,7 @@ public:
 
 	~SysTestBase();
 
-	static void StartServer(int argc,char* argv[]);
+	static void StartServer(int argc,const char* argv[]);
 
 	static void StopServer();
 
@@ -133,8 +134,7 @@ public:
 
 	bool GetTxConfirmedRegID(const string& haseh,string& strRegID)
 	{
-		char *argv[] = { "rpctest", "getscriptid", (char*) haseh.c_str() };
-		int argc = sizeof(argv) / sizeof(char*);
+		const char *argv[] = { "rpctest", "getscriptid", (char*) haseh.c_str() };
 
 		Value value;
 		if (!CommandLineRPC_GetValue(sizeof(argv) / sizeof(argv[0]), argv, value)) {
@@ -160,7 +160,7 @@ public:
 
 	bool ResetEnv();
 
-	bool CommandLineRPC_GetValue(int argc, char *argv[], Value &value);
+	bool CommandLineRPC_GetValue(int argc, const char *argv[], Value &value);
 
 	bool IsScriptAccCreated(const string& strScript);
 
@@ -208,7 +208,7 @@ public:
 	bool DisConnectBlock(int nNum);
 	Value GetScriptID(string txhash);
 	bool GetStrFromObj(const Value& valueRes,string& str);
-	bool ImportWalletKey(char**address,int nCount);
+	bool ImportWalletKey(const char**address,int nCount);
 protected:
 	static boost::thread* pThreadShutdown ;
 	std::map<string, AccState> mapAccState;

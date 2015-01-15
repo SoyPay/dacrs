@@ -178,7 +178,7 @@ public:
 		char temp[64] = { 0 };
 		strncpy(temp, scriptid.c_str(), sizeof(temp) - 1);
 
-		char *argv[] = { "rpctest", "getaccountinfo", temp };
+		const char *argv[] = { "rpctest", "getaccountinfo", temp };
 		int argc = sizeof(argv) / sizeof(char*);
 		Value value;
 
@@ -198,7 +198,7 @@ public:
 		char temp[64] = { 0 };
 		strncpy(temp, addr.c_str(), sizeof(temp) - 1);
 
-		char *argv[] = { "rpctest", "getaccountinfo", temp };
+		const char *argv[] = { "rpctest", "getaccountinfo", temp };
 		int argc = sizeof(argv) / sizeof(char*);
 		Value value;
 
@@ -302,8 +302,8 @@ public:
 		return (int) chainActive.Height();
 	}
 
-	bool SetAddrGenerteBlock(char *addr) {
-		char *argv[] = { "rpctest", "generateblock", addr };
+	bool SetAddrGenerteBlock(const char *addr) {
+		const char *argv[] = { "rpctest", "generateblock", addr };
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
@@ -532,7 +532,7 @@ static bool RegScript(void) {
 
 static bool GetRandomByteOrderData(unsigned char *buf, unsigned char &num)
 {
-	int len;
+	unsigned int len(0);
 	do
 	{
 		len = GetRandInt(15);
@@ -592,7 +592,7 @@ static bool OperateAccount(const string &addr, const OperAccountType &operate, c
 	case MINUSSELF:
 		acc.SetInfo(0, -fee, 0, -amount);
 		break;
-		defualt: break;
+	default: break;
 	}
 
 	operlog.Add(gLottoTestData.operatetimes, acc);
@@ -721,7 +721,7 @@ typedef struct
 
 static bool GetLuckyNum(const uint256 &phash, vector<unsigned char> &luckynum)
 {
-	unsigned char luckysize = 0, ii = 0;
+	unsigned char ii = 0;
 	unsigned char hash[32] = {0};
 
 	memcpy(hash, phash.begin(), 32);

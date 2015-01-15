@@ -9,7 +9,7 @@ using namespace json_spirit;
 
 string srcAddress="mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5";
 extern int GetRandomFee();
-extern int CommandLineRPC_GetValue(int argc, char *argv[], Value &value);
+extern int CommandLineRPC_GetValue(int argc, const char *argv[], Value &value);
 
 int GetRandomMoney() {
 	srand(time(NULL));
@@ -17,7 +17,7 @@ int GetRandomMoney() {
 	return r;
 }
 
-const int GetRandTxType() {
+int GetRandTxType() {
 	unsigned char cType;
 	RAND_bytes(&cType, sizeof(cType));
 	//srand(time(NULL));
@@ -33,7 +33,7 @@ bool CreateCommonTx(string srcAddr, string desAddr) {
 	int nmoney = GetRandomMoney();
 	sprintf(money, "%d00000000", nmoney);
 	if ("" == desAddr) {
-		char *argv[] = { "rpctest", "getnewaddress" };
+		const char *argv[] = { "rpctest", "getnewaddress" };
 		int argc = sizeof(argv) / sizeof(char *);
 		Value value;
 		if (0 != CommandLineRPC_GetValue(argc, argv, value)) {
@@ -45,7 +45,7 @@ bool CreateCommonTx(string srcAddr, string desAddr) {
 		}
 		desAddr = retNewAddr.get_str();
 	}
-	char *argv1[] = { "rpctest", "sendtoaddresswithfee", const_cast<char *>(srcAddr.c_str()), const_cast<char *>(desAddr.c_str()), money, fee};
+	const char *argv1[] = { "rpctest", "sendtoaddresswithfee", srcAddr.c_str(), desAddr.c_str(), money, fee};
 	int argc = sizeof(argv1) / sizeof(char*);
 	Value value;
 	if (0 != CommandLineRPC_GetValue(argc, argv1, value)) {
@@ -66,7 +66,7 @@ bool CreateCommonTx(string srcAddr, string desAddr) {
  */
 bool CreateRegAcctTx() {
 	//获取一个新的地址
-	char *argv[] = {"rpctest", "getnewaddress"};
+	const char *argv[] = {"rpctest", "getnewaddress"};
 	int argc = sizeof(argv) /sizeof(char *);
 	Value value;
 	if(0 != CommandLineRPC_GetValue(argc, argv, value))
@@ -87,7 +87,7 @@ bool CreateRegAcctTx() {
 	sprintf(fee, "%d", nfee);
 
 	//新产生地址注册账户
-	char *argvReg[] = {"rpctest", "registaccounttx", const_cast<char *>(newAddress.c_str()), fee, "false"};
+	const char *argvReg[] = {"rpctest", "registaccounttx", newAddress.c_str(), fee, "false"};
 	int argcReg = sizeof(argvReg) / sizeof(char *);
 	if(0 != CommandLineRPC_GetValue(argcReg, argvReg, value))
 	{
@@ -116,7 +116,7 @@ bool CreateFreezeTx() {
 	int freeHeight = rand() % 90 + 10;
 	char free[64] = {0};
 	sprintf(free, "%d", freeHeight);
-	char *argv[] = {"rpctest", "createfreezetx", const_cast<char *>(srcAddress.c_str()), money, fee, "0", free};
+	const char *argv[] = {"rpctest", "createfreezetx", srcAddress.c_str(), money, fee, "0", free};
 	int argc = sizeof(argv) / sizeof(char *);
 	Value value;
 	if (0 != CommandLineRPC_GetValue(argc, argv, value)) {
@@ -137,7 +137,7 @@ bool CreateRegistScriptTx() {
 	sprintf(fee, "%d", nfee);
 	string scriptPath = SysCfg().GetDefaultTestDataPath() + "test.bin";
 
-	char *argv[] = {"rpctest", "registerscripttx", const_cast<char *>(srcAddress.c_str()), "0", const_cast<char *>(scriptPath.c_str()), fee, "0"};
+	const char *argv[] = {"rpctest", "registerscripttx", srcAddress.c_str(), "0", scriptPath.c_str(), fee, "0"};
 	int argc = sizeof(argv) / sizeof(char *);
 	Value value;
 	if (0 != CommandLineRPC_GetValue(argc, argv, value)) {
