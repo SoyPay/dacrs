@@ -55,12 +55,10 @@ void testscriptdb() {
 	vScript.clear();
 	vector<unsigned char> vId;
 
-	int nIndex = 0;
 	CRegID regId;
 	BOOST_CHECK(pTestView->GetScript(0, regId, vScript));
 	BOOST_CHECK(vScriptId == regId.GetVec6());
 	BOOST_CHECK(vScriptContent == vScript);
-	nIndex = 1;
 	BOOST_CHECK(pTestView->GetScript(1, regId, vScript));
 	BOOST_CHECK(vScriptId1 == regId.GetVec6());
 	BOOST_CHECK(vScriptContent1 == vScript);

@@ -80,6 +80,7 @@ struct AccOperLog{
 	bool Add(int &nHeight,AccState &accstate)
 	{
 		mapAccState[nHeight] = accstate;
+		return true;
 	}
 
 	void MergeAcc(int nHeight)
@@ -147,20 +148,20 @@ private:
 		string strMoneyPerDay = strprintf("%d",author.GetMaxMoneyPerDay());
 
 		string strUserData = HexStr(author.GetUserData());
-		char *argv[13] = {						//
+		const char *argv[13] = {						//
 						"rpctest",						//
 						"registerscripttx",				//
-						(char*) strAddress.c_str(), 	//
+						strAddress.c_str(), 	//
 						szType, 						//
-						(char*) strScriptData.c_str(),	//
-						(char*) strFee.c_str(), 		//
-						(char*) strHeight.c_str(), 		//
+						strScriptData.c_str(),	//
+						strFee.c_str(), 		//
+						strHeight.c_str(), 		//
 						"this is description", 			//
-						(char*) strAuTime.c_str(),		//
-						(char*) strMoneyPerTime.c_str(),//
-						(char*) strMoneyTotal.c_str(), 	//
-						(char*) strMoneyPerDay.c_str(),	//
-						(char*) strUserData.c_str() };	//
+						strAuTime.c_str(),		//
+						strMoneyPerTime.c_str(),//
+						strMoneyTotal.c_str(), 	//
+						strMoneyPerDay.c_str(),	//
+						strUserData.c_str() };	//
 
 		Value value;
 
@@ -172,9 +173,7 @@ private:
 	}
 
 	Value GetAccountInfo(const string& strID) {
-		char *argv[] = {"rpctest", "getaccountinfo",(char*) strID.c_str() };
-		int argc = sizeof(argv) / sizeof(char*);
-
+		const char *argv[] = {"rpctest", "getaccountinfo", strID.c_str()};
 		Value value;
 		if (CommandLineRPC_GetValue(sizeof(argv) / sizeof(argv[0]), argv, value)) {
 			return value;
@@ -182,7 +181,7 @@ private:
 		return value;
 	}
 public:
-	bool CommandLineRPC_GetValue(int argc, char *argv[],Value &value)
+	bool CommandLineRPC_GetValue(int argc, const char *argv[], Value &value)
 	{
 	    string strPrint;
 	    bool nRes = false;
@@ -215,7 +214,6 @@ public:
 	        {
 	            // Error
 	            strPrint = "error: " + write_string(error, false);
-	            int code = find_value(error.get_obj(), "code").get_int();
 	        }
 	        else
 	        {
@@ -262,31 +260,10 @@ public:
 		return true;
 	}
 
-	uint64_t GetFreeMoney(const string& strID)
-	{
-		Value valueRes = GetAccountInfo(strID);
-		BOOST_CHECK(valueRes.type() != null_type);
-		Value result = find_value(valueRes.get_obj(), "FreeValues");
-		BOOST_CHECK(result.type() != null_type);
-
-		uint64_t nMoney = result.get_int64();
-
-		result = find_value(valueRes.get_obj(), "FreedomFund");
-		Array arrayFreedom = result.get_array();
-
-		for (const auto& item:arrayFreedom)
-		{
-			nMoney += find_value(valueRes.get_obj(), "value").get_int64();
-
-		}
-		return nMoney;
-	}
-
 	bool GetOneAddr(std::string &addr,char *pStrMinMoney,char *bpBoolReg)
 	{
 		//CommanRpc
-		char *argv[] = {"rpctest", "getoneaddr",pStrMinMoney,bpBoolReg};
-		int argc = sizeof(argv)/sizeof(char*);
+		const char *argv[] = {"rpctest", "getoneaddr",pStrMinMoney,bpBoolReg};
 
 		Value value;
 		if (CommandLineRPC_GetValue(sizeof(argv) / sizeof(argv[0]), argv, value))
@@ -301,7 +278,7 @@ public:
 	bool GetOneScriptId(std::string &regscriptid)
 	{
 		//CommanRpc
-		char *argv[] = {"rpctest", "listscriptregid"};
+		const char *argv[] = {"rpctest", "listscriptregid"};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -318,7 +295,7 @@ public:
 	bool GetNewAddr(std::string &addr)
 	{
 		//CommanRpc
-		char *argv[] = {"rpctest", "getnewaddress"};
+		const char *argv[] = {"rpctest", "getnewaddress"};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -338,7 +315,7 @@ public:
 		char temp[64] = {0};
 		strncpy(temp,addr.c_str(),sizeof(temp)-1);
 
-		char *argv[] = {"rpctest", "getaddramount",temp};
+		const char *argv[] = {"rpctest", "getaddramount", temp};
 		int argc = sizeof(argv)/sizeof(char*);
 		Value value;
 		int ret = CommandLineRPC_GetValue(argc, argv, value);
@@ -360,7 +337,7 @@ public:
 
 	bool GetBlockHeight(int &nHeight)
 	{
-		char *argv[] = {"rpctest", "getinfo",};
+		const char *argv[] = {"rpctest", "getinfo"};
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
@@ -397,7 +374,7 @@ public:
 		char height[16] = {0};
 		sprintf(height,"%d",nHeight);
 
-		char *argv[] = { "rpctest", "createnormaltx", src,dest,money,fee,height};
+		const char *argv[] = { "rpctest", "createnormaltx", src, dest, money, fee, height};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -432,7 +409,7 @@ public:
 		char freeheight[16] = {0};
 		sprintf(freeheight,"%d",nHeight+100);
 
-		char *argv[] = { "rpctest", "createfreezetx", caddr,money,fee,height,freeheight};
+		const char *argv[] = { "rpctest", "createfreezetx", caddr, money, fee, height, freeheight};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -459,7 +436,7 @@ public:
 		sprintf(height,"%d",nHeight);
 
 
-		char *argv[] = { "rpctest", "registaccounttx", caddr, fee, height};
+		const char *argv[] = { "rpctest", "registaccounttx", caddr, fee, height};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -474,7 +451,7 @@ public:
 
 	bool CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract, const int nHeight)
 	{
-		char cscriptid[1024] = { 0 };
+//		char cscriptid[1024] = { 0 };
 //		vector<char> te(scriptid.begin(),scriptid.end());
 //		&te[0]
 //		strncpy(cscriptid, scriptid.c_str(), sizeof(scriptid)-1);
@@ -493,7 +470,7 @@ public:
 		char height[16] = {0};
 		sprintf(height,"%d",nHeight);
 
-		 char *argv[] = { "rpctest", "createcontracttx", (char *)(scriptid.c_str()), (char *)(addrs.c_str()), (char *)(contract.c_str()), fee, height};
+		const char *argv[] = { "rpctest", "createcontracttx", scriptid.c_str(), addrs.c_str(), contract.c_str(), fee, height};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -551,7 +528,7 @@ public:
 		sprintf(height,"%d",nHeight);
 
 
-		char *argv[] = { "rpctest", "createsecuretx", cscriptid,cobstr,addrstr,ccontract,"1000000",height};
+		const char *argv[] = { "rpctest", "createsecuretx", cscriptid, cobstr, addrstr, ccontract, "1000000", height};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -571,7 +548,7 @@ public:
 		strncpy(csecuretx, securetx.c_str(), sizeof(csecuretx)-1);
 
 
-		char *argv[] = { "rpctest", "signsecuretx", csecuretx};
+		const char *argv[] = { "rpctest", "signsecuretx", csecuretx};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -585,7 +562,7 @@ public:
 
 	bool IsAllTxInBlock()
 	{
-		char *argv[] = { "rpctest", "listunconfirmedtx" };
+		const char *argv[] = { "rpctest", "listunconfirmedtx" };
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
@@ -603,7 +580,7 @@ public:
 		char height[16] = {0};
 		sprintf(height,"%d",nHeight);
 
-		char *argv[] = {"rpctest", "getblockhash",height};
+		const char *argv[] = {"rpctest", "getblockhash", height};
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
@@ -621,7 +598,7 @@ public:
 		char cblockhash[80] = {0};
 		strncpy(cblockhash,blockhash.c_str(),sizeof(cblockhash)-1);
 
-		char *argv[] = {"rpctest", "getblock",cblockhash};
+		const char *argv[] = {"rpctest", "getblock", cblockhash};
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
@@ -638,7 +615,7 @@ public:
 
 	bool GenerateOneBlock()
 	{
-		char *argv[] = {"rpctest", "setgenerate","true"};
+		const char *argv[] = {"rpctest", "setgenerate","true"};
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;

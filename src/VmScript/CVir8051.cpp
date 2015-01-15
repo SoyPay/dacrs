@@ -642,16 +642,6 @@ static RET_DEFINE ExGetTxConFirmHeightFunc(unsigned char * ipara,void * pVmScrip
 	return std::make_tuple (true, tem);
 
 }
-static RET_DEFINE ExGetTipHeightFunc(unsigned char * ipara,void * pVmScriptRun) {
-	int height = chainActive.Height();
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
-    tep << height;
-    vector<unsigned char> tep1(tep.begin(),tep.end());
-    (*tem.get()).push_back(tep1);
-
-	return std::make_tuple (true, tem);
-}
 /**
  *bool GetBlockHash(const unsigned long height,void * const pblochHash)
  * 这个函数式从中间层传了一个参数过来:
@@ -1261,6 +1251,10 @@ static RET_DEFINE ExGetCurTxContactFunc(unsigned char * ipara,void * pVmScript)
 	(*tem.get()).push_back(contact);
 	return std::make_tuple (true, tem);
 }
+static RET_DEFINE ExDefaultFunc(unsigned char * ipara,void * pVmScriptRun) {
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+	return std::make_tuple (false, tem);
+}
 enum CALL_API_FUN {
 	COMP_FUNC = 0,            //!< COMP_FUNC
 	MULL_MONEY ,              //!< MULL_MONEY
@@ -1319,7 +1313,7 @@ const static struct __MapExterFun FunMap[] = { //
 		{GETACCPUB_FUNC,ExGetAccountPublickeyFunc},
 		{QUEYACCBALANCE_FUNC,ExQueryAccountBalanceFunc},
 		{GETTXCONFIRH_FUNC,ExGetTxConFirmHeightFunc},
-		{GETTIPH_FUNC,ExGetTipHeightFunc},
+		{GETTIPH_FUNC,ExDefaultFunc},
 		{GETBLOCKHASH_FUNC,ExGetBlockHashFunc},
 		{ISAUTHORIT_FUNC,ExIsAuthoritFunc},
 		{GETAUTHORITDEFINE_FUNC,ExGetAuthoritedDefineFunc},

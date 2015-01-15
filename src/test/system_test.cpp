@@ -197,8 +197,7 @@ public:
 			return false;
 		}
 
-		long lSize;
-		size_t nSize = 1;
+		unsigned long lSize;
 		fseek(file, 0, SEEK_END);
 		lSize = ftell(file);
 		rewind(file);
@@ -336,9 +335,9 @@ public:
 		string vAddr = "[\"" + strSignAddr + "\"] ";
 
 		CAuthorizate author = GetAuthorByAddress(strOperAddr, strScriptID);
-		int nAvailable = author.GetCurMaxMoneyPerDay();
+		unsigned int nAvailable = author.GetCurMaxMoneyPerDay();
 		SetRandomRanger(nAvailable);
-		int nRandomValue = 0;
+		unsigned int nRandomValue = 0;
 
 		for (int i = 0; i < nRandomTestCount; i++) {
 			nRandomValue = GetRandomValue();
@@ -380,7 +379,7 @@ public:
 	void Transfer_Signed(const string& strScriptID, const string& strSignAddr,unsigned char nTestType) {
 		string strContractData;
 		string vAddr = "[\"" + strSignAddr + "\"] ";
-		int nRandomValue = 0;
+		unsigned int nRandomValue = 0;
 		for (int i = 0; i < nRandomTestCount; i++) {
 			nRandomValue = GetRandomValue();
 			BOOST_CHECK(PacketContractData(nTestType, strRegID1, strRegID2, //
@@ -474,7 +473,7 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 		map<int,string> mapData = vDataInfo[i];
 		BOOST_CHECK(1 == mapData.size());
 
-		int nTxIndex = mapData.begin()->first;
+//		int nTxIndex = mapData.begin()->first;
 		string strTxHash = mapData.begin()->second;
 		uint256 txHash(strTxHash);
 

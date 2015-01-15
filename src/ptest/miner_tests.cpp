@@ -19,9 +19,7 @@ using namespace json_spirit;
 extern Object CallRPC(const string& strMethod, const Array& params);
 extern void SHA256Transform(void* pstate, void* pinput, const void* pinit);
 
-#define LogPrint(a,...) printf(__VA_ARGS__)
-
-int CommandLineRPC_GetValue(int argc, char *argv[],Value &value)
+int CommandLineRPC_GetValue(int argc, const char *argv[],Value &value)
 {
     string strPrint;
     int nRet = 0;
@@ -144,6 +142,7 @@ struct AccOperLog{
 	bool Add(int &nHeight,AccState &accstate)
 	{
 		mapAccState[nHeight] = accstate;
+		return true;
 	}
 
 	void MergeAcc(int nHeight)
@@ -187,10 +186,10 @@ private:
 	}
 public:
 
-	bool GetOneAddr(std::string &addr,char *pStrMinMoney,char *bpBoolReg)
+	bool GetOneAddr(std::string &addr, const char *pStrMinMoney, const char *bpBoolReg)
 	{
 		//CommanRpc
-		char *argv[] = {"rpctest", "getoneaddr",pStrMinMoney,bpBoolReg};
+		const char *argv[] = {"rpctest", "getoneaddr",pStrMinMoney,bpBoolReg};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -207,7 +206,7 @@ public:
 	bool GetOneScriptId(std::string &regscriptid)
 	{
 		//CommanRpc
-		char *argv[] = {"rpctest", "listscriptregid"};
+		const char *argv[] = {"rpctest", "listscriptregid"};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -225,7 +224,7 @@ public:
 	bool GetNewAddr(std::string &addr)
 	{
 		//CommanRpc
-		char *argv[] = {"rpctest", "getnewaddress"};
+		const char *argv[] = {"rpctest", "getnewaddress"};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -245,7 +244,7 @@ public:
 		char temp[64] = {0};
 		strncpy(temp,addr.c_str(),sizeof(temp)-1);
 
-		char *argv[] = {"rpctest", "getaddramount",temp};
+		const char *argv[] = {"rpctest", "getaddramount",temp};
 		int argc = sizeof(argv)/sizeof(char*);
 		Value value;
 		int ret = CommandLineRPC_GetValue(argc, argv, value);
@@ -268,7 +267,7 @@ public:
 	bool GetBlockHeight(int &nHeight)
 	{
 		nHeight = 0;
-		char *argv[] = {"rpctest", "getinfo",};
+		const char *argv[] = {"rpctest", "getinfo",};
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
@@ -306,7 +305,7 @@ public:
 		char height[16] = {0};
 		sprintf(height,"%d",nHeight);
 
-		char *argv[] = { "rpctest", "createnormaltx", src,dest,money,fee,height};
+		const char *argv[] = { "rpctest", "createnormaltx", src,dest,money,fee,height};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -341,7 +340,7 @@ public:
 		char freeheight[16] = {0};
 		sprintf(freeheight,"%d",nHeight+100);
 
-		char *argv[] = { "rpctest", "createfreezetx", caddr,money,fee,height,freeheight};
+		const char *argv[] = { "rpctest", "createfreezetx", caddr,money,fee,height,freeheight};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -369,7 +368,7 @@ public:
 		sprintf(height,"%d",nHeight);
 
 
-		char *argv[] = { "rpctest", "registaccounttx", caddr, fee, height};
+		const char *argv[] = { "rpctest", "registaccounttx", caddr, fee, height};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -384,7 +383,7 @@ public:
 
 	bool CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract, const int nHeight)
 	{
-		char cscriptid[1024] = { 0 };
+//		char cscriptid[1024] = { 0 };
 //		vector<char> te(scriptid.begin(),scriptid.end());
 //		&te[0]
 //		strncpy(cscriptid, scriptid.c_str(), sizeof(scriptid)-1);
@@ -403,7 +402,7 @@ public:
 		char height[16] = {0};
 		sprintf(height,"%d",nHeight);
 
-		 char *argv[] = { "rpctest", "createcontracttx", (char *)(scriptid.c_str()), (char *)(addrs.c_str()), (char *)(contract.c_str()), fee, height};
+		 const char *argv[] = { "rpctest", "createcontracttx", (char *)(scriptid.c_str()), (char *)(addrs.c_str()), (char *)(contract.c_str()), fee, height};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -434,7 +433,7 @@ public:
 		sprintf(height,"%d",nHeight);
 
 
-		char *argv[] = { "rpctest", "registerscripttx", caddr, csript, fee, height};
+		const char *argv[] = { "rpctest", "registerscripttx", caddr, csript, fee, height};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -483,7 +482,7 @@ public:
 		sprintf(height,"%d",nHeight);
 
 
-		char *argv[] = { "rpctest", "createsecuretx", cscriptid,cobstr,addrstr,ccontract,"1000000",height};
+		const char *argv[] = { "rpctest", "createsecuretx", cscriptid,cobstr,addrstr,ccontract,"1000000",height};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -503,7 +502,7 @@ public:
 		strncpy(csecuretx, securetx.c_str(), sizeof(csecuretx)-1);
 
 
-		char *argv[] = { "rpctest", "signsecuretx", csecuretx};
+		const char *argv[] = { "rpctest", "signsecuretx", csecuretx};
 		int argc = sizeof(argv)/sizeof(char*);
 
 		Value value;
@@ -518,7 +517,7 @@ public:
 
 	bool IsAllTxInBlock()
 	{
-		char *argv[] = { "rpctest", "listunconfirmedtx" };
+		const char *argv[] = { "rpctest", "listunconfirmedtx" };
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
@@ -536,7 +535,7 @@ public:
 		char height[16] = {0};
 		sprintf(height,"%d",nHeight);
 
-		char *argv[] = {"rpctest", "getblockhash",height};
+		const char *argv[] = {"rpctest", "getblockhash",height};
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
@@ -555,7 +554,7 @@ public:
 		char cblockhash[80] = {0};
 		strncpy(cblockhash,blockhash.c_str(),sizeof(cblockhash)-1);
 
-		char *argv[] = {"rpctest", "getblock",cblockhash};
+		const char *argv[] = {"rpctest", "getblock",cblockhash};
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
@@ -572,7 +571,7 @@ public:
 
 	bool GenerateOneBlock()
 	{
-		char *argv[] = {"rpctest", "setgenerate","true"};
+		const char *argv[] = {"rpctest", "setgenerate","true"};
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;

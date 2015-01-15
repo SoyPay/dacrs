@@ -498,9 +498,7 @@ Object CScriptDB::ToJosnObj(string Prefix) {
 				}
 				else if(Prefix == "author"){
 					obj.push_back(Pair("accountid", HexStr(ssKey)));
-					CAuthorizate author;
-					ssValue >> author;
-					obj.push_back(Pair("account", author.ToJosnObj()));
+					obj.push_back(Pair("author", HexStr(ssValue)));
 
 				}
 				arrayObj.push_back(obj);

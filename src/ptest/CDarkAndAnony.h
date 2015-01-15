@@ -95,7 +95,7 @@ class CDarkAndAnony: public CycleTestBase {
 	string anonyhahs;
 	string darkRegId;
 	string anonyRegId;
-	char* dest1[3];
+	const char* dest1[3];
 public:
 	CDarkAndAnony();
 	virtual ~CDarkAndAnony();
@@ -122,16 +122,15 @@ public:
 	bool step0RegistScript()
 	{
 		vector<string> param;
-		bool flag = true;
 		string buyaddr,selleraddr;
 		GetAddress(buyaddr,selleraddr);
 		string nfee;
 		nfee = strprintf("%d",GetRandomFee());
 
-		darkhash = CreateScript("D:\\bitcoin\\data\\darksecure.bin",buyaddr,nfee);
+		darkhash = CreateScript("D:\\bitcoin\\data\\darksecure.bin", buyaddr, nfee);
 		BOOST_CHECK(Parsejson(darkhash) != "");
 
-		anonyhahs = CreateScript("D:\\bitcoin\\data\\anony.bin",buyaddr,nfee);
+		anonyhahs = CreateScript("D:\\bitcoin\\data\\anony.bin", buyaddr, nfee);
 		BOOST_CHECK(Parsejson(anonyhahs) != "");
 
 		darkhash = Parsejson(darkhash);
@@ -156,14 +155,14 @@ public:
 		return false;
 	}
 
-	string CreateScript(char * vmpath,string addr,string nfee);
+	string CreateScript(const char * vmpath, string addr, string nfee);
 	string Parsejson(string str);
-	string CreateDarkTx(string scriptid,string buyeraddr,string selleraddr,string nfee,uint64_t paymoney);
-	string CreateSecondDarkTx(string scriptid,string hash,string buyeraddr,string nfee);
-	string Createanony(string scriptid,string addr,string toaddress1,string toaddress2,string nfee,uint64_t paymoney);
+	string CreateDarkTx(string scriptid, string buyeraddr, string selleraddr, string nfee, uint64_t paymoney);
+	string CreateSecondDarkTx(string scriptid, string hash, string buyeraddr, string nfee);
+	string Createanony(string scriptid, string addr, string toaddress1, string toaddress2, string nfee, uint64_t paymoney);
 	string GetScript(string hash);
 
-	void GetAddress(string& buyaddr,string& selleraddr)
+	void GetAddress(string& buyaddr, string& selleraddr)
 	{
 		srand(time(NULL));
 		int i = rand() % 3;
@@ -178,7 +177,7 @@ public:
 		selleraddr = dest1[k];
 	}
 
-	void GetAddress(string& addr1,string& addr2,string& addr3)
+	void GetAddress(string& addr1, string& addr2, string& addr3)
 	{
 		srand(time(NULL));
 		int i = rand() % 3;

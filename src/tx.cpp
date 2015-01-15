@@ -467,12 +467,13 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 	uint64_t el = GetElementForBurn(chainActive.Tip());
+	int64_t llTime = GetTimeMillis();
 	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptCache, nHeight, el);
 	if (!std::get<0>(ret))
 		return state.DoS(100,
 				ERRORMSG("UpdateAccounts() : ContractTransaction UpdateAccount txhash=%s run script error:%s",
 						GetHash().GetHex(), std::get<2>(ret)), UPDATE_ACCOUNT_FAIL, "run-script-error");
-
+	LogPrint("CONTRACT_TX", "execute contract elapse:%lld, txhash=%s\n", GetTimeMillis()-llTime, GetHash().GetHex());
 	set<CKeyID> vAddress;
 	vector<std::shared_ptr<CAccount> > &vAccount = vmRun.GetNewAccont();
 	for (auto & itemAccount : vAccount) {
