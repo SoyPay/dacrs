@@ -61,9 +61,10 @@ void CTxMemPool::ReScanMemPoolTx(const CBlock &block, CAccountViewCache *pAccoun
 		for(auto &pTxItem : block.vptx){
 			mapTx.erase(pTxItem->GetHash());
 		}
+		CValidationState state;
 		list<std::shared_ptr<CBaseTransaction> > removed;
 		for(map<uint256, CTxMemPoolEntry >::iterator iterTx = mapTx.begin(); iterTx != mapTx.end(); ) {
-			if (!CheckTxInMemPool(iterTx->first, iterTx->second)) {
+			if (!CheckTxInMemPool(iterTx->first, iterTx->second, state)) {
 				iterTx = mapTx.erase(iterTx++);
 				continue;
 			}
@@ -100,8 +101,7 @@ void CTxMemPool::remove(CBaseTransaction *pBaseTx, list<std::shared_ptr<CBaseTra
 	}
 }
 
-bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &entry) {
-	CValidationState state;
+bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &entry, CValidationState &state) {
 	CTxUndo txundo;
 	CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
 	// is it already confirmed in block
@@ -118,13 +118,13 @@ bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &en
 	}
 	return true;
 }
-bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry) {
+bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, CValidationState &state) {
 	// Add to memory pool without checking anything.
 	// Used by main.cpp AcceptToMemoryPool(), which DOES do
 	// all the appropriate checks.
 	LOCK(cs);
 	{
-		if(!CheckTxInMemPool(hash, entry)) {
+		if(!CheckTxInMemPool(hash, entry, state)) {
 			return false;
 		}
 		mapTx.insert(make_pair(hash, entry));

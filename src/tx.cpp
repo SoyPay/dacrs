@@ -300,7 +300,7 @@ bool CTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidatio
 	srcAccount.CompactAccount(nHeight);
 	if (!srcAccount.OperateAccount(MINUS_FREE, minusFund, scriptCache, txundo.vScriptOperLog))
 		return state.DoS(100, ERRORMSG("UpdateAccounts() : accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
-				"bad-operate-account");
+				"not-sufficient-funds");
 	if(!view.SetAccount(srcUserId, srcAccount)) {
 		return state.DoS(100, ERRORMSG("UpdateAccounts() : save account error, kyeId=%s", srcAccount.keyID.ToString()), UPDATE_ACCOUNT_FAIL,
 						"bad-save-account");
