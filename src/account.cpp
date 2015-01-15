@@ -394,6 +394,7 @@ bool CScriptDBView::GetScriptData(const int nCurBlockHeight, const vector<unsign
 		set<CScriptDBOperLog> &setOperLog) {
 	return false;
 }
+bool CScriptDBView::GetAccountAuthor(const CRegID & acctRegId, vector<CAuthorizate> & vAuthorizate) { return false;}
 Object CScriptDBView:: ToJosnObj(string Prefix){
 	Object obj;
 	return obj;
@@ -410,10 +411,13 @@ bool CScriptDBViewBacked::GetScriptData(const int nCurBlockHeight, const vector<
 		set<CScriptDBOperLog> &setOperLog) {
 	return pBase->GetScriptData(nCurBlockHeight, vScriptId, nIndex, vScriptKey, vScriptData, nHeight, setOperLog);
 }
+bool CScriptDBViewBacked::GetAccountAuthor(const CRegID & acctRegId, vector<CAuthorizate> & vAuthorizate) {
+	return pBase->GetAccountAuthor(acctRegId, vAuthorizate);
+}
+
 CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScriptDBViewBacked(base) {
 	mapDatas.clear();
 }
-
 bool CScriptDBViewCache::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {
 	if (mapDatas.count(vKey) > 0) {
 		if (!mapDatas[vKey].empty()) {
@@ -1003,7 +1007,9 @@ bool CScriptDBViewCache::EraseScript(const CRegID &scriptId) {
 	return EraseScript(scriptId.GetVec6());
 }
 bool CScriptDBViewCache::GetScriptDataCount(const CRegID &scriptId, int &nCount) {
-	return GetScriptDataCount(scriptId.GetVec6(), nCount);
+	bool ret = GetScriptDataCount(scriptId.GetVec6(), nCount);
+	LogPrint("GetScriptDataCount", "param in:%s param out:%d ret:%d\n", scriptId.ToString(), nCount, ret);
+	return ret;
 }
 bool CScriptDBViewCache::EraseScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey, CScriptDBOperLog &operLog) {
 	bool  temp = EraseScriptData(scriptId.GetVec6(), vScriptKey, operLog);
@@ -1014,7 +1020,9 @@ bool CScriptDBViewCache::HaveScriptData(const CRegID &scriptId, const vector<uns
 }
 bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
 			vector<unsigned char> &vScriptData, int &nHeight, CScriptDBOperLog &operLog) {
-	return GetScriptData(nCurBlockHeight, scriptId.GetVec6() , vScriptKey, vScriptData, nHeight, operLog);
+	bool ret = GetScriptData(nCurBlockHeight, scriptId.GetVec6() , vScriptKey, vScriptData, nHeight, operLog);
+	LogPrint("GetScriptData", "param in:%d, %s, %s\n param out:%s, %d, %s ret:%d\n",nCurBlockHeight, scriptId.ToString(), HexStr(vScriptKey), HexStr(vScriptData), nHeight, operLog.ToString(), ret);
+	return ret;
 }
 bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const CRegID &scriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData,
 		int &nHeight, set<CScriptDBOperLog> &setOperLog) {
@@ -1026,6 +1034,9 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const CRegID &
 			}
 		}
 	}
+
+	LogPrint("GetScriptDataIndex", "param in:%d, %s, %d, %s\n param out:%s, %d, %d ret:%d\n",nCurBlockHeight, scriptId.ToString(), nIndex, HexStr(vScriptKey), HexStr(vScriptData), nHeight, setOperLog.size(), bRet);
+
 	return bRet;
 }
 bool CScriptDBViewCache::SetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
@@ -1103,6 +1114,11 @@ bool CScriptDBViewCache::SetAuthorizate(const CRegID &acctRegId, const CRegID &s
 	GetData(vKey, oldValue);
 	operLog = CScriptDBOperLog(vKey, oldValue);
 	return SetData(vKey, vValue);
+}
+
+bool CScriptDBViewCache::GetAccountAuthor(const CRegID & acctRegId, vector<CAuthorizate> & vAuthorizate) {
+
+	return true;
 }
 uint256 CTransactionDBView::IsContainTx(const uint256 & txHash) { return std::move(uint256(0)); }
 bool CTransactionDBView::IsContainBlock(const CBlock &block) { return false; }

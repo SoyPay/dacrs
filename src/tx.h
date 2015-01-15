@@ -297,6 +297,8 @@ public:
 
 	unsigned char nTxType;
 	int nVersion;
+
+	uint64_t nRunStep;   //only in memory
 public:
 
 	CBaseTransaction(const CBaseTransaction &other) {
@@ -304,11 +306,11 @@ public:
 	}
 
 	CBaseTransaction(int _nVersion, unsigned char _nTxType) :
-			nTxType(_nTxType), nVersion(_nVersion){
+			nTxType(_nTxType), nVersion(_nVersion), nRunStep(0){
 	}
 
 	CBaseTransaction() :
-			nTxType(COMMON_TX) ,nVersion(CURRENT_VERSION) {
+			nTxType(COMMON_TX) ,nVersion(CURRENT_VERSION), nRunStep(0) {
 	}
 
 	virtual ~CBaseTransaction() {
@@ -617,6 +619,7 @@ public:
 	vector_unsigned_char vContract;
 	int nValidHeight;
 	vector<vector_unsigned_char> vSignature;
+
 public:
 	CContractTransaction(const CBaseTransaction *pBaseTx) {
 		assert(CONTRACT_TX == pBaseTx->nTxType);

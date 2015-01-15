@@ -309,7 +309,7 @@ static const CRPCCommand vRPCCommands[] =
     { "createfreezetxraw",      &createfreezetxraw,      true,      false,      true },
     { "registerscripttxraw",    &registerscripttxraw,    true,      false,      true },
     { "sigstr",    				&sigstr,    			 true,      false,      true },
-
+    { "listauthor",             &listauthor,             true,      false,      true },
 
 //for test code
 	{ "gettxoperationlog",      &gettxoperationlog,      false,     false,      false },
@@ -321,6 +321,7 @@ static const CRPCCommand vRPCCommands[] =
     { "getscriptdbsize",        &getscriptdbsize,        true,      false,      false},
     { "printblokdbinfo",        &printblokdbinfo,        true,      false,      false},
     { "getalltxinfo",			&getalltxinfo,			 true,      false,      true},
+
 };
 
 CRPCTable::CRPCTable()

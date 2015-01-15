@@ -113,7 +113,7 @@ public:
 	 * uint64_t if the script run sucess Run the script calls the money ,string represent run the failed's  Reason
 	 */
 	tuple<bool,uint64_t,string> run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view,CScriptDBViewCache& VmDB,
-			int nheight,uint64_t nBurnFactor);
+			int nheight,uint64_t nBurnFactor, uint64_t &uRunStep);
 	/**
 	 * @brief just for test
 	 * @return:
