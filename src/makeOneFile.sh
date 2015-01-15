@@ -24,7 +24,7 @@ else
 			-I/c/deps/boost_1_55_0/boost/thread -DHAVE_CONFIG_H\
 			-I/c/deps -I/c/deps/protobuf-2.5.0/src -I/c/deps/libpng-1.6.9 -I/c/deps/qrencode-3.4.3 -DBOOST_SPIRIT_THREADSAFE -DHAVE_BUILD_INFO \
 			-D__STDC_FORMAT_MACROS -D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -D_FILE_OFFSET_BITS=64  -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -DSTATICLIB \
-			-g3 -O0 -DDEBUG -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector -fstack-protector-all -fPIE
+			-g3 -O0 -DDEBUG -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector -fstack-protector-all
 
 		temp_var=$?
 			if [ $temp_var != 0 ]; then
