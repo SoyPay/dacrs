@@ -123,6 +123,7 @@ public:
 	bool GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
 	bool GetScriptData(const int curBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData,
 			int &nHeight, set<CScriptDBOperLog> &setOperLog);
+	bool GetAccountAuthor(const CRegID & acctRegId, vector<CAuthorizate> & vAuthorizate);
 	int64_t GetDbCount()
 	{
 		return db.GetDbCount();

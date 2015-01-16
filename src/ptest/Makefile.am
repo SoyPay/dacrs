@@ -40,5 +40,7 @@ dacrs_ptest_SOURCES = \
   CycleTestBase.h	\
   CycleSesureTrade_tests.h	\
   CDarkAndAnony.h	\
-  ../test/SysTestBase.h
+  ../test/SysTestBase.h \
+  CycleP2PBet_test.cpp \
+  CycleP2PBet_test.h
   

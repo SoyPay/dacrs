@@ -2232,3 +2232,39 @@ Value printblokdbinfo(const Array& params, bool fHelp) {
 	WriteBlockLog(false);
 	return Value::null;
 }
+
+Value listauthor(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 1) {
+			string msg = "listauthor \"addr\"\n"
+					"\ngetaddramount\n"
+					"\nArguments:\n"
+					"1.\"addr\": (string)"
+					"\nResult:\n"
+					"\"account authorizate\":\n"
+					"\nExamples:\n" + HelpExampleCli("getaccountinfo", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n")
+					+HelpExampleCli("getaccountinfo", "000000000500\n")
+					+ "\nAs json rpc call\n"
+					+ HelpExampleRpc("getaccountinfo", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n");
+			throw runtime_error(msg);
+		}
+		RPCTypeCheck(params, list_of(str_type));
+		CKeyID keyid;
+		CUserID userId;
+		string addr = params[0].get_str();
+		if(CRegID::IsRegIdStr(addr)) {
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+		}
+		CRegID regId;
+		regId.SetRegID(addr);
+
+		vector<CAuthorizate> vAuthorizate;
+		if(!pScriptDBTip->GetAccountAuthor(regId, vAuthorizate)) {
+			throw JSONRPCError(RPC_DATABASE_ERROR, "Get Account error.");
+		}
+
+		Array array;
+		for(auto &item : vAuthorizate) {
+			array.push_back(item.ToJosnObj());
+		}
+		return array;
+}
