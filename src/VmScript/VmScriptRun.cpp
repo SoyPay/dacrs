@@ -70,7 +70,7 @@ CVmScriptRun::~CVmScriptRun() {
 
 }
 tuple<bool, uint64_t, string> CVmScriptRun::run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view, CScriptDBViewCache& VmDB, int nheight,
-		uint64_t nBurnFactor) {
+		uint64_t nBurnFactor, uint64_t &uRunStep) {
 
 	if(nBurnFactor == 0)
 	{
@@ -87,13 +87,17 @@ tuple<bool, uint64_t, string> CVmScriptRun::run(shared_ptr<CBaseTransaction>& Tx
 
 	}
 
-	int64_t  step = pMcu.get()->run(maxstep,this);
+	int64_t step = pMcu.get()->run(maxstep,this);
 	if (0 == step) {
-		return std::make_tuple (false, 0, string("VmScript run Failed\n"));
-	}else if(-1 == step){
-		return  std::make_tuple (false, 0, string("the fee not enough \n"));
+		return std::make_tuple(false, 0, string("VmScript run Failed\n"));
+	} else if (-1 == step) {
+		return std::make_tuple(false, 0, string("the fee not enough \n"));
+	} else {
+		if (step > MAX_BLOCK_RUN_STEP) {
+			return std::make_tuple(false, 0, string("execure tx contranct run step exceed the max step limit\n"));
+		}
+		uRunStep = step;
 	}
-
 	LogPrint("CONTRACT_TX", "tx:%s,step:%ld\n", tx->ToString(view), step);
 	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
 	CDataStream Contractstream(*retData.get(), SER_DISK, CLIENT_VERSION);

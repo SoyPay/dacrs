@@ -516,19 +516,22 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nIn
 	}
 
 	if (bNeedRunTx) {
+		uint64_t nTotalRunStep(0);
 		for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
 			shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
 			if (uint256(0) != txCache.IsContainTx(pBaseTx->GetHash())) {
-				LogPrint("ERROR", "VerifyPosTx duplicate tx hash:%s\n", pBaseTx->GetHash().GetHex());
-				return false;
+				return ERRORMSG("VerifyPosTx duplicate tx hash:%s", pBaseTx->GetHash().GetHex());
 			}
 
 			CTxUndo txundo;
 			CValidationState state;
 
 			if (!pBaseTx->UpdateAccount(i, view, state, txundo, pBlock->nHeight, txCache, scriptDBView)) {
-				LogPrint("ERROR", "transaction UpdateAccount account error\n");
-				return false;
+				return ERRORMSG("transaction UpdateAccount account error");
+			}
+			nTotalRunStep += pBaseTx->nRunStep;
+			if(nTotalRunStep > MAX_BLOCK_RUN_STEP) {
+				return ERRORMSG("block total run steps exceed max run step");
 			}
 		}
 
@@ -639,6 +642,7 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 			uint64_t nBlockTx = 0;
 //			int nBlockSigOps = 100;
 			bool fSortedByFee = true;
+			uint64_t nTotalRunStep = 0;
 
 			TxPriorityCompare comparer(fSortedByFee);
 			make_heap(vecPriority.begin(), vecPriority.end(), comparer);
@@ -661,7 +665,9 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 				unsigned int nTxSize = ::GetSerializeSize(*pBaseTx, SER_NETWORK, PROTOCOL_VERSION);
 				if (nBlockSize + nTxSize >= nBlockMaxSize)
 					continue;
-
+				// Run step limits
+				if(nTotalRunStep + pBaseTx->nRunStep >= MAX_BLOCK_RUN_STEP)
+					continue;
 				// Skip free transactions if we're past the minimum block size:
 				if (fSortedByFee && (dFeePerKb < CTransaction::nMinRelayTxFee) && (nBlockSize + nTxSize >= nBlockMinSize))
 					continue;
@@ -695,7 +701,7 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 				pblock->vptx.push_back(stx);
 				nFees += pBaseTx->GetFee();
 				nBlockSize += stx->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
-
+				nTotalRunStep += pBaseTx->nRunStep;
 			}
 
 			nLastBlockTx = nBlockTx;

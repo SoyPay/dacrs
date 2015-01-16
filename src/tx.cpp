@@ -468,7 +468,7 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 	uint64_t el = GetElementForBurn(chainActive.Tip());
 	int64_t llTime = GetTimeMillis();
-	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptCache, nHeight, el);
+	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptCache, nHeight, el, nRunStep);
 	if (!std::get<0>(ret))
 		return state.DoS(100,
 				ERRORMSG("UpdateAccounts() : ContractTransaction UpdateAccount txhash=%s run script error:%s",
@@ -535,7 +535,7 @@ bool CContractTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &vie
 	CScriptDBViewCache scriptDBView(*pScriptDBTip, true);
 	if(uint256(0) == pTxCacheTip->IsContainTx(GetHash())) {
 		CAccountViewCache accountView(view, true);
-		tuple<bool, uint64_t, string> ret = vmRun.run(pTx, accountView, scriptDBView, chainActive.Height() +1, el);
+		tuple<bool, uint64_t, string> ret = vmRun.run(pTx, accountView, scriptDBView, chainActive.Height() +1, el, nRunStep);
 		if (!std::get<0>(ret))
 			return ERRORMSG("GetAddress()  : %s", std::get<2>(ret));
 
