@@ -2192,7 +2192,6 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 
 	Object retObj;
 
-	vector<uint256> vAllTxHash;
 	assert(pwalletMain != NULL);
 	{
 		Array ComfirmTx;
@@ -2207,7 +2206,6 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 		Array UnComfirmTx;
 		CAccountViewCache view(*pAccountViewTip, true);
 		for (auto const &wtx : pwalletMain->UnConfirmTx) {
-			vAllTxHash.push_back(wtx.first);
 			Object objtx = GetTxDetail(wtx.first, false);
 			UnComfirmTx.push_back(objtx);
 		}
