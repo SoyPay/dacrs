@@ -1381,18 +1381,16 @@ int64_t CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 //				}
 			}
 		} else if (Sys.PC == 0x0008) {
-				INT8U result=GetExRam(0xEFFD);
-				if(result == 0x01)
-				{
-					return step;
-				}
-				return 0;
+			INT8U result = GetExRam(0xEFFD);
+			if (result == 0x01) {
+				return step;
 			}
-//		//// for test
-//			if (maxstep != 0 && step > maxstep) {
-//
-//				return -1;		//force return
-//			}
+			return 0;
+		}
+		if (maxstep != 0 && step >= MAX_BLOCK_RUN_STEP){//(step > maxstep || step >= MAX_BLOCK_RUN_STEP)) {
+
+			return -1;		//force return
+		}
 	}
 
 	return 1;

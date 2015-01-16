@@ -91,13 +91,10 @@ tuple<bool, uint64_t, string> CVmScriptRun::run(shared_ptr<CBaseTransaction>& Tx
 	if (0 == step) {
 		return std::make_tuple(false, 0, string("VmScript run Failed\n"));
 	} else if (-1 == step) {
-		return std::make_tuple(false, 0, string("the fee not enough \n"));
-	} else {
-		if (step > MAX_BLOCK_RUN_STEP) {
-			return std::make_tuple(false, 0, string("execure tx contranct run step exceed the max step limit\n"));
-		}
-		uRunStep = step;
+		return std::make_tuple(false, 0, string("execure tx contranct run step exceed the max step limit\n"));
 	}
+
+	uRunStep = step;
 	LogPrint("CONTRACT_TX", "tx:%s,step:%ld\n", tx->ToString(view), step);
 	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
 	CDataStream Contractstream(*retData.get(), SER_DISK, CLIENT_VERSION);
