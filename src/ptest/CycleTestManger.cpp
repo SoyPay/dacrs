@@ -18,6 +18,9 @@
 #include "json/json_spirit_writer_template.h"
 #include "CDarkAndAnony.h"
 #include "rpcclient.h"
+
+#include "CycleP2PBet_test.h"
+
 using namespace std;
 using namespace boost;
 using namespace json_spirit;
@@ -30,11 +33,12 @@ class CycleTestManger {
 
 public:
 	CycleTestManger(){
-		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
+//		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
 //		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
 //		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
 //		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
-		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
+//		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
+		vTest.push_back(std::make_shared<CTestBetTx>()) ;
 //		string dir = SysCfg().GetArg("rsetdir", "d:\\bitcoin");
 //		if (dir != "d:\\bitcoin") {
 //			char *argv[] = { "progname", (char*)dir.c_str() };

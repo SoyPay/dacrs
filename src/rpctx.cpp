@@ -2192,7 +2192,6 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 
 	Object retObj;
 
-	vector<uint256> vAllTxHash;
 	assert(pwalletMain != NULL);
 	{
 		Array ComfirmTx;
@@ -2207,13 +2206,44 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 		Array UnComfirmTx;
 		CAccountViewCache view(*pAccountViewTip, true);
 		for (auto const &wtx : pwalletMain->UnConfirmTx) {
-			vAllTxHash.push_back(wtx.first);
 			Object objtx = GetTxDetail(wtx.first, false);
 			UnComfirmTx.push_back(objtx);
 		}
 		retObj.push_back(Pair("UnConfirmed", UnComfirmTx));
 	}
 
+	return retObj;
+}
+
+Value getbetrandomdata(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 0) {
+		string msg = "getbetrandomdata \"addr\" showtxdetail\n"
+				"\nlistaddrtx\n"
+				"\nArguments:\n"
+				"\nResult:\n"
+				"\"txhash\"\n"
+				"\nExamples:\n" + HelpExampleCli("getbetrandomdata", "") + "\nAs json rpc call\n"
+				+ HelpExampleRpc("getbetrandomdata", "");
+		throw runtime_error(msg);
+	}
+
+	unsigned char szDataA[5] = {0};
+	unsigned char szDataB[5] = {0};
+	size_t nSize = sizeof(szDataA)/sizeof(szDataA[0]);
+	RAND_bytes(szDataA, nSize);
+	RAND_bytes(szDataB, nSize);
+	uint256 hashA = Hash(szDataA,szDataA+nSize);
+	uint256 hashB = Hash(szDataB,szDataB+nSize);
+
+	Object retObj;
+	string strDataA = strprintf("%d,%d,%d,%d,%d",static_cast<int>(szDataA[0]),static_cast<int>(szDataA[1]),
+			static_cast<int>(szDataA[2]),static_cast<int>(szDataA[3]),static_cast<int>(szDataA[4]));
+	string strDataB = strprintf("%d,%d,%d,%d,%d",static_cast<int>(szDataB[0]),static_cast<int>(szDataB[1]),
+				static_cast<int>(szDataB[2]),static_cast<int>(szDataB[3]),static_cast<int>(szDataB[4]));
+	retObj.push_back(Pair("dataA", strDataA));
+	retObj.push_back(Pair("HashA", hashA.ToString()));
+	retObj.push_back(Pair("dataB", strDataB));
+	retObj.push_back(Pair("HashB", hashB.ToString()));
 	return retObj;
 }
 
