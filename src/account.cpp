@@ -423,11 +423,15 @@ bool CScriptDBViewCache::GetData(const vector<unsigned char> &vKey, vector<unsig
 		if (!mapDatas[vKey].empty()) {
 			vValue = mapDatas[vKey];
 			return true;
-		} else
+		} else {
+			LogPrint("vm", "line:%s\n", "427");
 			return false;
+		}
 	}
-	if (!pBase->GetData(vKey, vValue))
+	if (!pBase->GetData(vKey, vValue)) {
+		LogPrint("vm", "line:%s\n", "432");
 		return false;
+	}
 	mapDatas[vKey] = vValue;
 	return true;
 }
@@ -949,19 +953,30 @@ bool CScriptDBViewCache::EraseScriptData(const vector<unsigned char> &vScriptId,
 
 	if (HaveScriptData(vScriptId, vScriptKey)) {
 		int nCount(0);
-		if(!GetScriptDataCount(vScriptId, nCount))
+		if (!GetScriptDataCount(vScriptId, nCount)) {
+			LogPrint("vm", "line:%s\n", "953");
 			return false;
+		}
 		--nCount;
-		if (!SetScriptDataCount(vScriptId, nCount))
+		if (!SetScriptDataCount(vScriptId, nCount)) {
+			LogPrint("vm", "line:%s\n", "958");
 			return false;
+		}
+
 	}
 
 	vector<unsigned char> vValue;
-	if(!GetData(scriptKey, vValue))
+	if (!GetData(scriptKey, vValue)) {
+		LogPrint("vm", "line:%s\n", "966");
 		return false;
+	}
+
 	operLog = CScriptDBOperLog(scriptKey, vValue);
-	if(!EraseKey(scriptKey))
+	if (!EraseKey(scriptKey)) {
+		LogPrint("vm", "line:%s\n", "972");
 		return false;
+	}
+
 
 	return true;
 }

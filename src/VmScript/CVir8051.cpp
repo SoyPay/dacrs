@@ -741,6 +741,7 @@ static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
     if(!GetData(ipara,retdata) ||retdata.size() != 1)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+    	LogPrint("vm", "GetData return error!\n");
     	return std::make_tuple (false, tem);
     }
 	CRegID scriptid = pVmScriptRun->GetScriptRegID();
@@ -750,6 +751,7 @@ static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 
 	CScriptDBOperLog operlog;
 	if (!scriptDB->EraseScriptData(scriptid, *retdata.at(0), operlog)) {
+		LogPrint("vm", "ExDeleteDataDBFunc error key:%s!\n",HexStr(*retdata.at(0)));
 		flag = false;
 	} else {
 		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
@@ -904,6 +906,9 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
 	set<CScriptDBOperLog> setOperLog;
 	flag = scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid,index,vScriptKey,vValue,nHeight,setOperLog);
 
+	if(flag){
+		LogPrint("vm", "Read key:%s,value:%s!\n",HexStr(vScriptKey),HexStr(vValue));
+	}
 	if (!setOperLog.empty()) {
 		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
 		for(auto &item : setOperLog)
