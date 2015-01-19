@@ -1507,7 +1507,7 @@ Object CAccount::ToJosnObj() const
 	Object obj;
 	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "IN_FREEZD_FUND",
 			"OUT_FREEZD_FUND", "SELF_FREEZD_FUND" };
-	obj.push_back(Pair("height", chainActive.Height()));
+//	obj.push_back(Pair("height", chainActive.Height()));
 	obj.push_back(Pair("Address",     keyID.ToAddress()));
 	obj.push_back(Pair("KeyID",     keyID.ToString()));
 	obj.push_back(Pair("RegID",     regID.ToString()));
@@ -1554,12 +1554,26 @@ Object CAccount::ToJosnObj() const
 	}
 	obj.push_back(Pair("SelfFreeze",     SelfFreeze));
 	Array listAuthorize;
+
+
+
+	vector<CAuthorizate> vAuthorizate;
+	pScriptDBTip->GetAccountAuthor(regID, vAuthorizate);
+
+	Array array;
+	for(auto &item : vAuthorizate) {
+		array.push_back(item.ToJosnObj());
+	}
+
+
+
+
 //	Object authorizateObj;
 //	for(auto & item : (*pMapAuthorizate)) {
 //		authorizateObj.push_back(Pair(HexStr(item.first), item.second.ToJosnObj()));
 //		listAuthorize.push_back(authorizateObj);
 //	}
-//	obj.push_back(Pair("Authorizates", listAuthorize));
+	obj.push_back(Pair("Authorizates", array));
 	return obj;
 }
 

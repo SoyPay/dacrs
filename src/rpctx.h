@@ -50,5 +50,6 @@ extern Value getscriptdata(const Array& params, bool fHelp);
 extern Value saveblocktofile(const Array& params, bool fHelp);
 extern Value getscriptdbsize(const Array& params, bool fHelp);
 extern Value getalltxinfo(const Array& params, bool fHelp);
+extern Value getbetrandomdata(const Array& params, bool fHelp);
 extern Value listauthor(const Array& params, bool fHelp);
 #endif /* RPCTX_H_ */
