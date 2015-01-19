@@ -128,7 +128,7 @@ public:
 						"04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
 		nDefaultPort = 8668;
 		nRPCPort = 8669;
-		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 20);        //00 00 0f ff ff
+		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 19);        //00 00 1f ff ff
 		nSubsidyHalvingInterval = 210000;
 
 		// Build the genesis block. Note that the output of the genesis coinbase cannot
@@ -152,7 +152,7 @@ public:
 		genesis.hashMerkleRoot = genesis.BuildMerkleTree();
 		genesis.nVersion = 1;
 		genesis.nTime = 1231006505;
-		genesis.nBits = 0x1e0fffff;        //00 00 0f ff
+		genesis.nBits = 0x1e1fffff;        //00 00 1f ff
 		genesis.nNonce = 888;
 		genesis.nHeight = 0;
 		genesis.vSignature.clear();
@@ -169,7 +169,8 @@ public:
 //		assert(hashGenesisBlock == uint256("0x0d48e88dca01697d10e0fe8f1981f94db1f5e525d5a0e0acf22919af23daed60"));
 //		assert(genesis.hashMerkleRoot == uint256("04b173fc873505d69f5f2a86aa8d7207abe7e0ffa63d786ff230f4a946f5a8255"));
 
-        vSeeds.push_back(CDNSSeedData("dspay.org", "seed_cn_0.dspay.org"));
+        vSeeds.push_back(CDNSSeedData("soypay.org.cn", "seed_cn_0.dspay.org"));
+        vSeeds.push_back(CDNSSeedData("soypay.org.us", "seed_us_0.dspay.org"));
 
 		base58Prefixes[PUBKEY_ADDRESS] = {0};
 		base58Prefixes[SCRIPT_ADDRESS] = {5};
