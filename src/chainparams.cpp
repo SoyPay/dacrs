@@ -128,7 +128,7 @@ public:
 						"04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
 		nDefaultPort = 8668;
 		nRPCPort = 8669;
-		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 19);        //00 00 1f ff ff
+		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 18);        //00 00 3f ff ff
 		nSubsidyHalvingInterval = 210000;
 
 		// Build the genesis block. Note that the output of the genesis coinbase cannot
@@ -152,7 +152,7 @@ public:
 		genesis.hashMerkleRoot = genesis.BuildMerkleTree();
 		genesis.nVersion = 1;
 		genesis.nTime = 1231006505;
-		genesis.nBits = 0x1e1fffff;        //00 00 1f ff
+		genesis.nBits = 0x1e3fffff;        //00 00 3f ff
 		genesis.nNonce = 888;
 		genesis.nHeight = 0;
 		genesis.vSignature.clear();
