@@ -954,14 +954,17 @@ bool CScriptDBViewCache::EraseScriptData(const vector<unsigned char> &vScriptId,
 		--nCount;
 		if (!SetScriptDataCount(vScriptId, nCount))
 			return false;
+
 	}
 
 	vector<unsigned char> vValue;
 	if(!GetData(scriptKey, vValue))
 		return false;
+
 	operLog = CScriptDBOperLog(scriptKey, vValue);
 	if(!EraseKey(scriptKey))
 		return false;
+
 
 	return true;
 }
