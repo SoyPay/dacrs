@@ -503,7 +503,9 @@ public:
 		GetAccountInfo("010000000100");
 		GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
 		temp1 = GetAccountInfo("mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y");
-		BOOST_CHECK_EQUAL(GetValue(temp1,"value"),150);
+		BOOST_CHECK_EQUAL(GetValue(temp1,"value"),100);
+		temp1 = GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
+		BOOST_CHECK_EQUAL(GetValue(temp1,"value"),50);
 	}
 
 	void CheckAnony()
