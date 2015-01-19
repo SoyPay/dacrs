@@ -1468,7 +1468,7 @@ bool static WriteChainState(CValidationState &state) {
             return state.Abort(_("Failed to write to account database"));
         if (!pTxCacheTip->Flush())
         	return state.Abort(_("Failed to write to tx cache database"));
-        if (! pScriptDBTip->Flush())
+        if (!pScriptDBTip->Flush())
         	return state.Abort(_("Failed to write to script db database"));
 
         nLastWrite = GetTimeMicros();

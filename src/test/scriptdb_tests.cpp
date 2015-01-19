@@ -6,11 +6,31 @@
 #include  "boost/filesystem/operations.hpp"
 #include  "boost/filesystem/path.hpp"
 using namespace std;
+CScriptDBViewCache *pscriptDBView = NULL;
 CScriptDBViewCache *pTestView = NULL;
 CScriptDB *pTestDB = NULL;
+vector< vector<unsigned char> > arrKey;
+vector<unsigned char> vKey1 = {0x01, 0x02, 0x01};
+vector<unsigned char> vKey2 = {0x01, 0x02, 0x02};
+vector<unsigned char> vKey3 = {0x01, 0x02, 0x03};
+vector<unsigned char> vKey4 = {0x01, 0x02, 0x04};
+vector<unsigned char> vKey5 = {0x01, 0x02, 0x05};
+vector<unsigned char> vKey6 = {0x01, 0x02, 0x06};
+vector<unsigned char> vKeyValue = {0x06, 0x07, 0x08};
+
+int nCount = 0;
 void init() {
 	 pTestDB = new CScriptDB("testdb",size_t(4<<20), false , true);
-	 pTestView=  new CScriptDBViewCache(*pTestDB, false);
+	 pTestView =  new CScriptDBViewCache(*pTestDB, false);
+	 //穷举数据分别位于scriptDBView pTestView, pTestDB 三级分布数据测试数据库中
+	 pscriptDBView = new CScriptDBViewCache(*pTestView, true);
+
+	 arrKey.push_back(vKey1);
+	 arrKey.push_back(vKey2);
+	 arrKey.push_back(vKey3);
+	 arrKey.push_back(vKey4);
+	 arrKey.push_back(vKey5);
+	 arrKey.push_back(vKey6);
 }
 
 void closedb() {
@@ -70,7 +90,89 @@ void testscriptdb() {
 	BOOST_CHECK(pTestView->Flush());
 }
 
+void settodb(int nType, vector<unsigned char> &vKey, vector<unsigned char> &vScriptData) {
+	vector<unsigned char> vScriptId = {0x01,0x00,0x00,0x00,0x02,0x00};
+	CScriptDBOperLog operlog;
+	CRegID regScriptId(vScriptId);
+	if(0==nType) {
+		BOOST_CHECK(pscriptDBView->SetScriptData(regScriptId, vKey, vScriptData, 100, operlog));
+		BOOST_CHECK(pscriptDBView->Flush());
+		BOOST_CHECK(pTestView->Flush());
+	}else if(1==nType) {
+		BOOST_CHECK(pscriptDBView->SetScriptData(regScriptId, vKey, vScriptData, 100, operlog));
+		BOOST_CHECK(pscriptDBView->Flush());
+	}else {
+		BOOST_CHECK(pscriptDBView->SetScriptData(regScriptId, vKey, vScriptData, 100, operlog));
+	}
+}
 
+void cleandb(int nType, vector<unsigned char> vKey) {
+	vector<unsigned char> vScriptId = {0x01,0x00,0x00,0x00,0x02,0x00};
+	CRegID regScriptId(vScriptId);
+	CScriptDBOperLog operlog;
+	if(0==nType) {
+		BOOST_CHECK(pscriptDBView->EraseScriptData(regScriptId, vKey, operlog));
+		BOOST_CHECK(pscriptDBView->Flush());
+		BOOST_CHECK(pTestView->Flush());
+	}else if(1==nType) {
+		BOOST_CHECK(pscriptDBView->EraseScriptData(regScriptId, vKey, operlog));
+		BOOST_CHECK(pscriptDBView->Flush());
+	}else {
+		BOOST_CHECK(pscriptDBView->EraseScriptData(regScriptId, vKey, operlog));
+	}
+}
+
+void traversaldb(CScriptDBViewCache *pScriptDB, bool needEqual) {
+	assert(pScriptDB!=NULL);
+	vector< vector<unsigned char> > traversalKey;
+	int height(0);
+	int curheight(0);
+	vector<unsigned char> vKey;
+	vector<unsigned char> vScript;
+	int nValidHeight(0);
+	set<CScriptDBOperLog> setOperLog;
+	vector<unsigned char> vScriptId = {0x01,0x00,0x00,0x00,0x02,0x00};
+	CRegID regScriptId(vScriptId);
+	bool ret = pScriptDB->GetScriptData(curheight,regScriptId, 0, vKey, vScript, nValidHeight, setOperLog);
+	int nType(0);
+	if(ret)  {
+		traversalKey.push_back(vKey);
+		vector<unsigned char> dataKey = { 'd', 'a', 't', 'a' };
+		dataKey.insert(dataKey.end(), regScriptId.GetVec6().begin(), regScriptId.GetVec6().end());
+		dataKey.push_back('_');
+		dataKey.insert(dataKey.end(), vKey.begin(), vKey.end());
+		if(pscriptDBView->mapDatas.count(dataKey)) {
+			nType = 0;
+		}else if(pTestView->mapDatas.count(dataKey)) {
+			nType = 1;
+		}else {
+			nType = 2;
+		}
+		cout << "script key:" << HexStr(vKey) <<" data at level:"<< nType<< endl;
+	}
+
+	while(ret) {
+		ret = pScriptDB->GetScriptData(curheight,regScriptId, 1, vKey, vScript, nValidHeight, setOperLog);
+		if(ret) {
+			vector<unsigned char> dataKey = { 'd', 'a', 't', 'a' };
+			dataKey.insert(dataKey.end(), regScriptId.GetVec6().begin(), regScriptId.GetVec6().end());
+			dataKey.push_back('_');
+			dataKey.insert(dataKey.end(), vKey.begin(), vKey.end());
+			if(pscriptDBView->mapDatas.count(dataKey)) {
+				nType = 0;
+			}else if(pTestView->mapDatas.count(dataKey)) {
+				nType = 1;
+			}else {
+				nType = 2;
+			}
+			traversalKey.push_back(vKey);
+			cout << "script key:" << HexStr(vKey) <<" data at level:"<< nType<< endl;
+		}
+	}
+	if(needEqual)
+		BOOST_CHECK(traversalKey == arrKey);
+	cout << "=======================traversaldb end======="<<++nCount<<"==============================="<<endl;
+}
 void testscriptdatadb() {
 	vector<unsigned char> vScriptId = {0x01,0x00,0x00,0x00,0x02,0x00};
 //  vector<unsigned char> vScriptKey = {0x01,0x00,0x02,0x03,0x04,0x05,0x06,0x07};
@@ -97,22 +199,81 @@ void testscriptdatadb() {
 	BOOST_CHECK(pTestView->EraseScriptData(regScriptId, vScriptKey3, operlog));
 	BOOST_CHECK(pTestView->EraseScriptData(regScriptId, vScriptKey2, operlog));
 
+	traversaldb(pTestView, false);
+
+	BOOST_CHECK(pTestView->EraseScriptData(regScriptId, vScriptKey, operlog));
+	BOOST_CHECK(pTestView->EraseScriptData(regScriptId, vScriptKey1, operlog));
+	BOOST_CHECK(pTestView->EraseScriptData(regScriptId, vScriptKey4, operlog));
+	BOOST_CHECK(pTestView->EraseScriptData(regScriptId, vScriptKey5, operlog));
+	BOOST_CHECK(pTestView->Flush());
+
+//	for(int a1=0; a1<3; ++a1) {
+//		settodb(a1, vKey1, vKeyValue);
+//		for(int a2=0; a2<3; ++a2) {
+//			settodb(a2, vKey2, vKeyValue);
+//			for(int a3=0; a3<3; ++a3) {
+//				settodb(a3, vKey3, vKeyValue);
+//				for(int a4=0; a4<3; ++a4) {
+//					settodb(a4, vKey4, vKeyValue);
+//					for(int a5=0; a5<3; ++a5) {
+//						settodb(a5, vKey5, vKeyValue);
+//						for(int a6=0; a6<3; ++a6){
+//							settodb(a6, vKey6, vKeyValue);
+//							traversaldb(pscriptDBView, true);
+//							cleandb(a6, vKey6);
+//						}
+//						cleandb(a5, vKey5);
+//					}
+//					cleandb(a4, vKey4);
+//				}
+//				cleandb(a3, vKey3);
+//			}
+//			cleandb(a2, vKey2);
+//		}
+//		cleandb(a1, vKey1);
+//	}
+	for(int i=0; i<5; ++i) {
+		for(int ii= i+1; ii<6; ++ii) {
+			settodb(0, arrKey[i], vKeyValue);
+			settodb(0, arrKey[ii], vKeyValue);
+			for(int j=0; j<5; ++j) {
+				for(int jj=j+1; jj<6; ++jj) {
+					if(i!=j && i!=jj && ii!=j && ii != jj) {
+						settodb(1, arrKey[j], vKeyValue);
+						settodb(1, arrKey[jj], vKeyValue);
+						for(int k=0; k<5; ++k) {
+							for(int kk=k+1; kk<6; ++kk) {
+								if(k != i && k != ii &&
+										kk != i && kk !=ii
+										&& k !=j && k != jj
+											&& kk != j && kk != jj) {
+									settodb(2, arrKey[k], vKeyValue);
+									settodb(2, arrKey[kk], vKeyValue);
+									traversaldb(pscriptDBView, true);
+									cleandb(2, arrKey[k]);
+									cleandb(2, arrKey[kk]);
+								}
+							}
+						}
+						cleandb(1, arrKey[j]);
+						cleandb(1, arrKey[jj]);
+						}
+					}
+				}
+			cleandb(0, arrKey[i]);
+			cleandb(0, arrKey[ii]);
+			}
+	}
+
+
+
 	int height(0);
 	int curheight(0);
 	vector<unsigned char> vKey;
 	vector<unsigned char> vScript;
 	int nValidHeight(0);
 	set<CScriptDBOperLog> setOperLog;
-	bool ret = pTestView->GetScriptData(curheight,regScriptId, 0, vKey, vScript, nValidHeight, setOperLog);
-	if(ret) cout << "script key:" << HexStr(vKey) << endl;
-	while(ret) {
-		ret = pTestView->GetScriptData(curheight,regScriptId, 1, vKey, vScript, nValidHeight, setOperLog);
-		if(ret) cout << "script key:" << HexStr(vKey) << endl;
-	}
-	BOOST_CHECK(pTestView->EraseScriptData(regScriptId, vScriptKey, operlog));
-	BOOST_CHECK(pTestView->EraseScriptData(regScriptId, vScriptKey1, operlog));
-	BOOST_CHECK(pTestView->EraseScriptData(regScriptId, vScriptKey4, operlog));
-	BOOST_CHECK(pTestView->EraseScriptData(regScriptId, vScriptKey5, operlog));
+
 
 	BOOST_CHECK(pTestView->SetScriptData(regScriptId, vScriptKey, vScriptData, 100, operlog));
 //	int height = 0;
