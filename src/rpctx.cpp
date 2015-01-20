@@ -271,7 +271,11 @@ Value registaccounttx(const Array& params, bool fHelp) {
 		CUserID userId = keyid;
 		if (view.GetAccount(userId, account)) {
 //			balance = account.GetRawBalance(chainActive.Tip()->nHeight);
-			account.GetRawBalance(chainActive.Tip()->nHeight);
+			uint64_t balance = account.GetRawBalance(chainActive.Tip()->nHeight);
+			if(balance < fee)
+			{
+				throw JSONRPCError(RPC_WALLET_ERROR, "Account do not have enough momeny!");
+			}
 		}
 
 		if (account.IsRegister()) {
