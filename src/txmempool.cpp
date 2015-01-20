@@ -112,6 +112,9 @@ bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &en
 		return state.Invalid(ERRORMSG("CheckTxInMemPool() : txhash=%s beyond the scope of valid height ", hash.GetHex()),
 				REJECT_INVALID, "tx-invalid-height");
 	}
+	if (CONTRACT_TX == entry.GetTx()->nTxType) {
+		LogPrint("vm", "tx hash=%s CheckTxInMemPool run contract\n", entry.GetTx()->GetHash().GetHex());
+	}
 	if (!entry.GetTx()->UpdateAccount(0, *pAccountViewCache, state, txundo, chainActive.Tip()->nHeight + 1,
 			txCacheTemp, *pScriptDBViewCache)) {
 		return false;

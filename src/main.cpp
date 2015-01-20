@@ -1365,6 +1365,10 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 						ERRORMSG("ConnectBlock() : txhash=%s beyond the scope of valid height",
 								pBaseTx->GetHash().GetHex()), REJECT_INVALID, "tx-invalid-height");
 			}
+
+			if (CONTRACT_TX == pBaseTx->nTxType) {
+				LogPrint("vm", "tx hash=%s ConnectBlock run contract\n", pBaseTx->GetHash().GetHex());
+			}
 			CTxUndo txundo;
 			if(!pBaseTx->UpdateAccount(i, view, state, txundo, pindex->nHeight, txCache, scriptDBCache)) {
 				return false;
