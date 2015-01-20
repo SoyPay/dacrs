@@ -13,7 +13,10 @@
 #include "tx.h"
 
 #include <boost/assign/list_of.hpp>
-#include <boost/algorithm/string/case_conv.hpp> // for to_lower()#include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()#include <boost/filesystem.hpp>using namespace boost::assign;
+#include <boost/algorithm/string/case_conv.hpp> // for to_lower()
+#include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()
+#include <boost/filesystem.hpp>
+using namespace boost::assign;
 using namespace std;
 
 map<string, string> CBaseParams::m_mapArgs;

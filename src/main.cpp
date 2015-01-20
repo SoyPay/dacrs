@@ -998,7 +998,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 //		int64_t nTargetSpacing = 20;//SysCfg().GetTargetSpacing(); //nStakeTargetSpacing;
 //		int64_t nInterval = SysCfg().GetInterval();//SysCfg().GetTargetTimespan() / nTargetSpacing;
 
-		int64_t nTargetSpacing = 20;//nStakeTargetSpacing;
+		int64_t nTargetSpacing = SysCfg().GetTargetSpacing();//nStakeTargetSpacing;
 		int64_t nInterval = SysCfg().GetTargetTimespan() / nTargetSpacing;
 
 		bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
