@@ -306,6 +306,7 @@ public:
 		genesis.nNonce = 888;
 		hashGenesisBlock = genesis.GetHash();
 		nDefaultPort = 18666;
+		nTargetSpacing = 20;
 		strDataDir = "regtest";
 //		{
 //			CBigNum bnTarget;
@@ -569,9 +570,8 @@ CBaseParams::CBaseParams() {
 	nTimeBestReceived = 0;
 	nScriptCheckThreads = 0;
 	nViewCacheSize = 2000000;
-	nTargetSpacing = 60*10; //8;  //
-	nTargetTimespan = 30 * 60;//20 * 3;  //
-	nInterval = nTargetTimespan / nTargetSpacing;
+	nTargetSpacing = 60;
+	nTargetTimespan = 30 * 60;
 	nMaxCoinDay = 30 * 24 * 60 * 60;
 	nSubsidyHalvingInterval = 0;
 	paytxfee = 200000;
