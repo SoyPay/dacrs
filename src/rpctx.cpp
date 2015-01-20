@@ -1605,11 +1605,11 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		int listcount = dbsize - 1;     /// 显示的条数
 		int count = 0;                  /// 遍历数据库要跳过的条数
 		if (dbsize >= pagesize * index) {
-			count = pagesize * (index - 1) - 1;
+			count = pagesize * index - 1;
 			listcount = pagesize ;
-		} else if (dbsize < pagesize * index && dbsize > index) {
+		} else if (dbsize < pagesize * index && dbsize > pagesize) {
 			int preindex = dbsize / pagesize;
-			count = pagesize * (preindex - 1) - 1;
+			count = pagesize * preindex - 1;
 			listcount = dbsize - count;
 		}else{
 			listcount = dbsize -1 ;
