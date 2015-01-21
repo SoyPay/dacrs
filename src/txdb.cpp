@@ -381,7 +381,8 @@ bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, v
 			}
 			else
 			{
-				break;
+				delete pcursor;
+				return false;
 			}
 		}catch (std::exception &e) {
 				return ERRORMSG("%s : Deserialize or I/O error - %s", __func__, e.what());
@@ -453,7 +454,8 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 				}
 				pcursor->Next();
 			} else {
-				break;
+				delete pcursor;
+				return false;
 			}
 		} catch (std::exception &e) {
 			return ERRORMSG("%s : Deserialize or I/O error - %s\n", __func__, e.what());
