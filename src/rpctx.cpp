@@ -269,21 +269,17 @@ Value registaccounttx(const Array& params, bool fHelp) {
 
 //		uint64_t balance;
 		CUserID userId = keyid;
-		if (view.GetAccount(userId, account)) {
-//			balance = account.GetRawBalance(chainActive.Tip()->nHeight);
-			uint64_t balance = account.GetRawBalance(chainActive.Tip()->nHeight);
-			if(balance < fee)
-			{
-				throw JSONRPCError(RPC_WALLET_ERROR, "Account do not have enough momeny!");
-			}
+		if (!view.GetAccount(userId, account)) {
+				throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account balance is insufficient.");
 		}
 
 		if (account.IsRegister()) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account is already registered");
 		}
-//		if (balance < fee) {
-//			throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account balance is insufficient.");
-//		}
+		uint64_t balance = account.GetRawBalance(chainActive.Tip()->nHeight);
+		if (balance < fee) {
+			throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account balance is insufficient.");
+		}
 
 		//pubkey
 		CPubKey pubkey;
@@ -2287,7 +2283,7 @@ Value listauthor(const Array& params, bool fHelp) {
 		CKeyID keyid;
 		CUserID userId;
 		string addr = params[0].get_str();
-		if(CRegID::IsRegIdStr(addr)) {
+		if(!CRegID::IsRegIdStr(addr)) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 		}
 		CRegID regId;
