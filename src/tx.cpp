@@ -1562,7 +1562,7 @@ Object CAccount::ToJosnObj() const
 	Array array;
 	for(auto &item : vAuthorizate) {
 		Object obj = item.second.ToJosnObj();
-		obj.push_back(Pair("scriptId", item.first.ToString()));
+		obj.push_back(Pair("appid", item.first.ToString()));
 		array.push_back(obj);
 	}
 
