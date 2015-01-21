@@ -269,17 +269,17 @@ Value registaccounttx(const Array& params, bool fHelp) {
 
 //		uint64_t balance;
 		CUserID userId = keyid;
-		if (view.GetAccount(userId, account)) {
-//			balance = account.GetRawBalance(chainActive.Tip()->nHeight);
-			account.GetRawBalance(chainActive.Tip()->nHeight);
+		if (!view.GetAccount(userId, account)) {
+				throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account balance is insufficient.");
 		}
 
 		if (account.IsRegister()) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account is already registered");
 		}
-//		if (balance < fee) {
-//			throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account balance is insufficient.");
-//		}
+		uint64_t balance = account.GetRawBalance(chainActive.Tip()->nHeight);
+		if (balance < fee) {
+			throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account balance is insufficient.");
+		}
 
 		//pubkey
 		CPubKey pubkey;
@@ -764,11 +764,12 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	uint64_t fee = params[3].get_uint64();
 	uint32_t height = params[4].get_int();
 
-	uint32_t nAuthorizeTime;
-	uint64_t nMaxMoneyPerTime;
-	uint64_t nMaxMoneyTotal;
-	uint64_t nMaxMoneyPerDay;
+	uint32_t nAuthorizeTime(0);
+	uint64_t nMaxMoneyPerTime(0);
+	uint64_t nMaxMoneyTotal(0);
+	uint64_t nMaxMoneyPerDay(0);
 	vector<unsigned char> vUserDefine;
+	vUserDefine.clear();
 
 	if (params.size() > 5) {
 		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type));
@@ -804,7 +805,6 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	if (!GetKeyId(params[0].get_str(),keyid)) {
 		throw runtime_error("in registerscripttx :send address err\n");
 	}
-
 
 	assert(pwalletMain != NULL);
 	CRegisterScriptTx tx;
@@ -2283,20 +2283,22 @@ Value listauthor(const Array& params, bool fHelp) {
 		CKeyID keyid;
 		CUserID userId;
 		string addr = params[0].get_str();
-		if(CRegID::IsRegIdStr(addr)) {
+		if(!CRegID::IsRegIdStr(addr)) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 		}
 		CRegID regId;
 		regId.SetRegID(addr);
 
-		vector<CAuthorizate> vAuthorizate;
+		vector<pair<CRegID ,CAuthorizate> >vAuthorizate;
 		if(!pScriptDBTip->GetAccountAuthor(regId, vAuthorizate)) {
 			throw JSONRPCError(RPC_DATABASE_ERROR, "Get Account error.");
 		}
 
 		Array array;
 		for(auto &item : vAuthorizate) {
-			array.push_back(item.ToJosnObj());
+			Object obj = item.second.ToJosnObj();
+			obj.push_back(Pair("appid", item.first.ToString()));
+			array.push_back(obj);
 		}
 		return array;
 }

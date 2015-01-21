@@ -13,7 +13,10 @@
 #include "tx.h"
 
 #include <boost/assign/list_of.hpp>
-#include <boost/algorithm/string/case_conv.hpp> // for to_lower()#include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()#include <boost/filesystem.hpp>using namespace boost::assign;
+#include <boost/algorithm/string/case_conv.hpp> // for to_lower()
+#include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()
+#include <boost/filesystem.hpp>
+using namespace boost::assign;
 using namespace std;
 
 map<string, string> CBaseParams::m_mapArgs;
@@ -128,7 +131,7 @@ public:
 						"04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
 		nDefaultPort = 8668;
 		nRPCPort = 8669;
-		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 18);        //00 00 3f ff ff
+		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 10);        //00 3f ff ff
 		nSubsidyHalvingInterval = 210000;
 
 		// Build the genesis block. Note that the output of the genesis coinbase cannot
@@ -152,7 +155,7 @@ public:
 		genesis.hashMerkleRoot = genesis.BuildMerkleTree();
 		genesis.nVersion = 1;
 		genesis.nTime = 1231006505;
-		genesis.nBits = 0x1e3fffff;        //00 00 3f ff
+		genesis.nBits = 0x1f3fffff;        //00 3f ff
 		genesis.nNonce = 888;
 		genesis.nHeight = 0;
 		genesis.vSignature.clear();
@@ -302,10 +305,12 @@ public:
 		nSubsidyHalvingInterval = 150;
 		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 8);        //00 00 ff ff
 		genesis.nTime = 1296688602;
-		genesis.nBits = 0x1f0000ff;
+		genesis.nBits = 0x1fffffff;
 		genesis.nNonce = 888;
 		hashGenesisBlock = genesis.GetHash();
 		nDefaultPort = 18666;
+		nTargetSpacing = 20;
+		nTargetTimespan = 30 * 20;
 		strDataDir = "regtest";
 //		{
 //			CBigNum bnTarget;
@@ -569,9 +574,8 @@ CBaseParams::CBaseParams() {
 	nTimeBestReceived = 0;
 	nScriptCheckThreads = 0;
 	nViewCacheSize = 2000000;
-	nTargetSpacing = 60*10; //8;  //
-	nTargetTimespan = 30 * 60;//20 * 3;  //
-	nInterval = nTargetTimespan / nTargetSpacing;
+	nTargetSpacing = 60;
+	nTargetTimespan = 30 * 60;
 	nMaxCoinDay = 30 * 24 * 60 * 60;
 	nSubsidyHalvingInterval = 0;
 	paytxfee = 200000;

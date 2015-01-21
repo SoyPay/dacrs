@@ -394,7 +394,7 @@ bool CScriptDBView::GetScriptData(const int nCurBlockHeight, const vector<unsign
 		set<CScriptDBOperLog> &setOperLog) {
 	return false;
 }
-bool CScriptDBView::GetAccountAuthor(const CRegID & acctRegId, vector<CAuthorizate> & vAuthorizate) { return false;}
+bool CScriptDBView::GetAccountAuthor(const CRegID & acctRegId, vector<pair<CRegID, CAuthorizate> > & vAuthorizate) { return false;}
 Object CScriptDBView:: ToJosnObj(string Prefix){
 	Object obj;
 	return obj;
@@ -411,7 +411,7 @@ bool CScriptDBViewBacked::GetScriptData(const int nCurBlockHeight, const vector<
 		set<CScriptDBOperLog> &setOperLog) {
 	return pBase->GetScriptData(nCurBlockHeight, vScriptId, nIndex, vScriptKey, vScriptData, nHeight, setOperLog);
 }
-bool CScriptDBViewBacked::GetAccountAuthor(const CRegID & acctRegId, vector<CAuthorizate> & vAuthorizate) {
+bool CScriptDBViewBacked::GetAccountAuthor(const CRegID & acctRegId, vector<pair<CRegID, CAuthorizate> > & vAuthorizate) {
 	return pBase->GetAccountAuthor(acctRegId, vAuthorizate);
 }
 
@@ -1131,9 +1131,8 @@ bool CScriptDBViewCache::SetAuthorizate(const CRegID &acctRegId, const CRegID &s
 	return SetData(vKey, vValue);
 }
 
-bool CScriptDBViewCache::GetAccountAuthor(const CRegID & acctRegId, vector<CAuthorizate> & vAuthorizate) {
-
-	return true;
+bool CScriptDBViewCache::GetAccountAuthor(const CRegID & acctRegId, vector<pair<CRegID, CAuthorizate> > & vAuthorizate) {
+	return pBase->GetAccountAuthor(acctRegId, vAuthorizate);
 }
 uint256 CTransactionDBView::IsContainTx(const uint256 & txHash) { return std::move(uint256(0)); }
 bool CTransactionDBView::IsContainBlock(const CBlock &block) { return false; }

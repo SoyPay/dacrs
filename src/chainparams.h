@@ -51,7 +51,6 @@ protected:
 	mutable int64_t paytxfee;
 	int64_t nTargetSpacing;
 	int64_t nTargetTimespan;
-	int64_t nInterval;
 	int64_t nMaxCoinDay;
 	mutable unsigned int nScriptCheckThreads;
 	mutable int64_t nViewCacheSize;
@@ -165,9 +164,6 @@ public:
 	}
 	int64_t GetTargetTimespan() const {
 		return nTargetTimespan;
-	}
-	int64_t GetInterval() const {
-		return nInterval;
 	}
 	int64_t GetMaxCoinDay() const {
 		return nMaxCoinDay;

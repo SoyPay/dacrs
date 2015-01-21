@@ -998,7 +998,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 //		int64_t nTargetSpacing = 20;//SysCfg().GetTargetSpacing(); //nStakeTargetSpacing;
 //		int64_t nInterval = SysCfg().GetInterval();//SysCfg().GetTargetTimespan() / nTargetSpacing;
 
-		int64_t nTargetSpacing = 20;//nStakeTargetSpacing;
+		int64_t nTargetSpacing = SysCfg().GetTargetSpacing();//nStakeTargetSpacing;
 		int64_t nInterval = SysCfg().GetTargetTimespan() / nTargetSpacing;
 
 		bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
@@ -1364,6 +1364,10 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 				return state.DoS(100,
 						ERRORMSG("ConnectBlock() : txhash=%s beyond the scope of valid height",
 								pBaseTx->GetHash().GetHex()), REJECT_INVALID, "tx-invalid-height");
+			}
+
+			if (CONTRACT_TX == pBaseTx->nTxType) {
+				LogPrint("vm", "tx hash=%s ConnectBlock run contract\n", pBaseTx->GetHash().GetHex());
 			}
 			CTxUndo txundo;
 			if(!pBaseTx->UpdateAccount(i, view, state, txundo, pindex->nHeight, txCache, scriptDBCache)) {
