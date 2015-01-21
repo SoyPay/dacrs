@@ -137,7 +137,6 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     if(pwallet->mKeyPool.size() == 0){
         CKey  mCkey;
         mCkey.MakeNewKey();
-        CPubKey newKey = mCkey.GetPubKey();
          if (!pwallet->AddKey(mCkey)) {
        		throw runtime_error("add key failed ");
        	}

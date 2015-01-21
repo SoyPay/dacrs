@@ -961,7 +961,7 @@ int64_t GetBlockValue(int nHeight, int64_t nFees)
 unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
 {
 	const CBigNum &bnLimit = SysCfg().ProofOfWorkLimit();
-
+	LogPrint("INFO", "bnLimit:%s\n", bnLimit.getuint256().GetHex());
 		CBigNum bnResult;
 		bnResult.SetCompact(nBase);
 		bnResult *= 2;
@@ -998,7 +998,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 //		int64_t nTargetSpacing = 20;//SysCfg().GetTargetSpacing(); //nStakeTargetSpacing;
 //		int64_t nInterval = SysCfg().GetInterval();//SysCfg().GetTargetTimespan() / nTargetSpacing;
 
-		int64_t nTargetSpacing = 20;//nStakeTargetSpacing;
+		int64_t nTargetSpacing = SysCfg().GetTargetSpacing();//nStakeTargetSpacing;
 		int64_t nInterval = SysCfg().GetTargetTimespan() / nTargetSpacing;
 
 		bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
@@ -1365,6 +1365,10 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 						ERRORMSG("ConnectBlock() : txhash=%s beyond the scope of valid height",
 								pBaseTx->GetHash().GetHex()), REJECT_INVALID, "tx-invalid-height");
 			}
+
+			if (CONTRACT_TX == pBaseTx->nTxType) {
+				LogPrint("vm", "tx hash=%s ConnectBlock run contract\n", pBaseTx->GetHash().GetHex());
+			}
 			CTxUndo txundo;
 			if(!pBaseTx->UpdateAccount(i, view, state, txundo, pindex->nHeight, txCache, scriptDBCache)) {
 				return false;
@@ -1468,7 +1472,7 @@ bool static WriteChainState(CValidationState &state) {
             return state.Abort(_("Failed to write to account database"));
         if (!pTxCacheTip->Flush())
         	return state.Abort(_("Failed to write to tx cache database"));
-        if (! pScriptDBTip->Flush())
+        if (!pScriptDBTip->Flush())
         	return state.Abort(_("Failed to write to script db database"));
 
         nLastWrite = GetTimeMicros();
@@ -2224,6 +2228,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
         if (bnNewBlock > bnRequired)
         {
+        	ERRORMSG("bnNewBlock:%s, bnRequired:%s", bnNewBlock.getuint256().GetHex(), bnRequired.getuint256().GetHex());
             return state.DoS(100, ERRORMSG("ProcessBlock() : block with too little proof-of-work"),
                              REJECT_INVALID, "bad-diffbits");
         }

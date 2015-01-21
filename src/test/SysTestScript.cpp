@@ -301,7 +301,7 @@ public:
 	}
 	bool CreateScriptAndCheck()
 	{
-		CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
+		CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
 
 		CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","scripttest.bin");
 
@@ -503,7 +503,9 @@ public:
 		GetAccountInfo("010000000100");
 		GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
 		temp1 = GetAccountInfo("mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y");
-		BOOST_CHECK_EQUAL(GetValue(temp1,"value"),150);
+		BOOST_CHECK_EQUAL(GetValue(temp1,"value"),100);
+		temp1 = GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
+		BOOST_CHECK_EQUAL(GetValue(temp1,"value"),50);
 	}
 
 	void CheckAnony()
@@ -657,7 +659,7 @@ public:
 	}
 	string CreatWriteTx(string &hash)
 	{
-		string shash = CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
+		string shash = CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
 		Value ret =GetScriptID(shash);
 		string scriptid;
 		BOOST_CHECK(GetHashFromCreatedTx(ret,scriptid));
@@ -811,19 +813,19 @@ BOOST_FIXTURE_TEST_SUITE(sysScript_test,CSysScriptTest)
 BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 {
 //	//// some debug
-//	ResetEnv();
-//	BOOST_CHECK(0==chainActive.Height());
-//	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
-//	CheckSdk();
-//
-//	ResetEnv();
-//	BOOST_CHECK(0==chainActive.Height());
-//	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","soypay_test.bin");
-//	CheckRollBack();
-//
-//	ResetEnv();
-//	BOOST_CHECK(0==chainActive.Height());
-//	CheckScriptAccount();
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
+	CheckSdk();
+
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
+	CheckRollBack();
+
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	CheckScriptAccount();
 
 	ResetEnv();
 	BOOST_CHECK(0==chainActive.Height());

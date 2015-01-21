@@ -466,12 +466,12 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 		return false;
 	return true;
 }
-bool CScriptDB::GetAccountAuthor(const CRegID & acctRegId, vector<CAuthorizate> &vAuthorizate) {
+bool CScriptDB::GetAccountAuthor(const CRegID & acctRegId, vector<pair<CRegID, CAuthorizate> > &vAuthorizate) {
 	leveldb::Iterator* pcursor = db.NewIterator();
 	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
 
 	string strPrefixTemp("author");
-	ssKeySet.insert(ssKeySet.end(), &strPrefixTemp[0], &strPrefixTemp[4]);
+	ssKeySet.insert(ssKeySet.end(), &strPrefixTemp[0], &strPrefixTemp[5]);
 	vector<char> vId(acctRegId.GetVec6().begin(), acctRegId.GetVec6().end());
 	ssKeySet.insert(ssKeySet.end(), vId.begin(), vId.end());
 	ssKeySet.insert(ssKeySet.end(),'_');
@@ -483,17 +483,18 @@ bool CScriptDB::GetAccountAuthor(const CRegID & acctRegId, vector<CAuthorizate> 
 			leveldb::Slice slKey = pcursor->key();
 			string strScriptKey(slKey.data(), 0, slKey.size());
 			string strPrefix = strScriptKey.substr(0, 6);
+			vector<unsigned char> vScriptId(slKey.data()+13, slKey.data()+19);
+			CRegID scriptId(vScriptId);
 			if (strPrefix == "author") {
 				vector<unsigned char> vValue;
 				leveldb::Slice slValue = pcursor->value();
 				CDataStream ssValue(slValue.data()+1, slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
 				CAuthorizate author;
 				ssValue >> author;
-				vAuthorizate.push_back(author);
+				vAuthorizate.push_back(make_pair(scriptId, author));
 				pcursor->Next();
 			} else {
-				delete pcursor;
-				return false;
+				break;
 			}
 		} catch (std::exception &e) {
 			return ERRORMSG("%s : Deserialize or I/O error - %s\n", __func__, e.what());

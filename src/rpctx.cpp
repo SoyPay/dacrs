@@ -269,17 +269,17 @@ Value registaccounttx(const Array& params, bool fHelp) {
 
 //		uint64_t balance;
 		CUserID userId = keyid;
-		if (view.GetAccount(userId, account)) {
-//			balance = account.GetRawBalance(chainActive.Tip()->nHeight);
-			account.GetRawBalance(chainActive.Tip()->nHeight);
+		if (!view.GetAccount(userId, account)) {
+				throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account balance is insufficient.");
 		}
 
 		if (account.IsRegister()) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account is already registered");
 		}
-//		if (balance < fee) {
-//			throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account balance is insufficient.");
-//		}
+		uint64_t balance = account.GetRawBalance(chainActive.Tip()->nHeight);
+		if (balance < fee) {
+			throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account balance is insufficient.");
+		}
 
 		//pubkey
 		CPubKey pubkey;
@@ -764,11 +764,12 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	uint64_t fee = params[3].get_uint64();
 	uint32_t height = params[4].get_int();
 
-	uint32_t nAuthorizeTime;
-	uint64_t nMaxMoneyPerTime;
-	uint64_t nMaxMoneyTotal;
-	uint64_t nMaxMoneyPerDay;
+	uint32_t nAuthorizeTime(0);
+	uint64_t nMaxMoneyPerTime(0);
+	uint64_t nMaxMoneyTotal(0);
+	uint64_t nMaxMoneyPerDay(0);
 	vector<unsigned char> vUserDefine;
+	vUserDefine.clear();
 
 	if (params.size() > 5) {
 		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type));
@@ -804,7 +805,6 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	if (!GetKeyId(params[0].get_str(),keyid)) {
 		throw runtime_error("in registerscripttx :send address err\n");
 	}
-
 
 	assert(pwalletMain != NULL);
 	CRegisterScriptTx tx;
@@ -1601,11 +1601,11 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		int listcount = dbsize - 1;     /// 显示的条数
 		int count = 0;                  /// 遍历数据库要跳过的条数
 		if (dbsize >= pagesize * index) {
-			count = pagesize * (index - 1) - 1;
+			count = pagesize * index - 1;
 			listcount = pagesize ;
-		} else if (dbsize < pagesize * index && dbsize > index) {
+		} else if (dbsize < pagesize * index && dbsize > pagesize) {
 			int preindex = dbsize / pagesize;
-			count = pagesize * (preindex - 1) - 1;
+			count = pagesize * preindex - 1;
 			listcount = dbsize - count;
 		}else{
 			listcount = dbsize -1 ;
@@ -2192,7 +2192,6 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 
 	Object retObj;
 
-	vector<uint256> vAllTxHash;
 	assert(pwalletMain != NULL);
 	{
 		Array ComfirmTx;
@@ -2207,13 +2206,44 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 		Array UnComfirmTx;
 		CAccountViewCache view(*pAccountViewTip, true);
 		for (auto const &wtx : pwalletMain->UnConfirmTx) {
-			vAllTxHash.push_back(wtx.first);
 			Object objtx = GetTxDetail(wtx.first, false);
 			UnComfirmTx.push_back(objtx);
 		}
 		retObj.push_back(Pair("UnConfirmed", UnComfirmTx));
 	}
 
+	return retObj;
+}
+
+Value getbetrandomdata(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 0) {
+		string msg = "getbetrandomdata \"addr\" showtxdetail\n"
+				"\nlistaddrtx\n"
+				"\nArguments:\n"
+				"\nResult:\n"
+				"\"txhash\"\n"
+				"\nExamples:\n" + HelpExampleCli("getbetrandomdata", "") + "\nAs json rpc call\n"
+				+ HelpExampleRpc("getbetrandomdata", "");
+		throw runtime_error(msg);
+	}
+
+	unsigned char szDataA[5] = {0};
+	unsigned char szDataB[5] = {0};
+	size_t nSize = sizeof(szDataA)/sizeof(szDataA[0]);
+	RAND_bytes(szDataA, nSize);
+	RAND_bytes(szDataB, nSize);
+	uint256 hashA = Hash(szDataA,szDataA+nSize);
+	uint256 hashB = Hash(szDataB,szDataB+nSize);
+
+	Object retObj;
+	string strDataA = strprintf("%d,%d,%d,%d,%d",static_cast<int>(szDataA[0]),static_cast<int>(szDataA[1]),
+			static_cast<int>(szDataA[2]),static_cast<int>(szDataA[3]),static_cast<int>(szDataA[4]));
+	string strDataB = strprintf("%d,%d,%d,%d,%d",static_cast<int>(szDataB[0]),static_cast<int>(szDataB[1]),
+				static_cast<int>(szDataB[2]),static_cast<int>(szDataB[3]),static_cast<int>(szDataB[4]));
+	retObj.push_back(Pair("dataA", strDataA));
+	retObj.push_back(Pair("HashA", hashA.ToString()));
+	retObj.push_back(Pair("dataB", strDataB));
+	retObj.push_back(Pair("HashB", hashB.ToString()));
 	return retObj;
 }
 
@@ -2253,20 +2283,22 @@ Value listauthor(const Array& params, bool fHelp) {
 		CKeyID keyid;
 		CUserID userId;
 		string addr = params[0].get_str();
-		if(CRegID::IsRegIdStr(addr)) {
+		if(!CRegID::IsRegIdStr(addr)) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 		}
 		CRegID regId;
 		regId.SetRegID(addr);
 
-		vector<CAuthorizate> vAuthorizate;
+		vector<pair<CRegID ,CAuthorizate> >vAuthorizate;
 		if(!pScriptDBTip->GetAccountAuthor(regId, vAuthorizate)) {
 			throw JSONRPCError(RPC_DATABASE_ERROR, "Get Account error.");
 		}
 
 		Array array;
 		for(auto &item : vAuthorizate) {
-			array.push_back(item.ToJosnObj());
+			Object obj = item.second.ToJosnObj();
+			obj.push_back(Pair("appid", item.first.ToString()));
+			array.push_back(obj);
 		}
 		return array;
 }

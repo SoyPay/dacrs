@@ -989,7 +989,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 	}
     // ********************************************************* Step 12: finished
 
-    uiInterface.InitMessage(_("Done loading"));
+    uiInterface.InitMessage(_("initialize ok"));
 
 
 //    if (pwalletMain) {

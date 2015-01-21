@@ -523,9 +523,11 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nIn
 				return ERRORMSG("VerifyPosTx duplicate tx hash:%s", pBaseTx->GetHash().GetHex());
 			}
 
+			if (CONTRACT_TX == pBaseTx->nTxType) {
+				LogPrint("vm", "tx hash=%s VerifyPosTx run contract\n", pBaseTx->GetHash().GetHex());
+			}
 			CTxUndo txundo;
 			CValidationState state;
-
 			if (!pBaseTx->UpdateAccount(i, view, state, txundo, pBlock->nHeight, txCache, scriptDBView)) {
 				return ERRORMSG("transaction UpdateAccount account error");
 			}
@@ -688,6 +690,9 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 				CValidationState state;
 				if(pBaseTx->IsCoinBase()){
 					assert(0); //never come here
+				}
+				if (CONTRACT_TX == pBaseTx->nTxType) {
+					LogPrint("vm", "tx hash=%s CreateNewBlock run contract\n", pBaseTx->GetHash().GetHex());
 				}
 				CAccountViewCache viewTemp(view, true);
 				CScriptDBViewCache scriptCacheTemp(scriptCache, true);

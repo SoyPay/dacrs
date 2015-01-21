@@ -13,7 +13,10 @@
 #include "tx.h"
 
 #include <boost/assign/list_of.hpp>
-#include <boost/algorithm/string/case_conv.hpp> // for to_lower()#include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()#include <boost/filesystem.hpp>using namespace boost::assign;
+#include <boost/algorithm/string/case_conv.hpp> // for to_lower()
+#include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()
+#include <boost/filesystem.hpp>
+using namespace boost::assign;
 using namespace std;
 
 map<string, string> CBaseParams::m_mapArgs;
@@ -110,7 +113,7 @@ string initPubKey[] = { //
 		"03ae28a4100145a4c354338c727a54800dc540069fa2f5fd5d4a1c80b4a35a1762"
 };
 unsigned int pnSeed[] = //
-		{ 0x7d04d1a2, 0x6c0c17d9, 0xdb330ab9, 0xc649c7c6, 0x7895484d, 0x047109b0, 0xb90ca5bc, 0xd130805f, };
+		{ 0xa78a2879 };
 
 class CMainParams: public CBaseParams {
 public:
@@ -119,16 +122,16 @@ public:
 // The message start string is designed to be unlikely to occur in normal data.
 // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
 // a large 4-byte int at any alignment.
-		pchMessageStart[0] = 0xf9;
-		pchMessageStart[1] = 0xbe;
-		pchMessageStart[2] = 0xb4;
-		pchMessageStart[3] = 0xd9;
+		pchMessageStart[0] = 0xff;
+		pchMessageStart[1] = 0xfe;
+		pchMessageStart[2] = 0x1d;
+		pchMessageStart[3] = 0x20;
 		vAlertPubKey =
 				ParseHex(
 						"04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
-		nDefaultPort = 8555;
-		nRPCPort = 8552;
-		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 20);        //00 00 0f ff ff
+		nDefaultPort = 8668;
+		nRPCPort = 8669;
+		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 10);        //00 3f ff ff
 		nSubsidyHalvingInterval = 210000;
 
 		// Build the genesis block. Note that the output of the genesis coinbase cannot
@@ -152,7 +155,7 @@ public:
 		genesis.hashMerkleRoot = genesis.BuildMerkleTree();
 		genesis.nVersion = 1;
 		genesis.nTime = 1231006505;
-		genesis.nBits = 0x1e0fffff;        //00 00 0f ff
+		genesis.nBits = 0x1f3fffff;        //00 3f ff
 		genesis.nNonce = 888;
 		genesis.nHeight = 0;
 		genesis.vSignature.clear();
@@ -169,12 +172,8 @@ public:
 //		assert(hashGenesisBlock == uint256("0x0d48e88dca01697d10e0fe8f1981f94db1f5e525d5a0e0acf22919af23daed60"));
 //		assert(genesis.hashMerkleRoot == uint256("04b173fc873505d69f5f2a86aa8d7207abe7e0ffa63d786ff230f4a946f5a8255"));
 
-//		vSeeds.push_back(CDNSSeedData("Dacrs.sipa.be", "seed.Dacrs.sipa.be"));
-//		vSeeds.push_back(CDNSSeedData("bluematt.me", "dnsseed.bluematt.me"));
-//		vSeeds.push_back(CDNSSeedData("dashjr.org", "dnsseed.Dacrs.dashjr.org"));
-//		vSeeds.push_back(CDNSSeedData("Dacrsstats.com", "seed.Dacrsstats.com"));
-//		vSeeds.push_back(CDNSSeedData("bitnodes.io", "seed.bitnodes.io"));
-//		vSeeds.push_back(CDNSSeedData("xf2.org", "bitseed.xf2.org"));
+        vSeeds.push_back(CDNSSeedData("soypay.org.cn", "seed_cn_0.dspay.org"));
+        vSeeds.push_back(CDNSSeedData("soypay.org.us", "seed_us_0.dspay.org"));
 
 		base58Prefixes[PUBKEY_ADDRESS] = {0};
 		base58Prefixes[SCRIPT_ADDRESS] = {5};
@@ -242,17 +241,17 @@ public:
 		// The message start string is designed to be unlikely to occur in normal data.
 		// The characters are rarely used upper ASCII, not valid as UTF-8, and produce
 		// a large 4-byte int at any alignment.
-		pchMessageStart[0] = 0x0b;
-		pchMessageStart[1] = 0x11;
-		pchMessageStart[2] = 0x09;
-		pchMessageStart[3] = 0x07;
+        pchMessageStart[0] = 0xfe;
+        pchMessageStart[1] = 0x2d;
+        pchMessageStart[2] = 0x1c;
+        pchMessageStart[3] = 0x0d;
 		vAlertPubKey =
 				ParseHex(
 						"04302390343f91cc401d56d68b123028bf52e5fca1939df127f63c646"
 						"7cdf9c8e2c14b61104cf817d0b780da337893ecc4aaff1309e536162d"
 						"abbdb45200ca2b0a");
-		nDefaultPort = 18555;
-		nRPCPort = 18552;
+		nDefaultPort = 18668;
+		nRPCPort = 18669;
 		strDataDir = "testnet3";
 
 		// Modify the testnet genesis block so the timestamp is valid for a later start.
@@ -268,10 +267,10 @@ public:
 //		}
 //		assert(hashGenesisBlock == uint256("0xeeae033352027ab2603e0d32c0585a0eb3b2e5f720d4de8eedec24050c66436f"));
 
-		vFixedSeeds.clear();
-		vSeeds.clear();
-		vSeeds.push_back(CDNSSeedData("Dacrs.petertodd.org", "testnet-seed.Dacrs.petertodd.org"));
-		vSeeds.push_back(CDNSSeedData("bluematt.me", "testnet-seed.bluematt.me"));
+//		vFixedSeeds.clear();
+//		vSeeds.clear();
+//		vSeeds.push_back(CDNSSeedData("Dacrs.petertodd.org", "testnet-seed.Dacrs.petertodd.org"));
+//		vSeeds.push_back(CDNSSeedData("bluematt.me", "testnet-seed.bluematt.me"));
 
 		base58Prefixes[PUBKEY_ADDRESS] = {111};
 		base58Prefixes[SCRIPT_ADDRESS] = {196};
@@ -299,17 +298,19 @@ public:
 class CRegTestParams: public CTestNetParams {
 public:
 	CRegTestParams() {
-		pchMessageStart[0] = 0xfa;
-		pchMessageStart[1] = 0xbf;
-		pchMessageStart[2] = 0xb5;
-		pchMessageStart[3] = 0xda;
+		pchMessageStart[0] = 0xfc;
+		pchMessageStart[1] = 0x1d;
+		pchMessageStart[2] = 0x2d;
+		pchMessageStart[3] = 0x3d;
 		nSubsidyHalvingInterval = 150;
 		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 8);        //00 00 ff ff
 		genesis.nTime = 1296688602;
-		genesis.nBits = 0x1f0000ff;
+		genesis.nBits = 0x1fffffff;
 		genesis.nNonce = 888;
 		hashGenesisBlock = genesis.GetHash();
 		nDefaultPort = 18666;
+		nTargetSpacing = 20;
+		nTargetTimespan = 30 * 20;
 		strDataDir = "regtest";
 //		{
 //			CBigNum bnTarget;
@@ -573,9 +574,8 @@ CBaseParams::CBaseParams() {
 	nTimeBestReceived = 0;
 	nScriptCheckThreads = 0;
 	nViewCacheSize = 2000000;
-	nTargetSpacing = 60*10; //8;  //
-	nTargetTimespan = 30 * 60;//20 * 3;  //
-	nInterval = nTargetTimespan / nTargetSpacing;
+	nTargetSpacing = 60;
+	nTargetTimespan = 30 * 60;
 	nMaxCoinDay = 30 * 24 * 60 * 60;
 	nSubsidyHalvingInterval = 0;
 	paytxfee = 200000;
