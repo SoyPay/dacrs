@@ -1556,17 +1556,15 @@ Object CAccount::ToJosnObj() const
 	Array listAuthorize;
 
 
-
-	vector<CAuthorizate> vAuthorizate;
+	vector<pair<CRegID ,CAuthorizate> >vAuthorizate;
 	pScriptDBTip->GetAccountAuthor(regID, vAuthorizate);
 
 	Array array;
 	for(auto &item : vAuthorizate) {
-		array.push_back(item.ToJosnObj());
+		Object obj = item.second.ToJosnObj();
+		obj.push_back(Pair("scriptId", item.first.ToString()));
+		array.push_back(obj);
 	}
-
-
-
 
 //	Object authorizateObj;
 //	for(auto & item : (*pMapAuthorizate)) {
