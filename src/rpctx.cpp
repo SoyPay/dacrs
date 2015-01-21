@@ -269,21 +269,17 @@ Value registaccounttx(const Array& params, bool fHelp) {
 
 //		uint64_t balance;
 		CUserID userId = keyid;
-		if (view.GetAccount(userId, account)) {
-//			balance = account.GetRawBalance(chainActive.Tip()->nHeight);
-			uint64_t balance = account.GetRawBalance(chainActive.Tip()->nHeight);
-			if(balance < fee)
-			{
-				throw JSONRPCError(RPC_WALLET_ERROR, "Account do not have enough momeny!");
-			}
+		if (!view.GetAccount(userId, account)) {
+				throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account balance is insufficient.");
 		}
 
 		if (account.IsRegister()) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account is already registered");
 		}
-//		if (balance < fee) {
-//			throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account balance is insufficient.");
-//		}
+		uint64_t balance = account.GetRawBalance(chainActive.Tip()->nHeight);
+		if (balance < fee) {
+			throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account balance is insufficient.");
+		}
 
 		//pubkey
 		CPubKey pubkey;
@@ -1605,11 +1601,11 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		int listcount = dbsize - 1;     /// 显示的条数
 		int count = 0;                  /// 遍历数据库要跳过的条数
 		if (dbsize >= pagesize * index) {
-			count = pagesize * (index - 1) - 1;
+			count = pagesize * index - 1;
 			listcount = pagesize ;
-		} else if (dbsize < pagesize * index && dbsize > index) {
+		} else if (dbsize < pagesize * index && dbsize > pagesize) {
 			int preindex = dbsize / pagesize;
-			count = pagesize * (preindex - 1) - 1;
+			count = pagesize * preindex - 1;
 			listcount = dbsize - count;
 		}else{
 			listcount = dbsize -1 ;
