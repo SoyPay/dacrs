@@ -1388,6 +1388,7 @@ public:
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
 		vSelfFreeze.clear();
+		regID.clean();
 //		mapAuthorizate.clear();
 	}
 	CAccount() :
@@ -1397,6 +1398,7 @@ public:
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
 		vSelfFreeze.clear();
+		regID.clean();
 //		mapAuthorizate.clear();
 	}
 	CAccount(const CAccount & other) {

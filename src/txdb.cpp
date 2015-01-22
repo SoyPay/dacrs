@@ -467,7 +467,12 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 	return true;
 }
 bool CScriptDB::GetAccountAuthor(const CRegID & acctRegId, vector<pair<CRegID, CAuthorizate> > &vAuthorizate) {
+
+	if(acctRegId.IsEmpty())
+		return false;
+
 	leveldb::Iterator* pcursor = db.NewIterator();
+
 	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
 
 	string strPrefixTemp("author");
@@ -497,6 +502,8 @@ bool CScriptDB::GetAccountAuthor(const CRegID & acctRegId, vector<pair<CRegID, C
 				break;
 			}
 		} catch (std::exception &e) {
+			if(pcursor)
+				delete pcursor;
 			return ERRORMSG("%s : Deserialize or I/O error - %s\n", __func__, e.what());
 		}
 	}
@@ -543,6 +550,8 @@ Object CScriptDB::ToJosnObj(string Prefix) {
 				break;
 			}
 		} catch (std::exception &e) {
+			if(pcursor)
+						delete pcursor;
 			LogPrint("ERROR","line:%d,%s : Deserialize or I/O error - %s\n",__LINE__, __func__, e.what());
 		}
 	}
