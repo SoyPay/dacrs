@@ -877,6 +877,11 @@ static RET_DEFINE ExGetDBSizeFunc(unsigned char * ipara,void * pVmScript) {
  * 2.第二是key值
  */
 static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
+
+	if (SysCfg().GetArg("-isdbtraversal", 0) == 0) {
+		auto tem = make_shared<std::vector<vector<unsigned char> > >();
+		return std::make_tuple(false, tem);
+	}
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
