@@ -34,7 +34,9 @@ bool PrintTestNotSetPara()
 			exit(0);
 		}
 	}
-	if(SysCfg().GetArg("-connect",flag))
+	string str("");
+	string strconnect = SysCfg().GetArg("-connect",str);
+	if (str != strconnect)
 	{
 		cout<<"Waring the test of the config file the connect param must be false"<<endl;
 		MilliSleep(500);
@@ -43,7 +45,7 @@ bool PrintTestNotSetPara()
 	}
 	if(SysCfg().GetArg("-iscutmine",flag))
 	{
-		cout<<"Waring the test of config file the connect param must be false"<<endl;
+		cout<<"Waring the test of config file the iscutmine param must be false"<<endl;
 		MilliSleep(500);
 		exit(0);
 	}
