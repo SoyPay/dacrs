@@ -879,6 +879,7 @@ static RET_DEFINE ExGetDBSizeFunc(unsigned char * ipara,void * pVmScript) {
 static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
 
 	if (SysCfg().GetArg("-isdbtraversal", 0) == 0) {
+		LogPrint("INFO","%s","ExGetDBValueFunc can't use\n");
 		auto tem = make_shared<std::vector<vector<unsigned char> > >();
 		return std::make_tuple(false, tem);
 	}

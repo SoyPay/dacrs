@@ -43,10 +43,17 @@ bool PrintTestNotSetPara()
 	}
 	if(SysCfg().GetArg("-iscutmine",flag))
 	{
-		cout<<"Waring the test of config file the connect param must be false"<<endl;
+		cout<<"Waring the test of config file the iscutmine param must be false"<<endl;
 		MilliSleep(500);
 		exit(0);
 	}
+	if(!SysCfg().GetArg("-isdbtraversal",flag))
+	{
+		cout<<"Waring the test of config file the isdbtraversal param must be true"<<endl;
+		MilliSleep(500);
+		exit(0);
+	}
+
 	return true;
 }
 bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {
