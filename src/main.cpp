@@ -965,9 +965,11 @@ unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
 		CBigNum bnResult;
 		bnResult.SetCompact(nBase);
 		bnResult *= 2;
+		bnResult.SetHex(bnResult.getuint256().GetHex());
 		while (nTime > 0 && bnResult < bnLimit) {
 			// Maximum 200% adjustment per day...
 			bnResult *= 2;
+			bnResult.SetHex(bnResult.getuint256().GetHex());
 			nTime -= 24 * 60 * 60;
 		}
 		if (bnResult > bnLimit)
