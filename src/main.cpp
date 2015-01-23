@@ -961,20 +961,19 @@ int64_t GetBlockValue(int nHeight, int64_t nFees)
 unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
 {
 	const CBigNum &bnLimit = SysCfg().ProofOfWorkLimit();
-	CBigNum bnResult;
-	bnResult.SetCompact(nBase);
-	bnResult *= 2;
-	bnResult.SetHex(bnResult.getuint256().GetHex());
-	unsigned long nCount(0);
-	while (nTime > 0 && bnResult < bnLimit ) {
-		// Maximum 200% adjustment per day...
+	LogPrint("INFO", "bnLimit:%s\n", bnLimit.getuint256().GetHex());
+		CBigNum bnResult;
+		bnResult.SetCompact(nBase);
 		bnResult *= 2;
-		bnResult.SetHex(bnResult.getuint256().GetHex());
-		nTime -= 24 * 60 * 60;
-	}
-	if (bnResult > bnLimit)
-		bnResult = bnLimit;
-	return bnResult.GetCompact();
+		while (nTime > 0 && bnResult < bnLimit) {
+			// Maximum 200% adjustment per day...
+			bnResult *= 2;
+			nTime -= 24 * 60 * 60;
+		}
+		if (bnResult > bnLimit)
+			bnResult = bnLimit;
+
+		return bnResult.GetCompact();
 }
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
@@ -2075,7 +2074,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 	// Check for duplicate
 	uint256 hash = block.GetHash();
 	LogPrint("INFO", "AcceptBlcok hash:%s\n", hash.GetHex());
-	block.print(*pAccountViewTip);
+	LogPrint("acceptblock", "AcceptBlcok hash:%s\n", hash.GetHex());
 	if (mapBlockIndex.count(hash))
 		return state.Invalid(ERRORMSG("AcceptBlock() : block already in mapBlockIndex"), 0, "duplicate");
 

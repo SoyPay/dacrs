@@ -49,6 +49,13 @@ bool PrintTestNotSetPara()
 		MilliSleep(500);
 		exit(0);
 	}
+	if(!SysCfg().GetArg("-isdbtraversal",flag))
+	{
+		cout<<"Waring the test of config file the isdbtraversal param must be true"<<endl;
+		MilliSleep(500);
+		exit(0);
+	}
+
 	return true;
 }
 bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {

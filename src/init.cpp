@@ -986,6 +986,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 	if (pwalletMain) {
 		GenerateSoys(SysCfg().GetBoolArg("-gen", false), pwalletMain, SysCfg().GetArg("-genproclimit", -1));
 		pwalletMain->ResendWalletTransactions();
+		pwalletMain->SynchronizSys(*pAccountViewTip);
 	}
     // ********************************************************* Step 12: finished
 
