@@ -304,7 +304,8 @@ public:
 		pchMessageStart[3] = 0x3d;
 		nSubsidyHalvingInterval = 150;
 		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 8);        //00 00 ff ff
-		genesis.nTime = 1296688602;
+		genesis.nTime = 1421808634;
+//		genesis.nTime = 1296688602;
 		genesis.nBits = 0x1fffffff;
 		genesis.nNonce = 888;
 		hashGenesisBlock = genesis.GetHash();

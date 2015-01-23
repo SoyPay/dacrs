@@ -962,18 +962,23 @@ unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
 {
 	const CBigNum &bnLimit = SysCfg().ProofOfWorkLimit();
 	LogPrint("INFO", "bnLimit:%s\n", bnLimit.getuint256().GetHex());
-		CBigNum bnResult;
-		bnResult.SetCompact(nBase);
+	CBigNum bnResult;
+	bnResult.SetCompact(nBase);
+	LogPrint("INFO", "bnResult:%s\n", bnResult.getuint256().GetHex());
+	bnResult *= 2;
+	bnResult.SetHex(bnResult.getuint256().GetHex());
+	unsigned long nCount(0);
+	while (nTime > 0 && bnResult < bnLimit ) {
+		// Maximum 200% adjustment per day...
 		bnResult *= 2;
-		while (nTime > 0 && bnResult < bnLimit) {
-			// Maximum 200% adjustment per day...
-			bnResult *= 2;
-			nTime -= 24 * 60 * 60;
-		}
-		if (bnResult > bnLimit)
-			bnResult = bnLimit;
-
-		return bnResult.GetCompact();
+		bnResult.SetHex(bnResult.getuint256().GetHex());
+		nTime -= 24 * 60 * 60;
+		LogPrint("INFO", "nCount:%lld, bnResult:%s\n", ++nCount, bnResult.getuint256().GetHex());
+	}
+	if (bnResult > bnLimit)
+		bnResult = bnLimit;
+	LogPrint("INFO", "return bnResult:%s\n", bnResult.getuint256().GetHex());
+	return bnResult.GetCompact();
 }
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
@@ -2074,7 +2079,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 	// Check for duplicate
 	uint256 hash = block.GetHash();
 	LogPrint("INFO", "AcceptBlcok hash:%s\n", hash.GetHex());
-	LogPrint("acceptblock", "AcceptBlcok hash:%s\n", hash.GetHex());
+	block.print(*pAccountViewTip);
 	if (mapBlockIndex.count(hash))
 		return state.Invalid(ERRORMSG("AcceptBlock() : block already in mapBlockIndex"), 0, "duplicate");
 
@@ -3537,10 +3542,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 				pfrom->addr.ToString(), pfrom->cleanSubVer,
 				state.GetRejectReason());
 			pfrom->PushMessage("reject", strCommand, state.GetRejectCode(), state.GetRejectReason(), inv.hash);
-			if (nDoS > 0) {
-				LogPrint("INFO", "Misebehaving, add to tx hash %s mempool error, Misbehavior add %d",  pBaseTx->GetHash().GetHex(), nDoS);
-				Misbehaving(pfrom->GetId(), nDoS);
-			}
+//			if (nDoS > 0) {
+//				LogPrint("INFO", "Misebehaving, add to tx hash %s mempool error, Misbehavior add %d",  pBaseTx->GetHash().GetHex(), nDoS);
+//				Misbehaving(pfrom->GetId(), nDoS);
+//			}
 		}
 
 		mapOrphanTransactionsByPrev.erase(pBaseTx->GetHash());

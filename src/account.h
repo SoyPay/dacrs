@@ -177,6 +177,9 @@ public:
 	bool Flush();
 	unsigned int GetCacheSize();
 	Object ToJosnObj() const;
+	CScriptDBView * GetBaseScriptDB() {
+		return pBase;
+	}
 
 private:
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);

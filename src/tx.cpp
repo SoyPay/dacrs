@@ -468,6 +468,20 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 	uint64_t el = GetElementForBurn(chainActive.Tip());
 	int64_t llTime = GetTimeMillis();
+//	LogPrint("vm", "CContractTransaction::UpdateAccount(),ScriptDB addr:0x%x\n", &scriptCache);
+//	CScriptDBView *pBaseTemp = scriptCache.GetBaseScriptDB();
+//	while (pBaseTemp) {
+//		if (typeid(*pBaseTemp) == typeid(CScriptDBViewCache)) {
+//			LogPrint("vm", "CContractTransaction::UpdateAccount(),base scriptdb cache addr is:0x%x\n", pBaseTemp);
+//			pBaseTemp = ((CScriptDBViewCache*) pBaseTemp)->GetBaseScriptDB();
+//		} else if (typeid(*pBaseTemp) == typeid(CScriptDB)) {
+//			LogPrint("vm", "CContractTransaction::UpdateAccount(),base scriptdb addr:0x%x\n", pBaseTemp);
+//			break;
+//		} else {
+//			LogPrint("vm", "CContractTransaction::UpdateAccount(), invalid base scriptdb type\n");
+//			break;
+//		}
+//	}
 	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptCache, nHeight, el, nRunStep);
 	if (!std::get<0>(ret))
 		return state.DoS(100,
