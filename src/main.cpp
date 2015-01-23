@@ -961,10 +961,8 @@ int64_t GetBlockValue(int nHeight, int64_t nFees)
 unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
 {
 	const CBigNum &bnLimit = SysCfg().ProofOfWorkLimit();
-	LogPrint("INFO", "bnLimit:%s\n", bnLimit.getuint256().GetHex());
 	CBigNum bnResult;
 	bnResult.SetCompact(nBase);
-	LogPrint("INFO", "bnResult:%s\n", bnResult.getuint256().GetHex());
 	bnResult *= 2;
 	bnResult.SetHex(bnResult.getuint256().GetHex());
 	unsigned long nCount(0);
@@ -973,11 +971,9 @@ unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
 		bnResult *= 2;
 		bnResult.SetHex(bnResult.getuint256().GetHex());
 		nTime -= 24 * 60 * 60;
-		LogPrint("INFO", "nCount:%lld, bnResult:%s\n", ++nCount, bnResult.getuint256().GetHex());
 	}
 	if (bnResult > bnLimit)
 		bnResult = bnLimit;
-	LogPrint("INFO", "return bnResult:%s\n", bnResult.getuint256().GetHex());
 	return bnResult.GetCompact();
 }
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
@@ -2233,8 +2229,8 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
         if (bnNewBlock > bnRequired)
         {
-        	ERRORMSG("bnNewBlock:%s, bnRequired:%s", bnNewBlock.getuint256().GetHex(), bnRequired.getuint256().GetHex());
-            return state.DoS(100, ERRORMSG("ProcessBlock() : block with too little proof-of-work"),
+            return state.DoS(100, ERRORMSG("ProcessBlock() : block with too little proof-of-work\n"
+            		"bnNewBlock:%s, bnRequired:%s", bnNewBlock.getuint256().GetHex(), bnRequired.getuint256().GetHex()),
                              REJECT_INVALID, "bad-diffbits");
         }
     }
