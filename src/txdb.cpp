@@ -476,7 +476,7 @@ bool CScriptDB::GetAccountAuthor(const CRegID & acctRegId, vector<pair<CRegID, C
 	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
 
 	string strPrefixTemp("author");
-	ssKeySet.insert(ssKeySet.end(), &strPrefixTemp[0], &strPrefixTemp[5]);
+	ssKeySet.insert(ssKeySet.end(), &strPrefixTemp[0], &strPrefixTemp[6]);
 	vector<char> vId(acctRegId.GetVec6().begin(), acctRegId.GetVec6().end());
 	ssKeySet.insert(ssKeySet.end(), vId.begin(), vId.end());
 	ssKeySet.insert(ssKeySet.end(),'_');
@@ -486,11 +486,13 @@ bool CScriptDB::GetAccountAuthor(const CRegID & acctRegId, vector<pair<CRegID, C
 		boost::this_thread::interruption_point();
 		try {
 			leveldb::Slice slKey = pcursor->key();
-			string strScriptKey(slKey.data(), 0, slKey.size());
-			string strPrefix = strScriptKey.substr(0, 6);
+			vector<unsigned char> vDataKey(slKey.data(), slKey.data()+slKey.size());
+			string strPrefix(vDataKey.begin(), vDataKey.begin()+13);
+//			string strScriptKey(slKey.data(), 0, slKey.size());
+//			string strPrefix = strScriptKey.substr(0, 13);
 			vector<unsigned char> vScriptId(slKey.data()+13, slKey.data()+19);
 			CRegID scriptId(vScriptId);
-			if (strPrefix == "author") {
+			if (strPrefix == ssKeySet.str()) {
 				vector<unsigned char> vValue;
 				leveldb::Slice slValue = pcursor->value();
 				CDataStream ssValue(slValue.data()+1, slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
