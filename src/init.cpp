@@ -527,8 +527,8 @@ bool AppInit2(boost::thread_group& threadGroup)
 //        fDebug = false;
 
     // Check for -debugnet (deprecated)
-    if (SysCfg().GetBoolArg("-debugnet", false))
-        InitWarning(_("Warning: Deprecated argument -debugnet ignored, use -debug=net"));
+//    if (SysCfg().GetBoolArg("-debugnet", false))
+//        InitWarning(_("Warning: Deprecated argument -debugnet ignored, use -debug=net"));
 
     SysCfg().SetBenchMark(SysCfg().GetBoolArg("-benchmark", false));
     mempool.setSanityCheck(SysCfg().GetBoolArg("-checkmempool", RegTest()));

@@ -825,7 +825,7 @@ bool CRegisterScriptTx::UpdateAccount(int nIndex, CAccountViewCache &view,CValid
 				return state.DoS(100,
 						ERRORMSG(
 								"UpdateAccounts() : CRegisterScriptTx UpdateAccount save authorizate account id=%s, script id=%s error",
-								HexStr(acctInfo.regID.GetVec6()), HexStr(regId.GetVec6())), UPDATE_ACCOUNT_FAIL,
+								acctInfo.regID.ToString(), regId.ToString()), UPDATE_ACCOUNT_FAIL,
 						"bad-save-scriptdb");
 		}
 	}

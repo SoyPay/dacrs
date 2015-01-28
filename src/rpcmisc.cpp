@@ -72,6 +72,8 @@ Value getinfo(const Array& params, bool fHelp)
 
     Object obj;
     obj.push_back(Pair("version",       (int)CLIENT_VERSION));
+    string fullersion =strprintf("%s (%s)", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
+    obj.push_back(Pair("fullversion",fullersion));
     obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
 
     if (pwalletMain) {
