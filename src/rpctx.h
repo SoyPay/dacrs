@@ -52,4 +52,5 @@ extern Value getscriptdbsize(const Array& params, bool fHelp);
 extern Value getalltxinfo(const Array& params, bool fHelp);
 extern Value getbetrandomdata(const Array& params, bool fHelp);
 extern Value listauthor(const Array& params, bool fHelp);
+extern Value getp2pbetdata(const Array& params, bool fHelp);
 #endif /* RPCTX_H_ */

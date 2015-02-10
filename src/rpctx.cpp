@@ -80,8 +80,8 @@ Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 		CContractTransaction *prtx = (CContractTransaction *) pTx;
 		result.push_back(Pair("txtype", "ContractTx"));
 		result.push_back(Pair("ver", prtx->nVersion));
-		CID id(prtx->scriptRegId);
-		result.push_back(Pair("script id", HexStr(id.GetID())));
+		CRegID tep = boost::get<CRegID>(prtx->scriptRegId);
+		result.push_back(Pair("appid", tep.ToString()));
 		{
 			Array array;
 			for(auto& item : prtx->vAccountRegId)
@@ -131,8 +131,9 @@ Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 		if (!bPrintScriptContent && prtx->script.size() != SCRIPT_ID_SIZE) {
 			result.push_back(Pair("script", "script_content"));
 		} else {
-			result.push_back(Pair("script", HexStr(prtx->script)));
+			result.push_back(Pair("appid", CRegID(prtx->script).ToString()));
 		}
+
 
 		result.push_back(Pair("fees", prtx->llFees));
 		result.push_back(Pair("height", prtx->nValidHeight));
@@ -1537,6 +1538,167 @@ Value reloadtxcache(const Array& params, bool fHelp) {
 	return obj;
 //	return string("reload tx cache succeed");
 }
+
+enum BETSTATUS {
+	BETSEND,  //!< SEND
+	BETACCEPT,//!< ACCEPT
+	BETOPEN   //!< OPEN
+};
+typedef struct {
+
+
+
+	unsigned char status;
+	unsigned char sendid[6];//send bet account id
+	unsigned char acceptid[6];//accept bet account id
+	uint64_t money;//bet amount
+	int hight;//上次冻结高度
+	int delyhight;
+	uint256 shash;//send data hash
+//	uchar ahash[32];//accept data hash
+	unsigned char sdata[5];//send data
+	unsigned char adata[5];//accept data
+
+	  IMPLEMENT_SERIALIZE
+	    (
+	        READWRITE(status);
+	  for(int i = 0 ;i < sizeof(sendid);i++)
+	        READWRITE(sendid[i]);
+	  for(int i = 0 ;i < sizeof(acceptid);i++)
+	        READWRITE(acceptid[i]);
+	  READWRITE(money);
+	  READWRITE(hight);
+	  READWRITE(delyhight);
+	  READWRITE(shash);
+	  for(int i = 0 ;i < sizeof(sdata);i++)
+		        READWRITE(sdata[i]);
+	  for(int i = 0 ;i < sizeof(adata);i++)
+		        READWRITE(adata[i]);
+	    )
+
+	Object toJson()
+	  {
+		  string temp[3] ={"BET_SENDED","BET_ACCEPTED","BET_OPENED"};
+			Object obj;
+			obj.push_back(Pair("status",temp[status]));
+			CRegID sid(vector<unsigned char>(sendid,sendid+sizeof(sendid)));
+			obj.push_back(Pair("sendid",sid.ToString()));
+			if(status >= BETACCEPT){
+			CRegID rid(vector<unsigned char>(acceptid,acceptid+sizeof(acceptid)));
+			obj.push_back(Pair("acceptid",rid.ToString()));
+			}
+			obj.push_back(Pair("money",ValueFromAmount(money)));
+			obj.push_back(Pair("timeouthigh",hight));
+			obj.push_back(Pair("delyhight",delyhight));
+			obj.push_back(Pair("shash",shash.ToString()));
+			if(BETOPEN == status)
+			 obj.push_back(Pair("senddata",strprintf("%d,%d,%d,%d,%d",sdata[0],sdata[1],sdata[2],sdata[3],sdata[4])));
+			if(status >= BETACCEPT)
+		       obj.push_back(Pair("acceptdata",strprintf("%d,%d,%d,%d,%d",adata[0],adata[1],adata[2],adata[3],adata[4])));
+			return obj;
+	  }
+
+}P2P_BET_DATA;
+
+static int getDataFromSriptData(CScriptDBViewCache &cache, const CRegID &regid,
+		int pagesize, int index,
+		vector<
+				std::tuple<vector<unsigned char>,
+				vector<unsigned char>,
+				int> >&ret
+				) {
+	int dbsize;
+	int nHeight = 0;
+	int height = chainActive.Height();
+	cache.GetScriptDataCount(regid, dbsize);
+	if (0 == dbsize) {
+		throw runtime_error(
+				"in getscriptdata :the scirptid database not data!\n");
+	}
+	vector<unsigned char> value;
+	vector<unsigned char> vScriptKey;
+
+	set<CScriptDBOperLog> dumy;
+	if (!cache.GetScriptData(height, regid, 0, vScriptKey, value, nHeight,
+			dumy)) {
+		throw runtime_error(
+				"in getscriptdata :the scirptid get data failed!\n");
+	}
+	if (index == 1) {
+		ret.push_back(std::make_tuple(vScriptKey, value, nHeight));
+	}
+	int readCount(1);
+	while (--dbsize) {
+		dumy.clear();
+		if (cache.GetScriptData(height, regid, 1, vScriptKey, value, nHeight,
+				dumy)) {
+			++readCount;
+			if (readCount > pagesize * (index - 1)) {
+				ret.push_back(std::make_tuple(vScriptKey, value, nHeight));
+			}
+		}
+		if (readCount >= pagesize * index) {
+			return ret.size();
+		}
+	}
+	return ret.size();
+}
+Value getp2pbetdata(const Array& params, bool fHelp){
+	if (fHelp || params.size() != 3) {
+		string msg = "getscriptdata nrequired \"scriptid\" \"\n"
+				"\ncreate contract\n"
+				"\nArguments:\n"
+				"1.\"appid\": (string)\n"
+				"2.[pagesize]: (pagesize int)\n"
+				"3.\"index\": (int )\n";
+		throw runtime_error(msg);
+	}
+	CRegID regid(params[0].get_str());
+	if (regid.IsEmpty() == true) {
+		throw runtime_error("in getscriptdata :vscriptid size is error!\n");
+	}
+	int pagesize = params[1].get_int();
+	int index = params[2].get_int();
+	int dbsize;
+	CScriptDBViewCache cacheTemp(*pScriptDBTip, true);
+	cacheTemp.GetScriptDataCount(regid, dbsize);
+	if (0 == dbsize) {
+		throw runtime_error(
+				"in getscriptdata :the scirptid database not data!\n");
+	}
+	vector<std::tuple<vector<unsigned char>, vector<unsigned char>, int> > ret;
+	getDataFromSriptData(cacheTemp, regid, pagesize, index, ret);
+	Object sendobj;
+	Object accseptobj;
+	Object openobj;
+	for (auto te : ret) {
+		vector<unsigned char> key = std::get<0>(te);
+		uint256 hash(key);
+		P2P_BET_DATA tem;
+		vector<unsigned char> valvue = std::get<1>(te);
+		CDataStream stream(valvue, SER_DISK, CLIENT_VERSION);
+		stream >> tem;
+		switch (tem.status) {
+		case BETSEND:
+			sendobj.push_back(Pair(hash.ToString(), tem.toJson()));
+			break;
+		case BETACCEPT:
+			accseptobj.push_back(Pair(hash.ToString(), tem.toJson()));
+			break;
+		case BETOPEN:
+			openobj.push_back(Pair(hash.ToString(), tem.toJson()));
+			break;
+		default:
+			break;
+		}
+	}
+	Object retd;
+	retd.push_back(Pair("unaccept", sendobj));
+	retd.push_back(Pair("unopen", accseptobj));
+	retd.push_back(Pair("opened", openobj));
+	return retd;
+}
+
 Value getscriptdata(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 2) {
 		string msg = "getscriptdata nrequired \"scriptid\" \"\n"
@@ -1560,7 +1722,7 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		throw runtime_error("in getscriptdata :vscriptid id is exist!\n");
 	}
 	Object script;
-	Array retArray;
+
 	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 	if (params.size() == 2) {
 		vector<unsigned char> key = ParseHex(params[1].get_str());
@@ -1584,50 +1746,21 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		}
 		int pagesize = params[1].get_int();
 		int index = params[2].get_int();
-		vector<unsigned char> value;
-		vector<unsigned char> vScriptKey;
-		int nHeight = 0;
 
-		set<CScriptDBOperLog> setOperLog;
-		if (!contractScriptTemp.GetScriptData(height,regid, 0, vScriptKey, value, nHeight,setOperLog)) {
-			throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
-		}
-		Object firt;
-		firt.push_back(Pair("key", HexStr(vScriptKey)));
-		firt.push_back(Pair("value", HexStr(value)));
-		firt.push_back(Pair("height", nHeight));
-	//	retArray.push_back(firt);
-
-		int listcount = dbsize - 1;     /// 显示的条数
-		int count = 0;                  /// 遍历数据库要跳过的条数
-		if (dbsize >= pagesize * index) {
-			count = pagesize * index - 1;
-			listcount = pagesize ;
-		} else if (dbsize < pagesize * index && dbsize > pagesize) {
-			int preindex = dbsize / pagesize;
-			count = pagesize * preindex - 1;
-			listcount = dbsize - count;
-		}else{
-			listcount = dbsize -1 ;
-			retArray.push_back(firt);
-		}
-		while (count--) {
-			if (!contractScriptTemp.GetScriptData(height,regid, 1, vScriptKey, value, nHeight,setOperLog)) {
-				throw runtime_error("in getscriptdata :the scirptid get data failed!\n");
-			}
-		}
-
-		while (listcount--) {
-			if (!contractScriptTemp.GetScriptData(height,regid, 1, vScriptKey, value, nHeight,setOperLog)) {
-				return retArray;
-			}
+		vector<std::tuple<vector<unsigned char>,vector<unsigned char>,int> >ret;
+		getDataFromSriptData(contractScriptTemp,regid,pagesize,index,ret);
+		Array retArray;
+		for(auto te:ret)
+		{
+			vector<unsigned char>key =  std::get<0>(te);
+			vector<unsigned char>valvue =  std::get<1>(te);
+			int high =  std::get<2>(te);
 			Object firt;
-			firt.push_back(Pair("key", HexStr(vScriptKey)));
-			firt.push_back(Pair("value", HexStr(value)));
-			firt.push_back(Pair("height", nHeight));
+			firt.push_back(Pair("key", HexStr(key)));
+			firt.push_back(Pair("value", HexStr(valvue)));
+			firt.push_back(Pair("height", high));
 			retArray.push_back(firt);
 		}
-
 		return retArray;
 	}
 

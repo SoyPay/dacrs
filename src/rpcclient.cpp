@@ -231,6 +231,9 @@ Array RPCConvertValues(const string &strMethod, const vector<string> &strParams)
     if (strMethod == "getoneaddr"          && n > 1) ConvertTo<bool>(params[1]);
     if (strMethod == "getscriptdata"          && n ==3) ConvertTo<int>(params[1]);
     if (strMethod == "getscriptdata"          && n == 3) ConvertTo<int>(params[2]);
+    if (strMethod == "getp2pbetdata"          && n == 3) ConvertTo<int>(params[1]);
+    if (strMethod == "getp2pbetdata"          && n == 3) ConvertTo<int>(params[2]);
+
     if (strMethod == "listregscript"          && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "getblock"          && n > 0){ if(params[0].get_str().size()<32) ConvertTo<int>(params[0]);}
 
