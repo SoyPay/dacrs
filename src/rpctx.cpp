@@ -1592,9 +1592,9 @@ typedef struct {
 			obj.push_back(Pair("delyhight",delyhight));
 			obj.push_back(Pair("shash",shash.ToString()));
 			if(BETOPEN == status)
-			 obj.push_back(Pair("senddata",strprintf("%d,%d,%d,%d,%d",sdata[0],sdata[1],sdata[2],sdata[3],sdata[4])));
+			 obj.push_back(Pair("senddata",strprintf("%d-%d-%d-%d-%d",sdata[0],sdata[1],sdata[2],sdata[3],sdata[4])));
 			if(status >= BETACCEPT)
-		       obj.push_back(Pair("acceptdata",strprintf("%d,%d,%d,%d,%d",adata[0],adata[1],adata[2],adata[3],adata[4])));
+		       obj.push_back(Pair("acceptdata",strprintf("%d-%d-%d-%d-%d",adata[0],adata[1],adata[2],adata[3],adata[4])));
 			return obj;
 	  }
 
@@ -1678,24 +1678,27 @@ Value getp2pbetdata(const Array& params, bool fHelp){
 		vector<unsigned char> valvue = std::get<1>(te);
 		CDataStream stream(valvue, SER_DISK, CLIENT_VERSION);
 		stream >> tem;
+		Object temjosn;
+		temjosn = tem.toJson();
+		temjosn.push_back(Pair("key",hash.ToString()));
 		switch (tem.status) {
 		case BETSEND:
-			sendobj.push_back(Pair(hash.ToString(), tem.toJson()));
+			sendobj.push_back(Pair(hash.ToString(), temjosn));
 			break;
 		case BETACCEPT:
-			accseptobj.push_back(Pair(hash.ToString(), tem.toJson()));
+			accseptobj.push_back(Pair(hash.ToString(), temjosn));
 			break;
 		case BETOPEN:
-			openobj.push_back(Pair(hash.ToString(), tem.toJson()));
+			openobj.push_back(Pair(hash.ToString(), temjosn));
 			break;
 		default:
 			break;
 		}
 	}
 	Object retd;
-	retd.push_back(Pair("unaccept", sendobj));
-	retd.push_back(Pair("unopen", accseptobj));
-	retd.push_back(Pair("opened", openobj));
+	retd.push_back(Pair("first", sendobj));
+	retd.push_back(Pair("second", accseptobj));
+	retd.push_back(Pair("third", openobj));
 	return retd;
 }
 
