@@ -848,7 +848,11 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific) {
 		return path;
 
 	if (CBaseParams::IsArgCount("-datadir")) {
-		path = fs::system_complete(CBaseParams::GetArg("-datadir", ""));
+		std::string strCfgDataDir = CBaseParams::GetArg("-datadir", "");
+		if("cur" == strCfgDataDir) {
+			strCfgDataDir = fs::initial_path<boost::filesystem::path>().string();
+		}
+		path = fs::system_complete(strCfgDataDir);
 		if (!fs::is_directory(path)) {
 			path = "";
 			return path;
