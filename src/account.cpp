@@ -844,7 +844,8 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 					break;
 				}
 			} else {
-				++iterFindKey;
+				break;
+				//++iterFindKey;
 			}
 		}
 		bool bUpLevelRet(false);
