@@ -1677,7 +1677,13 @@ Value getp2pbetdata(const Array& params, bool fHelp){
 		P2P_BET_DATA tem;
 		vector<unsigned char> valvue = std::get<1>(te);
 		CDataStream stream(valvue, SER_DISK, CLIENT_VERSION);
-		stream >> tem;
+
+		try { // because of bug !
+			stream >> tem;
+		} catch (...) {
+			ERRORMSG("unseraile err!");
+			continue;
+		}
 		Object temjosn;
 		temjosn = tem.toJson();
 		temjosn.push_back(Pair("key",hash.ToString()));
