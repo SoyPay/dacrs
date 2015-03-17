@@ -25,6 +25,7 @@
 #include "json/json_spirit_value.h"
 #include "json/json_spirit_stream_reader.h"
 #include "tx.h"
+
 using namespace std;
 using namespace boost;
 std::string TxHash("");
@@ -855,3 +856,120 @@ BOOST_FIXTURE_TEST_CASE(minier,CSysScriptTest)
 }
 BOOST_AUTO_TEST_SUITE_END()
 
+enum COMPRESS_TYPE {
+	U16_TYPE = 0,
+	I16_TYPE = 1,
+	U32_TYPE = 2,
+	I32_TYPE = 3,
+	U64_TYPE = 4,
+	I64_TYPE = 5,
+	NO_TYPE = 6,
+};
+static void Decompress(vector<unsigned char>& format,vector<unsigned char> &contact,std::vector<unsigned char> &ret){
+
+	CDataStream ds(contact,SER_DISK, CLIENT_VERSION);
+
+	CDataStream retdata(SER_DISK, CLIENT_VERSION);
+	for (auto item = format.begin(); item != format.end();item++) {
+		   switch(*item){
+			case U16_TYPE: {
+				unsigned short i = 0;
+				ds >> VARINT(i);
+				retdata<<i;
+				break;
+			}
+			case I16_TYPE:
+				{
+					short i = 0;
+					ds >> VARINT(i);
+					retdata<<i;
+					break;
+				}
+				case U32_TYPE:
+				{
+					short i = 0;
+					ds >> VARINT(i);
+					retdata<<i;
+					break;
+				}
+				case I32_TYPE:
+				{
+					unsigned int i = 0;
+					ds >> VARINT(i);
+					retdata<<i;
+					break;
+				}
+				case U64_TYPE:
+				{
+					uint64_t i = 0;
+					ds >> VARINT(i);
+					retdata<<i;
+					break;
+				}
+				case I64_TYPE:
+				{
+					int64_t i = 0;
+					ds >> VARINT(i);
+					retdata<<i;
+					break;
+				}
+				case NO_TYPE:
+				{
+					unsigned char temp = 0;
+					item++;
+					int te = *item;
+					while (te--){
+						ds >> VARINT(temp);
+						retdata<<temp;
+					}
+					break;
+				}
+			}
+		 }
+
+	ret.insert(ret.begin(),retdata.begin(),retdata.end());
+}
+
+BOOST_AUTO_TEST_SUITE(compress)
+BOOST_AUTO_TEST_CASE(test_compress)
+{
+	CONTRACT_ANONY contact;
+	const char*temp ="000001";
+	memcpy(contact.Sender,temp,sizeof(contact.Sender));
+	contact.nHeight = 10;
+	contact.nPayMoney = 100;
+	contact.len = 80;
+
+	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
+	scriptData << contact;
+	string source = HexStr(scriptData);
+//	cout<<"sourece decompress:"<<HexStr(scriptData)<<endl;
+
+	std::vector<unsigned char> temp1;
+	temp1.insert(temp1.end(),scriptData.begin(),scriptData.begin()+6);
+	scriptData.clear();
+	scriptData<<temp1;
+//	cout<<"decompress data:"<<HexStr(scriptData)<<endl;
+	scriptData<<VARINT(contact.nHeight);
+	scriptData<<VARINT(contact.nPayMoney);
+	scriptData<<VARINT(contact.len);
+//	cout<<"decompress data:"<<HexStr(scriptData)<<endl;
+
+	vector<unsigned char> format;
+	format.push_back(0x06);
+	format.push_back(0x06);
+	format.push_back(0x03);
+	format.push_back(0x05);
+	format.push_back(0x01);
+	std::vector<unsigned char> ret;
+	std::vector<unsigned char> pcontact;
+	pcontact.insert(pcontact.end(),scriptData.begin()+1,scriptData.end());
+//	cout<<"input decompress data:"<<HexStr(pcontact)<<endl;
+
+	Decompress(format,pcontact,ret);
+//	cout<<"after decompress data:"<<HexStr(ret)<<endl;
+	string out = HexStr(ret);
+	BOOST_CHECK_EQUAL(out,source);
+
+}
+BOOST_AUTO_TEST_SUITE_END()
