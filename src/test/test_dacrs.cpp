@@ -26,7 +26,11 @@ extern void noui_connect();
 struct TestingSetup {
 	TestingSetup() {
 			int argc = 2;
-			const char* argv[] = { "D:\\cppwork\\soypay\\src\\soypayd.exe", "-datadir=d:\\bitcoin" };
+			#ifdef WIN32
+			const char* argv[] = { "D:\\cppwork\\soypay\\src\\dacrs_d.exe", "-datadir=D:\\bitcoin" };
+			#else
+			const char* argv[] = { "D:\\cppwork\\soypay\\src\\dacrs_d.exe", "-datadir=/home/share/bess/dacrs_test" };
+			#endif
 			SysTestBase::StartServer(argc, argv);
 		}
 		~TestingSetup()

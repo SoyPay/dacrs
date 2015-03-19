@@ -555,16 +555,30 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 	CVmScriptRun *pVmScript = (CVmScriptRun *)pVmScriptRun;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
-    if(!GetData(ipara,retdata) ||retdata.size() != 1|| retdata.at(0).get()->size() != 6)
+    if(!GetData(ipara,retdata) ||retdata.size() != 1)  //|| retdata.at(0).get()->size() != 6)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
     bool flag = true;
 
+	auto GetKeyId = [](string const &addr,CKeyID &KeyId) {
+		if (!CRegID::GetKeyID(addr, KeyId)) {
+			KeyId=CKeyID(addr);
+			if (KeyId.IsEmpty())
+			return false;
+		}
+		return true;
+	};
+	string addr((*retdata[0]).begin(), (*retdata[0]).end());
+	CKeyID addrKeyId;
+	if (!GetKeyId(addr, addrKeyId)) {
+    	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+    	return std::make_tuple (false, tem);
+	}
+
+	CUserID userid(addrKeyId);
 	CAccount aAccount;
-	CRegID regid(*retdata.at(0));
-	CUserID userid(regid);
 	if (!pVmScript->GetCatchView()->GetAccount(userid, aAccount)) {
 		flag = false;
 	}
@@ -587,15 +601,31 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 static RET_DEFINE ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScriptRun) {
 	CVmScriptRun *pVmScript = (CVmScriptRun *)pVmScriptRun;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-    if(!GetData(ipara,retdata) ||retdata.size() != 1|| retdata.at(0).get()->size() != 6)
+    if(!GetData(ipara,retdata) ||retdata.size() != 1)//|| retdata.at(0).get()->size() != 6)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
 	bool flag = true;
+
+	auto GetKeyId = [](string const &addr,CKeyID &KeyId) {
+		if (!CRegID::GetKeyID(addr, KeyId)) {
+			KeyId=CKeyID(addr);
+			if (KeyId.IsEmpty())
+			return false;
+		}
+		return true;
+	};
+	string addr((*retdata[0]).begin(), (*retdata[0]).end());
+	CKeyID addrKeyId;
+	if (!GetKeyId(addr, addrKeyId)) {
+    	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+    	return std::make_tuple (false, tem);
+	}
+
+	CUserID userid(addrKeyId);
 	CAccount aAccount;
-	CRegID regid(*retdata.at(0));
-	CUserID userid(regid);
+
 	if (!pVmScript->GetCatchView()->GetAccount(userid, aAccount)) {
 		flag = false;
 	}
@@ -711,11 +741,11 @@ static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	int height = 0;
 	memcpy(&height,&retdata.at(2).get()->at(0),4);
 
-//	if(height <= pVmScriptRun->GetComfirHeight())
-//    {
-//		auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-//		return std::make_tuple (false, tem);
-//	}
+	if(height <= pVmScriptRun->GetComfirHeight())
+    {
+		auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+		return std::make_tuple (false, tem);
+	}
 	const CRegID scriptid = pVmScriptRun->GetScriptRegID();
 	bool flag = true;
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
@@ -958,7 +988,7 @@ static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
     if(!GetData(ipara,retdata) ||retdata.size() != 2
-    		|| retdata.at(0).get()->size() != 6
+    	//	|| retdata.at(0).get()->size() != 6
     		|| retdata.at(1).get()->size() != sizeof(uint64_t))
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -968,9 +998,24 @@ static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 	memcpy(&money,&retdata.at(1).get()->at(0),sizeof(money));
 
 	bool flag = true;
+
+	auto GetKeyId = [](string const &addr,CKeyID &KeyId) {
+		if (!CRegID::GetKeyID(addr, KeyId)) {
+			KeyId=CKeyID(addr);
+			if (KeyId.IsEmpty())
+			return false;
+		}
+		return true;
+	};
+	string addr((*retdata[0]).begin(), (*retdata[0]).end());
+	CKeyID addrKeyId;
+	if (!GetKeyId(addr, addrKeyId)) {
+    	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+    	return std::make_tuple (false, tem);
+	}
+
+	CUserID userid(addrKeyId);
 	CAccount aAccount;
-	CRegID regid(*retdata.at(0));
-	CUserID userid(regid);
 	if (!pVmScriptRun->GetCatchView()->GetAccount(userid, aAccount)) {
 		flag = false;
 	}
@@ -1165,15 +1210,30 @@ static RET_DEFINE ExGetAuthoritedDefineFunc(unsigned char * ipara,void * pVmScri
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
-    if(!GetData(ipara,retdata) ||retdata.size() != 1 || retdata.at(0).get()->size() != 6)
+    if(!GetData(ipara,retdata) ||retdata.size() != 1 )//|| retdata.at(0).get()->size() != 6)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
 	bool flag = true;
+
+	auto GetKeyId = [](string const &addr,CKeyID &KeyId) {
+		if (!CRegID::GetKeyID(addr, KeyId)) {
+			KeyId=CKeyID(addr);
+			if (KeyId.IsEmpty())
+			return false;
+		}
+		return true;
+	};
+	string addr((*retdata[0]).begin(), (*retdata[0]).end());
+	CKeyID addrKeyId;
+	if (!GetKeyId(addr, addrKeyId)) {
+    	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+    	return std::make_tuple (false, tem);
+	}
+
+	CUserID userid(addrKeyId);
 	CAccount aAccount;
-	CRegID regid(*retdata.at(0));
-	CUserID userid(regid);
 	if (!pVmScriptRun->GetCatchView()->GetAccount(userid, aAccount)) {
 		flag = false;
 	}
@@ -1271,6 +1331,125 @@ static RET_DEFINE ExDefaultFunc(unsigned char * ipara,void * pVmScriptRun) {
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	return std::make_tuple (false, tem);
 }
+enum COMPRESS_TYPE {
+	U16_TYPE = 0,					// U16_TYPE
+	I16_TYPE = 1,					// I16_TYPE
+	U32_TYPE = 2,					// U32_TYPE
+	I32_TYPE = 3,					// I32_TYPE
+	U64_TYPE = 4,					// U64_TYPE
+	I64_TYPE = 5,					// I64_TYPE
+	NO_TYPE = 6,                   // NO_TYPE +n (tip char)
+};
+void Decompress(vector<unsigned char>& format,vector<unsigned char> &contact,std::vector<unsigned char> &ret){
+
+	CDataStream ds(contact,SER_DISK, CLIENT_VERSION);
+
+	CDataStream retdata(SER_DISK, CLIENT_VERSION);
+	for (auto item = format.begin(); item != format.end();item++) {
+		   switch(*item){
+			case U16_TYPE: {
+				unsigned short i = 0;
+				ds >> VARINT(i);
+				retdata<<i;
+				break;
+			}
+			case I16_TYPE:
+				{
+					short i = 0;
+					ds >> VARINT(i);
+					retdata<<i;
+					break;
+				}
+				case U32_TYPE:
+				{
+					short i = 0;
+					ds >> VARINT(i);
+					retdata<<i;
+					break;
+				}
+				case I32_TYPE:
+				{
+					unsigned int i = 0;
+					ds >> VARINT(i);
+					retdata<<i;
+					break;
+				}
+				case U64_TYPE:
+				{
+					uint64_t i = 0;
+					ds >> VARINT(i);
+					retdata<<i;
+					break;
+				}
+				case I64_TYPE:
+				{
+					int64_t i = 0;
+					ds >> VARINT(i);
+					retdata<<i;
+					break;
+				}
+				case NO_TYPE:
+				{
+					unsigned char temp = 0;
+					item++;
+					int te = *item;
+					while (te--){
+						ds >> VARINT(temp);
+						retdata<<temp;
+					}
+					break;
+				}
+			}
+		 }
+
+	ret.insert(ret.begin(),retdata.begin(),retdata.end());
+}
+
+static RET_DEFINE ExCurDeCompressContactFunc(unsigned char * ipara,void * pVmScriptRun){
+
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+
+    if(!GetData(ipara,retdata) ||retdata.size() != 1 )
+    {
+    	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+    	return std::make_tuple (false, tem);
+    }
+	vector<unsigned char> contact =((CVmScriptRun *)pVmScriptRun)->GetTxContact();
+
+	std::vector<unsigned char> outContact;
+	Decompress(*retdata.at(0),contact,outContact);
+
+	vector<unsigned char> item;
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+	(*tem.get()).push_back(outContact);
+	return std::make_tuple (true, tem);
+
+}
+static RET_DEFINE ExDeCompressContactFunc(unsigned char * ipara,void * pVmScriptRun){
+
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+    if(!GetData(ipara,retdata) ||retdata.size() != 2 || retdata.at(1).get()->size() != 32)
+    {
+    	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+    	return std::make_tuple (false, tem);
+    }
+	uint256 hash1(*retdata.at(1));
+//	LogPrint("vm","ExGetTxContractsFunc1:%s\n",hash1.GetHex().c_str());
+
+
+	std::shared_ptr<CBaseTransaction> pBaseTx;
+
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+
+	if (GetTransaction(pBaseTx, hash1)) {
+		CContractTransaction *tx = static_cast<CContractTransaction*>(pBaseTx.get());
+		 std::vector<unsigned char> outContact;
+		 Decompress(*retdata.at(0),tx->vContract,outContact);
+		 (*tem.get()).push_back(outContact);
+	}
+
+	return std::make_tuple (true, tem);
+}
 enum CALL_API_FUN {
 	COMP_FUNC = 0,            //!< COMP_FUNC
 	MULL_MONEY ,              //!< MULL_MONEY
@@ -1311,6 +1490,8 @@ enum CALL_API_FUN {
 	GETSCRIPTID_FUNC,		//!<GETSCRIPTID_FUNC
 	GETCURTXACCOUNT_FUNC,//!<GETCURTXACCOUNT_FUNC
 	GETCURTXCONTACT_FUNC,		 //!<GETCURTXCONTACT_FUNC
+	GETCURDECOMPRESSCONTACR_FUNC,   //!<GETCURDECOMPRESSCONTACR_FUNC
+	GETDECOMPRESSCONTACR_FUNC,   	//!<GETDECOMPRESSCONTACR_FUNC
 };
 
 const static struct __MapExterFun FunMap[] = { //
@@ -1350,6 +1531,8 @@ const static struct __MapExterFun FunMap[] = { //
 		{GETSCRIPTID_FUNC,ExGetScriptIDFunc},
 		{GETCURTXACCOUNT_FUNC,ExGetCurTxAccountFunc	  },
 		{GETCURTXCONTACT_FUNC,ExGetCurTxContactFunc		},
+		{GETCURDECOMPRESSCONTACR_FUNC,ExCurDeCompressContactFunc },
+		{GETDECOMPRESSCONTACR_FUNC,ExDeCompressContactFunc  	},
 
 		};
 
