@@ -9,8 +9,8 @@
 #include "net.h"
 #include "netbase.h"
 #include "util.h"
-#include "wallet.h"
-#include "walletdb.h"
+#include "../wallet/wallet.h"
+#include "../wallet/walletdb.h"
 
 #include <stdint.h>
 

@@ -35,7 +35,7 @@ BITCOIN_CORE_H = \
   checkpoints.h \
   checkqueue.h \
   clientversion.h \
-  compat.h \
+  compat\compat.h \
   core.h \
   account.h \
   crypter.h \
@@ -52,9 +52,9 @@ BITCOIN_CORE_H = \
   net.h \
   noui.h \
   protocol.h \
-  rpcclient.h \
-  rpcprotocol.h \
-  rpcserver.h \
+  rpc/rpcclient.h \
+  rpc/rpcprotocol.h \
+  rpc/rpcserver.h \
   serialize.h \
   sync.h \
   threadsafety.h \
@@ -65,8 +65,7 @@ BITCOIN_CORE_H = \
   uint256.h \
   util.h \
   version.h \
-  walletdb.h \
-  wallet.h
+  wallet/wallet.h
 
 JSON_H = \
   json/json_spirit.h \
@@ -115,12 +114,12 @@ libdacrs_server_a_SOURCES = \
   miner.cpp \
   net.cpp \
   noui.cpp \
-  rpcblockchain.cpp \
-  rpcmining.cpp \
-  rpcmisc.cpp \
-  rpcnet.cpp \
-  rpcrawtransaction.cpp \
-  rpcserver.cpp \
+  rpc/rpcblockchain.cpp \
+  rpc/rpcmining.cpp \
+  rpc/rpcmisc.cpp \
+  rpc/rpcnet.cpp \
+  rpc/rpcrawtransaction.cpp \
+  rpc/rpcserver.cpp \
   txdb.cpp \
   txmempool.cpp \
   cuiserve.cpp	\
@@ -131,11 +130,11 @@ libdacrs_server_a_SOURCES = \
 
 libdacrs_wallet_a_SOURCES = \
   crypter.cpp \
-  rpcdump.cpp \
-  rpcwallet.cpp \
-  wallet.cpp \
-  walletdb.cpp \
-  rpctx.cpp \
+  rpc/rpcdump.cpp \
+  rpc/rpcwallet.cpp \ 
+  wallet/wallet.cpp \
+  wallet/walletdb.cpp \
+  rpc/rpctx.cpp \
   $(BITCOIN_CORE_H)
 
 libdacrs_common_a_SOURCES = \
@@ -147,7 +146,7 @@ libdacrs_common_a_SOURCES = \
   key.cpp \
   netbase.cpp \
   protocol.cpp \
-  rpcprotocol.cpp \
+  rpc/rpcprotocol.cpp \
   sync.cpp \
   util.cpp \
   version.cpp \
@@ -162,7 +161,7 @@ libdacrs_common_a_SOURCES += compat/glibcxx_compat.cpp
 endif
 
 libdacrs_cli_a_SOURCES = \
-  rpcclient.cpp \
+  rpc/rpcclient.cpp \
   $(BITCOIN_CORE_H)
 
 nodist_libdacrs_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
