@@ -10,7 +10,7 @@
 #include "tx.h"
 #include "net.h"
 
-#include "wallet.h"
+#include "./wallet/wallet.h"
 extern CWallet* pwalletMain;
 //////////////////////////////////////////////////////////////////////////////
 //

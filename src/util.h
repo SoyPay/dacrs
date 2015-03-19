@@ -10,7 +10,7 @@
 #include "dacrs-config.h"
 #endif
 
-#include "compat.h"
+#include "./compat/compat.h"
 #include "serialize.h"
 #include "tinyformat.h"
 
