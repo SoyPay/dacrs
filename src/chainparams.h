@@ -112,7 +112,11 @@ public:
     int64_t SetDeflautTxFee(int64_t fee)const;
 	virtual string GetDefaultTestDataPath() const
 	{
+		#ifdef WIN32
 		return string("D:\\bitcoin\\data\\");
+		#else
+		return string("/home/share/bess/dacrs_test/data/");
+		#endif
 	}
 public:
 	int getConnectTimeOut()const {
