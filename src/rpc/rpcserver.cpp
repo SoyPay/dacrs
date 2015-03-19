@@ -24,7 +24,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <memory>
 #include "json/json_spirit_writer_template.h"
-#include "wallet.h"
+#include "../wallet/wallet.h"
 using namespace std;
 using namespace boost;
 using namespace boost::asio;
