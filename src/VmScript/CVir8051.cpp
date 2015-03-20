@@ -555,7 +555,8 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 	CVmScriptRun *pVmScript = (CVmScriptRun *)pVmScriptRun;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
-    if(!GetData(ipara,retdata) ||retdata.size() != 1)  //|| retdata.at(0).get()->size() != 6)
+    if(!GetData(ipara,retdata) ||retdata.size() != 1
+    	|| !(retdata.at(0).get()->size() == 6 || retdata.at(0).get()->size() == 34))
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
@@ -601,7 +602,8 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 static RET_DEFINE ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScriptRun) {
 	CVmScriptRun *pVmScript = (CVmScriptRun *)pVmScriptRun;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-    if(!GetData(ipara,retdata) ||retdata.size() != 1)//|| retdata.at(0).get()->size() != 6)
+    if(!GetData(ipara,retdata) ||retdata.size() != 1
+    	|| !(retdata.at(0).get()->size() == 6 || retdata.at(0).get()->size() == 34))
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
@@ -987,9 +989,8 @@ static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
-    if(!GetData(ipara,retdata) ||retdata.size() != 2
-    	//	|| retdata.at(0).get()->size() != 6
-    		|| retdata.at(1).get()->size() != sizeof(uint64_t))
+    if(!GetData(ipara,retdata) ||retdata.size() != 2|| retdata.at(1).get()->size() != sizeof(uint64_t)
+    		|| !(retdata.at(0).get()->size() == 6 || retdata.at(0).get()->size() == 34))
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
@@ -1210,7 +1211,8 @@ static RET_DEFINE ExGetAuthoritedDefineFunc(unsigned char * ipara,void * pVmScri
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
-    if(!GetData(ipara,retdata) ||retdata.size() != 1 )//|| retdata.at(0).get()->size() != 6)
+    if(!GetData(ipara,retdata) ||retdata.size() != 1 || !(retdata.at(0).get()->size() == 6
+    	|| retdata.at(0).get()->size() == 34))
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
