@@ -17,7 +17,7 @@
 
 #include "json/json_spirit_writer_template.h"
 #include "CDarkAndAnony.h"
-#include "rpcclient.h"
+#include "./rpc/rpcclient.h"
 
 #include "CycleP2PBet_test.h"
 

@@ -1,6 +1,6 @@
 
-#include "rpcserver.h"
-#include "rpcclient.h"
+#include "./rpc/rpcserver.h"
+#include "./rpc/rpcclient.h"
 #include "util.h"
 #include <boost/test/unit_test.hpp>
 
