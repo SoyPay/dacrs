@@ -1,5 +1,5 @@
-#include "rpcserver.h"
-#include "rpcclient.h"
+#include "./rpc/rpcserver.h"
+#include "./rpc/rpcclient.h"
 #include "util.h"
 #include "chainparams.h"
 #include "tx.h"
