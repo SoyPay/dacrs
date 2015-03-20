@@ -7,7 +7,7 @@
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 #include "json/json_spirit_writer_template.h"
-#include "rpcclient.h"
+#include "./rpc/rpcclient.h"
 #include "tx.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
