@@ -529,12 +529,12 @@ public:
 	CTransaction(const CBaseTransaction *pBaseTx) {
 		assert(COMMON_TX == pBaseTx->nTxType);
 		*this = *(CTransaction *) pBaseTx;
-		assert(srcUserId.type()==typeid(CRegID));
+		assert(srcUserId.type()==typeid(CRegID) || srcUserId.type()==typeid(CPubKey));
 	}
 
 	CTransaction(const CUserID& send, const CUserID& rev,int64_t nAmount ,int high,int64_t Fee)
 	{
-		assert(send.type()==typeid(CRegID));
+		assert(send.type()==typeid(CRegID) || send.type()==typeid(CPubKey));
 		srcUserId = send;
 		desUserId=rev;
 		llValues =nAmount;
