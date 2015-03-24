@@ -12,10 +12,10 @@
 #include "util.h"
 
 
-#include "wallet.h"
-
+#include "wallet/wallet.h"
 
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/test/unit_test.hpp>
 #include "SysTestBase.h"
 //CWallet* pwalletMain;
@@ -26,10 +26,32 @@ extern void noui_connect();
 struct TestingSetup {
 	TestingSetup() {
 			int argc = 2;
+			char findchar;
 			#ifdef WIN32
-			const char* argv[] = { "D:\\cppwork\\soypay\\src\\dacrs_d.exe", "-datadir=D:\\bitcoin" };
+			findchar = '\\';
 			#else
-			const char* argv[] = { "D:\\cppwork\\soypay\\src\\dacrs_d.exe", "-datadir=/home/share/bess/dacrs_test" };
+			findchar = '/';
+			#endif
+
+			string strCurDir = boost::filesystem::initial_path<boost::filesystem::path>().string();
+			int index = strCurDir.find_last_of(findchar);
+			int count = 3;
+			while (count--) {
+				index = strCurDir.find_last_of(findchar);
+				strCurDir = strCurDir.substr(0, index);
+
+			}
+
+			#ifdef WIN32
+			strCurDir +="\\dacrs_test";
+			string param = "-datadir=";
+			param +=strCurDir;
+			const char* argv[] = { "D:\\cppwork\\soypay\\src\\dacrs_d.exe", param.c_str() };
+			#else
+			strCurDir +="/dacrs_test";
+			string param = "-datadir=";
+			param +=strCurDir;
+			const char* argv[] = { "D:\\cppwork\\soypay\\src\\dacrs_d.exe", param.c_str() };
 			#endif
 			SysTestBase::StartServer(argc, argv);
 		}

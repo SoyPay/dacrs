@@ -14,14 +14,14 @@
 #include "main.h"
 #include "miner.h"
 #include "net.h"
-#include "rpcserver.h"
+#include "./rpc/rpcserver.h"
 #include "txdb.h"
 #include "ui_interface.h"
 #include "util.h"
 #include "cuiserve.h"
 #include "tx.h"
-#include "wallet.h"
-#include "walletdb.h"
+#include "./wallet/wallet.h"
+#include "./wallet/walletdb.h"
 
 
 #include <stdint.h>
@@ -987,6 +987,8 @@ bool AppInit2(boost::thread_group& threadGroup)
 		GenerateSoys(SysCfg().GetBoolArg("-gen", false), pwalletMain, SysCfg().GetArg("-genproclimit", -1));
 		pwalletMain->ResendWalletTransactions();
 		pwalletMain->SynchronizSys(*pAccountViewTip);
+	//	extern void ThreadFlushWalletDB(const string& strFile);
+   //    threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(pwalletMain->strWalletFile)));
 	}
     // ********************************************************* Step 12: finished
 
