@@ -55,52 +55,52 @@
 
 /* Define to 1 if you have the declaration of `strerror_r', and to 0 if you
    don't. */
-#define HAVE_DECL_STRERROR_R 0
+#define HAVE_DECL_STRERROR_R 1
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `advapi32' library (-ladvapi32). */
-#define HAVE_LIBADVAPI32 1
+/* #undef HAVE_LIBADVAPI32 */
 
 /* Define to 1 if you have the `comctl32' library (-lcomctl32). */
-#define HAVE_LIBCOMCTL32 1
+/* #undef HAVE_LIBCOMCTL32 */
 
 /* Define to 1 if you have the `comdlg32' library (-lcomdlg32). */
-#define HAVE_LIBCOMDLG32 1
+/* #undef HAVE_LIBCOMDLG32 */
 
 /* Define to 1 if you have the `crypt32' library (-lcrypt32). */
-#define HAVE_LIBCRYPT32 1
+/* #undef HAVE_LIBCRYPT32 */
 
 /* Define to 1 if you have the `crypto' library (-lcrypto). */
-#define HAVE_LIBCRYPTO 1
+/* #undef HAVE_LIBCRYPTO */
 
 /* Define to 1 if you have the `gdi32' library (-lgdi32). */
-#define HAVE_LIBGDI32 1
+/* #undef HAVE_LIBGDI32 */
 
 /* Define to 1 if you have the `imm32' library (-limm32). */
 /* #undef HAVE_LIBIMM32 */
 
 /* Define to 1 if you have the `iphlpapi' library (-liphlpapi). */
-#define HAVE_LIBIPHLPAPI 1
+/* #undef HAVE_LIBIPHLPAPI */
 
 /* Define to 1 if you have the `kernel32' library (-lkernel32). */
-#define HAVE_LIBKERNEL32 1
+/* #undef HAVE_LIBKERNEL32 */
 
 /* Define to 1 if you have the `mingwthrd' library (-lmingwthrd). */
-#define HAVE_LIBMINGWTHRD 1
+/* #undef HAVE_LIBMINGWTHRD */
 
 /* Define to 1 if you have the `miniupnpc' library (-lminiupnpc). */
 #define HAVE_LIBMINIUPNPC 1
 
 /* Define to 1 if you have the `mswsock' library (-lmswsock). */
-#define HAVE_LIBMSWSOCK 1
+/* #undef HAVE_LIBMSWSOCK */
 
 /* Define to 1 if you have the `ole32' library (-lole32). */
-#define HAVE_LIBOLE32 1
+/* #undef HAVE_LIBOLE32 */
 
 /* Define to 1 if you have the `oleaut32' library (-loleaut32). */
-#define HAVE_LIBOLEAUT32 1
+/* #undef HAVE_LIBOLEAUT32 */
 
 /* Define to 1 if you have the `png ' library (-lpng ). */
 /* #undef HAVE_LIBPNG_ */
@@ -112,34 +112,34 @@
 /* #undef HAVE_LIBQRENCODE */
 
 /* Define to 1 if you have the `rpcrt4' library (-lrpcrt4). */
-#define HAVE_LIBRPCRT4 1
+/* #undef HAVE_LIBRPCRT4 */
 
 /* Define to 1 if you have the `shell32' library (-lshell32). */
-#define HAVE_LIBSHELL32 1
+/* #undef HAVE_LIBSHELL32 */
 
 /* Define to 1 if you have the `shlwapi' library (-lshlwapi). */
-#define HAVE_LIBSHLWAPI 1
+/* #undef HAVE_LIBSHLWAPI */
 
 /* Define to 1 if you have the `ssl' library (-lssl). */
-#define HAVE_LIBSSL 1
+/* #undef HAVE_LIBSSL */
 
 /* Define to 1 if you have the `ssp' library (-lssp). */
-#define HAVE_LIBSSP 1
+/* #undef HAVE_LIBSSP */
 
 /* Define to 1 if you have the `user32' library (-luser32). */
-#define HAVE_LIBUSER32 1
+/* #undef HAVE_LIBUSER32 */
 
 /* Define to 1 if you have the `uuid' library (-luuid). */
-#define HAVE_LIBUUID 1
+/* #undef HAVE_LIBUUID */
 
 /* Define to 1 if you have the `winmm' library (-lwinmm). */
-#define HAVE_LIBWINMM 1
+/* #undef HAVE_LIBWINMM */
 
 /* Define to 1 if you have the `winspool' library (-lwinspool). */
-#define HAVE_LIBWINSPOOL 1
+/* #undef HAVE_LIBWINSPOOL */
 
 /* Define to 1 if you have the `ws2_32' library (-lws2_32). */
-#define HAVE_LIBWS2_32 1
+/* #undef HAVE_LIBWS2_32 */
 
 /* Define to 1 if you have the `z ' library (-lz ). */
 /* #undef HAVE_LIBZ_ */
@@ -160,7 +160,7 @@
 #define HAVE_MINIUPNPC_UPNPERRORS_H 1
 
 /* Define this symbol if you have MSG_NOSIGNAL */
-/* #undef HAVE_MSG_NOSIGNAL */
+#define HAVE_MSG_NOSIGNAL 1
 
 /* Define if you have POSIX threads libraries and header files. */
 #define HAVE_PTHREAD 1
@@ -178,7 +178,7 @@
 #define HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the `strerror_r' function. */
-/* #undef HAVE_STRERROR_R */
+#define HAVE_STRERROR_R 1
 
 /* Define to 1 if you have the <strings.h> header file. */
 #define HAVE_STRINGS_H 1
@@ -219,7 +219,7 @@
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "1.0.0"
 
-/* Define to necessary symbol if this constant uses a non-standard name on
+/* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
 /* #undef PTHREAD_CREATE_JOINABLE */
 
@@ -230,7 +230,7 @@
 #define STDC_HEADERS 1
 
 /* Define to 1 if strerror_r returns char *. */
-/* #undef STRERROR_R_CHAR_P */
+#define STRERROR_R_CHAR_P 1
 
 /* Define if dbus support should be compiled in */
 /* #undef USE_DBUS */
@@ -254,8 +254,13 @@
 # endif
 #endif
 
+/* Enable large inode numbers on Mac OS X 10.5.  */
+#ifndef _DARWIN_USE_64_BIT_INODE
+# define _DARWIN_USE_64_BIT_INODE 1
+#endif
+
 /* Number of bits in a file offset, on hosts where this is settable. */
-#define _FILE_OFFSET_BITS 64
+/* #undef _FILE_OFFSET_BITS */
 
 /* Define for large files, on AIX-style hosts. */
 /* #undef _LARGE_FILES */
