@@ -987,8 +987,8 @@ bool AppInit2(boost::thread_group& threadGroup)
 		GenerateSoys(SysCfg().GetBoolArg("-gen", false), pwalletMain, SysCfg().GetArg("-genproclimit", -1));
 		pwalletMain->ResendWalletTransactions();
 		pwalletMain->SynchronizSys(*pAccountViewTip);
-	//	extern void ThreadFlushWalletDB(const string& strFile);
-   //    threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(pwalletMain->strWalletFile)));
+		extern void ThreadFlushWalletDB(const string& strFile);
+       threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(pwalletMain->strWalletFile)));
 	}
     // ********************************************************* Step 12: finished
 
