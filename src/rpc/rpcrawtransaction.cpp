@@ -11,7 +11,7 @@
 #include "net.h"
 #include "rpcserver.h"
 #include "uint256.h"
-#include "wallet.h"
+#include "../wallet/wallet.h"
 
 
 #include <stdint.h>

@@ -9,7 +9,8 @@
 #include "bignum.h"
 #include "uint256.h"
 #include "util.h"
-
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <vector>
 
 using namespace std;
@@ -112,10 +113,28 @@ public:
     int64_t SetDeflautTxFee(int64_t fee)const;
 	virtual string GetDefaultTestDataPath() const
 	{
+		char findchar;
 		#ifdef WIN32
-		return string("D:\\bitcoin\\data\\");
+		findchar = '\\';
 		#else
-		return string("/home/share/bess/dacrs_test/data/");
+		findchar = '/';
+		#endif
+
+		string strCurDir = boost::filesystem::initial_path<boost::filesystem::path>().string();
+		int index = strCurDir.find_last_of(findchar);
+		int count = 3;
+		while (count--) {
+			index = strCurDir.find_last_of(findchar);
+			strCurDir = strCurDir.substr(0, index);
+
+		}
+
+		#ifdef WIN32
+		strCurDir += "\\dacrs_test\\data\\";
+		return strCurDir;
+		#else
+		strCurDir +="/dacrs_test/data/";
+		return strCurDir;
 		#endif
 	}
 public:
