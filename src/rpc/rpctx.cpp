@@ -1562,17 +1562,17 @@ typedef struct {
 	  IMPLEMENT_SERIALIZE
 	    (
 	        READWRITE(status);
-	  for(int i = 0 ;i < sizeof(sendid);i++)
+	  for(unsigned int i = 0 ;i < sizeof(sendid);i++)
 	        READWRITE(sendid[i]);
-	  for(int i = 0 ;i < sizeof(acceptid);i++)
+	  for(unsigned int i = 0 ;i < sizeof(acceptid);i++)
 	        READWRITE(acceptid[i]);
 	  READWRITE(money);
 	  READWRITE(hight);
 	  READWRITE(delyhight);
 	  READWRITE(shash);
-	  for(int i = 0 ;i < sizeof(sdata);i++)
+	  for(unsigned int i = 0 ;i < sizeof(sdata);i++)
 		        READWRITE(sdata[i]);
-	  for(int i = 0 ;i < sizeof(adata);i++)
+	  for(unsigned int i = 0 ;i < sizeof(adata);i++)
 		        READWRITE(adata[i]);
 	    )
 
