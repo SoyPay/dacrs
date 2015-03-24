@@ -30,8 +30,12 @@ typedef vector<unsigned char> vector_unsigned_char;
 
 class CNullID {
 public:
-    friend bool operator==(const CNullID &a, const CNullID &b) { return true; }
-    friend bool operator<(const CNullID &a, const CNullID &b) { return true; }
+	friend bool operator==(const CNullID &a, const CNullID &b) {
+		return true;
+	}
+	friend bool operator<(const CNullID &a, const CNullID &b) {
+		return true;
+	}
 };
 
 typedef boost::variant<CNullID, CRegID, CKeyID, CPubKey> CUserID;
@@ -44,11 +48,17 @@ private:
 	void SetRegIDByCompact(const vector<unsigned char> &vIn);
 public:
 	friend class CID;
-	const vector<unsigned char> &GetVec6() const {assert(vRegID.size() ==6);return vRegID;}
-	void SetRegID(const vector<unsigned char> &vIn) ;
+	const vector<unsigned char> &GetVec6() const {
+		assert(vRegID.size() == 6);
+		return vRegID;
+	}
+	void SetRegID(const vector<unsigned char> &vIn);
 	void SetRegID(string strRegID);
-    CKeyID getKeyID(const CAccountViewCache &view)const;
-    uint32_t getHight()const { return nHeight;};
+	CKeyID getKeyID(const CAccountViewCache &view) const;
+	uint32_t getHight() const {
+		return nHeight;
+	}
+	;
 	CRegID(string strRegID);
 	bool operator ==(const CRegID& co) const {
 		return (this->nHeight == co.nHeight && this->nIndex == co.nIndex);
@@ -58,27 +68,29 @@ public:
 	}
 	static bool IsSimpleRegIdStr(const string & str);
 	static bool IsRegIdStr(const string & str);
-	static bool GetKeyID(const string & str,CKeyID &keyId);
-	CRegID(const vector<unsigned char> &vIn) ;
-    bool IsEmpty()const{return (nHeight == 0 && nIndex == 0);};
+	static bool GetKeyID(const string & str, CKeyID &keyId);
+	CRegID(const vector<unsigned char> &vIn);
+	bool IsEmpty() const {
+		return (nHeight == 0 && nIndex == 0);
+	}
+	;
 	CRegID(uint32_t nHeight = 0, uint16_t nIndex = 0);
-    bool clean();
+	bool clean();
 
 	string ToString() const;
 
 	IMPLEMENT_SERIALIZE
 	(
-		READWRITE(VARINT(nHeight));
-		READWRITE(VARINT(nIndex));
-		if(fRead) {
-			vRegID.clear();
-			vRegID.insert(vRegID.end(), BEGIN(nHeight), END(nHeight));
-			vRegID.insert(vRegID.end(), BEGIN(nIndex), END(nIndex));
-		}
+			READWRITE(VARINT(nHeight));
+			READWRITE(VARINT(nIndex));
+			if(fRead) {
+				vRegID.clear();
+				vRegID.insert(vRegID.end(), BEGIN(nHeight), END(nHeight));
+				vRegID.insert(vRegID.end(), BEGIN(nIndex), END(nIndex));
+			}
 	)
 
 };
-
 
 class CID {
 private:
@@ -88,29 +100,30 @@ public:
 		return vchData;
 	}
 	bool Set(const CRegID &id);
-    bool Set(const CKeyID &id);
-    bool Set(const CPubKey &id);
-    bool Set(const CNullID &id);
-    bool Set(const CUserID &userid);
-    CID() {}
-    CID(const CUserID &dest) {Set(dest);}
-    CUserID GetUserId();
-    IMPLEMENT_SERIALIZE
+	bool Set(const CKeyID &id);
+	bool Set(const CPubKey &id);
+	bool Set(const CNullID &id);
+	bool Set(const CUserID &userid);
+	CID() {
+	}
+	CID(const CUserID &dest) {
+		Set(dest);
+	}
+	CUserID GetUserId();IMPLEMENT_SERIALIZE
 	(
-		READWRITE(vchData);
+			READWRITE(vchData);
 	)
 };
-
 
 class CIDVisitor: public boost::static_visitor<bool> {
 private:
 	CID *pId;
 public:
 	CIDVisitor(CID *pIdIn) :
-		pId(pIdIn) {
+			pId(pIdIn) {
 	}
 	bool operator()(const CRegID &id) const {
-			return pId->Set(id);
+		return pId->Set(id);
 	}
 	bool operator()(const CKeyID &id) const {
 		return pId->Set(id);
@@ -123,29 +136,25 @@ public:
 	}
 };
 
-
-
-
 enum TxType {
 	REWARD_TX = 1,    //!< reward tx
 	REG_ACCT_TX = 2,  //!< tx that used to register account
 	COMMON_TX = 3,    //!< transfer money from one account to another
 	CONTRACT_TX = 4,  //!< contract tx
 	FREEZE_TX = 5,    //!< freeze tx
-	REG_SCRIPT_TX = 6,//!< register script or modify authorization
+	REG_SCRIPT_TX = 6,    //!< register script or modify authorization
 	NULL_TX,          //!< NULL_TX
 };
 
 enum RegScriptType {
 	SCRIPT_ID = 0,     //!< SCRIPT_ID
-	SCRIPT_CONTENT = 1,//!< SCRIPT_CONTENT
+	SCRIPT_CONTENT = 1,     //!< SCRIPT_CONTENT
 	NULL_TYPE,         //!< NULL_TYPE
 };
 
 class CNetAuthorizate {
 public:
-	CNetAuthorizate()
-	{
+	CNetAuthorizate() {
 		nAuthorizeTime = 0;
 		nUserDefine.clear();
 		nMaxMoneyPerTime = 0;
@@ -153,15 +162,15 @@ public:
 		nMaxMoneyPerDay = 0;
 	}
 
-	CNetAuthorizate(uint32_t nauthorizetime, vector<unsigned char> nuserdefine, uint64_t nmaxmoneypertime, uint64_t nmaxmoneytotal,
-			uint64_t nmaxmoneyperday);
+	CNetAuthorizate(uint32_t nauthorizetime, vector<unsigned char> nuserdefine, uint64_t nmaxmoneypertime,
+			uint64_t nmaxmoneytotal, uint64_t nmaxmoneyperday);
 
 	uint32_t GetAuthorizeTime() const {
 		return nAuthorizeTime;
 	}
 	const vector<unsigned char> &GetUserData() const {
-			return nUserDefine;
-		}
+		return nUserDefine;
+	}
 	uint64_t GetMaxMoneyPerTime() const {
 		return nMaxMoneyPerTime;
 	}
@@ -180,7 +189,7 @@ public:
 	}
 	void SetUserData(const vector<unsigned char> &data) {
 		nUserDefine = data;
-		}
+	}
 	void SetMaxMoneyTotal(uint64_t nMoney) {
 		nMaxMoneyTotal = nMoney;
 	}
@@ -189,7 +198,7 @@ public:
 	}
 
 	bool IsValid() {
-		if(nUserDefine.size() > 128) {
+		if (nUserDefine.size() > 128) {
 			return false;
 		}
 		return true;
@@ -201,11 +210,11 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
-		READWRITE(VARINT(nAuthorizeTime));
-		READWRITE(nUserDefine);
-		READWRITE(VARINT(nMaxMoneyPerTime));
-		READWRITE(VARINT(nMaxMoneyTotal));
-		READWRITE(VARINT(nMaxMoneyPerDay));
+			READWRITE(VARINT(nAuthorizeTime));
+			READWRITE(nUserDefine);
+			READWRITE(VARINT(nMaxMoneyPerTime));
+			READWRITE(VARINT(nMaxMoneyTotal));
+			READWRITE(VARINT(nMaxMoneyPerDay));
 	)
 	Object ToJosnObj() const;
 	string ToString(bool bFlag) const;
@@ -217,9 +226,9 @@ protected:
 	uint64_t nMaxMoneyPerDay;
 };
 
-class CAuthorizate :public CNetAuthorizate{
+class CAuthorizate: public CNetAuthorizate {
 public:
-	CAuthorizate(CNetAuthorizate te) ;
+	CAuthorizate(CNetAuthorizate te);
 	CAuthorizate() {
 		nLastOperHeight = 0;
 		nCurMaxMoneyPerDay = 0;
@@ -306,11 +315,11 @@ public:
 	}
 
 	CBaseTransaction(int _nVersion, unsigned char _nTxType) :
-			nTxType(_nTxType), nVersion(_nVersion), nRunStep(0){
+			nTxType(_nTxType), nVersion(_nVersion), nRunStep(0) {
 	}
 
 	CBaseTransaction() :
-			nTxType(COMMON_TX) ,nVersion(CURRENT_VERSION), nRunStep(0) {
+			nTxType(COMMON_TX), nVersion(CURRENT_VERSION), nRunStep(0) {
 	}
 
 	virtual ~CBaseTransaction() {
@@ -370,12 +379,12 @@ public:
 		assert(REG_ACCT_TX == pBaseTx->nTxType);
 		*this = *(CRegisterAccountTx *) pBaseTx;
 	}
-	CRegisterAccountTx(const CUserID &uId,const CUserID &minerID,int64_t fees,int height) {
+	CRegisterAccountTx(const CUserID &uId, const CUserID &minerID, int64_t fees, int height) {
 		nTxType = REG_ACCT_TX;
 		llFees = fees;
 		nValidHeight = height;
 		userId = uId;
-		minerId=minerID;
+		minerId = minerID;
 		signature.clear();
 	}
 	CRegisterAccountTx() {
@@ -461,19 +470,19 @@ public:
 //	}
 	IMPLEMENT_SERIALIZE
 	(
-		READWRITE(VARINT(this->nVersion));
-		nVersion = this->nVersion;
-		CID id(userId);
-		READWRITE(id);
-		CID mMinerid(minerId);
-		READWRITE(mMinerid);
-		if(fRead) {
-			userId = id.GetUserId();
-			minerId = mMinerid.GetUserId();
-		}
-		READWRITE(VARINT(llFees));
-		READWRITE(VARINT(nValidHeight));
-		READWRITE(signature);
+			READWRITE(VARINT(this->nVersion));
+			nVersion = this->nVersion;
+			CID id(userId);
+			READWRITE(id);
+			CID mMinerid(minerId);
+			READWRITE(mMinerid);
+			if(fRead) {
+				userId = id.GetUserId();
+				minerId = mMinerid.GetUserId();
+			}
+			READWRITE(VARINT(llFees));
+			READWRITE(VARINT(nValidHeight));
+			READWRITE(signature);
 	)
 
 	uint64_t GetFee() const {
@@ -497,7 +506,7 @@ public:
 	}
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
-		return make_shared<CRegisterAccountTx>(this);
+		return make_shared < CRegisterAccountTx > (this);
 	}
 
 	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view);
@@ -529,15 +538,14 @@ public:
 	CTransaction(const CBaseTransaction *pBaseTx) {
 		assert(COMMON_TX == pBaseTx->nTxType);
 		*this = *(CTransaction *) pBaseTx;
-		assert(srcUserId.type()==typeid(CRegID));
+		assert(srcUserId.type() == typeid(CRegID));
 	}
 
-	CTransaction(const CUserID& send, const CUserID& rev,int64_t nAmount ,int high,int64_t Fee)
-	{
-		assert(send.type()==typeid(CRegID));
+	CTransaction(const CUserID& send, const CUserID& rev, int64_t nAmount, int high, int64_t Fee) {
+		assert(send.type() == typeid(CRegID));
 		srcUserId = send;
-		desUserId=rev;
-		llValues =nAmount;
+		desUserId = rev;
+		llValues = nAmount;
 		nValidHeight = high;
 		llFees = Fee;
 		signature.clear();
@@ -593,7 +601,7 @@ public:
 	}
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
-		return make_shared<CTransaction>(this);
+		return make_shared < CTransaction > (this);
 	}
 
 	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view);
@@ -611,7 +619,7 @@ public:
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
 
-class CContractTransaction : public CBaseTransaction {
+class CContractTransaction: public CBaseTransaction {
 public:
 	mutable CUserID scriptRegId;                    //regid
 	mutable vector<CUserID> vAccountRegId;
@@ -626,14 +634,14 @@ public:
 		*this = *(CContractTransaction *) pBaseTx;
 	}
 
-	CContractTransaction(const CUserID& sRegId, vector_unsigned_char& pContract,vector<CUserID>& vRegId,int high,int64_t Fee)
-	{
+	CContractTransaction(const CUserID& sRegId, vector_unsigned_char& pContract, vector<CUserID>& vRegId, int high,
+			int64_t Fee) {
 		nTxType = CONTRACT_TX;
 		scriptRegId = sRegId;
 		vContract = pContract;
 		nValidHeight = high;
 		llFees = Fee;
-		vAccountRegId.assign(vRegId.begin(),vRegId.end());
+		vAccountRegId.assign(vRegId.begin(), vRegId.end());
 		vSignature.clear();
 	}
 	CContractTransaction() {
@@ -691,7 +699,7 @@ public:
 	uint256 SignatureHash() const;
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
-		return make_shared<CContractTransaction>(this);
+		return make_shared < CContractTransaction > (this);
 	}
 
 	string ToString(CAccountViewCache &view) const;
@@ -728,8 +736,7 @@ public:
 		assert(FREEZE_TX == pBaseTx->nTxType);
 		*this = *(CFreezeTransaction*) pBaseTx;
 	}
-	CFreezeTransaction(const CUserID& regId, uint64_t freeze,int unhight,int high,int64_t Fee)
-	{
+	CFreezeTransaction(const CUserID& regId, uint64_t freeze, int unhight, int high, int64_t Fee) {
 		regAccountId = regId;
 		nValidHeight = high;
 		llFees = Fee;
@@ -755,7 +762,7 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
-		    READWRITE(VARINT(this->nVersion));
+			READWRITE(VARINT(this->nVersion));
 			nVersion = this->nVersion;
 			CID regId(regAccountId);
 			READWRITE(regId);
@@ -778,13 +785,14 @@ public:
 	}
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
-		return make_shared<CFreezeTransaction>(this);
+		return make_shared < CFreezeTransaction > (this);
 	}
 
 	uint256 SignatureHash() const {
 		CHashWriter ss(SER_GETHASH, 0);
 		CID regId(regAccountId);
-		ss <<VARINT(nVersion) << nTxType << regId << VARINT(llFees) << VARINT(llFreezeFunds) << VARINT(nValidHeight) << VARINT(nUnfreezeHeight);
+		ss << VARINT(nVersion) << nTxType << regId << VARINT(llFees) << VARINT(llFreezeFunds) << VARINT(nValidHeight)
+				<< VARINT(nUnfreezeHeight);
 		return ss.GetHash();
 	}
 
@@ -837,15 +845,15 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
-		READWRITE(VARINT(this->nVersion));
-		nVersion = this->nVersion;
-		CID acctId(account);
-		READWRITE(acctId);
-		if(fRead) {
-			account = acctId.GetUserId();
-		}
-		READWRITE(VARINT(rewardValue));
-		READWRITE(VARINT(nHeight));
+			READWRITE(VARINT(this->nVersion));
+			nVersion = this->nVersion;
+			CID acctId(account);
+			READWRITE(acctId);
+			if(fRead) {
+				account = acctId.GetUserId();
+			}
+			READWRITE(VARINT(rewardValue));
+			READWRITE(VARINT(nHeight));
 	)
 
 	uint256 GetHash() const {
@@ -853,13 +861,13 @@ public:
 	}
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
-		return make_shared<CRewardTransaction>(this);
+		return make_shared < CRewardTransaction > (this);
 	}
 
 	uint256 SignatureHash() const {
 		CHashWriter ss(SER_GETHASH, 0);
 		CID accId(account);
-		ss <<VARINT(nVersion) << nTxType<< accId << VARINT(rewardValue) << VARINT(nHeight);
+		ss << VARINT(nVersion) << nTxType << accId << VARINT(rewardValue) << VARINT(nHeight);
 		return ss.GetHash();
 	}
 
@@ -916,18 +924,18 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
-		READWRITE(VARINT(this->nVersion));
-		nVersion = this->nVersion;
-		CID regAcctId(regAccountId);
-		READWRITE(regAcctId);
-		if(fRead) {
-			regAccountId = regAcctId.GetUserId();
-		}
-		READWRITE(script);
-		READWRITE(VARINT(llFees));
-		READWRITE(VARINT(nValidHeight));
-		READWRITE(aAuthorizate);
-		READWRITE(signature);
+			READWRITE(VARINT(this->nVersion));
+			nVersion = this->nVersion;
+			CID regAcctId(regAccountId);
+			READWRITE(regAcctId);
+			if(fRead) {
+				regAccountId = regAcctId.GetUserId();
+			}
+			READWRITE(script);
+			READWRITE(VARINT(llFees));
+			READWRITE(VARINT(nValidHeight));
+			READWRITE(aAuthorizate);
+			READWRITE(signature);
 	)
 
 	uint256 GetHash() const {
@@ -935,7 +943,7 @@ public:
 	}
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
-		return make_shared<CRegisterScriptTx>(this);
+		return make_shared < CRegisterScriptTx > (this);
 	}
 
 	uint256 SignatureHash() const {
@@ -1007,7 +1015,8 @@ public:
 		value = _value;
 		nHeight = 0;
 	}
-	CFund(unsigned char _type, uint64_t _value, int _Height,const vector_unsigned_char& _scriptID = vector_unsigned_char()) {
+	CFund(unsigned char _type, uint64_t _value, int _Height, const vector_unsigned_char& _scriptID =
+			vector_unsigned_char()) {
 		nFundType = _type;
 		value = _value;
 		nHeight = _Height;
@@ -1064,8 +1073,6 @@ public:
 		return true;
 	}
 
-
-
 	IMPLEMENT_SERIALIZE
 	(
 			READWRITE(nFundType);
@@ -1084,13 +1091,12 @@ enum AccountOper {
 	NULL_OPER,			//!< invalid
 };
 
-
 class CScriptDBOperLog {
 public:
 	vector<unsigned char> vKey;
 	vector<unsigned char> vValue;
 
-	CScriptDBOperLog (const vector<unsigned char> &vKeyIn, const vector<unsigned char> &vValueIn) {
+	CScriptDBOperLog(const vector<unsigned char> &vKeyIn, const vector<unsigned char> &vValueIn) {
 		vKey = vKeyIn;
 		vValue = vValueIn;
 	}
@@ -1101,8 +1107,8 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
-		READWRITE(vKey);
-		READWRITE(vValue);
+			READWRITE(vKey);
+			READWRITE(vValue);
 	)
 
 	string ToString() const {
@@ -1110,7 +1116,7 @@ public:
 		str += "vKey:";
 		str += HexStr(vKey);
 		str += "\n";
-		str +="vValue:";
+		str += "vValue:";
 		str += HexStr(vValue);
 		str += "\n";
 		return str;
@@ -1120,7 +1126,6 @@ public:
 		return log1.vKey < log2.vKey;
 	}
 };
-
 
 class COperFund {
 public:
@@ -1140,13 +1145,13 @@ public:
 		vFund.clear();
 	}
 
-	COperFund(unsigned char nType, const vector<CFund>& vOperFund,bool _bAuthorizated = false) {
+	COperFund(unsigned char nType, const vector<CFund>& vOperFund, bool _bAuthorizated = false) {
 		operType = nType;
 		vFund = vOperFund;
 		bAuthorizated = _bAuthorizated;
 	}
 
-	COperFund(unsigned char nType, const CFund& fund,bool _bAuthorizated) {
+	COperFund(unsigned char nType, const CFund& fund, bool _bAuthorizated) {
 		operType = nType;
 		vFund.push_back(fund);
 		bAuthorizated = _bAuthorizated;
@@ -1166,7 +1171,8 @@ public:
 		scriptID.clear();
 	}
 
-	CAuthorizateLog(int nHeight,uint64_t nMoneyPerDay, uint64_t nTotalMoney, bool _bValid,const vector_unsigned_char& _scriptID) {
+	CAuthorizateLog(int nHeight, uint64_t nMoneyPerDay, uint64_t nTotalMoney, bool _bValid,
+			const vector_unsigned_char& _scriptID) {
 		bValid = _bValid;
 		nLastOperHeight = nHeight;
 		nLastCurMaxMoneyPerDay = nMoneyPerDay;
@@ -1174,7 +1180,7 @@ public:
 		scriptID = _scriptID;
 	}
 
-	int GetLastOperHeight() const{
+	int GetLastOperHeight() const {
 		return nLastOperHeight;
 	}
 	uint64_t GetLastCurMaxMoneyPerDay() const {
@@ -1186,14 +1192,14 @@ public:
 	const vector_unsigned_char& GetScriptID() const {
 		return scriptID;
 	}
-	void SetLastOperHeight(int nHeight)  {
-		assert(nHeight>=0);
+	void SetLastOperHeight(int nHeight) {
+		assert(nHeight >= 0);
 		nLastOperHeight = nHeight;
 	}
 	void SetScriptID(const vector_unsigned_char& _scriptID) {
 		scriptID = _scriptID;
 	}
-	bool IsLogValid() const{
+	bool IsLogValid() const {
 		return bValid;
 	}
 
@@ -1280,28 +1286,28 @@ public:
 //	mutable CAuthorizateLog   authorLog;
 	IMPLEMENT_SERIALIZE
 	(
-		vector<unsigned char> vData;
-		if(fWrite || fGetSize) {
-			if(keyID == uint160(0)) {
-				vData.clear();
+			vector<unsigned char> vData;
+			if(fWrite || fGetSize) {
+				if(keyID == uint160(0)) {
+					vData.clear();
+				}
+				else {
+					CDataStream ds(SER_DISK, CLIENT_VERSION);
+					ds << keyID;
+					ds << vOperFund;
+					//			ds << authorLog;
+					vData.insert(vData.end(), ds.begin(), ds.end());
+				}
 			}
-			else {
-				CDataStream ds(SER_DISK, CLIENT_VERSION);
-				ds << keyID;
-				ds << vOperFund;
-	//			ds << authorLog;
-				vData.insert(vData.end(), ds.begin(), ds.end());
-			}
-		}
-		READWRITE(vData);
-		if(fRead) {
-			if(!vData.empty()) {
-				CDataStream ds(vData, SER_DISK, CLIENT_VERSION);
-				ds >> keyID;
-				ds >> vOperFund;
+			READWRITE(vData);
+			if(fRead) {
+				if(!vData.empty()) {
+					CDataStream ds(vData, SER_DISK, CLIENT_VERSION);
+					ds >> keyID;
+					ds >> vOperFund;
 //				ds >> authorLog;
+				}
 			}
-		}
 
 	)
 public:
@@ -1326,12 +1332,11 @@ class CTxUndo {
 public:
 	uint256 txHash;
 	vector<CAccountOperLog> vAccountOperLog;
-	vector<CScriptDBOperLog> vScriptOperLog;
-	IMPLEMENT_SERIALIZE
+	vector<CScriptDBOperLog> vScriptOperLog;IMPLEMENT_SERIALIZE
 	(
-		READWRITE(txHash);
-		READWRITE(vAccountOperLog);
-		READWRITE(vScriptOperLog);
+			READWRITE(txHash);
+			READWRITE(vAccountOperLog);
+			READWRITE(vScriptOperLog);
 	)
 
 public:
@@ -1351,7 +1356,7 @@ public:
 	vector<CFund> vFreeze;									//!< freezed money
 	vector<CFund> vSelfFreeze;								//!< self-freeze money
 	CAccountOperLog accountOperLog;							//!< record operlog, write at undoinfo
-public :
+public:
 	/**
 	 * @brief operate account
 	 * @param type:	operate type
@@ -1361,8 +1366,9 @@ public :
 	 * @param bCheckAuthorized
 	 * @return if operate successfully return ture,otherwise return false
 	 */
-	bool OperateAccount(OperType type, const CFund &fund, CScriptDBViewCache &scriptCache, vector<CScriptDBOperLog> &vAuthorLog, int nHeight = 0,
-			const vector_unsigned_char* pscriptID = NULL,bool bCheckAuthorized = false);
+	bool OperateAccount(OperType type, const CFund &fund, CScriptDBViewCache &scriptCache,
+			vector<CScriptDBOperLog> &vAuthorLog, int nHeight = 0, const vector_unsigned_char* pscriptID = NULL,
+			bool bCheckAuthorized = false);
 
 	/**
 	 * @brief:	test whether  can minus money  from the account by the script
@@ -1371,7 +1377,8 @@ public :
 	 * @param scriptID:
 	 * @return if we can minus the money then return ture,otherwise return false
 	 */
-	bool IsAuthorized(uint64_t nMoney,int nHeight,const vector_unsigned_char& scriptID, CScriptDBViewCache &scriptCache);
+	bool IsAuthorized(uint64_t nMoney, int nHeight, const vector_unsigned_char& scriptID,
+			CScriptDBViewCache &scriptCache);
 
 	/**
 	 * @brief get user defined data in authorizate class by scriptID
@@ -1379,12 +1386,13 @@ public :
 	 * @param vData user defined data
 	 * @return true if success,otherwise false
 	 */
-	bool GetUserData(const vector_unsigned_char& scriptID,vector<unsigned char> & vData, CScriptDBViewCache &scriptCache);
+	bool GetUserData(const vector_unsigned_char& scriptID, vector<unsigned char> & vData,
+			CScriptDBViewCache &scriptCache);
 public:
 	CAccount(CKeyID &keyId, CPubKey &pubKey) :
 			keyID(keyId), PublicKey(pubKey) {
 		llValues = 0;
-		MinerPKey =  CPubKey();
+		MinerPKey = CPubKey();
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
 		vSelfFreeze.clear();
@@ -1394,7 +1402,7 @@ public:
 	CAccount() :
 			keyID(uint160(0)), llValues(0) {
 		PublicKey = CPubKey();
-		MinerPKey =  CPubKey();
+		MinerPKey = CPubKey();
 		accountOperLog.keyID = keyID;
 		vFreedomFund.clear();
 		vSelfFreeze.clear();
@@ -1415,7 +1423,7 @@ public:
 		this->accountOperLog = other.accountOperLog;
 	}
 	CAccount &operator=(const CAccount & other) {
-		if(this == &other)
+		if (this == &other)
 			return *this;
 		this->regID = other.regID;
 		this->keyID = other.keyID;
@@ -1431,7 +1439,7 @@ public:
 		return *this;
 	}
 	std::shared_ptr<CAccount> GetNewInstance() {
-		return make_shared<CAccount>(*this);
+		return make_shared < CAccount > (*this);
 	}
 	uint64_t GetInterest() const {
 		/**
@@ -1444,8 +1452,16 @@ public:
 	bool IsRegister() const {
 		return (PublicKey.IsFullyValid() && PublicKey.GetKeyID() == keyID);
 	}
-	bool SetRegId(const CRegID &regID){this->regID = regID;return true;};
-	bool GetRegId(CRegID &regID)const {regID = this->regID;return !regID.IsEmpty();};
+	bool SetRegId(const CRegID &regID) {
+		this->regID = regID;
+		return true;
+	}
+	;
+	bool GetRegId(CRegID &regID) const {
+		regID = this->regID;
+		return !regID.IsEmpty();
+	}
+	;
 	uint64_t GetRewardAmount(int nCurHeight);
 	uint64_t GetSripteFreezeAmount(int nCurHeight);
 	uint64_t GetSelfFreezeAmount(int nCurHeight);
@@ -1459,12 +1475,12 @@ public:
 		return !(llValues > 0 || !vFreedomFund.empty() || !vFreeze.empty() || !vSelfFreeze.empty());
 	}
 	bool CompactAccount(int nCurHeight);
-	void AddToFreedom(const CFund &fund,bool bWriteLog = true);
-	void AddToFreeze(const CFund &fund,bool bWriteLog = true);
-	void AddToSelfFreeze(const CFund &fund,bool bWriteLog = true);
+	void AddToFreedom(const CFund &fund, bool bWriteLog = true);
+	void AddToFreeze(const CFund &fund, bool bWriteLog = true);
+	void AddToSelfFreeze(const CFund &fund, bool bWriteLog = true);
 
 	bool UndoOperateAccount(const CAccountOperLog & accountOperLog);
-	bool FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID,CFund&fund);
+	bool FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID, CFund&fund);
 
 	IMPLEMENT_SERIALIZE
 	(
@@ -1482,17 +1498,18 @@ public:
 
 private:
 	bool MergerFund(vector<CFund> &vFund, int nCurHeight);
-	void WriteOperLog(AccountOper emOperType, const CFund &fund,bool bAuthorizated = false);
+	void WriteOperLog(AccountOper emOperType, const CFund &fund, bool bAuthorizated = false);
 	void WriteOperLog(const COperFund &operLog);
-	bool IsFundValid(OperType type, const CFund &fund, CScriptDBViewCache &scriptCache, int nHeight, const vector_unsigned_char* pscriptID = NULL,
-			bool bCheckAuthorized = false);
+	bool IsFundValid(OperType type, const CFund &fund, CScriptDBViewCache &scriptCache, int nHeight,
+			const vector_unsigned_char* pscriptID = NULL, bool bCheckAuthorized = false);
 
 	bool MinusFreezed(const CFund& fund);
-	bool MinusFree(const CFund &fund,bool bAuthorizated);
-	bool MinusSelf(const CFund &fund,bool bAuthorizated);
+	bool MinusFree(const CFund &fund, bool bAuthorizated);
+	bool MinusSelf(const CFund &fund, bool bAuthorizated);
 	bool IsMoneyOverflow(uint64_t nAddMoney);
-	void UpdateAuthority(int nHeight,uint64_t nMoney, const vector_unsigned_char& scriptID, CScriptDBViewCache &scriptCache, vector<CScriptDBOperLog> &vAuthorLog);
-	void UndoAuthorityOnDay(uint64_t nUndoMoney,const CAuthorizateLog& log);
+	void UpdateAuthority(int nHeight, uint64_t nMoney, const vector_unsigned_char& scriptID,
+			CScriptDBViewCache &scriptCache, vector<CScriptDBOperLog> &vAuthorLog);
+	void UndoAuthorityOnDay(uint64_t nUndoMoney, const CAuthorizateLog& log);
 	void UndoAuthorityOverDay(const CAuthorizateLog& log);
 	uint64_t GetVecMoney(const vector<CFund>& vFund);
 };
@@ -1507,23 +1524,17 @@ void Serialize(Stream& os, const std::shared_ptr<CBaseTransaction> &pa, int nTyp
 	Serialize(os, ntxType, nType, nVersion);
 	if (pa->nTxType == REG_ACCT_TX) {
 		Serialize(os, *((CRegisterAccountTx *) (pa.get())), nType, nVersion);
-	}
-	else if (pa->nTxType == COMMON_TX) {
+	} else if (pa->nTxType == COMMON_TX) {
 		Serialize(os, *((CTransaction *) (pa.get())), nType, nVersion);
-	}
-	else if (pa->nTxType == CONTRACT_TX) {
+	} else if (pa->nTxType == CONTRACT_TX) {
 		Serialize(os, *((CContractTransaction *) (pa.get())), nType, nVersion);
-	}
-	else if (pa->nTxType == FREEZE_TX) {
+	} else if (pa->nTxType == FREEZE_TX) {
 		Serialize(os, *((CFreezeTransaction *) (pa.get())), nType, nVersion);
-	}
-	else if (pa->nTxType == REWARD_TX) {
+	} else if (pa->nTxType == REWARD_TX) {
 		Serialize(os, *((CRewardTransaction *) (pa.get())), nType, nVersion);
-	}
-	else if (pa->nTxType == REG_SCRIPT_TX) {
+	} else if (pa->nTxType == REG_SCRIPT_TX) {
 		Serialize(os, *((CRegisterScriptTx *) (pa.get())), nType, nVersion);
-	}
-	else {
+	} else {
 		assert(0);
 	}
 
@@ -1536,45 +1547,42 @@ void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, i
 	if (nTxType == REG_ACCT_TX) {
 		pa = make_shared<CRegisterAccountTx>();
 		Unserialize(is, *((CRegisterAccountTx *) (pa.get())), nType, nVersion);
-	}
-	else if (nTxType == COMMON_TX) {
+	} else if (nTxType == COMMON_TX) {
 		pa = make_shared<CTransaction>();
 		Unserialize(is, *((CTransaction *) (pa.get())), nType, nVersion);
-	}
-	else if (nTxType == CONTRACT_TX) {
+	} else if (nTxType == CONTRACT_TX) {
 		pa = make_shared<CContractTransaction>();
 		Unserialize(is, *((CContractTransaction *) (pa.get())), nType, nVersion);
-	}
-	else if (nTxType == FREEZE_TX) {
+	} else if (nTxType == FREEZE_TX) {
 		pa = make_shared<CFreezeTransaction>();
 		Unserialize(is, *((CFreezeTransaction *) (pa.get())), nType, nVersion);
-	}
-	else if (nTxType == REWARD_TX) {
+	} else if (nTxType == REWARD_TX) {
 		pa = make_shared<CRewardTransaction>();
 		Unserialize(is, *((CRewardTransaction *) (pa.get())), nType, nVersion);
-	}
-	else if (nTxType == REG_SCRIPT_TX) {
+	} else if (nTxType == REG_SCRIPT_TX) {
 		pa = make_shared<CRegisterScriptTx>();
 		Unserialize(is, *((CRegisterScriptTx *) (pa.get())), nType, nVersion);
-	}
-	else {
+	} else {
 		assert(0);
 	}
 	pa->nTxType = nTxType;
 }
 
-inline unsigned int GetSerializeSize(const std::shared_ptr<map<vector<unsigned char>,CAuthorizate> > &pAuthorizate, int nType, int nVersion) {
-	return ::GetSerializeSize(*((map<vector<unsigned char>,CAuthorizate> *) (pAuthorizate.get())), nType, nVersion);
+inline unsigned int GetSerializeSize(const std::shared_ptr<map<vector<unsigned char>, CAuthorizate> > &pAuthorizate,
+		int nType, int nVersion) {
+	return ::GetSerializeSize(*((map<vector<unsigned char>, CAuthorizate> *) (pAuthorizate.get())), nType, nVersion);
 }
 
 template<typename Stream>
-void Serialize(Stream& os, const std::shared_ptr<map<vector<unsigned char>,CAuthorizate> > &pAuthorizate, int nType, int nVersion) {
-	::Serialize(os, *((map<vector<unsigned char>,CAuthorizate> *) (pAuthorizate.get())), nType, nVersion);
+void Serialize(Stream& os, const std::shared_ptr<map<vector<unsigned char>, CAuthorizate> > &pAuthorizate, int nType,
+		int nVersion) {
+	::Serialize(os, *((map<vector<unsigned char>, CAuthorizate> *) (pAuthorizate.get())), nType, nVersion);
 }
 
 template<typename Stream>
-void Unserialize(Stream& is, std::shared_ptr<map<vector<unsigned char>,CAuthorizate> > &pAuthorizate, int nType, int nVersion) {
-	pAuthorizate = make_shared<map<vector_unsigned_char,CAuthorizate> >();
-	::Unserialize(is, *((map<vector<unsigned char>,CAuthorizate> *) (pAuthorizate.get())), nType, nVersion);
+void Unserialize(Stream& is, std::shared_ptr<map<vector<unsigned char>, CAuthorizate> > &pAuthorizate, int nType,
+		int nVersion) {
+	pAuthorizate = make_shared<map<vector_unsigned_char, CAuthorizate> >();
+	::Unserialize(is, *((map<vector<unsigned char>, CAuthorizate> *) (pAuthorizate.get())), nType, nVersion);
 }
 #endif
