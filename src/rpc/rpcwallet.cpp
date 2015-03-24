@@ -402,9 +402,19 @@ Value sendtoaddress(const Array& params, bool fHelp)
 	CRegID sendreg;
 	CRegID revreg;
 	CUserID rev;
+	CUserID send;
+
+//	if (!pwalletMain->GetRegId(sendKeyId, sendreg)) {
+//		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+//	}
 
 	if (!pwalletMain->GetRegId(sendKeyId, sendreg)) {
-		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+		CPubKey pubkey;
+		if (!pwalletMain->GetPubKey(sendKeyId, pubkey))
+			throw JSONRPCError(RPC_WALLET_ERROR, "in sendtoaddress Error: not find key.");
+		send = pubkey;
+	} else {
+		send = sendreg;
 	}
 
 	if (pAccountViewTip->GetRegId(CUserID(RevKeyId), revreg)) {
@@ -413,9 +423,9 @@ Value sendtoaddress(const Array& params, bool fHelp)
 		rev = RevKeyId;
 	}
 
-	CTransaction tx(sendreg,rev,nAmount,chainActive.Height(),SysCfg().GetTxFee());
+	CTransaction tx(send,rev,nAmount,chainActive.Height(),SysCfg().GetTxFee());
 
-	if (!pwalletMain->Sign(sendreg,tx.SignatureHash(), tx.signature)) {
+	if (!pwalletMain->Sign(send,tx.SignatureHash(), tx.signature)) {
 		throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
 	}
 
