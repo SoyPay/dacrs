@@ -525,7 +525,7 @@ DBErrors CWallet::LoadWallet(bool fFirstRunRet) {
 	  return db.LoadWallet(this);
 
 }
-
+string CWallet::strWalletFile="";
 
 int64_t CWallet::GetRawBalance(int ncurhigh) const
 {
@@ -589,68 +589,73 @@ void CWallet::UpdatedTransaction(const uint256 &hashTx) {
 
 bool CWallet::StartUp() {
 //	[](int i) { return i+4; };
-	 auto InitError = [] (const string &str)
+	auto InitError = [] (const string &str)
 	{
-        uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING | CClientUIInterface::NOSHOWGUI);
-	    return true;
+		uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING | CClientUIInterface::NOSHOWGUI);
+		return true;
 	};
 
-	 defaultFilename = SysCfg().GetArg("-wallet", "wallet");
-//	  bool fDisableWallet = SysCfg().GetBoolArg("-disablewallet", false);
-    string strDataDir = GetDataDir().string();
+	auto InitWarning = [](const string &str)
+	{
+		uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING | CClientUIInterface::NOSHOWGUI);
+		return true;
+	};
 
-	    // Wallet file must be a plain filename without a directory
-	    if (defaultFilename != boost::filesystem::basename(defaultFilename) + boost::filesystem::extension(defaultFilename))
-	        return InitError(strprintf(("Wallet %s resides outside data directory %s"), defaultFilename, strDataDir));
-//
-////	 if (!fDisableWallet) {
-////	        LogPrint("INFO","Using wallet %s\n", defaultFilename);
-////	        uiInterface.InitMessage(("Verifying wallet..."));
-////
-//	        if (!bitdb.Open(GetDataDir()))
-//	        {
-//	            // try moving the database env out of the way
-//	            boost::filesystem::path pathDatabase = GetDataDir() / "database";
-//	            boost::filesystem::path pathDatabaseBak = GetDataDir() / strprintf("database.%d.bak", GetTime());
-//	            try {
-//	                boost::filesystem::rename(pathDatabase, pathDatabaseBak);
-//	                LogPrint("INFO","Moved old %s to %s. Retrying.\n", pathDatabase.string(), pathDatabaseBak.string());
-//	            } catch(boost::filesystem::filesystem_error &error) {
-//	                 // failure is ok (well, not really, but it's not worse than what we started with)
-//	            }
-//
-//	            // try again
-//	            if (!bitdb.Open(GetDataDir())) {
-//	                // if it still fails, it probably means we can't even create the database env
-//	                string msg = strprintf(("Error initializing wallet database environment %s!"), strDataDir);
-//	                return InitError(msg);
-//	            }
-//	        }
-////
-//	        if (GetBoolArg("-salvagewallet", false))
-//	        {
-//	            // Recover readable keypairs:
-//	            if (!CWalletDB::Recover(bitdb, defaultFilename, true))
-//	                return false;
-//	        }
-//
-//	        if (filesystem::exists(GetDataDir() / defaultFilename))
-//	        {
-//	            CDBEnv::VerifyResult r = bitdb.Verify(defaultFilename, CWalletDB::Recover);
-//	            if (r == CDBEnv::RECOVER_OK)
-//	            {
-//	                string msg = strprintf(_("Warning: wallet.dat corrupt, data salvaged!"
-//	                                         " Original wallet.dat saved as wallet.{timestamp}.bak in %s; if"
-//	                                         " your balance or transactions are incorrect you should"
-//	                                         " restore from a backup."), strDataDir);
-//	                InitError(msg);
-//	            }
-//	            if (r == CDBEnv::RECOVER_FAIL)
-//	                return InitError(_("wallet.dat corrupt, salvage failed"));
-//	        }
-////	    } // (!fDisableWallet)
-  return true;
+	defaultFilename = SysCfg().GetArg("-wallet", "wallet.dat");
+//	  bool fDisableWallet = SysCfg().GetBoolArg("-disablewallet", false);
+	string strDataDir = GetDataDir().string();
+
+	// Wallet file must be a plain filename without a directory
+	if (defaultFilename != boost::filesystem::basename(defaultFilename) + boost::filesystem::extension(defaultFilename))
+		return InitError(strprintf(("Wallet %s resides outside data directory %s"), defaultFilename, strDataDir));
+
+	if(strWalletFile =="")
+	{
+		strWalletFile = defaultFilename;
 	}
+	LogPrint("INFO", "Using wallet %s\n", strWalletFile);
+	uiInterface.InitMessage(_("Verifying wallet..."));
+
+	if (!bitdb.Open(GetDataDir())) {
+		// try moving the database env out of the way
+		boost::filesystem::path pathDatabase = GetDataDir() / "database";
+		boost::filesystem::path pathDatabaseBak = GetDataDir() / strprintf("database.%d.bak", GetTime());
+		try {
+			boost::filesystem::rename(pathDatabase, pathDatabaseBak);
+			LogPrint("INFO", "Moved old %s to %s. Retrying.\n", pathDatabase.string(), pathDatabaseBak.string());
+		} catch (boost::filesystem::filesystem_error &error) {
+			// failure is ok (well, not really, but it's not worse than what we started with)
+		}
+
+		// try again
+		if (!bitdb.Open(GetDataDir())) {
+			// if it still fails, it probably means we can't even create the database env
+			string msg = strprintf(_("Error initializing wallet database environment %s!"), strDataDir);
+			return InitError(msg);
+		}
+	}
+
+	if (SysCfg().GetBoolArg("-salvagewallet", false)) {
+		// Recover readable keypairs:
+		if (!CWalletDB::Recover(bitdb, strWalletFile, true))
+			return false;
+	}
+
+	if (filesystem::exists(GetDataDir() / strWalletFile)) {
+		CDBEnv::VerifyResult r = bitdb.Verify(strWalletFile, CWalletDB::Recover);
+		if (r == CDBEnv::RECOVER_OK) {
+			string msg = strprintf(_("Warning: wallet.dat corrupt, data salvaged!"
+					" Original wallet.dat saved as wallet.{timestamp}.bak in %s; if"
+					" your balance or transactions are incorrect you should"
+					" restore from a backup."), strDataDir);
+			InitWarning(msg);
+		}
+		if (r == CDBEnv::RECOVER_FAIL)
+			return InitError(_("wallet.dat corrupt, salvage failed"));
+	}
+
+	return true;
+}
 
 
 CWallet* CWallet::getinstance() {
