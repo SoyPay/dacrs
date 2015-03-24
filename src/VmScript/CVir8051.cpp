@@ -562,21 +562,25 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
     	return std::make_tuple (false, tem);
     }
     bool flag = true;
+    auto GetKeyId = [](const CAccountViewCache &view,vector<std::shared_ptr < std::vector<unsigned char> > > &ret,CKeyID &KeyId) {
+    	 if(ret.at(0).get()->size() == 6){
+    		 CRegID reg(*ret.at(0));
+    		 KeyId= reg.getKeyID(view);
+    	 }else if(ret.at(0).get()->size() == 34) {
+    		 string addr((*ret[0]).begin(), (*ret[0]).end());
+    		 KeyId=CKeyID(addr);
+    	 }
+    	   if (KeyId.IsEmpty())
+    	   return false;
 
-	auto GetKeyId = [](string const &addr,CKeyID &KeyId) {
-		if (!CRegID::GetKeyID(addr, KeyId)) {
-			KeyId=CKeyID(addr);
-			if (KeyId.IsEmpty())
-			return false;
-		}
-		return true;
-	};
-	string addr((*retdata[0]).begin(), (*retdata[0]).end());
-	CKeyID addrKeyId;
-	if (!GetKeyId(addr, addrKeyId)) {
-    	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    	return std::make_tuple (false, tem);
-	}
+    	  return true;
+    	 };
+
+	 CKeyID addrKeyId;
+	 if (!GetKeyId(*pVmScript->GetCatchView(),retdata, addrKeyId)) {
+		 auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+		 return std::make_tuple (false, tem);
+	 }
 
 	CUserID userid(addrKeyId);
 	CAccount aAccount;
@@ -610,24 +614,28 @@ static RET_DEFINE ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScri
     }
 	bool flag = true;
 
-	auto GetKeyId = [](string const &addr,CKeyID &KeyId) {
-		if (!CRegID::GetKeyID(addr, KeyId)) {
-			KeyId=CKeyID(addr);
-			if (KeyId.IsEmpty())
-			return false;
-		}
-		return true;
-	};
-	string addr((*retdata[0]).begin(), (*retdata[0]).end());
-	CKeyID addrKeyId;
-	if (!GetKeyId(addr, addrKeyId)) {
-    	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    	return std::make_tuple (false, tem);
-	}
+	auto GetKeyId = [](const CAccountViewCache &view,vector<std::shared_ptr < std::vector<unsigned char> > > &ret,CKeyID &KeyId) {
+	 if(ret.at(0).get()->size() == 6){
+		 CRegID reg(*ret.at(0));
+		 KeyId= reg.getKeyID(view);
+	 }else if(ret.at(0).get()->size() == 34) {
+		 string addr((*ret[0]).begin(), (*ret[0]).end());
+		 KeyId=CKeyID(addr);
+	 }
+	   if (KeyId.IsEmpty())
+	   return false;
 
-	CUserID userid(addrKeyId);
-	CAccount aAccount;
+	  return true;
+	 };
 
+	 CKeyID addrKeyId;
+	 if (!GetKeyId(*pVmScript->GetCatchView(),retdata, addrKeyId)) {
+	     auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+	     return std::make_tuple (false, tem);
+	 }
+
+	 CUserID userid(addrKeyId);
+	 CAccount aAccount;
 	if (!pVmScript->GetCatchView()->GetAccount(userid, aAccount)) {
 		flag = false;
 	}
@@ -1000,20 +1008,25 @@ static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 
 	bool flag = true;
 
-	auto GetKeyId = [](string const &addr,CKeyID &KeyId) {
-		if (!CRegID::GetKeyID(addr, KeyId)) {
-			KeyId=CKeyID(addr);
-			if (KeyId.IsEmpty())
-			return false;
-		}
-		return true;
-	};
-	string addr((*retdata[0]).begin(), (*retdata[0]).end());
-	CKeyID addrKeyId;
-	if (!GetKeyId(addr, addrKeyId)) {
-    	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    	return std::make_tuple (false, tem);
-	}
+	auto GetKeyId = [](const CAccountViewCache &view,vector<std::shared_ptr < std::vector<unsigned char> > > &ret,CKeyID &KeyId) {
+		 if(ret.at(0).get()->size() == 6){
+			 CRegID reg(*ret.at(0));
+			 KeyId= reg.getKeyID(view);
+		 }else if(ret.at(0).get()->size() == 34) {
+			 string addr((*ret[0]).begin(), (*ret[0]).end());
+			 KeyId=CKeyID(addr);
+		 }
+		   if (KeyId.IsEmpty())
+		   return false;
+
+		  return true;
+		 };
+
+	 CKeyID addrKeyId;
+	 if (!GetKeyId(*pVmScriptRun->GetCatchView(),retdata, addrKeyId)) {
+		 auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+		 return std::make_tuple (false, tem);
+	 }
 
 	CUserID userid(addrKeyId);
 	CAccount aAccount;
@@ -1219,20 +1232,25 @@ static RET_DEFINE ExGetAuthoritedDefineFunc(unsigned char * ipara,void * pVmScri
     }
 	bool flag = true;
 
-	auto GetKeyId = [](string const &addr,CKeyID &KeyId) {
-		if (!CRegID::GetKeyID(addr, KeyId)) {
-			KeyId=CKeyID(addr);
-			if (KeyId.IsEmpty())
-			return false;
-		}
-		return true;
-	};
-	string addr((*retdata[0]).begin(), (*retdata[0]).end());
-	CKeyID addrKeyId;
-	if (!GetKeyId(addr, addrKeyId)) {
-    	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    	return std::make_tuple (false, tem);
-	}
+	auto GetKeyId = [](const CAccountViewCache &view,vector<std::shared_ptr < std::vector<unsigned char> > > &ret,CKeyID &KeyId) {
+			 if(ret.at(0).get()->size() == 6){
+				 CRegID reg(*ret.at(0));
+				 KeyId= reg.getKeyID(view);
+			 }else if(ret.at(0).get()->size() == 34) {
+				 string addr((*ret[0]).begin(), (*ret[0]).end());
+				 KeyId=CKeyID(addr);
+			 }
+			   if (KeyId.IsEmpty())
+			   return false;
+
+			  return true;
+			 };
+
+	 CKeyID addrKeyId;
+	 if (!GetKeyId(*pVmScriptRun->GetCatchView(),retdata, addrKeyId)) {
+		 auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+		 return std::make_tuple (false, tem);
+	 }
 
 	CUserID userid(addrKeyId);
 	CAccount aAccount;
