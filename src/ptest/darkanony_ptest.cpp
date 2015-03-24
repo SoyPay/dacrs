@@ -10,7 +10,7 @@
 #include "VmScript/CVir8051.h"
 #include "VmScript/TestMcu.h"
 #include "json/json_spirit_writer_template.h"
-#include "rpcclient.h"
+#include "./rpc/rpcclient.h"
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_reader.h"
 #include "json/json_spirit_writer.h"
