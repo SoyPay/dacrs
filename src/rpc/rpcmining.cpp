@@ -25,7 +25,7 @@
 #include "util.h"
 #include "version.h"
 
-#include "wallet.h"
+#include "../wallet/wallet.h"
 
 #include <stdint.h>
 

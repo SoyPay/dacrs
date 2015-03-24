@@ -7,7 +7,7 @@
 #include "init.h"
 #include "main.h"
 #include "sync.h"
-#include "wallet.h"
+#include "../wallet/wallet.h"
 
 #include <fstream>
 #include <stdint.h>

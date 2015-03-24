@@ -7,7 +7,7 @@
 #define DACRS_NET_H
 
 #include "bloom.h"
-#include "compat.h"
+#include "./compat/compat.h"
 #include "hash.h"
 #include "limitedmap.h"
 #include "mruset.h"
