@@ -44,12 +44,16 @@ private:
 	void SetRegIDByCompact(const vector<unsigned char> &vIn);
 public:
 	friend class CID;
+	CRegID(string strRegID);
+	CRegID(const vector<unsigned char> &vIn) ;
+	CRegID(uint32_t nHeight = 0, uint16_t nIndex = 0);
+
 	const vector<unsigned char> &GetVec6() const {assert(vRegID.size() ==6);return vRegID;}
 	void SetRegID(const vector<unsigned char> &vIn) ;
 	void SetRegID(string strRegID);
     CKeyID getKeyID(const CAccountViewCache &view)const;
     uint32_t getHight()const { return nHeight;};
-	CRegID(string strRegID);
+
 	bool operator ==(const CRegID& co) const {
 		return (this->nHeight == co.nHeight && this->nIndex == co.nIndex);
 	}
@@ -59,9 +63,9 @@ public:
 	static bool IsSimpleRegIdStr(const string & str);
 	static bool IsRegIdStr(const string & str);
 	static bool GetKeyID(const string & str,CKeyID &keyId);
-	CRegID(const vector<unsigned char> &vIn) ;
+
     bool IsEmpty()const{return (nHeight == 0 && nIndex == 0);};
-	CRegID(uint32_t nHeight = 0, uint16_t nIndex = 0);
+
     bool clean();
 
 	string ToString() const;
