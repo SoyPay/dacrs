@@ -65,7 +65,8 @@ BITCOIN_CORE_H = \
   uint256.h \
   util.h \
   version.h \
-  wallet/wallet.h
+  wallet/wallet.h \
+  wallet/db.h 
 
 JSON_H = \
   json/json_spirit.h \
@@ -129,6 +130,7 @@ libdacrs_server_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 libdacrs_wallet_a_SOURCES = \
+  wallet/db.cpp  \
   crypter.cpp \
   rpc/rpcdump.cpp \
   rpc/rpcwallet.cpp \ 

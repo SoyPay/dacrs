@@ -182,7 +182,7 @@ public:
 	CWalletDB db;
 	map<CKeyID, CKeyStoreValue> mKeyPool;
 	CPubKey vchDefaultKey ;
-	string strWalletFile;
+	static string strWalletFile;
 
 	map<uint256, CAccountTx> mapInBlockTx;
 	map<uint256, std::shared_ptr<CBaseTransaction> > UnConfirmTx;
