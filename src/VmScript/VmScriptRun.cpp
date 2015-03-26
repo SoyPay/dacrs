@@ -151,6 +151,7 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 			memcpy(&temp,it.money,sizeof(it.money));
 			addmoey += temp;
 		}
+
 		if (it.opeatortype == MINUS_FREE) {
 
 			/// 从冻结金额里面扣钱，超时高度必须大于当前tip高度
@@ -174,7 +175,7 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 		if(regId.IsEmpty() || regId.getKeyID( *m_view) == uint160(0))
 			return false;
 		/// if account script id ,the it.opeatortype must be ADD_FREE or MINUS_FREE
-		if (m_ScriptDBTip->HaveScript(regId) && it.opeatortype != ADD_FREE && it.opeatortype != MINUS_FREE) {
+		if (m_ScriptDBTip->HaveScript(regId)|| it.opeatortype != MINUS_FREE) {
 			return false;
 		}
 	}
