@@ -465,52 +465,6 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 		return false;
 	return true;
 }
-bool CScriptDB::GetAccountAuthor(const CRegID & acctRegId, vector<pair<CRegID, CAuthorizate> > &vAuthorizate) {
-
-	if(acctRegId.IsEmpty())
-		return false;
-
-	leveldb::Iterator* pcursor = db.NewIterator();
-
-	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
-
-	string strPrefixTemp("author");
-	ssKeySet.insert(ssKeySet.end(), &strPrefixTemp[0], &strPrefixTemp[6]);
-	vector<char> vId(acctRegId.GetVec6().begin(), acctRegId.GetVec6().end());
-	ssKeySet.insert(ssKeySet.end(), vId.begin(), vId.end());
-	ssKeySet.insert(ssKeySet.end(),'_');
-	pcursor->Seek(ssKeySet.str());
-
-	while (pcursor->Valid()) {
-		boost::this_thread::interruption_point();
-		try {
-			leveldb::Slice slKey = pcursor->key();
-			vector<unsigned char> vDataKey(slKey.data(), slKey.data()+slKey.size());
-			string strPrefix(vDataKey.begin(), vDataKey.begin()+13);
-//			string strScriptKey(slKey.data(), 0, slKey.size());
-//			string strPrefix = strScriptKey.substr(0, 13);
-			vector<unsigned char> vScriptId(slKey.data()+13, slKey.data()+19);
-			CRegID scriptId(vScriptId);
-			if (strPrefix == ssKeySet.str()) {
-				vector<unsigned char> vValue;
-				leveldb::Slice slValue = pcursor->value();
-				CDataStream ssValue(slValue.data()+1, slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-				CAuthorizate author;
-				ssValue >> author;
-				vAuthorizate.push_back(make_pair(scriptId, author));
-				pcursor->Next();
-			} else {
-				break;
-			}
-		} catch (std::exception &e) {
-			if(pcursor)
-				delete pcursor;
-			return ERRORMSG("%s : Deserialize or I/O error - %s\n", __func__, e.what());
-		}
-	}
-	delete pcursor;
-	return true;
-}
 Object CScriptDB::ToJosnObj(string Prefix) {
 
 	Object obj;
