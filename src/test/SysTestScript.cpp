@@ -178,7 +178,7 @@ public:
 	{
 //		int nHeight = 0;
 		string param ="01";
-		Value resut =CreateContractTx1("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
+		Value resut =CreateContractTx("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,TxHash));
 		LogPrint("vm", "create new contract tx:hash=%s\n", TxHash);
 		LogPrint("INFO", "create new contract tx:hash=%s\n", TxHash);
@@ -187,14 +187,14 @@ public:
 		param ="02";
 		param += HexStr(hash);
 		string temp;
-		resut =CreateContractTx1("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
+		resut =CreateContractTx("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
 		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
 		BOOST_CHECK(GenerateOneBlock());
 
 		param ="03";
-		resut =CreateContractTx1("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
+		resut =CreateContractTx("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
 		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
@@ -203,7 +203,7 @@ public:
 		param ="05";
 		param += HexStr(hash);
 
-		resut =CreateContractTx1("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
+		resut =CreateContractTx("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
 		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
@@ -225,7 +225,7 @@ public:
 		char buffer[3] = {0};
 		sprintf(buffer,"%02x",param);
 		string temp;
-		Value resut =CreateContractTx1("010000000100", "[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]", buffer,10);
+		Value resut =CreateContractTx("010000000100", "[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]", buffer,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
 		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
@@ -326,7 +326,7 @@ public:
 		string accountid = "010000000100";
 		string temp = "";
 		temp += tinyformat::format("%02x%s",param,accountid);
-		Value resut =CreateContractTx1("010000000100", "[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\"]", temp,10);
+		Value resut =CreateContractTx("010000000100", "[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\"]", temp,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
 		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
@@ -338,7 +338,7 @@ public:
 		string accountid = "010000000100";
 		string temp = "";
 		temp += tinyformat::format("%02x%s",param,accountid);
-		Value resut =CreateContractTx1("020000000100", "[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\"]", temp,10);
+		Value resut =CreateContractTx("020000000100", "[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\"]", temp,10);
 		return resut;
 	}
 	bool SetBlockGenerte(const char *addr)
@@ -398,7 +398,7 @@ public:
 		CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 		scriptData << contact;
 		string temp = HexStr(scriptData);
-		Value resut =CreateContractTx1("010000000100", "[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\",\"mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y\"]", temp,10);
+		Value resut =CreateContractTx("010000000100", "[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\",\"mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y\"]", temp,10);
 		string strReturn;
 		BOOST_CHECK(GetHashFromCreatedTx(resut,strReturn));
 		LogPrint("vm", "create new contract tx:hash=%s\n", strReturn);
@@ -414,7 +414,7 @@ public:
 		string param ="02";
 		param += HexStr(hash1);
 
-		Value resut =CreateContractTx1("010000000100", "[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\"]", param,10);
+		Value resut =CreateContractTx("010000000100", "[\"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5\"]", param,10);
 		string strReturn;
 		BOOST_CHECK(GetHashFromCreatedTx(resut,strReturn));
 		LogPrint("vm", "create new contract tx:hash=%s\n", strReturn);
@@ -452,7 +452,7 @@ public:
 		scriptData << info1;
 		temp = HexStr(scriptData);
 
-		Value resut =CreateContractTx1("010000000100", temp1, temp,10);
+		Value resut =CreateContractTx("010000000100", temp1, temp,10);
 		string strReturn;
 		BOOST_CHECK(GetHashFromCreatedTx(resut,strReturn));
 		LogPrint("vm", "create new contract tx:hash=%s\n", strReturn);
@@ -617,7 +617,7 @@ public:
 	{
 		string temp ="[";
 		temp += "\""+addr+"\""+"]";
-		Value resut =CreateContractTx1("010000000100", temp, pcontact,10);
+		Value resut =CreateContractTx("010000000100", temp, pcontact,10);
 		string strReturn;
 		BOOST_CHECK(GetHashFromCreatedTx(resut,strReturn));
 		BOOST_CHECK(GenerateOneBlock());
@@ -659,9 +659,7 @@ public:
 	string CreatWriteTx(string &hash)
 	{
 		string shash = CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
-		Value ret =GetScriptID(shash);
 		string scriptid;
-		BOOST_CHECK(GetHashFromCreatedTx(ret,scriptid));
 		GetTxConfirmedRegID(shash, scriptid);
 		BOOST_CHECK(scriptid !="");
 		//// first tx
