@@ -516,8 +516,6 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
  * 这个函数式从中间层传了一个参数过来:
  * 1.第一个是 hash
  */
-
-//todolist
 static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun) {
 	vector<std::shared_ptr<vector<unsigned char> > > retdata;
     if(!GetData(ipara,retdata) ||retdata.size() != 1|| retdata.at(0).get()->size() != 32)
@@ -536,7 +534,7 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 
 	if (GetTransaction(pBaseTx, hash1)) {
 		CContractTransaction *tx = static_cast<CContractTransaction*>(pBaseTx.get());
-		vector<unsigned char> item;
+		vector<unsigned char> item = boost::get<CRegID>(tx->userRegId).GetVec6();
 		(*tem.get()).push_back(item);
 	}
 	return std::make_tuple(true, tem);
@@ -743,14 +741,13 @@ static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
-	int height = 0;
 
 	const CRegID scriptid = pVmScriptRun->GetScriptRegID();
 	bool flag = true;
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
 
 	CScriptDBOperLog operlog;
-	if (!scriptDB->SetScriptData(scriptid, *retdata.at(0), *retdata.at(1), height, operlog)) {
+	if (!scriptDB->SetScriptData(scriptid, *retdata.at(0), *retdata.at(1),operlog)) {
 		flag = false;
 	} else {
 		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
@@ -816,13 +813,12 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) 
 	CRegID scriptid = pVmScriptRun->GetScriptRegID();
 
 	vector_unsigned_char vValue;
-	int nHeight;
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
 	bool flag =true;
 
 //	LogPrint("INFO", "script run read data:%s\n", HexStr(*retdata.at(0)));
 	CScriptDBOperLog operLog;
-	if(!scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid, *retdata.at(0), vValue, nHeight, operLog))
+	if(!scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid, *retdata.at(0), vValue, operLog))
 	{
 		if(!operLog.vKey.empty()) {
 			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
@@ -890,7 +886,6 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
 	CRegID scriptid = pVmScriptRun->GetScriptRegID();
 
 	vector_unsigned_char vValue;
-	int nHeight;
 	vector<unsigned char> vScriptKey;
 	if(index == 1)
 	{
@@ -899,7 +894,7 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
 
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
 	set<CScriptDBOperLog> setOperLog;
-	flag = scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid,index,vScriptKey,vValue,nHeight,setOperLog);
+	flag = scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid,index,vScriptKey,vValue,setOperLog);
 
 	if(flag){
 		LogPrint("vm", "Read key:%s,value:%s!\n",HexStr(vScriptKey),HexStr(vValue));
@@ -914,7 +909,6 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
     (*tem.get()).push_back(vScriptKey);
 	(*tem.get()).push_back(vValue);
     CDataStream tep(SER_DISK, CLIENT_VERSION);
-    tep << nHeight;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
 	return std::make_tuple (flag, tem);
@@ -952,24 +946,16 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript
 	CRegID scriptid = pVmScriptRun->GetScriptRegID();
 	vector_unsigned_char vValue;
 	bool flag = false;
-	int temp = 0;
 	bool ret = true;
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
 
 	CScriptDBOperLog operlog;
-	if(scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid,*retdata.at(0),vValue,temp,operlog))
+
+	if(scriptDB->SetScriptData(scriptid,*retdata.at(0),*retdata.at(1),operlog))
 	{
-		if(scriptDB->SetScriptData(scriptid,*retdata.at(0),*retdata.at(1),temp,operlog))
-		{
-			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
-			m_dblog.get()->push_back(operlog);
-			flag = true;
-		}
-	}else {
-		if (!operlog.vKey.empty()) {
-			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
-			m_dblog.get()->push_back(operlog);
-		}
+		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
+		m_dblog.get()->push_back(operlog);
+		flag = true;
 	}
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -1029,13 +1015,12 @@ static RET_DEFINE ExGetScriptDataFunc(unsigned char * ipara,void * pVmScript)
     	return std::make_tuple (false, tem);
     }
 	vector_unsigned_char vValue;
-	int nHeight;
 	bool flag =true;
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
 	CRegID scriptid(*retdata.at(0));
 	CScriptDBOperLog operLog;
-	if(!scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid, *retdata.at(1), vValue, nHeight, operLog))
+	if(!scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid, *retdata.at(1), vValue,  operLog))
 	{
 		if (!operLog.vKey.empty()) {
 			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();

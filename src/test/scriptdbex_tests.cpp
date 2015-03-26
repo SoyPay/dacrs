@@ -120,14 +120,14 @@ void CScriptDBTest::GetScriptData(CScriptDBViewCache* pViewCache) {
 	BOOST_CHECK(it != mapScript.end());
 
 	BOOST_CHECK(pViewCache->GetScriptDataCount(CRegID(it->first), nCount));
-	bool ret = pViewCache->GetScriptData(nCurHeight, CRegID(it->first), 0, vScriptKey, vScriptData, nHeight,
+	bool ret = pViewCache->GetScriptData(nCurHeight, CRegID(it->first), 0, vScriptKey, vScriptData,
 			setOperLog);
 
 	while (ret) {
 		if (++it == mapScript.end()) {
 			break;
 		}
-		ret = pViewCache->GetScriptData(nCurHeight, CRegID(it->first), 1, vScriptKey, vScriptData, nHeight, setOperLog);
+		ret = pViewCache->GetScriptData(nCurHeight, CRegID(it->first), 1, vScriptKey, vScriptData,  setOperLog);
 		pViewCache->GetScriptDataCount(CRegID(it->first), nCount);
 	}
 }
