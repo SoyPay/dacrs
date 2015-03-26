@@ -515,9 +515,6 @@ public:
 		case CONTRACT_TX:
 			mapAccountTx[hash] = make_shared<CContractTransaction>(pTx);
 			break;
-		case FREEZE_TX:
-			mapAccountTx[hash] = make_shared<CFreezeTransaction>(pTx);
-			break;
 		case REWARD_TX:
 			mapAccountTx[hash] = make_shared<CRewardTransaction>(pTx);
 			break;

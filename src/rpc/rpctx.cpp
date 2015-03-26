@@ -103,17 +103,6 @@ Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 		}
 		break;
 	}
-	case FREEZE_TX: {
-		CFreezeTransaction *prtx = (CFreezeTransaction *) pTx;
-		result.push_back(Pair("txtype", "FreezeTx"));
-		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("addr", RegIDToAddress(prtx->regAccountId)));
-		result.push_back(Pair("frozen amt", prtx->llFreezeFunds));
-		result.push_back(Pair("fees", prtx->llFees));
-		result.push_back(Pair("height", prtx->nValidHeight));
-		result.push_back(Pair("free height", prtx->nUnfreezeHeight));
-		break;
-	}
 	case REWARD_TX: {
 		CRewardTransaction *prtx = (CRewardTransaction *) pTx;
 		result.push_back(Pair("txtype", "RewardTx"));
@@ -137,7 +126,6 @@ Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 
 		result.push_back(Pair("fees", prtx->llFees));
 		result.push_back(Pair("height", prtx->nValidHeight));
-		result.push_back(Pair("authorizate", prtx->aAuthorizate.ToJosnObj()));
 		break;
 	}
 	default:
@@ -573,123 +561,6 @@ Value signcontracttx(const Array& params, bool fHelp) {
 
 }
 
-//create a freeze tx
-Value createfreezetx(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 5) {
-		string msg = "createfreezetx nrequired \"addr\" frozenmoney fee height freeheight\n"
-				"\nfrozen some money\n"
-				"\nArguments:\n"
-				"1.\"addr\": (string)\n"
-				"2.frozenmoney: (numeric)\n"
-				"3.fee: (numeric) pay to miner\n"
-				"4.height: (numeric)create height\n"
-				"5.freeheight: (numeric)frozenmoney free height\n"
-				"\nResult:\n"
-				"\"txhash\": (string)\n"
-				"\nExamples:\n"
-				+ HelpExampleCli("createfreezetx",
-						"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 20000000000 100000 1 101") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("createfreezetx",
-						"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 20000000000 100000 1 101")
-				+ HelpExampleCli("createfreezetx",
-				"0-6 20000000000 100000 1 101")
-				+ HelpExampleCli("createfreezetx",
-										"00000000000000000005 20000000000 100000 1 101");
-		throw runtime_error(msg);
-	}
-
-	RPCTypeCheck(params, list_of(str_type)(int_type)(int_type)(int_type)(int_type));
-
-	//get addresss
-	string addr = params[0].get_str();
-	uint64_t frozenmoney = params[1].get_uint64();
-	uint64_t fee = params[2].get_uint64();
-	uint32_t height = params[3].get_int();
-	uint32_t freeheight = params[4].get_int();
-
-	if (frozenmoney < CTransaction::nMinTxFee) {
-		throw runtime_error("in createfreezetx :frozenmoney is smaller than nMinTxFee\n");
-	}
-
-	if (fee > 0 && fee < CTransaction::nMinTxFee) {
-		throw runtime_error("in createfreezetx :fee is smaller than nMinTxFee\n");
-	}
-	//get keyid
-	CKeyID keyid;
-	if (!GetKeyId(addr, keyid)) {
-		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
-	}
-
-//	CKey key;
-//	if(!pwalletMain->GetKey(keyid, key))
-//	{
-//		throw runtime_error("keyid not exist\n");
-//	}
-
-	CFreezeTransaction tx;
-	{
-	//	LOCK2(cs_main, pwalletMain->cs_wallet);
-		EnsureWalletIsUnlocked();
-
-//		if (freeheight < chainActive.Tip()->nHeight + 2) {
-//			throw JSONRPCError(RPC_WALLET_ERROR, "in createfreezetx Error: freeheight is invalid.");
-//		}
-		//balance
-		CAccountViewCache view(*pAccountViewTip, true);
-		CAccount account;
-
-		uint64_t balance = 0;
-		CUserID userId = keyid;
-		if (view.GetAccount(userId, account)) {
-			balance = account.GetRawBalance(chainActive.Tip()->nHeight);
-		}
-
-		if (!account.IsRegister()) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "in createfreezetx Error: Account is not registered.");
-		}
-
-//		if (!pwalletMain->mapKeyRegID.count(keyid)) {
-//			throw JSONRPCError(RPC_WALLET_ERROR, "in createfreezetx Error: WALLET file is not correct.");
-//		}
-
-		if (balance < fee || balance < frozenmoney || balance < (frozenmoney + fee)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "in createfreezetx Error: Account balance is insufficient.");
-		}
-
-		tx.regAccountId = account.regID;// pwalletMain->mapKeyRegID[keyid];
-		tx.llFreezeFunds = frozenmoney;
-		tx.llFees = fee;
-		if (0 == height) {
-			height = chainActive.Tip()->nHeight;
-		}
-		tx.nValidHeight = height;
-		if(0 == freeheight) {
-			freeheight = chainActive.Tip()->nHeight + 100;
-		}else
-		{
-			freeheight += chainActive.Tip()->nHeight;
-		}
-		tx.nUnfreezeHeight = freeheight;
-
-
-		if (!pwalletMain->Sign(keyid,tx.SignatureHash(), tx.signature)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "createfreezetx Error: Sign failed.");
-		}
-//		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
-//			throw JSONRPCError(RPC_WALLET_ERROR, "createfreezetx Error: CommitTransaction failed.");
-//		}
-	}
-
-	std::tuple<bool,string> ret;
-		ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
-		if(!std::get<0>(ret))
-		{
-			throw JSONRPCError(RPC_WALLET_ERROR, "registerscripttx Error:"+ std::get<1>(ret));
-		}
-		Object obj;
-		obj.push_back(Pair("hash", std::get<1>(ret)));
-		return obj;
-}
 
 //create a register script tx
 Value registerscripttx(const Array& params, bool fHelp) {
@@ -765,37 +636,10 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	uint64_t fee = params[3].get_uint64();
 	uint32_t height = params[4].get_int();
 
-	uint32_t nAuthorizeTime(0);
-	uint64_t nMaxMoneyPerTime(0);
-	uint64_t nMaxMoneyTotal(0);
-	uint64_t nMaxMoneyPerDay(0);
-	vector<unsigned char> vUserDefine;
-	vUserDefine.clear();
-
 	if (params.size() > 5) {
 		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type));
 		string scriptDesc = params[5].get_str();
 		vmScript.ScriptExplain.insert(vmScript.ScriptExplain.end(),scriptDesc.begin(), scriptDesc.end());
-	}
-	if (params.size() > 6) {
-		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type));
-		nAuthorizeTime = params[6].get_uint64();
-	}
-	if (params.size() > 7) {
-		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type)(int_type));
-		nMaxMoneyPerTime = params[7].get_uint64();
-	}
-	if (params.size() > 8) {
-		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type)(int_type)(int_type));
-		nMaxMoneyTotal = params[8].get_uint64();
-	}
-	if (params.size() > 9) {
-		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type)(int_type)(int_type)(int_type));
-		nMaxMoneyPerDay = params[9].get_uint64();
-	}
-	if (params.size() > 10) {
-		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type)(int_type)(int_type)(int_type)(int_type)(str_type));
-		vUserDefine = ParseHex(params[10].get_str());
 	}
 
 	if (fee > 0 && fee < CTransaction::nMinTxFee) {
@@ -867,13 +711,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 			height = chainActive.Tip()->nHeight;
 		}
 		tx.nValidHeight = height;
-//		tx.aAuthorizate(nAuthorizeTime, nUserDefine, nMaxMoneyPerTime, nMaxMoneyTotal,
-//				nMaxMoneyPerDay);
-		tx.aAuthorizate.SetAuthorizeTime(nAuthorizeTime);
-		tx.aAuthorizate.SetMaxMoneyPerTime(nMaxMoneyPerTime);
-		tx.aAuthorizate.SetMaxMoneyTotal(nMaxMoneyTotal);
-		tx.aAuthorizate.SetMaxMoneyPerDay(nMaxMoneyPerDay);
-		tx.aAuthorizate.SetUserData(vUserDefine);
+
 
 //		vector<unsigned char> vscriptcontent;
 //		if (pScriptDBTip->GetScript(vscript, vscriptcontent)) {
@@ -939,8 +777,6 @@ Value listaddr(const Array& params, bool fHelp) {
 				accView.GetAccount(userId, Lambaacc);
 				obj.push_back(Pair("free  amount", (double)Lambaacc.GetRawBalance(curheight)/ (double) COIN));
 				obj.push_back(Pair("Reward amount", (double)Lambaacc.GetRewardAmount(curheight)/ (double) COIN));
-				obj.push_back(Pair("freeze amount", (double)Lambaacc.GetSripteFreezeAmount(curheight)/ (double) COIN));
-				obj.push_back(Pair("self freeze amount", (double)Lambaacc.GetSelfFreezeAmount(curheight)/ (double) COIN));
 				return obj;
 			};
 
@@ -1986,78 +1822,6 @@ Value createcontracttxraw(const Array& params, bool fHelp) {
 	obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
 	return obj;
 }
-Value createfreezetxraw(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 5) {
-		string msg = "createfreezetx nrequired \"addr\" frozenmoney fee height freeheight\n"
-				"\nfrozen some money\n"
-				"\nArguments:\n"
-				"1.height: (numeric)create height\n"
-				"2.fee: (numeric) pay to miner\n"
-				"3.\"addr\": (string)\n"
-				"4.frozenmoney: (numeric)\n"
-				"5.freeheight: (numeric)frozenmoney free height\n"
-				"\nResult:\n"
-				"\"txhash\": (string)\n"
-				"\nExamples:\n"
-				+ HelpExampleCli("createfreezetxraw",
-						"100000 1 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 20000000000  101") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("createfreezetxraw",
-						"100000 1 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 20000000000 101")
-				+ HelpExampleCli("createfreezetxraw",
-				"0-6 20000000000 100000 1 101")
-				+ HelpExampleCli("createfreezetxraw",
-										"100000 1 00000000000000000005 20000000000  101");
-		throw runtime_error(msg);
-	}
-
-	RPCTypeCheck(params, list_of(int_type)(int_type)(str_type)(int_type)(int_type));
-
-	//get addresss
-	int height = params[0].get_int();
-	uint64_t fee = AmountToRawValue(params[1]);
-	string addr = params[2].get_str();
-	uint64_t frozenmoney = params[3].get_uint64();
-	uint32_t freeheight = params[4].get_int();
-
-	if (frozenmoney < CTransaction::nMinTxFee) {
-		throw runtime_error("in createfreezetx :frozenmoney is smaller than nMinTxFee\n");
-	}
-
-	if (fee > 0 && fee < CTransaction::nMinTxFee) {
-		throw runtime_error("in createfreezetx :fee is smaller than nMinTxFee\n");
-	}
-	//get keyid
-	CKeyID keyid;
-	if (!GetKeyId(addr, keyid)) {
-		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
-	}
-
-	CAccountViewCache view(*pAccountViewTip, true);
-	CAccount account;
-
-	CUserID userId = keyid;
-	if (!view.GetAccount(userId, account)) {
-		throw JSONRPCError(RPC_WALLET_ERROR, "in createfreezetxraw Error: Account is not exist.");
-	}
-
-	if (!account.IsRegister()) {
-		throw JSONRPCError(RPC_WALLET_ERROR, "in createfreezetxraw Error: Account is not registered.");
-	}
-	if(0 == freeheight) {
-		freeheight = chainActive.Tip()->nHeight + 100;
-	}else
-	{
-		freeheight += chainActive.Tip()->nHeight;
-	}
-	std::shared_ptr<CFreezeTransaction> tx =  make_shared<CFreezeTransaction>(account.regID,frozenmoney,freeheight,height,fee);
-
-	CDataStream ds(SER_DISK, CLIENT_VERSION);
-	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
-	ds << pBaseTx;
-	Object obj;
-	obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
-	return obj;
-}
 
 Value registerscripttxraw(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 4) {
@@ -2132,37 +1896,10 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 		vscript = ParseHex(params[4].get_str());
 	}
 
-
-	uint32_t nAuthorizeTime;
-	uint64_t nMaxMoneyPerTime;
-	uint64_t nMaxMoneyTotal;
-	uint64_t nMaxMoneyPerDay;
-	vector<unsigned char> vUserDefine;
-
 	if (params.size() > 5) {
 		RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(bool_type)(str_type)(str_type));
 		string scriptDesc = params[5].get_str();
 		vmScript.ScriptExplain.insert(vmScript.ScriptExplain.end(),scriptDesc.begin(), scriptDesc.end());
-	}
-	if (params.size() > 6) {
-		RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(bool_type)(str_type)(str_type)(int_type));
-		nAuthorizeTime = params[6].get_uint64();
-	}
-	if (params.size() > 7) {
-		RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(bool_type)(str_type)(str_type)(int_type)(int_type));
-		nMaxMoneyPerTime = params[7].get_uint64();
-	}
-	if (params.size() > 8) {
-		RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(bool_type)(str_type)(int_type)(int_type)(int_type));
-		nMaxMoneyTotal = params[8].get_uint64();
-	}
-	if (params.size() > 9) {
-		RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(bool_type)(str_type)(str_type)(int_type)(int_type)(int_type)(int_type));
-		nMaxMoneyPerDay = params[9].get_uint64();
-	}
-	if (params.size() > 10) {
-		RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(bool_type)(str_type)(str_type)(int_type)(int_type)(int_type)(int_type)(str_type));
-		vUserDefine = ParseHex(params[10].get_str());
 	}
 
 	if (fee > 0 && fee < CTransaction::nMinTxFee) {
@@ -2210,11 +1947,6 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 	tx.get()->script = vscript;
 	tx.get()->llFees = fee;
 	tx.get()->nValidHeight = height;
-	tx.get()->aAuthorizate.SetAuthorizeTime(nAuthorizeTime);
-	tx.get()->aAuthorizate.SetMaxMoneyPerTime(nMaxMoneyPerTime);
-	tx.get()->aAuthorizate.SetMaxMoneyTotal(nMaxMoneyTotal);
-	tx.get()->aAuthorizate.SetMaxMoneyPerDay(nMaxMoneyPerDay);
-	tx.get()->aAuthorizate.SetUserData(vUserDefine);
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 	ds << pBaseTx;
@@ -2289,17 +2021,6 @@ Value sigstr(const Array& params, bool fHelp)
 			obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
 	}
 	break;
-	case FREEZE_TX:	{
-		std::shared_ptr<CFreezeTransaction> tx = make_shared<CFreezeTransaction>(pBaseTx.get());
-		if (!pwalletMain->Sign(keyid,tx.get()->SignatureHash(), tx.get()->signature)) {
-			throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
-		}
-		CDataStream ds(SER_DISK, CLIENT_VERSION);
-			std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
-			ds << pBaseTx;
-			obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
-	}
-		break;
 	case REWARD_TX:
 		break;
 	case REG_SCRIPT_TX:	{
@@ -2407,40 +2128,3 @@ Value printblokdbinfo(const Array& params, bool fHelp) {
 	return Value::null;
 }
 
-Value listauthor(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 1) {
-			string msg = "listauthor \"addr\"\n"
-					"\ngetaddramount\n"
-					"\nArguments:\n"
-					"1.\"addr\": (string)"
-					"\nResult:\n"
-					"\"account authorizate\":\n"
-					"\nExamples:\n" + HelpExampleCli("getaccountinfo", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n")
-					+HelpExampleCli("getaccountinfo", "000000000500\n")
-					+ "\nAs json rpc call\n"
-					+ HelpExampleRpc("getaccountinfo", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n");
-			throw runtime_error(msg);
-		}
-		RPCTypeCheck(params, list_of(str_type));
-		CKeyID keyid;
-		CUserID userId;
-		string addr = params[0].get_str();
-		if(!CRegID::IsRegIdStr(addr)) {
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
-		}
-		CRegID regId;
-		regId.SetRegID(addr);
-
-		vector<pair<CRegID ,CAuthorizate> >vAuthorizate;
-		if(!pScriptDBTip->GetAccountAuthor(regId, vAuthorizate)) {
-			throw JSONRPCError(RPC_DATABASE_ERROR, "Get Account error.");
-		}
-
-		Array array;
-		for(auto &item : vAuthorizate) {
-			Object obj = item.second.ToJosnObj();
-			obj.push_back(Pair("appid", item.first.ToString()));
-			array.push_back(obj);
-		}
-		return array;
-}

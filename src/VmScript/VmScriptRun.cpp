@@ -153,14 +153,14 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 	uint64_t temp = 0;
 	for (auto& it : listoperate) {
 
-		if (it.opeatortype == ADD_FREE || it.opeatortype == ADD_SELF_FREEZD || it.opeatortype == ADD_FREEZD) {
+		if (it.opeatortype == ADD_FREE ) {
 			memcpy(&temp,it.money,sizeof(it.money));
 			addmoey += temp;
 		}
-		if (it.opeatortype == MINUS_FREE || it.opeatortype == MINUS_SELF_FREEZD || it.opeatortype == MINUS_FREEZD) {
+		if (it.opeatortype == MINUS_FREE) {
 
 			/// 从冻结金额里面扣钱，超时高度必须大于当前tip高度
-			if(it.opeatortype == MINUS_FREEZD && it.outheight < height)
+			if(it.outheight < height)
 			{
 				return false;
 			}
@@ -234,23 +234,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		}
 		if ((OperType) it.opeatortype == ADD_FREE) {
 			fund.nFundType = FREEDOM_FUND;
-		} else if ((OperType) it.opeatortype == ADD_FREEZD || (OperType) it.opeatortype == MINUS_FREEZD) {
-			fund.nFundType = FREEZD_FUND;
-		} else if ((OperType) it.opeatortype == ADD_SELF_FREEZD) {
-			fund.nFundType = SELF_FREEZD_FUND;
 		}
-		//// the script account if ADD_FREE must merge
-		if (m_ScriptDBTip->HaveScript(vmAccount.get()->regID)
-				&& vmAccount.get()->regID.GetVec6() != fund.scriptID) {
-			if (fund.nFundType == ADD_FREE) {
-				CFund vFind;
-				if (vmAccount.get()->FindFund(vmAccount.get()->vFreeze, fund.scriptID, vFind)) {
-					fund.nHeight = vFind.nHeight;
-				}
-
-			}
-		}
-
 
 //		LogPrint("vm", "account id:%s\r\n", HexStr(accountid).c_str());
 //		LogPrint("vm", "befer account:%s\r\n", vmAccount.get()->ToString().c_str());

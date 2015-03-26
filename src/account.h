@@ -114,7 +114,6 @@ public:
 	virtual bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex,
 			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight,
 			set<CScriptDBOperLog> &setOperLog);
-	virtual bool GetAccountAuthor(const CRegID & acctRegId, vector<pair<CRegID, CAuthorizate> > & vAuthorizate);
 	virtual Object ToJosnObj(string Prefix);
 	virtual ~CScriptDBView(){};
 };
@@ -133,7 +132,6 @@ public:
 	bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex,
 			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight,
 			set<CScriptDBOperLog> &setOperLog);
-	bool GetAccountAuthor(const CRegID & acctRegId, vector<pair<CRegID, CAuthorizate> > & vAuthorizate);
 };
 
 class CScriptDBViewCache : public CScriptDBViewBacked {
@@ -167,9 +165,6 @@ public:
 	bool GetScriptCount(int &nCount);
 	bool SetTxRelAccout(const uint256 &txHash, const set<CKeyID> &relAccount);
 	bool GetTxRelAccount(const uint256 &txHash, set<CKeyID> &relAccount);
-	bool GetAuthorizate(const CRegID &acctRegId, const CRegID &scriptId, CAuthorizate &authorizate);
-	bool SetAuthorizate(const CRegID &acctRegId, const CRegID &scriptId, const CAuthorizate &authorizate, CScriptDBOperLog &operLog);
-	bool GetAccountAuthor(const CRegID & acctRegId, vector<pair<CRegID, CAuthorizate> > & vAuthorizate);
 	/**
 	 * @brief write all data in the caches to script db
 	 * @return
