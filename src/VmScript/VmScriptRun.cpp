@@ -38,8 +38,8 @@ bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& 
 	}
 
 	CContractTransaction* secure = static_cast<CContractTransaction*>(Tx.get());
-	if (!m_ScriptDBTip->GetScript(boost::get<CRegID>(secure->scriptRegId), vScript)) {
-		LogPrint("ERROR", "Script is not Registed %s\r\n", boost::get<CRegID>(secure->scriptRegId).ToString());
+	if (!m_ScriptDBTip->GetScript(boost::get<CRegID>(secure->appRegId), vScript)) {
+		LogPrint("ERROR", "Script is not Registed %s\r\n", boost::get<CRegID>(secure->appRegId).ToString());
 		return false;
 	}
 
@@ -54,12 +54,6 @@ bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& 
 	if (vmScript.IsValid() == false){
 		LogPrint("ERROR", "%s\r\n", "CVmScriptRun::intial() vmScript.IsValid error");
 		return false;
-	}
-
-	for (auto& tx : secure->vAccountRegId) {
-		auto tem = make_shared<CAccount>();
-		view.GetAccount(tx, *tem.get());
-		RawAccont.push_back(tem);
 	}
 
 	pMcu = make_shared<CVir8051>(vmScript.Rom, secure->vContract);
@@ -168,7 +162,7 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 			CRegID regId(accountid);
 			CContractTransaction* secure = static_cast<CContractTransaction*>(listTx.get());
 			/// current tx's script cant't mius other script's regid
-			if(m_ScriptDBTip->HaveScript(regId) && regId != boost::get<CRegID>(secure->scriptRegId))
+			if(m_ScriptDBTip->HaveScript(regId) && regId != boost::get<CRegID>(secure->appRegId))
 			{
 				return false;
 			}
@@ -209,7 +203,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		CFund fund;
 		memcpy(&fund.value,it.money,sizeof(it.money));
 		fund.nHeight = it.outheight;
-		fund.scriptID = boost::get<CRegID>(tx->scriptRegId).GetVec6();
+		fund.scriptID = boost::get<CRegID>(tx->appRegId).GetVec6();
 
 		auto tem = make_shared<CAccount>();
 //		vector_unsigned_char accountid = GetAccountID(it);
@@ -241,12 +235,14 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 //		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
 		bool ret = false;
 		vector<CScriptDBOperLog> vAuthorLog;
-		if(IsSignatureAccount(vmAccount.get()->regID) || vmAccount.get()->regID == boost::get<CRegID>(tx->scriptRegId))
+		//todolist
+//		if(IsSignatureAccount(vmAccount.get()->regID) || vmAccount.get()->regID == boost::get<CRegID>(tx->appRegId))
 		{
 			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype, fund, *m_ScriptDBTip, vAuthorLog, height);
-		}else{
-			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype, fund, *m_ScriptDBTip, vAuthorLog,  height, &GetScriptRegID().GetVec6(), true);
 		}
+//		else{
+//			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype, fund, *m_ScriptDBTip, vAuthorLog,  height, &GetScriptRegID().GetVec6(), true);
+//		}
 
 //		LogPrint("vm", "after account:%s\r\n", vmAccount.get()->ToString().c_str());
 		if (!ret) {
@@ -262,25 +258,9 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 const CRegID& CVmScriptRun::GetScriptRegID()
 {
 	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
-	return boost::get<CRegID>(tx->scriptRegId);
+	return boost::get<CRegID>(tx->appRegId);
 }
-const vector<CUserID>& CVmScriptRun::GetTxAccount()
-{
-	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
-		return tx->vAccountRegId;
-}
-bool CVmScriptRun::IsSignatureAccount(CRegID account)
-{
-	vector<CUserID> regid =GetTxAccount();
 
-	vector<unsigned char> item;
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-		for (auto& it : regid) {
-			if(account.GetVec6() == boost::get<CRegID>(it).GetVec6())
-			return true;
-		}
-		return false;
-}
 const vector<unsigned char>& CVmScriptRun::GetTxContact()
 {
 	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
