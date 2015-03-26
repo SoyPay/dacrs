@@ -1045,7 +1045,6 @@ static Value COperFundToJson(const COperFund &opfound)
 {
 	Object obj;
 	obj.push_back(Pair("operType",  opfound.operType == 1 ? "ADD_VALUE":"MINUS_VALUE"));
-	obj.push_back(Pair("IsAuthorizated",  opfound.bAuthorizated == 1 ? "TURE":"FLASE"));
 	Array array;
 
 	static const vector<string> strname=
