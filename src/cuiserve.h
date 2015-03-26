@@ -5,7 +5,7 @@
 #include <boost/asio/ssl.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/shared_ptr.hpp>
-
+#include "chainparams.h"
 using namespace boost;
 using namespace std;
 using boost::asio::ip::tcp;
@@ -22,7 +22,7 @@ public:
 	static void StopServer();
 
 private:
-	CUIServer() :m_acceptor(m_iosev, tcp::endpoint(tcp::v4(), PORT)) {
+	CUIServer() :m_acceptor(m_iosev, tcp::endpoint(tcp::v4(), SysCfg().GetArg("-port", 3200)+1)) {
 		m_bConnect = false;
 		m_bRunFlag = true;
 	}

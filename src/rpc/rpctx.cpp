@@ -1205,6 +1205,8 @@ Value resetclient(const Array& params, bool fHelp) {
 		}
 		pAccountViewTip->Flush();
 		pScriptDBTip->Flush();
+		pTxCacheTip->Flush();
+//		pTxCacheTip->GetTxHashCache().size()
        if(SysCfg().Network::TESTNET == SysCfg().NetworkID()|| SysCfg().Network::TESTNET==SysCfg().NetworkID()){
        assert(pAccountViewDB->GetDbCount() == 22);
        assert(pScriptDB->GetDbCount() == 0);}
@@ -1398,17 +1400,17 @@ typedef struct {
 	  IMPLEMENT_SERIALIZE
 	    (
 	        READWRITE(status);
-	  for(size_t i = 0 ;i < sizeof(sendid);i++)
+	  for(unsigned int i = 0 ;i < sizeof(sendid);i++)
 	        READWRITE(sendid[i]);
-	  for(size_t i = 0 ;i < sizeof(acceptid);i++)
+	  for(unsigned int i = 0 ;i < sizeof(acceptid);i++)
 	        READWRITE(acceptid[i]);
 	  READWRITE(money);
 	  READWRITE(hight);
 	  READWRITE(delyhight);
 	  READWRITE(shash);
-	  for(size_t i = 0 ;i < sizeof(sdata);i++)
+	  for(unsigned int i = 0 ;i < sizeof(sdata);i++)
 		        READWRITE(sdata[i]);
-	  for(size_t i = 0 ;i < sizeof(adata);i++)
+	  for(unsigned int i = 0 ;i < sizeof(adata);i++)
 		        READWRITE(adata[i]);
 	    )
 

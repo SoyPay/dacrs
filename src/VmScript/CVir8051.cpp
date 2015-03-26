@@ -751,11 +751,11 @@ static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	int height = 0;
 	memcpy(&height,&retdata.at(2).get()->at(0),4);
 
-//	if(height <= pVmScriptRun->GetComfirHeight())
-//    {
-//		auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-//		return std::make_tuple (false, tem);
-//	}
+	if(height <= pVmScriptRun->GetComfirHeight())
+    {
+		auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+		return std::make_tuple (false, tem);
+	}
 	const CRegID scriptid = pVmScriptRun->GetScriptRegID();
 	bool flag = true;
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();

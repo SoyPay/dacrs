@@ -52,104 +52,29 @@ private:
 	CKey  mMinerCkey; //only used for miner
 	int64_t nCreationTime;
 public:
+	CKeyStoreValue();
+	CKeyStoreValue(const CPubKey &pubkey);
+	CKeyStoreValue(CKey const &inkey,CKey const &minerKey);
+	CKeyStoreValue(CKey const &inkey);
 
 	bool SelfCheck() const;
-	string ToString()
-	{
-		return strprintf("CRegID:%s CPubKey:%s CKey:%s mMinerCkey:%s CreationTime:%d",mregId.ToString(),mPKey.ToString(),mCkey.ToString(),mMinerCkey.ToString(),nCreationTime);
-	}
+	string ToString() const;
+
 	Object ToJsonObj()const;
 	bool UnSersailFromJson(const Object&);
-	int64_t getBirthDay()const
-	{
-		return nCreationTime;
-	}
-	bool getCKey(CKey& keyOut,bool IsMiner = false) const {
-		if(IsMiner == true && mMinerCkey.IsValid()) {
-			keyOut = mMinerCkey;
-		} else {
-			keyOut = mCkey;
-		}
-		return keyOut.IsValid();
-	}
-
-	bool CreateANewKey()
-	{
-		clean();
-		mCkey.MakeNewKey();
-		mPKey = mCkey.GetPubKey();
-		nCreationTime = GetTime();
-		return true;
-	}
-	bool GetPubKey(CPubKey &mOutKey,bool IsMiner = false) const
-	{
-		if(IsMiner == true){
-			if(mMinerCkey.IsValid()){
-				mOutKey = mMinerCkey.GetPubKey();
-				return true;
-			}
-			return false;
-		}
-
-		assert(mCkey.IsValid());
-		mOutKey =mPKey;
-		assert(mCkey.GetPubKey() == mPKey);
-		return  true;
-	}
+	int64_t getBirthDay()const;
+	bool getCKey(CKey& keyOut,bool IsMiner = false) const ;
+	bool CreateANewKey();
+	bool GetPubKey(CPubKey &mOutKey,bool IsMiner = false) const;
 	bool SynchronizSys(CAccountViewCache &view);
+    bool cleanCkey();
+    bool CleanAll();
+	bool IsCrypted() ;
+	bool IsContainReadyMinerKey()const;
+	CKeyID GetCKeyID() const ;
+	CRegID GetRegID() const ;
 
 
-	CKeyStoreValue(const CPubKey &pubkey) {
-		assert(mCkey.IsValid() == false && pubkey.IsFullyValid()); //the ckey mustbe unvalid
-		clean();
-		nCreationTime = GetTime();
-		mPKey = pubkey;
-	}
-
-	CKeyStoreValue(CKey const &inkey,CKey const &minerKey)
-	{
-		assert(inkey.IsValid());
-		assert(minerKey.IsValid());
-		 clean();
-		mMinerCkey = minerKey;
-		mCkey = inkey ;
-		nCreationTime = GetTime();
-		mPKey = mCkey.GetPubKey();
-		mMinerPk = mMinerCkey.GetPubKey();
-	}
-
-	CKeyStoreValue(CKey const &inkey)
-	{
-		assert(inkey.IsValid());
-		 clean();
-		mCkey = inkey ;
-		nCreationTime = GetTime();
-		mPKey = mCkey.GetPubKey();
-
-	}
-   bool clean()
-   {
-		mCkey.Clear();
-		mPKey= CPubKey();
-		mMinerCkey.Clear();
-	    mMinerPk = CPubKey();
-		nCreationTime = 0 ;
-	    return true;
-   }
-	CKeyStoreValue()
-	{
-		 clean();
-	}
-	bool IsCrypted() {
-		return mCkey.size() == 0;
-	}
-
-	CKeyID GetCKeyID() const {
-		return (mPKey.GetKeyID());
-	}
-	CRegID GetRegID() const {
-		return mregId;
-	}
 	IMPLEMENT_SERIALIZE
 	(
 
@@ -173,8 +98,6 @@ private:
 	static bool StartUp();
 
 	CMasterKey MasterKey;
-
-
 	int nWalletVersion;
 	CBlockLocator  bestBlock;
 	uint256 GetCheckSum()const;
@@ -182,16 +105,17 @@ public:
 	CWalletDB db;
 	map<CKeyID, CKeyStoreValue> mKeyPool;
 	CPubKey vchDefaultKey ;
-	string strWalletFile;
+	static string strWalletFile;
 
 	map<uint256, CAccountTx> mapInBlockTx;
 	map<uint256, std::shared_ptr<CBaseTransaction> > UnConfirmTx;
 
-	map<CKeyID, CKeyStoreValue> GetKeyPool() const
-		{
-		  AssertLockHeld(cs_wallet);
-		  return mKeyPool;
-		}
+
+	mutable CCriticalSection cs_wallet;
+
+
+	map<CKeyID, CKeyStoreValue> GetKeyPool() const;
+
 
 	IMPLEMENT_SERIALIZE
 	(
@@ -225,15 +149,10 @@ public:
     bool AddKey(const CKeyStoreValue& store);
 	bool AddPubKey(const CPubKey& pk);
 	bool SynchronizSys(const CAccountViewCache &inview) ;
-	static string defaultFilename ;
 
-	static CWallet* getinstance();
 
-	mutable CCriticalSection cs_wallet;
-	bool IsCrypted() const
-	{
-		return false;
-	}
+	bool IsCrypted() const;
+
 	bool GetPubKey(const CKeyID &address, CPubKey& keyOut,bool IsMiner = false);
 
 	bool GetKey(const CKeyID &address, CKey& keyOut, bool IsMiner = false) const ;
@@ -245,70 +164,44 @@ public:
 
 	bool CleanAll(); //just for unit test
 
-    bool count(const CKeyID &address) const
-    {
-    	AssertLockHeld(cs_wallet);
-    	return mKeyPool.count(address) > 0;
-    }
+    bool count(const CKeyID &address) const;
+    bool IsReadyForCoolMiner()const;
+    bool ClearAllCkeyForCoolMiner();
 
-
-
-	CWallet(string strWalletFileIn):db(strWalletFileIn) {
-		SetNull();
-
-		strWalletFile = strWalletFileIn;
-
-	}
-	void SetNull() {
-		nWalletVersion = 0;
-
-	}
-
-
+	CWallet(string strWalletFileIn);
+	void SetNull() ;
 
 	// Adds a key to the store, and saves it to disk.
 	bool AddKey(const CKey& key);
 
-
-	bool LoadMinVersion(int nVersion) {
-		AssertLockHeld(cs_wallet);
-		nWalletVersion = nVersion;
-
-		return true;
-	}
-
+	bool LoadMinVersion(int nVersion);
 
 	void SyncTransaction(const uint256 &hash, CBaseTransaction *pTx, const CBlock* pblock);
 //	void EraseFromWallet(const uint256 &hash);
 	int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
 //	void ReacceptWalletTransactions();
-		void ResendWalletTransactions();
-
-	std::tuple<bool,string>  SendMoney(const CRegID &send,const CUserID &rsv, int64_t nValue, int64_t nFee=0);
+	void ResendWalletTransactions();
 
 	bool IsMine(CBaseTransaction*pTx)const;
 
 	void SetBestChain(const CBlockLocator& loc);
 
-
 	DBErrors LoadWallet(bool fFirstRunRet);
-
-
 
 	void UpdatedTransaction(const uint256 &hashTx);
 
 
 
-
-
-
 	// get the current wallet format (the oldest client version guaranteed to understand this wallet)
-	int GetVersion() {
-		LOCK(cs_wallet);
-		return nWalletVersion;
-	}
+	int GetVersion() ;
+
+	static string defaultFilename ;
+
+	static CWallet* getinstance();
 
 	std::tuple<bool,string>  CommitTransaction(CBaseTransaction *pTx);
+
+//	std::tuple<bool,string>  SendMoney(const CRegID &send,const CUserID &rsv, int64_t nValue, int64_t nFee=0);
 
 	/** Address book entry changed.
 	 * @note called with lock cs_wallet held.
