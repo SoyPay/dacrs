@@ -738,19 +738,13 @@ static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
-    if(!GetData(ipara,retdata) ||retdata.size() != 3)
+    if(!GetData(ipara,retdata) ||retdata.size() != 2)
     {
     	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     	return std::make_tuple (false, tem);
     }
 	int height = 0;
-	memcpy(&height,&retdata.at(2).get()->at(0),4);
 
-	if(height <= pVmScriptRun->GetComfirHeight())
-    {
-		auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-		return std::make_tuple (false, tem);
-	}
 	const CRegID scriptid = pVmScriptRun->GetScriptRegID();
 	bool flag = true;
 	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
@@ -842,52 +836,7 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) 
 
 	return std::make_tuple (flag, tem);
 }
-/**
- *bool ModifyDataDB(const void* const key,const unsigned char keylen, const void* const pvalue,const unsigned short valuelen,const unsigned long ptime)
- * 这个函数式从中间层传了三个个参数过来:
- * 1.第一个是 key值
- * 2.第二个是value值
- * 3.第三个是超时高度
- */
-static RET_DEFINE ExModifyDataDBFunc(unsigned char * ipara,void * pVmScript) {
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
-    if(!GetData(ipara,retdata) ||retdata.size() != 3)
-    {
-    	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    	return std::make_tuple (false, tem);
-    }
-	int height = 0;
-	memcpy(&height,&retdata.at(2).get()->at(0),4);
-
-	const CRegID scriptid = pVmScriptRun->GetScriptRegID();
-	bool flag = false;
-	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
-
-	CScriptDBOperLog operlog;
-	vector_unsigned_char vTemp;
-	int nHeight;
-	if(scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid, *retdata.at(0), vTemp, nHeight, operlog)) {
-		if(scriptDB->SetScriptData(scriptid,*retdata.at(0),*retdata.at(1).get(),height,operlog))
-		{
-			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
-			m_dblog.get()->push_back(operlog);
-			flag = true;
-		}
-	}else {
-		if(!operlog.vKey.empty()) {
-			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
-			m_dblog.get()->push_back(operlog);
-		}
-	}
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
-    tep << flag;
-    vector<unsigned char> tep1(tep.begin(),tep.end());
-    (*tem.get()).push_back(tep1);
-	return std::make_tuple (true, tem);
-}
 
 static RET_DEFINE ExGetDBSizeFunc(unsigned char * ipara,void * pVmScript) {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
@@ -982,154 +931,7 @@ static RET_DEFINE ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
  //   LogPrint("vm","ExGetCurTxHash:%s",HexStr(hash).c_str());
 	return std::make_tuple (true, tem);
 }
-/**todo delete
- *bool IsAuthorited(const void* const account,const Int64* const pmoney)
- * 中间层传了两个参数
- * 1.第一个是 账号的id
- * 2.第二个是int64_t类型的数据
- */
-static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
-    if(!GetData(ipara,retdata) ||retdata.size() != 2|| retdata.at(1).get()->size() != sizeof(uint64_t)
-    		|| !(retdata.at(0).get()->size() == 6 || retdata.at(0).get()->size() == 34))
-    {
-    	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    	return std::make_tuple (false, tem);
-    }
-	uint64_t money;
-	memcpy(&money,&retdata.at(1).get()->at(0),sizeof(money));
-
-	bool flag = true;
-
-	auto GetKeyId = [](const CAccountViewCache &view,vector<std::shared_ptr < std::vector<unsigned char> > > &ret,CKeyID &KeyId) {
-		 if(ret.at(0).get()->size() == 6){
-			 CRegID reg(*ret.at(0));
-			 KeyId= reg.getKeyID(view);
-		 }else if(ret.at(0).get()->size() == 34) {
-			 string addr((*ret[0]).begin(), (*ret[0]).end());
-			 KeyId=CKeyID(addr);
-		 }
-		   if (KeyId.IsEmpty())
-		   return false;
-
-		  return true;
-		 };
-
-	 CKeyID addrKeyId;
-	 if (!GetKeyId(*pVmScriptRun->GetCatchView(),retdata, addrKeyId)) {
-		 auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-		 return std::make_tuple (false, tem);
-	 }
-
-	CUserID userid(addrKeyId);
-	CAccount aAccount;
-	if (!pVmScriptRun->GetCatchView()->GetAccount(userid, aAccount)) {
-		flag = false;
-	}
-
-	CRegID scriptid = pVmScriptRun->GetScriptRegID();
-//	int height = pVmScriptRun->GetComfirHeight();
-	bool ret = true;//aAccount.IsAuthorized(money,height,scriptid.GetVec6(), *pVmScriptRun->GetScriptDB());
-
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
-    tep << ret;
-    vector<unsigned char> tep1(tep.begin(),tep.end());
-    (*tem.get()).push_back(tep1);
-
-	return std::make_tuple (flag, tem);
-
-}
-/**
- *bool ReadDataDBTime(const void* const key,const unsigned char keylen, unsigned long * const ptime)
- * 中间层传了一个个参数
- * 1.第一个是 key
- */
-static RET_DEFINE ExReadDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
-{
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-    if(!GetData(ipara,retdata) ||retdata.size() != 1 )
-    {
-    	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    	return std::make_tuple (false, tem);
-    }
-	CRegID scriptid = pVmScriptRun->GetScriptRegID();
-	vector_unsigned_char vValue;
-	int nHeight;
-	bool flag = true;
-	CScriptDBViewCache *scriptDB = pVmScriptRun->GetScriptDB();
-
-	CScriptDBOperLog operLog;
-	if(!scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid,*retdata.at(0),vValue,nHeight, operLog))
-	{
-		if(!operLog.vKey.empty()) {
-			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
-			m_dblog.get()->push_back(operLog);
-		}
-		flag =  false;
-	}
-
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
-    tep << nHeight;
-    vector<unsigned char> tep1(tep.begin(),tep.end());
-    (*tem.get()).push_back(tep1);
-
-	return std::make_tuple (flag, tem);
-}
-/**
- *bool ModifyDataDBTime(const void* const key,const unsigned char keylen, const unsigned long ptime)
- * 中间层传了两个参数
- * 1.第一个是 key
- * 2.第二个是 超时时间
- */
-static RET_DEFINE ExModifyDataDBTimeFunc(unsigned char * ipara,void * pVmScript)
-{
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-
-    if(!GetData(ipara,retdata) ||retdata.size() != 2 )
-    {
-    	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    	return std::make_tuple (false, tem);
-    }
-	int height = 0;
-	memcpy(&height,&retdata.at(1).get()->at(0),4);
-
-	CRegID scriptid = pVmScriptRun->GetScriptRegID();
-	vector_unsigned_char vValue;
-	bool flag = false;
-	bool ret = true;
-	int temp = 0;
-	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
-
-	CScriptDBOperLog operlog;
-	if(scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid,*retdata.at(0),vValue,temp,operlog))
-	{
-		if(scriptDB->SetScriptData(scriptid,*retdata.at(0),vValue,height,operlog))
-		{
-			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
-			m_dblog.get()->push_back(operlog);
-			flag = true;
-		}
-	}else {
-		if (!operlog.vKey.empty()) {
-			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
-			m_dblog.get()->push_back(operlog);
-		}
-	}
-
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
-    tep << flag;
-    vector<unsigned char> tep1(tep.begin(),tep.end());
-    (*tem.get()).push_back(tep1);
-
-	return std::make_tuple (ret , tem);
-}
 /**
  *bool ModifyDataDBVavle(const void* const key,const unsigned char keylen, const void* const pvalue,const unsigned short valuelen)
  * 中间层传了两个参数
@@ -1210,65 +1012,7 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmScript)
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	return std::make_tuple (true , tem);
 }
-/**
- *todo delete
- *unsigned short GetAuthUserDefine(const void* const account,void *const pout,const unsigned short maxlen)
- * 中间层传了一个参数
- * 1.账户的id
- */
-static RET_DEFINE ExGetAuthoritedDefineFunc(unsigned char * ipara,void * pVmScript){
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
-    if(!GetData(ipara,retdata) ||retdata.size() != 1 || !(retdata.at(0).get()->size() == 6
-    	|| retdata.at(0).get()->size() == 34))
-    {
-    	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    	return std::make_tuple (false, tem);
-    }
-	bool flag = true;
-
-	auto GetKeyId = [](const CAccountViewCache &view,vector<std::shared_ptr < std::vector<unsigned char> > > &ret,CKeyID &KeyId) {
-			 if(ret.at(0).get()->size() == 6){
-				 CRegID reg(*ret.at(0));
-				 KeyId= reg.getKeyID(view);
-			 }else if(ret.at(0).get()->size() == 34) {
-				 string addr((*ret[0]).begin(), (*ret[0]).end());
-				 KeyId=CKeyID(addr);
-			 }
-			   if (KeyId.IsEmpty())
-			   return false;
-
-			  return true;
-			 };
-
-	 CKeyID addrKeyId;
-	 if (!GetKeyId(*pVmScriptRun->GetCatchView(),retdata, addrKeyId)) {
-		 auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-		 return std::make_tuple (false, tem);
-	 }
-
-	CUserID userid(addrKeyId);
-	CAccount aAccount;
-	if (!pVmScriptRun->GetCatchView()->GetAccount(userid, aAccount)) {
-		flag = false;
-	}
-
-	vector_unsigned_char scriptid = pVmScriptRun->GetScriptRegID().GetVec6();
-//	int height = pVmScriptRun->GetComfirHeight();
-
-////	vector<unsigned char> vData;
-////	if(!aAccount.GetUserData(scriptid, vData, *pVmScriptRun->GetScriptDB()))
-////	{
-////		flag = false;
-////	}
-//
-//	/// untodo
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-
-
-	return std::make_tuple (flag, tem);
-}
 /**
  *bool GetScriptData(const void* const scriptID,void* const pkey,short len,void* const pvalve,short maxlen)
  * 中间层传了两个个参数
@@ -1484,8 +1228,6 @@ enum CALL_API_FUN {
 	GETTXCONFIRH_FUNC,        //!< GETTXCONFIRH_FUNC
 	GETTIPH_FUNC,             //!< GETTIPH_FUNC
 	GETBLOCKHASH_FUNC,        //!< GETBLOCKHASH_FUNC
-	ISAUTHORIT_FUNC,          //!<ISAUTHORIT
-	GETAUTHORITDEFINE_FUNC,   //!GETAUTHORITDEFINE_FUNC
 
 
 	//// tx api
@@ -1493,18 +1235,14 @@ enum CALL_API_FUN {
 	WRITEDB_FUNC,       //!< WRITEDB_FUNC
 	DELETEDB_FUNC,      //!< DELETEDB_FUNC
 	READDB_FUNC,        //!< READDB_FUNC
-	MODIFYDB_FUNC,      //!< MODIFYDB_FUNC
 	GETDBSIZE_FUNC,     //!< GETDBSIZE_FUNC
 	GETDBVALUE_FUNC,    //!< GETDBVALUE_FUNC
 	GetCURTXHASH_FUNC,  //!< GetCURTXHASH_FUNC
-	READDBTIME_FUNC,     //!< READDBTIME_FUNC
-	MODIFYDBTIME_FUNC,  //!< MODIFYDBTIME_FUNC
 	MODIFYDBVALUE_FUNC ,  //!< MODIFYDBVALUE_FUNC
 	WRITEOUTPUT_FUNC,     //!<WRITEOUTPUT_FUNC
-
 	GETSCRIPTDATA_FUNC,		  //!<GETSCRIPTDATA_FUNC
-	GETSCRIPTID_FUNC,		//!<GETSCRIPTID_FUNC
-	GETCURTXACCOUNT_FUNC,//!<GETCURTXACCOUNT_FUNC
+	GETSCRIPTID_FUNC,		  //!<GETSCRIPTID_FUNC
+	GETCURTXACCOUNT_FUNC,		  //!<GETSCRIPTID_FUNC
 	GETCURTXCONTACT_FUNC,		 //!<GETCURTXCONTACT_FUNC
 	GETCURDECOMPRESSCONTACR_FUNC,   //!<GETCURDECOMPRESSCONTACR_FUNC
 	GETDECOMPRESSCONTACR_FUNC,   	//!<GETDECOMPRESSCONTACR_FUNC
@@ -1528,19 +1266,15 @@ const static struct __MapExterFun FunMap[] = { //
 		{GETTXCONFIRH_FUNC,ExGetTxConFirmHeightFunc},
 		{GETTIPH_FUNC,ExDefaultFunc},
 		{GETBLOCKHASH_FUNC,ExGetBlockHashFunc},
-		{ISAUTHORIT_FUNC,ExIsAuthoritFunc},
-		{GETAUTHORITDEFINE_FUNC,ExGetAuthoritedDefineFunc},
+
 
 		{GETCTXCONFIRMH_FUNC,ExGetCurRunEnvHeightFunc},
 		{WRITEDB_FUNC,ExWriteDataDBFunc},
 		{DELETEDB_FUNC,ExDeleteDataDBFunc},
 		{READDB_FUNC,ExReadDataValueDBFunc},
-		{MODIFYDB_FUNC,ExModifyDataDBFunc},
 		{GETDBSIZE_FUNC,ExGetDBSizeFunc},
 		{GETDBVALUE_FUNC,ExGetDBValueFunc},
 		{GetCURTXHASH_FUNC,ExGetCurTxHash},
-		{READDBTIME_FUNC,ExReadDataDBTimeFunc},
-		{MODIFYDBTIME_FUNC,ExModifyDataDBTimeFunc},
 		{MODIFYDBVALUE_FUNC,ExModifyDataDBVavleFunc},
 		{WRITEOUTPUT_FUNC,ExWriteOutputFunc},
 		{GETSCRIPTDATA_FUNC,ExGetScriptDataFunc},
