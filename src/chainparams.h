@@ -84,7 +84,7 @@ public:
 		}
 		return true;
 	}
-	virtual string ToString() {
+	virtual string ToString() const {
 		string te = "";
 
 		for (auto & tep1 : m_mapMultiArgs) {
@@ -95,13 +95,27 @@ public:
 				te += strprintf("value :%s\n",tep3.c_str());
 			}
 		}
-
+		te += strprintf("fDebugAll:%s\n",fDebugAll);
 		te += strprintf("fDebug:%s\n",fDebug);
 		te += strprintf("fPrintToConsole:%d\n",fPrintToConsole);
 		te += strprintf("fPrintToToFile:%d\n",fPrintToToFile);
 		te += strprintf("fLogTimestamps:%d\n",fLogTimestamps);
 		te += strprintf("fLogPrintFileLine:%d\n",fLogPrintFileLine);
 		te += strprintf("fServer:%d\n",fServer);
+
+		te += strprintf("fImporting:%d\n",fImporting);
+		te += strprintf("fReindex:%d\n",fReindex);
+		te += strprintf("fBenchmark:%d\n",fBenchmark);
+		te += strprintf("fTxIndex:%d\n",fTxIndex);
+		te += strprintf("nTimeBestReceived:%d\n",nTimeBestReceived);
+		te += strprintf("paytxfee:%d\n",paytxfee);
+		te += strprintf("nTargetSpacing:%d\n",nTargetSpacing);
+		te += strprintf("nTargetTimespan:%d\n",nTargetTimespan);
+		te += strprintf("nMaxCoinDay:%d\n",nMaxCoinDay);
+		te += strprintf("nScriptCheckThreads:%d\n",nScriptCheckThreads);
+		te += strprintf("nViewCacheSize:%d\n",nViewCacheSize);
+		te += strprintf("nTxCacheHeight:%d\n",nTxCacheHeight);
+		te += strprintf("nIntervalPos:%d\n",nIntervalPos);
 
 		return te;
 	}

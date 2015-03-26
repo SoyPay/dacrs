@@ -70,6 +70,21 @@ string DecodeDumpString(const string &str) {
     return ret.str();
 }
 
+Value prepareforcoolmining(const Array& params, bool fHelp){
+	if (fHelp || params.size() != 0)
+		throw runtime_error("this cmd have no params\n");
+
+	EnsureWalletIsUnlocked();
+	if (!pwalletMain->IsReadyForCoolMiner()) {
+		throw runtime_error("there is no cool miner key  or miner key in on regist to blockchain\n");
+	}
+
+	pwalletMain->ClearAllCkeyForCoolMiner();
+	Object reply2;
+	reply2.push_back(Pair("info", "wallet is ready for cool miner"));
+	return reply2;
+}
+
 Value importprivkey(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 3)
@@ -116,25 +131,11 @@ Value importprivkey(const Array& params, bool fHelp)
     {
         LOCK2(cs_main, pwalletMain->cs_wallet);
 
-//        pwalletMain->MarkDirty();
-
-
-        // Don't throw error in case a key is already there
-        if (pwalletMain->count(vchAddress))
-        	throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key is in the wallet");;
-
-//        pwalletMain->mapKeyMetadata[vchAddress].nCreateTime = 1;
-
-        if (!pwalletMain->AddKey(key))
-            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
-
-        // whenever a key is imported, we need to scan the whole chain
-//        pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
+       if (!pwalletMain->AddKey(key))
+           throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
 
         pwalletMain->SynchronizRegId(vchAddress,*pAccountViewTip);
-        if (fRescan) {
-            pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
-        }
+
     }
     Object reply2;
     reply2.push_back(Pair("imorpt key address",pubkey.GetKeyID().ToAddress()));

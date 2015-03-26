@@ -80,11 +80,14 @@ bool CWallet::AddKey(const CKey& secret) {
 	AssertLockHeld(cs_wallet);
 
 	CKeyStoreValue tem(secret);
-	if(mKeyPool.count(tem.GetCKeyID()) > 0)
-		{
-		  LogPrint("CWallet","this key is in the CWallet");
-		 return false;
+	CKeyID kid = tem.GetCKeyID();
+	if (mKeyPool.count(kid) > 0) {
+		CKey dumy;
+		if (mKeyPool[kid].getCKey(dumy, false) == true) {
+			LogPrint("CWallet", "this key is in the CWallet");
+			return false;
 		}
+	}
 
 	if (!IsCrypted()) {
 		mKeyPool[tem.GetCKeyID()] = tem;
@@ -502,7 +505,6 @@ void CWallet::ResendWalletTransactions() {
 std::tuple<bool, string> CWallet::CommitTransaction(CBaseTransaction *pTx) {
 	LOCK2(cs_main, cs_wallet);
 	LogPrint("INFO", "CommitTransaction:\n%s", pTx->ToString(*pAccountViewTip));
-
 	{
 		CValidationState state;
 		if (!::AcceptToMemoryPool(mempool, state, pTx, true, NULL)) {
@@ -543,37 +545,37 @@ int64_t CWallet::GetRawBalance(int ncurhigh) const
 }
 
 
-std::tuple<bool,string>  CWallet::SendMoney(const CRegID &send, const CUserID &rsv, int64_t nValue, int64_t nFee)
-{
-
-	CTransaction tx;
-	{
-		LOCK2(cs_main, cs_wallet);
-		tx.srcUserId = send;
-		tx.desUserId = rsv;
-		tx.llValues = nValue;
-		if (0 == nFee) {
-			tx.llFees = SysCfg().GetTxFee();
-		}else
-			tx.llFees = nFee;
-		tx.nValidHeight = chainActive.Tip()->nHeight;
-	}
-
-	CKeyID keID;
-	if(!pAccountViewTip->GetKeyId(send,keID)){
-		return std::make_tuple (false,"key or keID failed");
-	}
-
-	if (!Sign(keID,tx.SignatureHash(), tx.signature)) {
-		return std::make_tuple (false,"Sign failed");
-	}
-	std::tuple<bool,string> ret = CommitTransaction((CBaseTransaction *) &tx);
-	if(!std::get<0>(ret))
-		return ret;
-	return  std::make_tuple (true,tx.GetHash().GetHex());
-
-
-}
+//std::tuple<bool,string>  CWallet::SendMoney(const CRegID &send, const CUserID &rsv, int64_t nValue, int64_t nFee)
+//{
+//
+//	CTransaction tx;
+//	{
+//		LOCK2(cs_main, cs_wallet);
+//		tx.srcUserId = send;
+//		tx.desUserId = rsv;
+//		tx.llValues = nValue;
+//		if (0 == nFee) {
+//			tx.llFees = SysCfg().GetTxFee();
+//		}else
+//			tx.llFees = nFee;
+//		tx.nValidHeight = chainActive.Tip()->nHeight;
+//	}
+//
+//	CKeyID keID;
+//	if(!pAccountViewTip->GetKeyId(send,keID)){
+//		return std::make_tuple (false,"key or keID failed");
+//	}
+//
+//	if (!Sign(keID,tx.SignatureHash(), tx.signature)) {
+//		return std::make_tuple (false,"Sign failed");
+//	}
+//	std::tuple<bool,string> ret = CommitTransaction((CBaseTransaction *) &tx);
+//	if(!std::get<0>(ret))
+//		return ret;
+//	return  std::make_tuple (true,tx.GetHash().GetHex());
+//
+//
+//}
 
 
 
@@ -760,12 +762,10 @@ bool CWallet::GetPubKey(const CKeyID& address, CPubKey& keyOut, bool IsMiner) {
 
 bool CWallet::SynchronizRegId(const CKeyID& keyid, const CAccountViewCache& inview) {
 	CAccountViewCache view(inview);
-	if(count(keyid)> 0)
-	{
-		if(mKeyPool[keyid].SynchronizSys(view))
-			{
-			return db.WriteKeyStoreValue(keyid,mKeyPool[keyid]);
-			}
+	if (count(keyid) > 0) {
+		if (mKeyPool[keyid].SynchronizSys(view)) {
+			return db.WriteKeyStoreValue(keyid, mKeyPool[keyid]);
+		}
 	}
 	return false;
 }
@@ -904,28 +904,179 @@ bool CKeyStoreValue::SelfCheck()const {
   return true;
 }
 
-bool CKeyStoreValue::SynchronizSys(CAccountViewCache& view){
-	 CAccount account;
-	if(!view.GetAccount(CUserID(mPKey.GetKeyID()),account))
-	{
+bool CKeyStoreValue::SynchronizSys(CAccountViewCache& view) {
+	CAccount account;
+	if (!view.GetAccount(CUserID(mPKey.GetKeyID()), account)) {
 		mregId.clean();
-	}
-	else if(account.PublicKey.IsValid())//是注册的账户
+	} else if (account.PublicKey.IsValid())			//是注册的账户
 	{
 		mregId = account.regID;
-		if(account.PublicKey != mPKey)
-			{
-				ERRORMSG("shit %s acc %s mPKey:%s\r\n","not fix the bug",account.ToString(),this->ToString());
-				assert(0);
-			}
-		if(account.MinerPKey.IsValid())
+		if (account.PublicKey != mPKey) {
+			ERRORMSG("shit %s acc %s mPKey:%s\r\n", "not fix the bug", account.ToString(), this->ToString());
+			assert(0);
+		}
+		if (account.MinerPKey.IsValid())
 			assert(account.MinerPKey == mMinerCkey.GetPubKey());
-	}
-	else//有可能是没有注册的账户
+	} else			//有可能是没有注册的账户
 	{
 		mregId.clean();
 	}
 
-	LogPrint("wallet","%s \r\n",this->ToString());
+	LogPrint("wallet", "%s \r\n", this->ToString());
 	return true;
+}
+
+bool CKeyStoreValue::IsCrypted() {
+	return mCkey.size() == 0;
+
+}
+
+bool CKeyStoreValue::CleanAll() {
+	mCkey.Clear();
+	mPKey= CPubKey();
+	mMinerCkey.Clear();
+    mMinerPk = CPubKey();
+	nCreationTime = 0 ;
+    return true;
+}
+
+bool CKeyStoreValue::cleanCkey(){
+		return mCkey.Clear();
+  }
+
+CKeyStoreValue::CKeyStoreValue(const CKey& inkey) {
+	assert(inkey.IsValid());
+	 CleanAll();
+	mCkey = inkey ;
+	nCreationTime = GetTime();
+	mPKey = mCkey.GetPubKey();
+
+}
+
+CKeyStoreValue::CKeyStoreValue(const CKey& inkey, const CKey& minerKey) {
+	assert(inkey.IsValid());
+	assert(minerKey.IsValid());
+	 CleanAll();
+	mMinerCkey = minerKey;
+	mCkey = inkey ;
+	nCreationTime = GetTime();
+	mPKey = mCkey.GetPubKey();
+	mMinerPk = mMinerCkey.GetPubKey();
+}
+
+CKeyStoreValue::CKeyStoreValue(const CPubKey& pubkey) {
+	assert(mCkey.IsValid() == false && pubkey.IsFullyValid()); //the ckey mustbe unvalid
+	CleanAll();
+	nCreationTime = GetTime();
+	mPKey = pubkey;
+}
+
+bool CKeyStoreValue::GetPubKey(CPubKey& mOutKey, bool IsMiner) const {
+	if(IsMiner == true){
+		if(mMinerCkey.IsValid()){
+			mOutKey = mMinerCkey.GetPubKey();
+			return true;
+		}
+		return false;
+	}
+
+	assert(mCkey.IsValid());
+	mOutKey =mPKey;
+	assert(mCkey.GetPubKey() == mPKey);
+	return  true;
+}
+
+string CKeyStoreValue::ToString() const{
+			return strprintf("CRegID:%s CPubKey:%s CKey:%s mMinerCkey:%s CreationTime:%d",mregId.ToString(),mPKey.ToString(),mCkey.ToString(),mMinerCkey.ToString(),nCreationTime);
+}
+
+bool CKeyStoreValue::getCKey(CKey& keyOut, bool IsMiner) const {
+	if(IsMiner == true && mMinerCkey.IsValid()) {
+		keyOut = mMinerCkey;
+	} else {
+		keyOut = mCkey;
+	}
+	return keyOut.IsValid();
+
+}
+
+bool CKeyStoreValue::CreateANewKey() {
+	CleanAll();
+	mCkey.MakeNewKey();
+	mPKey = mCkey.GetPubKey();
+	nCreationTime = GetTime();
+	return true;
+}
+
+CKeyStoreValue::CKeyStoreValue() {
+		 CleanAll();
+}
+
+int64_t CKeyStoreValue::getBirthDay() const {
+			return nCreationTime;
+}
+
+bool CKeyStoreValue::IsContainReadyMinerKey() const{
+			return mMinerCkey.IsValid()&&(!mregId.IsEmpty());
+}
+
+CKeyID CKeyStoreValue::GetCKeyID() const {
+	return (mPKey.GetKeyID());
+}
+
+CRegID CKeyStoreValue::GetRegID() const {
+	return mregId;
+}
+
+bool CWallet::IsReadyForCoolMiner() const {
+	for (auto const &te : mKeyPool) {
+		if (te.second.IsContainReadyMinerKey()) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool CWallet::ClearAllCkeyForCoolMiner() {
+	for (auto &te : mKeyPool) {
+			if (te.second.cleanCkey()) {
+				db.WriteKeyStoreValue(te.first,te.second);
+			}
+		}
+		return true;
+}
+
+map<CKeyID, CKeyStoreValue> CWallet::GetKeyPool() const {
+	AssertLockHeld(cs_wallet);
+	return mKeyPool;
+}
+
+bool CWallet::IsCrypted() const {
+	return false;
+}
+
+bool CWallet::count(const CKeyID& address) const {
+	AssertLockHeld(cs_wallet);
+	return mKeyPool.count(address) > 0;
+}
+
+CWallet::CWallet(string strWalletFileIn) :db(strWalletFileIn) {
+	SetNull();
+	strWalletFile = strWalletFileIn;
+}
+
+void CWallet::SetNull() {
+	nWalletVersion = 0;
+}
+
+bool CWallet::LoadMinVersion(int nVersion) {
+	AssertLockHeld(cs_wallet);
+	nWalletVersion = nVersion;
+
+	return true;
+}
+
+int CWallet::GetVersion() {
+	LOCK(cs_wallet);
+	return nWalletVersion;
 }

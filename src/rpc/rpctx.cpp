@@ -1369,6 +1369,8 @@ Value resetclient(const Array& params, bool fHelp) {
 		}
 		pAccountViewTip->Flush();
 		pScriptDBTip->Flush();
+		pTxCacheTip->Flush();
+//		pTxCacheTip->GetTxHashCache().size()
        if(SysCfg().Network::TESTNET == SysCfg().NetworkID()|| SysCfg().Network::TESTNET==SysCfg().NetworkID()){
        assert(pAccountViewDB->GetDbCount() == 22);
        assert(pScriptDB->GetDbCount() == 0);}
