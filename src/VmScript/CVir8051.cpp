@@ -517,6 +517,7 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
  * 1.第一个是 hash
  */
 
+//todolist
 static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun) {
 	vector<std::shared_ptr<vector<unsigned char> > > retdata;
     if(!GetData(ipara,retdata) ||retdata.size() != 1|| retdata.at(0).get()->size() != 32)
@@ -536,12 +537,6 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 	if (GetTransaction(pBaseTx, hash1)) {
 		CContractTransaction *tx = static_cast<CContractTransaction*>(pBaseTx.get());
 		vector<unsigned char> item;
-
-		for (auto& it : tx->vAccountRegId) {
-			vector<unsigned char> id = boost::get<CRegID>(it).GetVec6();
-			item.insert(item.end(), id.begin(), id.end());
-		}
-
 		(*tem.get()).push_back(item);
 	}
 	return std::make_tuple(true, tem);
@@ -1325,14 +1320,14 @@ static RET_DEFINE ExGetScriptIDFunc(unsigned char * ipara,void * pVmScript)
 static RET_DEFINE ExGetCurTxAccountFunc(unsigned char * ipara,void * pVmScript)
 {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	vector<CUserID> regid =pVmScriptRun->GetTxAccount();
+//	vector<CUserID> regid =pVmScriptRun->GetTxAccount();
 
 	vector<unsigned char> item;
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-		for (auto& it : regid) {
-			vector<unsigned char> id = boost::get<CRegID>(it).GetVec6();
-			item.insert(item.end(), id.begin(), id.end());
-		}
+//		for (auto& it : regid) {
+//			vector<unsigned char> id = boost::get<CRegID>(it).GetVec6();
+//			item.insert(item.end(), id.begin(), id.end());
+//		}
 
 		(*tem.get()).push_back(item);
 		return std::make_tuple (true, tem);

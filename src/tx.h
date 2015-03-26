@@ -394,8 +394,8 @@ public:
 
 class CContractTransaction : public CBaseTransaction {
 public:
-	mutable CUserID scriptRegId;                    //regid
-	mutable vector<CUserID> vAccountRegId;
+	mutable CUserID userRegId;                      //app regid
+	mutable CUserID appRegId;                    //user regid
 	uint64_t llFees;
 	vector_unsigned_char vContract;
 	int nValidHeight;
@@ -407,21 +407,20 @@ public:
 		*this = *(CContractTransaction *) pBaseTx;
 	}
 
-	CContractTransaction(const CUserID& sRegId, vector_unsigned_char& pContract,vector<CUserID>& vRegId,int high,int64_t Fee)
+	CContractTransaction(const CUserID& in_UserRegId, CUserID in_AppRegId, int64_t Fee, vector_unsigned_char& pContract, int high)
 	{
 		nTxType = CONTRACT_TX;
-		scriptRegId = sRegId;
+		userRegId = in_UserRegId;
+		appRegId = in_AppRegId;
 		vContract = pContract;
 		nValidHeight = high;
 		llFees = Fee;
-		vAccountRegId.assign(vRegId.begin(),vRegId.end());
 		vSignature.clear();
 	}
+
 	CContractTransaction() {
 		nTxType = CONTRACT_TX;
 		llFees = 0;
-		vAccountRegId.clear();
-		vContract.clear();
 		vContract.clear();
 		nValidHeight = 0;
 		vSignature.clear();
@@ -435,22 +434,10 @@ public:
 	(
 			READWRITE(VARINT(this->nVersion));
 			nVersion = this->nVersion;
-			CID scriptId(scriptRegId);
-			READWRITE(scriptId);
-			vector<CID> vAcctId;
-			if(fRead) {
-				scriptRegId = scriptId.GetUserId();
-				READWRITE(vAcctId);
-				for(auto &acctId : vAcctId) {
-					CUserID userId = acctId.GetUserId();
-					vAccountRegId.push_back(userId);
-				}
-			} else {
-				for(auto &acctRegId : vAccountRegId) {
-					vAcctId.push_back(CID(acctRegId));
-				}
-				READWRITE(vAcctId);
-			}
+			CID userId(userRegId);
+			READWRITE(userId);
+			CID appId(appRegId);
+			READWRITE(appId);
 			READWRITE(VARINT(llFees));
 			READWRITE(vContract);
 			READWRITE(VARINT(nValidHeight));
@@ -713,6 +700,12 @@ public:
 	Object ToJosnObj() const;
 	bool IsMergeFund(const int & nCurHeight, int &mergeType) const;
 
+	uint256 GetHash() const {
+		CHashWriter ss(SER_GETHASH, 0);
+		ss << nFundType << scriptID << VARINT(value) << VARINT(nHeight);
+		return ss.GetHash();
+	}
+
 	friend bool operator <(const CFund &fa, const CFund &fb) {
 		if (fa.nFundType < fb.nFundType)
 			return true;
@@ -813,7 +806,7 @@ public:
 public:
 	COperFund() {
 		operType = NULL_OPER;
-				vFund.clear();
+		vFund.clear();
 	}
 
 	COperFund(unsigned char nType, const vector<CFund>& vOperFund) {

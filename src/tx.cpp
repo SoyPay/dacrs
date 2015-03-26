@@ -414,10 +414,9 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 	CAccount account;
 	uint64_t minusValue = llFees;
 	CFund minusFund(minusValue);
-	CID id(*(vAccountRegId.rbegin()));
-	if (!view.GetAccount(*(vAccountRegId.rbegin()), account))
+	if (!view.GetAccount(userRegId, account))
 		return state.DoS(100,
-				ERRORMSG("UpdateAccounts() : read source addr %s account info error", HexStr(id.GetID())),
+				ERRORMSG("UpdateAccounts() : read source addr %s account info error", boost::get<CRegID>(userRegId).ToString()),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	account.CompactAccount(nHeight);
 	if (!account.OperateAccount(MINUS_FREE, minusFund, scriptCache, txundo.vScriptOperLog))
@@ -425,7 +424,7 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 				"bad-read-accountdb");
 	CUserID userId = account.keyID;
 	if(!view.SetAccount(userId, account)){
-		return state.DoS(100, ERRORMSG("UpdataAccounts() :save account%s info error", HexStr(id.GetID())),
+		return state.DoS(100, ERRORMSG("UpdataAccounts() :save account%s info error",  boost::get<CRegID>(userRegId).ToString()),
 				UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 	}
 	txundo.vAccountOperLog.push_back(account.accountOperLog);
@@ -434,20 +433,6 @@ bool CContractTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CV
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 	uint64_t el = GetElementForBurn(chainActive.Tip());
 	int64_t llTime = GetTimeMillis();
-//	LogPrint("vm", "CContractTransaction::UpdateAccount(),ScriptDB addr:0x%x\n", &scriptCache);
-//	CScriptDBView *pBaseTemp = scriptCache.GetBaseScriptDB();
-//	while (pBaseTemp) {
-//		if (typeid(*pBaseTemp) == typeid(CScriptDBViewCache)) {
-//			LogPrint("vm", "CContractTransaction::UpdateAccount(),base scriptdb cache addr is:0x%x\n", pBaseTemp);
-//			pBaseTemp = ((CScriptDBViewCache*) pBaseTemp)->GetBaseScriptDB();
-//		} else if (typeid(*pBaseTemp) == typeid(CScriptDB)) {
-//			LogPrint("vm", "CContractTransaction::UpdateAccount(),base scriptdb addr:0x%x\n", pBaseTemp);
-//			break;
-//		} else {
-//			LogPrint("vm", "CContractTransaction::UpdateAccount(), invalid base scriptdb type\n");
-//			break;
-//		}
-//	}
 	tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptCache, nHeight, el, nRunStep);
 	if (!std::get<0>(ret))
 		return state.DoS(100,
@@ -504,11 +489,10 @@ bool CBaseTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CV
 
 bool CContractTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	CKeyID keyId;
-	for(auto & accountId : vAccountRegId) {
-		if(!view.GetKeyId(accountId, keyId))
-			return false;
-		vAddr.insert(keyId);
-	}
+	if(!view.GetKeyId(userRegId, keyId))
+		return false;
+	vAddr.insert(keyId);
+
 	CVmScriptRun vmRun;
 	std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 	uint64_t el = GetElementForBurn(chainActive.Tip());
@@ -544,14 +528,9 @@ bool CContractTransaction::IsValidHeight(int nCurHeight, int nTxCacheHeight) con
 
 string CContractTransaction::ToString(CAccountViewCache &view) const {
 	string str;
-	string strAccountId("");
-	for(auto accountId : vAccountRegId) {
-		strAccountId += boost::get<CRegID>(accountId).ToString();
-		strAccountId += "|";
-	}
-	strAccountId = strAccountId.substr(0, strAccountId.length()-1);
-	str += strprintf("txType=%s, hash=%s, ver=%d, vAccountRegId=%s, llFees=%ld, vContract=%s\n",
-	txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, strAccountId, llFees, HexStr(vContract).c_str());
+
+	str += strprintf("txType=%s, hash=%s, ver=%d, userId=%s AppId=%s, llFees=%ld, vContract=%s\n",
+	txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, boost::get<CRegID>(userRegId).ToString(), boost::get<CRegID>(appRegId).ToString(), llFees, HexStr(vContract).c_str());
 	return str;
 }
 bool CContractTransaction::CheckTransction(CValidationState &state, CAccountViewCache &view) {
@@ -559,26 +538,7 @@ bool CContractTransaction::CheckTransction(CValidationState &state, CAccountView
 		return state.DoS(100, ERRORMSG("CheckTransaction() : appeal tx fee out of range"), REJECT_INVALID,
 				"bad-appeal-fee-toolarge");
 	}
-
-	if ((vAccountRegId.size()) != (vSignature.size())) {
-		return state.DoS(100, ERRORMSG("CheckTransaction() :account size not equal to sign size"), REJECT_INVALID,
-				"bad-vpre-size ");
-	}
-
-	for (size_t i = 0; i < vAccountRegId.size(); ++i) {
-		CAccount acctInfo;
-		if (!view.GetAccount(vAccountRegId[i], acctInfo)) {
-			return state.DoS(100, ERRORMSG("CheckSignScript() :tx GetAccount falied"), REJECT_INVALID, "bad-getaccount");
-		}
-		if (!acctInfo.IsRegister()) {
-			return state.DoS(100, ERRORMSG("CheckSignScript(): account have not registed public key"), REJECT_INVALID,
-							"bad-no-pubkey");
-		}
-		if (!CheckSignScript(SignatureHash(), vSignature[i], acctInfo.PublicKey)) {
-			return state.DoS(100, ERRORMSG("CheckTransaction() :CheckSignScript failed"), REJECT_INVALID,
-					"bad-signscript-check");
-		}
-	}
+//to signature verify
 
 	return true;
 }
@@ -970,17 +930,6 @@ bool CAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
 }
 
 void CAccount::WriteOperLog(const COperFund &operLog) {
-//	for(auto item:operLog.vFund)
-//	{
-//		LogPrint("key","keyid:%s\n",HexStr(keyID).c_str());
-//		LogPrint("key"," type is:%d,fund:%s\n",static_cast<int>(operLog.operType),item.ToString().c_str());
-//		string s("9f2faa80029ee70f87819c283f5e96aa0e83d421");
-//		if (keyID == uint160(s) )
-//		cout<<"height is "<<item.nHeight<<
-//				" type is: "<<static_cast<int>(operLog.operType)<<" value is: "<<item.value<<
-//				" fund type is: "<<static_cast<int>(item.nFundType) <<" scriptID is: "<<HexStr(item.scriptID).c_str()<<endl;
-//	}
-
 	accountOperLog.InsertOperateLog(operLog);
 }
 
@@ -1200,7 +1149,7 @@ uint256 CAccount::BuildMerkleTree(int prevBlockHeight) const {
 	for (const auto &freeFund : vFreedomFund) {
 		//at least larger than 100 height
 		//if (prevBlockHeight < freeFund.confirmHeight + 100) {
-		vMerkleTree.push_back(uint256(freeFund.scriptID));
+		vMerkleTree.push_back(freeFund.GetHash());
 		//}
 	}
 
@@ -1393,12 +1342,9 @@ bool CRegID::clean()  {
 
 uint256 CContractTransaction::SignatureHash() const  {
 	CHashWriter ss(SER_GETHASH, 0);
-	CID scriptId(scriptRegId);
-	ss <<VARINT(nVersion) << nTxType << scriptId;
-	for(auto & acctRegId : vAccountRegId) {
-		CID acctId(acctRegId);
-		ss << acctId;
-	}
+	CID appId(appRegId);
+	CID userId(userRegId);
+	ss <<VARINT(nVersion) << nTxType << userId << appId;
 	ss << VARINT(llFees) << vContract << VARINT(nValidHeight) ;
 	return ss.GetHash();
 }

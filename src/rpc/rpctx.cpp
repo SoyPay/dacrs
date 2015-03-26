@@ -80,16 +80,10 @@ Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 		CContractTransaction *prtx = (CContractTransaction *) pTx;
 		result.push_back(Pair("txtype", "ContractTx"));
 		result.push_back(Pair("ver", prtx->nVersion));
-		CRegID tep = boost::get<CRegID>(prtx->scriptRegId);
+		CRegID userId = boost::get<CRegID>(prtx->userRegId);
+		CRegID tep = boost::get<CRegID>(prtx->appRegId);
+		result.push_back(Pair("userid", userId.ToString()));
 		result.push_back(Pair("appid", tep.ToString()));
-		{
-			Array array;
-			for(auto& item : prtx->vAccountRegId)
-			{
-				array.push_back(RegIDToAddress(item));
-			}
-			result.push_back(Pair("accountid", array));
-		}
 		result.push_back(Pair("fees", prtx->llFees));
 		result.push_back(Pair("Contract", HexStr(prtx->vContract)));
 		result.push_back(Pair("height", prtx->nValidHeight));
@@ -351,12 +345,13 @@ Value createcontracttx(const Array& params, bool fHelp) {
 	}
 
 
-	RPCTypeCheck(params, list_of(str_type)(array_type)(str_type)(int_type)(int_type));
+	RPCTypeCheck(params, list_of(str_type)(str_type)(str_type)(int_type)(int_type));
 
 	//get addresss
 //	vector<unsigned char> vscriptid = ParseHex(params[0].get_str());
-	CRegID vscriptid(params[0].get_str()) ;
-	Array addr = params[1].get_array();
+	CRegID userid(params[0].get_str());
+	CRegID appId(params[1].get_str());
+
 	vector<unsigned char> vcontract = ParseHex(params[2].get_str());
 	uint64_t fee = params[3].get_uint64();
 	uint32_t height = params[4].get_int();
@@ -365,47 +360,24 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		throw runtime_error("in createcontracttx :fee is smaller than nMinTxFee\n");
 	}
 
-	if (vscriptid.IsEmpty()) {
+	if (appId.IsEmpty()) {
 		throw runtime_error("in createcontracttx :addresss is error!\n");
 	}
 	EnsureWalletIsUnlocked();
 //	CContractTransaction tx;
 	std::shared_ptr<CContractTransaction> tx = make_shared<CContractTransaction>();
 	{
-
-
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
 		CAccount secureAcc;
 
-		if(!pScriptDBTip->HaveScript(vscriptid))
+		if(!pScriptDBTip->HaveScript(appId))
 		{
-			throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", vscriptid.ToString()));
+			throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", appId.ToString()));
 		}
 
-		auto GetUserId = [&](CKeyID &keyId)
-		{
-			CAccount acct;
-			if (view.GetAccount(CUserID(keyId), acct)) {
-				return acct.regID;
-			}
-			throw runtime_error(
-							tinyformat::format("createcontracttx :account id %s is not exist\n", keyId.GetHex()));
-		};
-
-		vector<CUserID > vaccountid;
-
-		for (auto& item : addr) {
-			CKeyID keyid;
-			if (!GetKeyId(item.get_str(),keyid)) {
-				throw runtime_error("in createcontracttx :address err\n");
-			}
-
-			vaccountid.push_back(CUserID(GetUserId(keyid)));
-		}
-
-		tx.get()->scriptRegId = vscriptid;
-		tx.get()->vAccountRegId = vaccountid;
+		tx.get()->userRegId = userid;
+		tx.get()->appRegId = appId;
 		tx.get()->llFees = fee;
 		tx.get()->vContract = vcontract;
 		if( 0 == height) {
@@ -415,8 +387,8 @@ Value createcontracttx(const Array& params, bool fHelp) {
 
 		//get keyid by accountid
 		CKeyID keyid;
-		if (!view.GetKeyId(vaccountid.at(0), keyid)) {
-			CID id(vaccountid.at(0));
+		if (!view.GetKeyId(userid, keyid)) {
+			CID id(userid);
 			LogPrint("INFO", "vaccountid:%s have no key id\r\n", HexStr(id.GetID()).c_str());
 			assert(0);
 		}
@@ -428,138 +400,18 @@ Value createcontracttx(const Array& params, bool fHelp) {
 
 		tx.get()->vSignature.push_back(signature);
 	}
-	if (tx.get()->vSignature.size() == tx.get()->vAccountRegId.size()) {
-		std::tuple<bool, string> ret;
-		ret = pwalletMain->CommitTransaction((CBaseTransaction *) tx.get());
-		if (!std::get<0>(ret)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "Error:" + std::get<1>(ret));
-		}
-		Object obj;
-		obj.push_back(Pair("hash", std::get<1>(ret)));
-		return obj;
-	} else {
-		CDataStream ds(SER_DISK, CLIENT_VERSION);
-		std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
-		ds << pBaseTx;
-		Object obj;
-		obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
-		return obj;
+
+	std::tuple<bool, string> ret;
+	ret = pwalletMain->CommitTransaction((CBaseTransaction *) tx.get());
+	if (!std::get<0>(ret)) {
+		throw JSONRPCError(RPC_WALLET_ERROR, "Error:" + std::get<1>(ret));
 	}
+	Object obj;
+	obj.push_back(Pair("hash", std::get<1>(ret)));
+	return obj;
+
 }
 
-//sign a contract tx
-Value signcontracttx(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 1) {
-		string msg =
-				"signsecuretx nrequired \"contract tx str\"\n"
-						"\nsign \"contract tx str\"\n"
-						"\nArguments:\n"
-						"1.\"contract tx str\": (string) \n"
-						"\nResult:\n"
-						"\"contract tx str\" or \"txhash\": (string) after the last one sign the tx will be commint and return \"txhash\"\n"
-						"\nExamples:\n"
-						+ HelpExampleCli("signcontracttx",
-								"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000")
-						+ "\nAs json rpc call\n"
-						+ HelpExampleRpc("signcontracttx",
-								"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000");
-		throw runtime_error(msg);
-	}
-//	LogPrint("INFO", "signcontracttx enter\r\n");
-	EnsureWalletIsUnlocked();
-	vector<unsigned char> vch(ParseHex(params[0].get_str()));
-	CDataStream stream(vch, SER_DISK, CLIENT_VERSION);
-
-	std::shared_ptr<CBaseTransaction> pBaseTx; //= make_shared<CContractTransaction>();
-	stream >> pBaseTx;
-
-	std::shared_ptr<CContractTransaction> tx = make_shared<CContractTransaction>(pBaseTx.get());
-//	cout << "sig:" << tx.get()->ToString(*pAccountViewTip) << endl;
-//	assert(pwalletMain != NULL);
-	{
-
-
-
-		//balance
-		CAccountViewCache view(*pAccountViewTip, true);
-
-		if (tx.get()->vAccountRegId.size() < 1 || tx.get()->vSignature.size() >= tx.get()->vAccountRegId.size()) {
-			throw runtime_error("in signsecuretx :tx data err\n");
-		}
-
-		vector<unsigned char> vscript;
-		if (!pScriptDBTip->GetScript(boost::get<CRegID>(tx.get()->scriptRegId), vscript)) {
-			CID id(tx.get()->scriptRegId);
-			throw runtime_error(
-					tinyformat::format("createcontracttx :script id %s is not exist\n", HexStr(id.GetID())));
-		}
-
-		for (auto& item : tx.get()->vAccountRegId) {
-			CAccount account;
-			if (!pAccountViewTip->GetAccount(item, account)) {
-				CID id(item);
-				throw runtime_error(
-						tinyformat::format("createcontracttx :account id %s is not exist\n", HexStr(id.GetID())));
-			}
-		}
-
-		CRegID accountid = boost::get<CRegID>(tx.get()->vAccountRegId.at(tx.get()->vSignature.size()));
-
-		if (!pwalletMain->count(accountid.getKeyID(*pAccountViewTip))) {
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "signcontracttx error: Not to my time!\r\n");
-		}
-
-		//verify sig
-		for (unsigned int ii = 0; ii < tx.get()->vSignature.size(); ii++) {
-			CAccount account;
-			if (!view.GetAccount(tx.get()->vAccountRegId.at(ii), account)) {
-				CID id(tx.get()->vAccountRegId.at(ii));
-				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("unregister RegID: ") + HexStr(id.GetID()));
-			}
-
-			if (!account.PublicKey.Verify(tx.get()->SignatureHash(), tx.get()->vSignature.at(ii))) {
-				throw runtime_error("in signsecuretx :tx data sign err\n");
-			}
-		}
-
-		//sig
-		//get keyid by accountid
-		CKeyID keyid;
-		if (!view.GetKeyId(tx.get()->vAccountRegId.at(tx.get()->vSignature.size()), keyid)) {
-			LogPrint("INFO", "vaccountid:%s have no key id\r\n", accountid.ToString());
-			assert(0);
-		}
-
-//		CKey key;
-//		pwalletMain->GetKey(keyid, key);
-		vector<unsigned char> signature;
-		if (!pwalletMain->Sign(keyid,tx.get()->SignatureHash(), signature)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: Sign failed.");
-		}
-
-		tx.get()->vSignature.push_back(signature);
-	}
-
-	if (tx.get()->vSignature.size() == tx.get()->vAccountRegId.size()) {
-
-		std::tuple<bool, string> ret;
-		ret = pwalletMain->CommitTransaction((CBaseTransaction *) tx.get());
-		if (!std::get<0>(ret)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "registerscripttx Error:" + std::get<1>(ret));
-		}
-		Object obj;
-		obj.push_back(Pair("hash", std::get<1>(ret)));
-		return obj;
-	} else {
-		CDataStream ds(SER_DISK, CLIENT_VERSION);
-		std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
-		ds << pBaseTx;
-		Object obj;
-		obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
-		return obj;
-	}
-
-}
 
 
 //create a register script tx
@@ -1763,12 +1615,13 @@ Value createcontracttxraw(const Array& params, bool fHelp) {
 	}
 
 
-	RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(array_type)(str_type));
+	RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(str_type)(str_type));
 
 	int hight = params[0].get_int();
 	uint64_t fee = AmountToRawValue(params[1]);
-	CRegID vscriptid(params[2].get_str()) ;
-	Array addr = params[3].get_array();
+	CRegID userid(params[2].get_str());
+	CRegID appid(params[3].get_str());
+
 	vector<unsigned char> vcontract = ParseHex(params[4].get_str());
 
 
@@ -1776,45 +1629,25 @@ Value createcontracttxraw(const Array& params, bool fHelp) {
 		throw runtime_error("in createcontracttxraw :fee is smaller than nMinTxFee\n");
 	}
 
-	if (vscriptid.IsEmpty()) {
+	if (appid.IsEmpty()) {
 		throw runtime_error("in createcontracttxraw :addresss is error!\n");
 	}
 
 	CAccountViewCache view(*pAccountViewTip, true);
 	CAccount secureAcc;
 
-	if(!pScriptDBTip->HaveScript(vscriptid))
+	if(!pScriptDBTip->HaveScript(appid))
 	{
-		throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", vscriptid.ToString()));
-	}
-
-	auto GetUserId = [&](CKeyID &keyId)
-	{
-		CAccount acct;
-		if (view.GetAccount(CUserID(keyId), acct)) {
-			return acct.regID;
-		}
-		throw runtime_error(
-						tinyformat::format("createcontracttx :account id %s is not exist\n", keyId.GetHex()));
-	};
-
-	vector<CUserID > vaccountid;
-
-	for (auto& item : addr) {
-		CKeyID keyid;
-		if (!GetKeyId(item.get_str(),keyid)) {
-			throw runtime_error("in createcontracttx :address err\n");
-		}
-		vaccountid.push_back(CUserID(GetUserId(keyid)));
+		throw runtime_error(tinyformat::format("createcontracttx :app id %s is not exist\n", appid.ToString()));
 	}
 
 	CKeyID keyid;
-	if (!view.GetKeyId(vaccountid.at(0), keyid)) {
-		CID id(vaccountid.at(0));
+	if (!view.GetKeyId(userid, keyid)) {
+		CID id(userid);
 		LogPrint("INFO", "vaccountid:%s have no key id\r\n", HexStr(id.GetID()).c_str());
 		assert(0);
 	}
-	std::shared_ptr<CContractTransaction> tx = make_shared<CContractTransaction>(vscriptid,vcontract,vaccountid,hight,fee);
+	std::shared_ptr<CContractTransaction> tx = make_shared<CContractTransaction>(userid, appid, fee, vcontract, hight);
 
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
