@@ -3565,6 +3565,16 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         CValidationState state;
         ProcessBlock(state, pfrom, &block);
+
+        CNodeState *nodestate = State(pfrom->GetId());
+        if (nodestate == NULL)
+			  return false;
+
+		if(0 == nodestate->vBlocksToDownload.size() && pfrom->nStartingHeight > chainActive.Tip()->nHeight)
+		{
+			 LogPrint("GetLocator", "continue get block from node:%s\n", pfrom->addr.ToString());
+			 PushGetBlocks(pfrom, chainActive.Tip(), inv.hash);
+		}
     }
 
 
