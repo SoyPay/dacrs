@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 #include "stdio.h"
-#include "leveldbwrapper.h"
+#include "db.h"
 
 class CAccountInfo;
 class CAccountingEntry;
@@ -73,16 +73,12 @@ public:
 
 
 /** Access to the wallet database (wallet.dat) */
-class CWalletDB
+class CWalletDB : public CDB
 {
 
 public:
     CWalletDB(const string& strFilename);
-
-
 private:
-	CLevelDBWrapper db;
-	unsigned int nWalletDBUpdated;
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
 public:
@@ -94,8 +90,18 @@ public:
     bool EraseUnComFirmedTx(const uint256& hash);
     bool WriteMasterKey(const CMasterKey& kMasterKey);
     bool EraseMasterKey();
-    DBErrors LoadWallet(CWallet* pwallet);
+    bool WriteVersion(const int version) ;
+    bool WriteMinVersion(const int version) ;
+    int GetMinVersion(void);
 
+
+    int GetVersion(void);
+
+
+    DBErrors LoadWallet(CWallet* pwallet);
+   static unsigned int nWalletDBUpdated ;
+   static bool Recover(CDBEnv& dbenv, string filename, bool fOnlyKeys);
+   static bool Recover(CDBEnv& dbenv, string filename);
 };
 
 bool BackupWallet(const CWallet& wallet, const string& strDest);

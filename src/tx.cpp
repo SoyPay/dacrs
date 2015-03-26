@@ -382,31 +382,20 @@ string CTransaction::ToString(CAccountViewCache &view) const {
 	string str;
 	CKeyID srcKeyId, desKeyId;
 	view.GetKeyId(srcUserId, srcKeyId);
-	if(srcUserId.type() == typeid(CRegID)){
-		if (desUserId.type() == typeid(CKeyID)) {
-			str += strprintf("txType=%s, hash=	%s, nVersion=%d, srcAccountId=%s, llFees=%ld, llValues=%ld, desKeyId=%s, nValidHeight=%d\n",
-			txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, (boost::get<CRegID>(srcUserId).ToString()), llFees, llValues, boost::get<CKeyID>(desUserId).GetHex(), nValidHeight);
-		} else if(desUserId.type() == typeid(CRegID)&&srcUserId.type() == typeid(CPubKey)) {
-			view.GetKeyId(desUserId, desKeyId);
-			str += strprintf("txType=%s, hash=%s, nVersion=%d, srcAccountId=%s, srcKeyId=%s, llFees=%ld, llValues=%ld, desAccountId=%s, desKeyId=%s, nValidHeight=%d\n",
-			txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, boost::get<CRegID>(srcUserId).ToString(), srcKeyId.GetHex(), llFees, llValues, boost::get<CRegID>(desUserId).ToString(), desKeyId.GetHex(), nValidHeight);
-		}
-	}else if(srcUserId.type() == typeid(CPubKey)){
-			if (desUserId.type() == typeid(CKeyID)) {
-				str += strprintf("txType=%s, hash=	%s, nVersion=%d, srcAccountId=%s, llFees=%ld, llValues=%ld, desKeyId=%s, nValidHeight=%d\n",
-				txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, (boost::get<CPubKey>(srcUserId).ToString()), llFees, llValues, boost::get<CKeyID>(desUserId).GetHex(), nValidHeight);
-			} else if(desUserId.type() == typeid(CRegID)) {
-				view.GetKeyId(desUserId, desKeyId);
-				str += strprintf("txType=%s, hash=%s, nVersion=%d, srcAccountId=%s, srcKeyId=%s, llFees=%ld, llValues=%ld, desAccountId=%s, desKeyId=%s, nValidHeight=%d\n",
-				txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, boost::get<CPubKey>(srcUserId).ToString(), srcKeyId.GetHex(), llFees, llValues, boost::get<CRegID>(desUserId).ToString(), desKeyId.GetHex(), nValidHeight);
-			}
+	if (desUserId.type() == typeid(CKeyID)) {
+		str += strprintf("txType=%s, hash=	%s, nVersion=%d, srcAccountId=%s, llFees=%ld, llValues=%ld, desKeyId=%s, nValidHeight=%d\n",
+		txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, (boost::get<CRegID>(srcUserId).ToString()), llFees, llValues, boost::get<CKeyID>(desUserId).GetHex(), nValidHeight);
+	} else if(desUserId.type() == typeid(CRegID)) {
+		view.GetKeyId(desUserId, desKeyId);
+		str += strprintf("txType=%s, hash=%s, nVersion=%d, srcAccountId=%s, srcKeyId=%s, llFees=%ld, llValues=%ld, desAccountId=%s, desKeyId=%s, nValidHeight=%d\n",
+		txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, boost::get<CRegID>(srcUserId).ToString(), srcKeyId.GetHex(), llFees, llValues, boost::get<CRegID>(desUserId).ToString(), desKeyId.GetHex(), nValidHeight);
 	}
 
 	return str;
 }
 bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &view) {
 	//check source addr, destination addr
-	if (srcUserId.type() != typeid(CRegID)&&srcUserId.type() != typeid(CPubKey)) {
+	if (srcUserId.type() != typeid(CRegID)) {
 		return state.DoS(100, ERRORMSG("CheckTransaction() : normal tx source address or des address is invalid"),
 				REJECT_INVALID, "bad-normaltx-sourceaddr");
 	}
@@ -419,28 +408,17 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 				"bad-normaltx-value-toolarge");
 	}
 	CAccount acctInfo;
-	CPubKey PublicKey;
-	if (srcUserId.type() == typeid(CRegID)){
-		if (!view.GetAccount(boost::get<CRegID>(srcUserId), acctInfo) ) {
-			return state.DoS(100, ERRORMSG("CheckTransaction() :tx GetAccount falied"), REJECT_INVALID, "bad-getaccount");
-		}
-		if (!acctInfo.IsRegister()) {
-			return state.DoS(100, ERRORMSG("CheckTransaction(): account have not registed public key"), REJECT_INVALID,
-					"bad-no-pubkey");
-		}
-		PublicKey = acctInfo.PublicKey;
-	}else if(srcUserId.type() == typeid(CPubKey)){
-		if (!boost::get<CPubKey>(srcUserId).IsFullyValid()) {
-				return state.DoS(100, ERRORMSG("CheckTransaction() : register tx public key is invalid"), REJECT_INVALID,
-						"bad-regtx-publickey");
-			}
-		PublicKey = boost::get<CPubKey>(srcUserId);
+	if (!view.GetAccount(boost::get<CRegID>(srcUserId), acctInfo)) {
+		return state.DoS(100, ERRORMSG("CheckTransaction() :tx GetAccount falied"), REJECT_INVALID, "bad-getaccount");
 	}
-
+	if (!acctInfo.IsRegister()) {
+		return state.DoS(100, ERRORMSG("CheckTransaction(): account have not registed public key"), REJECT_INVALID,
+				"bad-no-pubkey");
+	}
 
 	//check signature script
 	uint256 sighash = SignatureHash();
-	if (!CheckSignScript(sighash, signature, PublicKey)) {
+	if (!CheckSignScript(sighash, signature, acctInfo.PublicKey)) {
 		return state.DoS(100, ERRORMSG("CheckTransaction() :CheckSignScript failed"), REJECT_INVALID,
 				"bad-signscript-check");
 	}

@@ -80,11 +80,14 @@ bool CWallet::AddKey(const CKey& secret) {
 	AssertLockHeld(cs_wallet);
 
 	CKeyStoreValue tem(secret);
-	if(mKeyPool.count(tem.GetCKeyID()) > 0)
-		{
-		  LogPrint("CWallet","this key is in the CWallet");
-		 return false;
+	CKeyID kid = tem.GetCKeyID();
+	if (mKeyPool.count(kid) > 0) {
+		CKey dumy;
+		if (mKeyPool[kid].getCKey(dumy, false) == true) {
+			LogPrint("CWallet", "this key is in the CWallet");
+			return false;
 		}
+	}
 
 	if (!IsCrypted()) {
 		mKeyPool[tem.GetCKeyID()] = tem;
@@ -502,7 +505,6 @@ void CWallet::ResendWalletTransactions() {
 std::tuple<bool, string> CWallet::CommitTransaction(CBaseTransaction *pTx) {
 	LOCK2(cs_main, cs_wallet);
 	LogPrint("INFO", "CommitTransaction:\n%s", pTx->ToString(*pAccountViewTip));
-
 	{
 		CValidationState state;
 		if (!::AcceptToMemoryPool(mempool, state, pTx, true, NULL)) {
@@ -525,7 +527,7 @@ DBErrors CWallet::LoadWallet(bool fFirstRunRet) {
 	  return db.LoadWallet(this);
 
 }
-
+string CWallet::strWalletFile="";
 
 int64_t CWallet::GetRawBalance(int ncurhigh) const
 {
@@ -543,37 +545,37 @@ int64_t CWallet::GetRawBalance(int ncurhigh) const
 }
 
 
-std::tuple<bool,string>  CWallet::SendMoney(const CRegID &send, const CUserID &rsv, int64_t nValue, int64_t nFee)
-{
-
-	CTransaction tx;
-	{
-		LOCK2(cs_main, cs_wallet);
-		tx.srcUserId = send;
-		tx.desUserId = rsv;
-		tx.llValues = nValue;
-		if (0 == nFee) {
-			tx.llFees = SysCfg().GetTxFee();
-		}else
-			tx.llFees = nFee;
-		tx.nValidHeight = chainActive.Tip()->nHeight;
-	}
-
-	CKeyID keID;
-	if(!pAccountViewTip->GetKeyId(send,keID)){
-		return std::make_tuple (false,"key or keID failed");
-	}
-
-	if (!Sign(keID,tx.SignatureHash(), tx.signature)) {
-		return std::make_tuple (false,"Sign failed");
-	}
-	std::tuple<bool,string> ret = CommitTransaction((CBaseTransaction *) &tx);
-	if(!std::get<0>(ret))
-		return ret;
-	return  std::make_tuple (true,tx.GetHash().GetHex());
-
-
-}
+//std::tuple<bool,string>  CWallet::SendMoney(const CRegID &send, const CUserID &rsv, int64_t nValue, int64_t nFee)
+//{
+//
+//	CTransaction tx;
+//	{
+//		LOCK2(cs_main, cs_wallet);
+//		tx.srcUserId = send;
+//		tx.desUserId = rsv;
+//		tx.llValues = nValue;
+//		if (0 == nFee) {
+//			tx.llFees = SysCfg().GetTxFee();
+//		}else
+//			tx.llFees = nFee;
+//		tx.nValidHeight = chainActive.Tip()->nHeight;
+//	}
+//
+//	CKeyID keID;
+//	if(!pAccountViewTip->GetKeyId(send,keID)){
+//		return std::make_tuple (false,"key or keID failed");
+//	}
+//
+//	if (!Sign(keID,tx.SignatureHash(), tx.signature)) {
+//		return std::make_tuple (false,"Sign failed");
+//	}
+//	std::tuple<bool,string> ret = CommitTransaction((CBaseTransaction *) &tx);
+//	if(!std::get<0>(ret))
+//		return ret;
+//	return  std::make_tuple (true,tx.GetHash().GetHex());
+//
+//
+//}
 
 
 
@@ -589,68 +591,73 @@ void CWallet::UpdatedTransaction(const uint256 &hashTx) {
 
 bool CWallet::StartUp() {
 //	[](int i) { return i+4; };
-	 auto InitError = [] (const string &str)
+	auto InitError = [] (const string &str)
 	{
-        uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING | CClientUIInterface::NOSHOWGUI);
-	    return true;
+		uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING | CClientUIInterface::NOSHOWGUI);
+		return true;
 	};
 
-	 defaultFilename = SysCfg().GetArg("-wallet", "wallet");
-//	  bool fDisableWallet = SysCfg().GetBoolArg("-disablewallet", false);
-    string strDataDir = GetDataDir().string();
+	auto InitWarning = [](const string &str)
+	{
+		uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING | CClientUIInterface::NOSHOWGUI);
+		return true;
+	};
 
-	    // Wallet file must be a plain filename without a directory
-	    if (defaultFilename != boost::filesystem::basename(defaultFilename) + boost::filesystem::extension(defaultFilename))
-	        return InitError(strprintf(("Wallet %s resides outside data directory %s"), defaultFilename, strDataDir));
-//
-////	 if (!fDisableWallet) {
-////	        LogPrint("INFO","Using wallet %s\n", defaultFilename);
-////	        uiInterface.InitMessage(("Verifying wallet..."));
-////
-//	        if (!bitdb.Open(GetDataDir()))
-//	        {
-//	            // try moving the database env out of the way
-//	            boost::filesystem::path pathDatabase = GetDataDir() / "database";
-//	            boost::filesystem::path pathDatabaseBak = GetDataDir() / strprintf("database.%d.bak", GetTime());
-//	            try {
-//	                boost::filesystem::rename(pathDatabase, pathDatabaseBak);
-//	                LogPrint("INFO","Moved old %s to %s. Retrying.\n", pathDatabase.string(), pathDatabaseBak.string());
-//	            } catch(boost::filesystem::filesystem_error &error) {
-//	                 // failure is ok (well, not really, but it's not worse than what we started with)
-//	            }
-//
-//	            // try again
-//	            if (!bitdb.Open(GetDataDir())) {
-//	                // if it still fails, it probably means we can't even create the database env
-//	                string msg = strprintf(("Error initializing wallet database environment %s!"), strDataDir);
-//	                return InitError(msg);
-//	            }
-//	        }
-////
-//	        if (GetBoolArg("-salvagewallet", false))
-//	        {
-//	            // Recover readable keypairs:
-//	            if (!CWalletDB::Recover(bitdb, defaultFilename, true))
-//	                return false;
-//	        }
-//
-//	        if (filesystem::exists(GetDataDir() / defaultFilename))
-//	        {
-//	            CDBEnv::VerifyResult r = bitdb.Verify(defaultFilename, CWalletDB::Recover);
-//	            if (r == CDBEnv::RECOVER_OK)
-//	            {
-//	                string msg = strprintf(_("Warning: wallet.dat corrupt, data salvaged!"
-//	                                         " Original wallet.dat saved as wallet.{timestamp}.bak in %s; if"
-//	                                         " your balance or transactions are incorrect you should"
-//	                                         " restore from a backup."), strDataDir);
-//	                InitError(msg);
-//	            }
-//	            if (r == CDBEnv::RECOVER_FAIL)
-//	                return InitError(_("wallet.dat corrupt, salvage failed"));
-//	        }
-////	    } // (!fDisableWallet)
-  return true;
+	defaultFilename = SysCfg().GetArg("-wallet", "wallet.dat");
+//	  bool fDisableWallet = SysCfg().GetBoolArg("-disablewallet", false);
+	string strDataDir = GetDataDir().string();
+
+	// Wallet file must be a plain filename without a directory
+	if (defaultFilename != boost::filesystem::basename(defaultFilename) + boost::filesystem::extension(defaultFilename))
+		return InitError(strprintf(("Wallet %s resides outside data directory %s"), defaultFilename, strDataDir));
+
+	if(strWalletFile =="")
+	{
+		strWalletFile = defaultFilename;
 	}
+	LogPrint("INFO", "Using wallet %s\n", strWalletFile);
+	uiInterface.InitMessage(_("Verifying wallet..."));
+
+	if (!bitdb.Open(GetDataDir())) {
+		// try moving the database env out of the way
+		boost::filesystem::path pathDatabase = GetDataDir() / "database";
+		boost::filesystem::path pathDatabaseBak = GetDataDir() / strprintf("database.%d.bak", GetTime());
+		try {
+			boost::filesystem::rename(pathDatabase, pathDatabaseBak);
+			LogPrint("INFO", "Moved old %s to %s. Retrying.\n", pathDatabase.string(), pathDatabaseBak.string());
+		} catch (boost::filesystem::filesystem_error &error) {
+			// failure is ok (well, not really, but it's not worse than what we started with)
+		}
+
+		// try again
+		if (!bitdb.Open(GetDataDir())) {
+			// if it still fails, it probably means we can't even create the database env
+			string msg = strprintf(_("Error initializing wallet database environment %s!"), strDataDir);
+			return InitError(msg);
+		}
+	}
+
+	if (SysCfg().GetBoolArg("-salvagewallet", false)) {
+		// Recover readable keypairs:
+		if (!CWalletDB::Recover(bitdb, strWalletFile, true))
+			return false;
+	}
+
+	if (filesystem::exists(GetDataDir() / strWalletFile)) {
+		CDBEnv::VerifyResult r = bitdb.Verify(strWalletFile, CWalletDB::Recover);
+		if (r == CDBEnv::RECOVER_OK) {
+			string msg = strprintf(_("Warning: wallet.dat corrupt, data salvaged!"
+					" Original wallet.dat saved as wallet.{timestamp}.bak in %s; if"
+					" your balance or transactions are incorrect you should"
+					" restore from a backup."), strDataDir);
+			InitWarning(msg);
+		}
+		if (r == CDBEnv::RECOVER_FAIL)
+			return InitError(_("wallet.dat corrupt, salvage failed"));
+	}
+
+	return true;
+}
 
 
 CWallet* CWallet::getinstance() {
@@ -755,12 +762,10 @@ bool CWallet::GetPubKey(const CKeyID& address, CPubKey& keyOut, bool IsMiner) {
 
 bool CWallet::SynchronizRegId(const CKeyID& keyid, const CAccountViewCache& inview) {
 	CAccountViewCache view(inview);
-	if(count(keyid)> 0)
-	{
-		if(mKeyPool[keyid].SynchronizSys(view))
-			{
-			return db.WriteKeyStoreValue(keyid,mKeyPool[keyid]);
-			}
+	if (count(keyid) > 0) {
+		if (mKeyPool[keyid].SynchronizSys(view)) {
+			return db.WriteKeyStoreValue(keyid, mKeyPool[keyid]);
+		}
 	}
 	return false;
 }
@@ -899,28 +904,179 @@ bool CKeyStoreValue::SelfCheck()const {
   return true;
 }
 
-bool CKeyStoreValue::SynchronizSys(CAccountViewCache& view){
-	 CAccount account;
-	if(!view.GetAccount(CUserID(mPKey.GetKeyID()),account))
-	{
+bool CKeyStoreValue::SynchronizSys(CAccountViewCache& view) {
+	CAccount account;
+	if (!view.GetAccount(CUserID(mPKey.GetKeyID()), account)) {
 		mregId.clean();
-	}
-	else if(account.PublicKey.IsValid())//是注册的账户
+	} else if (account.PublicKey.IsValid())			//是注册的账户
 	{
 		mregId = account.regID;
-		if(account.PublicKey != mPKey)
-			{
-				ERRORMSG("shit %s acc %s mPKey:%s\r\n","not fix the bug",account.ToString(),this->ToString());
-				assert(0);
-			}
-		if(account.MinerPKey.IsValid())
+		if (account.PublicKey != mPKey) {
+			ERRORMSG("shit %s acc %s mPKey:%s\r\n", "not fix the bug", account.ToString(), this->ToString());
+			assert(0);
+		}
+		if (account.MinerPKey.IsValid())
 			assert(account.MinerPKey == mMinerCkey.GetPubKey());
-	}
-	else//有可能是没有注册的账户
+	} else			//有可能是没有注册的账户
 	{
 		mregId.clean();
 	}
 
-	LogPrint("wallet","%s \r\n",this->ToString());
+	LogPrint("wallet", "%s \r\n", this->ToString());
 	return true;
+}
+
+bool CKeyStoreValue::IsCrypted() {
+	return mCkey.size() == 0;
+
+}
+
+bool CKeyStoreValue::CleanAll() {
+	mCkey.Clear();
+	mPKey= CPubKey();
+	mMinerCkey.Clear();
+    mMinerPk = CPubKey();
+	nCreationTime = 0 ;
+    return true;
+}
+
+bool CKeyStoreValue::cleanCkey(){
+		return mCkey.Clear();
+  }
+
+CKeyStoreValue::CKeyStoreValue(const CKey& inkey) {
+	assert(inkey.IsValid());
+	 CleanAll();
+	mCkey = inkey ;
+	nCreationTime = GetTime();
+	mPKey = mCkey.GetPubKey();
+
+}
+
+CKeyStoreValue::CKeyStoreValue(const CKey& inkey, const CKey& minerKey) {
+	assert(inkey.IsValid());
+	assert(minerKey.IsValid());
+	 CleanAll();
+	mMinerCkey = minerKey;
+	mCkey = inkey ;
+	nCreationTime = GetTime();
+	mPKey = mCkey.GetPubKey();
+	mMinerPk = mMinerCkey.GetPubKey();
+}
+
+CKeyStoreValue::CKeyStoreValue(const CPubKey& pubkey) {
+	assert(mCkey.IsValid() == false && pubkey.IsFullyValid()); //the ckey mustbe unvalid
+	CleanAll();
+	nCreationTime = GetTime();
+	mPKey = pubkey;
+}
+
+bool CKeyStoreValue::GetPubKey(CPubKey& mOutKey, bool IsMiner) const {
+	if(IsMiner == true){
+		if(mMinerCkey.IsValid()){
+			mOutKey = mMinerCkey.GetPubKey();
+			return true;
+		}
+		return false;
+	}
+
+	assert(mCkey.IsValid());
+	mOutKey =mPKey;
+	assert(mCkey.GetPubKey() == mPKey);
+	return  true;
+}
+
+string CKeyStoreValue::ToString() const{
+			return strprintf("CRegID:%s CPubKey:%s CKey:%s mMinerCkey:%s CreationTime:%d",mregId.ToString(),mPKey.ToString(),mCkey.ToString(),mMinerCkey.ToString(),nCreationTime);
+}
+
+bool CKeyStoreValue::getCKey(CKey& keyOut, bool IsMiner) const {
+	if(IsMiner == true && mMinerCkey.IsValid()) {
+		keyOut = mMinerCkey;
+	} else {
+		keyOut = mCkey;
+	}
+	return keyOut.IsValid();
+
+}
+
+bool CKeyStoreValue::CreateANewKey() {
+	CleanAll();
+	mCkey.MakeNewKey();
+	mPKey = mCkey.GetPubKey();
+	nCreationTime = GetTime();
+	return true;
+}
+
+CKeyStoreValue::CKeyStoreValue() {
+		 CleanAll();
+}
+
+int64_t CKeyStoreValue::getBirthDay() const {
+			return nCreationTime;
+}
+
+bool CKeyStoreValue::IsContainReadyMinerKey() const{
+			return mMinerCkey.IsValid()&&(!mregId.IsEmpty());
+}
+
+CKeyID CKeyStoreValue::GetCKeyID() const {
+	return (mPKey.GetKeyID());
+}
+
+CRegID CKeyStoreValue::GetRegID() const {
+	return mregId;
+}
+
+bool CWallet::IsReadyForCoolMiner() const {
+	for (auto const &te : mKeyPool) {
+		if (te.second.IsContainReadyMinerKey()) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool CWallet::ClearAllCkeyForCoolMiner() {
+	for (auto &te : mKeyPool) {
+			if (te.second.cleanCkey()) {
+				db.WriteKeyStoreValue(te.first,te.second);
+			}
+		}
+		return true;
+}
+
+map<CKeyID, CKeyStoreValue> CWallet::GetKeyPool() const {
+	AssertLockHeld(cs_wallet);
+	return mKeyPool;
+}
+
+bool CWallet::IsCrypted() const {
+	return false;
+}
+
+bool CWallet::count(const CKeyID& address) const {
+	AssertLockHeld(cs_wallet);
+	return mKeyPool.count(address) > 0;
+}
+
+CWallet::CWallet(string strWalletFileIn) :db(strWalletFileIn) {
+	SetNull();
+	strWalletFile = strWalletFileIn;
+}
+
+void CWallet::SetNull() {
+	nWalletVersion = 0;
+}
+
+bool CWallet::LoadMinVersion(int nVersion) {
+	AssertLockHeld(cs_wallet);
+	nWalletVersion = nVersion;
+
+	return true;
+}
+
+int CWallet::GetVersion() {
+	LOCK(cs_wallet);
+	return nWalletVersion;
 }
