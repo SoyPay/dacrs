@@ -86,14 +86,6 @@ struct CTxTest :public SysTestBase{
 
 	void InitAuthorization() {
 		authorScript = v[0];
-		CAuthorizate author;
-		author.SetAuthorizeTime(CHAIN_HEIGHT + 100);
-		author.SetMaxMoneyPerDay(800);
-		author.SetCurMaxMoneyPerDay(0);
-		author.SetLastOperHeight(1);
-		author.SetMaxMoneyPerTime(37);
-		author.SetMaxMoneyTotal(10 * TEST_SIZE);
-		accOperate.mapAuthorizate[authorScript] = author;
 		accOperate.keyID = uint160(1);
 
 //		authorScript = v[0];
@@ -110,20 +102,6 @@ struct CTxTest :public SysTestBase{
 //		int a = 1;
 	}
 
-	CAuthorizate GetAuthorByAddress(const string& strAddress, const string& strScriptID) {
-		CDacrsAddress address(strAddress);
-		CKeyID keyID;
-		BOOST_CHECK(address.GetKeyID(keyID));
-		CUserID userId = keyID;
-		CAccount account;
-
-		BOOST_CHECK(pAccountViewTip->GetAccount(userId, account));
-		vector<unsigned char> vScriptID = ParseHex(strScriptID);
-		auto it = account.mapAuthorizate.find(vScriptID);
-		BOOST_CHECK(it != account.mapAuthorizate.end());
-		return it->second;
-	}
-
 	void InitFund() {
 		for (int i = 0; i < TEST_SIZE/100; i++) {
 			accOperate.vRewardFund.push_back(CFund(REWARD_FUND, RANDOM_FUND_MONEY, random(5)));
@@ -132,14 +110,6 @@ struct CTxTest :public SysTestBase{
 		for (int i = 0; i < TEST_SIZE; i++) {
 			int nFundHeight = CHAIN_HEIGHT - MONTH_BLOCKS;
 			accOperate.AddToFreedom(CFund(FREEDOM_FUND, RANDOM_FUND_MONEY, nFundHeight+random(MONTH_BLOCKS)), false);
-		}
-
-		for (int i = 0; i < TEST_SIZE; i++) {
-			accOperate.AddToFreeze(CFund(FREEZD_FUND, RANDOM_FUND_MONEY, random(15), v[random(10)]), false);
-		}
-
-		for (int i = 0; i < TEST_SIZE; i++) {
-			accOperate.AddToSelfFreeze(CFund(SELF_FREEZD_FUND, RANDOM_FUND_MONEY*2, random(20)) ,false);
 		}
 	}
 
@@ -231,31 +201,13 @@ struct CTxTest :public SysTestBase{
 		InitFund();
 	}
 
-	void IsAuthorityEqual(const vector_unsigned_char& scriptID) {
-		auto itBefore = accBeforOperate.mapAuthorizate.find(scriptID);
-		BOOST_CHECK(accBeforOperate.mapAuthorizate.end() != itBefore);
-
-		auto it = accOperate.mapAuthorizate.find(scriptID);
-		BOOST_CHECK(accBeforOperate.mapAuthorizate.end() != it);
-
-		CAuthorizate& authorizate = it->second;
-		CAuthorizate& authorizateBefor = itBefore->second;
-		BOOST_CHECK(authorizate.GetCurMaxMoneyPerDay() == authorizateBefor.GetCurMaxMoneyPerDay() &&
-				authorizate.GetMaxMoneyTotal() == authorizateBefor.GetMaxMoneyTotal() &&
-				authorizate.GetLastOperHeight() == authorizateBefor.GetLastOperHeight() );
-		//cout<<"old oper height: "<<authorizateBefor.GetLastOperHeight()<<" new oper height: "<<authorizate.GetLastOperHeight()<<endl;
-	}
 
 	void CheckAccountEqual(bool bCheckAuthority = true) {
 		BOOST_CHECK(IsEqual(accBeforOperate.vRewardFund, accOperate.vRewardFund));
 		BOOST_CHECK(IsEqual(accBeforOperate.vFreedomFund, accOperate.vFreedomFund));
-		BOOST_CHECK(IsEqual(accBeforOperate.vFreeze, accOperate.vFreeze));
-		BOOST_CHECK(IsEqual(accBeforOperate.vSelfFreeze, accOperate.vSelfFreeze));
 		BOOST_CHECK(accBeforOperate.llValues == accOperate.llValues);
 
 		//cout<<"old: "<<GetTotalValue(accBeforOperate.vSelfFreeze)<<" new: "<<GetTotalValue(accOperate.vSelfFreeze)<<endl;
-		if (bCheckAuthority)
-			IsAuthorityEqual(authorScript);
 	}
 
 	uint64_t GetTotalValue(const vector<CFund>& vFund) {
@@ -279,21 +231,6 @@ struct CTxTest :public SysTestBase{
 		random_shuffle(vHashCopy.begin(), vHashCopy.end());
 	}
 
-	void CheckAuthorization(const CAuthorizate OldAuth, uint64_t nMoney, int nHeight,
-			const vector<unsigned char>& scriptID) {
-		CAuthorizate newAuthor = accOperate.mapAuthorizate[scriptID];
-		BOOST_CHECK(OldAuth.GetMaxMoneyTotal() == newAuthor.GetMaxMoneyTotal() + nMoney);
-
-		const uint64_t nBlocksPerDay = 24 * 60 / 10;	//amount of blocks that connected into chain per day
-		if (OldAuth.GetLastOperHeight() / nBlocksPerDay < nHeight / nBlocksPerDay && 0 != nMoney) {
-			BOOST_CHECK(OldAuth.GetMaxMoneyPerDay() == newAuthor.GetCurMaxMoneyPerDay() + nMoney);
-		}
-		else
-		{
-			//cout<<"old: "<<OldAuth.GetCurMaxMoneyPerDay()<<" Money:"<<nMoney<<" new: "<<newAuthor.GetCurMaxMoneyPerDay()<<endl;
-			BOOST_CHECK(OldAuth.GetCurMaxMoneyPerDay() == newAuthor.GetCurMaxMoneyPerDay() + nMoney);
-		}
-	}
 };
 
 BOOST_FIXTURE_TEST_SUITE(tx_tests,CTxTest)

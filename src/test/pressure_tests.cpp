@@ -72,9 +72,10 @@ public:
 
 	bool InitRegScript() {
 		ResetEnv();
-		BOOST_CHECK(CreateRegScriptTx(false, "mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v"));
+		string hash = "";
+		BOOST_CHECK(CreateRegScriptTx(false, hash,"mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v"));
 		BOOST_CHECK(SetBlockGenerte("mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v"));
-		BOOST_CHECK(GetOneScriptId(regScriptId));
+		BOOST_CHECK(GetTxConfirmedRegID(hash,regScriptId));
 		return true;
 	}
 
@@ -243,7 +244,7 @@ public:
 		return true;
 	}
 
-	bool CreateRegScriptTx(bool fFlag, string regAddress="") {
+	bool CreateRegScriptTx(bool fFlag, string &hash,string regAddress="") {
 		if(regAddress=="") {
 			map<string, string>::iterator iterSrcAddr = GetRandAddress();
 			regAddress = iterSrcAddr->second;
@@ -257,6 +258,7 @@ public:
 		}
 		if(fFlag) {
 			string txHash = result.get_str();
+			hash = txHash;
 			vTransactionHash.push_back(txHash);
 			if (mempool.mapTx.count(uint256(txHash)) > 0) {
 				std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(txHash)].GetTx();
@@ -302,7 +304,8 @@ public:
 				break;
 			case 5:
 				{
-					BOOST_CHECK(CreateRegScriptTx(true));
+					string hash ="";
+					BOOST_CHECK(CreateRegScriptTx(true,hash));
 				}
 				break;
 			default:

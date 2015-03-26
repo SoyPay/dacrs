@@ -166,30 +166,16 @@ public:
 
 	uint64_t GetFreeMoney(const string& strID);
 
-	bool GetOneScriptId(std::string &regscriptid);
-
 	bool GetNewAddr(std::string &addr,bool flag);
-
-	bool GetAccState(const std::string &addr, AccState &accstate);
 
 	bool GetBlockHeight(int &nHeight);
 
 	bool CreateNormalTx(const std::string &srcAddr, const std::string &desAddr, const int nHeight);
 
-	Value CreateFreezeTx(const std::string &addr, const int nHeight);
-
 	Value registaccounttx(const std::string &addr, const int nHeight);
-
-	Value PCreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
-			int nHeight,int nFee = 10000);
-
-	Value CreateContractTxEx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
-			int nHeight,int nFee = 10000);
 
 	bool CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 			int nHeight,int nFee = 10000);
-	Value CreateContractTx1(const std::string &scriptid, const std::string &addrs, const std::string &contract,
-				const int nHeight);
 	Value RegisterScriptTx(const string& strAddress, const string& strScript, int nHeight, int nFee = 10000);
 
 	Value SignSecureTx(const string &securetx);
@@ -201,11 +187,18 @@ public:
 	bool GetBlockMinerAddr(const std::string &blockhash, std::string &addr);
 
 	bool GenerateOneBlock();
+	bool SetAddrGenerteBlock(const char *addr);
 
 	bool DisConnectBlock(int nNum);
-	Value GetScriptID(string txhash);
 	bool GetStrFromObj(const Value& valueRes,string& str);
 	bool ImportWalletKey(const char**address,int nCount);
+	uint64_t GetRandomBetfee();
+	bool GetKeyId(string const &addr,CKeyID &KeyId);
+	bool IsTxInMemorypool(const uint256& txHash);
+	bool IsTxUnConfirmdInWallet(const uint256& txHash) ;
+	bool IsTxInTipBlock(const uint256& txHash);
+	bool GetRegID(string& strAddr,CRegID& regID);
+	bool GetTxOperateLog(const uint256& txHash, vector<CAccountOperLog>& vLog) ;
 protected:
 	static boost::thread* pThreadShutdown ;
 	std::map<string, AccState> mapAccState;
