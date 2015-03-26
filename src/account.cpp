@@ -274,11 +274,7 @@ bool CAccountViewCache::SetAccount(const CUserID &userId, const CAccount &accoun
 		return SetAccount(boost::get<CRegID>(userId).GetVec6(), account);
 	} else if (userId.type() == typeid(CKeyID)) {
 		return SetAccount(boost::get<CKeyID>(userId), account);
-	} else if (userId.type() == typeid(CPubKey)) {
-		    CPubKey publkey =boost::get<CPubKey>(userId);
-			return SetAccount(boost::get<CKeyID>(publkey.GetKeyID()), account);
-		}
-	else {
+	} else {
 		assert(0);
 	}
 	return false;
