@@ -370,6 +370,7 @@ static bool RegScript(void) {
 		BOOST_CHECK(gTestValue.SetAddrGenerteBlock(MINERADDR));
 	} while (!pwalletMain->UnConfirmTx.empty());
 
+	BOOST_CHECK(gTestValue.GetTxConfirmedRegID(regTxHash,gTestValue.scriptid));
 	assert(pScriptDBTip->Flush());
 
 	return true;
@@ -441,7 +442,7 @@ static bool CheckAccountInfo(void)
 
 static bool ASendP2PBet(int shight) {
 	GetRandomBetData(gTestValue.sdata, sizeof(gTestValue.sdata));
-	BOOST_CHECK(gTestValue.GetOneScriptId(gTestValue.scriptid));
+//	BOOST_CHECK(gTestValue.GetOneScriptId(gTestValue.scriptid));
 //	printf("\r\n***************the script id:%s \r\n", gTestValue.scriptid.c_str());
 	SEND_DATA senddata;
 	senddata.type = 1;
@@ -454,7 +455,7 @@ static bool ASendP2PBet(int shight) {
 	scriptData << senddata;
 	string sendcontract = HexStr(scriptData);
 	uint64_t sendfee = gTestValue.GetRandomBetfee();
-	Value vsend = gTestValue.PCreateContractTx(gTestValue.scriptid, VADDR_A, sendcontract, gTestValue.GetBlockHeight(),
+	Value vsend = gTestValue.CreateContractTx(gTestValue.scriptid, VADDR_A, sendcontract, gTestValue.GetBlockHeight(),
 			sendfee);
 	BOOST_CHECK(gTestValue.GetHashFromCreatedTx(vsend, gTestValue.sendtxhash));
 
@@ -483,7 +484,7 @@ static bool BAcceptP2PBet(void) {
 	scriptData << acceptdata;
 	string acceptcontract = HexStr(scriptData);
 	uint64_t acceptfee = gTestValue.GetRandomBetfee();
-	Value vaccept = gTestValue.PCreateContractTx(gTestValue.scriptid, VADDR_B, acceptcontract,
+	Value vaccept = gTestValue.CreateContractTx(gTestValue.scriptid, VADDR_B, acceptcontract,
 			gTestValue.GetBlockHeight(), acceptfee);
 	string acceptTxHash;
 	BOOST_CHECK(gTestValue.GetHashFromCreatedTx(vaccept, acceptTxHash));
@@ -536,7 +537,7 @@ static bool AOpenP2PBet(void) {
 	scriptData << openA;
 	string openAcontract = HexStr(scriptData);
 	uint64_t openfee = gTestValue.GetRandomBetfee();
-	Value vopenA = gTestValue.PCreateContractTx(gTestValue.scriptid, VADDR_A, openAcontract,
+	Value vopenA = gTestValue.CreateContractTx(gTestValue.scriptid, VADDR_A, openAcontract,
 			gTestValue.GetBlockHeight(), openfee);
 	string openATxHash;
 	BOOST_CHECK(gTestValue.GetHashFromCreatedTx(vopenA, openATxHash));
