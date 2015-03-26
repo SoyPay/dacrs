@@ -320,39 +320,6 @@ bool CTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CValidatio
 	txundo.txHash = GetHash();
 	return true;
 }
-//bool CTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
-//		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
-//	CAccount sourceAccount;
-//	CAccount desAccount;
-//	CID srcId(srcUserId);
-//	if (!view.GetAccount(srcUserId, sourceAccount))
-//		return state.DoS(100,
-//				ERRORMSG("UpdateAccounts() : read source addr %s account info error", HexStr(srcId.GetID())),
-//				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
-//
-//	CID destId(desUserId);
-//	if (!view.GetAccount(desUserId, desAccount)) {
-//		return state.DoS(100,
-//				ERRORMSG("UpdateAccounts() : read destination addr %s account info error", HexStr(destId.GetID())),
-//				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
-//	}
-//
-//	for(auto &itemLog : txundo.vAccountOperLog){
-//		if(itemLog.keyID == sourceAccount.keyID) {
-//			sourceAccount.UndoOperateAccount(itemLog);
-//		}else if(itemLog.keyID == desAccount.keyID) {
-//			desAccount.UndoOperateAccount(itemLog);
-//		}
-//	}
-//	vector<CAccount> vAccounts;
-//	vAccounts.push_back(sourceAccount);
-//	vAccounts.push_back(desAccount);
-//
-//	if (!view.BatchWrite(vAccounts))
-//		return state.DoS(100, ERRORMSG("UpdateAccounts() : batch save accounts info error"), UPDATE_ACCOUNT_FAIL,
-//				"bad-read-accountdb");
-//	return true;
-//}
 bool CTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	CKeyID srcKeyId;
 	if (!view.GetKeyId(srcUserId, srcKeyId))
@@ -648,30 +615,6 @@ bool CRewardTransaction::UpdateAccount(int nIndex, CAccountViewCache &view, CVal
 	txundo.txHash = GetHash();
 	return true;
 }
-//bool CRewardTransaction::UndoUpdateAccount(int nIndex, CAccountViewCache &view, CValidationState &state,
-//		CTxUndo &txundo, int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
-//	CID id(account);
-//	if (account.type() != typeid(CRegID) && account.type() != typeid(CPubKey)) {
-//		return state.DoS(100,
-//				ERRORMSG("UpdateAccounts() : account  %s error, either accountId, or pubkey",
-//						HexStr(id.GetID())), UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
-//	}
-//	CAccount acctInfo;
-//	if (!view.GetAccount(account, acctInfo)) {
-//		return state.DoS(100, ERRORMSG("UpdateAccounts() : read source addr %s account info error", HexStr(id.GetID())),
-//				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
-//	}
-//	CAccountOperLog accountOperLog;
-//	if (!txundo.GetAccountOperLog(acctInfo.keyID, accountOperLog))
-//		return state.DoS(100, ERRORMSG("UpdateAccounts() : read keyid=%s undo info error", acctInfo.keyID.GetHex()),
-//				UPDATE_ACCOUNT_FAIL, "bad-read-txundoinfo");
-//	acctInfo.UndoOperateAccount(accountOperLog);
-//	CUserID userId = acctInfo.keyID;
-//	if (!view.SetAccount(userId, acctInfo))
-//		return state.DoS(100, ERRORMSG("UpdateAccounts() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
-//				"bad-read-accountdb");
-//	return true;
-//}
 bool CRewardTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	CKeyID keyId;
 	if (account.type() == typeid(CRegID)) {
@@ -926,13 +869,6 @@ string COperFund::ToString() const {
 	return str;
 }
 
-string CAuthorizateLog::ToString() const {
-	string str("");
-	str += strprintf("bvalid is %d,LastOperHeight is %d,lastCurMoney is %d,lastMaxTotalMoney is %d,scriptID is %s \n"
-	, bValid,nLastOperHeight,nLastCurMaxMoneyPerDay,nLastMaxMoneyTotal,HexStr(scriptID));
-
-	return str;
-}
 string CAccountOperLog::ToString() const {
 	string str("");
 	str += strprintf("    list oper funds: keyId=%d\n",keyID.GetHex());
@@ -1096,7 +1032,7 @@ bool CAccount::MinusFree(const CFund &fund,bool bAuthorizated) {
 			vFreedomFund.erase(vFreedomFund.begin(), iterFound + 1);
 		}
 
-		COperFund operLog(MINUS_FUND, vOperFund,bAuthorizated);
+		COperFund operLog(MINUS_FUND, vOperFund);
 		WriteOperLog(operLog);
 		return true;
 
@@ -1112,7 +1048,7 @@ bool CAccount::MinusFree(const CFund &fund,bool bAuthorizated) {
 		vOperFund.insert(vOperFund.end(), vFreedomFund.begin(), vFreedomFund.end());
 		vFreedomFund.clear();
 		vOperFund.push_back(freedom);
-		COperFund operLog(MINUS_FUND, vOperFund,bAuthorizated);
+		COperFund operLog(MINUS_FUND, vOperFund);
 		WriteOperLog(operLog);
 
 		return true;
@@ -1336,7 +1272,7 @@ string CAccount::ToString() const {
 void CAccount::WriteOperLog(AccountOper emOperType, const CFund &fund, bool bAuthorizated) {
 	vector<CFund> vFund;
 	vFund.push_back(fund);
-	COperFund operLog(emOperType, vFund, bAuthorizated);
+	COperFund operLog(emOperType, vFund);
 	WriteOperLog(operLog);
 }
 

@@ -156,7 +156,7 @@ public:
 	}
 
 	Value CreateRegScriptTx(const string& strAddress, const string& strScript, bool bRigsterScript, int nFee,
-			int nHeight, const CNetAuthorizate& author);
+			int nHeight);
 
 	bool ResetEnv();
 
@@ -191,9 +191,6 @@ public:
 	Value CreateContractTx1(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 				const int nHeight);
 	Value RegisterScriptTx(const string& strAddress, const string& strScript, int nHeight, int nFee = 10000);
-
-	Value ModifyAuthor(const string& strAddress, const string& strScript, int nHeight, int nFee,
-			const CNetAuthorizate& author);
 
 	Value SignSecureTx(const string &securetx);
 
