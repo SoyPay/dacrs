@@ -350,26 +350,6 @@ uint64_t SysTestBase::GetFreeMoney(const string& strID) {
 	return nMoney;
 }
 
-bool SysTestBase::GetOneScriptId(std::string &regscriptid) {
-	//CommanRpc
-	const char *argv[] = { "rpctest", "listregscript","false" };
-	int argc = sizeof(argv) / sizeof(char*);
-
-	Value value;
-	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		Object &Oid = value.get_obj();
-		string strPrint = write_string((Value)Oid, true);
-		LogPrint("test_miners", "GetOneAddr1:%s\r\n", strPrint);
-		Array &Oid1 = Oid[0].value_.get_array();
-		strPrint = write_string((Value)Oid1, true);
-		LogPrint("test_miners", "GetOneAddr2:%s\r\n", strPrint);
-		const Value& result1 = find_value(Oid1[0].get_obj(), "scriptId");
-		regscriptid = result1.get_str();
-		LogPrint("test_miners", "GetOneAddr:%s\r\n", regscriptid.c_str());
-		return true;
-	}
-	return false;
-}
 
 bool SysTestBase::GetNewAddr(std::string &addr,bool flag) {
 	//CommanRpc
@@ -390,29 +370,6 @@ bool SysTestBase::GetNewAddr(std::string &addr,bool flag) {
 	return false;
 }
 
-bool SysTestBase::GetAccState(const std::string &addr, AccState &accstate) {
-	//CommanRpc
-	char temp[64] = { 0 };
-	strncpy(temp, addr.c_str(), sizeof(temp) - 1);
-
-	const char *argv[] = { "rpctest", "getaddramount", temp };
-	int argc = sizeof(argv) / sizeof(char*);
-	Value value;
-
-	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		Object obj = value.get_obj();
-		double dfree = find_value(obj, "free amount").get_real();
-		double dmature = find_value(obj, "mature amount").get_real();
-		double dfrozen = find_value(obj, "frozen amount").get_real();
-		accstate.dFreeMoney = roundint64(dfree * COIN);
-		accstate.dUnmatureMoney = roundint64(dmature * COIN);
-		accstate.dFrozenMoney = roundint64(dfrozen * COIN);
-		LogPrint("test_miners", "addr:%s GetAccState FreeMoney:%0.8lf matureMoney:%0.8lf FrozenMoney:%0.8lf\r\n",
-				addr.c_str(), dfree, dmature, dfrozen);
-		return true;
-	}
-	return false;
-}
 
 bool SysTestBase::GetBlockHeight(int &nHeight) {
 	const char *argv[] = { "rpctest", "getinfo"};
@@ -461,37 +418,6 @@ bool SysTestBase::CreateNormalTx(const std::string &srcAddr, const std::string &
 	return false;
 }
 
-Value SysTestBase::CreateFreezeTx(const std::string &addr, const int nHeight) {
-	//CommanRpc
-	char caddr[64] = { 0 };
-	strncpy(caddr, addr.c_str(), sizeof(caddr) - 1);
-
-	char money[64] = { 0 };
-	int nmoney = GetRandomMoney();
-	sprintf(money, "%d00000000", nmoney);
-	nCurMoney = nmoney * COIN;
-
-	char fee[64] = { 0 };
-	int nfee = GetRandomFee();
-	sprintf(fee, "%d", nfee);
-	nCurFee = nfee;
-
-	char height[16] = { 0 };
-	sprintf(height, "%d", nHeight);
-
-	char freeheight[16] = { 0 };
-	sprintf(freeheight, "%d", nHeight + 100);
-
-	const char *argv[] = { "rpctest", "createfreezetx", caddr, money, fee, height, freeheight };
-	int argc = sizeof(argv) / sizeof(char*);
-
-	Value value;
-	if (CommandLineRPC_GetValue(argc, argv, value)) {
-	//	LogPrint("test_miners", "CreateFreezeTx:%s\r\n", value.get_str().c_str());
-		return value;
-	}
-	return value;
-}
 
 Value SysTestBase::registaccounttx(const std::string &addr, const int nHeight) {
 	//CommanRpc
@@ -517,97 +443,9 @@ Value SysTestBase::registaccounttx(const std::string &addr, const int nHeight) {
 	}
 	return value;
 }
-Value SysTestBase::CreateContractTx1(const std::string &scriptid, const std::string &addrs, const std::string &contract,
-			const int nHeight)
-{
-//	char cscriptid[1024] = { 0 };
 
-	char fee[64] = { 0 };
-	int nfee =1000000;
-	sprintf(fee, "%d", nfee);
-	nCurFee = nfee;
-
-	char height[16] = { 0 };
-	sprintf(height, "%d", nHeight);
-
-	const char *argv[] = { "rpctest", "createcontracttx", scriptid.c_str(), addrs.c_str(), contract.c_str(), fee, height };
-	int argc = sizeof(argv) / sizeof(char*);
-
-	Value value;
-	if (CommandLineRPC_GetValue(argc, argv, value)) {
-//		const Value& result = find_value(value.get_obj(), "hash");
-		return value;
-	}
-	return value;
-}
 bool SysTestBase::CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 		int nHeight,int nFee) {
-//	char cscriptid[1024] = { 0 };
-
-	string strFee;
-	if (0 == nFee) {
-		int nfee = GetRandomFee();
-		nCurFee = nfee;
-	} else {
-		nCurFee = nFee;
-	}
-
-	strFee = strprintf("%d",nCurFee);
-
-	char height[16] = { 0 };
-	sprintf(height, "%d", nHeight);
-
-	vector<unsigned char> vTemp;
-	vTemp.assign(contract.begin(),contract.end());
-	string strContractData = HexStr(vTemp);
-
-	const char *argv[] = { "rpctest", "createcontracttx", (char *) (scriptid.c_str()), (char *) (addrs.c_str()),
-			(char *) (strContractData.c_str()), (char*)strFee.c_str(), height };
-	int argc = sizeof(argv) / sizeof(char*);
-
-	Value value;
-	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		return true;
-	}
-	return false;
-}
-
-Value SysTestBase::CreateContractTxEx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
-		int nHeight,int nFee) {
-//	char cscriptid[1024] = { 0 };
-
-	string strFee;
-	if (0 == nFee) {
-		int nfee = GetRandomFee();
-		nCurFee = nfee;
-	} else {
-		nCurFee = nFee;
-	}
-
-	strFee = strprintf("%d",nCurFee);
-
-	char height[16] = { 0 };
-	sprintf(height, "%d", nHeight);
-
-	vector<unsigned char> vTemp;
-	vTemp.assign(contract.begin(),contract.end());
-	string strContractData = HexStr(vTemp);
-
-	const char *argv[] = { "rpctest", "createcontracttx", (char *) (scriptid.c_str()), (char *) (addrs.c_str()),
-			(char *) (strContractData.c_str()), (char*)strFee.c_str(), height };
-	int argc = sizeof(argv) / sizeof(char*);
-
-	Value value;
-	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		return value;
-	}
-	return value;
-}
-
-//注意，此函数为彩票测试专用，其他滥用后果自负
-Value SysTestBase::PCreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
-		int nHeight,int nFee) {
-//	char cscriptid[1024] = { 0 };
 
 	string strFee;
 	if (0 == nFee) {
@@ -628,9 +466,9 @@ Value SysTestBase::PCreateContractTx(const std::string &scriptid, const std::str
 
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		return value;
+		return true;
 	}
-	return value;
+	return false;
 }
 
 Value SysTestBase::RegisterScriptTx(const string& strAddress, const string& strScript, int nHeight, int nFee) {
@@ -710,7 +548,16 @@ bool SysTestBase::GenerateOneBlock() {
 	}
 	return false;
 }
+bool SysTestBase::SetAddrGenerteBlock(const char *addr) {
+	const char *argv[] = { "rpctest", "generateblock", addr };
+	int argc = sizeof(argv) / sizeof(char*);
 
+	Value value;
+	if (CommandLineRPC_GetValue(argc, argv, value)) {
+		return true;
+	}
+	return false;
+}
 bool SysTestBase::DisConnectBlock(int nNum) {
 	int nFirstHeight = static_cast<int>(chainActive.Height() );
 	BOOST_CHECK(nNum>0 && nNum<=nFirstHeight);
@@ -727,16 +574,7 @@ bool SysTestBase::DisConnectBlock(int nNum) {
 	}
 	return false;
 }
-Value SysTestBase::GetScriptID(string txhash)
-{
-	const char *argv[3] = { "rpctest", "getscriptid", txhash.c_str()};
-	int argc = sizeof(argv) / sizeof(char*);
-	Value value;
-	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		return value;
-	}
-	return value;
-}
+
 void SysTestBase::StartServer(int argc,const char* argv[]) {
 //		int argc = 2;
 //		char* argv[] = {"D:\\cppwork\\Dacrs\\src\\Dacrsd.exe","-datadir=d:\\bitcoin" };
@@ -767,14 +605,14 @@ bool SysTestBase::GetStrFromObj(const Value& valueRes,string& str)
 				return false;
 			}
 
-			const Value& result = find_value(valueRes.get_obj(), str);
-			if (result.type() == null_type){
-				return false;
-			}
-			if (result.type() != null_type){
-				str = result.get_str();
-				}
-			return true;
+	const Value& result = find_value(valueRes.get_obj(), str);
+	if (result.type() == null_type){
+		return false;
+	}
+	if (result.type() != str_type){
+		str = result.get_str();
+		}
+	return true;
 }
 bool SysTestBase::ImportWalletKey(const char**address, int nCount){
 	for (int i = 0; i < nCount; i++) {
@@ -788,3 +626,72 @@ bool SysTestBase::ImportWalletKey(const char**address, int nCount){
 
 	return true;
 }
+
+uint64_t SysTestBase::GetRandomBetfee() {
+		srand(time(NULL));
+		int r = (rand() % 1000000) + 1000000;
+		return r;
+	}
+bool SysTestBase::GetKeyId(string const &addr,CKeyID &KeyId) {
+	if (!CRegID::GetKeyID(addr, KeyId)) {
+		KeyId=CKeyID(addr);
+		if (KeyId.IsEmpty())
+		return false;
+	}
+	return true;
+};
+bool SysTestBase::IsTxInMemorypool(const uint256& txHash) {
+	for (const auto& entry : mempool.mapTx) {
+		if (entry.first == txHash)
+			return true;
+	}
+
+	return false;
+}
+
+bool SysTestBase::IsTxUnConfirmdInWallet(const uint256& txHash) {
+		for (const auto &item : pwalletMain->UnConfirmTx) {
+			if (txHash == item.first) {
+				return true;
+			}
+		}
+		return false;
+	}
+bool SysTestBase::IsTxInTipBlock(const uint256& txHash) {
+		CBlockIndex* pindex = chainActive.Tip();
+		CBlock block;
+		if (!ReadBlockFromDisk(block, pindex))
+			return false;
+
+		block.BuildMerkleTree();
+		std::tuple<bool, int> ret = block.GetTxIndex(txHash);
+		if (!std::get<0>(ret)) {
+			return false;
+		}
+
+		return true;
+	}
+bool SysTestBase::GetRegID(string& strAddr,CRegID& regID) {
+	CAccount account;
+	CKeyID keyid;
+	if (!GetKeyId(strAddr, keyid)) {
+		return false;
+	}
+
+	CUserID userId = keyid;
+
+	LOCK(cs_main);
+	CAccountViewCache accView(*pAccountViewTip, true);
+	if (!accView.GetAccount(userId, account)) {
+		return false;
+	}
+
+	regID = account.regID;
+	return true;
+}
+bool SysTestBase::GetTxOperateLog(const uint256& txHash, vector<CAccountOperLog>& vLog) {
+		if (!GetTxOperLog(txHash, vLog))
+			return false;
+
+		return true;
+	}

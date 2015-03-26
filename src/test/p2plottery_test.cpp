@@ -525,6 +525,7 @@ static bool RegScript(void) {
 		BOOST_CHECK(gLottoTestData.SetAddrGenerteBlock(MINERADDR));
 	} while (!pwalletMain->UnConfirmTx.empty());
 
+	BOOST_CHECK(gLottoTestData.GetTxConfirmedRegID(regTxHash,gLottoTestData.scriptid));
 	assert(pScriptDBTip->Flush());
 
 	return true;
@@ -632,7 +633,7 @@ static bool InitAllAccountInfo()
 }
 
 static bool RegLotto(int shight) {
-	BOOST_CHECK(gLottoTestData.GetOneScriptId(gLottoTestData.scriptid));
+	//BOOST_CHECK(gLottoTestData.GetOneScriptId(gLottoTestData.scriptid));
 //	BOOST_CHECK(gLottoTestData.GetScriptAddrByID(gLottoTestData.scriptid, gLottoTestData.scriptaddr));
 
 	REG_DATA regdata;
@@ -644,7 +645,7 @@ static bool RegLotto(int shight) {
 	scriptData << regdata;
 	string regcontract = HexStr(scriptData);
 	uint64_t sendfee = gLottoTestData.GetRandomfee();
-	Value vsend = gLottoTestData.PCreateContractTx(gLottoTestData.scriptid, AddrToVaddr(ADDR_REGLOTTO), regcontract, gLottoTestData.GetBlockHeight(),
+	Value vsend = gLottoTestData.CreateContractTx(gLottoTestData.scriptid, AddrToVaddr(ADDR_REGLOTTO), regcontract, gLottoTestData.GetBlockHeight(),
 			sendfee);
 	string txhash;
 	BOOST_CHECK(gLottoTestData.GetHashFromCreatedTx(vsend, txhash));
@@ -687,7 +688,7 @@ static bool OrderLotto(const string &addr)
 	string regcontract = HexStr(scriptData);
 //	LogPrint("spark", "\r\norder contract data:%s\r\n", regcontract);
 	uint64_t orderfee = gLottoTestData.GetRandomfee();
-	Value vsend = gLottoTestData.PCreateContractTx(gLottoTestData.scriptid, AddrToVaddr(addr), regcontract, gLottoTestData.GetBlockHeight(),
+	Value vsend = gLottoTestData.CreateContractTx(gLottoTestData.scriptid, AddrToVaddr(addr), regcontract, gLottoTestData.GetBlockHeight(),
 			orderfee);
 	string txhash;
 	BOOST_CHECK(gLottoTestData.GetHashFromCreatedTx(vsend, txhash));
@@ -794,7 +795,7 @@ static bool OpenLotto(const string &addr, int openhight)
 	scriptData << opendata;
 	string regcontract = HexStr(scriptData);
 	uint64_t openfee = gLottoTestData.GetRandomfee();
-	Value vsend = gLottoTestData.PCreateContractTx(gLottoTestData.scriptid, AddrToVaddr(addr), regcontract, gLottoTestData.GetBlockHeight(),
+	Value vsend = gLottoTestData.CreateContractTx(gLottoTestData.scriptid, AddrToVaddr(addr), regcontract, gLottoTestData.GetBlockHeight(),
 			openfee);
 	string txhash;
 	BOOST_CHECK(gLottoTestData.GetHashFromCreatedTx(vsend, txhash));
@@ -878,7 +879,7 @@ BOOST_AUTO_TEST_CASE(testhash)
 	string regcontract = HexStr(scriptData);
 //	LogPrint("spark", "\r\n:%s\r\n", regcontract);
 	uint64_t orderfee = gLottoTestData.GetRandomfee();
-	Value vsend = gLottoTestData.PCreateContractTx(gLottoTestData.scriptid, AddrToVaddr(ADDR_REGSCRIPT), regcontract, gLottoTestData.GetBlockHeight(),
+	Value vsend = gLottoTestData.CreateContractTx(gLottoTestData.scriptid, AddrToVaddr(ADDR_REGSCRIPT), regcontract, gLottoTestData.GetBlockHeight(),
 			orderfee);
 	string txhash;
 	BOOST_CHECK(gLottoTestData.GetHashFromCreatedTx(vsend, txhash));
