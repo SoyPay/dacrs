@@ -987,7 +987,7 @@ static RET_DEFINE ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
  //   LogPrint("vm","ExGetCurTxHash:%s",HexStr(hash).c_str());
 	return std::make_tuple (true, tem);
 }
-/**
+/**todo delete
  *bool IsAuthorited(const void* const account,const Int64* const pmoney)
  * 中间层传了两个参数
  * 1.第一个是 账号的id
@@ -1035,8 +1035,8 @@ static RET_DEFINE ExIsAuthoritFunc(unsigned char * ipara,void * pVmScript) {
 	}
 
 	CRegID scriptid = pVmScriptRun->GetScriptRegID();
-	int height = pVmScriptRun->GetComfirHeight();
-	bool ret = aAccount.IsAuthorized(money,height,scriptid.GetVec6(), *pVmScriptRun->GetScriptDB());
+//	int height = pVmScriptRun->GetComfirHeight();
+	bool ret = true;//aAccount.IsAuthorized(money,height,scriptid.GetVec6(), *pVmScriptRun->GetScriptDB());
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -1216,6 +1216,7 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmScript)
 	return std::make_tuple (true , tem);
 }
 /**
+ *todo delete
  *unsigned short GetAuthUserDefine(const void* const account,void *const pout,const unsigned short maxlen)
  * 中间层传了一个参数
  * 1.账户的id
@@ -1261,15 +1262,15 @@ static RET_DEFINE ExGetAuthoritedDefineFunc(unsigned char * ipara,void * pVmScri
 	vector_unsigned_char scriptid = pVmScriptRun->GetScriptRegID().GetVec6();
 //	int height = pVmScriptRun->GetComfirHeight();
 
-	vector<unsigned char> vData;
-	if(!aAccount.GetUserData(scriptid, vData, *pVmScriptRun->GetScriptDB()))
-	{
-		flag = false;
-	}
-
-	/// untodo
+////	vector<unsigned char> vData;
+////	if(!aAccount.GetUserData(scriptid, vData, *pVmScriptRun->GetScriptDB()))
+////	{
+////		flag = false;
+////	}
+//
+//	/// untodo
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-   (*tem.get()).push_back(vData);
+
 
 	return std::make_tuple (flag, tem);
 }

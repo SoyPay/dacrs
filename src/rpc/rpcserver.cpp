@@ -283,7 +283,7 @@ static const CRPCCommand vRPCCommands[] =
 //	{ "createnormaltx",         &createnormaltx,       	 true,      false,      true },
 	{ "createcontracttx",       &createcontracttx,       true,      false,      true },
 	{ "signcontracttx",         &signcontracttx,       	 true,      false,      true },
-	{ "createfreezetx",         &createfreezetx,       	 true,      false,      true },
+//	{ "createfreezetx",         &createfreezetx,       	 true,      false,      true },
 	{ "registerscripttx",       &registerscripttx,       true,      false,      true },
 	{ "settxfee",               &settxfee,               false,     false,      true },
 	{ "walletlock",             &walletlock,             true,      false,      true },
@@ -306,10 +306,10 @@ static const CRPCCommand vRPCCommands[] =
     { "registaccounttxraw",     &registaccounttxraw,     true,      false,      true },
     { "submittx",      			&submittx,       	 	 true,      false,      false },
     { "createcontracttxraw",    &createcontracttxraw,    true,      false,      true },
-    { "createfreezetxraw",      &createfreezetxraw,      true,      false,      true },
+//    { "createfreezetxraw",      &createfreezetxraw,      true,      false,      true },
     { "registerscripttxraw",    &registerscripttxraw,    true,      false,      true },
     { "sigstr",    				&sigstr,    			 true,      false,      true },
-    { "listauthor",             &listauthor,             true,      false,      true },
+//    { "listauthor",             &listauthor,             true,      false,      true },
 
 //for test code
 	{ "gettxoperationlog",      &gettxoperationlog,      false,     false,      false },
