@@ -27,6 +27,7 @@ public:
 			//return false;
 		}
 
+
 		CRegisterAccountTx rtx;
 		CNullID nullId;
 		rtx.minerId = nullId;
@@ -52,12 +53,30 @@ public:
 		return std::get<0>(ret);
 	}
 
-	bool SendMoney(const string& strRegAddr, const string& strDestAddr, uint64_t nMoney, uint64_t nFee=0) {
+	bool SendMoney(const string& strRegAddr, const string& strDestAddr, uint64_t nMoney, uint64_t nFee = 0) {
 		CKeyID keyid;
 		if (!GetKeyId(strDestAddr, keyid))
 			return false;
-		std::tuple<bool, string> ret = pwalletMain->SendMoney(strRegAddr, CUserID(keyid), nMoney, nFee);
-		return std::get<0>(ret);
+		auto GetKeyId = [](string const &addr,CKeyID &KeyId) {
+			if (!CRegID::GetKeyID(addr, KeyId)) {
+				KeyId=CKeyID(addr);
+				if (KeyId.IsEmpty())
+				return false;
+			}
+			return true;
+		};
+
+		CKeyID sendKid;
+		GetKeyId(strRegAddr, sendKid);
+		CKeyID revKid;
+		GetKeyId(strDestAddr, revKid);
+		CTransaction tx(sendKid, revKid, nMoney, chainActive.Height(), SysCfg().GetTxFee());
+
+		if (!pwalletMain->Sign(CRegID(strRegAddr), tx.SignatureHash(), tx.signature)) {
+			throw JSONRPCError(RPC_INVALID_PARAMETER, "Sign failed");
+		}
+		std::tuple<bool, string> ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
+		return std::get < 0 > (ret);
 	}
 
 	bool GetAccountInfo(const string& strAddr,CAccount& account) {
