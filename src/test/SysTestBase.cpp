@@ -212,7 +212,7 @@ int SysTestBase::GetRandomMoney() {
 }
 
 Value SysTestBase::CreateRegScriptTx(const string& strAddress, const string& strScript, bool bRigsterScript, int nFee,
-		int nHeight, const CNetAuthorizate& author) {
+		int nHeight) {
 	string strScriptData;
 	char szType[1] = { 0 };
 	if (bRigsterScript) {
@@ -229,12 +229,6 @@ Value SysTestBase::CreateRegScriptTx(const string& strAddress, const string& str
 
 	string strFee = strprintf("%d",nFee);
 	string strHeight = strprintf("%d",nHeight);
-	string strAuTime = strprintf("%d",author.GetAuthorizeTime());
-	string strMoneyPerTime = strprintf("%d",author.GetMaxMoneyPerTime());
-	string strMoneyTotal = strprintf("%d",author.GetMaxMoneyTotal());
-	string strMoneyPerDay = strprintf("%d",author.GetMaxMoneyPerDay());
-
-	string strUserData = HexStr(author.GetUserData());
 	const char *argv[13] = {						//
 			"rpctest",						//
 					"registerscripttx",				//
@@ -243,12 +237,7 @@ Value SysTestBase::CreateRegScriptTx(const string& strAddress, const string& str
 					(char*) strScriptData.c_str(),	//
 					(char*) strFee.c_str(), 		//
 					(char*) strHeight.c_str(), 		//
-					"this is description", 			//
-					(char*) strAuTime.c_str(),		//
-					(char*) strMoneyPerTime.c_str(),		//
-					(char*) strMoneyTotal.c_str(), 	//
-					(char*) strMoneyPerDay.c_str(),	//
-					(char*) strUserData.c_str() };	//
+					"this is description"};	//
 
 	Value value;
 
@@ -645,12 +634,7 @@ Value SysTestBase::PCreateContractTx(const std::string &scriptid, const std::str
 }
 
 Value SysTestBase::RegisterScriptTx(const string& strAddress, const string& strScript, int nHeight, int nFee) {
-	return CreateRegScriptTx(strAddress, strScript, true, nFee, nHeight, CNetAuthorizate());
-}
-
-Value SysTestBase::ModifyAuthor(const string& strAddress, const string& strScript, int nHeight, int nFee,
-		const CNetAuthorizate& author) {
-	return CreateRegScriptTx(strAddress, strScript, false, nFee, nHeight, author);
+	return CreateRegScriptTx(strAddress, strScript, true, nFee, nHeight);
 }
 
 Value SysTestBase::SignSecureTx(const string &securetx) {

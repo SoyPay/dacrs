@@ -315,52 +315,7 @@ public:
 		nRandomRanger = nMaxRanger;
 	}
 
-	CAuthorizate GetAuthorByAddress(const string& strAddress, const string& strScriptID) {
-		CDacrsAddress address(strAddress);
-		CKeyID keyID;
-		BOOST_CHECK(address.GetKeyID(keyID));
-		CUserID userId = keyID;
-		CAccount account;
-		CRegID scriptId(strScriptID);
-		CAuthorizate authorizate;
-		BOOST_CHECK(pAccountViewTip->GetAccount(userId, account));
-		BOOST_CHECK(pScriptDBTip->GetAuthorizate(account.regID, scriptId, authorizate));
 
-		return std::move(authorizate);
-	}
-
-	void Transfer_Authorizated(const string& strScriptID, const string& strSignAddr, const string& strOperAddr,
-			unsigned char nTestType) {
-		string strContractData;
-		string vAddr = "[\"" + strSignAddr + "\"] ";
-
-		CAuthorizate author = GetAuthorByAddress(strOperAddr, strScriptID);
-		unsigned int nAvailable = author.GetCurMaxMoneyPerDay();
-		SetRandomRanger(nAvailable);
-		unsigned int nRandomValue = 0;
-
-		for (int i = 0; i < nRandomTestCount; i++) {
-			nRandomValue = GetRandomValue();
-			BOOST_CHECK(PacketContractData(nTestType, strRegID1, strRegID2, //
-					strRegID3, nTimeOutHeight, nRandomValue, strContractData));
-
-			nOldMoney = GetFreeMoney(strOperAddr);
-			if (nOldMoney >= nRandomValue) {
-				if (nAvailable >= nRandomValue) {
-					nAvailable -= nRandomValue;
-					BOOST_CHECK(CreateContractTx(strScriptID, vAddr, strContractData, nTimeOutHeight, nFee));
-					BOOST_CHECK(GenerateOneBlock());
-					nNewMoney = GetFreeMoney(strOperAddr);
-					BOOST_CHECK(nOldMoney - nRandomValue == nNewMoney);
-//					cout << "random money is " << nRandomValue << " old money: " << nOldMoney << " new money is "
-//							<< nNewMoney << endl;
-				} else {
-					BOOST_CHECK(!CreateContractTx(strScriptID, vAddr, strContractData, nTimeOutHeight, nFee));
-				}
-
-			}
-		}
-	}
 
 	void Transfer_NotSigned_NotAuthor(const string& strScriptID, const string& strSignAddr, unsigned char nTestType) {
 		string strContractData;
@@ -509,77 +464,5 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 	BOOST_CHECK(0 == nNewBlockHeight);
 }
 
-BOOST_FIXTURE_TEST_CASE(author_test,CSystemTest)
-{
-	//清空环境
-	ResetEnv();
-	nNewBlockHeight = GetBlockHeight();
-	BOOST_CHECK(0 == nNewBlockHeight);
-
-	//0:创建脚本交易
-	Value valueRes = RegisterScriptTx(strAddr1, strFileName, nTimeOutHeight, nFee);
-	BOOST_CHECK(GetHashFromCreatedTx(valueRes, strTxHash));
-
-	//1:挖矿
-	BOOST_CHECK(GenerateOneBlock());
-
-	//修改权限(对第一个和第三个账号授权)
-	//账号1：签名且授权 账号2：不签名不授权 账号3：不签名但授权
-	int nIndex = 0;
-	BOOST_CHECK(GetTxIndexInBlock(uint256(strTxHash), nIndex));
-	CRegID striptID(nNewBlockHeight, nIndex);
-
-	vector<unsigned char> vUserDefine;
-	string strHash1,strHash2;
-	vUserDefine.push_back(1);
-	const int nMaxMoneyPerDay = 15000;
-	CNetAuthorizate author(100,vUserDefine,10000,nMaxMoneyPerDay,nMaxMoneyPerDay);
-	valueRes = ModifyAuthor(strAddr1,HexStr(striptID.GetVec6()),nTimeOutHeight,nFee,author);
-	BOOST_CHECK(GetHashFromCreatedTx(valueRes, strHash1));
-
-	valueRes = ModifyAuthor(strAddr3,HexStr(striptID.GetVec6()),nTimeOutHeight,nFee,author);
-	BOOST_CHECK(GetHashFromCreatedTx(valueRes, strHash2));
-	BOOST_CHECK(GenerateOneBlock());
-	nNewBlockHeight = GetBlockHeight();
-
-	BOOST_CHECK(IsTxConfirmdInWallet(nNewBlockHeight, uint256(strHash1)));
-	BOOST_CHECK(IsTxConfirmdInWallet(nNewBlockHeight, uint256(strHash2)));
-
-	//合约交易，主动冻结一部分钱，查看是否计算在权限金额以内
-	string strScriptID(HexStr(striptID.GetVec6()));
-	string vconaddr = "[\"" + strAddr1 + "\"] ";
-	string strContractData;
-	int nAvailable = nMaxMoneyPerDay;
-	BOOST_CHECK(PacketContractData(ID3_FREE_TO_ID3_SELF, strRegID1, strRegID2, //
-			strRegID3, nTimeOutHeight, 5000, strContractData));
-	BOOST_CHECK(CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
-	BOOST_CHECK(GenerateOneBlock());
-	nAvailable -= nPayMoney;
-
-	//扣除主动冻结中的钱，并检查权限
-	BOOST_CHECK(nAvailable < nPayMoney);
-	BOOST_CHECK(PacketContractData(ID3_SELF_TO_ID2_FREE, strRegID1, strRegID2, //
-			strRegID3, nTimeOutHeight, 5000, strContractData));
-	BOOST_CHECK(CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
-	BOOST_CHECK(GenerateOneBlock());
-	nAvailable -= nPayMoney;
-
-	//再次扣除（超过剩余权限）自由金额，并检查权限
-	BOOST_CHECK(nAvailable < nPayMoney);
-	BOOST_CHECK(PacketContractData(ID3_FREE_TO_ID3_SELF, strRegID1, strRegID2, //
-				strRegID3, nTimeOutHeight, 10000, strContractData));
-	BOOST_CHECK(!CreateContractTx(strScriptID, vconaddr, strContractData, nTimeOutHeight, nFee));
-	BOOST_CHECK(GenerateOneBlock());
-
-	vector<uint256> vUnConfirmTxHash;
-	//对已签名账户随机转账
-	Transfer_Signed(strScriptID,strAddr1,ID1_FREE_TO_ID2_FREE);
-
-	//对未签名已授权账户随机操作
-	Transfer_Authorizated(strScriptID,strAddr1,strAddr3,ID3_FREE_TO_ID2_FREE);
-
-	//对未签名未授权账户随机操作
-	Transfer_NotSigned_NotAuthor(strScriptID,strAddr1,ID2_FREE_TO_ID3_FREE);
-}
 BOOST_AUTO_TEST_SUITE_END()
 

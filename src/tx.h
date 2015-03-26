@@ -803,7 +803,6 @@ public:
 class COperFund {
 public:
 	unsigned char operType;  		//!<1:ADD_VALUE 2:MINUS_VALUE
-	unsigned char bAuthorizated;
 	vector<CFund> vFund;
 
 	IMPLEMENT_SERIALIZE
@@ -814,140 +813,21 @@ public:
 public:
 	COperFund() {
 		operType = NULL_OPER;
-		bAuthorizated = false;
-		vFund.clear();
+				vFund.clear();
 	}
 
-	COperFund(unsigned char nType, const vector<CFund>& vOperFund,bool _bAuthorizated = false) {
+	COperFund(unsigned char nType, const vector<CFund>& vOperFund) {
 		operType = nType;
 		vFund = vOperFund;
-		bAuthorizated = _bAuthorizated;
 	}
 
-	COperFund(unsigned char nType, const CFund& fund,bool _bAuthorizated) {
+	COperFund(unsigned char nType, const CFund& fund) {
 		operType = nType;
 		vFund.push_back(fund);
-		bAuthorizated = _bAuthorizated;
 	}
 
 	string ToString() const;
 
-};
-
-class CAuthorizateLog {
-public:
-	CAuthorizateLog() {
-		bValid = false;
-		nLastOperHeight = 0;
-		nLastCurMaxMoneyPerDay = 0;
-		nLastMaxMoneyTotal = 0;
-		scriptID.clear();
-	}
-
-	CAuthorizateLog(int nHeight,uint64_t nMoneyPerDay, uint64_t nTotalMoney, bool _bValid,const vector_unsigned_char& _scriptID) {
-		bValid = _bValid;
-		nLastOperHeight = nHeight;
-		nLastCurMaxMoneyPerDay = nMoneyPerDay;
-		nLastMaxMoneyTotal = nTotalMoney;
-		scriptID = _scriptID;
-	}
-
-	int GetLastOperHeight() const{
-		return nLastOperHeight;
-	}
-	uint64_t GetLastCurMaxMoneyPerDay() const {
-		return nLastCurMaxMoneyPerDay;
-	}
-	uint64_t GetLastMaxMoneyTotal() const {
-		return nLastMaxMoneyTotal;
-	}
-	const vector_unsigned_char& GetScriptID() const {
-		return scriptID;
-	}
-	void SetLastOperHeight(int nHeight)  {
-		assert(nHeight>=0);
-		nLastOperHeight = nHeight;
-	}
-	void SetScriptID(const vector_unsigned_char& _scriptID) {
-		scriptID = _scriptID;
-	}
-	bool IsLogValid() const{
-		return bValid;
-	}
-
-	string ToString() const;
-	void SetNULL() {
-		bValid = false;
-		nLastOperHeight = 0;
-		nLastCurMaxMoneyPerDay = 0;
-		nLastMaxMoneyTotal = 0;
-		scriptID.clear();
-	}
-
-	unsigned int GetSerializeSize(int nType, int nVersion) const {
-		CSerActionGetSerializeSize ser_action;
-		unsigned int nSerSize = 0;
-		ser_streamplaceholder s;
-		s.nType = nType;
-		s.nVersion = nVersion;
-		vector<unsigned char> vData;
-		vData.clear();
-		if (bValid) {
-			CDataStream ds(SER_DISK, CLIENT_VERSION);
-			ds << bValid;
-			ds << VARINT(nLastOperHeight);
-			ds << VARINT(nLastCurMaxMoneyPerDay);
-			ds << VARINT(nLastMaxMoneyTotal);
-			ds << scriptID;
-			vData.insert(vData.end(), ds.begin(), ds.end());
-			(nSerSize += ::SerReadWrite(s, (vData), nType, nVersion, ser_action));
-		} else {
-			(nSerSize += ::SerReadWrite(s, (bValid), nType, nVersion, ser_action));
-		}
-		return nSerSize;
-	}
-	template<typename Stream>
-	void Serialize(Stream& s, int nType, int nVersion) const {
-		CSerActionSerialize ser_action;
-		unsigned int nSerSize = 0;
-		vector<unsigned char> vData;
-		vData.clear();
-		if (bValid) {
-			CDataStream ds(SER_DISK, CLIENT_VERSION);
-			ds << bValid;
-			ds << VARINT(nLastOperHeight);
-			ds << VARINT(nLastCurMaxMoneyPerDay);
-			ds << VARINT(nLastMaxMoneyTotal);
-			ds << scriptID;
-			vData.insert(vData.end(), ds.begin(), ds.end());
-			(nSerSize += ::SerReadWrite(s, (vData), nType, nVersion, ser_action));
-		} else {
-			(nSerSize += ::SerReadWrite(s, (bValid), nType, nVersion, ser_action));
-		}
-	}
-	template<typename Stream>
-	void Unserialize(Stream& s, int nType, int nVersion) {
-		CSerActionUnserialize ser_action;
-		unsigned int nSerSize = 0;
-		vector<unsigned char> vData;
-		vData.clear();
-		(nSerSize += ::SerReadWrite(s, (vData), nType, nVersion, ser_action));
-		if (!vData.empty()) {
-			CDataStream ds(vData, SER_DISK, CLIENT_VERSION);
-			ds >> bValid;
-			ds >> VARINT(nLastOperHeight);
-			ds >> VARINT(nLastCurMaxMoneyPerDay);
-			ds >> VARINT(nLastMaxMoneyTotal);
-			ds >> scriptID;
-		}
-	}
-
-private:
-	bool bValid;
-	int nLastOperHeight;
-	uint64_t nLastCurMaxMoneyPerDay;
-	uint64_t nLastMaxMoneyTotal;
-	vector_unsigned_char scriptID;
 };
 
 class CAccountOperLog {
@@ -965,7 +845,6 @@ public:
 				CDataStream ds(SER_DISK, CLIENT_VERSION);
 				ds << keyID;
 				ds << vOperFund;
-	//			ds << authorLog;
 				vData.insert(vData.end(), ds.begin(), ds.end());
 			}
 		}
@@ -975,7 +854,6 @@ public:
 				CDataStream ds(vData, SER_DISK, CLIENT_VERSION);
 				ds >> keyID;
 				ds >> vOperFund;
-//				ds >> authorLog;
 			}
 		}
 
@@ -983,10 +861,6 @@ public:
 public:
 	void InsertOperateLog(const COperFund& op) {
 		vOperFund.push_back(op);
-	}
-
-	void InsertAuthorLog(const CAuthorizateLog& log) {
-//		authorLog = log;
 	}
 
 	string ToString() const;

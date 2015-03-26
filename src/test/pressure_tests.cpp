@@ -334,7 +334,6 @@ public:
 					return false;
 				}
 				rewardAmount += account.GetRewardAmount(chainActive.Tip()->nHeight);
-				SelfFreezeAmount += account.GetSelfFreezeAmount(chainActive.Tip()->nHeight);
 				freeValue += account.GetRawBalance(chainActive.Tip()->nHeight);
 			}
 
