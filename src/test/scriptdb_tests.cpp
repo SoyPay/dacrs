@@ -125,11 +125,11 @@ void cleandb(int nType, vector<unsigned char> vKey) {
 void traversaldb(CScriptDBViewCache *pScriptDB, bool needEqual) {
 	assert(pScriptDB!=NULL);
 	vector< vector<unsigned char> > traversalKey;
-	int height(0);
+//	int height(0);
 	int curheight(0);
 	vector<unsigned char> vKey;
 	vector<unsigned char> vScript;
-	int nValidHeight(0);
+//	int nValidHeight(0);
 	set<CScriptDBOperLog> setOperLog;
 	vector<unsigned char> vScriptId = {0x01,0x00,0x00,0x00,0x02,0x00};
 	CRegID regScriptId(vScriptId);
