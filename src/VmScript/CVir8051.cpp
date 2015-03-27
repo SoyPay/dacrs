@@ -1194,12 +1194,15 @@ static RET_DEFINE ExDeCompressContactFunc(unsigned char * ipara,void * pVmScript
 
 static RET_DEFINE GetCurTxPayAmountFunc(unsigned char * ipara,void * pVmScript){
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	vector<unsigned char> contact =pVmScriptRun->GetTxContact();
+	uint64_t lvalue =pVmScriptRun->GetValue();
 
 	vector<unsigned char> item;
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+    CDataStream tep(SER_DISK, CLIENT_VERSION);
 
-	(*tem.get()).push_back(contact);
+    tep << lvalue;
+    vector<unsigned char> tep1(tep.begin(),tep.end());
+	(*tem.get()).push_back(tep1);
 	return std::make_tuple (true, tem);
 }
 enum CALL_API_FUN {
