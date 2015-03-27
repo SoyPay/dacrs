@@ -204,7 +204,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		CFund fund;
 		memcpy(&fund.value,it.money,sizeof(it.money));
 		fund.nHeight = it.outheight;
-		fund.scriptID = boost::get<CRegID>(tx->desUserId).GetVec6();
+		fund.appId = boost::get<CRegID>(tx->desUserId).GetVec6();
 
 		auto tem = make_shared<CAccount>();
 //		vector_unsigned_char accountid = GetAccountID(it);
