@@ -1191,6 +1191,20 @@ static RET_DEFINE ExDeCompressContactFunc(unsigned char * ipara,void * pVmScript
 
 	return std::make_tuple (true, tem);
 }
+
+static RET_DEFINE GetCurTxPayAmountFunc(unsigned char * ipara,void * pVmScript){
+	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	uint64_t lvalue =pVmScriptRun->GetValue();
+
+	vector<unsigned char> item;
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+    CDataStream tep(SER_DISK, CLIENT_VERSION);
+
+    tep << lvalue;
+    vector<unsigned char> tep1(tep.begin(),tep.end());
+	(*tem.get()).push_back(tep1);
+	return std::make_tuple (true, tem);
+}
 enum CALL_API_FUN {
 	COMP_FUNC = 0,            //!< COMP_FUNC
 	MULL_MONEY ,              //!< MULL_MONEY
@@ -1207,7 +1221,6 @@ enum CALL_API_FUN {
 	GETACCPUB_FUNC,           //!< GETACCPUB_FUNC
 	QUEYACCBALANCE_FUNC,      //!< QUEYACCBALANCE_FUNC
 	GETTXCONFIRH_FUNC,        //!< GETTXCONFIRH_FUNC
-	GETTIPH_FUNC,             //!< GETTIPH_FUNC
 	GETBLOCKHASH_FUNC,        //!< GETBLOCKHASH_FUNC
 
 
@@ -1227,6 +1240,7 @@ enum CALL_API_FUN {
 	GETCURTXCONTACT_FUNC,		 //!<GETCURTXCONTACT_FUNC
 	GETCURDECOMPRESSCONTACR_FUNC,   //!<GETCURDECOMPRESSCONTACR_FUNC
 	GETDECOMPRESSCONTACR_FUNC,   	//!<GETDECOMPRESSCONTACR_FUNC
+	GETCURPAYMONEY_FUN,             //!<GETCURPAYMONEY_FUN
 };
 
 const static struct __MapExterFun FunMap[] = { //
@@ -1245,7 +1259,6 @@ const static struct __MapExterFun FunMap[] = { //
 		{GETACCPUB_FUNC,ExGetAccountPublickeyFunc},
 		{QUEYACCBALANCE_FUNC,ExQueryAccountBalanceFunc},
 		{GETTXCONFIRH_FUNC,ExGetTxConFirmHeightFunc},
-		{GETTIPH_FUNC,ExDefaultFunc},
 		{GETBLOCKHASH_FUNC,ExGetBlockHashFunc},
 
 
@@ -1264,6 +1277,7 @@ const static struct __MapExterFun FunMap[] = { //
 		{GETCURTXCONTACT_FUNC,ExGetCurTxContactFunc		},
 		{GETCURDECOMPRESSCONTACR_FUNC,ExCurDeCompressContactFunc },
 		{GETDECOMPRESSCONTACR_FUNC,ExDeCompressContactFunc  	},
+		{GETCURPAYMONEY_FUN,GetCurTxPayAmountFunc},
 
 		};
 
