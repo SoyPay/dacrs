@@ -705,13 +705,13 @@ uint256 CWallet::GetCheckSum() const {
 	return ss.GetHash();
 }
 
-bool CWallet::GetRegId(const CUserID& address, CRegID& IdOut) const  {
+bool CWallet::GetRegId(const CUserID& userid, CRegID& IdOut) const  {
 	AssertLockHeld(cs_wallet);
-	if (address.type() == typeid(CRegID)) {
-		IdOut = boost::get<CRegID>(address);
+	if (userid.type() == typeid(CRegID)) {
+		IdOut = boost::get<CRegID>(userid);
 		return !IdOut.IsEmpty();
-	} else if (address.type() == typeid(CKeyID)) {
-		CKeyID te = boost::get<CKeyID>(address);
+	} else if (userid.type() == typeid(CKeyID)) {
+		CKeyID te = boost::get<CKeyID>(userid);
 		if (count(te)) {
 			auto tep = mKeyPool.find(te);
 			if (tep != mKeyPool.end()) {
@@ -719,19 +719,17 @@ bool CWallet::GetRegId(const CUserID& address, CRegID& IdOut) const  {
 				return !IdOut.IsEmpty();
 			}
 		}
-
 	} else {
 		assert(0 && "to fixme");
 	}
-
 	return false;
 }
 
-bool CWallet::GetKey(const CUserID& address, CKey& keyOut,bool IsMiner) const{
+bool CWallet::GetKey(const CUserID& userid, CKey& keyOut,bool IsMiner) const{
 	AssertLockHeld(cs_wallet);
 	CAccountViewCache dumy(*pAccountViewTip,true);
 	CKeyID keyid;
-	if (dumy.GetKeyId(address, keyid)) {
+	if (dumy.GetKeyId(userid, keyid)) {
 		if (mKeyPool.count(keyid)) {
 			auto tep = mKeyPool.find(keyid);
 			if (tep != mKeyPool.end())
@@ -741,20 +739,20 @@ bool CWallet::GetKey(const CUserID& address, CKey& keyOut,bool IsMiner) const{
 	return false;
 }
 
-bool CWallet::GetKey(const CKeyID& address, CKey& keyOut, bool IsMiner) const {
+bool CWallet::GetKey(const CKeyID& keyid, CKey& secretKey, bool IsMiner) const {
 	AssertLockHeld(cs_wallet);
-	if (mKeyPool.count(address)) {
-		auto tep = mKeyPool.find(address);
+	if (mKeyPool.count(keyid)) {
+		auto tep = mKeyPool.find(keyid);
 		if(tep != mKeyPool.end())
-		return tep->second.getCKey(keyOut,IsMiner);
+		return tep->second.getCKey(secretKey,IsMiner);
 	}
 	return false;
 }
 
-bool CWallet::GetPubKey(const CKeyID& address, CPubKey& keyOut, bool IsMiner) {
+bool CWallet::GetPubKey(const CKeyID& keyid, CPubKey& secretKey, bool IsMiner) {
 	AssertLockHeld(cs_wallet);
-	if (mKeyPool.count(address)) {
-		return mKeyPool[address].GetPubKey(keyOut,IsMiner);
+	if (mKeyPool.count(keyid)) {
+		return mKeyPool[keyid].GetPubKey(secretKey,IsMiner);
 	}
 	return false;
 
