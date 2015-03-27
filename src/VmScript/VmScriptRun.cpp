@@ -266,7 +266,10 @@ const CRegID &CVmScriptRun::GetTxAccount() {
 	CTransaction* tx = static_cast<CTransaction*>(listTx.get());
 	return boost::get<CRegID>(tx->srcRegId);
 }
-
+uint64_t CVmScriptRun::GetValue() const{
+	CTransaction* tx = static_cast<CTransaction*>(listTx.get());
+		return tx->llValues;
+}
 const vector<unsigned char>& CVmScriptRun::GetTxContact()
 {
 	CTransaction* tx = static_cast<CTransaction*>(listTx.get());
