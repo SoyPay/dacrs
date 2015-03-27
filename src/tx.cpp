@@ -188,7 +188,7 @@ bool CBaseTransaction::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValid
 		CUserID userId = rIterAccountLog->keyID;
 		if(!view.GetAccount(userId, account))  {
 			return state.DoS(100,
-							ERRORMSG("UndoExecuteTx() : undo updateaccount read accountId= %s account info error"),
+							ERRORMSG("UndoExecuteTx() : undo ExecuteTx read accountId= %s account info error"),
 							UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 		}
 		if(!account.UndoOperateAccount(*rIterAccountLog)){
@@ -198,7 +198,7 @@ bool CBaseTransaction::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValid
 		}
 		if(!view.SetAccount(userId, account)) {
 			return state.DoS(100,
-					ERRORMSG("UndoExecuteTx() : undo updateaccount write accountId= %s account info error"),
+					ERRORMSG("UndoExecuteTx() : undo ExecuteTx write accountId= %s account info error"),
 					UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 		}
 	}
@@ -489,7 +489,7 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 		tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptCache, nHeight, el, nRunStep);
 		if (!std::get<0>(ret))
 			return state.DoS(100,
-					ERRORMSG("ExecuteTx() : ContractTransaction UpdateAccount txhash=%s run script error:%s",
+					ERRORMSG("ExecuteTx() : ContractTransaction ExecuteTx txhash=%s run script error:%s",
 							GetHash().GetHex(), std::get<2>(ret)), UPDATE_ACCOUNT_FAIL, "run-script-error");
 		LogPrint("CONTRACT_TX", "execute contract elapse:%lld, txhash=%s\n", GetTimeMillis() - llTime,
 				GetHash().GetHex());
@@ -500,13 +500,13 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 			userId = itemAccount->keyID;
 			if (!view.SetAccount(userId, *itemAccount))
 				return state.DoS(100,
-						ERRORMSG("ExecuteTx() : ContractTransaction Updateaccount write account info error"),
+						ERRORMSG("ExecuteTx() : ContractTransaction ExecuteTx write account info error"),
 						UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 			txundo.vAccountOperLog.push_back((itemAccount->accountOperLog));
 		}
 		txundo.vScriptOperLog.insert(txundo.vScriptOperLog.end(), vmRun.GetDbLog()->begin(), vmRun.GetDbLog()->end());
 		if(!scriptCache.SetTxRelAccout(GetHash(), vAddress))
-				return ERRORMSG("ExecuteTx() : ContractTransaction Updateaccount save tx relate account info to script db error");
+				return ERRORMSG("ExecuteTx() : ContractTransaction ExecuteTx save tx relate account info to script db error");
 
 	}
 	txundo.txHash = GetHash();
@@ -675,7 +675,7 @@ bool CRegisterAppTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidationSt
 		CRegID regId(script);
 		if (!scriptCache.GetScript(regId, vScript)) {
 			return state.DoS(100,
-					ERRORMSG("ExecuteTx() : CRegisterScriptTx UpdateAccount Get script id=%s hash=%s error", HexStr(script.begin(), script.end()), GetHash().ToString()),
+					ERRORMSG("ExecuteTx() : CRegisterScriptTx ExecuteTx Get script id=%s hash=%s error", HexStr(script.begin(), script.end()), GetHash().ToString()),
 					UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
 		}
 	}
