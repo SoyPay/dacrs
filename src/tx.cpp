@@ -650,7 +650,7 @@ bool CRewardTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 	return true;
 }
 
-bool CRegisterScriptTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidationState &state, CTxUndo &txundo,
+bool CRegisterAppTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	CID id(regAcctId);
 	CAccount acctInfo;
@@ -718,7 +718,7 @@ bool CRegisterScriptTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidatio
 				"bad-save-accountdb");
 	return true;
 }
-bool CRegisterScriptTx::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
+bool CRegisterAppTx::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	CID id(regAcctId);
 	CAccount account;
@@ -769,7 +769,7 @@ bool CRegisterScriptTx::UndoExecuteTx(int nIndex, CAccountViewCache &view, CVali
 				"bad-save-accountdb");
 	return true;
 }
-bool CRegisterScriptTx::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
+bool CRegisterAppTx::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	CKeyID keyId;
 	if (!view.GetKeyId(regAcctId, keyId))
 		return false;
@@ -777,7 +777,7 @@ bool CRegisterScriptTx::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) 
 	return true;
 }
 
-string CRegisterScriptTx::ToString(CAccountViewCache &view) const {
+string CRegisterAppTx::ToString(CAccountViewCache &view) const {
 	string str;
 	CKeyID keyId;
 	view.GetKeyId(regAcctId, keyId);
@@ -785,7 +785,7 @@ string CRegisterScriptTx::ToString(CAccountViewCache &view) const {
 	txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion,boost::get<CRegID>(regAcctId).ToString(), keyId.GetHex(), llFees, nValidHeight);
 	return str;
 }
-bool CRegisterScriptTx::CheckTransction(CValidationState &state, CAccountViewCache &view) {
+bool CRegisterAppTx::CheckTransction(CValidationState &state, CAccountViewCache &view) {
 	CAccount  account;
 	if(!view.GetAccount(regAcctId, account)) {
 		return state.DoS(100, ERRORMSG("CheckTransaction() : register script tx get registe account info error"), REJECT_INVALID,
@@ -854,8 +854,8 @@ string CFund::ToString() const {
 	string str;
 	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "FREEZD_FUND",
 			"SELF_FREEZD_FUND" };
-	str += strprintf("            nType=%s, uTxHash=%s, value=%ld, nHeight=%d\n",
-	fundTypeArray[nFundType], HexStr(scriptID).c_str(), value, nHeight);
+	str += strprintf("            nType=%s, appId=%s, value=%ld, nHeight=%d\n",
+	fundTypeArray[nFundType], HexStr(appId).c_str(), value, nHeight);
 	return str;
 //	return write_string(Value(ToJosnObj()),true);
 }
@@ -1283,7 +1283,7 @@ uint64_t CAccount::GetVecMoney(const vector<CFund>& vFund){
 
 bool CAccount::FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID,CFund&fund) {
 	for (vector<CFund>::const_iterator it = vFund.begin(); it != vFund.end(); it++) {
-		if (it->scriptID == scriptID) {
+		if (it->appId == scriptID) {
 			fund = *it;
 			return true;
 		}
