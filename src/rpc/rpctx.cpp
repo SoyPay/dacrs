@@ -303,7 +303,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		{
 			throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", appId.ToString()));
 		}
-
+		tx.get()->nTxType = CONTRACT_TX;
 		tx.get()->srcRegId = userId;
 		tx.get()->desUserId = appId;
 		tx.get()->llValues = amount;
