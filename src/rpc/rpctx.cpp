@@ -1725,7 +1725,6 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 	CAccountViewCache view(*pAccountViewTip, true);
 	CAccount account;
 
-//	uint64_t balance = 0;
 	CUserID userId = keyid;
 	if (!view.GetAccount(userId, account)) {
 		throw JSONRPCError(RPC_WALLET_ERROR, "in registerscripttxraw Error: Account is not exist.");
