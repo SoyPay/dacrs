@@ -111,7 +111,7 @@ void CScriptDBTest::EraseData(CScriptDBViewCache* pViewCache) {
 void CScriptDBTest::GetScriptData(CScriptDBViewCache* pViewCache) {
 	BOOST_CHECK(pViewCache);
 	int nCount = 0;
-	int nHeight = 0;
+//	int nHeight = 0;
 	int nCurHeight = TEST_SIZE / 2;
 	vector<unsigned char> vScriptData;
 	vector<unsigned char> vScriptKey;
