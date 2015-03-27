@@ -109,14 +109,14 @@ Value importprivkey(const Array& params, bool fHelp)
     EnsureWalletIsUnlocked();
 
     string strSecret = params[0].get_str();
-    string strLabel = "";
-    if (params.size() > 1)
-        strLabel = params[1].get_str();
-
-    // Whether to perform rescan after import
-    bool fRescan = true;
-    if (params.size() > 2)
-        fRescan = params[2].get_bool();
+//  string strLabel = "";
+//  if (params.size() > 1)
+//      strLabel = params[1].get_str();
+//
+//	bool fRescan(true);    // Whether to perform rescan after import
+//	if (params.size() > 2) {
+//		fRescan = params[2].get_bool();
+//	}
 
     CDacrsSecret vchSecret;
     bool fGood = vchSecret.SetString(strSecret);
