@@ -528,7 +528,7 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nIn
 			}
 			CTxUndo txundo;
 			CValidationState state;
-			if (!pBaseTx->UpdateAccount(i, view, state, txundo, pBlock->nHeight, txCache, scriptDBView)) {
+			if (!pBaseTx->ExecuteTx(i, view, state, txundo, pBlock->nHeight, txCache, scriptDBView)) {
 				return ERRORMSG("transaction UpdateAccount account error");
 			}
 			nTotalRunStep += pBaseTx->nRunStep;
@@ -696,7 +696,7 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 				}
 				CAccountViewCache viewTemp(view, true);
 				CScriptDBViewCache scriptCacheTemp(scriptCache, true);
-				if (!pBaseTx->UpdateAccount(nBlockTx + 1, viewTemp, state, txundo, pIndexPrev->nHeight + 1,
+				if (!pBaseTx->ExecuteTx(nBlockTx + 1, viewTemp, state, txundo, pIndexPrev->nHeight + 1,
 						txCache, scriptCacheTemp)) {
 					continue;
 				}
