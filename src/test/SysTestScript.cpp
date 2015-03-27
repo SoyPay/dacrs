@@ -634,7 +634,6 @@ public:
 				return false;
 			}
 			vector<unsigned char> value;
-			int nHeight = 0;
 			int tipH = chainActive.Height();
 			CScriptDBOperLog operLog;
 			if (!contractScriptTemp.GetScriptData(tipH,regid,key, value,operLog)) {
