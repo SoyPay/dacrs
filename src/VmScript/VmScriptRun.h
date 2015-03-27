@@ -121,6 +121,7 @@ public:
 	shared_ptr<vector<CVmOperate> > GetOperate() const;
 	const CRegID& GetScriptRegID();
 	const CRegID &GetTxAccount();
+	uint64_t GetValue() const;
 	const vector<unsigned char>& GetTxContact();
 	CScriptDBViewCache* GetScriptDB();
 	CAccountViewCache * GetCatchView();
