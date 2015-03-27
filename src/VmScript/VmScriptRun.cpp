@@ -37,9 +37,9 @@ bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& 
 		return false;
 	}
 
-	CContractTransaction* secure = static_cast<CContractTransaction*>(Tx.get());
-	if (!m_ScriptDBTip->GetScript(boost::get<CRegID>(secure->appRegId), vScript)) {
-		LogPrint("ERROR", "Script is not Registed %s\r\n", boost::get<CRegID>(secure->appRegId).ToString());
+	CTransaction* secure = static_cast<CTransaction*>(Tx.get());
+	if (!m_ScriptDBTip->GetScript(boost::get<CRegID>(secure->desUserId), vScript)) {
+		LogPrint("ERROR", "Script is not Registed %s\r\n", boost::get<CRegID>(secure->desUserId).ToString());
 		return false;
 	}
 
@@ -73,7 +73,7 @@ tuple<bool, uint64_t, string> CVmScriptRun::run(shared_ptr<CBaseTransaction>& Tx
 	}
 	m_ScriptDBTip = &VmDB;
 
-	CContractTransaction* tx = static_cast<CContractTransaction*>(Tx.get());
+	CTransaction* tx = static_cast<CTransaction*>(Tx.get());
 	uint64_t maxstep = tx->llFees;///nBurnFactor;
 	tuple<bool, uint64_t, string> mytuple;
 	if (!intial(Tx, view, nheight)) {
@@ -161,9 +161,9 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 			}
 			vector<unsigned char > accountid(it.accountid,it.accountid+sizeof(it.accountid));
 			CRegID regId(accountid);
-			CContractTransaction* secure = static_cast<CContractTransaction*>(listTx.get());
+			CTransaction* secure = static_cast<CTransaction*>(listTx.get());
 			/// current tx's script cant't mius other script's regid
-			if(m_ScriptDBTip->HaveScript(regId) && regId != boost::get<CRegID>(secure->appRegId))
+			if(m_ScriptDBTip->HaveScript(regId) && regId != boost::get<CRegID>(secure->desUserId))
 			{
 				return false;
 			}
@@ -200,11 +200,11 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 
 	NewAccont.clear();
 	for (auto& it : listoperate) {
-		CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
+		CTransaction* tx = static_cast<CTransaction*>(listTx.get());
 		CFund fund;
 		memcpy(&fund.value,it.money,sizeof(it.money));
 		fund.nHeight = it.outheight;
-		fund.scriptID = boost::get<CRegID>(tx->appRegId).GetVec6();
+		fund.scriptID = boost::get<CRegID>(tx->desUserId).GetVec6();
 
 		auto tem = make_shared<CAccount>();
 //		vector_unsigned_char accountid = GetAccountID(it);
@@ -239,7 +239,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		//todolist
 //		if(IsSignatureAccount(vmAccount.get()->regID) || vmAccount.get()->regID == boost::get<CRegID>(tx->appRegId))
 		{
-			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype, fund, *m_ScriptDBTip, vAuthorLog, height);
+			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype, fund);
 		}
 //		else{
 //			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype, fund, *m_ScriptDBTip, vAuthorLog,  height, &GetScriptRegID().GetVec6(), true);
@@ -258,13 +258,18 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 
 const CRegID& CVmScriptRun::GetScriptRegID()
 {
-	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
-	return boost::get<CRegID>(tx->appRegId);
+	CTransaction* tx = static_cast<CTransaction*>(listTx.get());
+	return boost::get<CRegID>(tx->desUserId);
+}
+
+const CRegID &CVmScriptRun::GetTxAccount() {
+	CTransaction* tx = static_cast<CTransaction*>(listTx.get());
+	return boost::get<CRegID>(tx->srcRegId);
 }
 
 const vector<unsigned char>& CVmScriptRun::GetTxContact()
 {
-	CContractTransaction* tx = static_cast<CContractTransaction*>(listTx.get());
+	CTransaction* tx = static_cast<CTransaction*>(listTx.get());
 		return tx->vContract;
 }
 int CVmScriptRun::GetComfirHeight()
