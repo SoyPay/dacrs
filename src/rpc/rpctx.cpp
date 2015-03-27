@@ -54,7 +54,7 @@ Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 	switch (pTx->nTxType) {
 	case REG_ACCT_TX: {
 		CRegisterAccountTx *prtx = (CRegisterAccountTx *) pTx;
-		result.push_back(Pair("txtype", "RegisterAccTx"));
+		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
 		result.push_back(Pair("ver", prtx->nVersion));
 		result.push_back(Pair("addr", boost::get<CPubKey>(prtx->userId).GetKeyID().ToAddress()));
 		CID id(prtx->userId);
@@ -65,41 +65,23 @@ Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 		result.push_back(Pair("height", prtx->nValidHeight));
 		break;
 	}
-	case COMMON_TX: {
+	case COMMON_TX:
+	case CONTRACT_TX:
+	{
 		CTransaction *prtx = (CTransaction *) pTx;
-		result.push_back(Pair("txtype", "NormalTx"));
+		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
 		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("srcaddr", RegIDToAddress(prtx->srcUserId)));
+		result.push_back(Pair("srcaddr", RegIDToAddress(prtx->srcRegId)));
 		result.push_back(Pair("desaddr", RegIDToAddress(prtx->desUserId)));
 		result.push_back(Pair("money", prtx->llValues));
 		result.push_back(Pair("fees", prtx->llFees));
 		result.push_back(Pair("height", prtx->nValidHeight));
-		break;
-	}
-	case CONTRACT_TX: {
-		CContractTransaction *prtx = (CContractTransaction *) pTx;
-		result.push_back(Pair("txtype", "ContractTx"));
-		result.push_back(Pair("ver", prtx->nVersion));
-		CRegID userId = boost::get<CRegID>(prtx->userRegId);
-		CRegID tep = boost::get<CRegID>(prtx->appRegId);
-		result.push_back(Pair("userid", userId.ToString()));
-		result.push_back(Pair("appid", tep.ToString()));
-		result.push_back(Pair("fees", prtx->llFees));
 		result.push_back(Pair("Contract", HexStr(prtx->vContract)));
-		result.push_back(Pair("height", prtx->nValidHeight));
-		{
-			Array array;
-			for(auto& item : prtx->vSignature)
-			{
-				array.push_back(HexStr(item));
-			}
-			result.push_back(Pair("Signature", array));
-		}
 		break;
 	}
 	case REWARD_TX: {
 		CRewardTransaction *prtx = (CRewardTransaction *) pTx;
-		result.push_back(Pair("txtype", "RewardTx"));
+		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
 		result.push_back(Pair("ver", prtx->nVersion));
 		result.push_back(Pair("addr", RegIDToAddress(prtx->account)));
 		result.push_back(Pair("reward money", prtx->rewardValue));
@@ -108,16 +90,14 @@ Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 	}
 	case REG_SCRIPT_TX: {
 		CRegisterScriptTx *prtx = (CRegisterScriptTx *) pTx;
-		result.push_back(Pair("txtype", "RegScriptTx"));
+		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
 		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("addr", RegIDToAddress(prtx->regAccountId)));
+		result.push_back(Pair("addr", RegIDToAddress(prtx->regAcctId)));
 		if (!bPrintScriptContent && prtx->script.size() != SCRIPT_ID_SIZE) {
 			result.push_back(Pair("script", "script_content"));
 		} else {
 			result.push_back(Pair("appid", CRegID(prtx->script).ToString()));
 		}
-
-
 		result.push_back(Pair("fees", prtx->llFees));
 		result.push_back(Pair("height", prtx->nValidHeight));
 		break;
@@ -364,8 +344,8 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		throw runtime_error("in createcontracttx :addresss is error!\n");
 	}
 	EnsureWalletIsUnlocked();
-//	CContractTransaction tx;
-	std::shared_ptr<CContractTransaction> tx = make_shared<CContractTransaction>();
+//	CTransaction tx;
+	std::shared_ptr<CTransaction> tx = make_shared<CTransaction>();
 	{
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
@@ -376,8 +356,8 @@ Value createcontracttx(const Array& params, bool fHelp) {
 			throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", appId.ToString()));
 		}
 
-		tx.get()->userRegId = userid;
-		tx.get()->appRegId = appId;
+		tx.get()->srcRegId = userid;
+		tx.get()->desUserId = appId;
 		tx.get()->llFees = fee;
 		tx.get()->vContract = vcontract;
 		if( 0 == height) {
@@ -394,11 +374,9 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		}
 
 		vector<unsigned char> signature;
-		if (!pwalletMain->Sign(keyid,tx.get()->SignatureHash(), signature)) {
+		if (!pwalletMain->Sign(keyid,tx.get()->SignatureHash(), tx.get()->signature)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: Sign failed.");
 		}
-
-		tx.get()->vSignature.push_back(signature);
 	}
 
 	std::tuple<bool, string> ret;
@@ -556,7 +534,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 							tinyformat::format("createcontracttx :account id %s is not exist\n", mkeyId.ToAddress()));
 		};
 
-		tx.regAccountId = GetUserId(keyid);
+		tx.regAcctId = GetUserId(keyid);
 		tx.script = vscript;
 		tx.llFees = fee;
 		if (0 == height) {
@@ -1612,12 +1590,13 @@ Value createcontracttxraw(const Array& params, bool fHelp) {
 	}
 
 
-	RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(str_type)(str_type));
+	RPCTypeCheck(params, list_of(int_type)(real_type)(real_type)(str_type)(str_type)(str_type));
 
 	int hight = params[0].get_int();
 	uint64_t fee = AmountToRawValue(params[1]);
-	CRegID userid(params[2].get_str());
-	CRegID appid(params[3].get_str());
+	uint64_t amount = AmountToRawValue(params[2]);
+	CRegID userid(params[3].get_str());
+	CRegID appid(params[4].get_str());
 
 	vector<unsigned char> vcontract = ParseHex(params[4].get_str());
 
@@ -1644,7 +1623,7 @@ Value createcontracttxraw(const Array& params, bool fHelp) {
 		LogPrint("INFO", "vaccountid:%s have no key id\r\n", HexStr(id.GetID()).c_str());
 		assert(0);
 	}
-	std::shared_ptr<CContractTransaction> tx = make_shared<CContractTransaction>(userid, appid, fee, vcontract, hight);
+	std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(userid, appid, fee, amount, hight, vcontract);
 
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
@@ -1774,7 +1753,7 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 						tinyformat::format("registerscripttxraw :account id %s is not exist\n", mkeyId.ToAddress()));
 	};
 	std::shared_ptr<CRegisterScriptTx> tx =  make_shared<CRegisterScriptTx>();
-	tx.get()->regAccountId = GetUserId(keyid);
+	tx.get()->regAcctId = GetUserId(keyid);
 	tx.get()->script = vscript;
 	tx.get()->llFees = fee;
 	tx.get()->nValidHeight = height;
@@ -1817,7 +1796,7 @@ Value sigstr(const Array& params, bool fHelp)
 	case COMMON_TX:{
 		std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(pBaseTx.get());
 		CKeyID keyid;
-		if (!view.GetKeyId(tx.get()->srcUserId, keyid)) {
+		if (!view.GetKeyId(tx.get()->srcRegId, keyid)) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "vaccountid have no key id");
 		}
 		if (!pwalletMain->Sign(keyid,tx.get()->SignatureHash(), tx.get()->signature)) {
@@ -1842,8 +1821,8 @@ Value sigstr(const Array& params, bool fHelp)
 		}
 			break;
 	case CONTRACT_TX:{
-		std::shared_ptr<CContractTransaction> tx = make_shared<CContractTransaction>(pBaseTx.get());
-		if (!pwalletMain->Sign(keyid,tx.get()->SignatureHash(),tx.get()->vSignature[0])) {
+		std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(pBaseTx.get());
+		if (!pwalletMain->Sign(keyid,tx.get()->SignatureHash(),tx.get()->signature)) {
 			throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
 		}
 		CDataStream ds(SER_DISK, CLIENT_VERSION);

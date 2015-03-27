@@ -400,13 +400,11 @@ public:
 	bool AddTx(const uint256 &hash, const CBaseTransaction*pTx) {
 		switch (pTx->nTxType) {
 		case COMMON_TX:
+		case CONTRACT_TX:
 			mapAccountTx[hash] = make_shared<CTransaction>(pTx);
 			break;
 		case REG_ACCT_TX:
 			mapAccountTx[hash] = make_shared<CRegisterAccountTx>(pTx);
-			break;
-		case CONTRACT_TX:
-			mapAccountTx[hash] = make_shared<CContractTransaction>(pTx);
 			break;
 		case REWARD_TX:
 			mapAccountTx[hash] = make_shared<CRewardTransaction>(pTx);
