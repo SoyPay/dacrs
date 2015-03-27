@@ -461,11 +461,10 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 
 	uint64_t addValue = llValues;
 	CFund addFund(FREEDOM_FUND, addValue, nHeight);
-	if (!view.GetAccount(srcRegId, srcAcct))
-		return state.DoS(100,
-				ERRORMSG("ExecuteTx() : read source addr %s account info error",
-						boost::get<CRegID>(srcRegId).ToString()), UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
-	desAcct.CompactAccount(nHeight);
+	if(!view.GetAccount(desUserId, desAcct))
+		desAcct.keyID = boost::get<CKeyID>(desUserId);
+	else
+		desAcct.CompactAccount(nHeight);
 	if (!desAcct.OperateAccount(ADD_FREE, addFund)) {
 		return state.DoS(100, ERRORMSG("ExecuteTx() : operate accounts error"), UPDATE_ACCOUNT_FAIL,
 				"bad-operate-account");
@@ -557,9 +556,14 @@ bool CTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 
 string CTransaction::ToString(CAccountViewCache &view) const {
 	string str;
-
+	string desId;
+	if (desUserId.type() == typeid(CKeyID)) {
+		desId = boost::get<CKeyID>(desUserId).ToString();
+	} else if (desUserId.type() == typeid(CRegID)) {
+		desId = boost::get<CRegID>(desUserId).ToString();
+	}
 	str += strprintf("txType=%s, hash=%s, ver=%d, srcId=%s desId=%s, llFees=%ld, vContract=%s\n",
-	txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, boost::get<CRegID>(srcRegId).ToString(), boost::get<CRegID>(desUserId).ToString(), llFees, HexStr(vContract).c_str());
+	txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, boost::get<CRegID>(srcRegId).ToString(), desId.c_str(), llFees, HexStr(vContract).c_str());
 	return str;
 }
 bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &view) {
@@ -842,7 +846,7 @@ Object CFund::ToJosnObj() const
 			"OUT_FREEZD_FUND", "SELF_FREEZD_FUND" };
 	obj.push_back(Pair("nType",     fundTypeArray[nFundType]));
 	obj.push_back(Pair("value",     value));
-	obj.push_back(Pair("timeout hight",     nHeight));
+	obj.push_back(Pair("confirmed hight",     nHeight));
 	return obj;
 }
 
@@ -909,7 +913,6 @@ bool CAccount::CompactAccount(int nCurHeight) {
 	if (nCurHeight <= 0) {
 		return false;
 	}
-
 	bool bMergeRewardRes = MergerFund(vRewardFund, nCurHeight);
 	bool bMergeFreeRes = MergerFund(vFreedomFund, nCurHeight);
 	return bMergeRewardRes||bMergeFreeRes;
@@ -1207,8 +1210,7 @@ Object CAccount::ToJosnObj() const
 {
 	using namespace json_spirit;
 	Object obj;
-	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "IN_FREEZD_FUND",
-			"OUT_FREEZD_FUND", "SELF_FREEZD_FUND" };
+	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND"};
 //	obj.push_back(Pair("height", chainActive.Height()));
 	obj.push_back(Pair("Address",     keyID.ToAddress()));
 	obj.push_back(Pair("KeyID",     keyID.ToString()));
