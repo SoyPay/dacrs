@@ -118,17 +118,26 @@ public:
 	bool GetHashFromCreatedTx(const Value& valueRes,string& strHash)
 	{
 		if (valueRes.type() == null_type) {
-			//cout<<write_string(valueRes, true)<<endl;
 			return false;
 		}
 
 		const Value& result = find_value(valueRes.get_obj(), "hash");
-		if (result.type() == null_type){
-			//cout<<write_string(valueRes, true)<<endl;
+		const Value& result1 = find_value(valueRes.get_obj(), "rawtx");
+		const Value& result3 = find_value(valueRes.get_obj(), "script");
+		if (result.type() == null_type && result1.type() == null_type && result3.type() == null_type){
 			return false;
 		}
+		if (result.type() != null_type){
+			strHash = result.get_str();
+			}
+		else if(result1.type() != null_type)
+		{
+			strHash = result1.get_str();
+		}else if(result3.type() != null_type)
+		{
+			strHash = result3.get_str();
+		}
 
-		strHash = result.get_str();
 		return true;
 	}
 
@@ -170,11 +179,11 @@ public:
 
 	bool GetBlockHeight(int &nHeight);
 
-	bool CreateNormalTx(const std::string &srcAddr, const std::string &desAddr, const int nHeight);
+	Value CreateNormalTx(const std::string &srcAddr, const std::string &desAddr,uint64_t nMoney, const int nfee =0,const int nHeight=0);
 
-	Value registaccounttx(const std::string &addr, const int nHeight);
+	Value registaccounttx(const std::string &addr, const int nfee =0,const int nHeight=0);
 
-	bool CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
+	Value CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 			int nHeight,int nFee = 10000);
 	Value RegisterScriptTx(const string& strAddress, const string& strScript, int nHeight, int nFee = 10000);
 
@@ -190,14 +199,23 @@ public:
 	bool SetAddrGenerteBlock(const char *addr);
 
 	bool DisConnectBlock(int nNum);
+
 	bool GetStrFromObj(const Value& valueRes,string& str);
+
 	bool ImportWalletKey(const char**address,int nCount);
+
 	uint64_t GetRandomBetfee();
+
 	bool GetKeyId(string const &addr,CKeyID &KeyId);
+
 	bool IsTxInMemorypool(const uint256& txHash);
+
 	bool IsTxUnConfirmdInWallet(const uint256& txHash) ;
+
 	bool IsTxInTipBlock(const uint256& txHash);
+
 	bool GetRegID(string& strAddr,CRegID& regID);
+
 	bool GetTxOperateLog(const uint256& txHash, vector<CAccountOperLog>& vLog) ;
 protected:
 	static boost::thread* pThreadShutdown ;

@@ -386,7 +386,7 @@ bool SysTestBase::GetBlockHeight(int &nHeight) {
 	return false;
 }
 
-bool SysTestBase::CreateNormalTx(const std::string &srcAddr, const std::string &desAddr, const int nHeight) {
+Value SysTestBase::CreateNormalTx(const std::string &srcAddr, const std::string &desAddr,uint64_t nMoney,const int nfee, const int nHeight) {
 	//CommanRpc
 	char src[64] = { 0 };
 	strncpy(src, srcAddr.c_str(), sizeof(src) - 1);
@@ -395,17 +395,19 @@ bool SysTestBase::CreateNormalTx(const std::string &srcAddr, const std::string &
 	strncpy(dest, desAddr.c_str(), sizeof(dest) - 1);
 
 	char money[64] = { 0 };
-	int nmoney = GetRandomMoney();
-	sprintf(money, "%d00000000", nmoney);
-	nCurMoney = nmoney * COIN;
+	sprintf(money, "%ld00000000", nMoney);
 
 	char fee[64] = { 0 };
-	int nfee = GetRandomFee();
-	sprintf(fee, "%d", nfee);
 	nCurFee = nfee;
+	if(nfee == 0)
+		nCurFee = GetRandomFee();;
+	strprintf(fee, "%d", nCurFee);
 
 	char height[16] = { 0 };
-	sprintf(height, "%d", nHeight);
+	int nheight = nHeight;
+	if(nHeight == 0)
+		nheight = chainActive.Height();
+	strprintf(height, "%d", nheight);
 
 	const char *argv[] = { "rpctest", "createnormaltx", src, dest, money, fee, height };
 	int argc = sizeof(argv) / sizeof(char*);
@@ -413,30 +415,33 @@ bool SysTestBase::CreateNormalTx(const std::string &srcAddr, const std::string &
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
 		LogPrint("test_miners", "CreateNormalTx:%s\r\n", value.get_str().c_str());
-		return true;
+		return value;
 	}
-	return false;
+	return value;
 }
 
 
-Value SysTestBase::registaccounttx(const std::string &addr, const int nHeight) {
+Value SysTestBase::registaccounttx(const std::string &addr, const int nfee ,const int nHeight) {
 	//CommanRpc
 	char caddr[64] = { 0 };
 	strncpy(caddr, addr.c_str(), sizeof(caddr) - 1);
 
 	char fee[64] = { 0 };
-	int nfee = GetRandomFee();
-	sprintf(fee, "%d", nfee);
 	nCurFee = nfee;
+	if(nfee == 0)
+		nCurFee = GetRandomFee();;
+	strprintf(fee, "%d", nCurFee);
 
 	char height[16] = { 0 };
-	sprintf(height, "%d", nHeight);
+	int nheight = nHeight;
+	if(nHeight == 0)
+		nheight = chainActive.Height();
+	strprintf(height, "%d", nheight);
 
 	const char *argv[] = { "rpctest", "registaccounttx", caddr, fee, height };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
-
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
 	//	LogPrint("test_miners", "RegisterSecureTx:%s\r\n", value.get_str().c_str());
 		return value;
@@ -444,7 +449,7 @@ Value SysTestBase::registaccounttx(const std::string &addr, const int nHeight) {
 	return value;
 }
 
-bool SysTestBase::CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
+Value SysTestBase::CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 		int nHeight,int nFee) {
 
 	string strFee;
@@ -466,9 +471,9 @@ bool SysTestBase::CreateContractTx(const std::string &scriptid, const std::strin
 
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		return true;
+		return value;
 	}
-	return false;
+	return value;
 }
 
 Value SysTestBase::RegisterScriptTx(const string& strAddress, const string& strScript, int nHeight, int nFee) {

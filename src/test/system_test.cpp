@@ -325,8 +325,9 @@ public:
 			nRandomValue = GetRandomValue();
 			BOOST_CHECK(PacketContractData(nTestType, strRegID1, strRegID2, //
 					strRegID3, nTimeOutHeight, nRandomValue, strContractData));
-
-			BOOST_CHECK(!CreateContractTx(strScriptID, vAddr, strContractData, nTimeOutHeight, nFee));
+			Value value = CreateContractTx(strScriptID, vAddr, strContractData, nTimeOutHeight, nFee);
+			string hahs = "";
+			BOOST_CHECK(!GetHashFromCreatedTx(value,hahs));
 
 		}
 	}
@@ -342,7 +343,10 @@ public:
 
 			nOldMoney = GetFreeMoney(strSignAddr);
 			if (nOldMoney >= nRandomValue) {
-				BOOST_CHECK(CreateContractTx(strScriptID, vAddr, strContractData, nTimeOutHeight, nFee));
+				Value value = CreateContractTx(strScriptID, vAddr, strContractData, nTimeOutHeight, nFee);
+				string hahs = "";
+				BOOST_CHECK(!GetHashFromCreatedTx(value,hahs));
+				//BOOST_CHECK(CreateContractTx(strScriptID, vAddr, strContractData, nTimeOutHeight, nFee));
 				BOOST_CHECK(GenerateOneBlock());
 				nNewMoney = GetFreeMoney(strSignAddr);
 				BOOST_CHECK(nOldMoney - nRandomValue - nFee == nNewMoney);
