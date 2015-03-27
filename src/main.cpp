@@ -1227,7 +1227,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
     //undo reward tx
     std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[0];
 	CTxUndo txundo = blockUndo.vtxundo.back();
-	if(!pBaseTx->UndoUpdateAccount(0, view, state, txundo, pindex->nHeight, txCache, scriptCache))
+	if(!pBaseTx->UndoExecuteTx(0, view, state, txundo, pindex->nHeight, txCache, scriptCache))
 		return false;
 //	LogPrint("INFO", "reward tx undo elapse:%lld ms\n", GetTimeMillis() - llTime);
 
@@ -1236,7 +1236,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
 //    	llTime = GetTimeMillis();
         std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[i];
         CTxUndo txundo = blockUndo.vtxundo[i-1];
-        if(!pBaseTx->UndoUpdateAccount(i, view, state, txundo, pindex->nHeight, txCache, scriptCache))
+        if(!pBaseTx->UndoExecuteTx(i, view, state, txundo, pindex->nHeight, txCache, scriptCache))
         	return false;
 //        LogPrint("INFO", "tx type:%d, undo elapse:%lld ms\n", pBaseTx->nTxType, GetTimeMillis() - llTime);
     }
@@ -1370,7 +1370,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 				LogPrint("vm", "tx hash=%s ConnectBlock run contract\n", pBaseTx->GetHash().GetHex());
 			}
 			CTxUndo txundo;
-			if(!pBaseTx->UpdateAccount(i, view, state, txundo, pindex->nHeight, txCache, scriptDBCache)) {
+			if(!pBaseTx->ExecuteTx(i, view, state, txundo, pindex->nHeight, txCache, scriptDBCache)) {
 				return false;
 			}
 			nTotalRunStep += pBaseTx->nRunStep;
@@ -1398,7 +1398,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 						nInterest + block.GetFee()), REJECT_INVALID, "bad-cb-amount");
     //deal with reward_tx
     CTxUndo txundo;
-    if(!block.vptx[0]->UpdateAccount(0, view, state, txundo, pindex->nHeight, txCache, scriptDBCache))
+    if(!block.vptx[0]->ExecuteTx(0, view, state, txundo, pindex->nHeight, txCache, scriptDBCache))
     	return false;
 	blockundo.vtxundo.push_back(txundo);
 
@@ -3057,11 +3057,8 @@ void static ProcessGetData(CNode* pfrom)
                     if (pBaseTx.get()) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        if(COMMON_TX == pBaseTx->nTxType ) {
+                        if(COMMON_TX == pBaseTx->nTxType || CONTRACT_TX == pBaseTx->nTxType) {
                         	 ss << *((CTransaction *)(pBaseTx.get()));
-                        }
-                        else if(CONTRACT_TX == pBaseTx->nTxType) {
-                        	ss << *((CContractTransaction *)pBaseTx.get());
                         }
                         else if(REG_ACCT_TX == pBaseTx->nTxType) {
                         	ss << *((CRegisterAccountTx *)pBaseTx.get());
@@ -4189,11 +4186,10 @@ public:
 std::shared_ptr<CBaseTransaction> CreateNewEmptyTransaction(unsigned char uType){
 	switch(uType){
 	case COMMON_TX:
+	case CONTRACT_TX:
 		return make_shared<CTransaction>();
 	case REG_ACCT_TX:
 		return make_shared<CRegisterAccountTx>();
-	case CONTRACT_TX:
-		return make_shared<CContractTransaction>();
 	case REWARD_TX:
 		return make_shared<CRewardTransaction>();
 	case REG_SCRIPT_TX:

@@ -505,7 +505,7 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 
 	if (GetTransaction(pBaseTx, hash1)) {
-		CContractTransaction *tx = static_cast<CContractTransaction*>(pBaseTx.get());
+		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
 		 (*tem.get()).push_back(tx->vContract);
 
 	}
@@ -533,8 +533,8 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 	auto tem = make_shared<std::vector<vector<unsigned char> > >();
 
 	if (GetTransaction(pBaseTx, hash1)) {
-		CContractTransaction *tx = static_cast<CContractTransaction*>(pBaseTx.get());
-		vector<unsigned char> item = boost::get<CRegID>(tx->userRegId).GetVec6();
+		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
+		vector<unsigned char> item = boost::get<CRegID>(tx->srcRegId).GetVec6();
 		(*tem.get()).push_back(item);
 	}
 	return std::make_tuple(true, tem);
@@ -1049,17 +1049,13 @@ static RET_DEFINE ExGetScriptIDFunc(unsigned char * ipara,void * pVmScript)
 static RET_DEFINE ExGetCurTxAccountFunc(unsigned char * ipara,void * pVmScript)
 {
 	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-//	vector<CUserID> regid =pVmScriptRun->GetTxAccount();
+	vector_unsigned_char vUserId =pVmScriptRun->GetTxAccount().GetVec6();
 
 	vector<unsigned char> item;
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-//		for (auto& it : regid) {
-//			vector<unsigned char> id = boost::get<CRegID>(it).GetVec6();
-//			item.insert(item.end(), id.begin(), id.end());
-//		}
 
-		(*tem.get()).push_back(item);
-		return std::make_tuple (true, tem);
+	(*tem.get()).push_back(vUserId);
+	return std::make_tuple (true, tem);
 }
 static RET_DEFINE ExGetCurTxContactFunc(unsigned char * ipara,void * pVmScript)
 {
@@ -1187,7 +1183,7 @@ static RET_DEFINE ExDeCompressContactFunc(unsigned char * ipara,void * pVmScript
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 
 	if (GetTransaction(pBaseTx, hash1)) {
-		CContractTransaction *tx = static_cast<CContractTransaction*>(pBaseTx.get());
+		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
 		 std::vector<unsigned char> outContact;
 		 Decompress(*retdata.at(0),tx->vContract,outContact);
 		 (*tem.get()).push_back(outContact);
