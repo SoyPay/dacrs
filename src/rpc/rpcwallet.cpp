@@ -215,7 +215,7 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 
 	auto SendMoney = [&](const CRegID &send, const CUserID &rsv, int64_t nValue, int64_t nFee) {
 		CTransaction tx;
-		tx.srcUserId = send;
+		tx.srcRegId = send;
 		tx.desUserId = rsv;
 		tx.llValues = nValue;
 		if (0 == nFee) {
@@ -345,7 +345,7 @@ Value sendtoaddressraw(const Array& params, bool fHelp)
 	}
 
 
-	std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(send,rev,nAmount,hight,Fee);
+	std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(send,rev,Fee, nAmount,hight);
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 	ds << pBaseTx;
@@ -354,6 +354,7 @@ Value sendtoaddressraw(const Array& params, bool fHelp)
 	return obj;
 
 }
+
 Value sendtoaddress(const Array& params, bool fHelp)
  {
 	int size = params.size();
@@ -442,7 +443,8 @@ Value sendtoaddress(const Array& params, bool fHelp)
 		rev = RevKeyId;
 	}
 
-	CTransaction tx(sendreg,rev,nAmount,chainActive.Height(),SysCfg().GetTxFee());
+
+	CTransaction tx(sendreg, rev, SysCfg().GetTxFee(), nAmount, chainActive.Height());
 
 	if (!pwalletMain->Sign(sendreg,tx.SignatureHash(), tx.signature)) {
 		throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");

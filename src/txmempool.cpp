@@ -115,7 +115,7 @@ bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &en
 	if (CONTRACT_TX == entry.GetTx()->nTxType) {
 		LogPrint("vm", "tx hash=%s CheckTxInMemPool run contract\n", entry.GetTx()->GetHash().GetHex());
 	}
-	if (!entry.GetTx()->UpdateAccount(0, *pAccountViewCache, state, txundo, chainActive.Tip()->nHeight + 1,
+	if (!entry.GetTx()->ExecuteTx(0, *pAccountViewCache, state, txundo, chainActive.Tip()->nHeight + 1,
 			txCacheTemp, *pScriptDBViewCache)) {
 		return false;
 	}
