@@ -31,6 +31,7 @@ using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
 
+extern CAccountViewDB *pAccountViewDB;
 string RegIDToAddress(CUserID &userId) {
 	CKeyID keid;
 	if(pAccountViewTip->GetKeyId(userId,keid))
@@ -48,6 +49,7 @@ static  bool GetKeyId(string const &addr,CKeyID &KeyId) {
 	}
 	return true;
 };
+
 Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 	Object result;
 	result.push_back(Pair("hash", pTx->GetHash().GetHex()));
@@ -89,7 +91,7 @@ Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 		break;
 	}
 	case REG_SCRIPT_TX: {
-		CRegisterScriptTx *prtx = (CRegisterScriptTx *) pTx;
+		CRegisterAppTx *prtx = (CRegisterAppTx *) pTx;
 		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
 		result.push_back(Pair("ver", prtx->nVersion));
 		result.push_back(Pair("addr", RegIDToAddress(prtx->regAcctId)));
@@ -109,7 +111,7 @@ Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 	return result;
 }
 
-Object GetTxDetail(const uint256& txhash,bool bPrintScriptContent = true ) {
+Object GetTxDetailJSON(const uint256& txhash,bool bPrintScriptContent = true ) {
 	Object obj;
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 	{
@@ -155,40 +157,8 @@ Value gettxdetail(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 	uint256 txhash(params[0].get_str());
-//	Object obj;
-//	std::shared_ptr<CBaseTransaction> pBaseTx;
-//	{
-//		LOCK(cs_main);
-//		{
-//			pBaseTx = mempool.lookup(txhash);
-//			if (pBaseTx.get()) {
-//				obj = TxToJSON(pBaseTx.get());
-//				return obj;
-//			}
-//		}
-//		if (SysCfg().IsTxIndex()) {
-//			CDiskTxPos postx;
-//			if (pblocktree->ReadTxIndex(txhash, postx)) {
-//				CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
-//				CBlockHeader header;
-//				try {
-//					file >> header;
-//					fseek(file, postx.nTxOffset, SEEK_CUR);
-//					file >> pBaseTx;
-//					obj = TxToJSON(pBaseTx.get());
-//					obj.push_back(Pair("blockhash", header.GetHash().GetHex()));
-//					obj.push_back(Pair("confirmHeight", (int)header.nHeight));
-//				} catch (std::exception &e) {
-//					throw runtime_error(tfm::format("%s : Deserialize or I/O error - %s", __func__, e.what()).c_str());
-//				}
-//				return obj;
-//			}
-//		}
-//	}
-//	return obj;
-	return GetTxDetail(txhash);
+	return GetTxDetailJSON(txhash);
 }
-
 
 //create a register account tx
 Value registaccounttx(const Array& params, bool fHelp) {
@@ -198,7 +168,6 @@ Value registaccounttx(const Array& params, bool fHelp) {
 				"\nArguments:\n"
 				"1.\"addr\": (string)\n"
 				"2.fee: (numeric) pay to miner\n"
-				"3.IsMinerID: (bool)create height\n"
 				"\nResult:\n"
 				"\"txhash\": (string)\n"
 				"\nExamples:\n" + HelpExampleCli("registaccounttx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 true")
@@ -207,11 +176,8 @@ Value registaccounttx(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 
-
-
 	string addr = params[0].get_str();
 	uint64_t fee = params[1].get_uint64();
-	bool IsMiner = params[2].get_bool();
 
 	//get keyid
 	CKeyID keyid;
@@ -219,7 +185,6 @@ Value registaccounttx(const Array& params, bool fHelp) {
 	{
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "in registaccounttx :address err");
 	}
-
 	CRegisterAccountTx rtx;
 	assert(pwalletMain != NULL);
 	{
@@ -230,7 +195,6 @@ Value registaccounttx(const Array& params, bool fHelp) {
 		CAccountViewCache view(*pAccountViewTip, true);
 		CAccount account;
 
-//		uint64_t balance;
 		CUserID userId = keyid;
 		if (!view.GetAccount(userId, account)) {
 				throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account balance is insufficient.");
@@ -244,18 +208,13 @@ Value registaccounttx(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Account balance is insufficient.");
 		}
 
-		//pubkey
 		CPubKey pubkey;
 		if (!pwalletMain->GetPubKey(keyid, pubkey)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: not find key.");
 		}
 
-		//pubkey
 		CPubKey MinerPKey;
-		if (IsMiner == true) {
-			if (!pwalletMain->GetPubKey(keyid, MinerPKey, true)) {
-				throw JSONRPCError(RPC_WALLET_ERROR, " not find Miner key.");
-			}
+		if (pwalletMain->GetPubKey(keyid, MinerPKey, true)) {
 			rtx.minerId= MinerPKey;
 		}
 		else {
@@ -266,46 +225,36 @@ Value registaccounttx(const Array& params, bool fHelp) {
 		rtx.llFees = fee;
 		rtx.nValidHeight = chainActive.Tip()->nHeight;
 
-		//sign
-//		CKey key;
-//		pwalletMain->GetKey(keyid, key);
 		if (!pwalletMain->Sign(keyid,rtx.SignatureHash(), rtx.signature)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registaccounttx Error: Sign failed.");
 		}
 
-
-
-
-//		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &rtx)) {
-//			throw JSONRPCError(RPC_WALLET_ERROR, "registaccounttx Error: CommitTransaction failed.");
-//		}
 	}
 
-
-		std::tuple<bool,string> ret;
-		ret = pwalletMain->CommitTransaction((CBaseTransaction *) &rtx);
-		if(!std::get<0>(ret))
-		{
-			throw JSONRPCError(RPC_WALLET_ERROR, "registaccounttx Error:"+ std::get<1>(ret));
-		}
-		Object obj;
-		obj.push_back(Pair("hash", std::get<1>(ret)));
-		return obj;
+	std::tuple<bool,string> ret;
+	ret = pwalletMain->CommitTransaction((CBaseTransaction *) &rtx);
+	if(!std::get<0>(ret))
+	{
+		throw JSONRPCError(RPC_WALLET_ERROR, "registaccounttx Error:"+ std::get<1>(ret));
+	}
+	Object obj;
+	obj.push_back(Pair("hash", std::get<1>(ret)));
+	return obj;
 
 }
 
-
 //create a contract tx
 Value createcontracttx(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 5) {
+	if (fHelp || params.size() > 6) {
 		string msg = "createsecuretx nrequired \"scriptid\" [\"addr\",...] \"fee\" \"contract\" \"height\"\n"
 				"\ncreate contract\n"
 				"\nArguments:\n"
-				"1.\"scriptid\": (string)\n"
-				"2.[\"addr\",...]: (string list)\n"
-				"3.\"contract\": (string)\n"
-				"4.\"fee\": (numeric) pay to miner\n"
-				"5.\"height\": (numeric)create height\n"
+				"1.\"userregid\": (string)\n"
+				"2.\"appid\":(string)\n"
+				"3.\"amount\":(numeric)\n"
+				"4.\"contract\": (string)\n"
+				"5.\"fee\": (numeric) pay to miner\n"
+				"6.\"height\": (numeric)create height\n"
 				"\nResult:\n"
 				"\"contract tx str\": (string)\n"
 				"\nExamples:\n"
@@ -325,16 +274,16 @@ Value createcontracttx(const Array& params, bool fHelp) {
 	}
 
 
-	RPCTypeCheck(params, list_of(str_type)(str_type)(str_type)(int_type)(int_type));
+	RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(str_type)(int_type)(int_type));
 
-	//get addresss
-//	vector<unsigned char> vscriptid = ParseHex(params[0].get_str());
-	CRegID userid(params[0].get_str());
+	CRegID userId(params[0].get_str());
 	CRegID appId(params[1].get_str());
-
-	vector<unsigned char> vcontract = ParseHex(params[2].get_str());
-	uint64_t fee = params[3].get_uint64();
-	uint32_t height = params[4].get_int();
+	uint64_t amount = params[2].get_uint64();
+	vector<unsigned char> vcontract = ParseHex(params[3].get_str());
+	uint64_t fee = params[4].get_uint64();
+	uint32_t height(0);
+	if(params.size()>5)
+		height= params[5].get_int();
 
 	if (fee > 0 && fee < CTransaction::nMinTxFee) {
 		throw runtime_error("in createcontracttx :fee is smaller than nMinTxFee\n");
@@ -344,7 +293,6 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		throw runtime_error("in createcontracttx :addresss is error!\n");
 	}
 	EnsureWalletIsUnlocked();
-//	CTransaction tx;
 	std::shared_ptr<CTransaction> tx = make_shared<CTransaction>();
 	{
 		//balance
@@ -356,8 +304,9 @@ Value createcontracttx(const Array& params, bool fHelp) {
 			throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", appId.ToString()));
 		}
 
-		tx.get()->srcRegId = userid;
+		tx.get()->srcRegId = userId;
 		tx.get()->desUserId = appId;
+		tx.get()->llValues = amount;
 		tx.get()->llFees = fee;
 		tx.get()->vContract = vcontract;
 		if( 0 == height) {
@@ -367,8 +316,8 @@ Value createcontracttx(const Array& params, bool fHelp) {
 
 		//get keyid by accountid
 		CKeyID keyid;
-		if (!view.GetKeyId(userid, keyid)) {
-			CID id(userid);
+		if (!view.GetKeyId(userId, keyid)) {
+			CID id(userId);
 			LogPrint("INFO", "vaccountid:%s have no key id\r\n", HexStr(id.GetID()).c_str());
 			assert(0);
 		}
@@ -390,25 +339,17 @@ Value createcontracttx(const Array& params, bool fHelp) {
 
 }
 
-
-
 //create a register script tx
 Value registerscripttx(const Array& params, bool fHelp) {
-	if (fHelp || params.size() < 4) {
+	if (fHelp || params.size() < 3) {
 		string msg = "registerscripttx nrequired \"addr\" \"script\" fee height\n"
 				"\nregister script\n"
 				"\nArguments:\n"
 				"1.\"addr\": (string required)\n"
-				"2.\"flag\": (numeric, required)\n"
-				"3.\"script or scriptid\": (string required), if flag=0 is script's file path, else if flag=1 scriptid\n"
-				"4.\"fee\": (numeric required) pay to miner\n"
-				"5.\"height\": (numeric required)valid height\n"
-				"6.\"script description\":(string optional) new script description\n"
-				"7.\"nAuthorizeTime\": (numeric, optional)\n"
-				"8.\"nMaxMoneyPerTime\": (numeric, optional)\n"
-				"9.\"nMaxMoneyTotal\": (numeric, optional)\n"
-				"10.\"nMaxMoneyPerDay\": (numeric, optional)\n"
-				"11.\"nUserDefine\": (string, optional)\n"
+				"2.\"app\": (string required),app's file path\n"
+				"3.\"fee\": (numeric required) pay to miner\n"
+				"4.\"height\": (numeric required)valid height\n"
+				"5.\"script description\":(string optional) new script description\n"
 				"\nResult:\n"
 				"\"txhash\": (string)\n"
 				"\nExamples:\n"
@@ -419,56 +360,48 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 
-	RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type));
+	RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(int_type)(str_type));
 	CVmScript vmScript;
-	//get addresss
-//	CDacrsAddress addr(params[0].get_str());
 	vector<unsigned char> vscript;
-	int flag = params[1].get_int();
-	if (0 == flag) {
-		string path = params[2].get_str();
-		 FILE* file = fopen(path.c_str(), "rb+");
-		 if(!file) {
-			 throw runtime_error("create registerscripttx open script file"+path+"error");
-		 }
-		 long lSize;
-//		 size_t nSize = 1;
-		 fseek(file , 0 , SEEK_END);
-		 lSize = ftell (file);
-		 rewind (file);
 
-		 // allocate memory to contain the whole file:
-		 char *buffer = (char*) malloc(sizeof(char) * lSize);
-		 if (buffer == NULL) {
-			throw runtime_error("allocate memory failed");
-		 }
+	string path = params[1].get_str();
+	FILE* file = fopen(path.c_str(), "rb+");
+	if(!file) {
+	 throw runtime_error("create registerscripttx open script file"+path+"error");
+	}
+	long lSize;
+	fseek(file , 0 , SEEK_END);
+	lSize = ftell (file);
+	rewind (file);
 
-		 if(fread(buffer, 1, lSize, file) != (size_t)lSize) {
-			 	if(buffer)
-			 		free(buffer);
-				throw runtime_error("read script file error");
-		 }
-		 vmScript.Rom.insert(vmScript.Rom.end(), buffer, buffer+lSize);
-		 CDataStream ds(SER_DISK, CLIENT_VERSION);
-		 ds << vmScript;
-
-		 vscript.assign(ds.begin(), ds.end());
-
-		 if(file)
-			 fclose(file);
-		 if(buffer)
-			 free(buffer);
-
-	} else if (1 == flag) {
-		vscript = ParseHex(params[2].get_str());
+	// allocate memory to contain the whole file:
+	char *buffer = (char*) malloc(sizeof(char) * lSize);
+	if (buffer == NULL) {
+		throw runtime_error("allocate memory failed");
+	}
+	if(fread(buffer, 1, lSize, file) != (size_t)lSize) {
+		if(buffer)
+			free(buffer);
+		throw runtime_error("read script file error");
 	}
 
-	uint64_t fee = params[3].get_uint64();
-	uint32_t height = params[4].get_int();
+	vmScript.Rom.insert(vmScript.Rom.end(), buffer, buffer+lSize);
+	CDataStream ds(SER_DISK, CLIENT_VERSION);
+	ds << vmScript;
+	vscript.assign(ds.begin(), ds.end());
 
-	if (params.size() > 5) {
-		RPCTypeCheck(params, list_of(str_type)(int_type)(str_type)(int_type)(int_type)(str_type));
-		string scriptDesc = params[5].get_str();
+	if(file)
+		fclose(file);
+	if(buffer)
+		free(buffer);
+
+	uint64_t fee = params[2].get_uint64();
+	int height(0);
+	if(params.size() > 3)
+		height = params[3].get_int();
+
+	if (params.size() > 4) {
+		string scriptDesc = params[4].get_str();
 		vmScript.ScriptExplain.insert(vmScript.ScriptExplain.end(),scriptDesc.begin(), scriptDesc.end());
 	}
 
@@ -482,11 +415,10 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	}
 
 	assert(pwalletMain != NULL);
-	CRegisterScriptTx tx;
+	CRegisterAppTx tx;
 	{
 	//	LOCK2(cs_main, pwalletMain->cs_wallet);
 		EnsureWalletIsUnlocked();
-
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
 		CAccount account;
@@ -509,29 +441,13 @@ Value registerscripttx(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registerscripttx Error: Account balance is insufficient.");
 		}
 
-//		if (vscript.size() == SCRIPT_ID_SIZE) {
-//			vector<unsigned char> vscriptcontent;
-//			CRegID regid(vscript) ;
-//			if (!pScriptDBTip->GetScript(CRegID(vscript), vscriptcontent)) {
-//				throw JSONRPCError(RPC_WALLET_ERROR, "script id find failed");
-//			}
-//		}
-		if(flag)
-		{
-			vector<unsigned char> vscriptcontent;
-			CRegID regid(params[2].get_str()) ;
-			if (!pScriptDBTip->GetScript(CRegID(vscript), vscriptcontent)) {
-				throw JSONRPCError(RPC_WALLET_ERROR, "script id find failed");
-			}
-		}
 		auto GetUserId = [&](CKeyID &mkeyId)
 		{
 			CAccount acct;
 			if (view.GetAccount(CUserID(mkeyId), acct)) {
 				return acct.regID;
 			}
-			throw runtime_error(
-							tinyformat::format("createcontracttx :account id %s is not exist\n", mkeyId.ToAddress()));
+			throw runtime_error(tinyformat::format("registerscripttx :account id %s is not exist\n", mkeyId.ToAddress()));
 		};
 
 		tx.regAcctId = GetUserId(keyid);
@@ -542,31 +458,20 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		}
 		tx.nValidHeight = height;
 
-
-//		vector<unsigned char> vscriptcontent;
-//		if (pScriptDBTip->GetScript(vscript, vscriptcontent)) {
-//			tx.nFlag = 0;
-//		}
-
-//		CKey key;
-//		pwalletMain->GetKey(keyid, key);
-		if (!pwalletMain->Sign(keyid,tx.SignatureHash(), tx.signature)) {
+		if (!pwalletMain->Sign(keyid, tx.SignatureHash(), tx.signature)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "registerscripttx Error: Sign failed.");
 		}
-//		if (!pwalletMain->CommitTransaction((CBaseTransaction *) &tx)) {
-//			throw JSONRPCError(RPC_WALLET_ERROR, "registerscripttx Error: CommitTransaction failed.");
-//		}
 	}
 
-		std::tuple<bool,string> ret;
-		ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
-		if(!std::get<0>(ret))
-		{
-			throw JSONRPCError(RPC_WALLET_ERROR, "registerscripttx Error:"+ std::get<1>(ret));
-		}
-		Object obj;
-		obj.push_back(Pair("hash", std::get<1>(ret)));
-		return obj;
+	std::tuple<bool,string> ret;
+	ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
+	if(!std::get<0>(ret))
+	{
+		throw JSONRPCError(RPC_WALLET_ERROR, "registerscripttx Error:"+ std::get<1>(ret));
+	}
+	Object obj;
+	obj.push_back(Pair("hash", std::get<1>(ret)));
+	return obj;
 
 }
 
@@ -596,11 +501,7 @@ Value listaddr(const Array& params, bool fHelp) {
 
 		for (const auto &tem : pool) {
 			//find CAccount info by keyid
-
-//			double dbalance = 0.0;
 			CUserID userId = tem.first;
-
-
 			auto GetDetailInfo = [&] (int curheight){
 				Object obj;
 				CAccount Lambaacc ;
@@ -673,17 +574,6 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 	RPCTypeCheck(params, list_of(str_type));
-//	CUserID userId;
-//	if (params[0].get_str().size() == 12) {
-//		vector<unsigned char> vscript = ParseHex(params[0].get_str());
-//		userId = CRegID(vscript);
-//	} else {
-//		CDacrsAddress address(params[0].get_str());
-//		CKeyID keyid;
-//		if (!address.GetKeyID(keyid))
-//			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
-//		userId = keyid;
-//	}
 	CKeyID keyid;
 	CUserID userId;
 	string addr = params[0].get_str();
@@ -729,12 +619,8 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 		}
 
 	}
-
-
-
 	return obj;
 }
-
 
 //list unconfirmed transaction of mine
 Value listunconfirmedtx(const Array& params, bool fHelp) {
@@ -868,9 +754,6 @@ Value sign(const Array& params, bool fHelp) {
 //	return obj;
 //}
 
-
-
-
 static Value COperFundToJson(const COperFund &opfound)
 {
 	Object obj;
@@ -892,7 +775,7 @@ static Value COperFundToJson(const COperFund &opfound)
       assert(te.nFundType>=1 &&te.nFundType < strname.size());
       Object obj2;
       obj2.push_back(Pair("FundType",  strname[te.nFundType]));
-      obj2.push_back(Pair("sriptID",  HexStr(te.scriptID)));
+      obj2.push_back(Pair("sriptID",  HexStr(te.appId)));
       obj2.push_back(Pair("value",  te.value));
       obj2.push_back(Pair("nHeight",  te.nHeight));
       array.push_back(obj2);
@@ -928,12 +811,10 @@ Value gettxoperationlog(const Array& params, bool fHelp)
 	retobj.push_back(Pair("hash",  txHash.GetHex()));
 	if(!GetTxOperLog(txHash, vLog))
 	   throw JSONRPCError(RPC_INVALID_PARAMS, "error hash");
-
 	{
 		Array arrayvLog;
         for(auto const &te :vLog)
         {
-
 			Object obj;
 			obj.push_back(Pair("addr",  te.keyID.ToAddress()));
 			Array array;
@@ -942,16 +823,15 @@ Value gettxoperationlog(const Array& params, bool fHelp)
 			  array.push_back(COperFundToJson(teOperFund));
 			}
 			obj.push_back(Pair("vOperFund",array));
-//			obj.push_back(Pair("authorLog",te.authorLog.ToString()));
 			arrayvLog.push_back(obj);
         }
         retobj.push_back(Pair("AccountOperLog",  arrayvLog));
 
 	}
-
 	return retobj;
 
 }
+
 static Value TestDisconnectBlock(int number)
 {
 //		CBlockIndex* pindex = chainActive.Tip();
@@ -1012,7 +892,7 @@ Value disconnectblock(const Array& params, bool fHelp) {
 
 	return te;
 }
-extern CAccountViewDB *pAccountViewDB;
+
 Value resetclient(const Array& params, bool fHelp) {
 	Value te = TestDisconnectBlock(chainActive.Tip()->nHeight);
 
@@ -1093,8 +973,6 @@ Value listregscript(const Array& params, bool fHelp) {
 	return obj;
 }
 
-
-
 Value getaddrbalance(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
 		string msg = "getaddrbalance nrequired [\"key\",...] ( \"account\" )\n"
@@ -1152,8 +1030,6 @@ Value generateblock(const Array& params, bool fHelp) {
 	return obj;
 }
 
-
-
 Value listtxcache(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {
 		throw runtime_error("listtxcache \"address \n" + HelpRequiringPassphrase() + "\nArguments:\n"
@@ -1206,67 +1082,6 @@ Value reloadtxcache(const Array& params, bool fHelp) {
 //	return string("reload tx cache succeed");
 }
 
-enum BETSTATUS {
-	BETSEND,  //!< SEND
-	BETACCEPT,//!< ACCEPT
-	BETOPEN   //!< OPEN
-};
-typedef struct {
-
-
-
-	unsigned char status;
-	unsigned char sendid[6];//send bet account id
-	unsigned char acceptid[6];//accept bet account id
-	uint64_t money;//bet amount
-	int hight;//上次冻结高度
-	int delyhight;
-	uint256 shash;//send data hash
-//	uchar ahash[32];//accept data hash
-	unsigned char sdata[5];//send data
-	unsigned char adata[5];//accept data
-
-	  IMPLEMENT_SERIALIZE
-	    (
-	        READWRITE(status);
-	  for(unsigned int i = 0 ;i < sizeof(sendid);i++)
-	        READWRITE(sendid[i]);
-	  for(unsigned int i = 0 ;i < sizeof(acceptid);i++)
-	        READWRITE(acceptid[i]);
-	  READWRITE(money);
-	  READWRITE(hight);
-	  READWRITE(delyhight);
-	  READWRITE(shash);
-	  for(unsigned int i = 0 ;i < sizeof(sdata);i++)
-		        READWRITE(sdata[i]);
-	  for(unsigned int i = 0 ;i < sizeof(adata);i++)
-		        READWRITE(adata[i]);
-	    )
-
-	Object toJson()
-	  {
-		  string temp[3] ={"BET_SENDED","BET_ACCEPTED","BET_OPENED"};
-			Object obj;
-			obj.push_back(Pair("status",temp[status]));
-			CRegID sid(vector<unsigned char>(sendid,sendid+sizeof(sendid)));
-			obj.push_back(Pair("sendid",sid.ToString()));
-			if(status >= BETACCEPT){
-			CRegID rid(vector<unsigned char>(acceptid,acceptid+sizeof(acceptid)));
-			obj.push_back(Pair("acceptid",rid.ToString()));
-			}
-			obj.push_back(Pair("money",ValueFromAmount(money)));
-			obj.push_back(Pair("timeouthigh",hight));
-			obj.push_back(Pair("delyhight",delyhight));
-			obj.push_back(Pair("shash",shash.ToString()));
-			if(BETOPEN == status)
-			 obj.push_back(Pair("senddata",strprintf("%d-%d-%d-%d-%d",sdata[0],sdata[1],sdata[2],sdata[3],sdata[4])));
-			if(status >= BETACCEPT)
-		       obj.push_back(Pair("acceptdata",strprintf("%d-%d-%d-%d-%d",adata[0],adata[1],adata[2],adata[3],adata[4])));
-			return obj;
-	  }
-
-}P2P_BET_DATA;
-
 static int getDataFromSriptData(CScriptDBViewCache &cache, const CRegID &regid,
 		int pagesize, int index,
 		vector<
@@ -1308,70 +1123,6 @@ static int getDataFromSriptData(CScriptDBViewCache &cache, const CRegID &regid,
 		}
 	}
 	return ret.size();
-}
-Value getp2pbetdata(const Array& params, bool fHelp){
-	if (fHelp || params.size() != 3) {
-		string msg = "getscriptdata nrequired \"scriptid\" \"\n"
-				"\ncreate contract\n"
-				"\nArguments:\n"
-				"1.\"appid\": (string)\n"
-				"2.[pagesize]: (pagesize int)\n"
-				"3.\"index\": (int )\n";
-		throw runtime_error(msg);
-	}
-	CRegID regid(params[0].get_str());
-	if (regid.IsEmpty() == true) {
-		throw runtime_error("in getscriptdata :vscriptid size is error!\n");
-	}
-	int pagesize = params[1].get_int();
-	int index = params[2].get_int();
-	int dbsize;
-	CScriptDBViewCache cacheTemp(*pScriptDBTip, true);
-	cacheTemp.GetScriptDataCount(regid, dbsize);
-	if (0 == dbsize) {
-		throw runtime_error(
-				"in getscriptdata :the scirptid database not data!\n");
-	}
-	vector<std::tuple<vector<unsigned char>, vector<unsigned char>, int> > ret;
-	getDataFromSriptData(cacheTemp, regid, pagesize, index, ret);
-	Object sendobj;
-	Object accseptobj;
-	Object openobj;
-	for (auto te : ret) {
-		vector<unsigned char> key = std::get<0>(te);
-		uint256 hash(key);
-		P2P_BET_DATA tem;
-		vector<unsigned char> valvue = std::get<1>(te);
-		CDataStream stream(valvue, SER_DISK, CLIENT_VERSION);
-
-		try { // because of bug !
-			stream >> tem;
-		} catch (...) {
-			ERRORMSG("unseraile err!");
-			continue;
-		}
-		Object temjosn;
-		temjosn = tem.toJson();
-		temjosn.push_back(Pair("key",hash.ToString()));
-		switch (tem.status) {
-		case BETSEND:
-			sendobj.push_back(Pair(hash.ToString(), temjosn));
-			break;
-		case BETACCEPT:
-			accseptobj.push_back(Pair(hash.ToString(), temjosn));
-			break;
-		case BETOPEN:
-			openobj.push_back(Pair(hash.ToString(), temjosn));
-			break;
-		default:
-			break;
-		}
-	}
-	Object retd;
-	retd.push_back(Pair("first", sendobj));
-	retd.push_back(Pair("second", accseptobj));
-	retd.push_back(Pair("third", openobj));
-	return retd;
 }
 
 Value getscriptdata(const Array& params, bool fHelp) {
@@ -1543,6 +1294,7 @@ Value registaccounttxraw(const Array& params, bool fHelp) {
 
 
 	}
+
 Value submittx(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
 		string msg = "registaccounttx nrequired \"addr\" fee height\n"
@@ -1567,9 +1319,10 @@ Value submittx(const Array& params, bool fHelp) {
 	obj.push_back(Pair("hash", std::get<1>(ret)));
 	return obj;
 }
+
 Value createcontracttxraw(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 5) {
-		string msg = "createsecuretx nrequired \"scriptid\" [\"addr\",...] \"fee\" \"contract\" \"height\"\n"
+		string msg = "createcontracttxraw nrequired \"scriptid\" [\"addr\",...] \"fee\" \"contract\" \"height\"\n"
 				"\ncreate contract\n"
 				"\nArguments:\n"
 				"1.\"height\": (numeric)create height\n"
@@ -1751,7 +1504,7 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 		throw runtime_error(
 						tinyformat::format("registerscripttxraw :account id %s is not exist\n", mkeyId.ToAddress()));
 	};
-	std::shared_ptr<CRegisterScriptTx> tx =  make_shared<CRegisterScriptTx>();
+	std::shared_ptr<CRegisterAppTx> tx =  make_shared<CRegisterAppTx>();
 	tx.get()->regAcctId = GetUserId(keyid);
 	tx.get()->script = vscript;
 	tx.get()->llFees = fee;
@@ -1833,7 +1586,7 @@ Value sigstr(const Array& params, bool fHelp)
 	case REWARD_TX:
 		break;
 	case REG_SCRIPT_TX:	{
-		std::shared_ptr<CRegisterScriptTx> tx = make_shared<CRegisterScriptTx>(pBaseTx.get());
+		std::shared_ptr<CRegisterAppTx> tx = make_shared<CRegisterAppTx>(pBaseTx.get());
 		if (!pwalletMain->Sign(keyid,tx.get()->SignatureHash(), tx.get()->signature)) {
 			throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
 		}
@@ -1869,7 +1622,7 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 		Array ComfirmTx;
 		for (auto const &wtx : pwalletMain->mapInBlockTx) {
 			for (auto const & item : wtx.second.mapAccountTx) {
-				Object objtx = GetTxDetail(item.first, false);
+				Object objtx = GetTxDetailJSON(item.first, false);
 				ComfirmTx.push_back(objtx);
 			}
 		}
@@ -1878,44 +1631,12 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 		Array UnComfirmTx;
 		CAccountViewCache view(*pAccountViewTip, true);
 		for (auto const &wtx : pwalletMain->UnConfirmTx) {
-			Object objtx = GetTxDetail(wtx.first, false);
+			Object objtx = GetTxDetailJSON(wtx.first, false);
 			UnComfirmTx.push_back(objtx);
 		}
 		retObj.push_back(Pair("UnConfirmed", UnComfirmTx));
 	}
 
-	return retObj;
-}
-
-Value getbetrandomdata(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 0) {
-		string msg = "getbetrandomdata \"addr\" showtxdetail\n"
-				"\nlistaddrtx\n"
-				"\nArguments:\n"
-				"\nResult:\n"
-				"\"txhash\"\n"
-				"\nExamples:\n" + HelpExampleCli("getbetrandomdata", "") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("getbetrandomdata", "");
-		throw runtime_error(msg);
-	}
-
-	unsigned char szDataA[5] = {0};
-	unsigned char szDataB[5] = {0};
-	size_t nSize = sizeof(szDataA)/sizeof(szDataA[0]);
-	RAND_bytes(szDataA, nSize);
-	RAND_bytes(szDataB, nSize);
-	uint256 hashA = Hash(szDataA,szDataA+nSize);
-	uint256 hashB = Hash(szDataB,szDataB+nSize);
-
-	Object retObj;
-	string strDataA = strprintf("%d,%d,%d,%d,%d",static_cast<int>(szDataA[0]),static_cast<int>(szDataA[1]),
-			static_cast<int>(szDataA[2]),static_cast<int>(szDataA[3]),static_cast<int>(szDataA[4]));
-	string strDataB = strprintf("%d,%d,%d,%d,%d",static_cast<int>(szDataB[0]),static_cast<int>(szDataB[1]),
-				static_cast<int>(szDataB[2]),static_cast<int>(szDataB[3]),static_cast<int>(szDataB[4]));
-	retObj.push_back(Pair("dataA", strDataA));
-	retObj.push_back(Pair("HashA", hashA.ToString()));
-	retObj.push_back(Pair("dataB", strDataB));
-	retObj.push_back(Pair("HashB", hashB.ToString()));
 	return retObj;
 }
 

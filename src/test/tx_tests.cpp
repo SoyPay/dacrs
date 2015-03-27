@@ -21,7 +21,7 @@ public:
 		m_scriptID = scriptID;
 	}
 	bool operator()(const CFund& fund) {
-		return fund.scriptID == m_scriptID;
+		return fund.appId == m_scriptID;
 	}
 
 private:

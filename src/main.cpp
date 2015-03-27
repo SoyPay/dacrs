@@ -3064,7 +3064,7 @@ void static ProcessGetData(CNode* pfrom)
                         	ss << *((CRegisterAccountTx *)pBaseTx.get());
                         }
                         else if(REG_SCRIPT_TX == pBaseTx->nTxType) {
-                        	ss << *((CRegisterScriptTx *)pBaseTx.get());
+                        	ss << *((CRegisterAppTx *)pBaseTx.get());
                         }
                         pfrom->PushMessage("tx", ss);
                         pushed = true;
@@ -4193,7 +4193,7 @@ std::shared_ptr<CBaseTransaction> CreateNewEmptyTransaction(unsigned char uType)
 	case REWARD_TX:
 		return make_shared<CRewardTransaction>();
 	case REG_SCRIPT_TX:
-		return make_shared<CRegisterScriptTx>();
+		return make_shared<CRegisterAppTx>();
 	default:
 		assert(0);
 		break;
