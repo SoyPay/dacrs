@@ -148,31 +148,6 @@ public:
 		}
 		return 0;
 	}
-	bool GetHashFromCreatedTx(const Value& valueRes,string& strHash)
-	{
-		if (valueRes.type() == null_type) {
-			return false;
-		}
-
-		const Value& result = find_value(valueRes.get_obj(), "hash");
-		const Value& result1 = find_value(valueRes.get_obj(), "rawtx");
-		const Value& result3 = find_value(valueRes.get_obj(), "script");
-		if (result.type() == null_type && result1.type() == null_type && result3.type() == null_type){
-			return false;
-		}
-		if (result.type() != null_type){
-			strHash = result.get_str();
-			}
-		else if(result1.type() != null_type)
-		{
-			strHash = result1.get_str();
-		}else if(result3.type() != null_type)
-		{
-			strHash = result3.get_str();
-		}
-
-		return true;
-	}
 
 	void CheckSdk()
 	{
@@ -815,22 +790,22 @@ BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
 	CheckSdk();
 
-	ResetEnv();
-	BOOST_CHECK(0==chainActive.Height());
-	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
-	CheckRollBack();
-
-	ResetEnv();
-	BOOST_CHECK(0==chainActive.Height());
-	CheckScriptAccount();
-
-	ResetEnv();
-	BOOST_CHECK(0==chainActive.Height());
-	testdb();
-
-	ResetEnv();
-	BOOST_CHECK(0==chainActive.Height());
-	 testdeletmodifydb();
+//	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
+//	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
+//	CheckRollBack();
+//
+//	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
+//	CheckScriptAccount();
+//
+//	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
+//	testdb();
+//
+//	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
+//	 testdeletmodifydb();
 }
 BOOST_FIXTURE_TEST_CASE(darksecure,CSysScriptTest)
 {
