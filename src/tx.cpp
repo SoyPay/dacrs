@@ -1369,7 +1369,7 @@ uint256 CTransaction::SignatureHash() const  {
 	return ss.GetHash();
 }
 
-inline CAppCFund::CAppCFund() {
+CAppCFund::CAppCFund() {
 	vTag.clear();
 	value = 0;
 	nHeight = 0;
@@ -1398,7 +1398,7 @@ inline bool CAppCFund::MergeCFund(const CAppCFund &fund) {
 
 
 CAppUserAccout::CAppUserAccout() {
-	regID.clean();
+	AccUserID = CNullID();
 	llValues = 0;
 	vFreezedFund.clear();
 }
