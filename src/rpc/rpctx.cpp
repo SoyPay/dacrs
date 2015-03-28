@@ -848,12 +848,15 @@ static Value TestDisconnectBlock(int number)
 {
 //		CBlockIndex* pindex = chainActive.Tip();
 		CBlock block;
+		Object obj;
+
 		CValidationState state;
 		if((chainActive.Tip()->nHeight - number) < 0)
 		{
 			throw JSONRPCError(RPC_INVALID_PARAMS, "restclient Error: number");
 		}
-		while (number--) {
+		if(number >0) {
+		do {
 			// check level 0: read from disk
 			 CBlockIndex * pTipIndex = chainActive.Tip();
 			 LogPrint("vm", "current height:%d\n", pTipIndex->nHeight);
@@ -881,9 +884,10 @@ static Value TestDisconnectBlock(int number)
 //
 //			assert(view.Flush() &&txCacheTemp.Flush()&& contractScriptTemp.Flush() );
 //			txCacheTemp.Clear();
+			}while(--number);
 		}
 //		pTxCacheTip->Flush();
-		Object obj;
+
 		obj.push_back(Pair("tip", strprintf("hash:%s hight:%s",chainActive.Tip()->GetBlockHash().ToString(),chainActive.Tip()->nHeight)));
 		return obj;
 }
