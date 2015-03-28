@@ -5,7 +5,7 @@
  *      Author: ranger.shi
  */
 #include "util.h"
-#include "TestMcu.h"
+#include "testmcu.h"
 typedef unsigned char byte;
 
 
@@ -42,7 +42,7 @@ string CTestMcu::MOV_Direct_DirectTest(int space) {
 		pCVir8051->m_ExeFile[PC + 2] = (byte)daddr;
 	};
 
-	for (PC = 0; PC < CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC < CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -100,7 +100,7 @@ string CTestMcu::DIV_ABTest(int space) {
 		pCVir8051->Sys.b = (byte) b;
 	};
 
-	for (PC = 0; PC < CVir8051::MAX_ROM; PC = PC + space) {
+	for (PC = 0; PC < CVm8051::MAX_ROM; PC = PC + space) {
 
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
@@ -149,13 +149,13 @@ string CTestMcu::MOVC_A_PCTest(int space) {
 		pCVir8051->m_ExeFile[PC + 1 + a] = data;
 	};
 
-	for (PC = 0; PC < CVir8051::MAX_ROM; PC = PC + space) {
+	for (PC = 0; PC < CVm8051::MAX_ROM; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
 		for (a = 0; a <= 0XFF; a++) {
 			data = rand() % 256;
-			expect = (1 + a + PC > CVir8051::MAX_ROM) ? (0) : (data);
+			expect = (1 + a + PC > CVm8051::MAX_ROM) ? (0) : (data);
 			updatecpu();
 			TestRun();
 			if (!checkresult()) {
@@ -203,7 +203,7 @@ string CTestMcu::ANL_C_BitTest(int space) {
 		}
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -246,13 +246,13 @@ string CTestMcu::SJMP_RelTest(int space) {
 		pCVir8051->m_ExeFile[PC + 1] = (byte)raddr;
 	};
 
-	for (PC = 0; PC < CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC < CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
 		for (raddr = -128; raddr <= 127; raddr++) {
 			expect = raddr + PC + 2;
-			if (expect >= CVir8051::MAX_ROM || expect < 0) {
+			if (expect >= CVm8051::MAX_ROM || expect < 0) {
 				continue;
 			}
 			updatecpu();
@@ -301,11 +301,11 @@ string CTestMcu::MOV_Ri_DataTest(int space) {
 	};
 
 	for (code = 0x76; code <= 0x77; code++) {
-		for (PC = 0; PC < CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC < CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
-			for (ri = 8; ri <= CVir8051::MAX_IN_RAM; ri++) {
+			for (ri = 8; ri <= CVm8051::MAX_IN_RAM; ri++) {
 				idata = rand() % 256;
 				updatecpu();
 				TestRun();
@@ -377,7 +377,7 @@ string CTestMcu::MOV_Rn_DataTest(int space) {
 	};
 
 	for (code = 0x78; code <= 0x7f; code++) {
-		for (PC = 0; PC < CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC < CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -422,11 +422,11 @@ string CTestMcu::MOV_Direct_DataTest(int space) {
 		pCVir8051->m_ExeFile[PC + 2] = idata;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 3; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (daddr = 7; daddr <= CVir8051::MAX_IN_RAM; daddr++) {
+		for (daddr = 7; daddr <= CVm8051::MAX_IN_RAM; daddr++) {
 			for (idata = 0; idata <= 0XFF; idata++) {
 				updatecpu();
 				TestRun();
@@ -468,7 +468,7 @@ string CTestMcu::MOV_A_DataTest(int space) {
 		pCVir8051->m_ExeFile[PC + 1] = idata;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 3; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -510,13 +510,13 @@ string CTestMcu::JMP_A_DPTRTest(int space) {
 		pCVir8051->m_ExeFile[PC] = code;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (dptr = 0; dptr <= CVir8051::MAX_ROM; dptr++) {
+		for (dptr = 0; dptr <= CVm8051::MAX_ROM; dptr++) {
 			for (a = 0; a <= 0xFF; a++) {
-				if (a + dptr > CVir8051::MAX_ROM) {
+				if (a + dptr > CVm8051::MAX_ROM) {
 					continue;
 				}
 				expect = a + dptr;
@@ -569,7 +569,7 @@ string CTestMcu::ORL_C_DirectTest(int space) {
 		pCVir8051->m_ExeFile[PC + 1] = baddr;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -616,14 +616,14 @@ string CTestMcu::JNZ_RelTest(int space) {
 		pCVir8051->m_ExeFile[PC + 1] = raddr;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
 		for (raddr = -128; raddr <= 127; raddr++) {
 			a = rand() % 2;
 			expect = (a) ? (PC + 2 + raddr) : (PC + 2);
-			if (expect > CVir8051::MAX_ROM || expect < 0) {
+			if (expect > CVm8051::MAX_ROM || expect < 0) {
 				continue;
 			}
 			updatecpu();
@@ -693,7 +693,7 @@ string CTestMcu::XRL_A_Rn_1Test(int space) {
 	};
 
 	for (code = 0x68; code <= 0x6f; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -751,11 +751,11 @@ string CTestMcu::XRL_A_Ri_1Test(int space) {
 	};
 
 	for (code = 0x66; code <= 0x67; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
-			for (rr = 8; rr <= CVir8051::MAX_IN_RAM; rr++) {
+			for (rr = 8; rr <= CVm8051::MAX_IN_RAM; rr++) {
 				for (aa = 0; aa <= 0xff; aa++) {
 					data = rand() % 256;
 					expect = data ^ aa;
@@ -810,11 +810,11 @@ string CTestMcu::XRL_A_Data_And_DirectTest(int space) {
 	};
 
 	code = 0x65;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (daddr = 8; daddr <= CVir8051::MAX_IN_RAM; daddr++) {
+		for (daddr = 8; daddr <= CVm8051::MAX_IN_RAM; daddr++) {
 			for (aa = 0; aa <= 0xff; aa++) {
 				if (daddr == 0xe0 || daddr == 0xd0) {
 					continue; //modify the psw and a
@@ -831,7 +831,7 @@ string CTestMcu::XRL_A_Data_And_DirectTest(int space) {
 	}
 
 	code = 0x64;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -875,11 +875,11 @@ string CTestMcu::XRL_Direct_DataTest(int space) {
 		pCVir8051->m_ExeFile[PC + 2] = idata;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 3; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (daddr = 8; daddr <= CVir8051::MAX_IN_RAM; daddr++) {
+		for (daddr = 8; daddr <= CVm8051::MAX_IN_RAM; daddr++) {
 			for (idata = 0; idata <= 0xff; idata++) {
 				ddata = rand() % 256;
 				expect = idata ^ ddata;
@@ -923,11 +923,11 @@ string CTestMcu::XRL_Direct_ATest(int space) {
 		pCVir8051->m_ExeFile[PC + 1] = daddr;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (daddr = 8; daddr <= CVir8051::MAX_IN_RAM; daddr++) {
+		for (daddr = 8; daddr <= CVm8051::MAX_IN_RAM; daddr++) {
 			for (aa = 0; aa <= 0xff; aa++) {
 				if (daddr == 0xd0 || daddr == 0xe0) {
 					continue; //modify the psw and a
@@ -973,14 +973,14 @@ string CTestMcu::JZ_RelTest(int space) {
 		pCVir8051->m_ExeFile[PC + 1] = raddr;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
 		for (raddr = -128; raddr <= 127; raddr++) {
 			aa = rand() % 2;
 			expect = (aa) ? (PC + 2) : (raddr + PC + 2);
-			if (expect > CVir8051::MAX_ROM || expect < 0) {
+			if (expect > CVm8051::MAX_ROM || expect < 0) {
 				continue;
 			}
 			updatecpu();
@@ -1048,7 +1048,7 @@ string CTestMcu::ANL_A_Rn_1Test(int space) {
 	};
 
 	for (code = 0x58; code <= 0x5f; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -1107,11 +1107,11 @@ string CTestMcu::ANL_A_Ri_1Test(int space) {
 	};
 
 	for (code = 0x56; code <= 0x57; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
-			for (rr = 8; rr <= CVir8051::MAX_IN_RAM; rr++) {
+			for (rr = 8; rr <= CVm8051::MAX_IN_RAM; rr++) {
 				for (aa = 0; aa <= 0xff; aa++) {
 					ridata = rand() % 256;
 					expect = ridata & aa;
@@ -1165,11 +1165,11 @@ string CTestMcu::ANL_A_Data_And_DirectTest(int space) {
 	};
 
 	code = 0x55;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (daddr = 8; daddr <= CVir8051::MAX_IN_RAM; daddr++) {
+		for (daddr = 8; daddr <= CVm8051::MAX_IN_RAM; daddr++) {
 			for (aa = 0; aa <= 0xff; aa++) {
 				if (daddr == 0xe0 || daddr == 0xd0) {
 					continue; //modify the psw and a
@@ -1186,7 +1186,7 @@ string CTestMcu::ANL_A_Data_And_DirectTest(int space) {
 	}
 
 	code = 0x54;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -1232,11 +1232,11 @@ string CTestMcu::ANL_Direct_DataTest(int space) {
 	};
 
 	code = 0x53;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 3; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (daddr = 8; daddr <= CVir8051::MAX_IN_RAM; daddr++) {
+		for (daddr = 8; daddr <= CVm8051::MAX_IN_RAM; daddr++) {
 			for (idata = 0; idata <= 0xff; idata++) {
 				ddata = rand() % 256;
 				expect = ddata & idata;
@@ -1279,11 +1279,11 @@ string CTestMcu::ANL_Direct_ATest(int space) {
 	};
 
 	code = 0x52;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (daddr = 8; daddr <= CVir8051::MAX_IN_RAM; daddr++) {
+		for (daddr = 8; daddr <= CVm8051::MAX_IN_RAM; daddr++) {
 			for (aa = 0; aa <= 0xff; aa++) {
 				if (daddr == 0xd0 || daddr == 0xe0) {
 					continue; //modify the a and psw
@@ -1357,7 +1357,7 @@ string CTestMcu::ORL_A_Rn_1Test(int space) {
 	};
 
 	for (code = 0x48; code <= 0x4f; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -1415,11 +1415,11 @@ string CTestMcu::ORL_A_Ri_1Test(int space) {
 	};
 
 	for (code = 0x46; code <= 0x47; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
-			for (rr = 8; rr <= CVir8051::MAX_IN_RAM; rr++) {
+			for (rr = 8; rr <= CVm8051::MAX_IN_RAM; rr++) {
 				for (aa = 0; aa <= 0xff; aa++) {
 					ridata = rand() % 256;
 					expect = ridata | aa;
@@ -1473,11 +1473,11 @@ string CTestMcu::ORL_A_Data_And_DirectTest(int space) {
 	};
 
 	code = 0x45;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (daddr = 8; daddr <= CVir8051::MAX_IN_RAM; daddr++) {
+		for (daddr = 8; daddr <= CVm8051::MAX_IN_RAM; daddr++) {
 			for (aa = 0; aa <= 0xff; aa++) {
 				if (daddr == 0xe0 || daddr == 0xd0) {
 					continue; //modify the cy and a
@@ -1494,7 +1494,7 @@ string CTestMcu::ORL_A_Data_And_DirectTest(int space) {
 	}
 
 	code = 0x44;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -1540,11 +1540,11 @@ string CTestMcu::ORL_Direct_DataTest(int space) {
 	};
 
 	code = 0x43;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 3; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (daddr = 8; daddr <= CVir8051::MAX_IN_RAM; daddr++) {
+		for (daddr = 8; daddr <= CVm8051::MAX_IN_RAM; daddr++) {
 			for (idata = 0; idata <= 0xff; idata++) {
 				ddata = rand() % 256;
 				expect = idata | ddata;
@@ -1587,11 +1587,11 @@ string CTestMcu::ORL_Direct_ATest(int space) {
 	};
 
 	code = 0x42;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (daddr = 8; daddr <= CVir8051::MAX_IN_RAM; daddr++) {
+		for (daddr = 8; daddr <= CVm8051::MAX_IN_RAM; daddr++) {
 			for (aa = 0; aa <= 0xff; aa++) {
 				if (daddr == 0xe0 || daddr == 0xd0) {
 					continue; //modify the psw and a
@@ -1634,14 +1634,14 @@ string CTestMcu::JC_RelTest(int space) {
 		pCVir8051->m_ExeFile[PC + 1] = raddr;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
 		for (raddr = -128; raddr <= 127; raddr++) {
 			cc = rand() % 2;
 			expect = (cc) ? (raddr + PC + 2) : (PC + 2);
-			if (expect > CVir8051::MAX_ROM || expect < 0) {
+			if (expect > CVm8051::MAX_ROM || expect < 0) {
 				continue;
 			}
 			updatecpu();
@@ -1722,7 +1722,7 @@ string CTestMcu::ADDC_A_RnTest(int space) {
 	};
 
 	for (code = 0x38; code <= 0x3f; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -1810,11 +1810,11 @@ string CTestMcu::ADDC_A_RiTest(int space) {
 	};
 
 	for (code = 0x36; code <= 0x37; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
-			for (rr = 8; rr <= CVir8051::MAX_IN_RAM; rr++) {
+			for (rr = 8; rr <= CVm8051::MAX_IN_RAM; rr++) {
 				for (aa = 0; aa <= 0xff; aa++) {
 					ridata = rand() % 256;
 					cc = rand() % 2;
@@ -1889,11 +1889,11 @@ string CTestMcu::ADDC_A_DirectTest(int space) {
 	};
 
 	code = 0x35;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (addr = 8; addr <= CVir8051::MAX_IN_RAM; addr++) {
+		for (addr = 8; addr <= CVm8051::MAX_IN_RAM; addr++) {
 			for (aa = 0; aa <= 0xff; aa++) {
 				if (addr == 0xd0 || addr == 0xe0) {
 					continue; //modify the psw and a
@@ -1953,7 +1953,7 @@ string CTestMcu::ADDC_A_DataTest(int space) {
 	};
 
 	code = 0x34;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -2005,7 +2005,7 @@ string CTestMcu::RLC_ATest(int space) {
 	};
 
 	code = 0x33;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -2054,7 +2054,7 @@ string CTestMcu::JNB_Bit_RelTest(int space) {
 		pCVir8051->m_ExeFile[PC + 2] = raddr;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 3; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -2062,7 +2062,7 @@ string CTestMcu::JNB_Bit_RelTest(int space) {
 			for (raddr = -128; raddr <= 127; raddr++) {
 				bb = rand() % 2;
 				expect = (bb) ? (PC + 3) : (raddr + PC + 3);
-				if (expect >= CVir8051::MAX_ROM || expect < 0) {
+				if (expect >= CVm8051::MAX_ROM || expect < 0) {
 					continue;
 				}
 				updatecpu();
@@ -2142,7 +2142,7 @@ string CTestMcu::ADD_A_RnTest(int space) {
 	};
 
 	for (code = 0x28; code <= 0x2f; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -2227,11 +2227,11 @@ string CTestMcu::ADD_A_Ri_1Test(int space) {
 	};
 
 	for (code = 0x26; code <= 0x27; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
-			for (rr = 8; rr <= CVir8051::MAX_IN_RAM; rr++) {
+			for (rr = 8; rr <= CVm8051::MAX_IN_RAM; rr++) {
 				for (aa = 0; aa <= 0xff; aa++) {
 					data = rand() % 256;
 					expect = aa + data;
@@ -2288,11 +2288,11 @@ string CTestMcu::ADD_A_DirectTest(int space) {
 	};
 
 	code = 0x25;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (addr = 8; addr <= CVir8051::MAX_IN_RAM; addr++) {
+		for (addr = 8; addr <= CVm8051::MAX_IN_RAM; addr++) {
 			for (aa = 0; aa <= 0xff; aa++) {
 				if (addr == 0xe0 || addr == 0xd0) {
 					continue; //modify the psw and a
@@ -2349,7 +2349,7 @@ string CTestMcu::ADD_A_DataTest(int space) {
 	};
 
 	code = 0x24;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -2392,7 +2392,7 @@ string CTestMcu::RL_ATest(int space) {
 		pCVir8051->m_ExeFile[PC] = code;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -2436,11 +2436,11 @@ string CTestMcu::RETTest(int space) {
 		pCVir8051->SetRamDataAt(address - 1, Value2);
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (address = 0x00; address <= CVir8051::MAX_IN_RAM; address++) {
+		for (address = 0x00; address <= CVm8051::MAX_IN_RAM; address++) {
 			Value1 = rand() % 0xff;
 			Value2 = rand() % 0xff;
 			expectPC = (int) ((Value1 << 8) | (Value2));
@@ -2490,7 +2490,7 @@ string CTestMcu::JB_Bit_RelTest(int space) {
 		pCVir8051->m_ExeFile[PC + 2] = raddr;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 3; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -2498,7 +2498,7 @@ string CTestMcu::JB_Bit_RelTest(int space) {
 			for (raddr = -128; raddr <= 127; raddr++) {
 				bb = rand() % 2;
 				expect = (bb) ? (PC + 3 + raddr) : (PC + 3);
-				if (expect > CVir8051::MAX_ROM || expect < 0) {
+				if (expect > CVm8051::MAX_ROM || expect < 0) {
 					continue;
 				}
 				updatecpu();
@@ -2597,7 +2597,7 @@ string CTestMcu::DEC_RnTest(int space) {
 	};
 
 	for (code = 0x18; code <= 0x1f; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -2651,11 +2651,11 @@ string CTestMcu::DEC_Ri_1Test(int space) {
 	};
 
 	for (code = 0x16; code <= 0x17; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
-			for (rr = 8; rr <= CVir8051::MAX_IN_RAM; rr++) {
+			for (rr = 8; rr <= CVm8051::MAX_IN_RAM; rr++) {
 				ridata = rand() % 256;
 				expect = (ridata == 0) ? (0xff) : (ridata - 1);
 				updatecpu();
@@ -2699,11 +2699,11 @@ string CTestMcu::DEC_DirectTest(int space) {
 	};
 
 	code = 0x15;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (daddr = 8; daddr <= CVir8051::MAX_IN_RAM; daddr++) {
+		for (daddr = 8; daddr <= CVm8051::MAX_IN_RAM; daddr++) {
 			ddata = rand() % 256;
 			expect = (ddata == 0x00) ? (0xff) : (ddata - 1);
 			updatecpu();
@@ -2743,7 +2743,7 @@ string CTestMcu::DEC_ATest(int space) {
 	};
 
 	code = 0x14;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -2787,7 +2787,7 @@ string CTestMcu::RRC_ATest(int space) {
 		pCVir8051->m_ExeFile[PC] = code;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -2837,7 +2837,7 @@ string CTestMcu::LCALL_Addr16Test(int space) {
 		pCVir8051->m_ExeFile[PC + 2] = (byte)(addr & 0xff);
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 3; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -2891,7 +2891,7 @@ string CTestMcu::ACALL_Addr11Test(int space) {
 		pCVir8051->m_ExeFile[PC + 1] = (byte)(addr & 0xff);
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -2954,7 +2954,7 @@ string CTestMcu::JBC_Bit_RelTest(int space) {
 		pCVir8051->m_ExeFile[PC + 2] = raddr;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 3; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -2962,7 +2962,7 @@ string CTestMcu::JBC_Bit_RelTest(int space) {
 			for (raddr = -128; raddr <= 127; raddr++) {
 				bb = rand() % 2;
 				expect = (bb) ? (PC + 3 + raddr) : (PC + 3);
-				if (expect > CVir8051::MAX_ROM || expect < 0) {
+				if (expect > CVm8051::MAX_ROM || expect < 0) {
 					continue;
 				}
 				updatecpu();
@@ -3061,7 +3061,7 @@ string CTestMcu::INC_RnTest(int space) {
 	};
 
 	for (code = 0x08; code <= 0x0f; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -3115,11 +3115,11 @@ string CTestMcu::INC_Ri_1Test(int space) {
 	};
 
 	for (code = 0x06; code <= 0x07; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
-			for (rr = 8; rr <= CVir8051::MAX_IN_RAM; rr++) {
+			for (rr = 8; rr <= CVm8051::MAX_IN_RAM; rr++) {
 				ridata = rand() % 256;
 				expect = (ridata == 0xff) ? (0) : (ridata + 1);
 				updatecpu();
@@ -3163,11 +3163,11 @@ string CTestMcu::INC_DirectTest(int space) {
 	};
 
 	code = 0x05;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (daddr = 8; daddr <= CVir8051::MAX_IN_RAM; daddr++) {
+		for (daddr = 8; daddr <= CVm8051::MAX_IN_RAM; daddr++) {
 			ddata = rand() % 256;
 			expect = (ddata == 0xff) ? (0) : (ddata + 1);
 			updatecpu();
@@ -3207,7 +3207,7 @@ string CTestMcu::INC_ATest(int space) {
 	};
 
 	code = 0x04;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -3248,7 +3248,7 @@ string CTestMcu::RR_ATest(int space) {
 		pCVir8051->m_ExeFile[PC] = code;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -3288,11 +3288,11 @@ string CTestMcu::LJMPTest(int space) {
 		pCVir8051->m_ExeFile[PC + 2] = (byte)(addr&0xff);
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 3; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (addr = 0; addr <= CVir8051::MAX_ROM; addr++) {
+		for (addr = 0; addr <= CVm8051::MAX_ROM; addr++) {
 			updatecpu();
 			TestRun();
 			if (!checkresult()) {
@@ -3325,7 +3325,7 @@ string CTestMcu::NOPTest(int space) {
 		pCVir8051->m_ExeFile[PC] = code;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -3362,7 +3362,7 @@ string CTestMcu::AJMPTest(int space) {
 		pCVir8051->m_ExeFile[PC + 1] = (byte)(addr & 0xff);
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		for (addr = 0; addr <= 0x07ff; addr++) {
 			code = (byte) (0x01 | ((addr >> 8) << 5));
 			expectPC = PC + 2;
@@ -3433,7 +3433,7 @@ string CTestMcu::MOV_Rn_ATest(int space) {
 	};
 
 	for (code = 0xf8; code <= 0xff; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -3477,7 +3477,7 @@ string CTestMcu::MOV_Direct_ATest(int space) {
 		pCVir8051->m_ExeFile[PC + 1] = daddr;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -3522,7 +3522,7 @@ string CTestMcu::CPL_ATest(int space) {
 		pCVir8051->m_ExeFile[PC] = code;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -3573,7 +3573,7 @@ string CTestMcu::MOVX_Ri_1_ATest(int space) {
 	};
 
 	for (code = 0xf2; code <= 0xf3; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -3621,7 +3621,7 @@ string CTestMcu::MOVX_DPTR_ATest(int space) {
 		pCVir8051->m_ExeFile[PC] = code;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -3694,7 +3694,7 @@ string CTestMcu::MOV_A_Rn_1Test(int space) {
 	};
 
 	for (code = 0xe8; code <= 0xef; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -3750,7 +3750,7 @@ string CTestMcu::MOV_A_Ri_1Test(int space) {
 	};
 
 	for (code = 0xe6; code <= 0xe7; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -3797,7 +3797,7 @@ string CTestMcu::MOV_A_DirectTest(int space) {
 		pCVir8051->m_ExeFile[PC + 1] = daddr;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -3842,7 +3842,7 @@ string CTestMcu::CLR_ATest(int space) {
 		pCVir8051->m_ExeFile[PC] = code;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -3893,7 +3893,7 @@ string CTestMcu::MOVX_A_Ri_1Test(int space) {
 	};
 
 	for (code = 0xe2; code <= 0xe3; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -3940,7 +3940,7 @@ string CTestMcu::MOVX_A_DPTRTest(int space) {
 		pCVir8051->m_ExeFile[PC] = code;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -4043,7 +4043,7 @@ string CTestMcu::DJNZ_Rn_RelRTest(int space) {
 	};
 
 	for (code = 0xd8; code <= 0xdf; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -4051,7 +4051,7 @@ string CTestMcu::DJNZ_Rn_RelRTest(int space) {
 				for (raddr = -128; raddr <= 127; raddr++) {
 					expectRn = rn - 1;
 					expectPC = (expectRn) ? (PC + 2 + raddr) : (PC + 2);
-					if (expectPC > CVir8051::MAX_ROM || expectPC < 0) {
+					if (expectPC > CVm8051::MAX_ROM || expectPC < 0) {
 						continue;
 					}
 					updatecpu();
@@ -4110,11 +4110,11 @@ string CTestMcu::XCHD_A_Ri_1Test(int space) {
 	};
 
 	for (code = 0xd6; code <= 0xd7; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
-			for (rr = 8; rr <= CVir8051::MAX_IN_RAM; rr++) {
+			for (rr = 8; rr <= CVm8051::MAX_IN_RAM; rr++) {
 				for (aa = 0; aa <= 0xff; aa++) {
 					ridata = rand() % 256;
 					expectaa = (byte) ((aa & 0xf0) | (ridata & 0x0f));
@@ -4160,7 +4160,7 @@ string CTestMcu::DJNZ_Direct_RelTest(int space) {
 		pCVir8051->m_ExeFile[PC + 2] = raddr;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 3; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -4169,7 +4169,7 @@ string CTestMcu::DJNZ_Direct_RelTest(int space) {
 				ddata = rand() % 256;
 				expectdata = ddata - 1;
 				expectPC = (expectdata) ? (PC + 3 + raddr) : (PC + 3);
-				if (expectPC > CVir8051::MAX_ROM || expectPC < 0) {
+				if (expectPC > CVm8051::MAX_ROM || expectPC < 0) {
 					continue;
 				}
 				updatecpu();
@@ -4213,7 +4213,7 @@ string CTestMcu::DA_ATest(int space) {
 		pCVir8051->m_ExeFile[PC] = code;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -4268,7 +4268,7 @@ string CTestMcu::SETB_CTest(int space) {
 		pCVir8051->m_ExeFile[PC] = code;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -4316,7 +4316,7 @@ string CTestMcu::SETB_BitTest(int space) {
 		pCVir8051->m_ExeFile[PC + 1] = baddr;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -4364,7 +4364,7 @@ string CTestMcu::POP_DirectTest(int space) {
 		pCVir8051->m_ExeFile[PC + 1] = daddr;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -4473,7 +4473,7 @@ string CTestMcu::XCH_A_RnTest(int space) {
 	};
 
 	for (code = 0xc8; code <= 0xcf; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -4538,7 +4538,7 @@ string CTestMcu::XCH_A_DirectTest(int space) {
 		pCVir8051->m_ExeFile[PC + 1] = (byte)daddr;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -4587,7 +4587,7 @@ string CTestMcu::SWAP_ATest(int space) {
 		pCVir8051->m_ExeFile[PC] = code;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -4629,7 +4629,7 @@ string CTestMcu::CLR_CTest(int space) {
 		pCVir8051->m_ExeFile[PC] = code;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -4677,7 +4677,7 @@ string CTestMcu::CLR_BitTest(int space) {
 		pCVir8051->m_ExeFile[PC + 1] = baddr;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -4733,7 +4733,7 @@ string CTestMcu::PUSH_DirectTest(int space) {
 		pCVir8051->m_ExeFile[PC + 1] = daddr;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -4810,12 +4810,12 @@ string CTestMcu::MOV_Direct_Rn_Test(int space) {
 	};
 
 	for (code = 0x88; code <= 0x8f; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
 			for (rr = 0; rr <= 0xff; rr++) {
-				for (addr = 8; addr <= CVir8051::MAX_IN_RAM; addr++) {
+				for (addr = 8; addr <= CVm8051::MAX_IN_RAM; addr++) {
 					expect = rr;
 					updatecpu();
 					TestRun();
@@ -4866,13 +4866,13 @@ string CTestMcu::MOV_Direct_Ri_Test(int space) {
 	};
 
 	for (code = 0x86; code <= 0x87; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "NEW code = %x PC = %d\n", code, PC);
 			}
 
-			for (rr = 8; rr <= CVir8051::MAX_IN_RAM; rr++) {
-				for (addr = 8; addr <= CVir8051::MAX_IN_RAM; addr++) {
+			for (rr = 8; rr <= CVm8051::MAX_IN_RAM; rr++) {
+				for (addr = 8; addr <= CVm8051::MAX_IN_RAM; addr++) {
 					if (addr == rr)
 						continue;
 					data = rand() % 256;
@@ -4916,7 +4916,7 @@ string CTestMcu::MOV_DPTR_Data_Test(int space) {
 	};
 
 	code = 0x90;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 3; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -4961,7 +4961,7 @@ string CTestMcu::MOV_Bit_C_Test(int space) {
 	};
 
 	code = 0x92;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -5009,7 +5009,7 @@ string CTestMcu::MOV_C_Bit_Test(int space) {
 	};
 
 	code = 0xa2;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -5059,7 +5059,7 @@ string CTestMcu::MOVC_A_DPTR_Test(int space) {
 	};
 
 	code = 0x93;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -5163,7 +5163,7 @@ string CTestMcu::SUBB_A_RnTest(int space) {
 	};
 
 	for (code = 0x98; code <= 0x9f; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -5251,10 +5251,10 @@ string CTestMcu::SUBB_A_RiTest(int space) {
 	};
 
 	for (code = 0x96; code <= 0x97; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0)
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
-			for (rr = 8; rr <= CVir8051::MAX_IN_RAM; rr++) {
+			for (rr = 8; rr <= CVm8051::MAX_IN_RAM; rr++) {
 				for (aa = 0; aa <= 0xff; aa++) {
 					data = rand() % 256;
 					cc = rand() % 2;
@@ -5329,11 +5329,11 @@ string CTestMcu::SUBB_A_DirectTest(int space) {
 	};
 
 	code = 0x95;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (addr = 8; addr <= CVir8051::MAX_IN_RAM; addr++) {
+		for (addr = 8; addr <= CVm8051::MAX_IN_RAM; addr++) {
 			for (aa = 0; aa <= 0xff; aa++) {
 				if (addr == 0xe0 || addr == 0xd0) {
 					continue; //modify the psw and a
@@ -5408,7 +5408,7 @@ string CTestMcu::SUBB_A_Data_Test(int space) {
 	};
 
 	code = 0x94;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -5499,12 +5499,12 @@ string CTestMcu::MOV_Rn_Direct_Test(int space) {
 	};
 
 	for (code = 0xa8; code <= 0xaf; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
 			for (rr = 0; rr <= 0xff; rr++) {
-				for (addr = 8; addr <= CVir8051::MAX_IN_RAM; addr++) {
+				for (addr = 8; addr <= CVm8051::MAX_IN_RAM; addr++) {
 					data = rand() % 256;
 					expect = data;
 					updatecpu();
@@ -5555,12 +5555,12 @@ string CTestMcu::MOV_Ri_Direct_Test(int space) {
 	};
 
 	for (code = 0xa6; code <= 0xa7; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
-			for (rr = 8; rr <= CVir8051::MAX_IN_RAM; rr++) {
-				for (addr = 8; addr <= CVir8051::MAX_IN_RAM; addr++) {
+			for (rr = 8; rr <= CVm8051::MAX_IN_RAM; rr++) {
+				for (addr = 8; addr <= CVm8051::MAX_IN_RAM; addr++) {
 					if (addr == rr)
 						continue;
 					data = rand() % 256;
@@ -5635,7 +5635,7 @@ string CTestMcu::CJNE_Rn_Data_Rel_Test(int space) {
 	};
 
 	for (code = 0xb8; code <= 0xbf; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 3; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -5643,7 +5643,7 @@ string CTestMcu::CJNE_Rn_Data_Rel_Test(int space) {
 				for (raddr = -128; raddr <= 127; raddr++) {
 					data = rand() % 256;
 					expect = (rr != data) ? (PC + 3 + addr) : (PC + 3);
-					if (expect >= CVir8051::MAX_ROM || expect < 0) {
+					if (expect >= CVm8051::MAX_ROM || expect < 0) {
 						continue;
 					}
 					updatecpu();
@@ -5700,16 +5700,16 @@ string CTestMcu::CJNE_Ri_Data_Rel_Test(int space) {
 	};
 
 	for (code = 0xb6; code <= 0xb7; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 3; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
-			for (rr = 8; rr <= CVir8051::MAX_IN_RAM; rr++) {
+			for (rr = 8; rr <= CVm8051::MAX_IN_RAM; rr++) {
 				for (raddr = -128; raddr <= 127; raddr++) {
 					data = rand() % 256;
 					rdata = rand() % 256;
 					expect = (rdata != data) ? (PC + 3 + addr) : (PC + 3);
-					if (expect >= CVir8051::MAX_ROM || expect < 0) {
+					if (expect >= CVm8051::MAX_ROM || expect < 0) {
 						continue;
 					}
 					updatecpu();
@@ -5756,11 +5756,11 @@ string CTestMcu::CJNE_A_Direct_Rel_Test(int space) {
 	};
 
 	code = 0xb5;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 3; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
-		for (addr = 8; addr <= CVir8051::MAX_IN_RAM; addr++) {
+		for (addr = 8; addr <= CVm8051::MAX_IN_RAM; addr++) {
 			for (raddr = -128; raddr <= 127; raddr++) {
 				if (addr == 0xe0 || addr == 0xd0) {
 					continue; //modify the cy
@@ -5768,7 +5768,7 @@ string CTestMcu::CJNE_A_Direct_Rel_Test(int space) {
 				aa = rand() % 256;
 				data = rand() % 256;
 				expect = (aa != data) ? (PC + 3 + raddr) : (PC + 3);
-				if (expect >= CVir8051::MAX_ROM || expect < 0) {
+				if (expect >= CVm8051::MAX_ROM || expect < 0) {
 					continue;
 				}
 				updatecpu();
@@ -5814,7 +5814,7 @@ string CTestMcu::CJNE_A_Data_Rel_Test(int space) {
 	};
 
 	code = 0xb4;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 3; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -5822,7 +5822,7 @@ string CTestMcu::CJNE_A_Data_Rel_Test(int space) {
 			data = rand() % 0xff;
 			aa = rand() % 0xff;
 			expect = (aa != data) ? (PC + 3 + raddr) : (PC + 3);
-			if (expect >= CVir8051::MAX_ROM || expect < 0) {
+			if (expect >= CVm8051::MAX_ROM || expect < 0) {
 				continue;
 			}
 			updatecpu();
@@ -5861,7 +5861,7 @@ string CTestMcu::CPL_C_Test(int space) {
 	};
 
 	code = 0xb3;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -5908,7 +5908,7 @@ string CTestMcu::CPL_Bit_Test(int space) {
 	};
 
 	code = 0xb2;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -5967,12 +5967,12 @@ string CTestMcu::ANL_C_Bit_1_Test(int space) {
 	};
 
 	code = 0xb0;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
 		for (addr = 0; addr <= 0xff; addr++) {
-			if (addr == CVir8051::psw_addr + 7) {
+			if (addr == CVm8051::psw_addr + 7) {
 				continue; // because 0xd7 is the Sys.psw().cy falg;
 			}
 			bb = rand() % 2;
@@ -6023,7 +6023,7 @@ string CTestMcu::MUL_AB_Test(int space) {
 		};
 
 	code = 0xa4;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -6067,7 +6067,7 @@ string CTestMcu::INC_DPTR_Test(int space) {
 	};
 
 	code = 0xa3;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
@@ -6125,12 +6125,12 @@ string CTestMcu::ORL_C_Bit_Test(int space) {
 	};
 
 	code = 0xa0;
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
 		for (addr = 0; addr <= 0xff; addr++) {
-			if (addr == CVir8051::psw_addr + 7) {
+			if (addr == CVm8051::psw_addr + 7) {
 				continue; // because 0xd7 is the Sys.psw().cy falg;
 			}
 			bb = rand() % 2;
@@ -6180,7 +6180,7 @@ string CTestMcu::MOV_Ri_ATest(int space) {
 	};
 
 	for (code = 0xf6; code <= 0xf7; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 			}
@@ -6243,11 +6243,11 @@ string CTestMcu::XCH_A_RiTest(int space) {
 	};
 
 	for (code = 0xc6; code <= 0xc7; code++) {
-		for (PC = 0; PC <= CVir8051::MAX_ROM - 1; PC = PC + space) {
+		for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
 			if (PC % 1000 == 0) {
 				LogPrint("mcutest","code = %x PC = %d\n", code, PC);
 			}
-			for (rr = 8; rr <= CVir8051::MAX_IN_RAM; rr++) {
+			for (rr = 8; rr <= CVm8051::MAX_IN_RAM; rr++) {
 				for (aa = 0; aa <= 0xff; aa++) {
 					ridata = rand() % 256;
 					expectaa = ridata;
@@ -6289,14 +6289,14 @@ string CTestMcu::JNC_RelTest(int space) {
 		pCVir8051->m_ExeFile[PC + 1] = raddr;
 	};
 
-	for (PC = 0; PC <= CVir8051::MAX_ROM - 2; PC = PC + space) {
+	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
 		if (PC % 1000 == 0) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
 		for (raddr = -128; raddr <= 127; raddr++) {
 			cc = rand() % 2;
 			expect = (cc) ? (PC + 2) : (raddr + PC + 2);
-			if (expect > CVir8051::MAX_ROM || expect < 0) {
+			if (expect > CVm8051::MAX_ROM || expect < 0) {
 				continue;
 			}
 			updatecpu();
@@ -6328,7 +6328,7 @@ bool CTestMcu::IsOdd(unsigned char un) {
 void CTestMcu::TestRun() {
 	pCVir8051->StepRun(pCVir8051->GetOpcode());
 }
-CTestMcu::CTestMcu(CVir8051 *pCVir8051) :
+CTestMcu::CTestMcu(CVm8051 *pCVir8051) :
 		pCVir8051(pCVir8051) {
 }
 
