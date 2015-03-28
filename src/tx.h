@@ -123,6 +123,10 @@ public:
 	const vector_unsigned_char &GetID() {
 		return vchData;
 	}
+	static const vector_unsigned_char & UserIDToVector(const CUserID &userid)
+	{
+		return CID(userid).GetID();
+	}
 	bool Set(const CRegID &id);
     bool Set(const CKeyID &id);
     bool Set(const CPubKey &id);
@@ -1052,6 +1056,7 @@ void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, i
 
 class CAppCFund {
 public:
+	static const int MAX_TAG_SIZE  = 24;
 	CAppCFund();
 	CAppCFund(const CAppCFund &fund);
 	CAppCFund(const vector<unsigned char> &vtag,uint64_t val,int nhight);
@@ -1099,12 +1104,27 @@ private:
 	vector<unsigned char> vTag;	//!< vTag of the tx which create the fund
 
 };
+class CAppFundOperate{
+public:
+	unsigned char accountid[CAppCFund::MAX_TAG_SIZE];	//!< accountid
+	unsigned char opeatortype;		//!OperType
+	unsigned int  outheight;		//!< the transacion Timeout height
+	unsigned char money[8];			//!<The transfer amount
+	IMPLEMENT_SERIALIZE
+	(
+			for(int i = 0;i < CAppCFund::MAX_TAG_SIZE;i++)
+			READWRITE(accountid[i]);
+			READWRITE(opeatortype);
+			READWRITE(outheight);
+			for(int i = 0;i < 8;i++)
+			READWRITE(money[i]);
+	)
+};
+
 
 class CAppUserAccout {
 public:
-	uint64_t llValues;
-	CRegID regID;
-	vector<CAppCFund> vFreezedFund;
+
 	bool GetAppCFund(CAppCFund &outFound,const vector<unsigned char> &vtag);
 	bool AddAppCFund(const CAppCFund &inFound);
 	bool AddAppCFund(const vector<unsigned char> &vtag,uint64_t val,int nhight);
@@ -1115,15 +1135,37 @@ public:
 	CAppUserAccout();
 	virtual ~CAppUserAccout();
 
+	uint64_t getllValues() const {
+		return llValues;
+	}
+
+	void setLlValues(uint64_t llValues) {
+		this->llValues = llValues;
+	}
+
+	const CUserID& getregId() const {
+		return AccUserID;
+	}
+
+	void setRegId(const CUserID& regId) {
+		AccUserID = regId;
+	}
+
 	IMPLEMENT_SERIALIZE
 	(
 		READWRITE(VARINT(llValues));
-		READWRITE(regID);
+		CID regAcctId(AccUserID);
+		READWRITE(regAcctId);
+		if(fRead) {
+			AccUserID = regAcctId.GetUserId();
+		}
 		READWRITE(vFreezedFund);
 	)
 
-
-
+private:
+	uint64_t llValues;
+	mutable	CUserID AccUserID;
+	vector<CAppCFund> vFreezedFund;
 
 };
 

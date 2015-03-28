@@ -11,7 +11,7 @@
 CVmScriptRun::CVmScriptRun() {
 	RawAccont.clear();
 	NewAccont.clear();
-	height = 0;
+	RunTimeHeight = 0;
 	m_ScriptDBTip = NULL;
 	m_view = NULL;
 	m_dblog = std::make_shared<std::vector<CScriptDBOperLog> >();
@@ -27,7 +27,7 @@ bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& 
 
 	m_output.clear();
 	listTx = Tx;
-	height = nheight;
+	RunTimeHeight = nheight;
 	m_view = &view;
 	vector<unsigned char> vScript;
 
@@ -155,7 +155,7 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 		if (it.opeatortype == MINUS_FREE) {
 
 			/// 从冻结金额里面扣钱，超时高度必须大于当前tip高度
-			if(it.outheight < height)
+			if(it.outheight < RunTimeHeight)
 			{
 				return false;
 			}
@@ -225,7 +225,7 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 		if (vnewAccount.get() != NULL) {
 			vmAccount = vnewAccount;
 		}else{
-			vmAccount.get()->CompactAccount(height);
+			vmAccount.get()->CompactAccount(RunTimeHeight);
 		}
 		if ((OperType) it.opeatortype == ADD_FREE) {
 			fund.nFundType = FREEDOM_FUND;
@@ -277,7 +277,7 @@ const vector<unsigned char>& CVmScriptRun::GetTxContact()
 }
 int CVmScriptRun::GetComfirHeight()
 {
-	return height;
+	return RunTimeHeight;
 }
 uint256 CVmScriptRun::GetCurTxHash()
 {
@@ -298,4 +298,21 @@ void CVmScriptRun::InsertOutputData(vector<CVmOperate> source)
 shared_ptr<vector<CScriptDBOperLog> > CVmScriptRun::GetDbLog()
 {
 	return m_dblog;
+}
+
+bool CVmScriptRun::GetAppUserAccout(const CUserID& userId,shared_ptr<CAppUserAccout> &sptrAcc) {
+	assert(m_ScriptDBTip != NULL);
+	vector_unsigned_char vtemp = CID::UserIDToVector(userId);
+	if (mAccMap.count(vtemp)) {
+		sptrAcc=  mAccMap[vtemp];
+		return true;
+	}
+
+	shared_ptr<CAppUserAccout> tem = make_shared<CAppUserAccout>();
+	if (!m_ScriptDBTip->GetScriptAcc(GetScriptRegID(), userId, *tem.get())) {
+		return false;
+	}
+	mAccMap[vtemp] = tem;
+	sptrAcc= tem;
+	return true;
 }
