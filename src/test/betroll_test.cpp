@@ -2,8 +2,8 @@
 #include <stdint.h>
 #include <vector>
 #include <map>
-#include "VmScript/VmScriptRun.h"
-#include "VmScript/CVir8051.h"
+#include "vm/vmrunevn.h"
+#include "vm/vm8051.h"
 #include <memory>
 #include "util.h"
 #include "main.h"

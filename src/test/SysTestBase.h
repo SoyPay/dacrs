@@ -16,13 +16,13 @@
 #include "uint256.h"
 #include "util.h"
 #include <boost/test/unit_test.hpp>
-#include "./rpc/rpcclient.h"
+#include "rpc/rpcclient.h"
 #include "tx.h"
-#include "./wallet/wallet.h"
+#include "wallet/wallet.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include "./VmScript/VmScript.h"
-#include "./rpc/rpcserver.h"
+#include "vm/script.h"
+#include "rpc/rpcserver.h"
 #include "noui.h"
 #include "ui_interface.h"
 #include "cuiserve.h"
@@ -179,12 +179,12 @@ public:
 
 	bool GetBlockHeight(int &nHeight);
 
-	Value CreateNormalTx(const std::string &srcAddr, const std::string &desAddr,uint64_t nMoney, const int nfee =0,const int nHeight=0);
+	Value CreateNormalTx(const std::string &srcAddr, const std::string &desAddr,uint64_t nMoney);
 
-	Value registaccounttx(const std::string &addr, const int nfee =0,const int nHeight=0);
+	Value registaccounttx(const std::string &addr, const int nfee =0,bool flag =false);
 
 	Value CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
-			int nHeight,int nFee = 10000);
+			int nHeight,int nFee = 10000,uint64_t nMoney = 0);
 	Value RegisterScriptTx(const string& strAddress, const string& strScript, int nHeight, int nFee = 10000);
 
 	Value SignSecureTx(const string &securetx);

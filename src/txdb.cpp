@@ -435,21 +435,10 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 					vector<unsigned char> vValue;
 					leveldb::Slice slValue = pcursor->value();
 					CDataStream ssValue(slValue.data()+1, slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-					ssValue >> nHeight;
 					ssValue >> vScriptData;
 					vScriptKey.clear();
 					vScriptKey.insert(vScriptKey.end(), slKey.data() + iPrefixLen + iScriptIdLen + iSpaceLen,
 							slKey.data() + slKey.size());
-					if (nHeight <= curBlockHeight) {    //遍历到如果有数据超时的情况，将超时数据记录到操作日志中，返回给下级备操作
-						CScriptDBOperLog operLog;                  //继续遍历往前遍历查找合法的数据
-						vector<unsigned char> vKey(slKey.data(), slKey.data() + slKey.size());
-						vector<unsigned char> vValue;
-						CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-						ssValue >> vValue;
-						operLog = CScriptDBOperLog(vKey, vValue);
-						setOperLog.insert(operLog);
-						i = 0;
-					}
 				}
 				pcursor->Next();
 			} else {

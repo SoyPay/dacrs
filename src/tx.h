@@ -585,7 +585,7 @@ public:
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
 
-class CRegisterScriptTx: public CBaseTransaction {
+class CRegisterAppTx: public CBaseTransaction {
 
 public:
 	mutable CUserID regAcctId;         //regid
@@ -593,18 +593,18 @@ public:
 	uint64_t llFees;
 	vector_unsigned_char signature;
 public:
-	CRegisterScriptTx(const CBaseTransaction *pBaseTx) {
+	CRegisterAppTx(const CBaseTransaction *pBaseTx) {
 		assert(REG_SCRIPT_TX == pBaseTx->nTxType);
-		*this = *(CRegisterScriptTx*) pBaseTx;
+		*this = *(CRegisterAppTx*) pBaseTx;
 	}
 
-	CRegisterScriptTx() {
+	CRegisterAppTx() {
 		nTxType = REG_SCRIPT_TX;
 		llFees = 0;
 		nValidHeight = 0;
 	}
 
-	~CRegisterScriptTx() {
+	~CRegisterAppTx() {
 	}
 
 	IMPLEMENT_SERIALIZE
@@ -612,10 +612,10 @@ public:
 		READWRITE(VARINT(this->nVersion));
 		nVersion = this->nVersion;
 		READWRITE(VARINT(nValidHeight));
-		CID regAcctId(regAcctId);
-		READWRITE(regAcctId);
+		CID regId(regAcctId);
+		READWRITE(regId);
 		if(fRead) {
-			regAcctId = regAcctId.GetUserId();
+			regAcctId = regId.GetUserId();
 		}
 		READWRITE(script);
 		READWRITE(VARINT(llFees));
@@ -627,7 +627,7 @@ public:
 	}
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
-		return make_shared<CRegisterScriptTx>(this);
+		return make_shared<CRegisterAppTx>(this);
 	}
 
 	uint256 SignatureHash() const {
@@ -661,7 +661,7 @@ public:
 class CFund {
 public:
 	unsigned char nFundType;		//!< fund type
-	vector_unsigned_char scriptID;	//!< hash of the tx which create the fund
+	vector_unsigned_char appId;	    //!< hash of the tx which create the fund
 	uint64_t value;					//!< amount of money
 	int nHeight;					//!< time-out height
 public:
@@ -680,13 +680,13 @@ public:
 		value = _value;
 		nHeight = _Height;
 		if (!_scriptID.empty())
-			scriptID = _scriptID;
+			appId = _scriptID;
 	}
 	CFund(const CFund &fund) {
 		nFundType = fund.nFundType;
 		value = fund.value;
 		nHeight = fund.nHeight;
-		scriptID = fund.scriptID;
+		appId = fund.appId;
 	}
 	CFund & operator =(const CFund &fund) {
 		if (this == &fund) {
@@ -695,7 +695,7 @@ public:
 		this->nFundType = fund.nFundType;
 		this->value = fund.value;
 		this->nHeight = fund.nHeight;
-		this->scriptID = fund.scriptID;
+		this->appId = fund.appId;
 		return *this;
 	}
 	~CFund() {
@@ -705,7 +705,7 @@ public:
 
 	uint256 GetHash() const {
 		CHashWriter ss(SER_GETHASH, 0);
-		ss << nFundType << scriptID << VARINT(value) << VARINT(nHeight);
+		ss << nFundType << appId << VARINT(value) << VARINT(nHeight);
 		return ss.GetHash();
 	}
 
@@ -729,7 +729,7 @@ public:
 	friend bool operator ==(const CFund &fa, const CFund &fb) {
 		if (fa.nFundType != fb.nFundType)
 			return false;
-		if (fa.scriptID != fb.scriptID)
+		if (fa.appId != fb.appId)
 			return false;
 		if (fa.value != fb.value)
 			return false;
@@ -743,7 +743,7 @@ public:
 	IMPLEMENT_SERIALIZE
 	(
 			READWRITE(nFundType);
-			READWRITE(scriptID);
+			READWRITE(appId);
 			READWRITE(value);
 			READWRITE(nHeight);
 
@@ -1015,7 +1015,7 @@ void Serialize(Stream& os, const std::shared_ptr<CBaseTransaction> &pa, int nTyp
 		Serialize(os, *((CRewardTransaction *) (pa.get())), nType, nVersion);
 	}
 	else if (pa->nTxType == REG_SCRIPT_TX) {
-		Serialize(os, *((CRegisterScriptTx *) (pa.get())), nType, nVersion);
+		Serialize(os, *((CRegisterAppTx *) (pa.get())), nType, nVersion);
 	}
 	else {
 		assert(0);
@@ -1044,8 +1044,8 @@ void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, i
 		Unserialize(is, *((CRewardTransaction *) (pa.get())), nType, nVersion);
 	}
 	else if (nTxType == REG_SCRIPT_TX) {
-		pa = make_shared<CRegisterScriptTx>();
-		Unserialize(is, *((CRegisterScriptTx *) (pa.get())), nType, nVersion);
+		pa = make_shared<CRegisterAppTx>();
+		Unserialize(is, *((CRegisterAppTx *) (pa.get())), nType, nVersion);
 	}
 	else {
 		assert(0);
