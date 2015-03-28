@@ -2,8 +2,8 @@
 #include <stdint.h>
 #include <vector>
 #include <map>
-#include "VmScript/CVir8051.h"
-#include "VmScript/TestMcu.h"
+#include "vm/vm8051.h"
+#include "vm/testmcu.h"
 #include <iostream>
 
 #include<time.h>
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(cvir8051_test2)
 
 	string reslut = "";
 	vector<unsigned char> InputData;
-	CVir8051 mcu(m_ROM,InputData);
+	CVm8051 mcu(m_ROM,InputData);
 	CTestMcu test(&mcu);
 
 	struct __Map map[] = {
