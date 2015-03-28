@@ -213,36 +213,23 @@ int SysTestBase::GetRandomMoney() {
 
 Value SysTestBase::CreateRegScriptTx(const string& strAddress, const string& strScript, bool bRigsterScript, int nFee,
 		int nHeight) {
-	string strScriptData;
-	char szType[1] = { 0 };
-	if (bRigsterScript) {
-		szType[0] = '0';
-		strScriptData = SysCfg().GetDefaultTestDataPath() + strScript;
-		if (!boost::filesystem::exists(strScriptData)) {
-			BOOST_CHECK_MESSAGE(0, strScriptData + " not exist");
+
+	string filepath = SysCfg().GetDefaultTestDataPath() + strScript;
+		if (!boost::filesystem::exists(filepath)) {
+			BOOST_CHECK_MESSAGE(0, filepath + " not exist");
 			return false;
 		}
-	} else {
-		strScriptData = strScript;
-		szType[0] = '1';
-	}
 
 	string strFee = strprintf("%d",nFee);
 	string strHeight = strprintf("%d",nHeight);
-	const char *argv[13] = {						//
-			"rpctest",						//
-					"registerscripttx",				//
-					(char*) strAddress.c_str(), 	//
-					szType, 						//
-					(char*) strScriptData.c_str(),	//
-					(char*) strFee.c_str(), 		//
-					(char*) strHeight.c_str(), 		//
-					"this is description"};	//
+
+	const char *argv[] = { "rpctest", "registerscripttx", (char*) strAddress.c_str(), (char*) filepath.c_str(), (char*) strFee.c_str(),(char*) strHeight.c_str(),"this is description"};
+	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
 
-	if (CommandLineRPC_GetValue(sizeof(argv) / sizeof(argv[0]), argv, value)) {
-		LogPrint("test_miners", "RegisterSecureTx:%s\r\n", write_string(value, true));
+	if (CommandLineRPC_GetValue(argc, argv, value)) {
+		LogPrint("test_miners", "RegScriptTx:%s\r\n", write_string(value, true));
 		return value;
 	}
 	return value;
@@ -436,9 +423,8 @@ Value SysTestBase::registaccounttx(const std::string &addr, const int nfee ,bool
 }
 
 Value SysTestBase::CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
-		int nHeight,int nFee) {
+		int nHeight,int nFee,uint64_t nMoney ) {
 
-	string strFee;
 	if (0 == nFee) {
 		int nfee = GetRandomFee();
 		nCurFee = nfee;
@@ -446,13 +432,14 @@ Value SysTestBase::CreateContractTx(const std::string &scriptid, const std::stri
 		nCurFee = nFee;
 	}
 
-	strFee = strprintf("%d",nCurFee);
+	string strFee = strprintf("%d",nCurFee);
 
-	char height[16] = { 0 };
-	strprintf(height, "%d", nHeight);
+	string height =strprintf("%d", nHeight);
 
-	const char *argv[] = { "rpctest", "createcontracttx", (char *) (scriptid.c_str()), (char *) (addrs.c_str()),
-			(char *) (contract.c_str()), (char*)strFee.c_str(), height };
+	string pmoney = strprintf("%ld", nMoney);
+
+	const char *argv[] = { "rpctest", "createcontracttx",(char *) (addrs.c_str()), (char *) (scriptid.c_str()), (char *)pmoney.c_str(),
+			(char *) (contract.c_str()), (char*)strFee.c_str(), (char*)height.c_str() };
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;

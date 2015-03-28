@@ -153,7 +153,7 @@ public:
 	{
 //		int nHeight = 0;
 		string param ="01";
-		Value resut =CreateContractTx("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
+		Value resut =CreateContractTx("010000000100", "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,TxHash));
 		LogPrint("vm", "create new contract tx:hash=%s\n", TxHash);
 		LogPrint("INFO", "create new contract tx:hash=%s\n", TxHash);
@@ -162,14 +162,14 @@ public:
 		param ="02";
 		param += HexStr(hash);
 		string temp;
-		resut =CreateContractTx("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
+		resut =CreateContractTx("010000000100", "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
 		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
 		BOOST_CHECK(GenerateOneBlock());
 
 		param ="03";
-		resut =CreateContractTx("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
+		resut =CreateContractTx("010000000100", "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
 		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
@@ -178,7 +178,7 @@ public:
 		param ="05";
 		param += HexStr(hash);
 
-		resut =CreateContractTx("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
+		resut =CreateContractTx("010000000100", "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,10000000);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
 		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
