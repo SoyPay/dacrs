@@ -112,7 +112,7 @@ public:
 	virtual bool HaveData(const vector<unsigned char> &vKey);
 	virtual bool GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
 	virtual bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex,
-			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, set<CScriptDBOperLog> &setOperLog);
+			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData);
 	virtual Object ToJosnObj(string Prefix);
 	virtual ~CScriptDBView(){};
 };
@@ -129,7 +129,7 @@ public:
 	bool HaveData(const vector<unsigned char> &vKey);
 	bool GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
 	bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex,
-			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, set<CScriptDBOperLog> &setOperLog);
+			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData);
 };
 
 class CScriptDBViewCache : public CScriptDBViewBacked {
@@ -151,9 +151,9 @@ public:
 	bool EraseScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey, CScriptDBOperLog &operLog);
 	bool HaveScriptData(const CRegID &scriptId, const vector<unsigned char > &vScriptKey);
 	bool GetScriptData(const int nCurBlockHeight, const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
-			vector<unsigned char> &vScriptData, CScriptDBOperLog &operLog);
+			vector<unsigned char> &vScriptData);
 	bool GetScriptData(const int nCurBlockHeight, const CRegID &scriptId, const int &nIndex,
-			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, set<CScriptDBOperLog> &setOperLog);
+			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData);
 	bool SetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
 				const vector<unsigned char> &vScriptData, CScriptDBOperLog &operLog);
 	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
@@ -263,7 +263,7 @@ private:
 	 * @return true if get succeed, otherwise false
 	 */
 	bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId, const vector<unsigned char> &vScriptKey,
-			vector<unsigned char> &vScriptData, CScriptDBOperLog &operLog);
+			vector<unsigned char> &vScriptData);
 	/**
 	 * @brief Get script data and valide height by scriptid and nIndex
 	 * @param vScriptId
@@ -273,7 +273,7 @@ private:
 	 * @param nHeight valide height of script data
 	 * @return true if get succeed, otherwise false
 	 */
-	bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, set<CScriptDBOperLog> &setOperLog);
+	bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData);
 	/**
 	 * @brief Save script data and valide height into script db
 	 * @param vScriptId

@@ -324,9 +324,6 @@ static const CRPCCommand vRPCCommands[] =
     { "getscriptdbsize",        &getscriptdbsize,        true,      false,      false},
     { "printblokdbinfo",        &printblokdbinfo,        true,      false,      false},
     { "getalltxinfo",			&getalltxinfo,			 true,      false,      true },
-    { "getbetrandomdata",		&getbetrandomdata,		 true,	    false,      false},
-    { "getp2pbetdata",		    &getp2pbetdata,		     true,	    false,      false},
-
 
 };
 
