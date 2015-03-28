@@ -7,13 +7,13 @@ using namespace boost;
 class CSysRegisterAccTest:public SysTestBase {
 public:
 
-	bool RegisterAccount(const string& strAddr, uint64_t nFee,string& strTxHash,int nHeight = 0,bool bSign = true) {
-		Value value = registaccounttx(strAddr,nFee,nHeight);
+	bool RegisterAccount(const string& strAddr, uint64_t nFee,string& strTxHash,bool bSign = false) {
+		Value value = registaccounttx(strAddr,nFee,bSign);
 		return GetHashFromCreatedTx(value,strTxHash);
 	}
 
 	bool SendMoney(const string& strRegAddr, const string& strDestAddr, uint64_t nMoney, uint64_t nFee = 0) {
-		Value value = CreateNormalTx(strRegAddr,strDestAddr,nMoney,nFee);
+		Value value = CreateNormalTx(strRegAddr,strDestAddr,nMoney);
 		string hash = "";
 		return GetHashFromCreatedTx(value,hash);
 	}
@@ -27,7 +27,7 @@ BOOST_FIXTURE_TEST_CASE(rpc_test,CSysRegisterAccTest)
 	//转账
 	string strRegAddr = "mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz";
 	string strSrcRegID = "000000000400";
-	uint64_t nMoney = 100000;
+	uint64_t nMoney = 10000000;
 	BOOST_CHECK(SendMoney(strSrcRegID,strRegAddr,nMoney));
 	BOOST_CHECK(GenerateOneBlock());
 
@@ -110,7 +110,7 @@ BOOST_FIXTURE_TEST_CASE(sysonly_test,CSysRegisterAccTest)
 
 	//给没有余额的账户转账
 	string strSrcRegID = "000000000400";
-	uint64_t nMoney = 100000;
+	uint64_t nMoney = 10000000;
 	BOOST_CHECK(SendMoney(strSrcRegID, strRegAddr1, nMoney));
 	BOOST_CHECK(GenerateOneBlock());
 
@@ -127,12 +127,12 @@ BOOST_FIXTURE_TEST_CASE(sysonly_test,CSysRegisterAccTest)
 
 
 	string strSpecial;
-	BOOST_CHECK(RegisterAccount(strRegAddr1, nFee, strSpecial,nInValidHeight));
+	BOOST_CHECK(RegisterAccount(strRegAddr1, nFee, strSpecial,false));
 	BOOST_CHECK(IsTxInMemorypool(uint256(strSpecial)));
 	BOOST_CHECK(IsTxUnConfirmdInWallet(uint256(strSpecial)));
 
 	//交易已经在memorypool中
-	BOOST_CHECK(!RegisterAccount(strRegAddr1, nFee, strTxHash,nInValidHeight));
+	BOOST_CHECK(!RegisterAccount(strRegAddr1, nFee, strTxHash,false));
 	BOOST_CHECK(!IsTxInMemorypool(uint256(strTxHash)));
 	BOOST_CHECK(!IsTxUnConfirmdInWallet(uint256(strTxHash)));
 
