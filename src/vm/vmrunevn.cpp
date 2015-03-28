@@ -4,11 +4,11 @@
  *  Created on: Sep 2, 2014
  *      Author: ranger.shi
  */
-#include "VmScriptRun.h"
+#include "vmrunevn.h"
 #include "tx.h"
 #include "util.h"
 #include <boost/foreach.hpp>
-CVmScriptRun::CVmScriptRun() {
+CVmRunEvn::CVmRunEvn() {
 	RawAccont.clear();
 	NewAccont.clear();
 	height = 0;
@@ -16,14 +16,14 @@ CVmScriptRun::CVmScriptRun() {
 	m_view = NULL;
 	m_dblog = std::make_shared<std::vector<CScriptDBOperLog> >();
 }
-vector<shared_ptr<CAccount> > &CVmScriptRun::GetRawAccont() {
+vector<shared_ptr<CAccount> > &CVmRunEvn::GetRawAccont() {
 	return RawAccont;
 }
-vector<shared_ptr<CAccount> > &CVmScriptRun::GetNewAccont() {
+vector<shared_ptr<CAccount> > &CVmRunEvn::GetNewAccont() {
 	return NewAccont;
 }
 
-bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& view, int nheight) {
+bool CVmRunEvn::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& view, int nheight) {
 
 	m_output.clear();
 	listTx = Tx;
@@ -56,14 +56,14 @@ bool CVmScriptRun::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& 
 		return false;
 	}
 
-	pMcu = make_shared<CVir8051>(vmScript.Rom, secure->vContract);
+	pMcu = make_shared<CVm8051>(vmScript.Rom, secure->vContract);
 	return true;
 }
 
-CVmScriptRun::~CVmScriptRun() {
+CVmRunEvn::~CVmRunEvn() {
 
 }
-tuple<bool, uint64_t, string> CVmScriptRun::run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view, CScriptDBViewCache& VmDB, int nheight,
+tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view, CScriptDBViewCache& VmDB, int nheight,
 		uint64_t nBurnFactor, uint64_t &uRunStep) {
 
 	if(nBurnFactor == 0)
@@ -107,7 +107,7 @@ tuple<bool, uint64_t, string> CVmScriptRun::run(shared_ptr<CBaseTransaction>& Tx
 
 }
 
-shared_ptr<CAccount> CVmScriptRun::GetNewAccount(shared_ptr<CAccount>& vOldAccount) {
+shared_ptr<CAccount> CVmRunEvn::GetNewAccount(shared_ptr<CAccount>& vOldAccount) {
 	if (NewAccont.size() == 0)
 		return NULL;
 	vector<shared_ptr<CAccount> >::iterator Iter;
@@ -120,7 +120,7 @@ shared_ptr<CAccount> CVmScriptRun::GetNewAccount(shared_ptr<CAccount>& vOldAccou
 	}
 	return NULL;
 }
-shared_ptr<CAccount> CVmScriptRun::GetAccount(shared_ptr<CAccount>& Account) {
+shared_ptr<CAccount> CVmRunEvn::GetAccount(shared_ptr<CAccount>& Account) {
 	if (RawAccont.size() == 0)
 		return NULL;
 	vector<shared_ptr<CAccount> >::iterator Iter;
@@ -132,7 +132,7 @@ shared_ptr<CAccount> CVmScriptRun::GetAccount(shared_ptr<CAccount>& Account) {
 	}
 	return NULL;
 }
-vector_unsigned_char CVmScriptRun::GetAccountID(CVmOperate value) {
+vector_unsigned_char CVmRunEvn::GetAccountID(CVmOperate value) {
 	vector_unsigned_char accountid;
 	//if (value.type == ACCOUNTID) {
 	//	accountid.assign(value.accountid, value.accountid + 6);
@@ -141,7 +141,7 @@ vector_unsigned_char CVmScriptRun::GetAccountID(CVmOperate value) {
 	//}
 	return accountid;
 }
-bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
+bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) const {
 	// judge contract rulue
 	uint64_t addmoey = 0, miusmoney = 0;
 	uint64_t temp = 0;
@@ -181,7 +181,7 @@ bool CVmScriptRun::CheckOperate(const vector<CVmOperate> &listoperate) const {
 	return true;
 }
 
-shared_ptr<vector<CVmOperate>> CVmScriptRun::GetOperate() const {
+shared_ptr<vector<CVmOperate>> CVmRunEvn::GetOperate() const {
 	auto tem = make_shared<vector<CVmOperate>>();
 	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
 	CDataStream Contractstream(*retData.get(), SER_DISK, CLIENT_VERSION);
@@ -191,7 +191,7 @@ shared_ptr<vector<CVmOperate>> CVmScriptRun::GetOperate() const {
 	return tem;
 }
 
-bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountViewCache& view) {
+bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountViewCache& view) {
 
 	NewAccont.clear();
 	for (auto& it : listoperate) {
@@ -251,46 +251,46 @@ bool CVmScriptRun::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccoun
 	return true;
 }
 
-const CRegID& CVmScriptRun::GetScriptRegID()
+const CRegID& CVmRunEvn::GetScriptRegID()
 {
 	CTransaction* tx = static_cast<CTransaction*>(listTx.get());
 	return boost::get<CRegID>(tx->desUserId);
 }
 
-const CRegID &CVmScriptRun::GetTxAccount() {
+const CRegID &CVmRunEvn::GetTxAccount() {
 	CTransaction* tx = static_cast<CTransaction*>(listTx.get());
 	return boost::get<CRegID>(tx->srcRegId);
 }
-uint64_t CVmScriptRun::GetValue() const{
+uint64_t CVmRunEvn::GetValue() const{
 	CTransaction* tx = static_cast<CTransaction*>(listTx.get());
 		return tx->llValues;
 }
-const vector<unsigned char>& CVmScriptRun::GetTxContact()
+const vector<unsigned char>& CVmRunEvn::GetTxContact()
 {
 	CTransaction* tx = static_cast<CTransaction*>(listTx.get());
 		return tx->vContract;
 }
-int CVmScriptRun::GetComfirHeight()
+int CVmRunEvn::GetComfirHeight()
 {
 	return height;
 }
-uint256 CVmScriptRun::GetCurTxHash()
+uint256 CVmRunEvn::GetCurTxHash()
 {
 	return listTx.get()->GetHash();
 }
-CScriptDBViewCache* CVmScriptRun::GetScriptDB()
+CScriptDBViewCache* CVmRunEvn::GetScriptDB()
 {
 	return m_ScriptDBTip;
 }
-CAccountViewCache * CVmScriptRun::GetCatchView()
+CAccountViewCache * CVmRunEvn::GetCatchView()
 {
 	return m_view;
 }
-void CVmScriptRun::InsertOutputData(vector<CVmOperate> source)
+void CVmRunEvn::InsertOutputData(vector<CVmOperate> source)
 {
 	m_output.insert(m_output.end(),source.begin(),source.end());
 }
-shared_ptr<vector<CScriptDBOperLog> > CVmScriptRun::GetDbLog()
+shared_ptr<vector<CScriptDBOperLog> > CVmRunEvn::GetDbLog()
 {
 	return m_dblog;
 }
