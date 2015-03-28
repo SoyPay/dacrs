@@ -2,7 +2,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "CVir8051.h"
+#include "vm8051.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -13,7 +13,7 @@
 #include "main.h"
 #include <openssl/des.h>
 #include <vector>
-#include "VmScriptRun.h"
+#include "vmrunevn.h"
 #include "tx.h"
 //#include "Typedef.h"
 
@@ -21,7 +21,7 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-void CVir8051::InitalReg() {
+void CVm8051::InitalReg() {
 
 	memset(m_ChipRam, 0, sizeof(m_ChipRam));
 	memset(m_ChipSfr, 0, sizeof(m_ChipSfr));
@@ -51,7 +51,7 @@ void CVir8051::InitalReg() {
 
 }
 
-CVir8051::CVir8051(const vector<unsigned char> & vRom, const vector<unsigned char> &InputData) :
+CVm8051::CVm8051(const vector<unsigned char> & vRom, const vector<unsigned char> &InputData) :
 		Sys(this), Rges(this) {
 
 	InitalReg();
@@ -64,7 +64,7 @@ CVir8051::CVir8051(const vector<unsigned char> & vRom, const vector<unsigned cha
 	memcpy(&ipara[2], &InputData[0],count);
 }
 
-CVir8051::~CVir8051() {
+CVm8051::~CVm8051() {
 
 }
 
@@ -566,7 +566,7 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
  * 1.第一个是 账户id,六个字节
  */
 static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScriptRun) {
-	CVmScriptRun *pVmScript = (CVmScriptRun *)pVmScriptRun;
+	CVmRunEvn *pVmScript = (CVmRunEvn *)pVmScriptRun;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
     if(!GetData(ipara,retdata) ||retdata.size() != 1
@@ -604,7 +604,7 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
  * 1.第一个是 账户id,六个字节
  */
 static RET_DEFINE ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScriptRun) {
-	CVmScriptRun *pVmScript = (CVmScriptRun *)pVmScriptRun;
+	CVmRunEvn *pVmScript = (CVmRunEvn *)pVmScriptRun;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
     if(!GetData(ipara,retdata) ||retdata.size() != 1
     	|| !(retdata.at(0).get()->size() == 6 || retdata.at(0).get()->size() == 34))
@@ -673,7 +673,7 @@ static RET_DEFINE ExGetTxConFirmHeightFunc(unsigned char * ipara,void * pVmScrip
  */
 static RET_DEFINE ExGetBlockHashFunc(unsigned char * ipara,void * pVmScriptRun) {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-	CVmScriptRun *pVmScript = (CVmScriptRun *)pVmScriptRun;
+	CVmRunEvn *pVmScript = (CVmRunEvn *)pVmScriptRun;
     if(!GetData(ipara,retdata) ||retdata.size() != 1 || retdata.at(0).get()->size() != sizeof(int))
     {
     	return RetFalse(string(__FUNCTION__)+"para  err !");
@@ -703,9 +703,9 @@ static RET_DEFINE ExGetBlockHashFunc(unsigned char * ipara,void * pVmScriptRun) 
 
 }
 
-static RET_DEFINE ExGetCurRunEnvHeightFunc(unsigned char * ipara,void * pVmScript) {
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	int height = pVmScriptRun->GetComfirHeight();
+static RET_DEFINE ExGetCurRunEnvHeightFunc(unsigned char * ipara,void * pVmEvn) {
+	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
+	int height = pVmRunEvn->GetComfirHeight();
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -722,8 +722,8 @@ static RET_DEFINE ExGetCurRunEnvHeightFunc(unsigned char * ipara,void * pVmScrip
  * 2.第二个是value值
  * 3.第三个是超时高度
  */
-static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmEvn) {
+	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
     if(!GetData(ipara,retdata) ||retdata.size() != 2)
@@ -731,15 +731,15 @@ static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
     	return RetFalse(string(__FUNCTION__)+"para  err !");
     }
 
-	const CRegID scriptid = pVmScriptRun->GetScriptRegID();
+	const CRegID scriptid = pVmRunEvn->GetScriptRegID();
 	bool flag = true;
-	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
+	CScriptDBViewCache* scriptDB = pVmRunEvn->GetScriptDB();
 
 	CScriptDBOperLog operlog;
 	if (!scriptDB->SetScriptData(scriptid, *retdata.at(0), *retdata.at(1),operlog)) {
 		flag = false;
 	} else {
-		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
+		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmRunEvn->GetDbLog();
 		(*m_dblog.get()).push_back(operlog);
 	}
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -754,8 +754,8 @@ static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmScript) {
  * 这个函数式从中间层传了一个参数过来:
  * 1.第一个是 key值
  */
-static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmEvn) {
+	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
     if(!GetData(ipara,retdata) ||retdata.size() != 1)
@@ -764,17 +764,17 @@ static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
     	LogPrint("vm", "GetData return error!\n");
     	return RetFalse(string(__FUNCTION__)+"para  err !");
     }
-	CRegID scriptid = pVmScriptRun->GetScriptRegID();
+	CRegID scriptid = pVmRunEvn->GetScriptRegID();
 
 	bool flag = true;
-	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
+	CScriptDBViewCache* scriptDB = pVmRunEvn->GetScriptDB();
 
 	CScriptDBOperLog operlog;
 	if (!scriptDB->EraseScriptData(scriptid, *retdata.at(0), operlog)) {
 		LogPrint("vm", "ExDeleteDataDBFunc error key:%s!\n",HexStr(*retdata.at(0)));
 		flag = false;
 	} else {
-		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
+		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmRunEvn->GetDbLog();
 		m_dblog.get()->push_back(operlog);
 	}
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -790,26 +790,26 @@ static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmScript) {
  * 这个函数式从中间层传了一个参数过来:
  * 1.第一个是 key值
  */
-static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) {
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmEvn) {
+	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
     if(!GetData(ipara,retdata) ||retdata.size() != 1)
     {
     	return RetFalse(string(__FUNCTION__)+"para  err !");
     }
-	CRegID scriptid = pVmScriptRun->GetScriptRegID();
+	CRegID scriptid = pVmRunEvn->GetScriptRegID();
 
 	vector_unsigned_char vValue;
-	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
+	CScriptDBViewCache* scriptDB = pVmRunEvn->GetScriptDB();
 	bool flag =true;
 
 //	LogPrint("INFO", "script run read data:%s\n", HexStr(*retdata.at(0)));
 	CScriptDBOperLog operLog;
-	if(!scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid, *retdata.at(0), vValue, operLog))
+	if(!scriptDB->GetScriptData(pVmRunEvn->GetComfirHeight(),scriptid, *retdata.at(0), vValue))
 	{
 		if(!operLog.vKey.empty()) {
-			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
+			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmRunEvn->GetDbLog();
 			m_dblog.get()->push_back(operLog);
 		}
 		flag = false;
@@ -822,13 +822,13 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmScript) 
 }
 
 
-static RET_DEFINE ExGetDBSizeFunc(unsigned char * ipara,void * pVmScript) {
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	CRegID scriptid = pVmScriptRun->GetScriptRegID();
+static RET_DEFINE ExGetDBSizeFunc(unsigned char * ipara,void * pVmEvn) {
+	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
+	CRegID scriptid = pVmRunEvn->GetScriptRegID();
 	vector<unsigned char> vScriptKey;
 	int count = 0;
 	bool flag = true;
-	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
+	CScriptDBViewCache* scriptDB = pVmRunEvn->GetScriptDB();
 	if(!scriptDB->GetScriptDataCount(scriptid,count))
 	{
 		flag = false;
@@ -849,13 +849,13 @@ static RET_DEFINE ExGetDBSizeFunc(unsigned char * ipara,void * pVmScript) {
  * 1.第一个是 index值
  * 2.第二是key值
  */
-static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
+static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmEvn) {
 
 	if (SysCfg().GetArg("-isdbtraversal", 0) == 0) {
 		LogPrint("INFO","%s","ExGetDBValueFunc can't use\n");
     	return RetFalse(string(__FUNCTION__)+"para  err !");
 	}
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
     if(!GetData(ipara,retdata) ||(retdata.size() != 2 && retdata.size() != 1))
@@ -869,7 +869,7 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
 	{
 		flag =  false;
 	}
-	CRegID scriptid = pVmScriptRun->GetScriptRegID();
+	CRegID scriptid = pVmRunEvn->GetScriptRegID();
 
 	vector_unsigned_char vValue;
 	vector<unsigned char> vScriptKey;
@@ -878,15 +878,15 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
 		vScriptKey.assign(retdata.at(1).get()->begin(),retdata.at(1).get()->end());
 	}
 
-	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
+	CScriptDBViewCache* scriptDB = pVmRunEvn->GetScriptDB();
 	set<CScriptDBOperLog> setOperLog;
-	flag = scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid,index,vScriptKey,vValue,setOperLog);
+	flag = scriptDB->GetScriptData(pVmRunEvn->GetComfirHeight(),scriptid,index,vScriptKey,vValue);
 
 	if(flag){
 		LogPrint("vm", "Read key:%s,value:%s!\n",HexStr(vScriptKey),HexStr(vValue));
 	}
 	if (!setOperLog.empty()) {
-		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
+		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmRunEvn->GetDbLog();
 		for(auto &item : setOperLog)
 			m_dblog.get()->push_back(item);
 	}
@@ -894,14 +894,11 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmScript) {
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     (*tem.get()).push_back(vScriptKey);
 	(*tem.get()).push_back(vValue);
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
-    vector<unsigned char> tep1(tep.begin(),tep.end());
-    (*tem.get()).push_back(tep1);
 	return std::make_tuple (flag, tem);
 }
-static RET_DEFINE ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	uint256 hash = pVmScriptRun->GetCurTxHash();
+static RET_DEFINE ExGetCurTxHash(unsigned char * ipara,void * pVmEvn) {
+	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
+	uint256 hash = pVmRunEvn->GetCurTxHash();
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << hash;
@@ -918,9 +915,9 @@ static RET_DEFINE ExGetCurTxHash(unsigned char * ipara,void * pVmScript) {
  * 1.第一个是 key
  * 2.第二个是 value
  */
-static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript)
+static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmEvn)
 {
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
@@ -928,19 +925,26 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript
     {
     	return RetFalse(string(__FUNCTION__)+"para  err !");
     }
-	CRegID scriptid = pVmScriptRun->GetScriptRegID();
+	CRegID scriptid = pVmRunEvn->GetScriptRegID();
 	vector_unsigned_char vValue;
 	bool flag = false;
 	bool ret = true;
-	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
+	CScriptDBViewCache* scriptDB = pVmRunEvn->GetScriptDB();
 
 	CScriptDBOperLog operlog;
-
-	if(scriptDB->SetScriptData(scriptid,*retdata.at(0),*retdata.at(1),operlog))
-	{
-		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
-		m_dblog.get()->push_back(operlog);
-		flag = true;
+	vector_unsigned_char vTemp;
+	if(scriptDB->GetScriptData(pVmRunEvn->GetComfirHeight(),scriptid, *retdata.at(0), vTemp)) {
+		if(scriptDB->SetScriptData(scriptid,*retdata.at(0),*retdata.at(1).get(),operlog))
+		{
+			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmRunEvn->GetDbLog();
+			m_dblog.get()->push_back(operlog);
+			flag = true;
+		}
+	}else {
+		if(!operlog.vKey.empty()) {
+			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmRunEvn->GetDbLog();
+			m_dblog.get()->push_back(operlog);
+		}
 	}
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -956,11 +960,11 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmScript
  * 中间层传了一个参数
  * 1.第一个是输出指令
  */
-static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmScript)
+static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmEvn)
 {
 
 	unsigned char * pbuffer = ipara;
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
     if(!GetData(ipara,retdata) ||retdata.size() != 1 )
@@ -978,7 +982,7 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmScript)
 		ss >> temp;
       source.push_back(temp);
 	}
-	pVmScriptRun->InsertOutputData(source);
+	pVmRunEvn->InsertOutputData(source);
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	return std::make_tuple (true , tem);
 }
@@ -989,7 +993,7 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmScript)
  * 1.脚本的id号
  * 2.数据库的key值
  */
-static RET_DEFINE ExGetScriptDataFunc(unsigned char * ipara,void * pVmScript)
+static RET_DEFINE ExGetScriptDataFunc(unsigned char * ipara,void * pVmEvn)
 {
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
@@ -999,14 +1003,14 @@ static RET_DEFINE ExGetScriptDataFunc(unsigned char * ipara,void * pVmScript)
     }
 	vector_unsigned_char vValue;
 	bool flag =true;
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	CScriptDBViewCache* scriptDB = pVmScriptRun->GetScriptDB();
+	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
+	CScriptDBViewCache* scriptDB = pVmRunEvn->GetScriptDB();
 	CRegID scriptid(*retdata.at(0));
 	CScriptDBOperLog operLog;
-	if(!scriptDB->GetScriptData(pVmScriptRun->GetComfirHeight(),scriptid, *retdata.at(1), vValue,  operLog))
+	if(!scriptDB->GetScriptData(pVmRunEvn->GetComfirHeight(), scriptid, *retdata.at(1), vValue))
 	{
 		if (!operLog.vKey.empty()) {
-			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmScriptRun->GetDbLog();
+			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmRunEvn->GetDbLog();
 			m_dblog.get()->push_back(operLog);
 		}
 		flag = false;
@@ -1018,21 +1022,21 @@ static RET_DEFINE ExGetScriptDataFunc(unsigned char * ipara,void * pVmScript)
 	return std::make_tuple (flag, tem);
 
 }
-static RET_DEFINE ExGetScriptIDFunc(unsigned char * ipara,void * pVmScript)
+static RET_DEFINE ExGetScriptIDFunc(unsigned char * ipara,void * pVmEvn)
 {
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 
-	vector_unsigned_char scriptid = pVmScriptRun->GetScriptRegID().GetVec6();
+	vector_unsigned_char scriptid = pVmRunEvn->GetScriptRegID().GetVec6();
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
    (*tem.get()).push_back(scriptid);
 
 	return std::make_tuple (true, tem);
 }
-static RET_DEFINE ExGetCurTxAccountFunc(unsigned char * ipara,void * pVmScript)
+static RET_DEFINE ExGetCurTxAccountFunc(unsigned char * ipara,void * pVmEvn)
 {
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	vector_unsigned_char vUserId =pVmScriptRun->GetTxAccount().GetVec6();
+	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
+	vector_unsigned_char vUserId =pVmRunEvn->GetTxAccount().GetVec6();
 
 	vector<unsigned char> item;
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -1040,10 +1044,10 @@ static RET_DEFINE ExGetCurTxAccountFunc(unsigned char * ipara,void * pVmScript)
 	(*tem.get()).push_back(vUserId);
 	return std::make_tuple (true, tem);
 }
-static RET_DEFINE ExGetCurTxContactFunc(unsigned char * ipara,void * pVmScript)
+static RET_DEFINE ExGetCurTxContactFunc(unsigned char * ipara, void *pVmEvn)
 {
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	vector<unsigned char> contact =pVmScriptRun->GetTxContact();
+	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
+	vector<unsigned char> contact =pVmRunEvn->GetTxContact();
 
 	vector<unsigned char> item;
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -1051,7 +1055,7 @@ static RET_DEFINE ExGetCurTxContactFunc(unsigned char * ipara,void * pVmScript)
 	(*tem.get()).push_back(contact);
 	return std::make_tuple (true, tem);
 }
-static RET_DEFINE ExDefaultFunc(unsigned char * ipara,void * pVmScriptRun) {
+static RET_DEFINE ExDefaultFunc(unsigned char * ipara,void * pVmEvn) {
 	return RetFalse(string(__FUNCTION__)+"para  err !");
 }
 enum COMPRESS_TYPE {
@@ -1128,7 +1132,7 @@ void Decompress(vector<unsigned char>& format,vector<unsigned char> &contact,std
 	ret.insert(ret.begin(),retdata.begin(),retdata.end());
 }
 
-static RET_DEFINE ExCurDeCompressContactFunc(unsigned char * ipara,void * pVmScriptRun){
+static RET_DEFINE ExCurDeCompressContactFunc(unsigned char *ipara,void *pVmEvn){
 
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
@@ -1136,7 +1140,7 @@ static RET_DEFINE ExCurDeCompressContactFunc(unsigned char * ipara,void * pVmScr
     {
     	return RetFalse(string(__FUNCTION__)+"para  err !");
     }
-	vector<unsigned char> contact =((CVmScriptRun *)pVmScriptRun)->GetTxContact();
+	vector<unsigned char> contact =((CVmRunEvn *)pVmEvn)->GetTxContact();
 
 	std::vector<unsigned char> outContact;
 	Decompress(*retdata.at(0),contact,outContact);
@@ -1147,7 +1151,7 @@ static RET_DEFINE ExCurDeCompressContactFunc(unsigned char * ipara,void * pVmScr
 	return std::make_tuple (true, tem);
 
 }
-static RET_DEFINE ExDeCompressContactFunc(unsigned char * ipara,void * pVmScriptRun){
+static RET_DEFINE ExDeCompressContactFunc(unsigned char *ipara,void *pVmEvn){
 
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
     if(!GetData(ipara,retdata) ||retdata.size() != 2 || retdata.at(1).get()->size() != 32)
@@ -1172,9 +1176,9 @@ static RET_DEFINE ExDeCompressContactFunc(unsigned char * ipara,void * pVmScript
 	return std::make_tuple (true, tem);
 }
 
-static RET_DEFINE GetCurTxPayAmountFunc(unsigned char * ipara,void * pVmScript){
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
-	uint64_t lvalue =pVmScriptRun->GetValue();
+static RET_DEFINE GetCurTxPayAmountFunc(unsigned char *ipara,void *pVmEvn){
+	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
+	uint64_t lvalue =pVmRunEvn->GetValue();
 
 	vector<unsigned char> item;
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -1186,7 +1190,7 @@ static RET_DEFINE GetCurTxPayAmountFunc(unsigned char * ipara,void * pVmScript){
 	return std::make_tuple (true, tem);
 }
 static RET_DEFINE GetUserAppAccValue(unsigned char * ipara,void * pVmScript){
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	CVmRunEvn *pVmScriptRun = (CVmRunEvn *)pVmScript;
 
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
@@ -1218,7 +1222,7 @@ static RET_DEFINE GetUserAppAccValue(unsigned char * ipara,void * pVmScript){
 
 
 static RET_DEFINE GetUserAppAccFoudWithTag(unsigned char * ipara,void * pVmScript){
-	CVmScriptRun *pVmScriptRun = (CVmScriptRun *)pVmScript;
+	CVmRunEvn *pVmScriptRun = (CVmRunEvn *)pVmScript;
 
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
@@ -1335,12 +1339,12 @@ const static struct __MapExterFun FunMap[] = { //
 
 		};
 
-RET_DEFINE CallExternalFunc(INT16U method, unsigned char *ipara,CVmScriptRun *pVmScriptRun) {
-	return FunMap[method].fun(ipara,pVmScriptRun);
+RET_DEFINE CallExternalFunc(INT16U method, unsigned char *ipara,CVmRunEvn *pVmEvn) {
+	return FunMap[method].fun(ipara, pVmEvn);
 
 }
 
-int64_t CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
+int64_t CVm8051::run(uint64_t maxstep, CVmRunEvn *pVmEvn) {
 	INT8U code = 0;
 	uint64_t step = 0;
 
@@ -1353,7 +1357,7 @@ int64_t CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 			//get what func will be called
 			INT16U methodID = ((INT16U) GetExRam(VM_FUN_CALL_ADDR) | ((INT16U) GetExRam(VM_FUN_CALL_ADDR+1) << 8));
 			unsigned char *ipara = (unsigned char *) GetExRamAddr(VM_SHARE_ADDR);		//input para
-			RET_DEFINE retdata = CallExternalFunc(methodID, ipara, pVmScriptRun);
+			RET_DEFINE retdata = CallExternalFunc(methodID, ipara, pVmEvn);
 			memset(ipara, 0, MAX_SHARE_RAM);
 
 			if (std::get<0>(retdata)) {
@@ -1394,7 +1398,7 @@ int64_t CVir8051::run(uint64_t maxstep,CVmScriptRun *pVmScriptRun) {
 	return 1;
 }
 
-bool CVir8051::run() {
+bool CVm8051::run() {
 
 	INT8U code = 0;
 //	INT16U flag;
@@ -1409,7 +1413,7 @@ bool CVir8051::run() {
 			INT16U method = ((INT16U) GetExRam(VM_FUN_CALL_ADDR) | ((INT16U) GetExRam(VM_FUN_CALL_ADDR+1) << 8));
 //			flag = method;
 			unsigned char *ipara = (unsigned char *) GetExRamAddr(VM_SHARE_ADDR);		//input para
-			CVmScriptRun *pVmScript = NULL;
+			CVmRunEvn *pVmScript = NULL;
 			RET_DEFINE retdata = CallExternalFunc(method, ipara, pVmScript);
 			//memset(ipara, 0, MAX_SHARE_RAM);
 			memset(ipara, 0, 8);
@@ -1445,10 +1449,10 @@ bool CVir8051::run() {
 
 	return 1;
 }
-void CVir8051::SetExRamData(INT16U addr, const vector<unsigned char> data) {
+void CVm8051::SetExRamData(INT16U addr, const vector<unsigned char> data) {
 	memcpy(&m_ExRam[addr], &data[0], data.size());
 }
-void CVir8051::StepRun(INT8U code) {
+void CVm8051::StepRun(INT8U code) {
 //		INT8U tempa = Sys.a();
 //	m_ChipRamoper[code] = 1;
 //	char temp[1024];
@@ -2502,7 +2506,7 @@ void CVir8051::StepRun(INT8U code) {
 //	return addr;
 //}
 
-bool CVir8051::GetBitFlag(INT8U addr) {
+bool CVm8051::GetBitFlag(INT8U addr) {
 	return (GetBitRamRef(addr) & (BIT0 << (addr % 8))) != 0;
 }
 
@@ -2514,7 +2518,7 @@ bool CVir8051::GetBitFlag(INT8U addr) {
 //	memcpy(&temp, GetPointRamAddr(addr), sizeof(temp));
 //	return (((BIT0 << n) & temp) != 0);
 //}
-void CVir8051::SetBitFlag(INT8U addr) {
+void CVm8051::SetBitFlag(INT8U addr) {
 
 //	INT8U tempaddr = getAddr(addr);
 	GetBitRamRef(addr) |= (BIT0 << (addr % 8));
@@ -2523,7 +2527,7 @@ void CVir8051::SetBitFlag(INT8U addr) {
 	}
 }
 
-void CVir8051::ClrBitFlag(INT8U addr) {
+void CVm8051::ClrBitFlag(INT8U addr) {
 //	Assert(addr <= 0xF0);
 //	INT8U temp;
 //	//void  *p = GetPointRamAddr((addr/8)+0x20);
@@ -2552,11 +2556,11 @@ void CVir8051::ClrBitFlag(INT8U addr) {
 //}
 }
 
-INT8U CVir8051::GetOpcode(void) const {
+INT8U CVm8051::GetOpcode(void) const {
 	return m_ExeFile[Sys.PC];
 }
 
-INT8U& CVir8051::GetRamRef(INT8U addr) {
+INT8U& CVm8051::GetRamRef(INT8U addr) {
 
 //	static const INT8U sfrarry[] = { a_addr, b_addr, dptrl, dptrh, psw_addr, sp_addr };
 //	if (find(sfrarry, sfrarry + sizeof(sfrarry), addr) != sfrarry + sizeof(sfrarry)) {
@@ -2567,20 +2571,20 @@ INT8U& CVir8051::GetRamRef(INT8U addr) {
 	}
 }
 
-INT16U CVir8051::GetDebugOpcode(void) const {
+INT16U CVm8051::GetDebugOpcode(void) const {
 	INT16U temp = 0;
 	memcpy(&temp, &m_ExeFile[Sys.PC], 2);
 	return temp;
 }
 
-bool CVir8051::GetDebugPC(INT16U pc) const {
+bool CVm8051::GetDebugPC(INT16U pc) const {
 	return (pc == Sys.PC);
 }
 
-void CVir8051::GetOpcodeData(void * const p, INT8U len) const {  //先取高位字节
+void CVm8051::GetOpcodeData(void * const p, INT8U len) const {  //先取高位字节
 	memcpy(p, &m_ExeFile[Sys.PC + 1], len);
 }
-void CVir8051::AJMP(INT8U opCode, INT8U data) {
+void CVm8051::AJMP(INT8U opCode, INT8U data) {
 	INT16U tmppc = Sys.PC + 2;
 // tmppc  |= ((((((INT16U)opCode)<<5)&(0x7)))|((INT16U)data));
 	tmppc &= 0xF800;
@@ -2588,7 +2592,7 @@ void CVir8051::AJMP(INT8U opCode, INT8U data) {
 
 	Sys.PC = tmppc;
 }
-void CVir8051::ACALL(INT8U opCode) {
+void CVm8051::ACALL(INT8U opCode) {
 	INT8U data = Get1Opcode();
 //	GetOpcodeData(&data, sizeof(data));
 
@@ -2611,7 +2615,7 @@ void CVir8051::ACALL(INT8U opCode) {
 	Sys.PC = ((Sys.PC & 0xF800) | (((((INT16U) opCode) >> 5) << 8) | (INT16U) data));
 }
 
-void CVir8051::UpDataDebugInfo(void) {
+void CVm8051::UpDataDebugInfo(void) {
 	d_Rges.R0 = Rges.R0();
 	d_Rges.R1 = Rges.R1();
 	d_Rges.R2 = Rges.R2();
@@ -2629,38 +2633,38 @@ void CVir8051::UpDataDebugInfo(void) {
 	d_Sys.PC = Sys.PC;
 }
 
-void * CVir8051::GetExRamAddr(INT16U addr) const {
+void * CVm8051::GetExRamAddr(INT16U addr) const {
 //	Assert(addr < sizeof(m_ExRam));
 	return (void *) &m_ExRam[addr];
 }
-INT8U CVir8051::GetExRam(INT16U addr) const {
+INT8U CVm8051::GetExRam(INT16U addr) const {
 //	Assert(addr < sizeof(m_ExRam));
 	return m_ExRam[addr];
 }
-INT8U CVir8051::SetExRam(INT16U addr, INT8U data) {
+INT8U CVm8051::SetExRam(INT16U addr, INT8U data) {
 //	Assert(addr < sizeof(m_ExRam));
 	return m_ExRam[addr] = data;
 }
-void * CVir8051::GetPointRamAddr(INT16U addr) const {
+void * CVm8051::GetPointRamAddr(INT16U addr) const {
 //	Assert(addr < sizeof(m_ChipRam));
 	return (void *) &m_ChipRam[addr];
 }
 
-INT8U CVir8051::GetRamDataAt(INT8U addr) {
+INT8U CVm8051::GetRamDataAt(INT8U addr) {
 	return m_ChipRam[addr];
 }
-INT8U CVir8051::SetRamDataAt(INT8U addr, INT8U data) {
+INT8U CVm8051::SetRamDataAt(INT8U addr, INT8U data) {
 	return m_ChipRam[addr] = data;
 }
-INT8U CVir8051::GetRamData(INT8U addr) {
+INT8U CVm8051::GetRamData(INT8U addr) {
 	return GetRamRef(addr);
 }
-INT8U CVir8051::SetRamData(INT8U addr, INT8U data) {
+INT8U CVm8051::SetRamData(INT8U addr, INT8U data) {
 	GetRamRef(addr) = data;
 	return data;
 }
 
-void* CVir8051::GetPointFileAddr(INT16U addr) const {
+void* CVm8051::GetPointFileAddr(INT16U addr) const {
 	Assert(addr < sizeof(m_ExeFile));
 	return (void*) &m_ExeFile[addr];
 }
@@ -2710,7 +2714,7 @@ void* CVir8051::GetPointFileAddr(INT16U addr) const {
 ////	GetOpcodeData(&temp, 1);
 //	AJMP(0xE1,  Get1Opcode());
 //}
-void CVir8051::Opcode_02_LJMP_Addr16(void) {
+void CVm8051::Opcode_02_LJMP_Addr16(void) {
 	INT8U temp[2];
 	INT16U data;
 	GetOpcodeData(temp, 2);
@@ -2718,7 +2722,7 @@ void CVir8051::Opcode_02_LJMP_Addr16(void) {
 	Sys.PC = data | temp[1];
 }
 
-void CVir8051::Opcode_03_RR_A(void) {
+void CVm8051::Opcode_03_RR_A(void) {
 	INT8U temp = (Sys.a() & 0x1);
 	Sys.a = Sys.a() >> 1;
 	Sys.a = Sys.a() | (temp << 7);
@@ -2730,7 +2734,7 @@ void CVir8051::Opcode_03_RR_A(void) {
 //	Sys.a = Sys.a() + 1;
 //	++Sys.PC;
 //}
-void CVir8051::Opcode_05_INC_Direct(void) {
+void CVm8051::Opcode_05_INC_Direct(void) {
 	INT8U temp = 0;
 	INT8U addr = Get1Opcode();
 //	void *p = NULL;
@@ -2744,7 +2748,7 @@ void CVir8051::Opcode_05_INC_Direct(void) {
 	Sys.PC = Sys.PC + 2;
 }
 
-void CVir8051::Opcode_06_INC_R0_1(void) {
+void CVm8051::Opcode_06_INC_R0_1(void) {
 	INT8U data = 0;
 	INT8U addr = Rges.R0();
 	data = GetRamDataAt(addr);
@@ -2757,7 +2761,7 @@ void CVir8051::Opcode_06_INC_R0_1(void) {
 //	memcpy(p, &temp, sizeof(temp));
 	++Sys.PC;
 }
-void CVir8051::Opcode_07_INC_R1_1(void) {
+void CVm8051::Opcode_07_INC_R1_1(void) {
 //	INT8U temp = 0;
 //	void *p = GetPointRamAddr(Rges.R1());
 //	memcpy(&temp, p, sizeof(temp));
@@ -2805,7 +2809,7 @@ void CVir8051::Opcode_07_INC_R1_1(void) {
 //	Rges.R7 = Rges.R7() + 1;
 //	++Sys.PC;
 //}
-void CVir8051::Opcode_10_JBC_Bit_Rel(void) {
+void CVm8051::Opcode_10_JBC_Bit_Rel(void) {
 	INT8U temp[2];
 	char tem2;
 
@@ -2853,7 +2857,7 @@ void CVir8051::Opcode_10_JBC_Bit_Rel(void) {
 //	ACALL(0xF1);
 //}
 
-INT16U CVir8051::GetLcallAddr(void) {
+INT16U CVm8051::GetLcallAddr(void) {
 	INT16U addr = 0;
 	GetOpcodeData((INT8U*) &addr, 2);
 	Assert(GetOpcode() == 0x12);
@@ -2964,7 +2968,7 @@ INT16U CVir8051::GetLcallAddr(void) {
 //       Rges.R7 = ((INT8U)(ret));
 //    }
 
-void CVir8051::Opcode_12_LCALL_Addr16(void) {
+void CVm8051::Opcode_12_LCALL_Addr16(void) {
 //	INT8U temp = 0;
 	INT16U addr = 0;
 //	void *p = NULL;
@@ -2984,7 +2988,7 @@ void CVir8051::Opcode_12_LCALL_Addr16(void) {
 // GetOpcodeData(&Sys.PC,2);
 	Sys.PC = (addr >> 8) | (addr << 8);
 }
-void CVir8051::Opcode_13_RRC_A(void) {
+void CVm8051::Opcode_13_RRC_A(void) {
 	INT8U temp = Sys.a() & BIT0;
 
 	Sys.a = ((Sys.a() >> 1) | (Sys.psw().cy << 7));
@@ -2992,11 +2996,11 @@ void CVir8051::Opcode_13_RRC_A(void) {
 	Sys.psw().cy = (temp == 0) ? 0 : 1;
 	++Sys.PC;
 }
-void CVir8051::Opcode_14_DEC_A(void) {
+void CVm8051::Opcode_14_DEC_A(void) {
 	Sys.a = Sys.a() - 1;
 	++Sys.PC;
 }
-void CVir8051::Opcode_15_DEC_Direct(void) {
+void CVm8051::Opcode_15_DEC_Direct(void) {
 	INT8U temp = 0;
 	INT8U addr = Get1Opcode();
 //	void *p = NULL;
@@ -3010,7 +3014,7 @@ void CVir8051::Opcode_15_DEC_Direct(void) {
 	SetRamData(addr, temp);
 	Sys.PC = Sys.PC + 2;
 }
-void CVir8051::Opcode_16_DEC_R0_1(void) {
+void CVm8051::Opcode_16_DEC_R0_1(void) {
 	INT8U temp = 0;
 	INT8U addr = Rges.R0();
 //	void *p = GetPointRamAddr(Rges.R0());
@@ -3020,7 +3024,7 @@ void CVir8051::Opcode_16_DEC_R0_1(void) {
 	SetRamDataAt(addr, temp);
 	++Sys.PC;
 }
-void CVir8051::Opcode_17_DEC_R1_1(void) {
+void CVm8051::Opcode_17_DEC_R1_1(void) {
 //	INT8U temp = 0;
 //	void *p = GetPointRamAddr(Rges.R1());
 //	memcpy(&temp, p, sizeof(temp));
@@ -3072,7 +3076,7 @@ void CVir8051::Opcode_17_DEC_R1_1(void) {
 //	Rges.R7 = Rges.R7() - 1;
 //	++Sys.PC;
 //}
-void CVir8051::Opcode_20_JB_Bit_Rel(void) {
+void CVm8051::Opcode_20_JB_Bit_Rel(void) {
 	INT8U temp[2];
 
 	GetOpcodeData(&temp[0], sizeof(temp));
@@ -3097,7 +3101,7 @@ void CVir8051::Opcode_20_JB_Bit_Rel(void) {
 //	}
 }
 
-void CVir8051::Opcode_22_RET(void) {
+void CVm8051::Opcode_22_RET(void) {
 	INT8U temp = 0;
 //	p = GetPointRamAddr(Sys.sp());
 //	memcpy(&temp, p, sizeof(temp));
@@ -3113,14 +3117,14 @@ void CVir8051::Opcode_22_RET(void) {
 	Sys.sp = Sys.sp() - 1;
 }
 
-void CVir8051::Opcode_23_RL_A(void) {
+void CVm8051::Opcode_23_RL_A(void) {
 	INT8U temp = Sys.a() & 0x80;
 	INT8U tem2 = Sys.a();
 	Sys.a = (INT8U) ((tem2 << 1) | (temp >> 7));
 	++Sys.PC;
 }
 
-void CVir8051::MD_ADDC(INT8U data) {
+void CVm8051::MD_ADDC(INT8U data) {
 	INT8U flagAC = Sys.psw().cy;
 
 	if (flagAC > 1) {
@@ -3160,7 +3164,7 @@ void CVir8051::MD_ADDC(INT8U data) {
 	Sys.a = (INT8U) tep;
 
 }
-void CVir8051::MD_SUBB(INT8U data) {
+void CVm8051::MD_SUBB(INT8U data) {
 	INT16U tepa = Sys.a();
 
 	INT8U bcy = Sys.psw().cy;
@@ -3197,7 +3201,7 @@ void CVir8051::MD_SUBB(INT8U data) {
 
 }
 
-void CVir8051::MD_ADD(INT8U data) {
+void CVm8051::MD_ADD(INT8U data) {
 	INT16U tep = (INT16U) Sys.a() + (INT16U) data;
 
 	INT16U tep2 = ((INT16U) (Sys.a() & 0x7F) + (INT16U) (data & 0x7F));
@@ -3298,7 +3302,7 @@ void CVir8051::MD_ADD(INT8U data) {
 //	MD_ADD(Rges.R7());
 //	++Sys.PC;
 //}
-void CVir8051::Opcode_30_JNB_Bit_Rel(void) {
+void CVm8051::Opcode_30_JNB_Bit_Rel(void) {
 	INT8U temp[2];
 
 	GetOpcodeData(&temp[0], sizeof(temp));
@@ -3323,7 +3327,7 @@ void CVir8051::Opcode_30_JNB_Bit_Rel(void) {
 //	}
 }
 
-void CVir8051::Opcode_32_RETI(void) {
+void CVm8051::Opcode_32_RETI(void) {
 	INT8U temp = 0;
 //	void *p = NULL;
 //	p = GetPointRamAddr(Sys.sp());
@@ -3340,7 +3344,7 @@ void CVir8051::Opcode_32_RETI(void) {
 	Sys.sp = Sys.sp() - 1;
 	++Sys.PC;
 }
-void CVir8051::Opcode_33_RLC_A(void) {
+void CVm8051::Opcode_33_RLC_A(void) {
 	INT8U temp = Sys.a() & 0x80;
 	Sys.a = ((Sys.a() << 1) | Sys.psw().cy);
 	Sys.psw().cy = temp == 0 ? 0 : 1;
@@ -3419,7 +3423,7 @@ void CVir8051::Opcode_33_RLC_A(void) {
 //	MD_ADDC(Rges.R7());
 //	++Sys.PC;
 //}
-void CVir8051::Opcode_40_JC_Rel(void) {
+void CVm8051::Opcode_40_JC_Rel(void) {
 	char tem2= Get1Opcode();
 //	GetOpcodeData(&tem2, 1);
 	Sys.PC += 2;
@@ -3430,7 +3434,7 @@ void CVir8051::Opcode_40_JC_Rel(void) {
 	}
 }
 
-void CVir8051::Opcode_42_ORL_Direct_A(void) {
+void CVm8051::Opcode_42_ORL_Direct_A(void) {
 	INT8U temp;
 	INT8U addr = Get1Opcode();
 //	void *p = NULL;
@@ -3443,7 +3447,7 @@ void CVir8051::Opcode_42_ORL_Direct_A(void) {
 	SetRamData(addr, temp);
 	Sys.PC += 2;
 }
-void CVir8051::Opcode_43_ORL_Direct_Data(void) {
+void CVm8051::Opcode_43_ORL_Direct_Data(void) {
 	INT8U temp[2] = { 0 };
 	INT8U data;
 //	void *p = NULL;
@@ -3456,7 +3460,7 @@ void CVir8051::Opcode_43_ORL_Direct_Data(void) {
 	SetRamData(temp[0], data);
 	Sys.PC += 3;
 }
-void CVir8051::Updata_A_P_Flag(void) {
+void CVm8051::Updata_A_P_Flag(void) {
 	INT8U a = Sys.a();
 	a ^= a >> 4;
 	a ^= a >> 2;
@@ -3464,13 +3468,13 @@ void CVir8051::Updata_A_P_Flag(void) {
 	Sys.psw().p = (a & 1);
 
 }
-void CVir8051::Opcode_44_ORL_A_Data(void) {
+void CVm8051::Opcode_44_ORL_A_Data(void) {
 	INT8U temp = Get1Opcode();
 //	GetOpcodeData(&temp, 1);
 	Sys.a = Sys.a() | temp;
 	Sys.PC += 2;
 }
-void CVir8051::Opcode_45_ORL_A_Direct(void) {
+void CVm8051::Opcode_45_ORL_A_Direct(void) {
 	INT8U data;
 	INT8U addr = Get1Opcode();
 //	GetOpcodeData(&addr, 1);
@@ -3525,7 +3529,7 @@ void CVir8051::Opcode_45_ORL_A_Direct(void) {
 //	Sys.a = Sys.a() | Rges.R7();
 //	++Sys.PC;
 //}
-void CVir8051::Opcode_50_JNC_Rel(void) {
+void CVm8051::Opcode_50_JNC_Rel(void) {
 	char tem2 = Get1Opcode();
 //	GetOpcodeData(&tem2, 1);
 	Sys.PC += 2;
@@ -3533,7 +3537,7 @@ void CVir8051::Opcode_50_JNC_Rel(void) {
 		Sys.PC += tem2;
 	}
 }
-void CVir8051::Opcode_52_ANL_Direct_A(void) {
+void CVm8051::Opcode_52_ANL_Direct_A(void) {
 	INT8U temp;
 	INT8U addr =Get1Opcode();
 //	void *p = NULL;
@@ -3547,7 +3551,7 @@ void CVir8051::Opcode_52_ANL_Direct_A(void) {
 
 	Sys.PC += 2;
 }
-void CVir8051::Opcode_53_ANL_Direct_Data(void) {
+void CVm8051::Opcode_53_ANL_Direct_Data(void) {
 	INT8U temp[2] = { 0 };
 	INT8U data;
 //	void *p = NULL;
@@ -3625,7 +3629,7 @@ void CVir8051::Opcode_53_ANL_Direct_Data(void) {
 //	Sys.a = Sys.a() & Rges.R7();
 //	++Sys.PC;
 //}
-void CVir8051::Opcode_60_JZ_Rel(void) {
+void CVm8051::Opcode_60_JZ_Rel(void) {
 	char temp= Get1Opcode();
 //	GetOpcodeData(&temp, 1);
 	Sys.PC += 2;
@@ -3634,7 +3638,7 @@ void CVir8051::Opcode_60_JZ_Rel(void) {
 		Sys.PC += temp;
 	}
 }
-void CVir8051::Opcode_62_XRL_Direct_A(void) {
+void CVm8051::Opcode_62_XRL_Direct_A(void) {
 	INT8U temp;
 	INT8U addr = Get1Opcode();
 //	void *p = NULL;
@@ -3648,7 +3652,7 @@ void CVir8051::Opcode_62_XRL_Direct_A(void) {
 	Sys.PC += 2;
 }
 
-void CVir8051::Opcode_63_XRL_Direct_Data(void) {
+void CVm8051::Opcode_63_XRL_Direct_Data(void) {
 	INT8U temp[2] = { 0 };
 	INT8U data;
 //	void *p = NULL;
@@ -3727,7 +3731,7 @@ void CVir8051::Opcode_63_XRL_Direct_Data(void) {
 //	Sys.a = Sys.a() ^ Rges.R7();
 //	++Sys.PC;
 //}
-void CVir8051::Opcode_70_JNZ_Rel(void) {
+void CVm8051::Opcode_70_JNZ_Rel(void) {
 	char temp = Get1Opcode();
 //	GetOpcodeData(&temp, 1);
 	Sys.PC += 2;
@@ -3769,7 +3773,7 @@ void CVir8051::Opcode_70_JNZ_Rel(void) {
 //	Sys.a = Get1Opcode();
 //	Sys.PC += 2;
 //}
-void CVir8051::Opcode_75_MOV_Direct_Data(void) {
+void CVm8051::Opcode_75_MOV_Direct_Data(void) {
 	INT8U temp[2] = { 0 };
 //	INT8U data;
 //	void *p = NULL;
@@ -3850,7 +3854,7 @@ void CVir8051::Opcode_75_MOV_Direct_Data(void) {
 //	Rges.R7 =  Get1Opcode();
 //	Sys.PC += 2;
 //}
-void CVir8051::Opcode_80_SJMP_Rel(void) {
+void CVm8051::Opcode_80_SJMP_Rel(void) {
 	char temp=  Get1Opcode();
 //	GetOpcodeData(&temp, 1);
 //	printf("temp hex %d \r\n",temp);
@@ -3864,7 +3868,7 @@ void CVir8051::Opcode_80_SJMP_Rel(void) {
 //	Sys.psw().cy = Sys.psw().cy & GetBitFlag(m_ExeFile[Sys.PC + 1]);
 //	Sys.PC += 2;
 //}
-void CVir8051::Opcode_83_MOVC_A_PC(void) {
+void CVm8051::Opcode_83_MOVC_A_PC(void) {
 //	INT8U temp;
 	INT16U addr;
 //	void*p = NULL;
@@ -3872,10 +3876,10 @@ void CVir8051::Opcode_83_MOVC_A_PC(void) {
 	addr = (INT16U) (Sys.PC + Sys.a());
 //	p = GetPointFileAddr(addr);
 //	memcpy(&temp, p, sizeof(temp));
-	Sys.a = (Sys.PC > CVir8051::MAX_ROM - Sys.a()) ? (0x00) : (m_ExeFile[addr]);
+	Sys.a = (Sys.PC > CVm8051::MAX_ROM - Sys.a()) ? (0x00) : (m_ExeFile[addr]);
 
 }
-void CVir8051::Opcode_84_DIV_AB(void) {
+void CVm8051::Opcode_84_DIV_AB(void) {
 	INT8U data1, data2;
 	data1 = Sys.a();
 	data2 = Sys.b();
@@ -3889,7 +3893,7 @@ void CVir8051::Opcode_84_DIV_AB(void) {
 	Ret: Sys.psw().cy = 0;
 	++Sys.PC;
 }
-void CVir8051::Opcode_85_MOV_Direct_Direct(void) {
+void CVm8051::Opcode_85_MOV_Direct_Direct(void) {
 	INT8U temp[2];
 //	INT8U data[2];
 //	void *p0 = NULL;
@@ -4018,14 +4022,14 @@ void CVir8051::Opcode_85_MOV_Direct_Direct(void) {
 //	SetRamData(Get1Opcode(), Rges.R7());
 //	Sys.PC += 2;
 //}
-void CVir8051::Opcode_90_MOV_DPTR_Data(void) {
+void CVm8051::Opcode_90_MOV_DPTR_Data(void) {
 	INT16U temp;
 	GetOpcodeData(&temp, 2);
 	temp = (temp >> 8) | (temp << 8);
 	Sys.dptr = temp;
 	Sys.PC += 3;
 }
-void CVir8051::Opcode_92_MOV_Bit_C(void) {
+void CVm8051::Opcode_92_MOV_Bit_C(void) {
 	INT8U temp = Get1Opcode();
 //	GetOpcodeData(&temp, 1);
 //	Assert(temp<=0xF7);
@@ -4046,12 +4050,12 @@ void CVir8051::Opcode_92_MOV_Bit_C(void) {
 	}
 	Sys.PC += 2;
 }
-void CVir8051::Opcode_93_MOVC_A_DPTR(void) {
+void CVm8051::Opcode_93_MOVC_A_DPTR(void) {
 	INT8U temp;
 	void *p = NULL;
 	p = GetPointFileAddr((INT16U) (Sys.a() + Sys.dptr()));
 	memcpy(&temp, p, sizeof(temp));
-	Sys.a = (Sys.dptr() > CVir8051::MAX_ROM - Sys.a()) ? (0x00) : (temp);
+	Sys.a = (Sys.dptr() > CVm8051::MAX_ROM - Sys.a()) ? (0x00) : (temp);
 	++Sys.PC;
 }
 
@@ -4159,7 +4163,7 @@ void CVir8051::Opcode_93_MOVC_A_DPTR(void) {
 //	Sys.dptr = Sys.dptr() + 1;
 //	++Sys.PC;
 //}
-void CVir8051::Opcode_A4_MUL_AB(void) {
+void CVm8051::Opcode_A4_MUL_AB(void) {
 	INT16U temp;
 	temp = (INT16U) Sys.a() * (INT16U) Sys.b();
 	Sys.psw().ov = (temp > 255) ? 1 : 0;
@@ -4269,7 +4273,7 @@ void CVir8051::Opcode_A4_MUL_AB(void) {
 //	Sys.psw().cy = Sys.psw().cy & (!GetBitFlag(Get1Opcode()));
 //	Sys.PC += 2;
 //}
-void CVir8051::Opcode_B2_CPL_Bit(void) {
+void CVm8051::Opcode_B2_CPL_Bit(void) {
 	INT8U temp=Get1Opcode();
 //	GetOpcodeData(&temp, sizeof(temp));
 //	Assert(temp<=0xF7);
@@ -4306,7 +4310,7 @@ void CVir8051::Opcode_B2_CPL_Bit(void) {
 //		return Sys.PC +(char)rel;
 //	}
 //}
-void CVir8051::Opcode_B4_CJNE_A_Data_Rel(void) {
+void CVm8051::Opcode_B4_CJNE_A_Data_Rel(void) {
 	INT8U temp[2];
 
 	GetOpcodeData(&temp[0], sizeof(temp));
@@ -4324,7 +4328,7 @@ void CVir8051::Opcode_B4_CJNE_A_Data_Rel(void) {
 	}
 }
 
-void CVir8051::Opcode_B5_CJNE_A_Direct_Rel(void) {
+void CVm8051::Opcode_B5_CJNE_A_Direct_Rel(void) {
 	INT8U temp[2];
 	INT8U data;
 
@@ -4338,7 +4342,7 @@ void CVir8051::Opcode_B5_CJNE_A_Direct_Rel(void) {
 	}
 	Sys.psw().cy = (Sys.a() < data) ? 1 : 0;
 }
-void CVir8051::Opcode_B6_CJNE_R0_1_Data_Rel(void) {
+void CVm8051::Opcode_B6_CJNE_R0_1_Data_Rel(void) {
 	INT8U temp[2];
 	INT8U data;
 	GetOpcodeData(&temp[0], sizeof(temp));
@@ -4352,7 +4356,7 @@ void CVir8051::Opcode_B6_CJNE_R0_1_Data_Rel(void) {
 	}
 	Sys.psw().cy = (data < temp[0]) ? 1 : 0;
 }
-void CVir8051::Opcode_B7_CJNE_R1_1_Data_Rel(void) {
+void CVm8051::Opcode_B7_CJNE_R1_1_Data_Rel(void) {
 	INT8U temp[2];
 	INT8U data;
 	GetOpcodeData(&temp[0], sizeof(temp));
@@ -4366,7 +4370,7 @@ void CVir8051::Opcode_B7_CJNE_R1_1_Data_Rel(void) {
 	}
 	Sys.psw().cy = (data < temp[0]) ? 1 : 0;
 }
-void CVir8051::Opcode_B8_CJNE_R0_Data_Rel(void) {
+void CVm8051::Opcode_B8_CJNE_R0_Data_Rel(void) {
 	INT8U temp[2];
 
 	GetOpcodeData(&temp[0], sizeof(temp));
@@ -4378,7 +4382,7 @@ void CVir8051::Opcode_B8_CJNE_R0_Data_Rel(void) {
 	}
 	Sys.psw().cy = (Rges.R0() < temp[0]) ? 1 : 0;
 }
-void CVir8051::Opcode_B9_CJNE_R1_Data_Rel(void) {
+void CVm8051::Opcode_B9_CJNE_R1_Data_Rel(void) {
 	INT8U temp[2];
 	GetOpcodeData(&temp[0], sizeof(temp));
 	Sys.PC += 3;
@@ -4391,7 +4395,7 @@ void CVir8051::Opcode_B9_CJNE_R1_Data_Rel(void) {
 	}
 	Sys.psw().cy = (Rges.R1() < temp[0]) ? 1 : 0;
 }
-void CVir8051::Opcode_BA_CJNE_R2_Data_Rel(void) {
+void CVm8051::Opcode_BA_CJNE_R2_Data_Rel(void) {
 	INT8U temp[2];
 	GetOpcodeData(&temp[0], sizeof(temp));
 	Sys.PC += 3;
@@ -4403,7 +4407,7 @@ void CVir8051::Opcode_BA_CJNE_R2_Data_Rel(void) {
 	}
 	Sys.psw().cy = (Rges.R2() < temp[0]) ? 1 : 0;
 }
-void CVir8051::Opcode_BB_CJNE_R3_Data_Rel(void) {
+void CVm8051::Opcode_BB_CJNE_R3_Data_Rel(void) {
 	INT8U temp[2];
 	GetOpcodeData(&temp[0], sizeof(temp));
 	Sys.PC += 3;
@@ -4415,7 +4419,7 @@ void CVir8051::Opcode_BB_CJNE_R3_Data_Rel(void) {
 	}
 	Sys.psw().cy = (Rges.R3() < temp[0]) ? 1 : 0;
 }
-void CVir8051::Opcode_BC_CJNE_R4_Data_Rel(void) {
+void CVm8051::Opcode_BC_CJNE_R4_Data_Rel(void) {
 	INT8U temp[2];
 	GetOpcodeData(&temp[0], sizeof(temp));
 	Sys.PC += 3;
@@ -4428,7 +4432,7 @@ void CVir8051::Opcode_BC_CJNE_R4_Data_Rel(void) {
 	}
 	Sys.psw().cy = (Rges.R4() < temp[0]) ? 1 : 0;
 }
-void CVir8051::Opcode_BD_CJNE_R5_Data_Rel(void) {
+void CVm8051::Opcode_BD_CJNE_R5_Data_Rel(void) {
 	INT8U temp[2];
 	GetOpcodeData(&temp[0], sizeof(temp));
 	Sys.PC += 3;
@@ -4440,7 +4444,7 @@ void CVir8051::Opcode_BD_CJNE_R5_Data_Rel(void) {
 	}
 	Sys.psw().cy = (Rges.R5() < temp[0]) ? 1 : 0;
 }
-void CVir8051::Opcode_BE_CJNE_R6_Data_Rel(void) {
+void CVm8051::Opcode_BE_CJNE_R6_Data_Rel(void) {
 	INT8U temp[2];
 	GetOpcodeData(&temp[0], sizeof(temp));
 	Sys.PC += 3;
@@ -4452,7 +4456,7 @@ void CVir8051::Opcode_BE_CJNE_R6_Data_Rel(void) {
 	}
 	Sys.psw().cy = (Rges.R6() < temp[0]) ? 1 : 0;
 }
-void CVir8051::Opcode_BF_CJNE_R7_Data_Rel(void) {
+void CVm8051::Opcode_BF_CJNE_R7_Data_Rel(void) {
 	INT8U temp[2];
 	GetOpcodeData(&temp[0], sizeof(temp));
 	Sys.PC += 3;
@@ -4495,7 +4499,7 @@ void CVir8051::Opcode_BF_CJNE_R7_Data_Rel(void) {
 //	Sys.a = (Sys.a() >> 4) | (temp << 4);
 //	++Sys.PC;
 //}
-void CVir8051::Opcode_C5_XCH_A_Direct(void) {
+void CVm8051::Opcode_C5_XCH_A_Direct(void) {
 	INT8U addr;
 	INT8U data;
 	INT8U TT;
@@ -4506,7 +4510,7 @@ void CVir8051::Opcode_C5_XCH_A_Direct(void) {
 	SetRamData(addr, TT);
 	Sys.PC += 2;
 }
-void CVir8051::Opcode_C6_XCH_A_R0_1(void) {
+void CVm8051::Opcode_C6_XCH_A_R0_1(void) {
 //	INT8U data;
 	INT8U TT;
 //	data = GetRamDataAt(Rges.R0());
@@ -4515,7 +4519,7 @@ void CVir8051::Opcode_C6_XCH_A_R0_1(void) {
 	SetRamDataAt(Rges.R0(), TT);
 	++Sys.PC;
 }
-void CVir8051::Opcode_C7_XCH_A_R1_1(void) {
+void CVm8051::Opcode_C7_XCH_A_R1_1(void) {
 //	INT8U data;
 	INT8U TT;
 //	data = GetRamDataAt(Rges.R1());
@@ -4524,63 +4528,63 @@ void CVir8051::Opcode_C7_XCH_A_R1_1(void) {
 	SetRamDataAt(Rges.R1(), TT);
 	++Sys.PC;
 }
-void CVir8051::Opcode_C8_XCH_A_R0(void) {
+void CVm8051::Opcode_C8_XCH_A_R0(void) {
 	INT8U temp;
 	temp = Sys.a();
 	Sys.a = Rges.R0();
 	Rges.R0 = temp;
 	++Sys.PC;
 }
-void CVir8051::Opcode_C9_XCH_A_R1(void) {
+void CVm8051::Opcode_C9_XCH_A_R1(void) {
 	INT8U temp;
 	temp = Sys.a();
 	Sys.a = Rges.R1();
 	Rges.R1 = temp;
 	++Sys.PC;
 }
-void CVir8051::Opcode_CA_XCH_A_R2(void) {
+void CVm8051::Opcode_CA_XCH_A_R2(void) {
 	INT8U temp;
 	temp = Sys.a();
 	Sys.a = Rges.R2();
 	Rges.R2 = temp;
 	++Sys.PC;
 }
-void CVir8051::Opcode_CB_XCH_A_R3(void) {
+void CVm8051::Opcode_CB_XCH_A_R3(void) {
 	INT8U temp;
 	temp = Sys.a();
 	Sys.a = Rges.R3();
 	Rges.R3 = temp;
 	++Sys.PC;
 }
-void CVir8051::Opcode_CC_XCH_A_R4(void) {
+void CVm8051::Opcode_CC_XCH_A_R4(void) {
 	INT8U temp;
 	temp = Sys.a();
 	Sys.a = Rges.R4();
 	Rges.R4 = temp;
 	++Sys.PC;
 }
-void CVir8051::Opcode_CD_XCH_A_R5(void) {
+void CVm8051::Opcode_CD_XCH_A_R5(void) {
 	INT8U temp;
 	temp = Sys.a();
 	Sys.a = Rges.R5();
 	Rges.R5 = temp;
 	++Sys.PC;
 }
-void CVir8051::Opcode_CE_XCH_A_R6(void) {
+void CVm8051::Opcode_CE_XCH_A_R6(void) {
 	INT8U temp;
 	temp = Sys.a();
 	Sys.a = Rges.R6();
 	Rges.R6 = temp;
 	++Sys.PC;
 }
-void CVir8051::Opcode_CF_XCH_A_R7(void) {
+void CVm8051::Opcode_CF_XCH_A_R7(void) {
 	INT8U temp;
 	temp = Sys.a();
 	Sys.a = Rges.R7();
 	Rges.R7 = temp;
 	++Sys.PC;
 }
-void CVir8051::Opcode_D0_POP_Direct(void) {
+void CVm8051::Opcode_D0_POP_Direct(void) {
 //	INT8U addr;
 //	INT8U data;
 //	GetOpcodeData(&addr, sizeof(addr));
@@ -4606,7 +4610,7 @@ void CVir8051::Opcode_D0_POP_Direct(void) {
 //	Sys.psw().cy = 1;
 //	++Sys.PC;
 //}
-void CVir8051::Opcode_D4_DA_A(void) {
+void CVm8051::Opcode_D4_DA_A(void) {
 	INT8U temp;
 	if (((Sys.a() & 0x0f) > 9) || (Sys.psw().ac == 1)) {
 		temp = ((Sys.a() & 0x0f) + 6) % 16;
@@ -4621,7 +4625,7 @@ void CVir8051::Opcode_D4_DA_A(void) {
 	}
 	++Sys.PC;
 }
-void CVir8051::Opcode_D5_DJNZ_Direct_Rel(void) {
+void CVm8051::Opcode_D5_DJNZ_Direct_Rel(void) {
 	INT8U temp[2];
 	INT8U data;
 
@@ -4640,7 +4644,7 @@ void CVir8051::Opcode_D5_DJNZ_Direct_Rel(void) {
 		Sys.PC += tem;
 	}
 }
-void CVir8051::Opcode_D6_XCHD_A_R0_1(void) {
+void CVm8051::Opcode_D6_XCHD_A_R0_1(void) {
 	INT8U temp = 0;
 	INT8U data = GetRamDataAt(Rges.R0());
 	temp = Sys.a() & 0x0F;
@@ -4651,7 +4655,7 @@ void CVir8051::Opcode_D6_XCHD_A_R0_1(void) {
 	SetRamDataAt(Rges.R0(), data);
 	++Sys.PC;
 }
-void CVir8051::Opcode_D7_XCHD_A_R1_1(void) {
+void CVm8051::Opcode_D7_XCHD_A_R1_1(void) {
 	INT8U temp = 0;
 	INT8U data;
 	data = GetRamDataAt(Rges.R1());
@@ -4663,7 +4667,7 @@ void CVir8051::Opcode_D7_XCHD_A_R1_1(void) {
 	SetRamDataAt(Rges.R1(), data);
 	++Sys.PC;
 }
-void CVir8051::Opcode_D8_DJNZ_R0_Rel(void) {
+void CVm8051::Opcode_D8_DJNZ_R0_Rel(void) {
 	char temp = Get1Opcode();
 //	GetOpcodeData(&temp, sizeof(temp));
 	Sys.PC += 2;
@@ -4676,7 +4680,7 @@ void CVir8051::Opcode_D8_DJNZ_R0_Rel(void) {
 		Sys.PC += temp;
 	}
 }
-void CVir8051::Opcode_D9_DJNZ_R1_Rel(void) {
+void CVm8051::Opcode_D9_DJNZ_R1_Rel(void) {
 //	char temp;
 //	GetOpcodeData(&temp, sizeof(temp));
 	char temp = Get1Opcode();
@@ -4687,7 +4691,7 @@ void CVir8051::Opcode_D9_DJNZ_R1_Rel(void) {
 		Sys.PC += temp;
 	}
 }
-void CVir8051::Opcode_DA_DJNZ_R2_Rel(void) {
+void CVm8051::Opcode_DA_DJNZ_R2_Rel(void) {
 //	char temp;
 //	GetOpcodeData(&temp, sizeof(temp));
 	char temp = Get1Opcode();
@@ -4698,7 +4702,7 @@ void CVir8051::Opcode_DA_DJNZ_R2_Rel(void) {
 		Sys.PC += temp;
 	}
 }
-void CVir8051::Opcode_DB_DJNZ_R3_Rel(void) {
+void CVm8051::Opcode_DB_DJNZ_R3_Rel(void) {
 //	char temp;
 //	GetOpcodeData(&temp, sizeof(temp));
 	char temp = Get1Opcode();
@@ -4709,7 +4713,7 @@ void CVir8051::Opcode_DB_DJNZ_R3_Rel(void) {
 		Sys.PC += temp;
 	}
 }
-void CVir8051::Opcode_DC_DJNZ_R4_Rel(void) {
+void CVm8051::Opcode_DC_DJNZ_R4_Rel(void) {
 //	char temp;
 //	GetOpcodeData(&temp, sizeof(temp));
 	char temp = Get1Opcode();
@@ -4720,7 +4724,7 @@ void CVir8051::Opcode_DC_DJNZ_R4_Rel(void) {
 		Sys.PC += temp;
 	}
 }
-void CVir8051::Opcode_DD_DJNZ_R5_Rel(void) {
+void CVm8051::Opcode_DD_DJNZ_R5_Rel(void) {
 //	char temp;
 //	GetOpcodeData(&temp, sizeof(temp));
 	char temp = Get1Opcode();
@@ -4731,7 +4735,7 @@ void CVir8051::Opcode_DD_DJNZ_R5_Rel(void) {
 		Sys.PC += temp;
 	}
 }
-void CVir8051::Opcode_DE_DJNZ_R6_Rel(void) {
+void CVm8051::Opcode_DE_DJNZ_R6_Rel(void) {
 //	char temp;
 //	GetOpcodeData(&temp, sizeof(temp));
 	char temp = Get1Opcode();
@@ -4742,7 +4746,7 @@ void CVir8051::Opcode_DE_DJNZ_R6_Rel(void) {
 		Sys.PC += temp;
 	}
 }
-void CVir8051::Opcode_DF_DJNZ_R7_Rel(void) {
+void CVm8051::Opcode_DF_DJNZ_R7_Rel(void) {
 //	char temp;
 //	GetOpcodeData(&temp, sizeof(temp));
 	char temp = Get1Opcode();
@@ -4753,7 +4757,7 @@ void CVir8051::Opcode_DF_DJNZ_R7_Rel(void) {
 		Sys.PC += temp;
 	}
 }
-void CVir8051::Opcode_E0_MOVX_A_DPTR(void) {
+void CVm8051::Opcode_E0_MOVX_A_DPTR(void) {
 //	INT8U temp = m_ExRam[Sys.dptr()];
 //	void*p = GetExRamAddr(Sys.dptr());
 //	memcpy(&temp, p, sizeof(temp));
@@ -4912,7 +4916,7 @@ void CVir8051::Opcode_E0_MOVX_A_DPTR(void) {
 //	Rges.R7 = Sys.a();
 //	++Sys.PC;
 //}
-shared_ptr<vector<unsigned char>> CVir8051::GetRetData(void) const {
+shared_ptr<vector<unsigned char>> CVm8051::GetRetData(void) const {
 	auto tem = make_shared<vector<unsigned char>>();
 
 	char buffer[1024] = { 0 };

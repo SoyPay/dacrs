@@ -25,7 +25,7 @@ SUBDIRS = . $(BUILD_QT) $(BUILD_P_TEST) $(BUILD_TEST)
 DIST_SUBDIRS = . test ptest
 .PHONY: FORCE
 # bitcoin core #
-BITCOIN_CORE_H = \
+DACRS_CORE_H = \
   addrman.h \
   alert.h \
   allocators.h \
@@ -80,19 +80,17 @@ JSON_H = \
   json/json_spirit_writer_template.h
   
 # VmScript #
-VMSCRIPT_H = \
-	VmScript/CFundOpeator.h \
-	VmScript/CVir8051.h \
-	VmScript/CVmRule.h \
-	VmScript/VmScript.h \
-	VmScript/VmScriptRun.h \
-	VmScript/TestMcu.h
+VM_H = \
+	vm/vm8051.h \
+	vm/vmrunevn.h \
+	vm/script.h \
+	vm/testmcu.h
 
-VMSCRIPT_CPP = \
-	VmScript/CVir8051.cpp \
-	VmScript/VmScript.cpp \
-	VmScript/VmScriptRun.cpp \
-	VmScript/TestMcu.cpp
+VM_CPP = \
+	vm/vm8051.cpp \
+	vm/vmrunevn.cpp \
+	vm/script.cpp \
+	vm/testmcu.cpp
   
 
 obj/build.h: FORCE
@@ -124,10 +122,10 @@ libdacrs_server_a_SOURCES = \
   txdb.cpp \
   txmempool.cpp \
   cuiserve.cpp	\
-  $(VMSCRIPT_CPP) \
-  $(VMSCRIPT_H) \
+  $(VM_CPP) \
+  $(VM_H) \
   $(JSON_H) \
-  $(BITCOIN_CORE_H)
+  $(DACRS_CORE_H)
 
 libdacrs_wallet_a_SOURCES = \
   wallet/db.cpp  \
@@ -137,7 +135,7 @@ libdacrs_wallet_a_SOURCES = \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
   rpc/rpctx.cpp \
-  $(BITCOIN_CORE_H)
+  $(DACRS_CORE_H)
 
 libdacrs_common_a_SOURCES = \
   base58.cpp \
@@ -155,7 +153,7 @@ libdacrs_common_a_SOURCES = \
   json/json_spirit_reader.cpp \
   json/json_spirit_value.cpp \
   json/json_spirit_writer.cpp \
-  $(BITCOIN_CORE_H)
+  $(DACRS_CORE_H)
 
 if GLIBC_BACK_COMPAT
 libdacrs_common_a_SOURCES += compat/glibc_compat.cpp
@@ -164,7 +162,7 @@ endif
 
 libdacrs_cli_a_SOURCES = \
   rpc/rpcclient.cpp \
-  $(BITCOIN_CORE_H)
+  $(DACRS_CORE_H)
 
 nodist_libdacrs_common_a_SOURCES = $(top_srcdir)/src/obj/build.h
 #

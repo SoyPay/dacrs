@@ -17,8 +17,8 @@
 #include "./wallet/wallet.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include "./VmScript/VmScript.h"
-#include "./rpc/rpcserver.h"
+#include "vm/script.h"
+#include "rpc/rpcserver.h"
 #include "noui.h"
 #include "ui_interface.h"
 #include "SysTestBase.h"

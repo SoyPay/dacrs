@@ -7,19 +7,19 @@
 
 #ifndef SCRIPTCHECK_H_
 #define SCRIPTCHECK_H_
-#include "CVir8051.h"
+#include "vm8051.h"
 #include "serialize.h"
-#include "VmScript.h"
+#include "script.h"
 #include "main.h"
 #include "txdb.h"
 #include <memory>
 using namespace std;
 class CVmOperate;
-class CVmScriptRun {
+class CVmRunEvn {
 	/**
 	 * Run the script object
 	 */
-	shared_ptr<CVir8051> pMcu;
+	shared_ptr<CVm8051> pMcu;
 	/**
 	 * vm before the account state
 	 */
@@ -45,7 +45,6 @@ class CVmScriptRun {
 	vector<CVmOperate> m_output;
 	shared_ptr<vector<CScriptDBOperLog> > m_dblog;
 	map<vector<unsigned char >,shared_ptr<CAppUserAccout>> mAccMap;
-
 
 private:
 	/**
@@ -93,7 +92,7 @@ public:
 	/**
 	 * A constructor.
 	 */
-	CVmScriptRun();
+	CVmRunEvn();
 	/**
 	 *@brief get be operate the account
 	 * @return the variable RawAccont
@@ -130,9 +129,8 @@ public:
 	uint256 GetCurTxHash();
 	void InsertOutputData(vector<CVmOperate> source);
 	shared_ptr<vector<CScriptDBOperLog> > GetDbLog();
-	bool  GetAppUserAccout(const CUserID &userId,shared_ptr<CAppUserAccout> &sptrAcc );
-
-	virtual ~CVmScriptRun();
+	bool GetAppUserAccout(const CUserID& userId,shared_ptr<CAppUserAccout> &sptrAcc);
+	virtual ~CVmRunEvn();
 };
 
 enum ACCOUNT_TYPE {
