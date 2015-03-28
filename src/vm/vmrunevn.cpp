@@ -154,11 +154,6 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) const {
 
 		if (it.opeatortype == MINUS_FREE) {
 
-			/// 从冻结金额里面扣钱，超时高度必须大于当前tip高度
-			if(it.outheight < height)
-			{
-				return false;
-			}
 			vector<unsigned char > accountid(it.accountid,it.accountid+sizeof(it.accountid));
 			CRegID regId(accountid);
 			CTransaction* secure = static_cast<CTransaction*>(listTx.get());
@@ -174,8 +169,8 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) const {
 		CRegID regId(accountid);
 		if(regId.IsEmpty() || regId.getKeyID( *m_view) == uint160(0))
 			return false;
-		/// if account script id ,the it.opeatortype must be ADD_FREE or MINUS_FREE
-		if (m_ScriptDBTip->HaveScript(regId)|| it.opeatortype != MINUS_FREE) {
+		//  app only be allowed minus self money
+		if (!m_ScriptDBTip->HaveScript(regId) && it.opeatortype == MINUS_FREE) {
 			return false;
 		}
 	}
