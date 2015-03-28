@@ -7,7 +7,7 @@
 
 #include <cstdio>
 
-class CVmScriptRun;
+class CVmRunEvn;
 
 typedef unsigned char INT8U;
 typedef unsigned short INT16U;
@@ -46,8 +46,8 @@ typedef unsigned short INT16U;
 #include <string>
 #include <memory>
 using namespace std;
-class CVmScriptRun;
-class CVir8051;
+class CVmRunEvn;
+class CVm8051;
 class CUPSfr;
 typedef struct tagpsw PSW;
 typedef vector<unsigned char> vector_unsigned_char;
@@ -56,10 +56,10 @@ class CUPReg {
 
 protected:
 
-	CVir8051 *pmcu;
+	CVm8051 *pmcu;
 public:
 	INT8U m_Addr;
-	CUPReg(CVir8051 *mcu) {
+	CUPReg(CVm8051 *mcu) {
 		m_Addr = 255;
 		pmcu = mcu;
 	}
@@ -86,7 +86,7 @@ typedef CUPReg<INT16U> CUPReg_16;
 
 class CUPSfr: public CUPReg<INT8U> {
 public:
-	explicit CUPSfr(CVir8051 *mcu) :
+	explicit CUPSfr(CVm8051 *mcu) :
 			CUPReg<INT8U>(mcu) {
 	}
 	virtual ~CUPSfr() {
@@ -103,7 +103,7 @@ public:
 };
 class CUPReg_a: public CUPReg<INT8U> {
 public:
-	explicit CUPReg_a(CVir8051 *mcu) :
+	explicit CUPReg_a(CVm8051 *mcu) :
 			CUPReg<INT8U>(mcu) {
 	}
 	virtual ~CUPReg_a() {
@@ -122,7 +122,7 @@ public:
 
 class CUPSfr16: public CUPReg_16 {
 public:
-	CUPSfr16(CVir8051 *mcu) :
+	CUPSfr16(CVm8051 *mcu) :
 			CUPReg_16(mcu) {
 	}
 	template<class T>
@@ -149,7 +149,7 @@ public:
 	INT8U getValue() {
 		return GetRegRe();
 	}
-	explicit CUPPSW_8(CVir8051 *mcu) :
+	explicit CUPPSW_8(CVm8051 *mcu) :
 			CUPSfr(mcu) {
 	}
 	template<class T>
@@ -162,7 +162,7 @@ public:
 
 class CRges {
 public:
-	CRges(CVir8051 *mcu) :
+	CRges(CVm8051 *mcu) :
 			R0(mcu), R1(mcu), R2(mcu), R3(mcu), R4(mcu), R5(mcu), R6(mcu), R7(mcu) {
 	}
 
@@ -185,7 +185,7 @@ public:
 
 class CSys {
 public:
-	explicit CSys(CVir8051 *mcu) :
+	explicit CSys(CVm8051 *mcu) :
 			a(mcu), b(mcu), sp(mcu), psw(mcu), dptr(mcu), PC(0) {
 	}
 	CUPReg_a a;
@@ -222,7 +222,7 @@ struct DebugSys {
 	INT16U PC;
 
 };
-class CVir8051 {
+class CVm8051 {
 
 	static const int a_addr = 0xE0;
 	static const int b_addr = 0xF0;
@@ -241,16 +241,16 @@ class CVir8051 {
 
 public:
 	void InitalReg();
-	CVir8051(const vector<unsigned char> & vRom,const vector<unsigned char> &InputData);
+	CVm8051(const vector<unsigned char> & vRom,const vector<unsigned char> &InputData);
 	shared_ptr<vector<unsigned char>> GetRetData(void) const;
 	void SetExRamData(INT16U addr, const vector<unsigned char> data);
 	INT8U SetRamDataAt(INT8U addr,INT8U data);
 	INT8U GetRamDataAt(INT8U addr);
 	INT8U GetRamData(INT8U addr);
 	INT8U SetRamData(INT8U addr, INT8U data);
-	~CVir8051();
+	~CVm8051();
 	bool run();
-	int64_t run(uint64_t maxstep,CVmScriptRun *pVmScriptRun);
+	int64_t run(uint64_t maxstep,CVmRunEvn *pVmScriptRun);
 	void StepRun(INT8U code);
 
 	INT8U GetOpcode(void) const;

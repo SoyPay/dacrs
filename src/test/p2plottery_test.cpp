@@ -12,13 +12,13 @@
 #include "uint256.h"
 #include "util.h"
 #include <boost/test/unit_test.hpp>
-#include "./rpc/rpcclient.h"
+#include "rpc/rpcclient.h"
 #include "tx.h"
-#include "./wallet/wallet.h"
+#include "wallet/wallet.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include "./VmScript/VmScript.h"
-#include "./rpc/rpcserver.h"
+#include "vm/script.h"
+#include "rpc/rpcserver.h"
 #include "noui.h"
 #include "ui_interface.h"
 #include "SysTestBase.h"
