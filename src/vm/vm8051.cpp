@@ -814,7 +814,7 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmEvn) {
 
 //	LogPrint("INFO", "script run read data:%s\n", HexStr(*retdata.at(0)));
 	CScriptDBOperLog operLog;
-	if(!scriptDB->GetScriptData(pVmRunEvn->GetComfirHeight(),scriptid, *retdata.at(0), vValue, operLog))
+	if(!scriptDB->GetScriptData(pVmRunEvn->GetComfirHeight(),scriptid, *retdata.at(0), vValue))
 	{
 		if(!operLog.vKey.empty()) {
 			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmRunEvn->GetDbLog();
@@ -890,7 +890,7 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmEvn) {
 
 	CScriptDBViewCache* scriptDB = pVmRunEvn->GetScriptDB();
 	set<CScriptDBOperLog> setOperLog;
-	flag = scriptDB->GetScriptData(pVmRunEvn->GetComfirHeight(),scriptid,index,vScriptKey,vValue,setOperLog);
+	flag = scriptDB->GetScriptData(pVmRunEvn->GetComfirHeight(),scriptid,index,vScriptKey,vValue);
 
 	if(flag){
 		LogPrint("vm", "Read key:%s,value:%s!\n",HexStr(vScriptKey),HexStr(vValue));
@@ -1016,7 +1016,7 @@ static RET_DEFINE ExGetScriptDataFunc(unsigned char * ipara,void * pVmEvn)
 	CScriptDBViewCache* scriptDB = pVmRunEvn->GetScriptDB();
 	CRegID scriptid(*retdata.at(0));
 	CScriptDBOperLog operLog;
-	if(!scriptDB->GetScriptData(pVmRunEvn->GetComfirHeight(),scriptid, *retdata.at(1), vValue,  operLog))
+	if(!scriptDB->GetScriptData(pVmRunEvn->GetComfirHeight(), scriptid, *retdata.at(1), vValue))
 	{
 		if (!operLog.vKey.empty()) {
 			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmRunEvn->GetDbLog();
