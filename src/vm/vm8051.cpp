@@ -904,9 +904,6 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmEvn) {
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     (*tem.get()).push_back(vScriptKey);
 	(*tem.get()).push_back(vValue);
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
-    vector<unsigned char> tep1(tep.begin(),tep.end());
-    (*tem.get()).push_back(tep1);
 	return std::make_tuple (flag, tem);
 }
 static RET_DEFINE ExGetCurTxHash(unsigned char * ipara,void * pVmEvn) {
@@ -946,12 +943,19 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmEvn)
 	CScriptDBViewCache* scriptDB = pVmRunEvn->GetScriptDB();
 
 	CScriptDBOperLog operlog;
-
-	if(scriptDB->SetScriptData(scriptid,*retdata.at(0),*retdata.at(1),operlog))
-	{
-		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmRunEvn->GetDbLog();
-		m_dblog.get()->push_back(operlog);
-		flag = true;
+	vector_unsigned_char vTemp;
+	if(scriptDB->GetScriptData(pVmRunEvn->GetComfirHeight(),scriptid, *retdata.at(0), vTemp)) {
+		if(scriptDB->SetScriptData(scriptid,*retdata.at(0),*retdata.at(1).get(),operlog))
+		{
+			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmRunEvn->GetDbLog();
+			m_dblog.get()->push_back(operlog);
+			flag = true;
+		}
+	}else {
+		if(!operlog.vKey.empty()) {
+			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmRunEvn->GetDbLog();
+			m_dblog.get()->push_back(operlog);
+		}
 	}
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();

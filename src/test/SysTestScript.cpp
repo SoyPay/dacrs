@@ -151,12 +151,9 @@ public:
 
 	void CheckSdk()
 	{
-//		int nHeight = 0;
 		string param ="01";
 		Value resut =CreateContractTx("010000000100", "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,TxHash));
-		LogPrint("vm", "create new contract tx:hash=%s\n", TxHash);
-		LogPrint("INFO", "create new contract tx:hash=%s\n", TxHash);
 		BOOST_CHECK(GenerateOneBlock());
 		uint256 hash(TxHash.c_str());
 		param ="02";
@@ -164,15 +161,11 @@ public:
 		string temp;
 		resut =CreateContractTx("010000000100", "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
-		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
-		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
 		BOOST_CHECK(GenerateOneBlock());
 
 		param ="03";
 		resut =CreateContractTx("010000000100", "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
-		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
-		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
 		BOOST_CHECK(GenerateOneBlock());
 
 		param ="05";
@@ -180,8 +173,6 @@ public:
 
 		resut =CreateContractTx("010000000100", "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,10000000);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
-		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
-		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
 		BOOST_CHECK(GenerateOneBlock());
 	}
 
@@ -200,7 +191,7 @@ public:
 		char buffer[3] = {0};
 		sprintf(buffer,"%02x",param);
 		string temp;
-		Value resut =CreateContractTx("010000000100", "[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]", buffer,10);
+		Value resut =CreateContractTx("010000000100", "5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d", buffer,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
 		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
@@ -788,11 +779,11 @@ BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
 	CheckSdk();
 
-//	ResetEnv();
-//	BOOST_CHECK(0==chainActive.Height());
-//	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
-//	CheckRollBack();
-//
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
+	CheckRollBack();
+
 //	ResetEnv();
 //	BOOST_CHECK(0==chainActive.Height());
 //	CheckScriptAccount();
