@@ -9,14 +9,14 @@
 #define TESTMCU_H_
 #include <boost/format.hpp>
 
-#include "CVir8051.h"
+#include "vm8051.h"
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
 using namespace boost;
 
 class CTestMcu {
-	CVir8051 *pCVir8051;
+	CVm8051 *pCVir8051;
 
 public:
 	static bool IsOdd(unsigned char un);
@@ -138,7 +138,7 @@ public:
 
 
 	string PrintCMDUntested(void);
-	CTestMcu(CVir8051 *pCVir8051);
+	CTestMcu(CVm8051 *pCVir8051);
 
 	virtual ~CTestMcu();
 };
