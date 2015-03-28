@@ -461,8 +461,14 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 
 	uint64_t addValue = llValues;
 	CFund addFund(FREEDOM_FUND, addValue, nHeight);
-	if(!view.GetAccount(desUserId, desAcct))
-		desAcct.keyID = boost::get<CKeyID>(desUserId);
+	if(!view.GetAccount(desUserId, desAcct)) {
+		if(COMMON_TX == nTxType) {
+			desAcct.keyID = boost::get<CKeyID>(desUserId);
+		}
+		else {
+			return state.DoS(100, ERRORMSG("ExecuteTx() : get account info failed by regid"), UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
+		}
+	}
 	else
 		desAcct.CompactAccount(nHeight);
 	if (!desAcct.OperateAccount(ADD_FREE, addFund)) {
@@ -670,45 +676,37 @@ bool CRegisterAppTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidationSt
 		txundo.vAccountOperLog.push_back(acctInfo.accountOperLog);
 	}
 	txundo.txHash = GetHash();
-	if(script.size() == SCRIPT_ID_SIZE) {
-		vector<unsigned char> vScript;
-		CRegID regId(script);
-		if (!scriptCache.GetScript(regId, vScript)) {
-			return state.DoS(100,
-					ERRORMSG("ExecuteTx() : CRegisterScriptTx ExecuteTx Get script id=%s hash=%s error", HexStr(script.begin(), script.end()), GetHash().ToString()),
-					UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
-		}
-	}
-	else {
-		CVmScript vmScript;
-		CDataStream stream(script, SER_DISK, CLIENT_VERSION);
-		try {
-			stream >> vmScript;
-		} catch (exception& e) {
-			return state.DoS(100, ERRORMSG(("ExecuteTx() :intial() Unserialize to vmScript error:" + string(e.what())).c_str()),
-					UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
-		}
-		if(!vmScript.IsValid())
-			return state.DoS(100, ERRORMSG("ExecuteTx() : vmScript invalid"), UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
 
-		CRegID regId(nHeight, nIndex);
-		//create script account
-		CKeyID keyId = Hash160(regId.GetVec6());
-		CAccount account;
-		account.keyID = keyId;
-		account.regID = regId;
-		//save new script content
-		if(!scriptCache.SetScript(regId, script)){
-			return state.DoS(100,
-					ERRORMSG("ExecuteTx() : save script id %s script info error", regId.ToString()),
-					UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
-		}
-		if (!view.SaveAccountInfo(regId, keyId, account)) {
-			return state.DoS(100,
-					ERRORMSG("ExecuteTx() : create new account script id %s script info error",
-							regId.ToString()), UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
-		}
+
+	CVmScript vmScript;
+	CDataStream stream(script, SER_DISK, CLIENT_VERSION);
+	try {
+		stream >> vmScript;
+	} catch (exception& e) {
+		return state.DoS(100, ERRORMSG(("ExecuteTx() :intial() Unserialize to vmScript error:" + string(e.what())).c_str()),
+				UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
 	}
+	if(!vmScript.IsValid())
+		return state.DoS(100, ERRORMSG("ExecuteTx() : vmScript invalid"), UPDATE_ACCOUNT_FAIL, "bad-query-scriptdb");
+
+	CRegID regId(nHeight, nIndex);
+	//create script account
+	CKeyID keyId = Hash160(regId.GetVec6());
+	CAccount account;
+	account.keyID = keyId;
+	account.regID = regId;
+	//save new script content
+	if(!scriptCache.SetScript(regId, script)){
+		return state.DoS(100,
+				ERRORMSG("ExecuteTx() : save script id %s script info error", regId.ToString()),
+				UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
+	}
+	if (!view.SaveAccountInfo(regId, keyId, account)) {
+		return state.DoS(100,
+				ERRORMSG("ExecuteTx() : create new account script id %s script info error",
+						regId.ToString()), UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
+	}
+
 	if(!operLog.vKey.empty()) {
 		txundo.vScriptOperLog.push_back(operLog);
 	}
