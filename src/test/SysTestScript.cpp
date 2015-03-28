@@ -6,13 +6,13 @@
 #include "uint256.h"
 #include "util.h"
 #include <boost/test/unit_test.hpp>
-#include "./rpc/rpcclient.h"
+#include "rpc/rpcclient.h"
 #include "tx.h"
-#include "./wallet/wallet.h"
+#include "wallet/wallet.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include "./VmScript/VmScript.h"
-#include "./rpc/rpcserver.h"
+#include "vm/script.h"
+#include "rpc/rpcserver.h"
 #include "noui.h"
 #include "ui_interface.h"
 #include "SysTestBase.h"
@@ -148,65 +148,31 @@ public:
 		}
 		return 0;
 	}
-	bool GetHashFromCreatedTx(const Value& valueRes,string& strHash)
-	{
-		if (valueRes.type() == null_type) {
-			return false;
-		}
-
-		const Value& result = find_value(valueRes.get_obj(), "hash");
-		const Value& result1 = find_value(valueRes.get_obj(), "rawtx");
-		const Value& result3 = find_value(valueRes.get_obj(), "script");
-		if (result.type() == null_type && result1.type() == null_type && result3.type() == null_type){
-			return false;
-		}
-		if (result.type() != null_type){
-			strHash = result.get_str();
-			}
-		else if(result1.type() != null_type)
-		{
-			strHash = result1.get_str();
-		}else if(result3.type() != null_type)
-		{
-			strHash = result3.get_str();
-		}
-
-		return true;
-	}
 
 	void CheckSdk()
 	{
-//		int nHeight = 0;
 		string param ="01";
-		Value resut =CreateContractTx("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
+		Value resut =CreateContractTx("010000000100", "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,TxHash));
-		LogPrint("vm", "create new contract tx:hash=%s\n", TxHash);
-		LogPrint("INFO", "create new contract tx:hash=%s\n", TxHash);
 		BOOST_CHECK(GenerateOneBlock());
 		uint256 hash(TxHash.c_str());
 		param ="02";
 		param += HexStr(hash);
 		string temp;
-		resut =CreateContractTx("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
+		resut =CreateContractTx("010000000100", "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
-		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
-		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
 		BOOST_CHECK(GenerateOneBlock());
 
 		param ="03";
-		resut =CreateContractTx("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
+		resut =CreateContractTx("010000000100", "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
-		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
-		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
 		BOOST_CHECK(GenerateOneBlock());
 
 		param ="05";
 		param += HexStr(hash);
 
-		resut =CreateContractTx("010000000100", "[\"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb\"]", param,10);
+		resut =CreateContractTx("010000000100", "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,10000000);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
-		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
-		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
 		BOOST_CHECK(GenerateOneBlock());
 	}
 
@@ -225,7 +191,7 @@ public:
 		char buffer[3] = {0};
 		sprintf(buffer,"%02x",param);
 		string temp;
-		Value resut =CreateContractTx("010000000100", "[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\"]", buffer,10);
+		Value resut =CreateContractTx("010000000100", "5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d", buffer,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 		LogPrint("vm", "create new contract tx:hash=%s\n", temp);
 		LogPrint("INFO", "create new contract tx:hash=%s\n", temp);
@@ -577,8 +543,7 @@ public:
 		vector<unsigned char> value;
 		vector<unsigned char> vScriptKey;
 		int nHeight = 0;
-		set<CScriptDBOperLog> setOperLog;
-		if (!contractScriptTemp.GetScriptData(curtiph,regid, 0, vScriptKey, value,setOperLog)) {
+		if (!contractScriptTemp.GetScriptData(curtiph,regid, 0, vScriptKey, value)) {
 			return false;
 		}
 		uint256 hash1(value);
@@ -595,7 +560,7 @@ public:
 
 		int count = dbsize - 1;
 		while (count--) {
-			if (!contractScriptTemp.GetScriptData(curtiph, regid, 1, vScriptKey, value, setOperLog)) {
+			if (!contractScriptTemp.GetScriptData(curtiph, regid, 1, vScriptKey, value)) {
 				return false;
 			}
 			uint256 hash3(value);
@@ -634,10 +599,9 @@ public:
 				return false;
 			}
 			vector<unsigned char> value;
-			int nHeight = 0;
 			int tipH = chainActive.Height();
 			CScriptDBOperLog operLog;
-			if (!contractScriptTemp.GetScriptData(tipH,regid,key, value,operLog)) {
+			if (!contractScriptTemp.GetScriptData(tipH,regid,key, value)) {
 				return false;
 			}
 			return true;
@@ -820,17 +784,17 @@ BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
 	CheckRollBack();
 
-	ResetEnv();
-	BOOST_CHECK(0==chainActive.Height());
-	CheckScriptAccount();
-
-	ResetEnv();
-	BOOST_CHECK(0==chainActive.Height());
-	testdb();
-
-	ResetEnv();
-	BOOST_CHECK(0==chainActive.Height());
-	 testdeletmodifydb();
+//	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
+//	CheckScriptAccount();
+//
+//	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
+//	testdb();
+//
+//	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
+//	 testdeletmodifydb();
 }
 BOOST_FIXTURE_TEST_CASE(darksecure,CSysScriptTest)
 {

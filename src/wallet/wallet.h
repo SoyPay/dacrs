@@ -32,16 +32,6 @@
 static const int nHighTransactionFeeWarning = 0.01 * COIN;
 
 class CAccountingEntry;
-//class CCoinControl;
-//class CReserveKey;
-//class CScript;
-//class CRegID;
-
-
-
-
-
-
 
 class CKeyStoreValue {
 private:
@@ -106,16 +96,12 @@ public:
 	map<CKeyID, CKeyStoreValue> mKeyPool;
 	CPubKey vchDefaultKey ;
 	static string strWalletFile;
-
 	map<uint256, CAccountTx> mapInBlockTx;
 	map<uint256, std::shared_ptr<CBaseTransaction> > UnConfirmTx;
-
-
 	mutable CCriticalSection cs_wallet;
-
-
 	map<CKeyID, CKeyStoreValue> GetKeyPool() const;
 
+public:
 
 	IMPLEMENT_SERIALIZE
 	(
@@ -140,7 +126,6 @@ public:
 				}
 			}
 	)
-
 	virtual ~CWallet(){};
 	int64_t GetRawBalance(int ncurhigh)const;
     bool SynchronizRegId(const CKeyID &keyid,const CAccountViewCache &inview);
@@ -149,22 +134,14 @@ public:
     bool AddKey(const CKeyStoreValue& store);
 	bool AddPubKey(const CPubKey& pk);
 	bool SynchronizSys(const CAccountViewCache &inview) ;
-
-
 	bool IsCrypted() const;
-
-	bool GetPubKey(const CKeyID &address, CPubKey& keyOut,bool IsMiner = false);
-
-	bool GetKey(const CKeyID &address, CKey& keyOut, bool IsMiner = false) const ;
-	bool GetKey(const CUserID &address, CKey& keyOut,bool IsMiner = false) const ;
-	bool GetRegId(const CUserID &address, CRegID& IdOut) const;
-
+	bool GetPubKey(const CKeyID &address, CPubKey& pubKey,bool IsMiner = false);
+	bool GetKey(const CKeyID &keyid, CKey& secretKey, bool IsMiner = false) const ;
+	bool GetKey(const CUserID &userid, CKey& secretKey,bool IsMiner = false) const ;
+	bool GetRegId(const CUserID &userid, CRegID& IdOut) const;
 	bool GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner = false)const ;
-
-
 	bool CleanAll(); //just for unit test
-
-    bool count(const CKeyID &address) const;
+    bool count(const CKeyID &keyid) const;
     bool IsReadyForCoolMiner()const;
     bool ClearAllCkeyForCoolMiner();
 
@@ -218,7 +195,6 @@ public:
 	/** Show progress e.g. for rescan */
 	boost::signals2::signal<void(const string &title, int nProgress)> ShowProgress;
 };
-
 
 
 typedef map<string, string> mapValue_t;
@@ -410,7 +386,7 @@ public:
 			mapAccountTx[hash] = make_shared<CRewardTransaction>(pTx);
 			break;
 		case REG_SCRIPT_TX:
-			mapAccountTx[hash] = make_shared<CRegisterScriptTx>(pTx);
+			mapAccountTx[hash] = make_shared<CRegisterAppTx>(pTx);
 			break;
 		default:
 			assert(0);
