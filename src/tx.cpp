@@ -6,7 +6,7 @@
 #include "main.h"
 #include <algorithm>
 #include "txdb.h"
-#include "VmScript/VmScriptRun.h"
+#include "vm/vmrunevn.h"
 #include "core.h"
 #include "miner.h"
 #include "json/json_spirit_utils.h"
@@ -482,11 +482,11 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 			return state.DoS(100, ERRORMSG("ExecuteTx() : save account error, kyeId=%s", desAcct.keyID.ToString()),
 						UPDATE_ACCOUNT_FAIL, "bad-save-account");
 		}
-		CVmScriptRun vmRun;
+		CVmRunEvn vmRunEvn;
 		std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 		uint64_t el = GetElementForBurn(chainActive.Tip());
 		int64_t llTime = GetTimeMillis();
-		tuple<bool, uint64_t, string> ret = vmRun.run(pTx, view, scriptCache, nHeight, el, nRunStep);
+		tuple<bool, uint64_t, string> ret = vmRunEvn.run(pTx, view, scriptCache, nHeight, el, nRunStep);
 		if (!std::get<0>(ret))
 			return state.DoS(100,
 					ERRORMSG("ExecuteTx() : ContractTransaction ExecuteTx txhash=%s run script error:%s",
@@ -494,7 +494,7 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 		LogPrint("CONTRACT_TX", "execute contract elapse:%lld, txhash=%s\n", GetTimeMillis() - llTime,
 				GetHash().GetHex());
 		set<CKeyID> vAddress;
-		vector<std::shared_ptr<CAccount> > &vAccount = vmRun.GetNewAccont();
+		vector<std::shared_ptr<CAccount> > &vAccount = vmRunEvn.GetNewAccont();
 		for (auto & itemAccount : vAccount) {
 			vAddress.insert(itemAccount->keyID);
 			userId = itemAccount->keyID;
@@ -504,7 +504,7 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 						UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 			txundo.vAccountOperLog.push_back((itemAccount->accountOperLog));
 		}
-		txundo.vScriptOperLog.insert(txundo.vScriptOperLog.end(), vmRun.GetDbLog()->begin(), vmRun.GetDbLog()->end());
+		txundo.vScriptOperLog.insert(txundo.vScriptOperLog.end(), vmRunEvn.GetDbLog()->begin(), vmRunEvn.GetDbLog()->end());
 		if(!scriptCache.SetTxRelAccout(GetHash(), vAddress))
 				return ERRORMSG("ExecuteTx() : ContractTransaction ExecuteTx save tx relate account info to script db error");
 
@@ -528,18 +528,18 @@ bool CTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 		return false;
 
 	if (CONTRACT_TX == nTxType) {
-		CVmScriptRun vmRun;
+		CVmRunEvn vmRunEvn;
 		std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 		uint64_t el = GetElementForBurn(chainActive.Tip());
 		CScriptDBViewCache scriptDBView(*pScriptDBTip, true);
 		if (uint256(0) == pTxCacheTip->IsContainTx(GetHash())) {
 			CAccountViewCache accountView(view, true);
-			tuple<bool, uint64_t, string> ret = vmRun.run(pTx, accountView, scriptDBView, chainActive.Height() + 1, el,
+			tuple<bool, uint64_t, string> ret = vmRunEvn.run(pTx, accountView, scriptDBView, chainActive.Height() + 1, el,
 					nRunStep);
 			if (!std::get<0>(ret))
 				return ERRORMSG("GetAddress()  : %s", std::get<2>(ret));
 
-			vector<shared_ptr<CAccount> > vpAccount = vmRun.GetNewAccont();
+			vector<shared_ptr<CAccount> > vpAccount = vmRunEvn.GetNewAccont();
 
 			for (auto & item : vpAccount) {
 				vAddr.insert(item->keyID);

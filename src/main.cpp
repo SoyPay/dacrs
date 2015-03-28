@@ -18,7 +18,7 @@
 #include "util.h"
 #include "miner.h"
 #include "tx.h"
-#include "VmScript/VmScriptRun.h"
+#include "vm/vmrunevn.h"
 #include <sstream>
 
 #include <boost/algorithm/string/replace.hpp>
