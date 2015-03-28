@@ -179,9 +179,9 @@ public:
 
 	bool GetBlockHeight(int &nHeight);
 
-	Value CreateNormalTx(const std::string &srcAddr, const std::string &desAddr,uint64_t nMoney, const int nfee =0,const int nHeight=0);
+	Value CreateNormalTx(const std::string &srcAddr, const std::string &desAddr,uint64_t nMoney);
 
-	Value registaccounttx(const std::string &addr, const int nfee =0,const int nHeight=0);
+	Value registaccounttx(const std::string &addr, const int nfee =0,bool flag =false);
 
 	Value CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 			int nHeight,int nFee = 10000);
