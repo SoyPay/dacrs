@@ -5,7 +5,7 @@
  *      Author: ranger.shi
  */
 
-#include "VmScript.h"
+#include "script.h"
 
 CVmScript::CVmScript() {
 	// LEARN Auto-generated constructor stub

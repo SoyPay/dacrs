@@ -13,11 +13,11 @@
 #include "net.h"
 #include "netbase.h"
 #include "util.h"
-#include "../wallet/wallet.h"
-#include "../wallet/walletdb.h"
+#include "wallet/wallet.h"
+#include "wallet/walletdb.h"
 
 #include "miner.h"
-#include "VmScript/VmScript.h"
+#include "vm/script.h"
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
