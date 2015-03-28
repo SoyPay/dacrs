@@ -276,7 +276,19 @@ Value createcontracttx(const Array& params, bool fHelp) {
 
 	RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(str_type)(int_type)(int_type));
 
-	CRegID userId(params[0].get_str());
+	CRegID userId;
+	CKeyID srckeyid;
+	if(CRegID::IsRegIdStr(params[0].get_str())){
+		userId.SetRegID(params[0].get_str());
+	}else{
+		if (!GetKeyId(params[0].get_str(), srckeyid)) {
+					throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Source Invalid  address");
+		}
+		if (!pwalletMain->GetRegId(srckeyid, userId)) {
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "address not regist");
+		}
+	}
+
 	CRegID appId(params[1].get_str());
 	uint64_t amount = params[2].get_uint64();
 	vector<unsigned char> vcontract = ParseHex(params[3].get_str());
