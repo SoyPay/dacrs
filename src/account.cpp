@@ -390,7 +390,7 @@ bool CScriptDBView::EraseKey(const vector<unsigned char> &vKey) {return false;}
 bool CScriptDBView::HaveData(const vector<unsigned char> &vKey) {return false;}
 bool CScriptDBView::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue) {return false;}
 bool CScriptDBView::GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex,
-		vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, set<CScriptDBOperLog> &setOperLog) {
+		vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData) {
 	return false;
 }
 
@@ -406,8 +406,8 @@ bool CScriptDBViewBacked::EraseKey(const vector<unsigned char> &vKey) {return pB
 bool CScriptDBViewBacked::HaveData(const vector<unsigned char> &vKey) {return pBase->HaveData(vKey);}
 bool CScriptDBViewBacked::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue) {return pBase->GetScript(nIndex, vScriptId, vValue);}
 bool CScriptDBViewBacked::GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId,
-		const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, set<CScriptDBOperLog> &setOperLog) {
-	return pBase->GetScriptData(nCurBlockHeight, vScriptId, nIndex, vScriptKey, vScriptData, setOperLog);
+		const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData) {
+	return pBase->GetScriptData(nCurBlockHeight, vScriptId, nIndex, vScriptKey, vScriptData);
 }
 
 
@@ -649,7 +649,7 @@ bool CScriptDBViewCache::GetScript(const CRegID &scriptId, vector<unsigned char>
 }
 
 bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId,
-		const vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, CScriptDBOperLog &operLog) {
+		const vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData) {
 //	assert(vScriptKey.size() == 8);
 	vector<unsigned char> vKey = { 'd', 'a', 't', 'a' };
 
@@ -666,7 +666,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 	return true;
 }
 bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId,
-		const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, set<CScriptDBOperLog> &setOperLog) {
+		const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData) {
 	if(0 == nIndex) {
 		vector<unsigned char> vKey = { 'd', 'a', 't', 'a' };
 		vKey.insert(vKey.end(), vScriptId.begin(), vScriptId.end());
@@ -689,18 +689,10 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 		bool bUpLevelRet(false);
 //		unsigned long llCount(0);
 		int nIndexTemp = nIndex;
-		while((bUpLevelRet = pBase->GetScriptData(nCurBlockHeight, vScriptId, nIndexTemp, vScriptKey, vScriptData, setOperLog))) {
+		while((bUpLevelRet = pBase->GetScriptData(nCurBlockHeight, vScriptId, nIndexTemp, vScriptKey, vScriptData))) {
 //			LogPrint("INFO", "nCurBlockHeight:%d this addr:0x%x, nIndex:%d, count:%lld\n ScriptKey:%s\n nHeight:%d\n ScriptData:%s\n vDataKey:%s\n vDataValue:%s\n",
 //					nCurBlockHeight, this, nIndexTemp, ++llCount, HexStr(vScriptKey), nHeight, HexStr(vScriptData), HexStr(vDataKey), HexStr(vDataValue));
 			nIndexTemp = 1;
-			set<CScriptDBOperLog>::iterator iterOperLog = setOperLog.begin();
-			for (; iterOperLog != setOperLog.end();) { //防止由于没有flush cache，对数据库中超时的脚本数据项，在cache中多次删除，引起删除失败
-				if (mapDatas.count(iterOperLog->vKey) > 0 && mapDatas[iterOperLog->vKey].empty()) {
-					setOperLog.erase(iterOperLog++);
-				}else {
-					++iterOperLog;
-				}
-			}
 			vector<unsigned char> dataKeyTemp(vKey.begin(), vKey.end());
 			dataKeyTemp.insert(dataKeyTemp.end(), vScriptKey.begin(), vScriptKey.end());
 //			LogPrint("INFO", "dataKeyTemp:%s\n vDataKey:%s\n", HexStr(dataKeyTemp), HexStr(vDataKey));
@@ -765,14 +757,6 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 			}
 		}
 		if(!bUpLevelRet) {
-			set<CScriptDBOperLog>::iterator iterOperLog = setOperLog.begin();
-			for (; iterOperLog != setOperLog.end();) { //防止由于没有flush cache，对数据库中超时的脚本数据项，在cache中多次删除，引起删除失败
-				if (mapDatas.count(iterOperLog->vKey) > 0 && mapDatas[iterOperLog->vKey].empty()) {
-					setOperLog.erase(iterOperLog++);
-				}else{
-					++iterOperLog;
-				}
-			}
 			if (vDataKey.empty())
 				return false;
 			else {
@@ -817,17 +801,9 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 			}
 		}
 		bool bUpLevelRet(false);
-		while((bUpLevelRet=pBase->GetScriptData(nCurBlockHeight, vScriptId, nIndex, vScriptKey, vScriptData, setOperLog))) {
+		while((bUpLevelRet=pBase->GetScriptData(nCurBlockHeight, vScriptId, nIndex, vScriptKey, vScriptData))) {
 //			LogPrint("INFO", "nCurBlockHeight:%d this addr:0x%x, nIndex:%d, count:%lld\n ScriptKey:%s\n nHeight:%d\n ScriptData:%s\n vDataKey:%s\n vDataValue:%s\n",
 //					nCurBlockHeight, this, nIndex, ++llCount, HexStr(vScriptKey), nHeight, HexStr(vScriptData), HexStr(vDataKey), HexStr(vDataValue));
-			set<CScriptDBOperLog>::iterator iterOperLog = setOperLog.begin();
-			for (; iterOperLog != setOperLog.end();) { //防止由于没有flush cache，对数据库中超时的脚本数据项，在cache中多次删除，引起删除失败
-				if (mapDatas.count(iterOperLog->vKey) > 0 && mapDatas[iterOperLog->vKey].empty()) {
-					setOperLog.erase(iterOperLog++);
-				}else {
-					++iterOperLog;
-				}
-			}
 			vector<unsigned char> dataKeyTemp(vKey.begin(), vKey.end());
 			dataKeyTemp.insert(dataKeyTemp.end(), vScriptKey.begin(), vScriptKey.end());
 //			LogPrint("INFO", "dataKeyTemp:%s\n vDataKey:%s\n", HexStr(dataKeyTemp), HexStr(vDataKey));
@@ -891,14 +867,6 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 			}
 		}
 		if(!bUpLevelRet) {
-			set<CScriptDBOperLog>::iterator iterOperLog = setOperLog.begin();
-			for (; iterOperLog != setOperLog.end();) { //防止由于没有flush cache，对数据库中超时的脚本数据项，在cache中多次删除，引起删除失败
-				if (mapDatas.count(iterOperLog->vKey) > 0 && mapDatas[iterOperLog->vKey].empty()) {
-					setOperLog.erase(iterOperLog++);
-				}else{
-					++iterOperLog;
-				}
-			}
 			if (vDataKey.empty())
 				return false;
 			else {
@@ -1230,20 +1198,12 @@ bool CScriptDBViewCache::HaveScriptData(const CRegID &scriptId, const vector<uns
 	return HaveScriptData(scriptId.GetVec6(), vScriptKey);
 }
 bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
-			vector<unsigned char> &vScriptData, CScriptDBOperLog &operLog) {
-	return GetScriptData(nCurBlockHeight, scriptId.GetVec6(), vScriptKey, vScriptData, operLog);
+			vector<unsigned char> &vScriptData) {
+	return GetScriptData(nCurBlockHeight, scriptId.GetVec6(), vScriptKey, vScriptData);
 }
-bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const CRegID &scriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData,
-		 set<CScriptDBOperLog> &setOperLog) {
-	bool bRet = GetScriptData(nCurBlockHeight, scriptId.GetVec6(), nIndex, vScriptKey, vScriptData, setOperLog);
-	if(!setOperLog.empty()) {    //删除已经超时的数据项
-		for (auto &item : setOperLog) {
-			if(!EraseScriptData(item.vKey)) {
-				return ERRORMSG("GetScriptData() delete timeout script data item of super level db error");
-			}
-		}
-	}
-	return bRet;
+bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const CRegID &scriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData)
+{
+	return GetScriptData(nCurBlockHeight, scriptId.GetVec6(), nIndex, vScriptKey, vScriptData);
 }
 bool CScriptDBViewCache::SetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
 			const vector<unsigned char> &vScriptData, CScriptDBOperLog &operLog) {

@@ -1100,9 +1100,8 @@ static int getDataFromSriptData(CScriptDBViewCache &cache, const CRegID &regid,
 	vector<unsigned char> value;
 	vector<unsigned char> vScriptKey;
 
-	set<CScriptDBOperLog> dumy;
-	if (!cache.GetScriptData(height, regid, 0, vScriptKey, value,
-			dumy)) {
+
+	if (!cache.GetScriptData(height, regid, 0, vScriptKey, value)) {
 		throw runtime_error(
 				"in getscriptdata :the scirptid get data failed!\n");
 	}
@@ -1111,8 +1110,7 @@ static int getDataFromSriptData(CScriptDBViewCache &cache, const CRegID &regid,
 	}
 	int readCount(1);
 	while (--dbsize) {
-		dumy.clear();
-		if (cache.GetScriptData(height, regid, 1, vScriptKey, value, dumy)) {
+		if (cache.GetScriptData(height, regid, 1, vScriptKey, value)) {
 			++readCount;
 			if (readCount > pagesize * (index - 1)) {
 				ret.push_back(std::make_tuple(vScriptKey, value, nHeight));
@@ -1153,8 +1151,7 @@ Value getscriptdata(const Array& params, bool fHelp) {
 	if (params.size() == 2) {
 		vector<unsigned char> key = ParseHex(params[1].get_str());
 		vector<unsigned char> value;
-		CScriptDBOperLog operLog;
-		if (!contractScriptTemp.GetScriptData(height,regid, key, value, operLog)) {
+		if (!contractScriptTemp.GetScriptData(height,regid, key, value)) {
 			throw runtime_error("in getscriptdata :the key not exist!\n");
 		}
 		script.push_back(Pair("scritpid", params[0].get_str()));
