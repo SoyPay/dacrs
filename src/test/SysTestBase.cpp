@@ -395,7 +395,24 @@ Value SysTestBase::CreateNormalTx(const std::string &srcAddr, const std::string 
 	return value;
 }
 
+Value SysTestBase::CreateNormalTx(const std::string &desAddr,uint64_t nMoney){
 
+	char dest[64] = { 0 };
+	strncpy(dest, desAddr.c_str(), sizeof(dest) - 1);
+
+	string money =strprintf("%ld", nMoney);
+
+
+	const char *argv[] = { "rpctest", "sendtoaddress",dest, (char*)money.c_str()};
+	int argc = sizeof(argv) / sizeof(char*);
+
+	Value value;
+	if (CommandLineRPC_GetValue(argc, argv, value)) {
+		//LogPrint("test_miners", "CreateNormalTx:%s\r\n", value.get_str().c_str());
+		return value;
+	}
+	return value;
+}
 Value SysTestBase::registaccounttx(const std::string &addr, const int nfee ,bool flag) {
 	//CommanRpc
 	char caddr[64] = { 0 };
@@ -587,7 +604,7 @@ bool SysTestBase::GetStrFromObj(const Value& valueRes,string& str)
 	if (result.type() == null_type){
 		return false;
 	}
-	if (result.type() != str_type){
+	if (result.type() == str_type){
 		str = result.get_str();
 		}
 	return true;
