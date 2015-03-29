@@ -62,8 +62,6 @@ dacrs_test_SOURCES = \
   SysTestBase.cpp	\
   SysTestScript.cpp \
   SysRegisterAcc_test.cpp \
-  p2pBet_test.cpp \
-  p2plottery_test.cpp \
   pressure_tests.cpp \
   scriptdbex_tests.cpp	\
   $(JSON_TEST_FILES) $(RAW_TEST_FILES)
