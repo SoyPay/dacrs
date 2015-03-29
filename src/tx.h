@@ -123,6 +123,10 @@ public:
 	const vector_unsigned_char &GetID() {
 		return vchData;
 	}
+	static const vector_unsigned_char & UserIDToVector(const CUserID &userid)
+	{
+		return CID(userid).GetID();
+	}
 	bool Set(const CRegID &id);
     bool Set(const CKeyID &id);
     bool Set(const CPubKey &id);
@@ -1048,6 +1052,123 @@ void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, i
 	}
 	pa->nTxType = nTxType;
 }
+
+
+class CAppCFund {
+public:
+	static const int MAX_TAG_SIZE  = 24;
+	CAppCFund();
+	CAppCFund(const CAppCFund &fund);
+	CAppCFund(const vector<unsigned char> &vtag,uint64_t val,int nhight);
+	bool MergeCFund( const CAppCFund &fund);
+	const vector<unsigned char> GetTag() const {
+		return vTag;
+	}
+
+	int getheight() const {
+		return nHeight;
+	}
+
+	void setHeight(int height) {
+		nHeight = height;
+	}
+
+	uint64_t getvalue() const {
+		return value;
+	}
+
+	void setValue(uint64_t value) {
+		this->value = value;
+	}
+
+	const vector<unsigned char>& gettag() const {
+		return vTag;
+	}
+
+	void setTag(const vector<unsigned char>& tag) {
+		vTag = tag;
+	}
+
+public:
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(VARINT(value));
+		READWRITE(VARINT(nHeight));
+		READWRITE(vTag);
+	)
+
+
+private:
+	uint64_t value;					//!< amount of money
+	int nHeight;					//!< time-out height
+	vector<unsigned char> vTag;	//!< vTag of the tx which create the fund
+
+};
+class CAppFundOperate{
+public:
+	unsigned char accountid[CAppCFund::MAX_TAG_SIZE];	//!< accountid
+	unsigned char opeatortype;		//!OperType
+	unsigned int  outheight;		//!< the transacion Timeout height
+	unsigned char money[8];			//!<The transfer amount
+	IMPLEMENT_SERIALIZE
+	(
+			for(int i = 0;i < CAppCFund::MAX_TAG_SIZE;i++)
+			READWRITE(accountid[i]);
+			READWRITE(opeatortype);
+			READWRITE(outheight);
+			for(int i = 0;i < 8;i++)
+			READWRITE(money[i]);
+	)
+};
+
+
+class CAppUserAccout {
+public:
+
+	bool GetAppCFund(CAppCFund &outFound,const vector<unsigned char> &vtag);
+	bool AddAppCFund(const CAppCFund &inFound);
+	bool AddAppCFund(const vector<unsigned char> &vtag,uint64_t val,int nhight);
+	bool MinusAppCFund(const vector<unsigned char> &vtag,uint64_t val,int nhight);
+	bool MinusAppCFund(const CAppCFund &inFound);
+	bool ChangeAppCFund(const CAppCFund &inFound);
+	bool AutoMergeFreezeToFree(int hight);
+	CAppUserAccout();
+	virtual ~CAppUserAccout();
+
+	uint64_t getllValues() const {
+		return llValues;
+	}
+
+	void setLlValues(uint64_t llValues) {
+		this->llValues = llValues;
+	}
+
+	const CUserID& getregId() const {
+		return AccUserID;
+	}
+
+	void setRegId(const CUserID& regId) {
+		AccUserID = regId;
+	}
+
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(VARINT(llValues));
+		CID regAcctId(AccUserID);
+		READWRITE(regAcctId);
+		if(fRead) {
+			AccUserID = regAcctId.GetUserId();
+		}
+		READWRITE(vFreezedFund);
+	)
+
+private:
+	uint64_t llValues;
+	mutable	CUserID AccUserID;
+	vector<CAppCFund> vFreezedFund;
+
+};
+
 
 extern string txTypeArray[];
 

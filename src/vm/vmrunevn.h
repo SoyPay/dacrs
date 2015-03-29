@@ -39,12 +39,12 @@ class CVmRunEvn {
 	/**
 	 * the block height
 	 */
-	unsigned int height;
+	unsigned int RunTimeHeight;
 	CScriptDBViewCache *m_ScriptDBTip;
 	CAccountViewCache *m_view;
 	vector<CVmOperate> m_output;
 	shared_ptr<vector<CScriptDBOperLog> > m_dblog;
-
+	map<vector<unsigned char >,shared_ptr<CAppUserAccout>> mAccMap;
 
 private:
 	/**
@@ -129,6 +129,7 @@ public:
 	uint256 GetCurTxHash();
 	void InsertOutputData(vector<CVmOperate> source);
 	shared_ptr<vector<CScriptDBOperLog> > GetDbLog();
+	bool GetAppUserAccout(const CUserID& userId,shared_ptr<CAppUserAccout> &sptrAcc);
 	virtual ~CVmRunEvn();
 };
 
