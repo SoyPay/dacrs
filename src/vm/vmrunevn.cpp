@@ -11,7 +11,7 @@
 CVmRunEvn::CVmRunEvn() {
 	RawAccont.clear();
 	NewAccont.clear();
-	height = 0;
+	RunTimeHeight = 0;
 	m_ScriptDBTip = NULL;
 	m_view = NULL;
 	m_dblog = std::make_shared<std::vector<CScriptDBOperLog> >();
@@ -27,7 +27,7 @@ bool CVmRunEvn::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& vie
 
 	m_output.clear();
 	listTx = Tx;
-	height = nheight;
+	RunTimeHeight = nheight;
 	m_view = &view;
 	vector<unsigned char> vScript;
 
@@ -220,7 +220,7 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 		if (vnewAccount.get() != NULL) {
 			vmAccount = vnewAccount;
 		}else{
-			vmAccount.get()->CompactAccount(height);
+			vmAccount.get()->CompactAccount(RunTimeHeight);
 		}
 		if ((OperType) it.opeatortype == ADD_FREE) {
 			fund.nFundType = FREEDOM_FUND;
@@ -272,7 +272,7 @@ const vector<unsigned char>& CVmRunEvn::GetTxContact()
 }
 int CVmRunEvn::GetComfirHeight()
 {
-	return height;
+	return RunTimeHeight;
 }
 uint256 CVmRunEvn::GetCurTxHash()
 {
@@ -293,4 +293,21 @@ void CVmRunEvn::InsertOutputData(vector<CVmOperate> source)
 shared_ptr<vector<CScriptDBOperLog> > CVmRunEvn::GetDbLog()
 {
 	return m_dblog;
+}
+
+bool CVmRunEvn::GetAppUserAccout(const CUserID& userId,shared_ptr<CAppUserAccout> &sptrAcc) {
+	assert(m_ScriptDBTip != NULL);
+	vector_unsigned_char vtemp = CID::UserIDToVector(userId);
+	if (mAccMap.count(vtemp)) {
+		sptrAcc=  mAccMap[vtemp];
+		return true;
+	}
+
+	shared_ptr<CAppUserAccout> tem = make_shared<CAppUserAccout>();
+	if (!m_ScriptDBTip->GetScriptAcc(GetScriptRegID(), userId, *tem.get())) {
+		return false;
+	}
+	mAccMap[vtemp] = tem;
+	sptrAcc= tem;
+	return true;
 }

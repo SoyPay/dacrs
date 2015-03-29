@@ -139,6 +139,10 @@ public:
 public:
 	CScriptDBViewCache(CScriptDBView &base, bool fDummy = false);
 	bool GetScript(const CRegID &scriptId, vector<unsigned char> &vValue);
+
+	bool GetScriptAcc(const CRegID &scriptId,const CUserID AccUserID,CAppUserAccout& AccOut);
+	bool SetScriptAcc(const CRegID &scriptId, CAppUserAccout& AccOut);
+
 	bool GetScript(const int nIndex, CRegID &scriptId, vector<unsigned char> &vValue);
 	bool SetScript(const CRegID &scriptId, const vector<unsigned char> &vValue);
 	bool HaveScript(const CRegID &scriptId);

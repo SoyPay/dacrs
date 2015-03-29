@@ -1368,3 +1368,121 @@ uint256 CTransaction::SignatureHash() const  {
 	ss << srcId << desId << VARINT(llFees) << vContract;
 	return ss.GetHash();
 }
+
+CAppCFund::CAppCFund() {
+	vTag.clear();
+	value = 0;
+	nHeight = 0;
+}
+
+CAppCFund::CAppCFund(const CAppCFund &fund) {
+	vTag = fund.GetTag();
+	value = fund.getvalue();
+	nHeight = fund.getheight();
+}
+
+CAppCFund::CAppCFund(const vector<unsigned char>& vtag, uint64_t val, int nhight) {
+	vTag = vtag;
+	value = val;
+	nHeight = nhight;
+}
+
+inline bool CAppCFund::MergeCFund(const CAppCFund &fund) {
+	assert(fund.GetTag() == this->GetTag());
+	assert(fund.getheight() == this->getheight() && fund.getvalue() > 0);
+	value = fund.getvalue()+value;
+	return true;
+}
+
+
+
+
+CAppUserAccout::CAppUserAccout() {
+	AccUserID = CNullID();
+	llValues = 0;
+	vFreezedFund.clear();
+}
+
+bool CAppUserAccout::GetAppCFund(CAppCFund& outFound, const vector<unsigned char>& vtag) {
+
+	auto it = find_if(vFreezedFund.begin(), vFreezedFund.end(), [&](const CAppCFund& CfundIn) {
+		return CfundIn.GetTag()== vtag;});
+	if (it != vFreezedFund.end()) {
+		outFound = *it;
+		return true;
+	}
+	return false;
+}
+
+bool CAppUserAccout::AddAppCFund(const CAppCFund& inFound) {
+	//需要找到超时高度和tag 都相同的才可以合并
+	auto it = find_if(vFreezedFund.begin(), vFreezedFund.end(), [&](const CAppCFund& CfundIn) {
+		return CfundIn.GetTag()== inFound.GetTag() && CfundIn.getheight() ==inFound.getheight() ;});
+	if (it != vFreezedFund.end()) { //如果找到了
+		it->MergeCFund(inFound);
+		return true;
+	}
+	//没有找到就加一个新的
+	vFreezedFund.insert(vFreezedFund.end(),inFound);
+	return true;
+
+}
+
+bool CAppUserAccout::AutoMergeFreezeToFree(int hight) {
+
+	bool isneedremvoe = false;
+	for (auto &Fund : vFreezedFund) {
+		if (Fund.getheight() <= hight) {
+			llValues += Fund.getvalue();
+			isneedremvoe = true;
+		}
+	}
+	if (isneedremvoe) {
+		remove_if(vFreezedFund.begin(), vFreezedFund.end(), [&](const CAppCFund& CfundIn) {
+			return CfundIn.getheight() <= hight;});
+	}
+	return true;
+
+}
+
+bool CAppUserAccout::ChangeAppCFund(const CAppCFund& inFound) {
+	//需要找到超时高度和tag 都相同的才可以合并
+	assert(inFound.getheight() > 0);
+	auto it = find_if(vFreezedFund.begin(), vFreezedFund.end(), [&](const CAppCFund& CfundIn) {
+		return CfundIn.GetTag()== inFound.GetTag() && CfundIn.getheight() ==inFound.getheight() ;});
+	if (it != vFreezedFund.end()) { //如果找到了
+		*it= inFound;
+		return true;
+	}
+	return false;
+}
+
+bool CAppUserAccout::MinusAppCFund(const CAppCFund& inFound) {
+
+	assert(inFound.getheight() > 0);
+	auto it = find_if(vFreezedFund.begin(), vFreezedFund.end(), [&](const CAppCFund& CfundIn) {
+		return CfundIn.GetTag()== inFound.GetTag() && CfundIn.getheight() ==inFound.getheight() ;});
+	if (it != vFreezedFund.end()) { //如果找到了
+		if(it->getvalue() >= inFound.getvalue())
+			{
+			  it->setValue(it->getvalue()  - inFound.getvalue());
+			  return true;
+			}
+	}
+	return false;
+}
+
+bool CAppUserAccout::MinusAppCFund(const vector<unsigned char> &vtag,uint64_t val,int nhight) {
+	CAppCFund fund(vtag,val,nhight);
+	return MinusAppCFund(fund);
+}
+
+bool CAppUserAccout::AddAppCFund(const vector<unsigned char>& vtag, uint64_t val, int nhight) {
+	CAppCFund fund(vtag,val,nhight);
+	return AddAppCFund(fund);
+}
+
+CAppUserAccout::~CAppUserAccout() {
+
+}
+
