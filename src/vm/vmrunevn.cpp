@@ -99,10 +99,10 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 		return std::make_tuple (false, 0, string("VmScript OpeatorAccount Failed\n"));
 	}
 
-//	if(!OpeatorAppAccount())
-//	{
-//		return std::make_tuple (false, 0, string("OpeatorApp Account Failed\n"));
-//	}
+	if(!OpeatorAppAccount())
+	{
+		return std::make_tuple (false, 0, string("OpeatorApp Account Failed\n"));
+	}
 
 	uint64_t spend = step*nBurnFactor;
 	return std::make_tuple (true, spend, string("VmScript Sucess\n"));
@@ -232,7 +232,7 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 //		LogPrint("vm", "befer account:%s\r\n", vmAccount.get()->ToString().c_str());
 //		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
 		bool ret = false;
-		vector<CScriptDBOperLog> vAuthorLog;
+//		vector<CScriptDBOperLog> vAuthorLog;
 		//todolist
 //		if(IsSignatureAccount(vmAccount.get()->regID) || vmAccount.get()->regID == boost::get<CRegID>(tx->appRegId))
 		{
@@ -247,7 +247,7 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 			return false;
 		}
 		NewAccont.push_back(vmAccount);
-		m_dblog->insert(m_dblog->end(), vAuthorLog.begin(), vAuthorLog.end());
+//		m_dblog->insert(m_dblog->end(), vAuthorLog.begin(), vAuthorLog.end());
 
 	}
 	return true;
@@ -333,24 +333,38 @@ bool CVmRunEvn::GetAppUserAccout(const vector<unsigned char> &vId, shared_ptr<CA
 }
 
 bool CVmRunEvn::OpeatorAppAccount() {
-	 assert(MapAppOperate.size() > 0);
-	for (auto const tem : MapAppOperate) {
-		shared_ptr<CAppUserAccout> sptrAcc;
-		if (!GetAppUserAccout(tem.first, sptrAcc, true)) {
-			return false;
-		}
-		if(!sptrAcc.get()->Operate(tem.second)){
-			return false;
+	if ((MapAppOperate.size() > 0)) {
+		for (auto const tem : MapAppOperate) {
+			shared_ptr<CAppUserAccout> sptrAcc;
+			if (!GetAppUserAccout(tem.first, sptrAcc, true)) {
+				LogPrint("VM", "GetAppUserAccout(tem.first, sptrAcc, true) failed \r\n appuserid :%s\r\n",
+						HexStr(tem.first));
+				return false;
+			}
+			if (!sptrAcc.get()->Operate(tem.second)) {
+
+				int i = 0;
+				for (auto const pint : tem.second) {
+					LogPrint("VM", "GOperate failed \r\n Operate %d : %s\r\n", i++, pint.toString());
+				}
+				LogPrint("VM", "GetAppUserAccout(tem.first, sptrAcc, true) failed \r\n appuserid :%s\r\n",
+						HexStr(tem.first));
+				return false;
+			}
 		}
 	}
 	return true;
 }
 
-bool CVmRunEvn::SaveAppAccountToDb(CScriptDBViewCache &mScriptDBTip) {
-	assert(mAccMap.size() > 0);
-	for (auto const tem : mAccMap) {
-		if (!mScriptDBTip.SetScriptAcc(GetScriptRegID(), *tem.second.get()))
-			return false;
+bool CVmRunEvn::SaveAppAccountToDb(CScriptDBViewCache &mScriptDBTip, vector<CScriptDBOperLog> &retLog) {
+	if (mAccMap.size() > 0) {
+		for (auto const tem : mAccMap) {
+			CScriptDBOperLog temp;
+			if (!mScriptDBTip.SetScriptAcc(GetScriptRegID(), *tem.second.get(), temp)) {
+				return false;
+			}
+			retLog.insert(retLog.end(), temp);
+		}
 	}
 	return true;
 }
