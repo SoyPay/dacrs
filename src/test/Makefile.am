@@ -66,6 +66,7 @@ dacrs_test_SOURCES = \
   p2plottery_test.cpp \
   pressure_tests.cpp \
   scriptdbex_tests.cpp	\
+  appacc_test.cpp \
   $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 
 #if ENABLE_WALLET

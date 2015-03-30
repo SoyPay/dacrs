@@ -1425,10 +1425,10 @@ Object CTransactionDBCache::ToJosnObj() const {
 
 }
 
-bool CScriptDBViewCache::GetScriptAcc(const CRegID& scriptId, const CUserID AccUserID, CAppUserAccout& AccOut) {
+bool CScriptDBViewCache::GetScriptAcc(const CRegID& scriptId, const vector<unsigned char> &vKey, CAppUserAccout& AccOut) {
 	return true;
 }
 
-bool CScriptDBViewCache::SetScriptAcc(const CRegID& scriptId, CAppUserAccout& AccOut) {
+bool CScriptDBViewCache::SetScriptAcc(const CRegID& scriptId, const CAppUserAccout& AccOut) {
 	return true;
 }
