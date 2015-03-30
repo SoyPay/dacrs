@@ -90,10 +90,6 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 
 	uRunStep = step;
 	LogPrint("CONTRACT_TX", "tx:%s,step:%ld\n", tx->ToString(view), step);
-	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
-	CDataStream Contractstream(*retData.get(), SER_DISK, CLIENT_VERSION);
-	vector<CVmOperate> retvmcode;
-	Contractstream >> retvmcode;
 
 	if (!CheckOperate(m_output)) {
 		return std::make_tuple (false, 0, string("VmScript CheckOperate Failed \n"));
@@ -102,6 +98,12 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 	if (!OpeatorAccount(m_output, view)) {
 		return std::make_tuple (false, 0, string("VmScript OpeatorAccount Failed\n"));
 	}
+
+	if(!OpeatorAppAccount())
+	{
+		return std::make_tuple (false, 0, string("OpeatorApp Account Failed\n"));
+	}
+
 	uint64_t spend = step*nBurnFactor;
 	return std::make_tuple (true, spend, string("VmScript Sucess\n"));
 
@@ -286,7 +288,20 @@ CAccountViewCache * CVmRunEvn::GetCatchView()
 {
 	return m_view;
 }
-void CVmRunEvn::InsertOutputData(vector<CVmOperate> source)
+void CVmRunEvn::InsertOutAPPOperte(const vector<unsigned char>& userId,const vector<CAppFundOperate> &source)
+{
+	if(MapAppOperate.count(userId))
+	{
+		auto iter = MapAppOperate[userId].begin();
+		MapAppOperate[userId].insert(iter,source.begin(),source.end());
+	}
+	else
+	{
+		MapAppOperate[userId] = source;
+	}
+
+}
+void CVmRunEvn::InsertOutputData(const vector<CVmOperate>& source)
 {
 	m_output.insert(m_output.end(),source.begin(),source.end());
 }
@@ -295,19 +310,47 @@ shared_ptr<vector<CScriptDBOperLog> > CVmRunEvn::GetDbLog()
 	return m_dblog;
 }
 
-bool CVmRunEvn::GetAppUserAccout(const CUserID& userId,shared_ptr<CAppUserAccout> &sptrAcc) {
+bool CVmRunEvn::GetAppUserAccout(const vector<unsigned char> &vId, shared_ptr<CAppUserAccout> &sptrAcc, bool IsCreate) {
 	assert(m_ScriptDBTip != NULL);
-	vector_unsigned_char vtemp = CID::UserIDToVector(userId);
-	if (mAccMap.count(vtemp)) {
-		sptrAcc=  mAccMap[vtemp];
+	if (mAccMap.count(vId)) {
+		sptrAcc = mAccMap[vId];
 		return true;
 	}
+	shared_ptr<CAppUserAccout> tem ;
 
-	shared_ptr<CAppUserAccout> tem = make_shared<CAppUserAccout>();
-	if (!m_ScriptDBTip->GetScriptAcc(GetScriptRegID(), userId, *tem.get())) {
+	if (!m_ScriptDBTip->GetScriptAcc(GetScriptRegID(), vId, *tem.get())) {
+		if (IsCreate == true) {
+			tem = make_shared<CAppUserAccout>(vId);
+			mAccMap[vId] = tem;
+			sptrAcc = tem;
+			return true;
+		}
 		return false;
 	}
-	mAccMap[vtemp] = tem;
-	sptrAcc= tem;
+	mAccMap[vId] = tem;
+	sptrAcc = tem;
+	return true;
+}
+
+bool CVmRunEvn::OpeatorAppAccount() {
+	 assert(MapAppOperate.size() > 0);
+	for (auto const tem : MapAppOperate) {
+		shared_ptr<CAppUserAccout> sptrAcc;
+		if (!GetAppUserAccout(tem.first, sptrAcc, true)) {
+			return false;
+		}
+		if(!sptrAcc.get()->Operate(tem.second)){
+			return false;
+		}
+	}
+	return true;
+}
+
+bool CVmRunEvn::SaveAppAccountToDb(CScriptDBViewCache &mScriptDBTip) {
+	assert(mAccMap.size() > 0);
+	for (auto const tem : mAccMap) {
+		if (!mScriptDBTip.SetScriptAcc(GetScriptRegID(), *tem.second.get()))
+			return false;
+	}
 	return true;
 }

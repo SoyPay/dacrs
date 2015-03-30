@@ -986,6 +986,41 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmEvn)
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	return std::make_tuple (true , tem);
 }
+static RET_DEFINE ExWriteOutAppOperateFunc(unsigned char * ipara,void * pVmEvn)
+{
+	unsigned char * pbuffer = ipara;
+	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+
+    if(!GetData(ipara,retdata) ||retdata.size() != 2 || retdata.at(0).get()->size() > 1+CAppCFund::MAX_TAG_SIZE )
+    {
+  		 return RetFalse("para err");
+  	 }
+
+	vector<CAppFundOperate> source;
+	const vector<unsigned char> &temId = *retdata.at(0).get();
+
+
+	CAppFundOperate temp;
+	int Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
+	int count = GetParaLen(pbuffer)/Size;
+	CDataStream ss(*retdata.at(1),SER_DISK, CLIENT_VERSION);
+
+	while(count--)
+	{
+		ss >> temp;
+      source.push_back(temp);
+	}
+
+	pVmRunEvn->InsertOutAPPOperte(temId,source);
+
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+	return std::make_tuple (true , tem);
+}
+
+
+
+
 
 /**
  *bool GetScriptData(const void* const scriptID,void* const pkey,short len,void* const pvalve,short maxlen)
@@ -1195,19 +1230,14 @@ static RET_DEFINE GetUserAppAccValue(unsigned char * ipara,void * pVmScript){
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
     if(!GetData(ipara,retdata) ||retdata.size() != 1
-    	|| !(retdata.at(0).get()->size() == 6 || retdata.at(0).get()->size() == 34))
+    	|| retdata.at(0).get()->size() > CAppCFund::MAX_TAG_SIZE)
     {
     	return RetFalse(string(__FUNCTION__)+"para  err !");
     }
-    CKeyID addrKeyId;
-    vector<unsigned char> id = *retdata.at(0).get();
-   	 if (!GetKeyId(*(pVmScriptRun->GetCatchView()),id, addrKeyId)) {
-   		 auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-   		 return std::make_tuple (false, tem);
-   	 }
+
    	shared_ptr<CAppUserAccout> sptrAcc;
    	uint64_t value = 0 ;
-	if(pVmScriptRun->GetAppUserAccout(addrKeyId,sptrAcc))
+	if(pVmScriptRun->GetAppUserAccout(*retdata.at(0).get(),sptrAcc))
 	{
 		value = sptrAcc->getllValues();
 	}
@@ -1226,33 +1256,31 @@ static RET_DEFINE GetUserAppAccFoudWithTag(unsigned char * ipara,void * pVmScrip
 
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
-    if(!GetData(ipara,retdata) ||retdata.size() != 2
-    	|| !(retdata.at(0).get()->size() == 6 || retdata.at(0).get()->size() == 34))
+    if(!GetData(ipara,retdata) ||retdata.size() != 3
+    	|| retdata.at(0).get()->size() > 1+CAppCFund::MAX_TAG_SIZE ||(4 != retdata.at(2).get()->size()))
     {
-    	if(retdata.at(1).get()->size() > 34)//tag 最大为34
+    	if(retdata.at(1).get()->size() > 1+CAppCFund::MAX_TAG_SIZE)//tag 最大为34
     	{
 			return RetFalse(string(__FUNCTION__)+"para err !");
     	}
     }
-    CKeyID addrKeyId;
+
     vector<unsigned char> id = *retdata.at(0).get();
     vector<unsigned char> tag = *retdata.at(1).get();
-   	 if (!GetKeyId(*(pVmScriptRun->GetCatchView()),id, addrKeyId)) {
-   		 return RetFalse(string(__FUNCTION__)+"para id err !");
-   	 }
+    int te =   *((int*)(&(*retdata.at(2).get())[0])) ;
+
    	shared_ptr<CAppUserAccout> sptrAcc;
 
    	CAppCFund fund;
-	if(pVmScriptRun->GetAppUserAccout(addrKeyId,sptrAcc))
+	if(pVmScriptRun->GetAppUserAccout(id,sptrAcc))
 	{
-		CAppCFund fund;
-		if(!sptrAcc->GetAppCFund(fund,tag))	{
+		if(!sptrAcc->GetAppCFund(fund,tag,te))	{
 			return RetFalse(string(__FUNCTION__)+"tag err !");
 		}
 	}
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
-    tep << fund.getvalue() << fund.getheight();
+    tep << fund.getvalue() ;
     vector<unsigned char> tep1(tep.begin(),tep.end());
 	(*tem.get()).push_back(tep1);
 	return std::make_tuple (true, tem);
@@ -1295,6 +1323,7 @@ enum CALL_API_FUN {
 	GETCURPAYMONEY_FUN,             //!<GETCURPAYMONEY_FUN
 	GET_APP_USER_ACC_VALUE_FUN,             //!<GET_APP_USER_ACC_FUN
 	GET_APP_USER_ACC_FUND_WITH_TAG_FUN,             //!<GET_APP_USER_ACC_FUND_WITH_TAG_FUN
+	GET_WIRITE_OUT_APP_OPERATE_FUN,             //!<GET_WIRITE_OUT_APP_OPERATE_FUN
 
 };
 
@@ -1336,6 +1365,7 @@ const static struct __MapExterFun FunMap[] = { //
 
 		{GET_APP_USER_ACC_VALUE_FUN,GetUserAppAccValue},
 		{GET_APP_USER_ACC_FUND_WITH_TAG_FUN,GetUserAppAccFoudWithTag},
+		{GET_WIRITE_OUT_APP_OPERATE_FUN,ExWriteOutAppOperateFunc},
 
 		};
 
