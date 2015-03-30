@@ -270,7 +270,6 @@ void testscriptdatadb() {
 	int curheight(0);
 	vector<unsigned char> vKey;
 	vector<unsigned char> vScript;
-	int nValidHeight(0);
 	set<CScriptDBOperLog> setOperLog;
 
 
@@ -297,7 +296,6 @@ void testscriptdatadb() {
 	BOOST_CHECK(pTestView->GetScriptData(curheight,regScriptId, vScriptKey, vScript));
 	// if the readed script content equals with original
 	BOOST_CHECK(vScriptData == vScript);
-	BOOST_CHECK_EQUAL(nValidHeight, 100);
 	int nCount;
 	//get script numbers from db
 	BOOST_CHECK(pTestView->GetScriptDataCount(regScriptId, nCount));
@@ -306,15 +304,12 @@ void testscriptdatadb() {
 	//get index 0 script from db
 	vScript.clear();
 	vKey.clear();
-	nValidHeight = 0;
 	BOOST_CHECK(pTestView->GetScriptData(curheight,regScriptId, 0, vKey, vScript));
 	BOOST_CHECK(vKey == vScriptKey);
 	BOOST_CHECK(vScript == vScriptData);
-	BOOST_CHECK_EQUAL(nValidHeight,100);
 	BOOST_CHECK(pTestView->GetScriptData(curheight,regScriptId, 1, vKey, vScript));
 	BOOST_CHECK(vKey == vScriptKey1);
 	BOOST_CHECK(vScript == vScriptData1);
-	BOOST_CHECK_EQUAL(nValidHeight,101);
 	//delete script from db
 	BOOST_CHECK(pTestView->EraseScriptData(regScriptId, vScriptKey, operlog));
 	vKey.clear();
@@ -322,7 +317,6 @@ void testscriptdatadb() {
 	BOOST_CHECK(pTestView->GetScriptData(curheight,regScriptId, 0, vKey, vScript));
 	BOOST_CHECK(vKey == vScriptKey1);
 	BOOST_CHECK(vScript == vScriptData1);
-	BOOST_CHECK_EQUAL(nValidHeight,101);
 	BOOST_CHECK(pTestView->GetScriptDataCount(regScriptId, nCount));
 	BOOST_CHECK_EQUAL(nCount, 1);
 	//write all data in caches to db
