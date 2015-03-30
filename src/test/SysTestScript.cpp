@@ -200,7 +200,7 @@ public:
 	{
 		CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
 
-		CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","scripttest.bin");
+		CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
 
 		string strRegID = "010000000100";
 
@@ -394,7 +394,7 @@ public:
 			BOOST_CHECK(GenerateOneBlock());
 		}
 
-		int count = GetScriptSize(scriptid);
+		int count = 15;
 		while(count > 1)
 		{
 			//// second tx
@@ -411,7 +411,7 @@ public:
 				BOOST_CHECK(!GetScriptData(scriptid,key));
 
 				CheckScriptDB((height),scriptid,phash,false);
-				count = GetScriptSize(scriptid);
+				count--;
 		}
 
 		while(true)
@@ -445,7 +445,7 @@ public:
 
 	//	cout<<"end:"<<endl;
 		//// 遍历
-		int count = GetScriptSize(scriptid);
+		int count = 15;
         while(count > 1)
         {
     		int param =18;
@@ -455,10 +455,9 @@ public:
   //  		cout<<"cont:"<<endl;
    // 		cout<<chainActive.Height()<<endl;
         	CheckScriptDB(height,scriptid,writetxhash,true);
-        	count = GetScriptSize(scriptid);
+        	count--;
         }
 
-    	count = GetScriptSize(scriptid);
       /// 回滚
 		while(true)
 		{
@@ -511,7 +510,7 @@ BOOST_FIXTURE_TEST_SUITE(sysScript_test,CSysScriptTest)
 
 BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 {
-//	//// pass
+	//// pass
 	ResetEnv();
 	BOOST_CHECK(0==chainActive.Height());
 	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
@@ -527,13 +526,13 @@ BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 	BOOST_CHECK(0==chainActive.Height());
 	CheckScriptAccount();
 
-//	ResetEnv();
-//	BOOST_CHECK(0==chainActive.Height());
-//	testdb();
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	testdb();
 
-//	ResetEnv();
-//	BOOST_CHECK(0==chainActive.Height());
-//	 testdeletmodifydb();
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	testdeletmodifydb();
 }
 
 // 测试各种地址挖矿
