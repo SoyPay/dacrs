@@ -82,7 +82,7 @@ uint64_t GetElementForBurn(CBlockIndex* pindex)
 	int nBlock = SysCfg().GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
 //	CBlockIndex* pindex = chainActive.Tip();
 	if (nBlock > pindex->nHeight) {
-		return 100000;
+		return 100;
 	} else {
 		for (int ii = 0; ii < nBlock; ii++) {
 			sumfee += pindex->GetBlockFee();
