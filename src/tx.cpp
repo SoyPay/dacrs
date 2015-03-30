@@ -180,33 +180,37 @@ bool CBaseTransaction::IsValidHeight(int nCurHeight, int nTxCacheHeight) const
 			return false;
 	return true;
 }
-bool CBaseTransaction::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state,
-		CTxUndo &txundo, int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
+bool CBaseTransaction::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
+		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	vector<CAccountOperLog>::reverse_iterator rIterAccountLog = txundo.vAccountOperLog.rbegin();
-	for(; rIterAccountLog != txundo.vAccountOperLog.rend(); ++rIterAccountLog) {
+	for (; rIterAccountLog != txundo.vAccountOperLog.rend(); ++rIterAccountLog) {
 		CAccount account;
 		CUserID userId = rIterAccountLog->keyID;
-		if(!view.GetAccount(userId, account))  {
-			return state.DoS(100,
-							ERRORMSG("UndoExecuteTx() : undo ExecuteTx read accountId= %s account info error"),
-							UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
+		if (!view.GetAccount(userId, account)) {
+			return state.DoS(100, ERRORMSG("UndoExecuteTx() : undo ExecuteTx read accountId= %s account info error"),
+					UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 		}
-		if(!account.UndoOperateAccount(*rIterAccountLog)){
-			return state.DoS(100,
-							ERRORMSG("UndoExecuteTx() : undo UndoOperateAccount failed"),
-							UPDATE_ACCOUNT_FAIL, "undo-operate-account-failed");
+		if (!account.UndoOperateAccount(*rIterAccountLog)) {
+			return state.DoS(100, ERRORMSG("UndoExecuteTx() : undo UndoOperateAccount failed"), UPDATE_ACCOUNT_FAIL,
+					"undo-operate-account-failed");
 		}
-		if(!view.SetAccount(userId, account)) {
-			return state.DoS(100,
-					ERRORMSG("UndoExecuteTx() : undo ExecuteTx write accountId= %s account info error"),
-					UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
+		if (COMMON_TX == nTxType) {
+			if (account.IsEmptyValue() && !account.PublicKey.IsFullyValid()) {
+				view.EraseAccount(userId);
+			} else {
+				if (!view.SetAccount(userId, account)) {
+					return state.DoS(100,
+							ERRORMSG("UndoExecuteTx() : undo ExecuteTx write accountId= %s account info error"),
+							UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
+				}
+			}
 		}
 	}
 	vector<CScriptDBOperLog>::reverse_iterator rIterScriptDBLog = txundo.vScriptOperLog.rbegin();
-	for(; rIterScriptDBLog != txundo.vScriptOperLog.rend(); ++rIterScriptDBLog) {
-		if(!scriptCache.UndoScriptData(rIterScriptDBLog->vKey, rIterScriptDBLog->vValue))
-			return state.DoS(100,
-					ERRORMSG("UndoExecuteTx() : undo scriptdb data error"), UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
+	for (; rIterScriptDBLog != txundo.vScriptOperLog.rend(); ++rIterScriptDBLog) {
+		if (!scriptCache.UndoScriptData(rIterScriptDBLog->vKey, rIterScriptDBLog->vValue))
+			return state.DoS(100, ERRORMSG("UndoExecuteTx() : undo scriptdb data error"), UPDATE_ACCOUNT_FAIL,
+					"bad-save-scriptdb");
 	}
 	return true;
 }
