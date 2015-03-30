@@ -200,7 +200,7 @@ public:
 	{
 		CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
 
-		CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","scripttest.bin");
+		CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
 
 		string strRegID = "010000000100";
 
