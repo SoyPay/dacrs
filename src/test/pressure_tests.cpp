@@ -165,7 +165,7 @@ public:
 		unsigned char cType;
 		RAND_bytes(&cType, sizeof(cType));
 		int iIndex = cType % 2;
-
+		iIndex +=20;
 		string contact =strprintf("%02x",iIndex);
 
 		int nfee = GetRandomFee();
@@ -189,7 +189,7 @@ public:
 			regAddress = iterSrcAddr->second;
 		}
 		uint64_t nFee = GetRandomFee();
-		Value ret = RegisterScriptTx(regAddress, "test.bin", 100, nFee);
+		Value ret = RegisterScriptTx(regAddress, "unit_test.bin", 100, nFee);
 		BOOST_CHECK(GetHashFromCreatedTx(ret,hash));
 
 		if(fFlag) {
@@ -260,6 +260,7 @@ public:
 		uint64_t SelfFreezeAmount(0);
 		uint64_t freeValue(0);
 		uint64_t totalValue(0);
+		uint64_t scriptaccValue(0);
 		for(auto & item : mapAddress) {
 			CRegID regId(item.first);
 			CUserID userId = regId;
@@ -275,9 +276,26 @@ public:
 			}
 
 		}
+
+		if(regScriptId != ""){
+			CRegID regId(regScriptId);
+			CUserID userId = regId;
+			{
+				LOCK(cs_main);
+				CAccount account;
+				CAccountViewCache accView(*pAccountViewTip, true);
+				if (!accView.GetAccount(userId, account)) {
+					return false;
+				}
+				scriptaccValue += account.GetRewardAmount(chainActive.Tip()->nHeight);
+				scriptaccValue += account.GetRawBalance(chainActive.Tip()->nHeight);
+			}
+
+		}
 		totalValue += rewardAmount;
 		totalValue += SelfFreezeAmount;
 		totalValue += freeValue;
+		totalValue += scriptaccValue;
 		//¼ì²é×ÜÕËÆ½ºâ
 		BOOST_CHECK(totalValue  == 30000000*COIN);
 

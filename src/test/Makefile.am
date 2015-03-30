@@ -64,6 +64,8 @@ dacrs_test_SOURCES = \
   SysRegisterAcc_test.cpp \
   pressure_tests.cpp \
   scriptdbex_tests.cpp	\
+  account_tests.cpp \
+  appacc_test.cpp \
   $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 
 #if ENABLE_WALLET
