@@ -687,7 +687,6 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 			}
 		}
 		bool bUpLevelRet(false);
-//		unsigned long llCount(0);
 		int nIndexTemp = nIndex;
 		while((bUpLevelRet = pBase->GetScriptData(nCurBlockHeight, vScriptId, nIndexTemp, vScriptKey, vScriptData))) {
 //			LogPrint("INFO", "nCurBlockHeight:%d this addr:0x%x, nIndex:%d, count:%lld\n ScriptKey:%s\n nHeight:%d\n ScriptData:%s\n vDataKey:%s\n vDataValue:%s\n",
