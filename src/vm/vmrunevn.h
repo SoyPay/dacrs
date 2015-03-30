@@ -43,6 +43,9 @@ class CVmRunEvn {
 	CScriptDBViewCache *m_ScriptDBTip;
 	CAccountViewCache *m_view;
 	vector<CVmOperate> m_output;
+
+
+	map<vector<unsigned char >,vector<CAppFundOperate> > MapAppOperate;
 	shared_ptr<vector<CScriptDBOperLog> > m_dblog;
 	map<vector<unsigned char >,shared_ptr<CAppUserAccout>> mAccMap;
 
@@ -87,7 +90,7 @@ private:
 	 */
 	vector_unsigned_char GetAccountID(CVmOperate value);
 	bool IsSignatureAccount(CRegID account);
-
+	bool OpeatorAppAccount();
 public:
 	/**
 	 * A constructor.
@@ -127,9 +130,16 @@ public:
 	CAccountViewCache * GetCatchView();
 	int GetComfirHeight();
 	uint256 GetCurTxHash();
-	void InsertOutputData(vector<CVmOperate> source);
+	void InsertOutputData(const vector<CVmOperate> &source);
+	void InsertOutAPPOperte(const vector<unsigned char>& userId,const vector<CAppFundOperate> &source);
 	shared_ptr<vector<CScriptDBOperLog> > GetDbLog();
-	bool GetAppUserAccout(const CUserID& userId,shared_ptr<CAppUserAccout> &sptrAcc);
+
+	bool GetAppUserAccout(const vector<unsigned char> &id,shared_ptr<CAppUserAccout> &sptrAcc,bool IsCreate= false);
+	/**
+	 * @brief Save App Account into db
+	 * @return:
+	 */
+	bool SaveAppAccountToDb(CScriptDBViewCache &mScriptDBTip);
 	virtual ~CVmRunEvn();
 };
 
