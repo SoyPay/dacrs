@@ -512,24 +512,24 @@ BOOST_FIXTURE_TEST_SUITE(sysScript_test,CSysScriptTest)
 BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 {
 //	//// pass
-	ResetEnv();
-	BOOST_CHECK(0==chainActive.Height());
-	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
-	CheckSdk();
-
-	ResetEnv();
-	BOOST_CHECK(0==chainActive.Height());
-	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
-	CheckRollBack();
-
-	//// pass
-	ResetEnv();
-	BOOST_CHECK(0==chainActive.Height());
-	CheckScriptAccount();
-
 //	ResetEnv();
 //	BOOST_CHECK(0==chainActive.Height());
-//	testdb();
+//	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
+//	CheckSdk();
+//
+//	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
+//	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
+//	CheckRollBack();
+//
+//	//// pass
+//	ResetEnv();
+//	BOOST_CHECK(0==chainActive.Height());
+//	CheckScriptAccount();
+
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	testdb();
 
 //	ResetEnv();
 //	BOOST_CHECK(0==chainActive.Height());
