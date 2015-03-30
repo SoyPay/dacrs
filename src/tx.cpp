@@ -1396,17 +1396,34 @@ inline bool CAppCFund::MergeCFund(const CAppCFund &fund) {
 
 
 
-
-CAppUserAccout::CAppUserAccout() {
-	AccUserID = CNullID();
-	llValues = 0;
-	vFreezedFund.clear();
+CAppCFund::CAppCFund(const CAppFundOperate& Op) {
+	//	assert(Op.opeatortype == ADD_TAG_OP || ADD_TAG_OP == Op.opeatortype);
+	assert(Op.outheight > 0);
+	assert(Op.vTag[0] <= CAppCFund::MAX_TAG_SIZE);
+	vTag = Op.GetTagV();
+	value = Op.GetUint64Value();					//!< amount of money
+	nHeight = Op.outheight;
 }
 
-bool CAppUserAccout::GetAppCFund(CAppCFund& outFound, const vector<unsigned char>& vtag) {
+
+CAppUserAccout::CAppUserAccout() {
+	mAccUserID.clear();
+	llValues = 0;
+	mDirty = false;
+	vFreezedFund.clear();
+}
+CAppUserAccout::CAppUserAccout(const vector<unsigned char> &userId)
+{
+	mAccUserID.clear();
+	mAccUserID = userId;
+	llValues = 0;
+	mDirty = false;
+	vFreezedFund.clear();
+}
+bool CAppUserAccout::GetAppCFund(CAppCFund& outFound, const vector<unsigned char>& vtag , int hight) {
 
 	auto it = find_if(vFreezedFund.begin(), vFreezedFund.end(), [&](const CAppCFund& CfundIn) {
-		return CfundIn.GetTag()== vtag;});
+		return hight ==CfundIn.getheight() && CfundIn.GetTag()== vtag  ;});
 	if (it != vFreezedFund.end()) {
 		outFound = *it;
 		return true;
@@ -1438,8 +1455,8 @@ bool CAppUserAccout::AutoMergeFreezeToFree(int hight) {
 		}
 	}
 	if (isneedremvoe) {
-		remove_if(vFreezedFund.begin(), vFreezedFund.end(), [&](const CAppCFund& CfundIn) {
-			return CfundIn.getheight() <= hight;});
+		vFreezedFund.erase(remove_if(vFreezedFund.begin(), vFreezedFund.end(), [&](const CAppCFund& CfundIn) {
+			return (CfundIn.getheight() <= hight);}),vFreezedFund.end());
 	}
 	return true;
 
@@ -1485,4 +1502,88 @@ bool CAppUserAccout::AddAppCFund(const vector<unsigned char>& vtag, uint64_t val
 CAppUserAccout::~CAppUserAccout() {
 
 }
+bool CAppUserAccout::Operate(const vector<CAppFundOperate> &Op) {
+	assert(Op.size() > 0);
+	for (auto const op : Op) {
+		if (!Operate(op)) {
+			return false;
+		}
+	}
+	setDirty(true);
+	return true;
+}
 
+
+
+bool CAppUserAccout::Operate(const CAppFundOperate& Op) {
+	if (Op.opeatortype == ADD_FREE_OP) {
+		llValues += Op.GetUint64Value();
+		return true;
+	} else if (Op.opeatortype == SUB_FREE_OP) {
+		uint64_t tem = Op.GetUint64Value();
+		if (llValues >= tem) {
+			llValues -= tem;
+			return true;
+		}
+	} else if (Op.opeatortype == ADD_TAG_OP) {
+		CAppCFund tep(Op);
+		return AddAppCFund(tep);
+	} else if (Op.opeatortype == SUB_TAG_OP) {
+		CAppCFund tep(Op);
+		return MinusAppCFund(tep);
+	} else {
+		assert(0);
+	}
+	return false;
+}
+
+CAppFundOperate::CAppFundOperate() {
+		vTag[0] = 0;
+		opeatortype = 0;
+		outheight = 0;
+		mMoney = 0;
+}
+
+Object CAppCFund::toJSON()const {
+	Object result;
+	result.push_back(Pair("value", value));
+	result.push_back(Pair("nHeight", nHeight));
+	result.push_back(Pair("vTag", HexStr(vTag)));
+	return std::move(result);
+}
+
+string CAppCFund::toString()const {
+	return write_string(Value(toJSON()), true);
+}
+
+Object CAppUserAccout::toJSON() const {
+	Object result;
+	result.push_back(Pair("mDirty", mDirty));
+	result.push_back(Pair("mAccUserID", HexStr(mAccUserID)));
+	Array arry;
+	for (auto const te : vFreezedFund) {
+		arry.push_back(te.toJSON());
+	}
+	result.push_back(Pair("vFreezedFund", arry));
+	return std::move(result);
+}
+
+string CAppUserAccout::toString() const {
+	return write_string(Value(toJSON()), true);
+}
+
+Object CAppFundOperate::toJSON() const {
+	Object result;
+	int timout = outheight;
+	result.push_back(Pair("vTag", HexStr(GetTagV())));
+	result.push_back(Pair("opeatortype", opeatortype));
+	result.push_back(Pair("outheight", timout));
+//	result.push_back(Pair("outheight", outheight));
+	result.push_back(Pair("mMoney", mMoney));
+	return std::move(result);
+
+}
+
+string CAppFundOperate::toString() const {
+	return write_string(Value(toJSON()), true);
+}
