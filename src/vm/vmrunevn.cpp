@@ -99,10 +99,10 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 		return std::make_tuple (false, 0, string("VmScript OpeatorAccount Failed\n"));
 	}
 
-	if(!OpeatorAppAccount())
-	{
-		return std::make_tuple (false, 0, string("OpeatorApp Account Failed\n"));
-	}
+//	if(!OpeatorAppAccount())
+//	{
+//		return std::make_tuple (false, 0, string("OpeatorApp Account Failed\n"));
+//	}
 
 	uint64_t spend = step*nBurnFactor;
 	return std::make_tuple (true, spend, string("VmScript Sucess\n"));
