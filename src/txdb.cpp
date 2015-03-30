@@ -394,7 +394,7 @@ bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, v
 	return true;
 }
 bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex,
-		vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData, int &nHeight, set<CScriptDBOperLog> &setOperLog) {
+		vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData) {
 	const int iPrefixLen = 4;
 	const int iScriptIdLen = 6;
 	const int iSpaceLen = 1;
