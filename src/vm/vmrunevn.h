@@ -139,7 +139,7 @@ public:
 	 * @brief Save App Account into db
 	 * @return:
 	 */
-	bool SaveAppAccountToDb(CScriptDBViewCache &mScriptDBTip);
+	bool SaveAppAccountToDb(CScriptDBViewCache &mScriptDBTip,vector<CScriptDBOperLog> &retLog);
 	virtual ~CVmRunEvn();
 };
 
