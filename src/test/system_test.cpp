@@ -55,16 +55,10 @@ public:
 		nOldBlockHeight = 0;
 		nNewBlockHeight = 0;
 		nTimeOutHeight = 100;
-		nPayMoney = 10000;
 		nOldMoney = 0;
 		nNewMoney = 0;
-		nRandomRanger = 10000;
-		strFileName = "RegScriptTest.bin";
+		strFileName = "unit_test.bin";
 		strAddr1 = "mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA";
-		strAddr3 = "mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7";
-		strRegID1 = "000000000900";
-		strRegID2 = "000000000500";
-		strRegID3 = "000000000700";
 	}
 
 	~CSystemTest(){
@@ -72,28 +66,15 @@ public:
 	}
 
 public:
-	int GetBlockHeight()
-	{
-		return  (int)chainActive.Height();
-	}
-
-	bool GetBlockHash(int nHeight,uint256& blockHash)
-	{
-		if (nHeight < 0 || nHeight > chainActive.Height())
-			return false;
-
-		CBlockIndex* pblockindex = chainActive[nHeight];
-		blockHash = pblockindex->GetBlockHash();
-		return true;
-	}
 
 	bool IsTxConfirmdInWallet(int nBlockHeight,const uint256& txHash)
 	{
-		uint256 blockHash;
-		if (!GetBlockHash(nBlockHeight, blockHash)) {
+		string hash ="";
+		if (!SysTestBase::GetBlockHash(nBlockHeight, hash)) {
 			return false;
 		}
 
+		uint256 blockHash(hash);
 		auto itAccountTx = pwalletMain->mapInBlockTx.find(blockHash);
 		if (pwalletMain->mapInBlockTx.end() == itAccountTx)
 			return false;
@@ -103,24 +84,6 @@ public:
 				return true;
 			}
 		}
-		return false;
-	}
-
-	bool IsTxUnConfirmdInWallet(const uint256& txHash) {
-		for (const auto &item : pwalletMain->UnConfirmTx) {
-			if (txHash == item.first) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	bool IsTxInMemorypool(const uint256& txHash) {
-		for (const auto& entry : mempool.mapTx) {
-			if (entry.first == txHash)
-				return true;
-		}
-
 		return false;
 	}
 
@@ -231,68 +194,6 @@ public:
 		return true;
 	}
 
-	bool GetHashFromCreatedTx(const Value& valueRes,string& strHash)
-	{
-		if (valueRes.type() == null_type) {
-			return false;
-		}
-
-		const Value& result = find_value(valueRes.get_obj(), "hash");
-		if (result.type() == null_type){
-			return false;
-		}
-
-		strHash = result.get_str();
-		return true;
-	}
-
-	bool GetTxOperateLog(const uint256& txHash, vector<CAccountOperLog>& vLog) {
-		if (!GetTxOperLog(txHash, vLog))
-			return false;
-
-		return true;
-	}
-
-	bool PacketContractData(unsigned char nOperType,const string& strBuyerID,const string& strSellerID,const string& strAr,
-			int nHeight,int nMoney,string& strData) {
-		if (nOperType>=UNDEFINED_OPER || strBuyerID.size() != 2*ACCOUNT_ID_SIZE|| strSellerID.size() != 2*ACCOUNT_ID_SIZE) {
-					return false;
-				}
-		memset(&contractData,0,sizeof(CONTRACT_DATA));
-		contractData.nType = nOperType;
-		vector<unsigned char> v = ParseHex(strBuyerID.c_str());
-		memcpy(contractData.vregID[0].accounid,&v[0],ACCOUNT_ID_SIZE);
-
-		v = ParseHex(strSellerID.c_str());
-		memcpy(contractData.vregID[1].accounid,&v[0],ACCOUNT_ID_SIZE);
-
-		v = ParseHex(strAr.c_str());
-		memcpy(contractData.vregID[2].accounid,&v[0],ACCOUNT_ID_SIZE);
-
-		contractData.nHeight = nHeight;
-
-		memcpy(contractData.nPay.data,&nMoney,sizeof(nMoney));
-
-		string strContractData;
-		char* pData = (char*)&contractData;
-		strData.assign(pData,pData+sizeof(contractData));
-		return true;
-	}
-
-	bool GenerateOneBlock() {
-		nOldBlockHeight = GetBlockHeight();
-		if (!SysTestBase::GenerateOneBlock()) {
-			return false;
-		}
-
-		nNewBlockHeight = GetBlockHeight();
-		if (nNewBlockHeight != nOldBlockHeight + 1) {
-			return false;
-		}
-
-		return true;
-	}
-
 	bool IsScriptAccCreatedEx(const uint256& txHash,int nConfirmHeight) {
 		int nIndex = 0;
 		if (!GetTxIndexInBlock(uint256(strTxHash), nIndex)) {
@@ -303,92 +204,24 @@ public:
 		return IsScriptAccCreated(HexStr(regID.GetVec6()));
 	}
 
-	int GetRandomValue()
-	{
-		return rand()%nRandomRanger+1;
-	}
-
-	void SetRandomRanger(int nMaxRanger) {
-		if (!nMaxRanger) {
-			nMaxRanger = 10000;
-		}
-		nRandomRanger = nMaxRanger;
-	}
-
-
-
-	void Transfer_NotSigned_NotAuthor(const string& strScriptID, const string& strSignAddr, unsigned char nTestType) {
-		string strContractData;
-		int nRandomValue = 0;
-		string vAddr = "[\"" + strSignAddr + "\"] ";
-		for (int i = 0; i < nRandomTestCount; i++) {
-			nRandomValue = GetRandomValue();
-			BOOST_CHECK(PacketContractData(nTestType, strRegID1, strRegID2, //
-					strRegID3, nTimeOutHeight, nRandomValue, strContractData));
-			Value value = CreateContractTx(strScriptID, vAddr, strContractData, nTimeOutHeight, nFee);
-			string hahs = "";
-			BOOST_CHECK(!GetHashFromCreatedTx(value,hahs));
-
-		}
-	}
-
-	void Transfer_Signed(const string& strScriptID, const string& strSignAddr,unsigned char nTestType) {
-		string strContractData;
-		string vAddr = "[\"" + strSignAddr + "\"] ";
-		unsigned int nRandomValue = 0;
-		for (int i = 0; i < nRandomTestCount; i++) {
-			nRandomValue = GetRandomValue();
-			BOOST_CHECK(PacketContractData(nTestType, strRegID1, strRegID2, //
-					strRegID3, nTimeOutHeight, nRandomValue, strContractData));
-
-			nOldMoney = GetFreeMoney(strSignAddr);
-			if (nOldMoney >= nRandomValue) {
-				Value value = CreateContractTx(strScriptID, vAddr, strContractData, nTimeOutHeight, nFee);
-				string hahs = "";
-				BOOST_CHECK(!GetHashFromCreatedTx(value,hahs));
-				//BOOST_CHECK(CreateContractTx(strScriptID, vAddr, strContractData, nTimeOutHeight, nFee));
-				BOOST_CHECK(GenerateOneBlock());
-				nNewMoney = GetFreeMoney(strSignAddr);
-				BOOST_CHECK(nOldMoney - nRandomValue - nFee == nNewMoney);
-//				cout << "random money is " << nRandomValue << " old money: " << nOldMoney << " new money is "
-//						<< nNewMoney << endl;
-			}
-		}
-	}
-
 protected:
-	int nRandomRanger;
 	int nOldBlockHeight;
 	int nNewBlockHeight;
 	int nTimeOutHeight;
-	int nPayMoney;
 	static const int nFee = 100000;
-	static const int nRandomTestCount = 20;
 	uint64_t nOldMoney;
 	uint64_t nNewMoney;
 	string strTxHash;
 	string strFileName;
 	string strAddr1;
-	string strAddr3;
-	string strRegID1;
-	string strRegID2;
-	string strRegID3;
-	CONTRACT_DATA contractData;
 };
-
+/*
+ * 测试脚本账户一切在系统中的流程
+ */
 BOOST_FIXTURE_TEST_SUITE(system_test,CSystemTest)
-BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
+BOOST_FIXTURE_TEST_CASE(scriptaccount_test,CSystemTest)
 {
-//	int nOldBlockHeight = 0;
-//	int nNewBlockHeight = 0;
-//	int nTimeOutHeight = 5;
-//	int nFee = 100000;
-//	uint64_t nOldMoney = 0;
-//	uint64_t nNewMoney = 0;
-//	string strTxHash;
-//	string strFileName("RegScriptTest.bin");
-//	string strAddr("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA");
-
+	ResetEnv();
 	vector<map<int,string> >vDataInfo;
 	vector<CAccountOperLog> vLog;
 	for (int i = 0; i < nTimeOutHeight; i++) {
@@ -399,6 +232,7 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 		//1:挖矿
 		nOldMoney = GetFreeMoney(strAddr1);
 		BOOST_CHECK(GenerateOneBlock());
+		SysTestBase::GetBlockHeight(nNewBlockHeight);
 
 		//2:确认钱已经扣除
 		nNewMoney = GetFreeMoney(strAddr1);
@@ -436,7 +270,7 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 		string strTxHash = mapData.begin()->second;
 		uint256 txHash(strTxHash);
 
-		nOldBlockHeight = GetBlockHeight();
+		SysTestBase::GetBlockHeight(nOldBlockHeight);
 		nOldMoney = GetFreeMoney(strAddr1);
 
 		//8:回滚
@@ -444,7 +278,7 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 
 		//9.1:检查账户手续费是否回退
 		nNewMoney = GetFreeMoney(strAddr1);
-		nNewBlockHeight = GetBlockHeight();
+		SysTestBase::GetBlockHeight(nNewBlockHeight);
 		BOOST_CHECK(nOldBlockHeight - 1 == nNewBlockHeight);
 		BOOST_CHECK(nNewMoney-nFee == nOldMoney);
 
@@ -464,7 +298,7 @@ BOOST_FIXTURE_TEST_CASE(reg_test,CSystemTest)
 
 	//清空环境
 	ResetEnv();
-	nNewBlockHeight = GetBlockHeight();
+	SysTestBase::GetBlockHeight(nNewBlockHeight);
 	BOOST_CHECK(0 == nNewBlockHeight);
 }
 

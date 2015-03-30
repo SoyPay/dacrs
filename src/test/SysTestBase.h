@@ -181,6 +181,8 @@ public:
 
 	Value CreateNormalTx(const std::string &srcAddr, const std::string &desAddr,uint64_t nMoney);
 
+	Value CreateNormalTx(const std::string &desAddr,uint64_t nMoney);
+
 	Value registaccounttx(const std::string &addr, const int nfee =0,bool flag =false);
 
 	Value CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
