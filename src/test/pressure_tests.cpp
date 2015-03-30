@@ -141,22 +141,11 @@ public:
 		if(!CreateCommonTx(iterSrcAddr->second, newAddress))
 			return false;
 
-		char fee[64] = {0};
 		int nfee = GetRandomFee();
-		sprintf(fee, "%d", nfee);
+		Value result = registaccounttx(newAddress,nfee, "false");
+		string txHash = "";
+		BOOST_CHECK(GetHashFromCreatedTx(value,txHash));
 
-		//新产生地址注册账户
-		const char *argvReg[] = {"rpctest", "registaccounttx", newAddress.c_str(), fee, "false"};
-		int argcReg = sizeof(argvReg) / sizeof(char *);
-		if(!CommandLineRPC_GetValue(argcReg, argvReg, value))
-		{
-			return false;
-		}
-		const Value& result = find_value(value.get_obj(), "hash");
-		if(result.type() == null_type) {
-			return false;
-		}
-		string txHash = result.get_str();
 		vTransactionHash.push_back(txHash);
 		if (mempool.mapTx.count(uint256(txHash)) > 0) {
 			std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(txHash)].GetTx();
@@ -171,75 +160,25 @@ public:
 	 */
 	bool CreateContractTx() {
 		map<string, string>::iterator iterSrcAddr = GetRandAddress();
-		string srcAddr("[\""+iterSrcAddr->second+"\"]");
-		vector<unsigned char> vContract;
-		vContract.clear();
-		if(!GetContractData(iterSrcAddr->first, vContract))
-			return false;
+		string srcAddr(iterSrcAddr->second);
 
-		char fee[64] = {0};
+		unsigned char cType;
+		RAND_bytes(&cType, sizeof(cType));
+		int iIndex = cType % 2;
+
+		string contact =strprintf("%02x",iIndex);
+
 		int nfee = GetRandomFee();
-		sprintf(fee, "%d", nfee);
-		const char *argv[] = { "rpctest", "createcontracttx", regScriptId.c_str(), srcAddr.c_str(), HexStr(vContract).c_str(), fee, "0"};
-		int argc = sizeof(argv) / sizeof(char *);
-		Value value;
-		if (!CommandLineRPC_GetValue(argc, argv, value)) {
-//			cout << "CreateContractTx failed!" << endl;
-			return false;
-		}
-		const Value& result = find_value(value.get_obj(), "hash");
-		if(result == null_type) {
-//			cout << "CreateContractTx failed!" << endl;
-			return false;
-		}
-		string txHash = result.get_str();
+		uint64_t llmoney = GetRandomMoney() * COIN;
+		Value value = SysTestBase::CreateContractTx(regScriptId,srcAddr, contact,0,nfee, llmoney);
+		string txHash = "";
+		BOOST_CHECK(GetHashFromCreatedTx(value,txHash));
+
 		vTransactionHash.push_back(txHash);
 		if (mempool.mapTx.count(uint256(txHash)) > 0) {
 			std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(txHash)].GetTx();
 			vTransactions.push_back(tx);
 		}
-		vSendFee.push_back(make_pair(txHash, nfee));
-		return true;
-	}
-
-	/**
-	 * 创建主动冻结交易
-	 * @return
-	 */
-	bool CreateFreezeTx() {
-		map<string, string>::iterator iterAddr = GetRandAddress();
-		string addr = iterAddr->second;
-		char money[64] = {0};
-		int frozenmoney = GetRandomMoney();
-		sprintf(money, "%d00000000", frozenmoney);
-		char fee[64] = {0};
-		int nfee = GetRandomFee();
-		sprintf(fee, "%d", nfee);
-//		srand(time(NULL));
-		int freeHeight = rand() % 90 + 10;
-		char free[64] = {0};
-		sprintf(free, "%d", freeHeight);
-//		cout << "freeHeight:" << freeHeight << endl;
-		const char *argv[] = {"rpctest", "createfreezetx", const_cast<char *>(addr.c_str()), money, fee, "100", free};
-		int argc = sizeof(argv) / sizeof(char *);
-		Value value;
-		if (!CommandLineRPC_GetValue(argc, argv, value)) {
-//			cout << "CreateFreezeTx failed!" << endl;
-			return false;
-		}
-		const Value& result = find_value(value.get_obj(), "hash");
-		if(result.type() == null_type) {
-//			cout << "CreateFreezeTx failed!" << endl;
-			return false;
-		}
-		string txHash = result.get_str();
-		vTransactionHash.push_back(txHash);
-		if (mempool.mapTx.count(uint256(txHash)) > 0) {
-			std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(txHash)].GetTx();
-			vTransactions.push_back(tx);
-		}
-		uint64_t uMoney = frozenmoney * COIN;
-		vFreezeItem.push_back(make_tuple(freeHeight, uMoney, txHash));
 		vSendFee.push_back(make_pair(txHash, nfee));
 		return true;
 	}
@@ -251,20 +190,15 @@ public:
 		}
 		uint64_t nFee = GetRandomFee();
 		Value ret = RegisterScriptTx(regAddress, "test.bin", 100, nFee);
-		const Value& result = find_value(ret.get_obj(), "hash");
-		if(result.type() == null_type) {
-//			cout << "CreateRegScriptTx failed!" << endl;
-			return false;
-		}
+		BOOST_CHECK(GetHashFromCreatedTx(ret,hash));
+
 		if(fFlag) {
-			string txHash = result.get_str();
-			hash = txHash;
-			vTransactionHash.push_back(txHash);
-			if (mempool.mapTx.count(uint256(txHash)) > 0) {
-				std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(txHash)].GetTx();
+			vTransactionHash.push_back(hash);
+			if (mempool.mapTx.count(uint256(hash)) > 0) {
+				std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(hash)].GetTx();
 				vTransactions.push_back(tx);
 			}
-			vSendFee.push_back(make_pair(txHash, nFee));
+			vSendFee.push_back(make_pair(hash, nFee));
 		}
 
 		return true;
@@ -299,7 +233,7 @@ public:
 				break;
 			case 4:
 				{
-					BOOST_CHECK(CreateFreezeTx());
+					BOOST_CHECK(CreateContractTx());
 				}
 				break;
 			case 5:
@@ -365,14 +299,8 @@ public:
 
 	bool SetBlockGenerte(const char *addr)
 	{
-		const char *argv[] = { "rpctest", "generateblock", const_cast<char *>(addr) };
-		int argc = sizeof(argv) / sizeof(char*);
+		return SetAddrGenerteBlock(addr);
 
-		Value value;
-		if (CommandLineRPC_GetValue(argc, argv, value)) {
-			return true;
-		}
-		return false;
 	}
 };
 
