@@ -13,6 +13,8 @@
 #include <iostream>
 #include  "boost/filesystem/operations.hpp"
 #include  "boost/filesystem/path.hpp"
+#include  "../vm/appuseraccout.h"
+
 using namespace std;
 
 
@@ -28,14 +30,15 @@ BOOST_AUTO_TEST_CASE(key_test1)
 	{
 		return vector<unsigned char>(tag.begin(),tag.end());
 	};
+
 	srand((int) time(NULL));
 
-	vector<unsigned char> userId = StrTVector("test1");
+	vector<unsigned char> AppuserId = StrTVector("test1");
 	vector<unsigned char> fundtag = StrTVector("foundtag");
 	vector<unsigned char> fundtag2 = StrTVector("foundtag2");
 
-	CAppFundOperate opTe(fundtag, ADD_TAG_OP, 500, 800000);
-	BOOST_CHECK(opTe.GetTagV() == fundtag);
+	CAppFundOperate opTe(AppuserId,fundtag, ADD_TAG_OP, 500, 800000);
+	BOOST_CHECK(opTe.GetFundTagV() == fundtag);
 	BOOST_CHECK(opTe.GetUint64Value()== 800000);
 	BOOST_CHECK(opTe.getopeatortype()== ADD_TAG_OP);
 
@@ -48,13 +51,13 @@ BOOST_AUTO_TEST_CASE(key_test1)
 	for (int i = 0; i < loop; i++) {
 		int64_t temp = ((rand() * rand()) % 15000000) + 20;
 		allmony += temp;
-		CAppFundOperate op(fundtag, ADD_TAG_OP, timeout + i, temp);
+		CAppFundOperate op(AppuserId,fundtag, ADD_TAG_OP, timeout + i, temp);
 		OpArry.insert(OpArry.end(), op);
 	}
 
-	CAppUserAccout AccCount(userId);
+	CAppUserAccout AccCount(AppuserId);
 	BOOST_CHECK(AccCount.isdirty() == false);			 //刚刚初始化 必须是 干净的
-	BOOST_CHECK(AccCount.getaccUserId() == userId);      //初始化的ID 必须是
+	BOOST_CHECK(AccCount.getaccUserId() == AppuserId);      //初始化的ID 必须是
 	BOOST_CHECK(AccCount.Operate(OpArry));               //执行所有的操作符合
 	BOOST_CHECK(AccCount.getllValues() == 0);            //因为操作符全是加冻结的钱所以自由金额必须是0
 	BOOST_CHECK(AccCount.isdirty() == true);             //操作后必须是脏的
@@ -73,7 +76,7 @@ BOOST_AUTO_TEST_CASE(key_test1)
 
 	{
 		vector<CAppFundOperate> OpArry2;
-		CAppFundOperate subfreexeop(fundtag, SUB_TAG_OP, timeout, 8);
+		CAppFundOperate subfreexeop(AppuserId,fundtag, SUB_TAG_OP, timeout, 8);
 		OpArry2.insert(OpArry2.end(), subfreexeop);
 		BOOST_CHECK(AccCount.Operate(OpArry2));               //执行所有的操作符合
 	}
@@ -86,7 +89,7 @@ BOOST_AUTO_TEST_CASE(key_test1)
 
 	{
 		vector<CAppFundOperate> OpArry2;
-		CAppFundOperate revertfreexeop(fundtag, ADD_TAG_OP, timeout, 8);
+		CAppFundOperate revertfreexeop(AppuserId,fundtag, ADD_TAG_OP, timeout, 8);
 		OpArry2.clear();
 		OpArry2.insert(OpArry2.end(), revertfreexeop);
 		BOOST_CHECK(AccCount.Operate(OpArry2));               //执行所有的操作符合
@@ -106,7 +109,7 @@ BOOST_AUTO_TEST_CASE(key_test1)
 	}
 
 	{          				//减去全部
-		CAppFundOperate subfreeop(fundtag, SUB_FREE_OP, timeout, OpArry[0].GetUint64Value());
+		CAppFundOperate subfreeop(AppuserId,fundtag, SUB_FREE_OP, timeout, OpArry[0].GetUint64Value());
 		vector<CAppFundOperate> OpArry2;
 		OpArry2.insert(OpArry2.end(), subfreeop);
 		BOOST_CHECK(AccCount.Operate(OpArry2));               				//执行所有的操作符合
@@ -115,7 +118,7 @@ BOOST_AUTO_TEST_CASE(key_test1)
 
 	{
 		vector<CAppFundOperate> OpArry2;
-		CAppFundOperate addfreeop(fundtag, ADD_FREE_OP, timeout, OpArry[0].GetUint64Value());    //再次把数据加进去
+		CAppFundOperate addfreeop(AppuserId,fundtag, ADD_FREE_OP, timeout, OpArry[0].GetUint64Value());    //再次把数据加进去
 		OpArry2.clear();
 		OpArry2.insert(OpArry2.end(), addfreeop);
 		BOOST_CHECK(AccCount.Operate(OpArry2));               				//执行所有的操作符合
