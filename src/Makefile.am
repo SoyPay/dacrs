@@ -84,13 +84,15 @@ VM_H = \
 	vm/vm8051.h \
 	vm/vmrunevn.h \
 	vm/script.h \
-	vm/testmcu.h
+	vm/testmcu.h \
+	vm/appuseraccout.h
 
 VM_CPP = \
 	vm/vm8051.cpp \
 	vm/vmrunevn.cpp \
 	vm/script.cpp \
-	vm/testmcu.cpp
+	vm/testmcu.cpp \
+	vm/appuseraccout.cpp
   
 
 obj/build.h: FORCE
