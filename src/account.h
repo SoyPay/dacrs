@@ -5,7 +5,7 @@
 #include <vector>
 #include "serialize.h"
 #include "tx.h"
-
+#include "./vm/appuseraccout.h"
 using namespace std;
 
 class CAccount;
