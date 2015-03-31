@@ -975,6 +975,7 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmEvn)
 	CVmOperate temp;
 	int Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
 	int count = GetParaLen(pbuffer)/Size;
+	assert(GetParaLen(pbuffer)%Size == 0);
 	CDataStream ss(*retdata.at(0),SER_DISK, CLIENT_VERSION);
 
 	while(count--)
@@ -1004,6 +1005,7 @@ static RET_DEFINE ExWriteOutAppOperateFunc(unsigned char * ipara,void * pVmEvn)
 	CAppFundOperate temp;
 	int Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
 	int count = GetParaLen(pbuffer)/Size;
+	assert(GetParaLen(pbuffer)%Size == 0);
 	CDataStream ss(*retdata.at(1),SER_DISK, CLIENT_VERSION);
 
 	while(count--)
@@ -1224,13 +1226,16 @@ static RET_DEFINE GetCurTxPayAmountFunc(unsigned char *ipara,void *pVmEvn){
 	(*tem.get()).push_back(tep1);
 	return std::make_tuple (true, tem);
 }
+
+
+
 static RET_DEFINE GetUserAppAccValue(unsigned char * ipara,void * pVmScript){
 	CVmRunEvn *pVmScriptRun = (CVmRunEvn *)pVmScript;
 
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
     if(!GetData(ipara,retdata) ||retdata.size() != 1
-    	|| retdata.at(0).get()->size() > CAppCFund::MAX_TAG_SIZE)
+    	|| retdata.at(0).get()->size() != 95)
     {
     	return RetFalse(string(__FUNCTION__)+"para  err !");
     }
@@ -1257,12 +1262,9 @@ static RET_DEFINE GetUserAppAccFoudWithTag(unsigned char * ipara,void * pVmScrip
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
     if(!GetData(ipara,retdata) ||retdata.size() != 3
-    	|| retdata.at(0).get()->size() > 1+CAppCFund::MAX_TAG_SIZE ||(4 != retdata.at(2).get()->size()))
+    	|| retdata.at(0).get()->size() != 95 )
     {
-    	if(retdata.at(1).get()->size() > 1+CAppCFund::MAX_TAG_SIZE)//tag ×î´óÎª34
-    	{
 			return RetFalse(string(__FUNCTION__)+"para err !");
-    	}
     }
 
     vector<unsigned char> id = *retdata.at(0).get();
