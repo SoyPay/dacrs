@@ -470,8 +470,7 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 			desAcct.keyID = boost::get<CKeyID>(desUserId);
 		}
 		else {
-			LogPrint("INFO", "Error tx:%s\n", ToString(view).c_str());
-			return state.DoS(100, ERRORMSG("ExecuteTx() : get account info failed by regid:%s", boost::get<CRegID>(desUserId).ToString()), UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
+			return state.DoS(100, ERRORMSG("ExecuteTx() : get account info failed by regid"), UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 		}
 	}
 	else
