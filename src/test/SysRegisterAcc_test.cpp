@@ -71,19 +71,20 @@ BOOST_FIXTURE_TEST_CASE(sysonly_test,CSysRegisterAccTest)
 	string strTxHash;
 	CRegID regID;
 	string strRegAddr1("mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz");
-	string strRegAddr2("mydRNvqewpZt9tyNtBSmBCrKr1NTiii5JH");
+	string strRegAddr2 = "";
+	BOOST_CHECK(GetNewAddr(strRegAddr2,false));
 	uint64_t nFee = 10000;
 	vector<string> vFailedTxHash;
 
 	//无效的高度
 	int nInValidHeight = 1000;
-	BOOST_CHECK(!RegisterAccount(strRegAddr1, nFee, strTxHash,nInValidHeight));
+	BOOST_CHECK(!RegisterAccount(strRegAddr1, nFee, strTxHash));
 	vFailedTxHash.push_back(strTxHash);
 	nInValidHeight = 100;
 
 	//无法读取的账号地址
 	string strInvalidAddr("fjsofeoifdsfdsfdsafafafafafafafa");
-	BOOST_CHECK(!RegisterAccount(strInvalidAddr, nFee, strTxHash,nInValidHeight));
+	BOOST_CHECK(!RegisterAccount(strInvalidAddr, nFee, strTxHash));
 	vFailedTxHash.push_back(strTxHash);
 
 //	//不签名
@@ -91,16 +92,16 @@ BOOST_FIXTURE_TEST_CASE(sysonly_test,CSysRegisterAccTest)
 //	vFailedTxHash.push_back(strTxHash);
 
 	//手续费超过最大值
-	BOOST_CHECK(!RegisterAccount(strRegAddr1, nFee+MAX_MONEY, strTxHash,nInValidHeight));
+	BOOST_CHECK(!RegisterAccount(strRegAddr1, nFee+MAX_MONEY, strTxHash));
 	vFailedTxHash.push_back(strTxHash);
 
 	//重复注册的地址
 	string strReRegisrerAddr("mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc");
-	BOOST_CHECK(!RegisterAccount(strReRegisrerAddr, nFee, strTxHash,nInValidHeight));
+	BOOST_CHECK(!RegisterAccount(strReRegisrerAddr, nFee, strTxHash));
 	vFailedTxHash.push_back(strTxHash);
 
 	//账户上没有余额的未注册地址
-	BOOST_CHECK(!RegisterAccount(strRegAddr1, nFee, strTxHash,nInValidHeight));
+	BOOST_CHECK(!RegisterAccount(strRegAddr2, nFee, strTxHash));
 	vFailedTxHash.push_back(strTxHash);
 
 //	//检查失败的交易是否在memorypool中
@@ -113,11 +114,11 @@ BOOST_FIXTURE_TEST_CASE(sysonly_test,CSysRegisterAccTest)
 	//给没有余额的账户转账
 	string strSrcRegID = "000000000400";
 	uint64_t nMoney = 10000000;
-	BOOST_CHECK(SendMoney(strSrcRegID, strRegAddr1, nMoney));
+	BOOST_CHECK(SendMoney(strSrcRegID, strRegAddr2, nMoney));
 	BOOST_CHECK(GenerateOneBlock());
 
 	//确认转账成功
-	uint64_t nFreeMoney = GetFreeMoney(strRegAddr1);
+	uint64_t nFreeMoney = GetFreeMoney(strRegAddr2);
 	BOOST_CHECK(nFreeMoney == nMoney);
 
 	//再次检查失败的交易是否在memorypool中
@@ -127,6 +128,13 @@ BOOST_FIXTURE_TEST_CASE(sysonly_test,CSysRegisterAccTest)
 		BOOST_CHECK(!IsTxUnConfirmdInWallet(txHash));
 	}
 
+	//给地址为：mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz 的账户转账
+	BOOST_CHECK(SendMoney(strSrcRegID, strRegAddr1, nMoney));
+	BOOST_CHECK(GenerateOneBlock());
+
+	//确认转账成功
+	nFreeMoney = GetFreeMoney(strRegAddr1);
+	BOOST_CHECK(nFreeMoney == nMoney);
 
 	string strSpecial;
 	BOOST_CHECK(RegisterAccount(strRegAddr1, nFee, strSpecial,false));

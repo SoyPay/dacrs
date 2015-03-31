@@ -5,7 +5,7 @@
 #include <vector>
 #include "serialize.h"
 #include "tx.h"
-
+#include "./vm/appuseraccout.h"
 using namespace std;
 
 class CAccount;
@@ -140,8 +140,9 @@ public:
 	CScriptDBViewCache(CScriptDBView &base, bool fDummy = false);
 	bool GetScript(const CRegID &scriptId, vector<unsigned char> &vValue);
 
-	bool GetScriptAcc(const CRegID &scriptId,const vector<unsigned char> &vKey,CAppUserAccout& AccOut);
-	bool SetScriptAcc(const CRegID &scriptId, const CAppUserAccout& AccOut);
+	bool GetScriptAcc(const CRegID &scriptId,const vector<unsigned char> &vKey,CAppUserAccout& appAccOut);
+	bool SetScriptAcc(const CRegID &scriptId, const CAppUserAccout& appAccOut,CScriptDBOperLog &operlog);
+
 
 	bool GetScript(const int nIndex, CRegID &scriptId, vector<unsigned char> &vValue);
 	bool SetScript(const CRegID &scriptId, const vector<unsigned char> &vValue);

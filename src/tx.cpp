@@ -183,7 +183,7 @@ bool CBaseTransaction::IsValidHeight(int nCurHeight, int nTxCacheHeight) const
 bool CBaseTransaction::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state,
 		CTxUndo &txundo, int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	vector<CAccountOperLog>::reverse_iterator rIterAccountLog = txundo.vAccountOperLog.rbegin();
-	for(; rIterAccountLog != txundo.vAccountOperLog.rend(); ++rIterAccountLog) {
+	for (; rIterAccountLog != txundo.vAccountOperLog.rend(); ++rIterAccountLog) {
 		CAccount account;
 		CUserID userId = rIterAccountLog->keyID;
 		if(!view.GetAccount(userId, account))  {
@@ -711,10 +711,7 @@ bool CRegisterAppTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidationSt
 	if(!operLog.vKey.empty()) {
 		txundo.vScriptOperLog.push_back(operLog);
 	}
-	CUserID userId = acctInfo.keyID;
-	if (!view.SetAccount(userId, acctInfo))
-		return state.DoS(100, ERRORMSG("ExecuteTx() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
-				"bad-save-accountdb");
+
 	return true;
 }
 bool CRegisterAppTx::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
@@ -1077,6 +1074,7 @@ bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 						}
 						return false;
 					});
+
 					assert(it != vFreedomFund.end());
 
 					it->value -= iterFund->value;
