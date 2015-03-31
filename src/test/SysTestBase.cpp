@@ -555,6 +555,8 @@ bool SysTestBase::SetAddrGenerteBlock(const char *addr) {
 }
 bool SysTestBase::DisConnectBlock(int nNum) {
 	int nFirstHeight = static_cast<int>(chainActive.Height() );
+	if(nFirstHeight <=0)
+		return false;
 	BOOST_CHECK(nNum>0 && nNum<=nFirstHeight);
 
 	string strNum = strprintf("%d",nNum);
