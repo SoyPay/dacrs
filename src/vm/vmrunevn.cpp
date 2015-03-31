@@ -323,6 +323,9 @@ bool CVmRunEvn::GetAppUserAccout(const vector<unsigned char> &vAppUserId, shared
 		}
 		return false;
 	}
+	if (!tem.get()->AutoMergeFreezeToFree(RunTimeHeight)) {
+		return false;
+	};
 	sptrAcc = tem;
 	return true;
 }
@@ -336,6 +339,11 @@ bool CVmRunEvn::OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFu
 						HexStr(tem.first));
 				return false;
 			}
+			if (!sptrAcc.get()->AutoMergeFreezeToFree(RunTimeHeight)) {
+				LogPrint("VM", "AutoMergeFreezeToFreefailed \r\n appuser :%s\r\n", sptrAcc.get()->toString());
+				return false;
+
+			}
 			if (!sptrAcc.get()->Operate(tem.second)) {
 
 				int i = 0;
@@ -348,7 +356,7 @@ bool CVmRunEvn::OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFu
 			}
 
 			CScriptDBOperLog log;
-			view.SetScriptAcc(GetScriptRegID(),*sptrAcc.get(),log);
+			view.SetScriptAcc(GetScriptRegID(), *sptrAcc.get(), log);
 			shared_ptr<vector<CScriptDBOperLog> > m_dblog = GetDbLog();
 			m_dblog.get()->push_back(log);
 
