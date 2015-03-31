@@ -288,16 +288,17 @@ CAccountViewCache * CVmRunEvn::GetCatchView()
 {
 	return m_view;
 }
-void CVmRunEvn::InsertOutAPPOperte(const vector<unsigned char>& userId,const vector<CAppFundOperate> &source)
+void CVmRunEvn::InsertOutAPPOperte(const vector<unsigned char>& userId,const CAppFundOperate &source)
 {
 	if(MapAppOperate.count(userId))
 	{
-		auto iter = MapAppOperate[userId].begin();
-		MapAppOperate[userId].insert(iter,source.begin(),source.end());
+		MapAppOperate[userId].push_back(source);
 	}
 	else
 	{
-		MapAppOperate[userId] = source;
+		vector<CAppFundOperate> it;
+		it.push_back(source);
+		MapAppOperate[userId] = it;
 	}
 
 }
