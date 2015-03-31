@@ -987,38 +987,7 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmEvn)
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	return std::make_tuple (true , tem);
 }
-static RET_DEFINE ExWriteOutAppOperateFunc(unsigned char * ipara,void * pVmEvn)
-{
-	unsigned char * pbuffer = ipara;
-	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
-	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
-    if(!GetData(ipara,retdata) ||retdata.size() != 2 || retdata.at(0).get()->size() > 1+CAppCFund::MAX_TAG_SIZE )
-    {
-  		 return RetFalse("para err");
-  	 }
-
-	vector<CAppFundOperate> source;
-	const vector<unsigned char> &temId = *retdata.at(0).get();
-
-
-	CAppFundOperate temp;
-	int Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
-	int count = GetParaLen(pbuffer)/Size;
-	assert(GetParaLen(pbuffer)%Size == 0);
-	CDataStream ss(*retdata.at(1),SER_DISK, CLIENT_VERSION);
-
-	while(count--)
-	{
-		ss >> temp;
-      source.push_back(temp);
-	}
-
-	pVmRunEvn->InsertOutAPPOperte(temId,source);
-
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-	return std::make_tuple (true , tem);
-}
 
 
 
@@ -1226,8 +1195,17 @@ static RET_DEFINE GetCurTxPayAmountFunc(unsigned char *ipara,void *pVmEvn){
 	(*tem.get()).push_back(tep1);
 	return std::make_tuple (true, tem);
 }
+struct S_APP_ID
+{
+	unsigned char idlen;                    //!the len of the tag
+	unsigned char ID[CAppCFund::MAX_TAG_SIZE];     //! the ID for the
 
-
+	const vector<unsigned char> GetIdV() const {
+		assert(sizeof(ID) >= idlen && idlen >= 0);
+		vector<unsigned char> Id(&ID[0], &ID[idlen]);
+		return (Id);
+	}
+}__attribute((aligned (1)));
 
 static RET_DEFINE GetUserAppAccValue(unsigned char * ipara,void * pVmScript){
 	CVmRunEvn *pVmScriptRun = (CVmRunEvn *)pVmScript;
@@ -1235,14 +1213,17 @@ static RET_DEFINE GetUserAppAccValue(unsigned char * ipara,void * pVmScript){
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
     if(!GetData(ipara,retdata) ||retdata.size() != 1
-    	|| retdata.at(0).get()->size() != 95)
+    	|| retdata.at(0).get()->size() != sizeof(S_APP_ID))
     {
     	return RetFalse(string(__FUNCTION__)+"para  err !");
     }
 
+    S_APP_ID accid;
+    memcpy(&accid, &retdata.at(0).get()->at(0), sizeof(S_APP_ID));
+
    	shared_ptr<CAppUserAccout> sptrAcc;
    	uint64_t value = 0 ;
-	if(pVmScriptRun->GetAppUserAccout(*retdata.at(0).get(),sptrAcc))
+	if(pVmScriptRun->GetAppUserAccout(accid.GetIdV(),sptrAcc))
 	{
 		value = sptrAcc->getllValues();
 	}
@@ -1260,23 +1241,25 @@ static RET_DEFINE GetUserAppAccFoudWithTag(unsigned char * ipara,void * pVmScrip
 	CVmRunEvn *pVmScriptRun = (CVmRunEvn *)pVmScript;
 
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+	CVmOperate temp;
+	unsigned int Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
 
-    if(!GetData(ipara,retdata) ||retdata.size() != 3
-    	|| retdata.at(0).get()->size() != 95 )
+    if(!GetData(ipara,retdata) ||retdata.size() != 1
+    	|| retdata.at(0).get()->size() !=Size)
     {
 			return RetFalse(string(__FUNCTION__)+"para err !");
     }
 
-    vector<unsigned char> id = *retdata.at(0).get();
-    vector<unsigned char> tag = *retdata.at(1).get();
-    int te =   *((int*)(&(*retdata.at(2).get())[0])) ;
+    CDataStream ss(*retdata.at(0),SER_DISK, CLIENT_VERSION);
+    CAppFundOperate userfund;
+    ss>>userfund;
 
    	shared_ptr<CAppUserAccout> sptrAcc;
 
    	CAppCFund fund;
-	if(pVmScriptRun->GetAppUserAccout(id,sptrAcc))
+	if(pVmScriptRun->GetAppUserAccout(userfund.GetAppUserTagV(),sptrAcc))
 	{
-		if(!sptrAcc->GetAppCFund(fund,tag,te))	{
+		if(!sptrAcc->GetAppCFund(fund,userfund.GetFundTagV(),userfund.outheight))	{
 			return RetFalse(string(__FUNCTION__)+"tag err !");
 		}
 	}
@@ -1286,6 +1269,35 @@ static RET_DEFINE GetUserAppAccFoudWithTag(unsigned char * ipara,void * pVmScrip
     vector<unsigned char> tep1(tep.begin(),tep.end());
 	(*tem.get()).push_back(tep1);
 	return std::make_tuple (true, tem);
+
+	return RetFalse(string(__FUNCTION__)+"para  err !");
+}
+static RET_DEFINE ExWriteOutAppOperateFunc(unsigned char * ipara,void * pVmEvn)
+{
+	unsigned char * pbuffer = ipara;
+	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+
+	CAppFundOperate temp;
+	unsigned int Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
+
+    if(!GetData(ipara,retdata) ||retdata.size() != 1 || (retdata.at(0).get()->size()%Size) != 0 )
+    {
+  		 return RetFalse("para err");
+  	 }
+
+	int count = retdata.at(0).get()->size()/Size;
+	CDataStream ss(*retdata.at(0),SER_DISK, CLIENT_VERSION);
+
+	while(count--)
+	{
+		ss >> temp;
+	 	vector<unsigned char> temId(temp.vAppuser,temp.vAppuser+sizeof(temp.vAppuser));
+		pVmRunEvn->InsertOutAPPOperte(temId,temp);
+	}
+
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+	return std::make_tuple (true , tem);
 }
 
 enum CALL_API_FUN {

@@ -131,7 +131,7 @@ public:
 	int GetComfirHeight();
 	uint256 GetCurTxHash();
 	void InsertOutputData(const vector<CVmOperate> &source);
-	void InsertOutAPPOperte(const vector<unsigned char>& userId,const vector<CAppFundOperate> &source);
+	void InsertOutAPPOperte(const vector<unsigned char>& userId,const CAppFundOperate &source);
 	shared_ptr<vector<CScriptDBOperLog> > GetDbLog();
 
 	bool GetAppUserAccout(const vector<unsigned char> &id,shared_ptr<CAppUserAccout> &sptrAcc,bool IsCreate= false);
