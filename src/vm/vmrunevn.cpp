@@ -346,11 +346,11 @@ bool CVmRunEvn::OpeatorAppAccount() {
 	return true;
 }
 
-bool CVmRunEvn::SaveAppAccountToDb(CScriptDBViewCache &mScriptDBTip) {
-	assert(mAccMap.size() > 0);
-	for (auto const tem : mAccMap) {
-		if (!mScriptDBTip.SetScriptAcc(GetScriptRegID(), *tem.second.get()))
-			return false;
-	}
+bool CVmRunEvn::SaveAppAccountToDb(CScriptDBViewCache &mScriptDBTip,vector<CScriptDBOperLog> &retLog) {
+//	assert(mAccMap.size() > 0);
+//	for (auto const tem : mAccMap) {
+//		if (!mScriptDBTip.SetScriptAcc(GetScriptRegID(), *tem.second.get()))
+//			return false;
+//	}
 	return true;
 }
