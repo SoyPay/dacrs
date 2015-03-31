@@ -219,6 +219,8 @@ public:
 	bool GetRegID(string& strAddr,CRegID& regID);
 
 	bool GetTxOperateLog(const uint256& txHash, vector<CAccountOperLog>& vLog) ;
+
+	bool PrintLog();
 protected:
 	static boost::thread* pThreadShutdown ;
 	std::map<string, AccState> mapAccState;

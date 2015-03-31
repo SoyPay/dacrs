@@ -126,6 +126,13 @@ BOOST_FIXTURE_TEST_CASE(sysonly_test,CSysRegisterAccTest)
 		BOOST_CHECK(!IsTxUnConfirmdInWallet(txHash));
 	}
 
+	//给地址为：mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz 的账户转账
+	BOOST_CHECK(SendMoney(strSrcRegID, strRegAddr1, nMoney));
+	BOOST_CHECK(GenerateOneBlock());
+
+	//确认转账成功
+	nFreeMoney = GetFreeMoney(strRegAddr1);
+	BOOST_CHECK(nFreeMoney == nMoney);
 
 	string strSpecial;
 	BOOST_CHECK(RegisterAccount(strRegAddr1, nFee, strSpecial,false));

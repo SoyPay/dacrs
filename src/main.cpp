@@ -1221,7 +1221,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
     if (blockUndo.vtxundo.size() != block.vptx.size())
         return ERRORMSG("DisconnectBlock() : block and undo data inconsistent");
 
-//    LogPrint("INFO","%s", blockUndo.ToString());
+//    LogPrint("INFO","height= %d\n,%s", pindex->nHeight,blockUndo.ToString());
 
 //    int64_t llTime = GetTimeMillis();
     //undo reward tx
@@ -1236,9 +1236,10 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
 //    	llTime = GetTimeMillis();
         std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[i];
         CTxUndo txundo = blockUndo.vtxundo[i-1];
+  //      LogPrint("INFO", "tx type:%d,hash=%s\n",pBaseTx->nTxType, pBaseTx->GetHash().ToString());
         if(!pBaseTx->UndoExecuteTx(i, view, state, txundo, pindex->nHeight, txCache, scriptCache))
         	return false;
-//        LogPrint("INFO", "tx type:%d, undo elapse:%lld ms\n", pBaseTx->nTxType, GetTimeMillis() - llTime);
+      //  LogPrint("INFO", "tx type:%d,undo elapse:%lld ms\n", pBaseTx->nTxType, GetTimeMillis() - llTime);
     }
 
 
