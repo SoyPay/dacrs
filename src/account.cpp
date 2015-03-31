@@ -1423,36 +1423,36 @@ Object CTransactionDBCache::ToJosnObj() const {
 	return std::move(retobj);
 
 }
-
-bool CScriptDBViewCache::GetScriptAcc(const CRegID& scriptId, const vector<unsigned char> &vKey, CAppUserAccout& appAccOut) {
-//	vector<unsigned char> scriptKey = {'a','c','c','t'};
-//	vector<unsigned char> vRegId = scriptId.GetVec6();
-//	scriptKey.insert(scriptKey.end(), vRegId.begin(), vRegId.end());
-//	scriptKey.push_back( '_');
-//	scriptKey.insert(scriptKey.end(), vKey.begin(), vKey.end());
-//	vector<unsigned char> vValue;
-//	if(!GetData(scriptKey, vValue))
-//		return false;
-//	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
-//	ds >> appAccOut;
+bool CScriptDBViewCache::GetScriptAcc(const CRegID& scriptId, const vector<unsigned char> &vAccKey, CAppUserAccout& appAccOut) {
+	vector<unsigned char> scriptKey = {'a','c','c','t'};
+	vector<unsigned char> vRegId = scriptId.GetVec6();
+	scriptKey.insert(scriptKey.end(), vRegId.begin(), vRegId.end());
+	scriptKey.push_back( '_');
+	scriptKey.insert(scriptKey.end(), vAccKey.begin(), vAccKey.end());
+	vector<unsigned char> vValue;
+	if(!GetData(scriptKey, vValue))
+		return false;
+	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
+	ds >> appAccOut;
 	return true;
 }
 
 bool CScriptDBViewCache::SetScriptAcc(const CRegID& scriptId, const CAppUserAccout& appAccOut, CScriptDBOperLog &operlog) {
-//	vector<unsigned char> scriptKey = {'a','c','c','t'};
-//	vector<unsigned char> vRegId = scriptId.GetVec6();
-//	scriptKey.insert(scriptKey.end(), vRegId.begin(), vRegId.end());
-//	scriptKey.push_back( '_');
-//	scriptKey.insert(scriptKey.end(), appAccOut.mAccUserID.begin(), appAccOut.mAccUserID.end());
-//	vector<unsigned char> vValue;
-//	operlog.vKey = scriptKey;
-//	if(GetData(scriptKey, vValue))
-//	{
-//		operlog.vValue = vValue;
-//	}
-//	CDataStream ds(SER_DISK, CLIENT_VERSION);
-//	ds << appAccOut;
-//	vValue.clear();
-//	vValue.insert(vValue.end(), ds.begin(), ds.end());
-//	return SetData(scriptKey, vValue);
+	vector<unsigned char> scriptKey = {'a','c','c','t'};
+	vector<unsigned char> vRegId = scriptId.GetVec6();
+	vector<unsigned char> vAccKey = appAccOut.getaccUserId();
+	scriptKey.insert(scriptKey.end(), vRegId.begin(), vRegId.end());
+	scriptKey.push_back( '_');
+	scriptKey.insert(scriptKey.end(), vAccKey.begin(), vAccKey.end());
+	vector<unsigned char> vValue;
+	operlog.vKey = scriptKey;
+	if(GetData(scriptKey, vValue))
+	{
+		operlog.vValue = vValue;
+	}
+	CDataStream ds(SER_DISK, CLIENT_VERSION);
+	ds << appAccOut;
+	vValue.clear();
+	vValue.insert(vValue.end(), ds.begin(), ds.end());
+	return SetData(scriptKey, vValue);
 }
