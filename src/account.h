@@ -141,7 +141,7 @@ public:
 	bool GetScript(const CRegID &scriptId, vector<unsigned char> &vValue);
 
 	bool GetScriptAcc(const CRegID &scriptId,const vector<unsigned char> &vKey,CAppUserAccout& appAccOut);
-	bool SetScriptAcc(const CRegID &scriptId, const CAppUserAccout& appAccOut,CScriptDBOperLog &operlog);
+	bool SetScriptAcc(const CRegID &scriptId, const CAppUserAccout& appAccIn,CScriptDBOperLog &operlog);
 
 
 	bool GetScript(const int nIndex, CRegID &scriptId, vector<unsigned char> &vValue);
