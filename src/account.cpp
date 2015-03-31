@@ -1425,16 +1425,16 @@ Object CTransactionDBCache::ToJosnObj() const {
 }
 
 bool CScriptDBViewCache::GetScriptAcc(const CRegID& scriptId, const vector<unsigned char> &vKey, CAppUserAccout& appAccOut) {
-//	vector<unsigned char> scriptKey = {'a','c','c','t'};
-//	vector<unsigned char> vRegId = scriptId.GetVec6();
-//	scriptKey.insert(scriptKey.end(), vRegId.begin(), vRegId.end());
-//	scriptKey.push_back( '_');
-//	scriptKey.insert(scriptKey.end(), vKey.begin(), vKey.end());
-//	vector<unsigned char> vValue;
-//	if(!GetData(scriptKey, vValue))
-//		return false;
-//	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
-//	ds >> appAccOut;
+	vector<unsigned char> scriptKey = {'a','c','c','t'};
+	vector<unsigned char> vRegId = scriptId.GetVec6();
+	scriptKey.insert(scriptKey.end(), vRegId.begin(), vRegId.end());
+	scriptKey.push_back( '_');
+	scriptKey.insert(scriptKey.end(), vKey.begin(), vKey.end());
+	vector<unsigned char> vValue;
+	if(!GetData(scriptKey, vValue))
+		return false;
+	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
+	ds >> appAccOut;
 	return true;
 }
 

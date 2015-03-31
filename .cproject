@@ -61,6 +61,27 @@
 		<project id="soypay.null.1810634498" name="soypay"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.cross.base.1737262840;cdt.managedbuild.toolchain.gnu.cross.base.1737262840.1128479282;cdt.managedbuild.tool.gnu.cross.c.compiler.172331803;cdt.managedbuild.tool.gnu.c.compiler.input.1092719152">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.cross.base.1737262840;cdt.managedbuild.toolchain.gnu.cross.base.1737262840.1128479282;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1476375497;cdt.managedbuild.tool.gnu.cpp.compiler.input.2103328729">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.cross.base.1046549432;cdt.managedbuild.toolchain.gnu.cross.base.1046549432.290502251;cdt.managedbuild.tool.gnu.cross.cpp.compiler.1466703137;cdt.managedbuild.tool.gnu.cpp.compiler.input.676849956">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.198147249;org.eclipse.linuxtools.cdt.autotools.core.configuration.build.198147249.;org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gpp.1882252914;cdt.managedbuild.tool.gnu.cpp.compiler.input.2100447348">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.198147249;org.eclipse.linuxtools.cdt.autotools.core.configuration.build.198147249.;org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gcc.1794082451;cdt.managedbuild.tool.gnu.c.compiler.input.1673710103">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.cross.base.1046549432;cdt.managedbuild.toolchain.gnu.cross.base.1046549432.290502251;cdt.managedbuild.tool.gnu.cross.c.compiler.186605227;cdt.managedbuild.tool.gnu.c.compiler.input.2008552988">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+	</storageModule>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Default">
 			<resource resourceType="PROJECT" workspacePath="/soypay"/>
@@ -498,14 +519,5 @@
 				<runAllBuilders>false</runAllBuilders>
 			</target>
 		</buildTargets>
-	</storageModule>
-	<storageModule moduleId="scannerConfiguration">
-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		<scannerConfigBuildInfo instanceId="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.99534548;org.eclipse.linuxtools.cdt.autotools.core.configuration.build.99534548.;org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gpp.483073819;cdt.managedbuild.tool.gnu.cpp.compiler.input.758100192">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.99534548;org.eclipse.linuxtools.cdt.autotools.core.configuration.build.99534548.;org.eclipse.linuxtools.cdt.autotools.core.toolchain.tool.gcc.1303397452;cdt.managedbuild.tool.gnu.c.compiler.input.2140397670">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
 	</storageModule>
 </cproject>
