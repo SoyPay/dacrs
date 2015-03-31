@@ -47,7 +47,7 @@ class CVmRunEvn {
 
 	map<vector<unsigned char >,vector<CAppFundOperate> > MapAppOperate;
 	shared_ptr<vector<CScriptDBOperLog> > m_dblog;
-	map<vector<unsigned char >,shared_ptr<CAppUserAccout>> mAccMap;
+
 
 private:
 	/**
@@ -90,7 +90,7 @@ private:
 	 */
 	vector_unsigned_char GetAccountID(CVmOperate value);
 	bool IsSignatureAccount(CRegID account);
-	bool OpeatorAppAccount();
+	bool OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFundOperate> > opMap, CScriptDBViewCache& view) ;
 public:
 	/**
 	 * A constructor.
@@ -135,11 +135,7 @@ public:
 	shared_ptr<vector<CScriptDBOperLog> > GetDbLog();
 
 	bool GetAppUserAccout(const vector<unsigned char> &id,shared_ptr<CAppUserAccout> &sptrAcc,bool IsCreate= false);
-	/**
-	 * @brief Save App Account into db
-	 * @return:
-	 */
-	bool SaveAppAccountToDb(CScriptDBViewCache &mScriptDBTip,vector<CScriptDBOperLog> &retLog);
+
 	virtual ~CVmRunEvn();
 };
 
