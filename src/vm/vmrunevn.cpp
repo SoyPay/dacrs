@@ -99,7 +99,7 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 		return std::make_tuple (false, 0, string("VmScript OpeatorAccount Failed\n"));
 	}
 
-	if(!OpeatorAppAccount())
+	if(!OpeatorAppAccount(MapAppOperate, *m_ScriptDBTip))
 	{
 		return std::make_tuple (false, 0, string("OpeatorApp Account Failed\n"));
 	}
@@ -310,31 +310,25 @@ shared_ptr<vector<CScriptDBOperLog> > CVmRunEvn::GetDbLog()
 	return m_dblog;
 }
 
-bool CVmRunEvn::GetAppUserAccout(const vector<unsigned char> &vId, shared_ptr<CAppUserAccout> &sptrAcc, bool IsCreate) {
+bool CVmRunEvn::GetAppUserAccout(const vector<unsigned char> &vAppUserId, shared_ptr<CAppUserAccout> &sptrAcc, bool IsCreate) {
 	assert(m_ScriptDBTip != NULL);
-	if (mAccMap.count(vId)) {
-		sptrAcc = mAccMap[vId];
-		return true;
-	}
 	shared_ptr<CAppUserAccout> tem ;
-
-	if (!m_ScriptDBTip->GetScriptAcc(GetScriptRegID(), vId, *tem.get())) {
+	if (!m_ScriptDBTip->GetScriptAcc(GetScriptRegID(), vAppUserId, *tem.get())) {
 		if (IsCreate == true) {
-			tem = make_shared<CAppUserAccout>(vId);
-			mAccMap[vId] = tem;
+			tem = make_shared<CAppUserAccout>(vAppUserId);
+
 			sptrAcc = tem;
 			return true;
 		}
 		return false;
 	}
-	mAccMap[vId] = tem;
 	sptrAcc = tem;
 	return true;
 }
 
-bool CVmRunEvn::OpeatorAppAccount() {
+bool CVmRunEvn::OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFundOperate> > opMap, CScriptDBViewCache& view) {
 	if ((MapAppOperate.size() > 0)) {
-		for (auto const tem : MapAppOperate) {
+		for (auto const tem : opMap) {
 			shared_ptr<CAppUserAccout> sptrAcc;
 			if (!GetAppUserAccout(tem.first, sptrAcc, true)) {
 				LogPrint("VM", "GetAppUserAccout(tem.first, sptrAcc, true) failed \r\n appuserid :%s\r\n",
@@ -351,20 +345,15 @@ bool CVmRunEvn::OpeatorAppAccount() {
 						HexStr(tem.first));
 				return false;
 			}
+
+			CScriptDBOperLog log;
+			view.SetScriptAcc(GetScriptRegID(),*sptrAcc.get(),log);
+			shared_ptr<vector<CScriptDBOperLog> > m_dblog = GetDbLog();
+			m_dblog.get()->push_back(log);
+
 		}
 	}
 	return true;
 }
 
-bool CVmRunEvn::SaveAppAccountToDb(CScriptDBViewCache &mScriptDBTip, vector<CScriptDBOperLog> &retLog) {
-	if (mAccMap.size() > 0) {
-		for (auto const tem : mAccMap) {
-			CScriptDBOperLog temp;
-			if (!mScriptDBTip.SetScriptAcc(GetScriptRegID(), *tem.second.get(), temp)) {
-				return false;
-			}
-			retLog.insert(retLog.end(), temp);
-		}
-	}
-	return true;
-}
+
