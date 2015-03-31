@@ -24,6 +24,7 @@ BOOST_FIXTURE_TEST_SUITE(sysregisteracc_test,CSysRegisterAccTest)
 BOOST_FIXTURE_TEST_CASE(rpc_test,CSysRegisterAccTest)
 {
 	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
 	//в╙ук
 	string strRegAddr = "mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz";
 	string strSrcRegID = "000000000400";
@@ -66,6 +67,7 @@ BOOST_FIXTURE_TEST_CASE(rpc_test,CSysRegisterAccTest)
 BOOST_FIXTURE_TEST_CASE(sysonly_test,CSysRegisterAccTest)
  {
 	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
 	string strTxHash;
 	CRegID regID;
 	string strRegAddr1("mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz");
