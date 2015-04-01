@@ -1226,6 +1226,8 @@ static RET_DEFINE GetUserAppAccValue(unsigned char * ipara,void * pVmScript){
 	if(pVmScriptRun->GetAppUserAccout(accid.GetIdV(),sptrAcc))
 	{
 		value = sptrAcc->getllValues();
+//	 	cout<<"read:"<<endl;
+//	 	cout<<sptrAcc->toString()<<endl;
 	}
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -1292,8 +1294,9 @@ static RET_DEFINE ExWriteOutAppOperateFunc(unsigned char * ipara,void * pVmEvn)
 	while(count--)
 	{
 		ss >> temp;
-	 	vector<unsigned char> temId(temp.vAppuser,temp.vAppuser+sizeof(temp.vAppuser));
-		pVmRunEvn->InsertOutAPPOperte(temId,temp);
+//	 	cout<<"write:"<<endl;
+//	 	cout<<temp.toString().c_str()<<endl;
+		pVmRunEvn->InsertOutAPPOperte(temp.GetAppUserTagV(),temp);
 	}
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();

@@ -56,11 +56,10 @@ BOOST_AUTO_TEST_CASE(key_test1)
 	}
 
 	CAppUserAccout AccCount(AppuserId);
-	BOOST_CHECK(AccCount.isdirty() == false);			 //刚刚初始化 必须是 干净的
 	BOOST_CHECK(AccCount.getaccUserId() == AppuserId);      //初始化的ID 必须是
 	BOOST_CHECK(AccCount.Operate(OpArry));               //执行所有的操作符合
 	BOOST_CHECK(AccCount.getllValues() == 0);            //因为操作符全是加冻结的钱所以自由金额必须是0
-	BOOST_CHECK(AccCount.isdirty() == true);             //操作后必须是脏的
+
 
 	{
 		CAppCFund tep;
