@@ -64,7 +64,7 @@ CAppCFund::CAppCFund(const CAppFundOperate& Op) {
 CAppUserAccout::CAppUserAccout() {
 	mAccUserID.clear();
 	llValues = 0;
-	mDirty = false;
+
 	vFreezedFund.clear();
 }
 CAppUserAccout::CAppUserAccout(const vector<unsigned char> &userId)
@@ -72,7 +72,7 @@ CAppUserAccout::CAppUserAccout(const vector<unsigned char> &userId)
 	mAccUserID.clear();
 	mAccUserID = userId;
 	llValues = 0;
-	mDirty = false;
+
 	vFreezedFund.clear();
 }
 bool CAppUserAccout::GetAppCFund(CAppCFund& outFound, const vector<unsigned char>& vtag , int hight) {
@@ -164,7 +164,6 @@ bool CAppUserAccout::Operate(const vector<CAppFundOperate> &Op) {
 			return false;
 		}
 	}
-	setDirty(true);
 	return true;
 }
 
@@ -214,8 +213,8 @@ string CAppCFund::toString()const {
 
 Object CAppUserAccout::toJSON() const {
 	Object result;
-	result.push_back(Pair("mDirty", mDirty));
 	result.push_back(Pair("mAccUserID", HexStr(mAccUserID)));
+	result.push_back(Pair("FreeValues", llValues));
 	Array arry;
 	for (auto const te : vFreezedFund) {
 		arry.push_back(te.toJSON());
@@ -231,6 +230,7 @@ string CAppUserAccout::toString() const {
 Object CAppFundOperate::toJSON() const {
 	Object result;
 	int timout = outheight;
+	result.push_back(Pair("userid", HexStr(GetAppUserTagV())));
 	result.push_back(Pair("vTag", HexStr(GetFundTagV())));
 	result.push_back(Pair("opeatortype", opeatortype));
 	result.push_back(Pair("outheight", timout));

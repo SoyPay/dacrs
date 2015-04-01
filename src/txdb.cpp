@@ -471,10 +471,10 @@ Object CScriptDB::ToJosnObj(string Prefix) {
 			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
 			string strScriptKey(slKey.data(), 0, slKey.size());
 			string strPrefix = strScriptKey.substr(0,Prefix.length());
+			leveldb::Slice slValue = pcursor->value();
+			CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+			Object obj;
 			if (strPrefix == Prefix) {
-				leveldb::Slice slValue = pcursor->value();
-				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-				Object obj;
 				if(Prefix == "def"){
 				obj.push_back(Pair("scriptid", HexStr(ssKey)));
 				obj.push_back(Pair("value", HexStr(ssValue)));
@@ -483,16 +483,18 @@ Object CScriptDB::ToJosnObj(string Prefix) {
 					obj.push_back(Pair("key", HexStr(ssKey)));
 					obj.push_back(Pair("value", HexStr(ssValue)));
 				}
-				else if(Prefix == "author"){
-					obj.push_back(Pair("accountid", HexStr(ssKey)));
-					obj.push_back(Pair("author", HexStr(ssValue)));
+				else if(Prefix == "acct"){
+					obj.push_back(Pair("acctkey", HexStr(ssKey)));
+					obj.push_back(Pair("acctvalue", HexStr(ssValue)));
 
 				}
-				arrayObj.push_back(obj);
-				pcursor->Next();
+
 			} else {
-				break;
+				obj.push_back(Pair("unkown key", HexStr(ssKey)));
+				obj.push_back(Pair("unkown value", HexStr(ssValue)));
 			}
+			arrayObj.push_back(obj);
+			pcursor->Next();
 		} catch (std::exception &e) {
 			if(pcursor)
 						delete pcursor;
