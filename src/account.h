@@ -157,7 +157,7 @@ public:
 			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData);
 	bool SetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
 				const vector<unsigned char> &vScriptData, CScriptDBOperLog &operLog);
-	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
+
 	bool UndoScriptData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
 	/**
 	 * @brief Get all number of scripts in scriptdb
@@ -181,7 +181,7 @@ public:
 
 private:
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
-
+	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
 	bool BatchWrite(const map<vector<unsigned char>, vector<unsigned char> > &mapDatas);
 	bool EraseKey(const vector<unsigned char> &vKey);
 	bool HaveData(const vector<unsigned char> &vKey);
