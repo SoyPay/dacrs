@@ -212,6 +212,11 @@ bool CBaseTransaction::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValid
 			return state.DoS(100, ERRORMSG("UndoExecuteTx() : undo scriptdb data error"), UPDATE_ACCOUNT_FAIL,
 					"bad-save-scriptdb");
 	}
+	if(CONTRACT_TX == nTxType) {
+		if (!scriptCache.EraseTxRelAccout(GetHash()))
+			return state.DoS(100, ERRORMSG("UndoExecuteTx() : erase tx rel account error"), UPDATE_ACCOUNT_FAIL,
+							"bad-save-scriptdb");
+	}
 	return true;
 }
 
