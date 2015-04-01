@@ -194,15 +194,15 @@ bool CBaseTransaction::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValid
 			return state.DoS(100, ERRORMSG("UndoExecuteTx() : undo UndoOperateAccount failed"), UPDATE_ACCOUNT_FAIL,
 					"undo-operate-account-failed");
 		}
-		if (COMMON_TX == nTxType) {
-			if (account.IsEmptyValue() && !account.PublicKey.IsFullyValid()) {
-				view.EraseAccount(userId);
-			} else {
-				if (!view.SetAccount(userId, account)) {
-					return state.DoS(100,
-							ERRORMSG("UndoExecuteTx() : undo ExecuteTx write accountId= %s account info error"),
-							UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
-				}
+		if (COMMON_TX == nTxType
+				&& (account.IsEmptyValue()
+						&& (!account.PublicKey.IsFullyValid() || account.PublicKey.GetKeyID() != account.keyID))) {
+			view.EraseAccount(userId);
+		} else {
+			if (!view.SetAccount(userId, account)) {
+				return state.DoS(100,
+						ERRORMSG("UndoExecuteTx() : undo ExecuteTx write accountId= %s account info error"),
+						UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 			}
 		}
 	}
@@ -837,10 +837,6 @@ bool CFund::IsMergeFund(const int & nCurHeight, int &nMergeType) const {
 	return false;
 }
 
-
-
-
-
 Object CFund::ToJosnObj() const
 {
 	Object obj;
@@ -1006,9 +1002,7 @@ bool CAccount::MinusFree(const CFund &fund) {
 			}
 		}
 	}
-
 	if (iterFound != vFreedomFund.end()) {
-
 		uint64_t remainValue = nCandidateValue - fund.value;
 		if (remainValue > 0) {
 			vOperFund.insert(vOperFund.end(), vFreedomFund.begin(), iterFound);
@@ -1025,7 +1019,6 @@ bool CAccount::MinusFree(const CFund &fund) {
 		COperFund operLog(MINUS_FUND, vOperFund);
 		WriteOperLog(operLog);
 		return true;
-
 	} else {
 		if (llValues < fund.value - nCandidateValue)
 			return false;
@@ -1047,12 +1040,9 @@ bool CAccount::MinusFree(const CFund &fund) {
 }
 
 bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
-//	if (accountOperLog.authorLog.IsLogValid())
-//		bOverDay = true;
-//	LogPrint("vm","befor undo %s\n",ToString().c_str());
+//	LogPrint("undo_account", "after operate:%s\n", ToString());
 	vector<COperFund>::const_reverse_iterator iterOperFundLog = accountOperLog.vOperFund.rbegin();
 	for (; iterOperFundLog != accountOperLog.vOperFund.rend(); ++iterOperFundLog) {
-//		LogPrint("INFO", "undo account:%s\n" ,iterOperFundLog->ToString());
 		vector<CFund>::const_iterator iterFund = iterOperFundLog->vFund.begin();
 		for (; iterFund != iterOperFundLog->vFund.end(); ++iterFund) {
 			switch (iterFund->nFundType) {
@@ -1080,7 +1070,8 @@ bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 						}
 						return false;
 					});
-					assert(it != vFreedomFund.end());
+					if(it == vFreedomFund.end())
+						assert(it != vFreedomFund.end());
 
 					it->value -= iterFund->value;
 					if (!it->value)
@@ -1096,8 +1087,7 @@ bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 			}
 		}
 	}
-
-//	LogPrint("vm","after undo %s\n",ToString().c_str());
+//	LogPrint("undo_account", "before operate:%s\n", ToString().c_str());
 	return true;
 }
 
@@ -1114,9 +1104,11 @@ void CAccount::ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos) 
 		COperFund acclog;
 		acclog.operType = MINUS_FUND;
 		{
-			CFund fund(FREEDOM, llValues, 0);
-			acclog.vFund.push_back(fund);
-			llValues = 0;
+			if(llValues > 0) {
+				CFund fund(FREEDOM, llValues, 0);
+				acclog.vFund.push_back(fund);
+				llValues = 0;
+			}
 		}
 		vector<CFund>::iterator iterFund = vFreedomFund.begin();
 		for (; iterFund != vFreedomFund.end();) {
@@ -1308,6 +1300,7 @@ bool CAccount::IsFundValid(OperType type, const CFund &fund) {
 }
 
 bool CAccount::OperateAccount(OperType type, const CFund &fund) {
+//	LogPrint("op_account", "before operate:%s\n", ToString());
 	assert(keyID != uint160(0));
 	if (keyID != accountOperLog.keyID)
 		accountOperLog.keyID = keyID;
@@ -1335,7 +1328,8 @@ bool CAccount::OperateAccount(OperType type, const CFund &fund) {
 	default:
 		assert(0);
 	}
-
+//	LogPrint("op_account", "after operate:%s\n", ToString());
+//	LogPrint("account", "oper log list:%s\n", accountOperLog.ToString());
 	return bRet;
 }
 

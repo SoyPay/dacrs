@@ -1424,12 +1424,12 @@ Object CTransactionDBCache::ToJosnObj() const {
 
 }
 
-bool CScriptDBViewCache::GetScriptAcc(const CRegID& scriptId, const vector<unsigned char> &vKey, CAppUserAccout& appAccOut) {
+bool CScriptDBViewCache::GetScriptAcc(const CRegID& scriptId, const vector<unsigned char> &vAccKey, CAppUserAccout& appAccOut) {
 	vector<unsigned char> scriptKey = {'a','c','c','t'};
 	vector<unsigned char> vRegId = scriptId.GetVec6();
 	scriptKey.insert(scriptKey.end(), vRegId.begin(), vRegId.end());
 	scriptKey.push_back( '_');
-	scriptKey.insert(scriptKey.end(), vKey.begin(), vKey.end());
+	scriptKey.insert(scriptKey.end(), vAccKey.begin(), vAccKey.end());
 	vector<unsigned char> vValue;
 	if(!GetData(scriptKey, vValue))
 		return false;
@@ -1441,9 +1441,10 @@ bool CScriptDBViewCache::GetScriptAcc(const CRegID& scriptId, const vector<unsig
 bool CScriptDBViewCache::SetScriptAcc(const CRegID& scriptId, const CAppUserAccout& appAccOut, CScriptDBOperLog &operlog) {
 	vector<unsigned char> scriptKey = {'a','c','c','t'};
 	vector<unsigned char> vRegId = scriptId.GetVec6();
+	vector<unsigned char> vAccKey = appAccOut.getaccUserId();
 	scriptKey.insert(scriptKey.end(), vRegId.begin(), vRegId.end());
 	scriptKey.push_back( '_');
-	scriptKey.insert(scriptKey.end(), appAccOut.mAccUserID.begin(), appAccOut.mAccUserID.end());
+	scriptKey.insert(scriptKey.end(), vAccKey.begin(), vAccKey.end());
 	vector<unsigned char> vValue;
 	operlog.vKey = scriptKey;
 	if(GetData(scriptKey, vValue))

@@ -1221,30 +1221,29 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
     if (blockUndo.vtxundo.size() != block.vptx.size())
         return ERRORMSG("DisconnectBlock() : block and undo data inconsistent");
 
-//    LogPrint("INFO","%s", blockUndo.ToString());
+    LogPrint("INFO","%s", blockUndo.ToString());
 
-//    int64_t llTime = GetTimeMillis();
+//  int64_t llTime = GetTimeMillis();
     //undo reward tx
     std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[0];
 	CTxUndo txundo = blockUndo.vtxundo.back();
+//	LogPrint("undo_account", "tx Hash:%s\n", pBaseTx->GetHash().ToString());
 	if(!pBaseTx->UndoExecuteTx(0, view, state, txundo, pindex->nHeight, txCache, scriptCache))
 		return false;
 //	LogPrint("INFO", "reward tx undo elapse:%lld ms\n", GetTimeMillis() - llTime);
-
     // undo transactions in reverse order
     for (int i = block.vptx.size() - 1; i >= 1; i--) {
 //    	llTime = GetTimeMillis();
         std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[i];
         CTxUndo txundo = blockUndo.vtxundo[i-1];
+//      LogPrint("undo_account", "tx Hash:%s\n", pBaseTx->GetHash().ToString());
         if(!pBaseTx->UndoExecuteTx(i, view, state, txundo, pindex->nHeight, txCache, scriptCache))
         	return false;
 //        LogPrint("INFO", "tx type:%d, undo elapse:%lld ms\n", pBaseTx->nTxType, GetTimeMillis() - llTime);
     }
 
-
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
-
 
 	if (!txCache.DeleteBlockFromCache(block))
 		return state.Abort(_("Disconnect tip block failed to delete tx from txcache"));
@@ -1328,17 +1327,6 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 		}
 		return true;
 	}
-//	uint64_t nInterest = 0;
-//	if(!VerifyPosTx(pindex->pprev, view, &block, nInterest, txCache, scriptDBCache, false)) {
-//		return state.DoS(100,
-//							ERRORMSG("ConnectBlock() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
-//							REJECT_INVALID, "bad-pos-tx");
-//	}
-//	std::shared_ptr<CRewardTransaction> pRewardTx = dynamic_pointer_cast<CRewardTransaction>(block.vptx[0]);
-//	if(pRewardTx->rewardValue !=  nInterest + block.GetFee())
-//		return state.DoS(100, ERRORMSG("ConnectBlock() : coinbase pays too much (actual=%d vs limit=%d)",
-//									pRewardTx->rewardValue, nInterest + block.GetFee()),
-//							   REJECT_INVALID, "bad-cb-amount");
 
     CBlockUndo blockundo;
 
@@ -1369,6 +1357,8 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 			if (CONTRACT_TX == pBaseTx->nTxType) {
 				LogPrint("vm", "tx hash=%s ConnectBlock run contract\n", pBaseTx->GetHash().GetHex());
 			}
+//			LogPrint("op_account", "tx Hash:%s\n",pBaseTx->GetHash().ToString());
+//			LogPrint("account", "tx Hash:%s\n",pBaseTx->GetHash().ToString());
 			CTxUndo txundo;
 			if(!pBaseTx->ExecuteTx(i, view, state, txundo, pindex->nHeight, txCache, scriptDBCache)) {
 				return false;
@@ -1397,6 +1387,8 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 				ERRORMSG("ConnectBlock() : coinbase pays too much (actual=%d vs limit=%d)", pRewardTx->rewardValue,
 						nInterest + block.GetFee()), REJECT_INVALID, "bad-cb-amount");
     //deal with reward_tx
+//	LogPrint("op_account", "tx Hash:%s\n",block.vptx[0]->GetHash().ToString());
+//	LogPrint("account", "tx Hash:%s\n",block.vptx[0]->GetHash().ToString());
     CTxUndo txundo;
     if(!block.vptx[0]->ExecuteTx(0, view, state, txundo, pindex->nHeight, txCache, scriptDBCache))
     	return false;

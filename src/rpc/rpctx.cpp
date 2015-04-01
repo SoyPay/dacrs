@@ -95,11 +95,7 @@ Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
 		result.push_back(Pair("ver", prtx->nVersion));
 		result.push_back(Pair("addr", RegIDToAddress(prtx->regAcctId)));
-		if (!bPrintScriptContent && prtx->script.size() != SCRIPT_ID_SIZE) {
-			result.push_back(Pair("script", "script_content"));
-		} else {
-			result.push_back(Pair("appid", CRegID(prtx->script).ToString()));
-		}
+		result.push_back(Pair("script", "script_content"));
 		result.push_back(Pair("fees", prtx->llFees));
 		result.push_back(Pair("height", prtx->nValidHeight));
 		break;
