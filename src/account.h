@@ -141,7 +141,8 @@ public:
 	bool GetScript(const CRegID &scriptId, vector<unsigned char> &vValue);
 
 	bool GetScriptAcc(const CRegID &scriptId,const vector<unsigned char> &vKey,CAppUserAccout& appAccOut);
-	bool SetScriptAcc(const CRegID &scriptId, const CAppUserAccout& appAccOut,CScriptDBOperLog &operlog);
+	bool SetScriptAcc(const CRegID &scriptId, const CAppUserAccout& appAccIn,CScriptDBOperLog &operlog);
+
 
 	bool GetScript(const int nIndex, CRegID &scriptId, vector<unsigned char> &vValue);
 	bool SetScript(const CRegID &scriptId, const vector<unsigned char> &vValue);
@@ -166,6 +167,7 @@ public:
 	bool GetScriptCount(int &nCount);
 	bool SetTxRelAccout(const uint256 &txHash, const set<CKeyID> &relAccount);
 	bool GetTxRelAccount(const uint256 &txHash, set<CKeyID> &relAccount);
+	bool EraseTxRelAccout(const uint256 &txHash);
 	/**
 	 * @brief write all data in the caches to script db
 	 * @return

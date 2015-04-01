@@ -212,6 +212,11 @@ bool CBaseTransaction::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValid
 			return state.DoS(100, ERRORMSG("UndoExecuteTx() : undo scriptdb data error"), UPDATE_ACCOUNT_FAIL,
 					"bad-save-scriptdb");
 	}
+	if(CONTRACT_TX == nTxType) {
+		if (!scriptCache.EraseTxRelAccout(GetHash()))
+			return state.DoS(100, ERRORMSG("UndoExecuteTx() : erase tx rel account error"), UPDATE_ACCOUNT_FAIL,
+							"bad-save-scriptdb");
+	}
 	return true;
 }
 
@@ -837,6 +842,10 @@ bool CFund::IsMergeFund(const int & nCurHeight, int &nMergeType) const {
 	return false;
 }
 
+
+
+
+
 Object CFund::ToJosnObj() const
 {
 	Object obj;
@@ -1070,8 +1079,8 @@ bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 						}
 						return false;
 					});
-					if(it == vFreedomFund.end())
-						assert(it != vFreedomFund.end());
+
+					assert(it != vFreedomFund.end());
 
 					it->value -= iterFund->value;
 					if (!it->value)
