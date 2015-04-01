@@ -313,6 +313,7 @@ static const CRPCCommand vRPCCommands[] =
     { "registerscripttxraw",    &registerscripttxraw,    true,      false,      true },
     { "sigstr",    				&sigstr,    			 true,      false,      true },
 //    { "listauthor",             &listauthor,             true,      false,      true },
+    { "getappaccinfo",    		&getappaccinfo,    			 true,      false,      true },
 
 //for test code
 	{ "gettxoperationlog",      &gettxoperationlog,      false,     false,      false },

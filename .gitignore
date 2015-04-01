@@ -1,11 +1,10 @@
 *.tar.gz
 
 *.exe
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/test/test_bitcoin
+src/dacrs-d
+src/test/dacrs_test
 src/qt/test/test_bitcoin-qt
+src/ptest/dacrs_ptest
 
 Makefile.in
 aclocal.m4
@@ -13,6 +12,7 @@ autom4te.cache/
 config.log
 config.status
 configure
+autogen-dacrs-man.sh
 src/bitcoin-config.h
 src/bitcoin-config.h.in
 src/build-aux/
@@ -38,8 +38,6 @@ src/qt/test/moc*.cpp
 *.patch
 .bitcoin
 *.a
-!libleveldb.a
-!libmemenv.a
 *.pb.cc
 *.pb.h
 
@@ -85,8 +83,8 @@ qa/pull-tester/run-bitcoind-for-test.sh
 qa/pull-tester/build-tests.sh
 
 !src/leveldb*/Makefile
-/src/bitcoin-config.h
-/src/bitcoin-config.h.in
+/src/dacrs-config.h
+/src/dacrs-config.h.in
 /src/build-aux/config.guess
 /src/build-aux/config.sub
 /src/build-aux/depcomp

@@ -555,6 +555,8 @@ bool SysTestBase::SetAddrGenerteBlock(const char *addr) {
 }
 bool SysTestBase::DisConnectBlock(int nNum) {
 	int nFirstHeight = static_cast<int>(chainActive.Height() );
+	if(nFirstHeight <=0)
+		return false;
 	BOOST_CHECK(nNum>0 && nNum<=nFirstHeight);
 
 	string strNum = strprintf("%d",nNum);
@@ -690,3 +692,13 @@ bool SysTestBase::GetTxOperateLog(const uint256& txHash, vector<CAccountOperLog>
 
 		return true;
 	}
+
+bool SysTestBase::PrintLog(){
+	const char *argv2[] = { "rpctest", "printblokdbinfo"};
+
+		Value value;
+		if (!CommandLineRPC_GetValue(sizeof(argv2) / sizeof(argv2[0]), argv2, value)) {
+			return true;
+		}
+	return false;
+}

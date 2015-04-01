@@ -131,7 +131,7 @@ public:
 		return mMoney;
 	}
 	const vector<unsigned char> GetFundTagV() const {
-		assert(sizeof(vFundTag) >= FundTaglen && FundTaglen > 0);
+		assert(sizeof(vFundTag) >= FundTaglen );
 		vector<unsigned char> tag(&vFundTag[0], &vFundTag[FundTaglen]);
 		return (tag);
 	}
@@ -184,14 +184,6 @@ public:
 		this->llValues = llValues;
 	}
 
-	bool isdirty() const {
-		return mDirty;
-	}
-
-	void setDirty(bool dirty) {
-		mDirty = dirty;
-	}
-
 	const vector<unsigned char>& getaccUserId() const {
 		return mAccUserID;
 	}
@@ -220,7 +212,7 @@ private:
 
 	bool Operate(const CAppFundOperate &Op);
 
-	bool mDirty;
+
 	uint64_t llValues;
 	vector<unsigned char>  mAccUserID;
 	vector<CAppCFund> vFreezedFund;

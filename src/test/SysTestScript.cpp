@@ -541,5 +541,46 @@ BOOST_FIXTURE_TEST_CASE(minier,CSysScriptTest)
 	ResetEnv();
 	TestMinner();
 }
+BOOST_FIXTURE_TEST_CASE(appacc,CSysScriptTest){
+
+	ResetEnv();
+	BOOST_CHECK(0==chainActive.Height());
+	string shash = CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
+	string sriptid ="";
+	BOOST_CHECK(GetTxConfirmedRegID(shash,sriptid));
+	int temp = 22;
+
+	string param = strprintf("%02x",temp);
+	string hash ="";
+	uint64_t nMoney = 1000000000;
+	Value resut =CreateContractTx(sriptid, "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,100000,nMoney);
+	BOOST_CHECK(GetHashFromCreatedTx(resut,hash));
+	BOOST_CHECK(GenerateOneBlock());
+
+	nMoney = nMoney/5;
+	vector<unsigned char> vtemp;
+	vtemp.assign((char*)&nMoney,(char*)&nMoney+sizeof(nMoney));
+	for(int i = 1;i<5;i++){
+		temp += 1;
+		param = strprintf("%02x%s",temp,HexStr(vtemp));
+		cout<<i<<endl;
+		resut =CreateContractTx(sriptid, "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,100000,0);
+		BOOST_CHECK(GetHashFromCreatedTx(resut,hash));
+		BOOST_CHECK(GenerateOneBlock());
+	}
+
+	BOOST_CHECK(DisConnectBlock(4));
+
+	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+	CRegID script(sriptid);
+	CRegID strreg;
+	string address = "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb";
+
+	BOOST_CHECK(SysTestBase::GetRegID(address,strreg));
+	std::shared_ptr<CAppUserAccout> tem = make_shared<CAppUserAccout>();
+	contractScriptTemp.GetScriptAcc(script,strreg.GetVec6(),*tem.get());
+	BOOST_CHECK(tem.get()->getllValues() == nMoney);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
