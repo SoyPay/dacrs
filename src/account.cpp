@@ -1235,6 +1235,16 @@ bool CScriptDBViewCache::GetTxRelAccount(const uint256 &txHash, set<CKeyID> &rel
 	ds >> relAccount;
 	return true;
 }
+bool CScriptDBViewCache::EraseTxRelAccout(const uint256 &txHash) {
+	vector<unsigned char> vKey = {'t','x'};
+	vector<unsigned char> vValue;
+	vValue.clear();
+	CDataStream ds(SER_DISK, CLIENT_VERSION);
+	ds << txHash;
+	vKey.insert(vKey.end(), ds.begin(), ds.end());
+	SetData(vKey, vValue);
+	return true;
+}
 Object CScriptDBViewCache::ToJosnObj() const {
 	Object obj;
 	Array arrayObj;
@@ -1451,8 +1461,11 @@ bool CScriptDBViewCache::SetScriptAcc(const CRegID& scriptId, const CAppUserAcco
 		operlog.vValue = vValue;
 	}
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
+
 	ds << appAccOut;
+
 	vValue.clear();
 	vValue.insert(vValue.end(), ds.begin(), ds.end());
+	LogPrint("acct", "vKey:%s\n vValue:%s\n", HexStr(scriptKey), HexStr(vValue));
 	return SetData(scriptKey, vValue);
 }

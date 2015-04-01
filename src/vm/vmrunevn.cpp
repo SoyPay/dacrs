@@ -311,17 +311,13 @@ shared_ptr<vector<CScriptDBOperLog> > CVmRunEvn::GetDbLog()
 	return m_dblog;
 }
 
-bool CVmRunEvn::GetAppUserAccout(const vector<unsigned char> &vAppUserId, shared_ptr<CAppUserAccout> &sptrAcc, bool IsCreate) {
+bool CVmRunEvn::GetAppUserAccout(const vector<unsigned char> &vAppUserId, shared_ptr<CAppUserAccout> &sptrAcc) {
 	assert(m_ScriptDBTip != NULL);
-	shared_ptr<CAppUserAccout> tem ;
+	shared_ptr<CAppUserAccout> tem = make_shared<CAppUserAccout>();
 	if (!m_ScriptDBTip->GetScriptAcc(GetScriptRegID(), vAppUserId, *tem.get())) {
-		if (IsCreate == true) {
 			tem = make_shared<CAppUserAccout>(vAppUserId);
-
 			sptrAcc = tem;
 			return true;
-		}
-		return false;
 	}
 	if (!tem.get()->AutoMergeFreezeToFree(RunTimeHeight)) {
 		return false;
@@ -334,13 +330,13 @@ bool CVmRunEvn::OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFu
 	if ((MapAppOperate.size() > 0)) {
 		for (auto const tem : opMap) {
 			shared_ptr<CAppUserAccout> sptrAcc;
-			if (!GetAppUserAccout(tem.first, sptrAcc, true)) {
-				LogPrint("VM", "GetAppUserAccout(tem.first, sptrAcc, true) failed \r\n appuserid :%s\r\n",
+			if (!GetAppUserAccout(tem.first, sptrAcc)) {
+				LogPrint("vm", "GetAppUserAccout(tem.first, sptrAcc, true) failed \r\n appuserid :%s\r\n",
 						HexStr(tem.first));
 				return false;
 			}
 			if (!sptrAcc.get()->AutoMergeFreezeToFree(RunTimeHeight)) {
-				LogPrint("VM", "AutoMergeFreezeToFreefailed \r\n appuser :%s\r\n", sptrAcc.get()->toString());
+				LogPrint("vm", "AutoMergeFreezeToFreefailed \r\n appuser :%s\r\n", sptrAcc.get()->toString());
 				return false;
 
 			}
@@ -348,13 +344,13 @@ bool CVmRunEvn::OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFu
 
 				int i = 0;
 				for (auto const pint : tem.second) {
-					LogPrint("VM", "GOperate failed \r\n Operate %d : %s\r\n", i++, pint.toString());
+					LogPrint("vm", "GOperate failed \r\n Operate %d : %s\r\n", i++, pint.toString());
 				}
-				LogPrint("VM", "GetAppUserAccout(tem.first, sptrAcc, true) failed \r\n appuserid :%s\r\n",
+				LogPrint("vm", "GetAppUserAccout(tem.first, sptrAcc, true) failed \r\n appuserid :%s\r\n",
 						HexStr(tem.first));
 				return false;
 			}
-
+		//	cout << " writed acc:" << sptrAcc.get()->toString() << endl;
 			CScriptDBOperLog log;
 			view.SetScriptAcc(GetScriptRegID(), *sptrAcc.get(), log);
 			shared_ptr<vector<CScriptDBOperLog> > m_dblog = GetDbLog();

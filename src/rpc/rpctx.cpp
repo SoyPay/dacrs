@@ -1673,3 +1673,32 @@ Value printblokdbinfo(const Array& params, bool fHelp) {
 	return Value::null;
 }
 
+Value getappaccinfo(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 2) {
+		string msg = "getappaccinfo nrequired \"scriptid\" \"address\""
+				"\nregister script\n"
+				"\address:\n"
+				"\nExamples:\n" + HelpExampleCli("getappaccinfo", "000000100000 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG") + "\nAs json rpc call\n"
+				+ HelpExampleRpc("getappaccinfo", "000000100000 0-7")
+		+ HelpExampleRpc("getappaccinfo", "000000100000 00000008000");
+		throw runtime_error(msg);
+	}
+
+
+	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+	CRegID script(params[0].get_str());
+	vector<unsigned char> key;
+
+	if(CRegID::IsSimpleRegIdStr( params[1].get_str())){
+		CRegID reg( params[1].get_str());
+		key.insert(key.begin(),reg.GetVec6().begin(),reg.GetVec6().end());
+	}else{
+		string addr = params[1].get_str();
+		key.assign(addr.c_str(),addr.c_str()+addr.length());
+	}
+
+	std::shared_ptr<CAppUserAccout> tem = make_shared<CAppUserAccout>();
+	contractScriptTemp.GetScriptAcc(script,key,*tem.get());
+	return Value(tem.get()->toJSON());
+}
+
