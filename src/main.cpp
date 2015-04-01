@@ -1236,7 +1236,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
 //    	llTime = GetTimeMillis();
         std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[i];
         CTxUndo txundo = blockUndo.vtxundo[i-1];
-  //      LogPrint("INFO", "tx type:%d,hash=%s\n",pBaseTx->nTxType, pBaseTx->GetHash().ToString());
+//      LogPrint("undo_account", "tx Hash:%s\n", pBaseTx->GetHash().ToString());
         if(!pBaseTx->UndoExecuteTx(i, view, state, txundo, pindex->nHeight, txCache, scriptCache))
         	return false;
       //  LogPrint("INFO", "tx type:%d,undo elapse:%lld ms\n", pBaseTx->nTxType, GetTimeMillis() - llTime);
