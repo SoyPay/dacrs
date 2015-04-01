@@ -162,7 +162,7 @@ Value gettxdetail(const Array& params, bool fHelp) {
 
 //create a register account tx
 Value registaccounttx(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 3) {
+	if (fHelp || params.size() != 2) {
 		string msg = "registaccounttx nrequired \"addr\" fee height\n"
 				"\nregister secure account\n"
 				"\nArguments:\n"
