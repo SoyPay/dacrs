@@ -76,11 +76,9 @@ BOOST_FIXTURE_TEST_CASE(sysonly_test,CSysRegisterAccTest)
 	uint64_t nFee = 10000;
 	vector<string> vFailedTxHash;
 
-	//无效的高度
-	int nInValidHeight = 1000;
+	//余额不够
 	BOOST_CHECK(!RegisterAccount(strRegAddr1, nFee, strTxHash));
 	vFailedTxHash.push_back(strTxHash);
-	nInValidHeight = 100;
 
 	//无法读取的账号地址
 	string strInvalidAddr("fjsofeoifdsfdsfdsafafafafafafafa");

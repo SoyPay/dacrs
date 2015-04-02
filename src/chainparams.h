@@ -328,6 +328,21 @@ public:
 	static void ParseParameters(int argc, const char* const argv[]);
 
 	static const vector<string> &GetMultiArgs(const string& strArg);
+	static  int GetArgsSize();
+	static  int GetMultiArgsSize();
+	static  map<string, string> GetMapArgs() {
+		return m_mapArgs;
+	}
+	static  map<string, vector<string> > GetMapMultiArgs() {
+		return m_mapMultiArgs;
+	}
+	static void SetMapArgs(const map<string, string> &mapArgs) {
+		m_mapArgs = mapArgs;
+	}
+	static void SetMultiMapArgs(const map<string, vector<string> >&mapMultiArgs) {
+		m_mapMultiArgs = mapMultiArgs;
+	}
+
 protected:
 
 	static map<string, string> m_mapArgs;
