@@ -642,15 +642,11 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 			// Collect transactions into block
 			uint64_t nBlockSize = ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
 			uint64_t nBlockTx = 0;
-//			int nBlockSigOps = 100;
 			bool fSortedByFee = true;
 			uint64_t nTotalRunStep = 0;
 
 			TxPriorityCompare comparer(fSortedByFee);
 			make_heap(vecPriority.begin(), vecPriority.end(), comparer);
-//			CAccountViewCache accviewtemp(*pAccountViewTip, true);
-//			CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
-//			CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 
 			while (!vecPriority.empty()) {
 				// Take highest priority transaction off the priority queue:
@@ -854,12 +850,13 @@ void static DacrsMiner(CWallet *pwallet) {
 			CTransactionDBCache txCache(*pTxCacheTip, true);
 			CScriptDBViewCache ScriptDbTemp(*pScriptDBTip, true);
 			int64_t lasttime1 = GetTimeMillis();
-			shared_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock(accview,txCache,ScriptDbTemp));
-			LogPrint("MINER","CreateNewBlock blocksize%d used time :%d ms\n",pblocktemplate.get()->block.vptx.size(),GetTimeMillis() - lasttime1);
+			shared_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock(accview, txCache, ScriptDbTemp));
+			LogPrint("MINER", "CreateNewBlock blocksize%d used time :%d ms\n", pblocktemplate.get()->block.vptx.size(),
+					GetTimeMillis() - lasttime1);
 			if (!pblocktemplate.get())
 				throw;
 			CBlock *pblock = &pblocktemplate.get()->block;
-			MiningBlock(pblock,pwallet,pindexPrev,LastTrsa,accview,txCache,ScriptDbTemp);
+			MiningBlock(pblock, pwallet, pindexPrev, LastTrsa, accview, txCache, ScriptDbTemp);
 			
 			if (SysCfg().NetworkID() != CBaseParams::MAIN)
 				if(SysCfg().GetBoolArg("-iscutmine", false)== false)

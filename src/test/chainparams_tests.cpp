@@ -33,6 +33,9 @@ static void ResetArgs(const std::string& strArg) {
 }
 
 BOOST_AUTO_TEST_CASE(boolarg) {
+	map<string, string> mapArgs = SysCfg().GetMapArgs();
+	map<string, vector<string> > mapMultiArgs = SysCfg().GetMapMultiArgs();
+
 	ResetArgs("-foo");
 	BOOST_CHECK(SysCfg().GetBoolArg("-foo", false));
 	BOOST_CHECK(SysCfg().GetBoolArg("-foo", true));
@@ -81,9 +84,14 @@ BOOST_AUTO_TEST_CASE(boolarg) {
 	BOOST_CHECK(!SysCfg().GetBoolArg("-foo", false));
 	BOOST_CHECK(!SysCfg().GetBoolArg("-foo", true));
 
+	SysCfg().SetMapArgs(mapArgs);
+	SysCfg().SetMultiMapArgs(mapMultiArgs);
 }
 
 BOOST_AUTO_TEST_CASE(stringarg) {
+	map<string, string> mapArgs = SysCfg().GetMapArgs();
+	map<string, vector<string> > mapMultiArgs = SysCfg().GetMapMultiArgs();
+
 	ResetArgs("");
 	BOOST_CHECK_EQUAL(SysCfg().GetArg("-foo", ""), "");
 	BOOST_CHECK_EQUAL(SysCfg().GetArg("-foo", "eleven"), "eleven");
@@ -104,9 +112,15 @@ BOOST_AUTO_TEST_CASE(stringarg) {
 	BOOST_CHECK_EQUAL(SysCfg().GetArg("-foo", ""), "eleven");
 	BOOST_CHECK_EQUAL(SysCfg().GetArg("-foo", "eleven"), "eleven");
 
+	SysCfg().SetMapArgs(mapArgs);
+	SysCfg().SetMultiMapArgs(mapMultiArgs);
+
 }
 
 BOOST_AUTO_TEST_CASE(intarg) {
+	map<string, string> mapArgs = SysCfg().GetMapArgs();
+	map<string, vector<string> > mapMultiArgs = SysCfg().GetMapMultiArgs();
+
 	ResetArgs("");
 	BOOST_CHECK_EQUAL(SysCfg().GetArg("-foo", 11), 11);
 	BOOST_CHECK_EQUAL(SysCfg().GetArg("-foo", 0), 0);
@@ -122,18 +136,30 @@ BOOST_AUTO_TEST_CASE(intarg) {
 	ResetArgs("-foo=NaN -bar=NotANumber");
 	BOOST_CHECK_EQUAL(SysCfg().GetArg("-foo", 1), 0);
 	BOOST_CHECK_EQUAL(SysCfg().GetArg("-bar", 11), 0);
+
+	SysCfg().SetMapArgs(mapArgs);
+	SysCfg().SetMultiMapArgs(mapMultiArgs);
 }
 
 BOOST_AUTO_TEST_CASE(doubledash) {
+	map<string, string> mapArgs = SysCfg().GetMapArgs();
+	map<string, vector<string> > mapMultiArgs = SysCfg().GetMapMultiArgs();
+
 	ResetArgs("--foo");
 	BOOST_CHECK_EQUAL(SysCfg().GetBoolArg("-foo", false), true);
 
 	ResetArgs("--foo=verbose --bar=1");
 	BOOST_CHECK_EQUAL(SysCfg().GetArg("-foo", ""), "verbose");
 	BOOST_CHECK_EQUAL(SysCfg().GetArg("-bar", 0), 1);
+
+	SysCfg().SetMapArgs(mapArgs);
+	SysCfg().SetMultiMapArgs(mapMultiArgs);
 }
 
 BOOST_AUTO_TEST_CASE(boolargno) {
+	map<string, string> mapArgs = SysCfg().GetMapArgs();
+	map<string, vector<string> > mapMultiArgs = SysCfg().GetMapMultiArgs();
+
 	ResetArgs("-nofoo");
 	BOOST_CHECK(!SysCfg().GetBoolArg("-foo", true));
 	BOOST_CHECK(!SysCfg().GetBoolArg("-foo", false));
@@ -153,6 +179,9 @@ BOOST_AUTO_TEST_CASE(boolargno) {
 	ResetArgs("-nofoo -foo"); // foo always wins:
 	BOOST_CHECK(SysCfg().GetBoolArg("-foo", true));
 	BOOST_CHECK(SysCfg().GetBoolArg("-foo", false));
+
+	SysCfg().SetMapArgs(mapArgs);
+	SysCfg().SetMultiMapArgs(mapMultiArgs);
 }
 
 BOOST_AUTO_TEST_CASE(chain_main) {
