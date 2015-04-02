@@ -1073,9 +1073,13 @@ bool CScriptDBViewCache::GetScriptCount(int &nCount) {
 }
 bool CScriptDBViewCache::SetScriptCount(const int nCount) {
 	vector<unsigned char> scriptKey = { 's', 'n', 'u','m'};
-	CDataStream ds(SER_DISK, CLIENT_VERSION);
-	ds << nCount;
-	vector<unsigned char> vValue(ds.begin(), ds.end());
+	vector<unsigned char> vValue;
+	vValue.clear();
+	if(nCount > 0) {
+		CDataStream ds(SER_DISK, CLIENT_VERSION);
+		ds << nCount;
+		vValue.insert(vValue.end(), ds.begin(), ds.end());
+	}
 	if(!SetData(scriptKey, vValue))
 		return false;
 	return true;
@@ -1087,8 +1091,7 @@ bool CScriptDBViewCache::EraseScript(const vector<unsigned char> &vScriptId) {
 		int nCount(0);
 		if (!GetScriptCount(nCount))
 			return false;
-		--nCount;
-		if (!SetScriptCount(nCount))
+		if (!SetScriptCount(--nCount))
 			return false;
 	}
 	return EraseKey(scriptKey);
@@ -1106,9 +1109,13 @@ bool CScriptDBViewCache::GetScriptDataCount(const vector<unsigned char> &vScript
 bool CScriptDBViewCache::SetScriptDataCount(const vector<unsigned char> &vScriptId, int nCount) {
 	vector<unsigned char> scriptKey = { 's', 'd', 'n', 'u','m'};
 	scriptKey.insert(scriptKey.end(), vScriptId.begin(), vScriptId.end());
-	CDataStream ds(SER_DISK, CLIENT_VERSION);
-	ds << nCount;
-	vector<unsigned char> vValue(ds.begin(), ds.end());
+	vector<unsigned char> vValue;
+	vValue.clear();
+	if(nCount > 0) {
+		CDataStream ds(SER_DISK, CLIENT_VERSION);
+		ds << nCount;
+		vValue.insert(vValue.end(), ds.begin(), ds.end());
+	}
 	if(!SetData(scriptKey, vValue))
 		return false;
 	return true;
@@ -1126,8 +1133,7 @@ bool CScriptDBViewCache::EraseScriptData(const vector<unsigned char> &vScriptId,
 		if(!GetScriptDataCount(vScriptId, nCount)) {
 			return false;
 		}
-		--nCount;
-		if (!SetScriptDataCount(vScriptId, nCount)) {
+		if (!SetScriptDataCount(vScriptId, --nCount)) {
 			return false;
 		}
 
