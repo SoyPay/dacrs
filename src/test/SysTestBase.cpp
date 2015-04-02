@@ -428,7 +428,7 @@ Value SysTestBase::registaccounttx(const std::string &addr, const int nfee ,bool
 	{
 		param = "true";
 	}
-	const char *argv[] = { "rpctest", "registaccounttx", caddr, (char*)fee.c_str(), (char*)param.c_str() };
+	const char *argv[] = { "rpctest", "registaccounttx", caddr, (char*)fee.c_str()};
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
