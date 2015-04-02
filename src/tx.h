@@ -35,7 +35,7 @@ enum TxType {
 	REG_ACCT_TX = 2,  //!< tx that used to register account
 	COMMON_TX = 3,    //!< transfer money from one account to another
 	CONTRACT_TX = 4,  //!< contract tx
-	REG_SCRIPT_TX = 5,//!< register app
+	REG_APP_TX = 5,//!< register app
 	NULL_TX,          //!< NULL_TX
 };
 
@@ -410,7 +410,7 @@ public:
 	mutable CUserID srcRegId;                   //src regid
 	mutable CUserID desUserId;                  //user regid or user key id or app regid
 	uint64_t llFees;
-	uint64_t llValues;                           //transfer amount
+	uint64_t llValues;                          //transfer amount
 	vector_unsigned_char vContract;
 	vector_unsigned_char signature;
 
@@ -594,12 +594,12 @@ public:
 	vector_unsigned_char signature;
 public:
 	CRegisterAppTx(const CBaseTransaction *pBaseTx) {
-		assert(REG_SCRIPT_TX == pBaseTx->nTxType);
+		assert(REG_APP_TX == pBaseTx->nTxType);
 		*this = *(CRegisterAppTx*) pBaseTx;
 	}
 
 	CRegisterAppTx() {
-		nTxType = REG_SCRIPT_TX;
+		nTxType = REG_APP_TX;
 		llFees = 0;
 		nValidHeight = 0;
 	}
@@ -1014,7 +1014,7 @@ void Serialize(Stream& os, const std::shared_ptr<CBaseTransaction> &pa, int nTyp
 	else if (pa->nTxType == REWARD_TX) {
 		Serialize(os, *((CRewardTransaction *) (pa.get())), nType, nVersion);
 	}
-	else if (pa->nTxType == REG_SCRIPT_TX) {
+	else if (pa->nTxType == REG_APP_TX) {
 		Serialize(os, *((CRegisterAppTx *) (pa.get())), nType, nVersion);
 	}
 	else {
@@ -1043,7 +1043,7 @@ void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, i
 		pa = make_shared<CRewardTransaction>();
 		Unserialize(is, *((CRewardTransaction *) (pa.get())), nType, nVersion);
 	}
-	else if (nTxType == REG_SCRIPT_TX) {
+	else if (nTxType == REG_APP_TX) {
 		pa = make_shared<CRegisterAppTx>();
 		Unserialize(is, *((CRegisterAppTx *) (pa.get())), nType, nVersion);
 	}
