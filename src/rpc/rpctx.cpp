@@ -930,7 +930,10 @@ Value resetclient(const Array& params, bool fHelp) {
 //		pTxCacheTip->GetTxHashCache().size()
        if(SysCfg().Network::TESTNET == SysCfg().NetworkID()|| SysCfg().Network::REGTEST==SysCfg().NetworkID()){
     	   assert(pAccountViewDB->GetDbCount() == 43);
+    	   LogPrint("acc","%s",write_string(Value(pScriptDB->ToJosnObj("acct")),true));
+    	   cout << "script db size:" << pScriptDB->GetDbCount() <<endl;
     	   assert(pScriptDB->GetDbCount() == 0 || pScriptDB->GetDbCount() == 1);
+
     	   //assert(pTxCacheTip->GetTxHashCache().size() == 0);
        }
 
