@@ -83,8 +83,12 @@ void CScriptDBTest::InsertData(CScriptDBViewCache* pViewCache) {
 void CScriptDBTest::CheckRecordCount(CScriptDBViewCache* pViewCache,size_t nComparCount) {
 	BOOST_CHECK(pViewCache);
 	int nCount = 0;
-	BOOST_CHECK(pViewCache->GetScriptCount(nCount));
-	BOOST_CHECK((unsigned int)nCount == nComparCount);
+	if( 0 == nComparCount) {
+		BOOST_CHECK(!pViewCache->GetScriptCount(nCount));
+	} else {
+		BOOST_CHECK(pViewCache->GetScriptCount(nCount));
+		BOOST_CHECK((unsigned int)nCount == nComparCount);
+	}
 }
 
 void CScriptDBTest::Flush(CScriptDBViewCache* pViewCache1, CScriptDBViewCache* pViewCache2,

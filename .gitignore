@@ -91,3 +91,4 @@ qa/pull-tester/build-tests.sh
 /src/build-aux/install-sh
 /src/build-aux/missing
 
+/.project
