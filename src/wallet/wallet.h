@@ -385,7 +385,7 @@ public:
 		case REWARD_TX:
 			mapAccountTx[hash] = make_shared<CRewardTransaction>(pTx);
 			break;
-		case REG_SCRIPT_TX:
+		case REG_APP_TX:
 			mapAccountTx[hash] = make_shared<CRegisterAppTx>(pTx);
 			break;
 		default:
