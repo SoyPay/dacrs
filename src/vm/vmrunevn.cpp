@@ -7,6 +7,7 @@
 #include "vmrunevn.h"
 #include "tx.h"
 #include "util.h"
+#include<algorithm>
 #include <boost/foreach.hpp>
 CVmRunEvn::CVmRunEvn() {
 	RawAccont.clear();
@@ -74,11 +75,10 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 	m_ScriptDBTip = &VmDB;
 
 	CTransaction* tx = static_cast<CTransaction*>(Tx.get());
-	uint64_t maxstep = (tx->llFees/nBurnFactor)*nBurnFactor - 10000;
+	uint64_t maxstep = min((tx->llFees-CBaseTransaction::nMinTxFee)/nBurnFactor, MAX_BLOCK_RUN_STEP);
 	tuple<bool, uint64_t, string> mytuple;
 	if (!intial(Tx, view, nheight)) {
 		return std::make_tuple (false, 0, string("VmScript inital Failed\n"));
-
 	}
 
 	int64_t step = pMcu.get()->run(maxstep,this);
@@ -91,8 +91,7 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 		uRunStep = step;
 	}
 
-
-	LogPrint("CONTRACT_TX", "tx:%s,step:%ld\n", tx->ToString(view), step);
+	LogPrint("CONTRACT_TX", "tx:%s,step:%ld\n", tx->ToString(view), uRunStep);
 
 	if (!CheckOperate(m_output)) {
 		return std::make_tuple (false, 0, string("VmScript CheckOperate Failed \n"));
@@ -107,7 +106,7 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 		return std::make_tuple (false, 0, string("OpeatorApp Account Failed\n"));
 	}
 
-	uint64_t spend = step*nBurnFactor;
+	uint64_t spend = uRunStep * nBurnFactor;
 	return std::make_tuple (true, spend, string("VmScript Sucess\n"));
 
 }

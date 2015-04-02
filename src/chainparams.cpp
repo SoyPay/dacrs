@@ -384,6 +384,12 @@ public:
 const vector<string> &CBaseParams::GetMultiArgs(const string& strArg) {
 	return m_mapMultiArgs[strArg];
 }
+int CBaseParams::GetArgsSize() {
+	return m_mapArgs.size();
+}
+int CBaseParams::GetMultiArgsSize() {
+	return m_mapMultiArgs.size();
+}
 
 string CBaseParams::GetArg(const string& strArg, const string& strDefault) {
 	if (m_mapArgs.count(strArg))
