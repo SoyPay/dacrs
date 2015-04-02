@@ -14,7 +14,7 @@
 #include "json/json_spirit_writer_template.h"
 using namespace json_spirit;
 
-string txTypeArray[] = { "NULL_TXTYPE", "REWARD_TX", "REG_ACCT_TX", "COMMON_TX", "CONTRACT_TX", "REG_SCRIPT_TX"};
+string txTypeArray[] = { "NULL_TXTYPE", "REWARD_TX", "REG_ACCT_TX", "COMMON_TX", "CONTRACT_TX", "REG_APP_TX"};
 
 
 bool CID::Set(const CRegID &id) {
@@ -37,12 +37,9 @@ bool CID::Set(const CPubKey &id) {
 bool CID::Set(const CNullID &id) {
 	return true;
 }
-
-
 bool CID::Set(const CUserID &userid) {
 	return boost::apply_visitor(CIDVisitor(this), userid);
 }
-
 CUserID CID::GetUserId() {
 	if (1< vchData.size() && vchData.size() <= 10) {
 		CRegID regId;
@@ -63,6 +60,23 @@ CUserID CID::GetUserId() {
 		assert(0);
 	}
 	return CNullID();
+}
+
+
+bool CRegID::clean()  {
+	nHeight = 0 ;
+	nIndex = 0 ;
+	vRegID.clear();
+	return true;
+}
+CRegID::CRegID(const vector<unsigned char>& vIn) {
+	assert(vIn.size() == 6);
+	vRegID = vIn;
+	nHeight = 0;
+	nIndex = 0;
+	CDataStream ds(vIn, SER_DISK, CLIENT_VERSION);
+	ds >> nHeight;
+	ds >> nIndex;
 }
 bool CRegID::IsSimpleRegIdStr(const string & str)
 {
@@ -133,6 +147,13 @@ void CRegID::SetRegID(string strRegID){
 	}
 
 }
+void CRegID::SetRegID(const vector<unsigned char>& vIn) {
+	assert(vIn.size() == 6);
+	vRegID = vIn;
+	CDataStream ds(vIn, SER_DISK, CLIENT_VERSION);
+	ds >> nHeight;
+	ds >> nIndex;
+}
 CRegID::CRegID(string strRegID) {
 	SetRegID(strRegID);
 }
@@ -156,8 +177,6 @@ CKeyID CRegID::getKeyID(const CAccountViewCache &view)const
 	CAccountViewCache(view).GetKeyId(*this,ret);
 	return ret;
 }
-
-
 void CRegID::SetRegIDByCompact(const vector<unsigned char> &vIn) {
 	if(vIn.size()>0)
 	{
@@ -169,6 +188,7 @@ void CRegID::SetRegIDByCompact(const vector<unsigned char> &vIn) {
 		clean();
 	}
 }
+
 
 bool CBaseTransaction::IsValidHeight(int nCurHeight, int nTxCacheHeight) const
 {
@@ -220,6 +240,7 @@ bool CBaseTransaction::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValid
 	return true;
 }
 
+
 bool CRegisterAccountTx::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	CAccount account;
@@ -260,7 +281,6 @@ bool CRegisterAccountTx::ExecuteTx(int nIndex, CAccountViewCache &view, CValidat
 	txundo.txHash = GetHash();
 	return true;
 }
-
 bool CRegisterAccountTx::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state,
 		CTxUndo &txundo, int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	//drop account
@@ -293,7 +313,6 @@ bool CRegisterAccountTx::UndoExecuteTx(int nIndex, CAccountViewCache &view, CVal
 	view.EraseId(accountId);
 	return true;
 }
-
 bool CRegisterAccountTx::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	if (!boost::get<CPubKey>(userId).IsFullyValid()) {
 		return false;
@@ -326,6 +345,7 @@ bool CRegisterAccountTx::CheckTransction(CValidationState &state, CAccountViewCa
 				"bad-regtx-fee-toolarge");
 	return true;
 }
+
 
 //bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 //		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
@@ -445,8 +465,6 @@ bool CRegisterAccountTx::CheckTransction(CValidationState &state, CAccountViewCa
 //
 //	return true;
 //}
-
-
 bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 
@@ -527,7 +545,6 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 	txundo.txHash = GetHash();
 	return true;
 }
-
 bool CTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	CKeyID keyId;
 	if(!view.GetKeyId(srcRegId, keyId))
@@ -568,7 +585,6 @@ bool CTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	}
 	return true;
 }
-
 string CTransaction::ToString(CAccountViewCache &view) const {
 	string str;
 	string desId;
@@ -604,6 +620,14 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 	}
 
 	return true;
+}
+uint256 CTransaction::SignatureHash() const  {
+	CHashWriter ss(SER_GETHASH, 0);
+	CID srcId(srcRegId);
+	CID desId(desUserId);
+	ss <<VARINT(nVersion) << nTxType << VARINT(nValidHeight);
+	ss << srcId << desId << VARINT(llFees) << vContract;
+	return ss.GetHash();
 }
 
 
@@ -664,6 +688,7 @@ string CRewardTransaction::ToString(CAccountViewCache &view) const {
 bool CRewardTransaction::CheckTransction(CValidationState &state, CAccountViewCache &view) {
 	return true;
 }
+
 
 bool CRegisterAppTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
@@ -783,7 +808,6 @@ bool CRegisterAppTx::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	vAddr.insert(keyId);
 	return true;
 }
-
 string CRegisterAppTx::ToString(CAccountViewCache &view) const {
 	string str;
 	CKeyID keyId;
@@ -821,6 +845,7 @@ bool CRegisterAppTx::CheckTransction(CValidationState &state, CAccountViewCache 
 	return true;
 }
 
+
 bool CFund::IsMergeFund(const int & nCurHeight, int &nMergeType) const {
 	if (nCurHeight - nHeight > SysCfg().GetMaxCoinDay() / SysCfg().GetTargetSpacing()) {
 		nMergeType = FREEDOM;
@@ -841,11 +866,6 @@ bool CFund::IsMergeFund(const int & nCurHeight, int &nMergeType) const {
 	}
 	return false;
 }
-
-
-
-
-
 Object CFund::ToJosnObj() const
 {
 	Object obj;
@@ -856,7 +876,6 @@ Object CFund::ToJosnObj() const
 	obj.push_back(Pair("confirmed hight",     nHeight));
 	return obj;
 }
-
 string CFund::ToString() const {
 	string str;
 	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND", "FREEZD_FUND",
@@ -916,6 +935,7 @@ bool CTxUndo::GetAccountOperLog(const CKeyID &keyId, CAccountOperLog &accountOpe
 	return false;
 }
 
+
 bool CAccount::CompactAccount(int nCurHeight) {
 	if (nCurHeight <= 0) {
 		return false;
@@ -924,7 +944,6 @@ bool CAccount::CompactAccount(int nCurHeight) {
 	bool bMergeFreeRes = MergerFund(vFreedomFund, nCurHeight);
 	return bMergeRewardRes||bMergeFreeRes;
 }
-
 bool CAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
 	stable_sort(vFund.begin(), vFund.end(), greater<CFund>());
 	uint64_t value = 0;
@@ -974,11 +993,9 @@ bool CAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
 	}
 	return bHasMergd;
 }
-
 void CAccount::WriteOperLog(const COperFund &operLog) {
 	accountOperLog.InsertOperateLog(operLog);
 }
-
 void CAccount::AddToFreedom(const CFund &fund, bool bWriteLog) {
 	int nTenDayBlocks = 10 * ((24 * 60 * 60) / SysCfg().GetTargetSpacing());
 	int nHeightPoint = fund.nHeight - fund.nHeight % nTenDayBlocks;
@@ -998,7 +1015,6 @@ void CAccount::AddToFreedom(const CFund &fund, bool bWriteLog) {
 			WriteOperLog(ADD_FUND, addFund);
 	}
 }
-
 bool CAccount::MinusFree(const CFund &fund) {
 	vector<CFund> vOperFund;
 	uint64_t nCandidateValue = 0;
@@ -1047,7 +1063,6 @@ bool CAccount::MinusFree(const CFund &fund) {
 	}
 
 }
-
 bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 //	LogPrint("undo_account", "after operate:%s\n", ToString());
 	vector<COperFund>::const_reverse_iterator iterOperFundLog = accountOperLog.vOperFund.rbegin();
@@ -1099,8 +1114,6 @@ bool CAccount::UndoOperateAccount(const CAccountOperLog & accountOperLog) {
 //	LogPrint("undo_account", "before operate:%s\n", ToString().c_str());
 	return true;
 }
-
-//caculate pos
 void CAccount::ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos) {
 	/**
 	 * @todo change the  uint256 hash to uint256 &hash
@@ -1142,8 +1155,6 @@ void CAccount::ClearAccPos(uint256 hash, int prevBlockHeight, int nIntervalPos) 
 		}
 	}
 }
-
-//caculate pos
 uint64_t CAccount::GetAccountPos(int prevBlockHeight) const {
 	uint64_t accpos = 0;
 	int days = 0;
@@ -1162,8 +1173,6 @@ uint64_t CAccount::GetAccountPos(int prevBlockHeight) const {
 	}
 	return accpos;
 }
-
-
 uint64_t CAccount::GetRewardAmount(int nCurHeight) {
 	CompactAccount(nCurHeight);
 	uint64_t balance = 0;
@@ -1173,7 +1182,6 @@ uint64_t CAccount::GetRewardAmount(int nCurHeight) {
 	}
 	return balance;
 }
-
 uint64_t CAccount::GetRawBalance(int nCurHeight) {
 	CompactAccount(nCurHeight);
 	uint64_t balance = llValues;
@@ -1183,7 +1191,6 @@ uint64_t CAccount::GetRawBalance(int nCurHeight) {
 	}
 	return balance;
 }
-
 uint256 CAccount::BuildMerkleTree(int prevBlockHeight) const {
 	vector<uint256> vMerkleTree;
 	vMerkleTree.clear();
@@ -1208,7 +1215,6 @@ uint256 CAccount::BuildMerkleTree(int prevBlockHeight) const {
 	}
 	return (vMerkleTree.empty() ? 0 : vMerkleTree.back());
 }
-
 Object CAccount::ToJosnObj() const
 {
 	using namespace json_spirit;
@@ -1244,7 +1250,6 @@ Object CAccount::ToJosnObj() const
 	obj.push_back(Pair("FreedomFund",     FreedomFund));
 	return obj;
 }
-
 string CAccount::ToString() const {
 	string str;
 	str += strprintf("regID=%s, keyID=%s, publicKey=%s, minerpubkey=%s, values=%ld\n",
@@ -1258,14 +1263,12 @@ string CAccount::ToString() const {
 	return str;
 	//return  write_string(Value(ToJosnObj()),true);
 }
-
 void CAccount::WriteOperLog(AccountOper emOperType, const CFund &fund) {
 	vector<CFund> vFund;
 	vFund.push_back(fund);
 	COperFund operLog(emOperType, vFund);
 	WriteOperLog(operLog);
 }
-
 bool CAccount::IsMoneyOverflow(uint64_t nAddMoney) {
 	if (!MoneyRange(nAddMoney))
 		return false;
@@ -1274,7 +1277,6 @@ bool CAccount::IsMoneyOverflow(uint64_t nAddMoney) {
 	nTotalMoney = GetVecMoney(vFreedomFund)+GetVecMoney(vRewardFund)+llValues+nAddMoney;
 	return MoneyRange(static_cast<int64_t>(nTotalMoney) );
 }
-
 uint64_t CAccount::GetVecMoney(const vector<CFund>& vFund){
 	uint64_t nTotal = 0;
 	for(vector<CFund>::const_iterator it = vFund.begin();it != vFund.end();it++){
@@ -1283,7 +1285,6 @@ uint64_t CAccount::GetVecMoney(const vector<CFund>& vFund){
 
 	return nTotal;
 }
-
 bool CAccount::FindFund(const vector<CFund>& vFund, const vector_unsigned_char &scriptID,CFund&fund) {
 	for (vector<CFund>::const_iterator it = vFund.begin(); it != vFund.end(); it++) {
 		if (it->appId == scriptID) {
@@ -1293,8 +1294,6 @@ bool CAccount::FindFund(const vector<CFund>& vFund, const vector_unsigned_char &
 	}
 	return false;
 }
-
-
 bool CAccount::IsFundValid(OperType type, const CFund &fund) {
 
 	if(ADD_FREE == type)
@@ -1307,7 +1306,6 @@ bool CAccount::IsFundValid(OperType type, const CFund &fund) {
 
 	return true;
 }
-
 bool CAccount::OperateAccount(OperType type, const CFund &fund) {
 //	LogPrint("op_account", "before operate:%s\n", ToString());
 	assert(keyID != uint160(0));
@@ -1340,38 +1338,4 @@ bool CAccount::OperateAccount(OperType type, const CFund &fund) {
 //	LogPrint("op_account", "after operate:%s\n", ToString());
 //	LogPrint("account", "oper log list:%s\n", accountOperLog.ToString());
 	return bRet;
-}
-
-void CRegID::SetRegID(const vector<unsigned char>& vIn) {
-	assert(vIn.size() == 6);
-	vRegID = vIn;
-	CDataStream ds(vIn, SER_DISK, CLIENT_VERSION);
-	ds >> nHeight;
-	ds >> nIndex;
-}
-
-CRegID::CRegID(const vector<unsigned char>& vIn) {
-	assert(vIn.size() == 6);
-	vRegID = vIn;
-	nHeight = 0;
-	nIndex = 0;
-	CDataStream ds(vIn, SER_DISK, CLIENT_VERSION);
-	ds >> nHeight;
-	ds >> nIndex;
-}
-
-bool CRegID::clean()  {
-	nHeight = 0 ;
-	nIndex = 0 ;
-	vRegID.clear();
-	return true;
-}
-
-uint256 CTransaction::SignatureHash() const  {
-	CHashWriter ss(SER_GETHASH, 0);
-	CID srcId(srcRegId);
-	CID desId(desUserId);
-	ss <<VARINT(nVersion) << nTxType << VARINT(nValidHeight);
-	ss << srcId << desId << VARINT(llFees) << vContract;
-	return ss.GetHash();
 }
