@@ -90,7 +90,7 @@ Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 		result.push_back(Pair("height", prtx->nHeight));
 		break;
 	}
-	case REG_SCRIPT_TX: {
+	case REG_APP_TX: {
 		CRegisterAppTx *prtx = (CRegisterAppTx *) pTx;
 		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
 		result.push_back(Pair("ver", prtx->nVersion));
@@ -1599,7 +1599,7 @@ Value sigstr(const Array& params, bool fHelp)
 	break;
 	case REWARD_TX:
 		break;
-	case REG_SCRIPT_TX:	{
+	case REG_APP_TX:	{
 		std::shared_ptr<CRegisterAppTx> tx = make_shared<CRegisterAppTx>(pBaseTx.get());
 		if (!pwalletMain->Sign(keyid,tx.get()->SignatureHash(), tx.get()->signature)) {
 			throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
