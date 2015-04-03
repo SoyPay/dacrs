@@ -163,7 +163,7 @@ void CreateBetTx3() {
 void ListRegScript() {
 	//cout << "listRegScript" << endl;
 	int argc = 2;
-	const char *argv[2] = { "rpctest", "listregscript" };
+	const char *argv[2] = { "rpctest", "listapp" };
 	CommandLineRPC(argc, const_cast<char**>(argv));
 }
 

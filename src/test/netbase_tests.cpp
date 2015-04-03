@@ -12,7 +12,7 @@ using namespace std;
 
 BOOST_AUTO_TEST_SUITE(netbase_tests)
 
-#if 0
+
 
 BOOST_AUTO_TEST_CASE(netbase_networks)
 {
@@ -104,10 +104,6 @@ BOOST_AUTO_TEST_CASE(onioncat_test)
 	BOOST_CHECK(addr1.IsRoutable());
 }
 
-#else
-BOOST_AUTO_TEST_CASE(xxxx) {
-	BOOST_ERROR("ERROR:THE SUITE NEED TO MODIFY!");
-}
-#endif
+
 
 BOOST_AUTO_TEST_SUITE_END()

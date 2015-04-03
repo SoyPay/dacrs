@@ -1198,7 +1198,7 @@ struct S_APP_ID
 	unsigned char ID[CAppCFund::MAX_TAG_SIZE];     //! the ID for the
 
 	const vector<unsigned char> GetIdV() const {
-		assert(sizeof(ID) >= idlen && idlen >= 0);
+		assert(sizeof(ID) >= idlen);
 		vector<unsigned char> Id(&ID[0], &ID[idlen]);
 		return (Id);
 	}
@@ -1272,7 +1272,6 @@ static RET_DEFINE GetUserAppAccFoudWithTag(unsigned char * ipara,void * pVmScrip
 }
 static RET_DEFINE ExWriteOutAppOperateFunc(unsigned char * ipara,void * pVmEvn)
 {
-	unsigned char * pbuffer = ipara;
 	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
