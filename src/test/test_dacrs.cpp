@@ -46,7 +46,7 @@ struct TestingSetup {
 			strCurDir +="\\dacrs_test";
 			string param = "-datadir=";
 			param +=strCurDir;
-			const char* argv[] = { "D:\\cppwork\\soypay\\src\\dacrs_d.exe", param.c_str() };
+			const char* argv[] = { "D:\\cppwork\\soypay\\src\\dacrs-d.exe", param.c_str() };
 			#else
 			strCurDir +="/dacrs_test";
 			string param = "-datadir=";
