@@ -7,7 +7,7 @@
 #include "base58.h"
 #include "uint256.h"
 #include "util.h"
-
+#include "hash.h"
 #include <string>
 #include <vector>
 
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_SUITE(key_tests)
 
 BOOST_AUTO_TEST_CASE(key_test1)
 {
-#if 0
+
     CDacrsSecret bsecret1, bsecret2, bsecret1C, bsecret2C, baddress1;
     string strSecret1C, strSecret2C;
 
@@ -108,14 +108,14 @@ BOOST_AUTO_TEST_CASE(key_test1)
 		CDacrsAddress addr1Ct("n4PwAoA9zQ3SrndjB4wp8QWb9xPpNdtLsW");
 		CDacrsAddress addr2Ct("mfu2Z1UfUBkWQACSXVDr25h5UVU7LmC3xB");
 
-		BOOST_CHECK(addr1Ct.Get() == CTxDestination(pubkey1C.GetID()));
-		BOOST_CHECK(addr2Ct.Get() == CTxDestination(pubkey2C.GetID()));
+		BOOST_CHECK(addr1Ct.Get() == CTxDestination(pubkey1C.GetKeyID()));
+		BOOST_CHECK(addr2Ct.Get() == CTxDestination(pubkey2C.GetKeyID()));
 	} else {
 		CDacrsAddress addr1Cm("1NoJrossxPBKfCHuJXT4HadJrXRE9Fxiqs");
 		CDacrsAddress addr2Cm("1CRj2HyM1CXWzHAXLQtiGLyggNT9WQqsDs");
 
-		BOOST_CHECK(addr1Cm.Get() == CTxDestination(pubkey1C.GetID()));
-		BOOST_CHECK(addr2Cm.Get() == CTxDestination(pubkey2C.GetID()));
+		BOOST_CHECK(addr1Cm.Get() == CTxDestination(pubkey1C.GetKeyID()));
+		BOOST_CHECK(addr2Cm.Get() == CTxDestination(pubkey2C.GetKeyID()));
 	}
 
     for (int n=0; n<16; n++)
@@ -175,9 +175,7 @@ BOOST_AUTO_TEST_CASE(key_test1)
         BOOST_CHECK(rkey1C == pubkey1C);
         BOOST_CHECK(rkey2C == pubkey2C);
     }
-#else
-    BOOST_ERROR("ERROR:THE SUITE NEED TO MODIFY!");
-#endif
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

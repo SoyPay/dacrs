@@ -2320,7 +2320,7 @@ CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter& filter)
     for (unsigned int i = 0; i < block.vptx.size(); i++)
     {
         uint256 hash = block.vptx[i]->GetHash();
-        if (filter.IsRelevantAndUpdate(block.vptx[i].get(), hash))
+        if (filter.contains(block.vptx[i]->GetHash()))
         {
             vMatch.push_back(true);
             vMatchedTxn.push_back(make_pair(i, hash));
