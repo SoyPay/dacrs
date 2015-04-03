@@ -424,6 +424,10 @@ bool CBaseParams::SoftSetArgCover(const string& strArg, const string& strValue) 
 	return true;
 }
 
+void CBaseParams::EraseArg(const string& strArgKey) {
+	m_mapArgs.erase(strArgKey);
+}
+
 bool CBaseParams::SoftSetBoolArg(const string& strArg, bool fValue) {
 	if (fValue)
 		return SoftSetArg(strArg, string("1"));

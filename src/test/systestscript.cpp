@@ -15,7 +15,7 @@
 #include "rpc/rpcserver.h"
 #include "noui.h"
 #include "ui_interface.h"
-#include "SysTestBase.h"
+#include "systestbase.h"
 #include <boost/algorithm/string/predicate.hpp>
 #include "json/json_spirit_writer_template.h"
 #include "json/json_spirit_reader_template.h"
