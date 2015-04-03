@@ -725,7 +725,7 @@ static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmEvn) {
 	CScriptDBViewCache* scriptDB = pVmRunEvn->GetScriptDB();
 
 	CScriptDBOperLog operlog;
-	int64_t step = (*retdata.at(1)).size();
+	int64_t step = (*retdata.at(1)).size() -1;
 	if (!scriptDB->SetScriptData(scriptid, *retdata.at(0), *retdata.at(1),operlog)) {
 		flag = false;
 	} else {
@@ -760,10 +760,10 @@ static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmEvn) {
 	CScriptDBViewCache* scriptDB = pVmRunEvn->GetScriptDB();
 
 	CScriptDBOperLog operlog;
-	int64_t step = 0;
+	int64_t nstep = 0;
 	vector<unsigned char> vValue;
 	if(scriptDB->GetScriptData(pVmRunEvn->GetComfirHeight(),scriptid, *retdata.at(0), vValue)){
-		step = -vValue.size();
+		nstep = -vValue.size()-1;
 	}
 	if (!scriptDB->EraseScriptData(scriptid, *retdata.at(0), operlog)) {
 		LogPrint("vm", "ExDeleteDataDBFunc error key:%s!\n",HexStr(*retdata.at(0)));
@@ -778,7 +778,7 @@ static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmEvn) {
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
 
-	return std::make_tuple (true,step, tem);
+	return std::make_tuple (true,nstep, tem);
 }
 /**
  *unsigned short ReadDataValueDB(const void* const key,const unsigned char keylen, void* const value,unsigned short const maxbuffer)
@@ -943,7 +943,7 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmEvn)
 		}
 	}
 
-	step =(*retdata.at(1)).size()- vTemp.size() ;
+	step =(*retdata.at(1)).size()- vTemp.size() -1;
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << flag;
@@ -1287,7 +1287,7 @@ static RET_DEFINE ExWriteOutAppOperateFunc(unsigned char * ipara,void * pVmEvn)
 	int count = retdata.at(0).get()->size()/Size;
 	CDataStream ss(*retdata.at(0),SER_DISK, CLIENT_VERSION);
 
-	int64_t step = 0;
+	int64_t step =-1;
 	while(count--)
 	{
 		ss >> temp;
@@ -1436,7 +1436,7 @@ int64_t CVm8051::run(uint64_t maxstep, CVmRunEvn *pVmEvn) {
 			}
 			return 0;
 		}
-		if (maxstep != 0 && step >= MAX_BLOCK_RUN_STEP){//(step > maxstep || step >= MAX_BLOCK_RUN_STEP)) {
+		if (maxstep != 0 && (step >= MAX_BLOCK_RUN_STEP|| step >= maxstep)){//(step > maxstep || step >= MAX_BLOCK_RUN_STEP)) {
 
 			return -1;		//force return
 		}
