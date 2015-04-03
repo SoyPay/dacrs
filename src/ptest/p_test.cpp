@@ -24,8 +24,34 @@
 
 struct TestingSetup {
 	TestingSetup() {
-		const char *argv[] = {"progname", "-datadir=D:\\bitcoin"};
-		int argc = sizeof(argv) / sizeof(char*);
+		int argc = 2;
+			char findchar;
+			#ifdef WIN32
+			findchar = '\\';
+			#else
+			findchar = '/';
+			#endif
+
+			string strCurDir = boost::filesystem::initial_path<boost::filesystem::path>().string();
+			int index = strCurDir.find_last_of(findchar);
+			int count = 3;
+			while (count--) {
+				index = strCurDir.find_last_of(findchar);
+				strCurDir = strCurDir.substr(0, index);
+
+			}
+
+			#ifdef WIN32
+			strCurDir +="\\dacrs_test";
+			string param = "-datadir=";
+			param +=strCurDir;
+			const char* argv[] = { "D:\\cppwork\\soypay\\src\\dacrs-d.exe", param.c_str() };
+			#else
+			strCurDir +="/dacrs_test";
+			string param = "-datadir=";
+			param +=strCurDir;
+			const char* argv[] = { "D:\\cppwork\\soypay\\src\\dacrs-d.exe", param.c_str() };
+			#endif
 		CBaseParams::IntialParams(argc, argv);
 	}
     ~TestingSetup()
