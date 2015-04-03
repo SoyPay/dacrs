@@ -10,7 +10,7 @@
 #include <boost/assign/list_of.hpp>
 using namespace std;
 
-const unsigned int iTxCount = 6000;
+const unsigned int iTxCount = 6;
 vector<std::shared_ptr<CBaseTransaction> > vTransactions;
 vector<string> vTransactionHash;
 
@@ -47,7 +47,7 @@ int GetRandTxType() {
 	unsigned char cType;
 	RAND_bytes(&cType, sizeof(cType));
 	//srand(time(NULL));
-	int iIndex = cType % 5;
+	int iIndex = cType % 4;
 	return iIndex + 1;
 }
 
@@ -232,15 +232,11 @@ public:
 				}
 				break;
 			case 4:
-				{
-					BOOST_CHECK(CreateContractTx());
-				}
-				break;
-			case 5:
-				{
-					string hash ="";
-					BOOST_CHECK(CreateRegScriptTx(true,hash));
-				}
+//				{
+//					string hash ="";
+//					BOOST_CHECK(CreateRegScriptTx(true,hash));
+//				}
+				--i;
 				break;
 			default:
 				assert(0);
