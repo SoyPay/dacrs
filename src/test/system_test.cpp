@@ -15,7 +15,7 @@
 #include "rpc/rpcserver.h"
 #include "noui.h"
 #include "ui_interface.h"
-#include "SysTestBase.h"
+#include "systestbase.h"
 #include <boost/algorithm/string/predicate.hpp>
 
 using namespace std;
@@ -219,7 +219,7 @@ protected:
  * 测试脚本账户一切在系统中的流程
  */
 BOOST_FIXTURE_TEST_SUITE(system_test,CSystemTest)
-BOOST_FIXTURE_TEST_CASE(scriptaccount_test,CSystemTest)
+BOOST_FIXTURE_TEST_CASE(acct_process,CSystemTest)
 {
 	ResetEnv();
 	vector<map<int,string> >vDataInfo;
