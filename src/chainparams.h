@@ -319,6 +319,7 @@ public:
 	static bool SoftSetBoolArg(const string& strArg, bool fValue);
 	static bool IsArgCount(const string& strArg);
 	static bool SoftSetArgCover(const string& strArg, const string& strValue);
+	static void EraseArg(const string& strArgKey);
 
 
 	virtual ~CBaseParams() {
