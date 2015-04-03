@@ -3,7 +3,7 @@
 #include <map>
 #include <math.h>
 #include "tx.h"
-#include "SysTestBase.h"
+#include "systestbase.h"
 #include "miner.h"
 #include "../json/json_spirit_value.h"
 #include <boost/test/unit_test.hpp>
