@@ -535,10 +535,13 @@ boost::thread*SysTestBase::pThreadShutdown = NULL;
 bool SysTestBase::GenerateOneBlock() {
 	const char *argv[] = { "rpctest", "setgenerate", "true" ,"1"};
 	int argc = sizeof(argv) / sizeof(char*);
-    int high= chainActive.Height();
+    int high= 0;
+    GetBlockHeight(high);
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		BOOST_CHECK(high+1==chainActive.Height());
+		 int nHeight = 0;
+		GetBlockHeight(nHeight);
+		BOOST_CHECK(high+1==nHeight);
 		return true;
 	}
 	return false;
@@ -554,7 +557,8 @@ bool SysTestBase::SetAddrGenerteBlock(const char *addr) {
 	return false;
 }
 bool SysTestBase::DisConnectBlock(int nNum) {
-	int nFirstHeight = static_cast<int>(chainActive.Height() );
+	int nFirstHeight = 0;
+    GetBlockHeight(nFirstHeight);
 	if(nFirstHeight <=0)
 		return false;
 	BOOST_CHECK(nNum>0 && nNum<=nFirstHeight);
@@ -565,7 +569,8 @@ bool SysTestBase::DisConnectBlock(int nNum) {
 
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		int nHeightAfterDis = static_cast<int>(chainActive.Height() );
+		int nHeightAfterDis =0;
+		GetBlockHeight(nHeightAfterDis);
 		BOOST_CHECK(nHeightAfterDis == nFirstHeight-nNum);
 		return true;
 	}

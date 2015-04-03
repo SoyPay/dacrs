@@ -16,11 +16,13 @@
 
 typedef struct {
 	unsigned char type;
+	unsigned char noperateType;
 	uint64_t money;
-	int hight;
+	unsigned short hight;
 	unsigned char dhash[32];IMPLEMENT_SERIALIZE
 	(
 			READWRITE(type);
+			READWRITE(noperateType);
 			READWRITE(money);
 			READWRITE(hight);
 			for(int i = 0; i < 32; i++)
@@ -32,34 +34,36 @@ typedef struct {
 
 typedef struct {
 	unsigned char type;
+	unsigned char noperateType;
 	uint64_t money;
-	unsigned char targetkey[32];		//发起对赌的哈希，也是对赌数据的关键字
-	unsigned char data[5];IMPLEMENT_SERIALIZE
+	unsigned char data;
+	unsigned char txhash[32];		//发起对赌的哈希，也是对赌数据的关键字
+	IMPLEMENT_SERIALIZE
 	(
 			READWRITE(type);
+			READWRITE(noperateType);
 			READWRITE(money);
+			READWRITE(data);
 			for(int i = 0; i < 32; i++)
 			{
-				READWRITE(targetkey[i]);
-			}
-			for(int ii = 0; ii < 5; ii++)
-			{
-				READWRITE(data[ii]);
+				READWRITE(txhash[i]);
 			}
 	)
 } ACCEPT_DATA;
 
 typedef struct {
 	unsigned char type;
-	unsigned char targetkey[32];		//发起对赌的哈希，也是对赌数据的关键字
-	unsigned char dhash[5];IMPLEMENT_SERIALIZE
+	unsigned char noperateType;
+	unsigned char txhash[32];		//发起对赌的哈希，也是对赌数据的关键字
+	unsigned char dhash[33];IMPLEMENT_SERIALIZE
 	(
 			READWRITE(type);
+			READWRITE(noperateType);
 			for(int i = 0; i < 32; i++)
 			{
-				READWRITE(targetkey[i]);
+				READWRITE(txhash[i]);
 			}
-			for(int ii = 0; ii < 5; ii++)
+			for(int ii = 0; ii < 33; ii++)
 			{
 				READWRITE(dhash[ii]);
 			}
@@ -68,10 +72,10 @@ typedef struct {
 
 #pragma pack(pop)
 
-#define ADDR_A    "mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v"
+#define ADDR_A    "mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v"   // 0-6
 #define VADDR_A   "[\"mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v\"]"
 #define ADDR_B    "mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7"
-#define VADDR_B   "[\"mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7\"]"
+#define VADDR_B   "[\"mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7\"]"  //0-7
 
 
 class CTestBetTx:public CycleTestBase,public SysTestBase
@@ -80,13 +84,6 @@ class CTestBetTx:public CycleTestBase,public SysTestBase
 	bool ASendP2PBet(void);
 	bool BAcceptP2PBet(void);
 	bool AOpenP2PBet(void);
-	bool CheckLastTx(void) {
-		if (VerifyTxInBlock(strAopenHash)) {
-			mCurStep = 1;
-			return true;
-		}
-		return false;
-	}
 public:
 	CTestBetTx();
 	virtual TEST_STATE run();
@@ -97,35 +94,31 @@ public:
 		return r;
 	}
 
-	uint64_t GetRandomBetfee() {
-		srand(time(NULL));
-		int r = (rand() % 1000000) + 1000000;
-		return r;
-	}
-
-	bool GetHashFromCreatedTx(const Value& valueRes, string& strHash) {
-		if (valueRes.type() == null_type) {
-			return false;
-		}
-
-		const Value& result = find_value(valueRes.get_obj(), "hash");
-		if (result.type() == null_type) {
-			return false;
-		}
-
-		strHash = result.get_str();
-		return true;
-	}
-
-	bool GetRandomBetData(unsigned char *buf, int num)
+	bool GetRandomData(unsigned char *buf, int num)
 	{
 		RAND_bytes(buf, num);
 		return true;
 	}
+	int GetBetData()
+	{
+		unsigned char buf;
+		RAND_bytes(&buf, 1);
+		int num = buf;
 
-	bool VerifyTxInBlock(const string& strTxHash,bool bTryForever = false);
+		if(num>0&&num<=6)
+			return num;
+		num = num%6 +1;
+		return num;
+	}
+	unsigned char GetRanOpType(){
+		unsigned char cType;
+		RAND_bytes(&cType, sizeof(cType));
+		unsigned char  gussnum = cType % 2;
+		//cout<<"type:"<<(int)gussnum<<endl;
+		return gussnum;
+	}
 private:
-	unsigned char nSdata[5];
+	unsigned char nSdata[33];
 	int mCurStep;
 	string strRegScriptHash;
 	string strAsendHash;
