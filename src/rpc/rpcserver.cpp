@@ -317,6 +317,7 @@ static const CRPCCommand vRPCCommands[] =
     { "printblokdbinfo",        &printblokdbinfo,        true,      false,      false},
     { "getalltxinfo",			&getalltxinfo,			 true,      false,      true },
     { "saveblocktofile",        &saveblocktofile,        true,      false,      true },
+    { "gethash",                &saveblocktofile,        true,      false,      true },
 
 };
 
