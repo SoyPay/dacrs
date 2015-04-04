@@ -5,7 +5,7 @@
 #include "txdb.h"
 #include "account.h"
 #include "main.h"
-#include "SysTestBase.h"
+#include "systestbase.h"
 using namespace std;
 #define DAY_BLOCKS	((24 * 60 * 60)/(10*60))
 #define MONTH_BLOCKS (30*DAY_BLOCKS)

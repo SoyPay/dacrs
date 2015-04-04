@@ -33,7 +33,7 @@ CService ip(uint32_t i) {
 
 BOOST_AUTO_TEST_SUITE(DoS_tests)
 
-#if 0
+
 
 BOOST_AUTO_TEST_CASE(DoS_banning)
 {
@@ -61,7 +61,8 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
 BOOST_AUTO_TEST_CASE(DoS_banscore)
 {
 	CNode::ClearBanned();
-	mapArgs["-banscore"] = "111"; // because 11 is my favorite number
+	string oldValue = SysCfg().GetArg("-banscore", "");
+	SysCfg().SoftSetArgCover("-banscore", "111"); // because 11 is my favorite number
 	CAddress addr1(ip(0xa0b0c001));
 	CNode dummyNode1(INVALID_SOCKET, addr1, "", true);
 	dummyNode1.nVersion = 1;
@@ -74,7 +75,12 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
 	Misbehaving(dummyNode1.GetId(), 1);
 	SendMessages(&dummyNode1, false);
 	BOOST_CHECK(CNode::IsBanned(addr1));
-	mapArgs.erase("-banscore");
+	if("" == oldValue) {
+		SysCfg().EraseArg("-banscore");
+	}
+	else {
+		SysCfg().SoftSetArgCover("-banscore", oldValue.c_str());
+	}
 }
 
 BOOST_AUTO_TEST_CASE(DoS_bantime)
@@ -155,79 +161,6 @@ CTransaction RandomOrphan()
 	it = mapOrphanTransactions.begin();
 	return it->second;
 }
-
-//BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
-//{
-//    CKey key;
-//    key.MakeNewKey(true);
-//    CBasicKeyStore keystore;
-//    keystore.AddKey(key);
-//
-//    // 50 orphan transactions:
-//    for (int i = 0; i < 50; i++)
-//    {
-//        CTransaction tx;
-//        tx.vin.resize(1);
-//        tx.vin[0].prevout.n = 0;
-//        tx.vin[0].prevout.hash = GetRandHash();
-//        tx.vin[0].scriptSig << OP_1;
-//        tx.vout.resize(1);
-//        tx.vout[0].nValue = 1*CENT;
-//        tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
-//
-//        AddOrphanTx(tx);
-//    }
-//
-//    // ... and 50 that depend on other orphans:
-//    for (int i = 0; i < 50; i++)
-//    {
-//        CTransaction txPrev = RandomOrphan();
-//
-//        CTransaction tx;
-//        tx.vin.resize(1);
-//        tx.vin[0].prevout.n = 0;
-//        tx.vin[0].prevout.hash = txPrev.GetHash();
-//        tx.vout.resize(1);
-//        tx.vout[0].nValue = 1*CENT;
-//        tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
-//        SignSignature(keystore, txPrev, tx, 0);
-//
-//        AddOrphanTx(tx);
-//    }
-//
-//    // This really-big orphan should be ignored:
-//    for (int i = 0; i < 10; i++)
-//    {
-//        CTransaction txPrev = RandomOrphan();
-//
-//        CTransaction tx;
-//        tx.vout.resize(1);
-//        tx.vout[0].nValue = 1*CENT;
-//        tx.vout[0].scriptPubKey.SetDestination(key.GetPubKey().GetID());
-//        tx.vin.resize(500);
-//        for (unsigned int j = 0; j < tx.vin.size(); j++)
-//        {
-//            tx.vin[j].prevout.n = j;
-//            tx.vin[j].prevout.hash = txPrev.GetHash();
-//        }
-//        SignSignature(keystore, txPrev, tx, 0);
-//        // Re-use same signature for other inputs
-//        // (they don't have to be valid for this test)
-//        for (unsigned int j = 1; j < tx.vin.size(); j++)
-//            tx.vin[j].scriptSig = tx.vin[0].scriptSig;
-//
-//        BOOST_CHECK(!AddOrphanTx(tx));
-//    }
-//
-//    // Test LimitOrphanTxSize() function:
-//    LimitOrphanTxSize(40);
-//    BOOST_CHECK(mapOrphanTransactions.size() <= 40);
-//    LimitOrphanTxSize(10);
-//    BOOST_CHECK(mapOrphanTransactions.size() <= 10);
-//    LimitOrphanTxSize(0);
-//    BOOST_CHECK(mapOrphanTransactions.empty());
-//    BOOST_CHECK(mapOrphanTransactionsByPrev.empty());
-//}
 
 //BOOST_AUTO_TEST_CASE(DoS_checkSig)
 //{
@@ -316,10 +249,5 @@ CTransaction RandomOrphan()
 //    LimitOrphanTxSize(0);
 //}
 
-#else
-BOOST_AUTO_TEST_CASE(xxxx) {
-	BOOST_ERROR("ERROR:THE SUITE NEED TO MODIFY!");
-}
-#endif
 
 BOOST_AUTO_TEST_SUITE_END()
