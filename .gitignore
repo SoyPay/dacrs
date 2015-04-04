@@ -92,3 +92,5 @@ qa/pull-tester/build-tests.sh
 /src/build-aux/missing
 
 /.project
+/src/leveldb/libmemenv.a
+/src/leveldb/libleveldb.a

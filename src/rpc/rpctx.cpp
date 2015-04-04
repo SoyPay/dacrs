@@ -927,15 +927,10 @@ Value resetclient(const Array& params, bool fHelp) {
 		pAccountViewTip->Flush();
 		pScriptDBTip->Flush();
 		pTxCacheTip->Flush();
-//		pTxCacheTip->GetTxHashCache().size()
-       if(SysCfg().Network::TESTNET == SysCfg().NetworkID()|| SysCfg().Network::REGTEST==SysCfg().NetworkID()){
-    	   assert(pAccountViewDB->GetDbCount() == 43);
-    	   LogPrint("acc","%s",write_string(Value(pScriptDB->ToJosnObj("acct")),true));
-    	   cout << "script db size:" << pScriptDB->GetDbCount() <<endl;
-    	   assert(pScriptDB->GetDbCount() == 0 || pScriptDB->GetDbCount() == 1);
 
-    	   //assert(pTxCacheTip->GetTxHashCache().size() == 0);
-       }
+	    assert(pAccountViewDB->GetDbCount() == 43);
+	    assert(pScriptDB->GetDbCount() == 0 || pScriptDB->GetDbCount() == 1);
+	    assert(pTxCacheTip->GetSize() == 0);
 
 		CBlock firs = SysCfg().GenesisBlock();
 		pwalletMain->SyncTransaction(0,NULL,&firs);
@@ -949,12 +944,12 @@ Value resetclient(const Array& params, bool fHelp) {
 
 }
 
-Value listregscript(const Array& params, bool fHelp) {
+Value listapp(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
-		throw runtime_error("listregscript " + HelpRequiringPassphrase() + "\nArguments:\n"
+		throw runtime_error("listapp " + HelpRequiringPassphrase() + "\nArguments:\n"
 				"\nResult:\n"
 				"\"regscript array\"  (bool) \n"
-				"\nExamples:\n" + HelpExampleCli("listregscript", "true"));
+				"\nExamples:\n" + HelpExampleCli("listapp", "true"));
 	}
 	bool showDetail = false;
 	showDetail = params[0].get_bool();
@@ -1217,17 +1212,22 @@ Value saveblocktofile(const Array& params, bool fHelp) {
 	uint256 blockHash(params[0].get_str());
 	CBlockIndex *pIndex = mapBlockIndex[blockHash];
 	CBlock blockInfo;
-	if (!ReadBlockFromDisk(blockInfo, pIndex))
+	if (!pIndex || !ReadBlockFromDisk(blockInfo, pIndex))
 		throw runtime_error(_("Failed to read block"));
+	assert(strblockhash == blockInfo.GetHash().ToString());
+//	CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
+//	ds << blockInfo.GetBlockHeader();
+//	cout << "block header:" << HexStr(ds) << endl;
 	string file = params[1].get_str();
 	try {
-		FILE* fp = fopen(file.c_str(), "a+");
+		FILE* fp = fopen(file.c_str(), "w+");
 		CAutoFile fileout = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
 		if (!fileout)
 			throw JSONRPCError(RPC_MISC_ERROR, "open file:"+strblockhash+"failed!");
 		fileout << blockInfo;
 		fflush(fileout);
-		fclose(fp);
+		//fileout object auto free fp point, don't need double free fp point.
+//		fclose(fp);
 	}catch(std::exception &e) {
 		throw JSONRPCError(RPC_MISC_ERROR, "save block to file error");
 	}

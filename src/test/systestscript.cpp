@@ -15,7 +15,7 @@
 #include "rpc/rpcserver.h"
 #include "noui.h"
 #include "ui_interface.h"
-#include "SysTestBase.h"
+#include "systestbase.h"
 #include <boost/algorithm/string/predicate.hpp>
 #include "json/json_spirit_writer_template.h"
 #include "json/json_spirit_reader_template.h"
@@ -553,7 +553,7 @@ BOOST_FIXTURE_TEST_CASE(appacc,CSysScriptTest){
 	string param = strprintf("%02x",temp);
 	string hash ="";
 	uint64_t nMoney = 1000000000;
-	Value resut =CreateContractTx(sriptid, "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,100000,nMoney);
+	Value resut =CreateContractTx(sriptid, "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,10000000,nMoney);
 	BOOST_CHECK(GetHashFromCreatedTx(resut,hash));
 	BOOST_CHECK(GenerateOneBlock());
 
@@ -564,20 +564,20 @@ BOOST_FIXTURE_TEST_CASE(appacc,CSysScriptTest){
 		temp += 1;
 		param = strprintf("%02x%s",temp,HexStr(vtemp));
 		//cout<<i<<endl;
-		resut =CreateContractTx(sriptid, "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,100000,0);
+		resut =CreateContractTx(sriptid, "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,10000000,0);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,hash));
 		BOOST_CHECK(GenerateOneBlock());
 	}
 
 	temp += 1;
 	param = strprintf("%02x%s",temp,HexStr(vtemp));
-	resut =CreateContractTx(sriptid, "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,100000,0);
+	resut =CreateContractTx(sriptid, "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,10000000,0);
 	BOOST_CHECK(GetHashFromCreatedTx(resut,hash));
 	BOOST_CHECK(GenerateOneBlock());
 
 	temp += 1;
 	param = strprintf("%02x%s",temp,HexStr(vtemp));
-	resut =CreateContractTx(sriptid, "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,100000,0);
+	resut =CreateContractTx(sriptid, "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,10000000,0);
 	BOOST_CHECK(!GetHashFromCreatedTx(resut,hash));
 
 
