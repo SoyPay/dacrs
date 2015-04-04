@@ -122,7 +122,7 @@ public:
 
 	string CreateRegScript(const char* strAddr, const char* sourceCode)
 	{
-		int nFee = 10000000;
+		int nFee = 1*COIN + 10000000;
 		string strTxHash;
 		string strFileName(sourceCode);
 		Value valueRes = RegisterScriptTx(strAddr,strFileName , 100, nFee);

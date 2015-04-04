@@ -164,7 +164,7 @@ Value setgenerate(const Array& params, bool fHelp)
 	if (SysCfg().NetworkID() != CBaseParams::MAIN) {
 		if (SysCfg().GetBoolArg("-iscutmine", false) == true) //如果是持续挖矿
 				{
-			GenerateSoys(fGenerate, pwalletMain, 1);
+			GenerateDacrsBlock(fGenerate, pwalletMain, 1);
 		} else {//如果是一个一个地挖
 
 			int nHeightEnd = 0;
@@ -180,7 +180,7 @@ Value setgenerate(const Array& params, bool fHelp)
 			while (getcurhigh()  < nHeightEnd) {
 				if (getcurhigh() != high) {
 					high = getcurhigh();
-					GenerateSoys(true, pwalletMain, 1);
+					GenerateDacrsBlock(true, pwalletMain, 1);
 				}
 				MilliSleep(100);
 			}
@@ -190,7 +190,7 @@ Value setgenerate(const Array& params, bool fHelp)
     else // Not -regtest: start generate thread, return immediately
     {
     	SysCfg().SoftSetArgCover("-gen", fGenerate ?"1" : "0");
-        GenerateSoys(fGenerate, pwalletMain, nGenProcLimit);
+        GenerateDacrsBlock(fGenerate, pwalletMain, nGenProcLimit);
     }
 
     return Value::null;

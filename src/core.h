@@ -15,7 +15,7 @@
 #include <memory>
 
 /** No amount larger than this (in satoshi) is valid */
-static const int64_t MAX_MONEY = 21000000 * COIN;
+static const int64_t MAX_MONEY = 1000000000 * COIN;
 inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 
 class CAccountViewCache;
@@ -39,6 +39,7 @@ public:
     unsigned int nBits;
     unsigned int nNonce;
     unsigned int nHeight;
+    int64_t    nFuel;
     vector<unsigned char> vSignature;
     CBlockHeader()
     {
@@ -55,6 +56,7 @@ public:
         READWRITE(nBits);
         READWRITE(nNonce);
         READWRITE(nHeight);
+        READWRITE(nFuel);
         READWRITE(vSignature);
     )
 
@@ -129,6 +131,7 @@ public:
         block.nBits          = nBits;
         block.nNonce         = nNonce;
         block.nHeight        = nHeight;
+        block.nFuel     = nFuel;
         block.vSignature     = vSignature;
         return block;
     }

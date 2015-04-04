@@ -171,7 +171,7 @@ public:
 	unsigned char nTxType;
 	int nVersion;
 	int nValidHeight;
-	uint64_t nRunStep;   //only in memory
+	uint64_t nRunStep;
 public:
 
 	CBaseTransaction(const CBaseTransaction &other) {
@@ -183,7 +183,7 @@ public:
 	}
 
 	CBaseTransaction() :
-			nTxType(COMMON_TX) ,nVersion(CURRENT_VERSION), nValidHeight(0), nRunStep(0) {
+			nTxType(COMMON_TX), nVersion(CURRENT_VERSION), nValidHeight(0), nRunStep(0) {
 	}
 
 	virtual ~CBaseTransaction() {
@@ -227,6 +227,7 @@ public:
 
 	virtual bool CheckTransction(CValidationState &state, CAccountViewCache &view) = 0;
 
+	virtual uint64_t GetFuel();
 };
 
 class CRegisterAccountTx: public CBaseTransaction {
@@ -419,7 +420,6 @@ public:
 		assert(CONTRACT_TX == pBaseTx->nTxType || COMMON_TX == pBaseTx->nTxType);
 		*this = *(CTransaction *) pBaseTx;
 	}
-
 	CTransaction(const CUserID& in_UserRegId, CUserID in_desUserId, uint64_t Fee, uint64_t Value, int high, vector_unsigned_char& pContract)
 	{
 		nTxType = CONTRACT_TX;
@@ -441,7 +441,6 @@ public:
 		llValues = Value;
 		signature.clear();
 	}
-
 	CTransaction() {
 		nTxType = COMMON_TX;
 		llFees = 0;
@@ -944,14 +943,7 @@ public:
 	std::shared_ptr<CAccount> GetNewInstance() {
 		return make_shared<CAccount>(*this);
 	}
-	uint64_t GetInterest() const {
-		/**
-		 * @todo  what this   by ranger.shi
-		 */
-		uint64_t rest = 0;
 
-		return rest;
-	}
 	bool IsRegister() const {
 		return (PublicKey.IsFullyValid() && PublicKey.GetKeyID() == keyID);
 	}
