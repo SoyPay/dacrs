@@ -9,31 +9,39 @@
 #include "util.h"
 #include <stdint.h>
 #include <string>
+#include "json/json_spirit_utils.h"
+#include "json/json_spirit_value.h"
+#include "json/json_spirit_writer_template.h"
+using namespace json_spirit;
 #include "cuiserve.h"
 static bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
 {
+
+	Object obj;
+	obj.push_back(Pair("type",     "MessageBox"));
+	obj.push_back(Pair("BoxType",     message));
+
     std::string strCaption;
     // Check for usage of predefined caption
     switch (style) {
     case CClientUIInterface::MSG_ERROR:
-        strCaption += _("Error");
+      	obj.push_back(Pair("BoxType",     "Error"));
         break;
     case CClientUIInterface::MSG_WARNING:
-        strCaption += _("Warning");
+       	obj.push_back(Pair("BoxType",     "Warning"));
         break;
     case CClientUIInterface::MSG_INFORMATION:
-        strCaption += _("Information");
+    	obj.push_back(Pair("BoxType",     "Information"));
         break;
     default:
-        strCaption += caption; // Use supplied caption (can be empty)
+    	obj.push_back(Pair("BoxType",     "unKown"));
+//        strCaption += caption; // Use supplied caption (can be empty)
     }
 
 	if (CUIServer::HasConnection()) {
-		std::string strMessage = "INFO ";
-		strMessage += strprintf("%s: %s\n",strCaption, message);
-		CUIServer::Send(strMessage);
+		CUIServer::Send(write_string(Value(std::move(obj)),true));
 	} else {
-		LogPrint("INFO", "%s: %s\n", strCaption, message);
+		LogPrint("INFO", "%s\n", write_string(Value(std::move(obj)),true));
 	}
 
     fprintf(stderr, "%s: %s\n", strCaption.c_str(), message.c_str());
@@ -43,15 +51,23 @@ static bool noui_ThreadSafeMessageBox(const std::string& message, const std::str
 static void noui_InitMessage(const std::string &message)
 {
 	if(CUIServer::HasConnection()){
-		CUIServer::Send(message);
+		Object obj;
+		obj.push_back(Pair("type",     "Init"));
+		obj.push_back(Pair("msg",     message));
+		CUIServer::Send(write_string(Value(std::move(obj)),true));
 	}else{
 		LogPrint("INFO","init message: %s\n", message);
 	}
 }
 
-static void noui_BlockChanged(const std::string &message) {
+static void noui_BlockChanged(int64_t time,int64_t high,const uint256 &hash) {
 	if (CUIServer::HasConnection()) {
-		CUIServer::Send(message);
+		Object obj;
+		obj.push_back(Pair("type",     "blockchanged"));
+		obj.push_back(Pair("time",     time));
+		obj.push_back(Pair("high",     high));
+		obj.push_back(Pair("hash",     hash.ToString()));
+		CUIServer::Send(write_string(Value(std::move(obj)),true));
 	}
 }
 
