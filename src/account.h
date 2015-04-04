@@ -331,6 +331,7 @@ public:
 	bool LoadTransaction();
 	void Clear();
 	Object ToJosnObj() const;
+	int GetSize();
 };
 
 #endif
