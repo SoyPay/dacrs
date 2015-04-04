@@ -1700,4 +1700,22 @@ Value getappaccinfo(const Array& params, bool fHelp) {
 	contractScriptTemp.GetScriptAcc(script,key,*tem.get());
 	return Value(tem.get()->toJSON());
 }
+Value gethash(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 1) {
+	//	string msg = "gethash nrequired \"stri""
+	//			"\nregister script\n"
+	//			"\address:\n"
+	//			"\nExamples:\n" + HelpExampleCli("gethash", "5zQgdfghdfghdgfPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG") + "\nAs json rpc call\n"
+	//			+ HelpExampleRpc("gethash", "000000100000 0-7");
+		throw runtime_error("");
+	}
 
+	string str =params[0].get_str();
+	vector<unsigned char> vTemp;
+	vTemp.assign(str.c_str(),str.c_str()+str.length());
+	uint256 strhash = Hash(vTemp.begin(), vTemp.end());
+	Object obj;
+	obj.push_back(Pair("hash", strhash.ToString()));
+	return obj;
+
+}
