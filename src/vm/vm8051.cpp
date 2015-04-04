@@ -1403,9 +1403,7 @@ int64_t CVm8051::run(uint64_t maxstep, CVmRunEvn *pVmEvn) {
 			unsigned char *ipara = (unsigned char *) GetExRamAddr(VM_SHARE_ADDR);		//input para
 			RET_DEFINE retdata = CallExternalFunc(methodID, ipara, pVmEvn);
 			memset(ipara, 0, MAX_SHARE_RAM);
-
 			step += std::get<1>(retdata) - 1;
-
 			if (std::get<0>(retdata)) {
 				auto tem = std::get<2>(retdata);
 				int pos = 0;
@@ -1416,17 +1414,12 @@ int64_t CVm8051::run(uint64_t maxstep, CVmRunEvn *pVmEvn) {
 				if (totalsize + 2 < MAX_SHARE_RAM) { //if data not over
 					for (auto& it : *tem.get()) {
 						int size = it.size();
-//						if(methodID == READDB_FUNC)
-//							LogPrint("vm","size:%d",size);
+
 						memcpy(&ipara[pos], &size, 2);
 						memcpy(&ipara[pos + 2], &it.at(0), size);
 						pos += size + 2;
 					}
 				}
-//				if(methodID == READDB_FUNC) {
-//					LogPrint("vm","data1:%s\r\n",HexStr(ipara,ipara+totalsize));
-//					LogPrint("INFO","data1:%s\r\n",HexStr(ipara,ipara+totalsize));
-//				}
 			}
 		} else if (Sys.PC == 0x0008) {
 			INT8U result = GetExRam(0xEFFD);

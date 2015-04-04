@@ -85,8 +85,8 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 	if (0 == step) {
 		return std::make_tuple(false, 0, string("VmScript run Failed\n"));
 	} else if (-1 == step) {
-		//return std::make_tuple(false, 0, string("execure tx contranct run step exceed the max step limit\n"));
-		uRunStep = maxstep;
+		return std::make_tuple(false, 0, string("execure tx contranct run step exceed the max step limit\n"));
+//		uRunStep = maxstep;
 	}else{
 		uRunStep = step;
 	}
