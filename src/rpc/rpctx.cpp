@@ -461,6 +461,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		tx.regAcctId = GetUserId(keyid);
 		tx.script = vscript;
 		tx.llFees = fee;
+		tx.nRunStep = vscript.size();
 		if (0 == height) {
 			height = chainActive.Tip()->nHeight;
 		}

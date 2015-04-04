@@ -71,6 +71,8 @@ static const int MAX_BLOCKS_IN_TRANSIT_PER_PEER = 128;
 /** Timeout in seconds before considering a block download peer unresponsive. */
 static const unsigned int BLOCK_DOWNLOAD_TIMEOUT = 60;
 static const unsigned long MAX_BLOCK_RUN_STEP = 12000000;
+static const int64_t POS_REWARD = 10 * COIN;
+static const int64_t INIT_FUEL_RATES = 100;   //100 unit / 100 step
 
 #ifdef USE_UPNP
 static const int fHaveUPnP = true;
@@ -680,8 +682,10 @@ public:
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
+    int64_t nFuel;
     vector<unsigned char> vSignature;
 
+    double dFeePerKb;
     // (memory only) Sequencial id assigned to distinguish order in which blocks are received.
     uint32_t nSequenceId;
 
@@ -698,6 +702,7 @@ public:
         nChainTx = 0;
         nStatus = 0;
         nSequenceId = 0;
+        dFeePerKb = 0.0;
         nblockfee = 0; //add the block's fee
 
         nVersion       = 0;
@@ -705,6 +710,7 @@ public:
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
+        nFuel          = 0;
         vSignature.clear();
     }
 
@@ -723,11 +729,19 @@ public:
         nSequenceId = 0;
         nblockfee = block.GetFee(); //add the block's fee
 
+        int64_t nTxSize(0);
+        for(auto & pTx : block.vptx) {
+        	nTxSize += pTx->GetSerializeSize(SER_DISK, PROTOCOL_VERSION);
+        }
+
+		dFeePerKb = double((nblockfee - block.nFuel)) / (double(nTxSize / 1000.0));
+
         nVersion       = block.nVersion;
         hashMerkleRoot = block.hashMerkleRoot;
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
+        nFuel          = block.nFuel;
         vSignature     = block.vSignature;
     }
 
@@ -869,7 +883,9 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        READWRITE(nFuel);
         READWRITE(vSignature);
+        READWRITE(dFeePerKb);
     )
 
     uint256 GetBlockHash() const
@@ -882,6 +898,7 @@ public:
         block.nBits           = nBits;
         block.nNonce          = nNonce;
         block.nHeight         = nHeight;
+        block.nFuel           = nFuel;
         block.vSignature      = vSignature;
         return block.GetHash();
     }
