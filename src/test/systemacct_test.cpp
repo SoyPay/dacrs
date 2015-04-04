@@ -1,10 +1,10 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include "SysTestBase.h"
+#include "systestbase.h"
 using namespace std;
 using namespace boost;
 
-class CSysRegisterAccTest:public SysTestBase {
+class CSysAccountTest:public SysTestBase {
 public:
 
 	bool RegisterAccount(const string& strAddr, uint64_t nFee,string& strTxHash,bool bSign = false) {
@@ -20,8 +20,8 @@ public:
 
 };
 
-BOOST_FIXTURE_TEST_SUITE(sysregisteracc_test,CSysRegisterAccTest)
-BOOST_FIXTURE_TEST_CASE(rpc_test,CSysRegisterAccTest)
+BOOST_FIXTURE_TEST_SUITE(sysacct_test, CSysAccountTest)
+BOOST_FIXTURE_TEST_CASE(transfer_test, CSysAccountTest)
 {
 	ResetEnv();
 	BOOST_CHECK(0==chainActive.Height());
@@ -64,7 +64,7 @@ BOOST_FIXTURE_TEST_CASE(rpc_test,CSysRegisterAccTest)
 	BOOST_CHECK(nFreeMoney == nMoney);
 }
 
-BOOST_FIXTURE_TEST_CASE(sysonly_test,CSysRegisterAccTest)
+BOOST_FIXTURE_TEST_CASE(register_test,CSysAccountTest)
  {
 	ResetEnv();
 	BOOST_CHECK(0==chainActive.Height());

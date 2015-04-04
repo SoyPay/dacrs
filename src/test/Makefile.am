@@ -17,7 +17,7 @@ JSON_TEST_FILES = \
   data/tx_invalid.json.h \
   data/tx_valid.json.h \
   data/sighash.json.h	\
-  SysTestBase.h \
+  systestbase.h \
 RAW_TEST_FILES = data/alertTests.raw.h
 
 #BUILT_SOURCES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
@@ -54,14 +54,14 @@ dacrs_test_SOURCES = \
   util_tests.cpp \
   sighash_tests.cpp \
   chainparams_tests.cpp \
-  CVir8051_test.cpp \
+  vm8051_test.cpp \
   accountview_tests.cpp \
   scriptdb_tests.cpp \
   betroll_test.cpp \
   system_test.cpp	\
-  SysTestBase.cpp	\
-  SysTestScript.cpp \
-  SysRegisterAcc_test.cpp \
+  systestbase.cpp	\
+  systestscript.cpp \
+  systemacct_test.cpp \
   pressure_tests.cpp \
   scriptdbex_tests.cpp	\
   account_tests.cpp \

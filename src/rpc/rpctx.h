@@ -38,7 +38,7 @@ extern Value getaccountinfo(const Array& params, bool fHelp);
 
 
 extern Value disconnectblock(const Array& params, bool fHelp);
-extern Value listregscript(const Array& params, bool fHelp);
+extern Value listapp(const Array& params, bool fHelp);
 
 
 extern Value getaddrbalance(const Array& params, bool fHelp);

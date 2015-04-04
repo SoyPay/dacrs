@@ -5,7 +5,7 @@
  *      Author: ranger.shi
  */
 
-#include "SysTestBase.h"
+#include "systestbase.h"
 
 
 
@@ -199,7 +199,7 @@ bool SysTestBase::ResetEnv() {
 
 int SysTestBase::GetRandomFee() {
 	srand(time(NULL));
-	int r = (rand() % 1000000) + 1000000;
+	int r = (rand() % 1000000) + 100000000;
 	return r;
 }
 
