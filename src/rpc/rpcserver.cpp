@@ -220,6 +220,7 @@ Value stop(const Array& params, bool fHelp)
 extern Value resetclient(const Array& params, bool fHelp);
 extern Value gettxoperationlog(const Array& params, bool fHelp);
 extern Value prepareforcoolmining(const Array& params, bool fHelp);
+extern Value gethash(const Array& params, bool fHelp);
 static const CRPCCommand vRPCCommands[] =
 { //  name                      actor (function)         okSafeMode threadSafe reqWallet
   //  ------------------------  -----------------------  ---------- ---------- ---------
@@ -317,7 +318,7 @@ static const CRPCCommand vRPCCommands[] =
     { "printblokdbinfo",        &printblokdbinfo,        true,      false,      false},
     { "getalltxinfo",			&getalltxinfo,			 true,      false,      true },
     { "saveblocktofile",        &saveblocktofile,        true,      false,      true },
-    { "gethash",                &saveblocktofile,        true,      false,      true },
+    { "gethash",                &gethash,        true,      false,      true },
 
 };
 
