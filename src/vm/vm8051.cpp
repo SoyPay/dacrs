@@ -1299,6 +1299,28 @@ static RET_DEFINE ExWriteOutAppOperateFunc(unsigned char * ipara,void * pVmEvn)
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	return std::make_tuple (true ,step, tem);
 }
+static RET_DEFINE ExGetBase58AddrFunc(unsigned char * ipara,void * pVmEvn){
+	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+
+    if(!GetData(ipara,retdata) ||retdata.size() != 1 || retdata.at(0).get()->size() != 6)
+    {
+    	return RetFalse(string(__FUNCTION__)+"para  err !");
+    }
+
+	 CKeyID addrKeyId;
+	 if (!GetKeyId(*pVmRunEvn->GetCatchView(),*retdata.at(0).get(), addrKeyId)) {
+	     auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+	    	return RetFalse(string(__FUNCTION__)+"para  err !");
+	 }
+	 string dacrsaddr = addrKeyId.ToAddress();
+
+	 auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+	vector<unsigned char> vTemp;
+	vTemp.assign(dacrsaddr.c_str(),dacrsaddr.c_str()+dacrsaddr.length());
+	(*tem.get()).push_back(vTemp);
+	return std::make_tuple (true,0, tem);
+}
 
 enum CALL_API_FUN {
 	COMP_FUNC = 0,            //!< COMP_FUNC
@@ -1338,7 +1360,7 @@ enum CALL_API_FUN {
 	GET_APP_USER_ACC_VALUE_FUN,             //!<GET_APP_USER_ACC_FUN
 	GET_APP_USER_ACC_FUND_WITH_TAG_FUN,             //!<GET_APP_USER_ACC_FUND_WITH_TAG_FUN
 	GET_WIRITE_OUT_APP_OPERATE_FUN,             //!<GET_WIRITE_OUT_APP_OPERATE_FUN
-
+	GET_DACRS_ADDRESS_FUN,
 };
 
 const static struct __MapExterFun FunMap[] = { //
@@ -1380,6 +1402,7 @@ const static struct __MapExterFun FunMap[] = { //
 		{GET_APP_USER_ACC_VALUE_FUN,GetUserAppAccValue},
 		{GET_APP_USER_ACC_FUND_WITH_TAG_FUN,GetUserAppAccFoudWithTag},
 		{GET_WIRITE_OUT_APP_OPERATE_FUN,ExWriteOutAppOperateFunc},
+		{GET_DACRS_ADDRESS_FUN,ExGetBase58AddrFunc},
 
 		};
 

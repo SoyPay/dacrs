@@ -27,20 +27,17 @@ dacrs_ptest_SOURCES = \
   miner_tests.cpp \
   updateaccount_tests.cpp \
   mining_tests.cpp	\
-  regscript_test.cpp \
-  darkanony_ptest.cpp \
   create_tx_tests.cpp \
   CDarkAndAnony.cpp	\
-  ../test/SysTestBase.cpp \
+  ../test/systestbase.cpp \
   CycleSesureTrade_tests.cpp	\
   CycleTestBase.cpp	\
   CycleTestManger.cpp \
-  sesuretrade_test.cpp	\
   CycleTestManger.h	\
   CycleTestBase.h	\
   CycleSesureTrade_tests.h	\
   CDarkAndAnony.h	\
-  ../test/SysTestBase.h \
+  ../test/systestbase.h \
   CycleP2PBet_test.cpp \
   CycleP2PBet_test.h
   
