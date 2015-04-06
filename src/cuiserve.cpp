@@ -1,5 +1,8 @@
 #include "cuiserve.h"
-
+#include "json/json_spirit_utils.h"
+#include "json/json_spirit_value.h"
+#include "json/json_spirit_writer_template.h"
+using namespace json_spirit;
 bool CUIServer::HasConnection(){
 	if(NULL == instance)
 		return false;
@@ -37,6 +40,7 @@ void CUIServer::Send(const string& strData) {
 	instance->SendData(strData);
 }
 
+bool CUIServer::IsInitalEnd = false;
 void CUIServer::SendData(const string& strData) {
 	system::error_code ignored_error;
 	if(m_bConnect&&m_socket.get() ){
@@ -58,9 +62,18 @@ void CUIServer::Accept_handler(sock_pt sock) {
 	}
 	m_socket = sock;
 	m_bConnect = true;
+	Object obj;
+	if (CUIServer::IsInitalEnd == true) {
+		obj.push_back(Pair("type", "init"));
+		obj.push_back(Pair("msg", "initialize end"));
+		CUIServer::Send(write_string(Value(std::move(obj)), true));
+	} else {
+		obj.push_back(Pair("type", "hello"));
+		obj.push_back(Pair("msg", "hello asio"));
+	}
 
 	Accept();
-	sock->async_write_some(asio::buffer("hello asio\n"), bind(&CUIServer::write_handler, this));
+	sock->async_write_some(asio::buffer(write_string(Value(std::move(obj)),true)), bind(&CUIServer::write_handler, this));
 	std::shared_ptr<vector<char> > str(new vector<char>(100, 0));
 	memset(data_,0,max_length);
 	sock->async_read_some(asio::buffer(data_,max_length),
