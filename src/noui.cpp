@@ -50,9 +50,13 @@ static bool noui_ThreadSafeMessageBox(const std::string& message, const std::str
 
 static void noui_InitMessage(const std::string &message)
 {
+	if(message =="initialize end")
+	{
+		CUIServer::IsInitalEnd = true;
+	}
 	if(CUIServer::HasConnection()){
 		Object obj;
-		obj.push_back(Pair("type",     "Init"));
+		obj.push_back(Pair("type",     "init"));
 		obj.push_back(Pair("msg",     message));
 		CUIServer::Send(write_string(Value(std::move(obj)),true));
 	}else{
@@ -71,11 +75,9 @@ static void noui_BlockChanged(int64_t time,int64_t high,const uint256 &hash) {
 	}
 }
 
-static bool noui_RevTransaction(const uint256 &hash)
-{
-
+static bool noui_RevTransaction(const uint256 &hash){
 	Object obj;
-	obj.push_back(Pair("type",     "RevTransaction"));
+	obj.push_back(Pair("type",     "revtransaction"));
 	obj.push_back(Pair("hash",     hash.ToString()));
 
 	if (CUIServer::HasConnection()) {
