@@ -521,11 +521,10 @@ Value listaddr(const Array& params, bool fHelp) {
 			};
 
 			Object obj;
-			obj.push_back(Pair("addr",       tem.first.ToAddress()));
-			obj.push_back(Pair("balance",    GetDetailInfo(curheight)));
-			obj.push_back(Pair("RegID",      tem.second.GetRegID().ToString()));
-			if(!tem.second.GetRegID().IsEmpty())
-			obj.push_back(Pair("RegID2",     HexStr(tem.second.GetRegID().GetVec6())));
+			obj.push_back(Pair("addr",        tem.first.ToAddress()));
+			obj.push_back(Pair("balance",     GetDetailInfo(curheight)));
+			obj.push_back(Pair("haveminerkey",tem.second.IsContainMinerKey()));
+			obj.push_back(Pair("regid",      tem.second.GetRegID().ToString()));
 			retArry.push_back(obj);
 		}
 	}
