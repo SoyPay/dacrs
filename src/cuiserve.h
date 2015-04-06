@@ -20,6 +20,7 @@ public:
 	static void Send(const string& strData);
 	static bool HasConnection();
 	static void StopServer();
+	static bool IsInitalEnd;
 
 private:
 	CUIServer() :m_acceptor(m_iosev, tcp::endpoint(tcp::v4(), SysCfg().GetArg("-uiport", 18999))) {
@@ -36,7 +37,8 @@ private:
 	void RunServer();
 
 private:
-	static const int PORT=3200;
+	static const int PORT=18999;
+
 	static CUIServer* instance;
 	asio::io_service m_iosev;
 	tcp::acceptor m_acceptor;
