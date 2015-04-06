@@ -71,9 +71,26 @@ static void noui_BlockChanged(int64_t time,int64_t high,const uint256 &hash) {
 	}
 }
 
+static bool noui_RevTransaction(const uint256 &hash)
+{
+
+	Object obj;
+	obj.push_back(Pair("type",     "RevTransaction"));
+	obj.push_back(Pair("hash",     hash.ToString()));
+
+	if (CUIServer::HasConnection()) {
+		CUIServer::Send(write_string(Value(std::move(obj)),true));
+	} else {
+		LogPrint("INFO", "%s\n", write_string(Value(std::move(obj)),true));
+	}
+	return true;
+}
+
+
 void noui_connect()
 {
     // Connect Dacrsd signal handlers
+	uiInterface.RevTransaction.connect(noui_RevTransaction);
     uiInterface.ThreadSafeMessageBox.connect(noui_ThreadSafeMessageBox);
     uiInterface.InitMessage.connect(noui_InitMessage);
     uiInterface.NotifyBlocksChanged.connect(noui_BlockChanged);
