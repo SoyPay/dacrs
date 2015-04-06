@@ -170,14 +170,14 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 
 			//vector<unsigned char > accountid(it.accountid,it.accountid+sizeof(it.accountid));
 			vector_unsigned_char accountid = GetAccountID(it);
-			if(accountid.size() == 6){
-				CRegID regId(accountid);
-				CTransaction* secure = static_cast<CTransaction*>(listTx.get());
-				/// current tx's script cant't mius other script's regid
-				if(m_ScriptDBTip->HaveScript(regId) && regId != boost::get<CRegID>(secure->desUserId))
-				{
-					return false;
-				}
+			if(accountid.size() != 6)
+				return false;
+			CRegID regId(accountid);
+			CTransaction* secure = static_cast<CTransaction*>(listTx.get());
+			/// current tx's script cant't mius other script's regid
+			if(m_ScriptDBTip->HaveScript(regId) && regId != boost::get<CRegID>(secure->desUserId))
+			{
+				return false;
 			}
 
 			memcpy(&temp,it.money,sizeof(it.money));
