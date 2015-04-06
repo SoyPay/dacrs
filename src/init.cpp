@@ -119,7 +119,7 @@ void Shutdown()
     ShutdownRPCMining();
 
 
-    GenerateSoys(false, NULL, 0);
+    GenerateDacrsBlock(false, NULL, 0);
 
     StopNode();
     UnregisterNodeSignals(GetNodeSignals());
@@ -984,7 +984,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // Generate coins in the background
 	if (pwalletMain) {
-		GenerateSoys(SysCfg().GetBoolArg("-gen", false), pwalletMain, SysCfg().GetArg("-genproclimit", -1));
+		GenerateDacrsBlock(SysCfg().GetBoolArg("-gen", false), pwalletMain, SysCfg().GetArg("-genproclimit", -1));
 		pwalletMain->ResendWalletTransactions();
 		pwalletMain->SynchronizSys(*pAccountViewTip);
 		extern void ThreadFlushWalletDB(const string& strFile);

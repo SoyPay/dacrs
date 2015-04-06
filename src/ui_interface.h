@@ -74,6 +74,10 @@ public:
     /** Show message box. */
     boost::signals2::signal<bool (const string& message, const string& caption, unsigned int style), boost::signals2::last_value<bool> > ThreadSafeMessageBox;
 
+
+    /** rev tran box. */
+     boost::signals2::signal<bool (const uint256 &hash) > RevTransaction;
+
     /** Progress message during initialization. */
     boost::signals2::signal<void (const string &message)> InitMessage;
 
@@ -81,7 +85,7 @@ public:
     boost::signals2::signal<string (const char* psz)> Translate;
 
     /** Block chain changed. */
-    boost::signals2::signal<void (const string &message)> NotifyBlocksChanged;
+    boost::signals2::signal<void (int64_t time,int64_t high,const uint256 &hash)> NotifyBlocksChanged;
 
     /** Number of network connections changed. */
     boost::signals2::signal<void (int newNumConnections)> NotifyNumConnectionsChanged;

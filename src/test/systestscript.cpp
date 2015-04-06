@@ -122,7 +122,7 @@ public:
 
 	string CreateRegScript(const char* strAddr, const char* sourceCode)
 	{
-		int nFee = 10000000;
+		int nFee = 1*COIN + 10000000;
 		string strTxHash;
 		string strFileName(sourceCode);
 		Value valueRes = RegisterScriptTx(strAddr,strFileName , 100, nFee);
@@ -229,14 +229,15 @@ public:
 		int param = 13;
 		string temp = "";
 		temp += tinyformat::format("%02x%s",param,accountid);
-		Value resut =CreateContractTx("010000000100", "mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5", temp,10,1000000,10000);
+		Value resut =CreateContractTx("010000000100", "mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5", temp,10,100000000,10000);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 
 		BOOST_CHECK(SetAddrGenerteBlock("mjSwCwMsvtKczMfta1tvr78z2FTsZA1JKw"));
 		Value temp1 = GetAccountInfo("010000000100");
 		BOOST_CHECK_EQUAL(GetValue(temp1,"value"),10000);
 		temp1 = GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
-		BOOST_CHECK_EQUAL(GetValue(temp1,"FreeValues"),999999998990000);
+		BOOST_CHECK_EQUAL(GetValue(temp1,"FreeValues"),999999899990000);
+
 
 		/// 脚本账户给普通账户打钱
 		param = 14;

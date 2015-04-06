@@ -121,7 +121,9 @@ bool CBlockTreeDB::LoadBlockIndexGuts() {
 				pindexNew->nNonce = diskindex.nNonce;
 				pindexNew->nStatus = diskindex.nStatus;
 				pindexNew->nTx = diskindex.nTx;
+				pindexNew->nFuel = diskindex.nFuel;
 				pindexNew->vSignature = diskindex.vSignature;
+				pindexNew->dFeePerKb = diskindex.dFeePerKb;
 
 				if (!pindexNew->CheckIndex())
 					return ERRORMSG("LoadBlockIndex() : CheckIndex failed: %s", pindexNew->ToString());

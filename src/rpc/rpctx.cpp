@@ -461,6 +461,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		tx.regAcctId = GetUserId(keyid);
 		tx.script = vscript;
 		tx.llFees = fee;
+		tx.nRunStep = vscript.size();
 		if (0 == height) {
 			height = chainActive.Tip()->nHeight;
 		}
@@ -520,11 +521,10 @@ Value listaddr(const Array& params, bool fHelp) {
 			};
 
 			Object obj;
-			obj.push_back(Pair("addr",       tem.first.ToAddress()));
-			obj.push_back(Pair("balance",    GetDetailInfo(curheight)));
-			obj.push_back(Pair("RegID",      tem.second.GetRegID().ToString()));
-			if(!tem.second.GetRegID().IsEmpty())
-			obj.push_back(Pair("RegID2",     HexStr(tem.second.GetRegID().GetVec6())));
+			obj.push_back(Pair("addr",        tem.first.ToAddress()));
+			obj.push_back(Pair("balance",     GetDetailInfo(curheight)));
+			obj.push_back(Pair("haveminerkey",tem.second.IsContainMinerKey()));
+			obj.push_back(Pair("regid",      tem.second.GetRegID().ToString()));
 			retArry.push_back(obj);
 		}
 	}
@@ -1688,28 +1688,26 @@ Value getappaccinfo(const Array& params, bool fHelp) {
 	CRegID script(params[0].get_str());
 	vector<unsigned char> key;
 
-/*	if(CRegID::IsSimpleRegIdStr( params[1].get_str())){
+	if(CRegID::IsSimpleRegIdStr( params[1].get_str())){
 		CRegID reg( params[1].get_str());
 		key.insert(key.begin(),reg.GetVec6().begin(),reg.GetVec6().end());
 	}else{
 		string addr = params[1].get_str();
 		key.assign(addr.c_str(),addr.c_str()+addr.length());
-	}*/
+	}
 
-	string addr = params[1].get_str();
-	key.assign(addr.c_str(),addr.c_str()+addr.length());
 	std::shared_ptr<CAppUserAccout> tem = make_shared<CAppUserAccout>();
 	contractScriptTemp.GetScriptAcc(script,key,*tem.get());
 	return Value(tem.get()->toJSON());
 }
 Value gethash(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
-		string msg = "gethash nrequired \"stri"
-				"\nregister script\n"
-				"\address:\n"
-				"\nExamples:\n" + HelpExampleCli("gethash", "5zQgdfghdfghdgfPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("gethash", "000000100000 0-7");
-		throw runtime_error(msg);
+	//	string msg = "gethash nrequired \"stri""
+	//			"\nregister script\n"
+	//			"\address:\n"
+	//			"\nExamples:\n" + HelpExampleCli("gethash", "5zQgdfghdfghdgfPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG") + "\nAs json rpc call\n"
+	//			+ HelpExampleRpc("gethash", "000000100000 0-7");
+		throw runtime_error("");
 	}
 
 	string str =params[0].get_str();
