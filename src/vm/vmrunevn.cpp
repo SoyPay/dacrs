@@ -75,7 +75,12 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 	m_ScriptDBTip = &VmDB;
 
 	CTransaction* tx = static_cast<CTransaction*>(Tx.get());
-	uint64_t maxstep = min((tx->llFees-CBaseTransaction::nMinTxFee)/nBurnFactor, MAX_BLOCK_RUN_STEP);
+	uint64_t maxstep = (tx->llFees-CBaseTransaction::nMinTxFee)/nBurnFactor;
+	
+	if(maxstep > MAX_BLOCK_RUN_STEP){
+		maxstep = MAX_BLOCK_RUN_STEP;
+	}
+
 	tuple<bool, uint64_t, string> mytuple;
 	if (!intial(Tx, view, nheight)) {
 		return std::make_tuple (false, 0, string("VmScript inital Failed\n"));
