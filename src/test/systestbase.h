@@ -218,6 +218,8 @@ public:
 
 	bool GetRegID(string& strAddr,CRegID& regID);
 
+	bool GetRegID(string& strAddr,string& regID);
+
 	bool GetTxOperateLog(const uint256& txHash, vector<CAccountOperLog>& vLog) ;
 
 	bool PrintLog();

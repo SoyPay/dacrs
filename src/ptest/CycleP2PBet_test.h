@@ -8,7 +8,7 @@
 #ifndef CYCLEP2PBET_TEST_H_
 #define CYCLEP2PBET_TEST_H_
 
-#include "../test/SysTestBase.h"
+#include "../test/systestbase.h"
 #include "CycleTestBase.h"
 
 #pragma pack(push)
