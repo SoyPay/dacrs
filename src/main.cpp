@@ -1158,8 +1158,7 @@ void static InvalidChainFound(CBlockIndex* pindexNew)
 		// the block database anymore, as it is derived from the flags in block
 		// index entry. We only write it for backward compatibility.
 		pblocktree->WriteBestInvalidWork(CBigNum(pindexBestInvalid->nChainWork));
-		uiInterface.NotifyBlocksChanged(strprintf("block changed:%d time:%d",chainActive.Height(),
-		    		GetTime()-pindexNew->GetBlockTime()));
+		uiInterface.NotifyBlocksChanged(GetTime()-pindexNew->GetBlockTime(),chainActive.Height(),chainActive.Tip()->GetBlockHash());
 	}
     LogPrint("INFO","InvalidChainFound: invalid block=%s  height=%d  log2_work=%.8g  date=%s\n",
       pindexNew->GetBlockHash().ToString(), pindexNew->nHeight,
@@ -1329,17 +1328,6 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 		}
 		return true;
 	}
-//	uint64_t nInterest = 0;
-//	if(!VerifyPosTx(pindex->pprev, view, &block, nInterest, txCache, scriptDBCache, false)) {
-//		return state.DoS(100,
-//							ERRORMSG("ConnectBlock() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
-//							REJECT_INVALID, "bad-pos-tx");
-//	}
-//	std::shared_ptr<CRewardTransaction> pRewardTx = dynamic_pointer_cast<CRewardTransaction>(block.vptx[0]);
-//	if(pRewardTx->rewardValue !=  nInterest + block.GetFee())
-//		return state.DoS(100, ERRORMSG("ConnectBlock() : coinbase pays too much (actual=%d vs limit=%d)",
-//									pRewardTx->rewardValue, nInterest + block.GetFee()),
-//							   REJECT_INVALID, "bad-cb-amount");
 
     CBlockUndo blockundo;
 
@@ -1353,6 +1341,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
     pos.nTxOffset += ::GetSerializeSize(block.vptx[0], SER_DISK, CLIENT_VERSION);
 
     uint64_t nTotalRunStep(0);
+    int64_t nTotalFuel(0);
     if (block.vptx.size() > 1) {
 		for (unsigned int i = 1; i < block.vptx.size(); i++) {
 			std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[i];
@@ -1374,29 +1363,43 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 			if(!pBaseTx->ExecuteTx(i, view, state, txundo, pindex->nHeight, txCache, scriptDBCache)) {
 				return false;
 			}
+
 			nTotalRunStep += pBaseTx->nRunStep;
 			if (nTotalRunStep > MAX_BLOCK_RUN_STEP) {
 				return state.DoS(100,
 						ERRORMSG("block hash=%s total run steps exceed max run step", block.GetHash().GetHex()),
 						REJECT_INVALID, "exeed-max_step");
 			}
+			uint64_t llFuel = ceil(pBaseTx->nRunStep / 100.f) * GetElementForBurn(chainActive.Tip());
+			if(REG_APP_TX == pBaseTx->nTxType) {
+				if(llFuel < 1 * COIN){
+					llFuel = 1 * COIN;
+				}
+			}
+			nTotalFuel += llFuel;
+
 			vPos.push_back(make_pair(block.GetTxHash(i), pos));
 			pos.nTxOffset += ::GetSerializeSize(pBaseTx, SER_DISK, CLIENT_VERSION);
 			blockundo.vtxundo.push_back(txundo);
 		}
+
+		if (nTotalFuel != block.nFuel) {
+			return ERRORMSG("fuel value at block header calculate error(actual fuel:%ld vs block fuel:%ld)", nTotalFuel, block.nFuel);
+		}
 	}
 
-	uint64_t nInterest = 0;
-	if (!VerifyPosTx(view, &block, nInterest, txCache, scriptDBCache, false)) {
+	if (!VerifyPosTx(view, &block, txCache, scriptDBCache, false)) {
 		return state.DoS(100, ERRORMSG("ConnectBlock() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
 				REJECT_INVALID, "bad-pos-tx");
 	}
 	//校验利息是否正常
 	std::shared_ptr<CRewardTransaction> pRewardTx = dynamic_pointer_cast<CRewardTransaction>(block.vptx[0]);
-	if (pRewardTx->rewardValue != nInterest + block.GetFee())
+	uint64_t llValidReward = block.GetFee() - block.nFuel + POS_REWARD;
+	LogPrint("INFO", "block fee:%lld, block fuel:%lld\n", block.GetFee(), block.nFuel);
+	if (pRewardTx->rewardValue != llValidReward)
 		return state.DoS(100,
 				ERRORMSG("ConnectBlock() : coinbase pays too much (actual=%d vs limit=%d)", pRewardTx->rewardValue,
-						nInterest + block.GetFee()), REJECT_INVALID, "bad-cb-amount");
+						llValidReward), REJECT_INVALID, "bad-cb-amount");
     //deal with reward_tx
     CTxUndo txundo;
     if(!block.vptx[0]->ExecuteTx(0, view, state, txundo, pindex->nHeight, txCache, scriptDBCache))
@@ -1780,6 +1783,7 @@ bool AddToBlockIndex(CBlock& block, CValidationState& state, const CDiskBlockPos
          pindexNew->nSequenceId = nBlockSequenceId++;
     }
     map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(hash, pindexNew)).first;
+    LogPrint("INFO", "in map hash:%s map size:%d\n", hash.GetHex(), mapBlockIndex.size());
     pindexNew->phashBlock = &((*mi).first);
     map<uint256, CBlockIndex*>::iterator miPrev = mapBlockIndex.find(block.hashPrevBlock);
     if (miPrev != mapBlockIndex.end())
@@ -1820,8 +1824,8 @@ bool AddToBlockIndex(CBlock& block, CValidationState& state, const CDiskBlockPos
     if (!pblocktree->Flush())
         return state.Abort(_("Failed to sync block index"));
 
-    uiInterface.NotifyBlocksChanged(strprintf("block changed:%d time:%d",chainActive.Height(),
-    		GetTime()-pindexNew->GetBlockTime()));
+    uiInterface.NotifyBlocksChanged(GetTime()-pindexNew->GetBlockTime(),chainActive.Height(),
+    		chainActive.Tip()->GetBlockHash());
     return true;
 }
 
@@ -1956,17 +1960,17 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 		}
 
 		//校验pos交易
-		uint64_t nInterest = 0;
-		if (!VerifyPosTx(view, &block, nInterest, txCacheTemp, scriptDBTemp, true)) {
+		if (!VerifyPosTx(view, &block, txCacheTemp, scriptDBTemp, true)) {
 			return state.DoS(100,
 					ERRORMSG("ConnectBlock() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
 					REJECT_INVALID, "bad-pos-tx");
 		}
 		//校验利息是否正常
 		std::shared_ptr<CRewardTransaction> pRewardTx = dynamic_pointer_cast<CRewardTransaction>(block.vptx[0]);
-			if(pRewardTx->rewardValue !=  nInterest + block.GetFee())
+		uint64_t llValidReward = block.GetFee() - block.nFuel + POS_REWARD;
+		if(pRewardTx->rewardValue !=  llValidReward )
 				return state.DoS(100, ERRORMSG("ConnectBlock() : coinbase pays too much (actual=%d vs limit=%d)",
-											pRewardTx->rewardValue, nInterest + block.GetFee()),
+											pRewardTx->rewardValue, llValidReward),
 									   REJECT_INVALID, "bad-cb-amount");
 
 		for(auto & item : block.vptx) {
@@ -2543,6 +2547,7 @@ bool static LoadBlockIndexDB()
 	for (const auto& item : mapBlockIndex) {
 		CBlockIndex* pindex = item.second;
 		vSortedByHeight.push_back(make_pair(pindex->nHeight, pindex));
+		LogPrint("INFO","block hash:%s\n", pindex->GetBlockHash().GetHex());
 	}
     sort(vSortedByHeight.begin(), vSortedByHeight.end());
 	for (const auto& item : vSortedByHeight) {

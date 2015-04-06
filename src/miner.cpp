@@ -78,244 +78,42 @@ uint64_t nLastBlockSize = 0;
 //base on the last 500 blocks
 uint64_t GetElementForBurn(CBlockIndex* pindex)
 {
-	uint64_t sumfee;
+	double dTotalFeePerKb(0.0);
+	double dAverageFeePerKb(0.0);
 	int nBlock = SysCfg().GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
-//	CBlockIndex* pindex = chainActive.Tip();
-	if (nBlock > pindex->nHeight) {
+	if (nBlock >= pindex->nHeight-1) {
 		return 100;
 	} else {
+		CBlockIndex * pTemp = pindex;
 		for (int ii = 0; ii < nBlock; ii++) {
-			sumfee += pindex->GetBlockFee();
-			pindex = pindex->pprev;
+			dTotalFeePerKb += pTemp->dFeePerKb;
+			pindex = pTemp->pprev;
 		}
-		sumfee  = sumfee / nBlock;
-		if(sumfee < 100000) //如果平均值小于最小值 这取最小值
-			sumfee = 100000;
+		dAverageFeePerKb  = dTotalFeePerKb / nBlock;
+		int64_t newFuelRate = int64_t(INIT_FUEL_RATES * (pTemp->dFeePerKb / dAverageFeePerKb));
+		return newFuelRate;
 	}
-	return sumfee;
 }
 
 // We want to sort transactions by priority and fee, so:
 
 void GetPriorityTx(vector<TxPriority> &vecPriority) {
 	vecPriority.reserve(mempool.mapTx.size());
-//	CBlockIndex* pindexPrev = chainActive.Tip();
-
 	// Priority order to process transactions
 	list<COrphan> vOrphan; // list memory doesn't move
 	double dPriority = 0;
 	for (map<uint256, CTxMemPoolEntry>::iterator mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi) {
-//		int nTxHeight = mi->second.GetHeight();//get Chain height when the tx entering the mempool
 		CBaseTransaction *pBaseTx = mi->second.GetTx().get();
 
 		if (uint256(0) == std::move(pTxCacheTip->IsContainTx(std::move(pBaseTx->GetHash())))) {
 			unsigned int nTxSize = ::GetSerializeSize(*pBaseTx, SER_NETWORK, PROTOCOL_VERSION);
-#if 0
-			{
-				uint64_t element = GetElementForBurn();
-				uint64_t burnfee = xx(element, pBaseTx);
-				if(pBaseTx->GetFee() < burnfee)
-				{
-					LogPrint("INFO","the pBaseTx->GetFee() < burnfee\n");
-					assert(0);
-				}
-				double dFeePerKb = double(pBaseTx->GetFee() - ) / (double(nTxSize) / 1000.0);
-			}
-#else
-			double dFeePerKb = double(pBaseTx->GetFee()) / (double(nTxSize) / 1000.0);
-#endif
+			double dFeePerKb = double(pBaseTx->GetFee() - pBaseTx->GetFuel())/ (double(nTxSize) / 1000.0);
 			dPriority = 1000.0 / double(nTxSize);
 			vecPriority.push_back(TxPriority(dPriority, dFeePerKb, mi->second.GetTx()));
 		}
 
 	}
 }
-
-//CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn) {
-////    // Create new block
-//	auto_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
-//	if (!pblocktemplate.get())
-//		return NULL;
-//    CBlock *pblock = &pblocktemplate->block; // pointer for convenience
-//
-//    // Create coinbase tx
-//    CTransaction txNew;
-//    txNew.vin.resize(1);
-//    txNew.vin[0].prevout.SetNull();
-//    txNew.vout.resize(1);
-//    txNew.vout[0].scriptPubKey = scriptPubKeyIn;
-//
-//    // Add our coinbase tx as first transaction
-//    pblock->vtx.push_back(txNew);
-//    pblocktemplate->vTxFees.push_back(-1); // updated at end
-//    pblocktemplate->vTxSigOps.push_back(-1); // updated at end
-//
-//    // Largest block you're willing to create:
-//    unsigned int nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
-//    // Limit to betweeen 1K and MAX_BLOCK_SIZE-1K for sanity:
-//    nBlockMaxSize = max((unsigned int)1000, min((unsigned int)(MAX_BLOCK_SIZE-1000), nBlockMaxSize));
-//
-//    // How much of the block should be dedicated to high-priority transactions,
-//    // included regardless of the fees they pay
-//    unsigned int nBlockPrioritySize = GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE);
-//    nBlockPrioritySize = min(nBlockMaxSize, nBlockPrioritySize);
-//
-//    // Minimum block size you want to create; block will be filled with free transactions
-//    // until there are no more or the block reaches this size:
-//    unsigned int nBlockMinSize = GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE);
-//    nBlockMinSize = min(nBlockMaxSize, nBlockMinSize);
-//
-//    // Collect memory pool transactions into the block
-//    int64_t nFees = 0;
-//    {
-//        LOCK2(cs_main, mempool.cs);
-//        CBlockIndex* pindexPrev = chainActive.Tip();
-//        CCoinsViewCache view(*pcoinsTip, true);
-//
-//
-//        bool fPrintPriority = GetBoolArg("-printpriority", false);
-//
-//        // This vector will be sorted into a priority queue:
-//        vector<TxPriority> vecPriority;
-//    	map<uint256, vector<COrphan*> > mapDependers;
-//        GetPriorityTx(vecPriority, mapDependers);
-//
-//        // Collect transactions into block
-//        uint64_t nBlockSize = 1000;
-//        uint64_t nBlockTx = 0;
-//        int nBlockSigOps = 100;
-//        bool fSortedByFee = true;
-//
-//        TxPriorityCompare comparer(fSortedByFee);
-//        make_heap(vecPriority.begin(), vecPriority.end(), comparer);
-//
-//        while (!vecPriority.empty())
-//        {
-//            // Take highest priority transaction off the priority queue:
-//            double dPriority = vecPriority.front().get<0>();
-//            double dFeePerKb = vecPriority.front().get<1>();
-//            const CBaseTransaction *pBaseTx = vecPriority.front().get<2>();
-//            //const CTransaction& tx = *(vecPriority.front().get<2>());
-//
-//            pop_heap(vecPriority.begin(), vecPriority.end(), comparer);
-//            vecPriority.pop_back();
-//
-//            // Size limits
-//            unsigned int nTxSize = pBaseTx->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
-//            if (nBlockSize + nTxSize >= nBlockMaxSize)
-//                continue;
-//
-//            // Skip free transactions if we're past the minimum block size:
-//			if (fSortedByFee && (dFeePerKb < CTransaction::nMinRelayTxFee) && (nBlockSize + nTxSize >= nBlockMinSize))
-//				continue;
-//
-//			// Prioritize by fee once past the priority size or we run out of high-priority
-//			// transactions:
-//			if (!fSortedByFee &&
-//			   ((nBlockSize + nTxSize >= nBlockPrioritySize) || !AllowFree(dPriority)))
-//			{
-//				fSortedByFee = true;
-//				comparer = TxPriorityCompare(fSortedByFee);
-//				make_heap(vecPriority.begin(), vecPriority.end(), comparer);
-//			}
-//
-//            if(COMMON_TX == pBaseTx->nTxType || GENTOSECURE_TX == pBaseTx->nTxType)
-//            {
-//            	const CTransaction& tx = *((CTransaction *)vecPriority.front().get<2>());
-//            	// Legacy limits on sigOps:
-//				unsigned int nTxSigOps = GetLegacySigOpCount(tx);
-//				if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
-//					continue;
-//
-//				if (!view.HaveInputs(tx))
-//					continue;
-//
-//				int64_t nTxFees = view.GetValueIn(tx)-tx.GetValueOut();
-//
-//				nTxSigOps += GetP2SHSigOpCount(tx, view);
-//				if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
-//					continue;
-//
-//				CValidationState state;
-//				if (!CheckInputs(tx, state, view, true, SCRIPT_VERIFY_P2SH))
-//					continue;
-//
-//				CTxUndo txundo;
-//				uint256 hash = tx.GetHash();
-//				UpdateCoins(tx, state, view, txundo, pindexPrev->nHeight+1, hash);
-//
-//				// Added
-//				pblock->vtx.push_back(tx);
-//				pblocktemplate->vTxFees.push_back(nTxFees);
-//				pblocktemplate->vTxSigOps.push_back(nTxSigOps);
-//				nBlockSize += nTxSize;
-//				++nBlockTx;
-//				nBlockSigOps += nTxSigOps;
-//				nFees += nTxFees;
-//
-//				if (fPrintPriority)
-//				{
-//					LogPrint("INFO","priority %.1f feeperkb %.1f txid %s\n",
-//						   dPriority, dFeePerKb, tx.GetHash().ToString());
-//				}
-//
-//				// Add transactions that depend on this one to the priority queue
-//				if (mapDependers.count(hash))
-//				{
-//					BOOST_FOREACH(COrphan* porphan, mapDependers[hash])
-//					{
-//						if (!porphan->setDependsOn.empty())
-//						{
-//							porphan->setDependsOn.erase(hash);
-//							if (porphan->setDependsOn.empty())
-//							{
-//								vecPriority.push_back(TxPriority(porphan->dPriority, porphan->dFeePerKb, porphan->ptx));
-//								push_heap(vecPriority.begin(), vecPriority.end(), comparer);
-//							}
-//						}
-//					}
-//				}
-//            }
-//            else if(APPEAL_TX == pBaseTx->nTxType) {
-//            	pblock->vAppealTx.push_back(*(CAppealTransaction *)pBaseTx);
-//            }
-//            else if(SECURE_TX == pBaseTx->nTxType) {
-//            	pblock->vSecureTx.push_back(*(CSecureTransaction *)pBaseTx);
-//            }
-//            else if(SECURETOGEN_TX == pBaseTx->nTxType) {
-//            	pblock->vSecureToGenTx.push_back(*(CSecureToGeneralTx *)pBaseTx);
-//            }
-//            else if(FREEZE_TX == pBaseTx->nTxType) {
-//            	pblock->vFreezeTx.push_back(*(CFreezeTransaction *)pBaseTx);
-//            }
-//        }
-//
-//        nLastBlockTx = nBlockTx;
-//        nLastBlockSize = nBlockSize;
-//        LogPrint("INFO","CreateNewBlock(): total size %u\n", nBlockSize);
-//
-//        pblock->vtx[0].vout[0].nValue = GetBlockValue(pindexPrev->nHeight+1, nFees);
-//        pblocktemplate->vTxFees[0] = -nFees;
-//
-//        // Fill in header
-//        pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
-//        UpdateTime(*pblock, pindexPrev);
-//        pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock);
-//        pblock->nNonce         = 0;
-//        pblock->vtx[0].vin[0].scriptSig = CScript() << OP_0 << OP_0;
-//        pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
-//
-//        CBlockIndex indexDummy(*pblock);
-//        indexDummy.pprev = pindexPrev;
-//        indexDummy.nHeight = pindexPrev->nHeight + 1;
-//        CCoinsViewCache viewNew(*pcoinsTip, true);
-//        CValidationState state;
-//        if (!ConnectBlock(*pblock, state, &indexDummy, viewNew, true))
-//            throw runtime_error("CreateNewBlock() : ConnectBlock failed");
-//    }
-
-//	return pblocktemplate.release();
-//}
 
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce) {
 	// Update nExtraNonce
@@ -458,7 +256,6 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 
 				if (pAccountViewTip->GetRegId(item.keyID, regid)) {
 					CRewardTransaction *prtx = (CRewardTransaction *) pBlock->vptx[0].get();
-					prtx->rewardValue += item.GetInterest();
 					prtx->account = regid;
 					prtx->nHeight = pPrevIndex->nHeight+1;
 					pBlock->hashMerkleRoot = pBlock->BuildMerkleTree();
@@ -490,7 +287,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 	return false;
 }
 
-bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool bNeedRunTx) {
+bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool bNeedRunTx) {
 	LogPrint("INFO", "VerifyPoxTx begin\n");
 	uint64_t maxNonce = SysCfg().GetBlockMaxNonce(); //cacul times
 
@@ -516,6 +313,7 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nIn
 	}
 
 	if (bNeedRunTx) {
+		int64_t nTotalFuel(0);
 		uint64_t nTotalRunStep(0);
 		for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
 			shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
@@ -523,9 +321,9 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nIn
 				return ERRORMSG("VerifyPosTx duplicate tx hash:%s", pBaseTx->GetHash().GetHex());
 			}
 
-			if (CONTRACT_TX == pBaseTx->nTxType) {
-				LogPrint("vm", "tx hash=%s VerifyPosTx run contract\n", pBaseTx->GetHash().GetHex());
-			}
+//			if (CONTRACT_TX == pBaseTx->nTxType) {
+//				LogPrint("vm", "tx hash=%s VerifyPosTx run contract\n", pBaseTx->GetHash().GetHex());
+//			}
 			CTxUndo txundo;
 			CValidationState state;
 			if (!pBaseTx->ExecuteTx(i, view, state, txundo, pBlock->nHeight, txCache, scriptDBView)) {
@@ -535,6 +333,11 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nIn
 			if(nTotalRunStep > MAX_BLOCK_RUN_STEP) {
 				return ERRORMSG("block total run steps exceed max run step");
 			}
+			nTotalFuel += pBaseTx->GetFuel();
+		}
+
+		if(nTotalFuel != pBlock->nFuel) {
+			return ERRORMSG("fuel value at block header calculate error");
 		}
 
 		if (view.GetAccount(prtx->account, account)) {
@@ -562,7 +365,6 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nIn
 		}
 	}
 
-	nInterest = account.GetInterest();
 	uint256 prevblockhash = pBlock->hashPrevBlock;
 	const uint256 targetHash = CBigNum().SetCompact(pBlock->nBits).getuint256(); //target hash difficult
 
@@ -630,9 +432,6 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 		{
 			LOCK2(cs_main, mempool.cs);
 			CBlockIndex* pIndexPrev = chainActive.Tip();
-	//		CAccountViewCache accview(*pAccountViewTip, true);
-
-//			bool fPrintPriority = SysCfg().GetBoolArg("-printpriority", false);
 
 			// This vector will be sorted into a priority queue:
 			vector<TxPriority> vecPriority;
@@ -641,10 +440,10 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 
 			// Collect transactions into block
 			uint64_t nBlockSize = ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
-			uint64_t nBlockTx = 0;
-			bool fSortedByFee = true;
-			uint64_t nTotalRunStep = 0;
-
+			uint64_t nBlockTx(0);
+			bool fSortedByFee(true);
+			uint64_t nTotalRunStep(0);
+			int64_t  nTotalFuel(0);
 			TxPriorityCompare comparer(fSortedByFee);
 			make_heap(vecPriority.begin(), vecPriority.end(), comparer);
 
@@ -677,6 +476,7 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 					comparer = TxPriorityCompare(fSortedByFee);
 					make_heap(vecPriority.begin(), vecPriority.end(), comparer);
 				}
+
 				if(uint256(0) != std::move(txCache.IsContainTx(std::move(pBaseTx->GetHash())))) {
 					LogPrint("INFO","CreatePosTx duplicate tx\n");
 					continue;
@@ -703,13 +503,14 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 				nFees += pBaseTx->GetFee();
 				nBlockSize += stx->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
 				nTotalRunStep += pBaseTx->nRunStep;
+				nTotalFuel += pBaseTx->GetFuel();
 			}
 
 			nLastBlockTx = nBlockTx;
 			nLastBlockSize = nBlockSize;
 			LogPrint("INFO","CreateNewBlock(): total size %u\n", nBlockSize);
 
-			((CRewardTransaction*) pblock->vptx[0].get())->rewardValue = nFees;
+			((CRewardTransaction*) pblock->vptx[0].get())->rewardValue = nFees - nTotalFuel + POS_REWARD;
 
 			// Fill in header
 			pblock->hashPrevBlock = pIndexPrev->GetBlockHash();
@@ -717,7 +518,7 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 			pblock->nBits = GetNextWorkRequired(pIndexPrev, pblock);
 			pblock->nNonce = 0;
 			pblock->nHeight = pIndexPrev->nHeight + 1;
-
+			pblock->nFuel = nTotalFuel;
 		}
 
 		return pblocktemplate.release();
@@ -893,7 +694,6 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 
 //		int64_t nStart = GetTime();
 		while (true) {
-
 			pblock->nTime = max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
 			set<CKeyID> setCreateKey;
 			setCreateKey.clear();
@@ -917,7 +717,7 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 	return uint256(0);
 }
 
-void GenerateSoys(bool fGenerate, CWallet* pwallet, int nThreads) {
+void GenerateDacrsBlock(bool fGenerate, CWallet* pwallet, int nThreads) {
 	static boost::thread_group* minerThreads = NULL;
 
 	if (minerThreads != NULL) {
