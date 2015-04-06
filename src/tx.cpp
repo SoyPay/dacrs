@@ -239,7 +239,15 @@ bool CBaseTransaction::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValid
 	}
 	return true;
 }
-
+uint64_t CBaseTransaction::GetFuel() {
+	uint64_t llFuel = ceil(nRunStep/100.0f) * GetElementForBurn(chainActive.Tip());
+	if(REG_APP_TX == nTxType) {
+		if (llFuel < 1 * COIN) {
+			llFuel = 1 * COIN;
+		}
+	}
+	return llFuel;
+}
 
 bool CRegisterAccountTx::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
@@ -711,7 +719,6 @@ bool CRegisterAppTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidationSt
 	}
 	txundo.txHash = GetHash();
 
-
 	CVmScript vmScript;
 	CDataStream stream(script, SER_DISK, CLIENT_VERSION);
 	try {
@@ -740,6 +747,8 @@ bool CRegisterAppTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidationSt
 				ERRORMSG("ExecuteTx() : create new account script id %s script info error",
 						regId.ToString()), UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 	}
+
+	nRunStep = script.size();
 
 	if(!operLog.vKey.empty()) {
 		txundo.vScriptOperLog.push_back(operLog);
@@ -819,13 +828,22 @@ string CRegisterAppTx::ToString(CAccountViewCache &view) const {
 bool CRegisterAppTx::CheckTransction(CValidationState &state, CAccountViewCache &view) {
 	CAccount  account;
 	if(!view.GetAccount(regAcctId, account)) {
-		return state.DoS(100, ERRORMSG("CheckTransaction() : register script tx get registe account info error"), REJECT_INVALID,
+		return state.DoS(100, ERRORMSG("CheckTransaction() : register app tx get registe account info error"), REJECT_INVALID,
 				"bad-read-account-info");
 	}
 
 	if (!MoneyRange(llFees)) {
-			return state.DoS(100, ERRORMSG("CheckTransaction() : register script tx fee out of range"), REJECT_INVALID,
-					"bad-register-script-fee-toolarge");
+			return state.DoS(100, ERRORMSG("CheckTransaction() : register app tx fee out of range"), REJECT_INVALID,
+					"bad-register-app-fee-toolarge");
+	}
+	uint64_t llFuel = ceil(script.size()/100) * GetElementForBurn(chainActive.Tip());
+	if (llFuel < 1 * COIN) {
+		llFuel = 1 * COIN;
+	}
+
+	if( llFees < llFuel) {
+		return state.DoS(100, ERRORMSG("CheckTransaction() : register app tx fee too litter (actual:%lld vs need:%lld)", llFees, llFuel), REJECT_INVALID,
+							"bad-register-app-fee-toolarge");
 	}
 
 	CAccount acctInfo;

@@ -60,6 +60,7 @@ public:
     bool cleanCkey();
     bool CleanAll();
 	bool IsCrypted() ;
+	bool IsContainMinerKey()const;
 	bool IsContainReadyMinerKey()const;
 	CKeyID GetCKeyID() const ;
 	CRegID GetRegID() const ;

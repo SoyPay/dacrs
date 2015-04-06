@@ -52,7 +52,7 @@ public:
 };
 
 /** Run the miner threads */
-void GenerateSoys(bool fGenerate, CWallet* pwallet, int nThreads);
+void GenerateDacrsBlock(bool fGenerate, CWallet* pwallet, int nThreads);
 /** Generate a new block, without valid proof-of-work */
 //CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn);
 //CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey);
@@ -63,9 +63,9 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
 /** Do mining precalculation */
 void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash1);
 
-bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock,set<CKeyID>&setCreateKey,CAccountViewCache &view, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
+bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setCreateKey, CAccountViewCache &view, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 
-bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, uint64_t &nInterest, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool bNeedRunTx = false);
+bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool bNeedRunTx = false);
 /** Check mined block */
 bool CheckWork(CBlock* pblock, CWallet& wallet);
 /** Base sha256 mining transform */
