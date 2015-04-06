@@ -208,7 +208,7 @@ protected:
 	int nOldBlockHeight;
 	int nNewBlockHeight;
 	int nTimeOutHeight;
-	static const int nFee = 100000;
+	static const int nFee = 1*COIN + 100000;
 	uint64_t nOldMoney;
 	uint64_t nNewMoney;
 	string strTxHash;

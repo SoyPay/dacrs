@@ -306,6 +306,9 @@ void CWallet::SetBestChain(const CBlockLocator& loc) {
 
 
 
+
+
+
 void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const CBlock* pblock) {
 
 	LOCK2(cs_main, cs_wallet);
@@ -380,14 +383,12 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 								}
 							}
 					}
+					uiInterface.RevTransaction(sptx.get()->GetHash());
 					UnConfirmTx[sptx.get()->GetHash()] = sptx.get()->GetNewInstance();
 					db.WriteUnComFirmedTx(sptx.get()->GetHash(),UnConfirmTx[sptx.get()->GetHash()]);
 
 				}
-//				Oldtx.AddTx(sptx->GetHash(), sptx.get());
-
 			}
-//			Oldtx.AcceptToMemoryPool(); //add those tx to mempool
 			if (mapInBlockTx.count(blockhash)) {
 				db.EraseBlockTx(blockhash);
 				mapInBlockTx.erase(blockhash);
@@ -1077,4 +1078,8 @@ bool CWallet::LoadMinVersion(int nVersion) {
 int CWallet::GetVersion() {
 	LOCK(cs_wallet);
 	return nWalletVersion;
+}
+
+bool CKeyStoreValue::IsContainMinerKey() const {
+	return mMinerCkey.IsValid();
 }

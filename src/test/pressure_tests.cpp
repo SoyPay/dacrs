@@ -10,7 +10,7 @@
 #include <boost/assign/list_of.hpp>
 using namespace std;
 
-const unsigned int iTxCount = 6;
+const unsigned int iTxCount = 6000;
 vector<std::shared_ptr<CBaseTransaction> > vTransactions;
 vector<string> vTransactionHash;
 
@@ -188,7 +188,7 @@ public:
 			map<string, string>::iterator iterSrcAddr = GetRandAddress();
 			regAddress = iterSrcAddr->second;
 		}
-		uint64_t nFee = GetRandomFee();
+		uint64_t nFee = GetRandomFee() + 1 * COIN;
 		Value ret = RegisterScriptTx(regAddress, "unit_test.bin", 100, nFee);
 		BOOST_CHECK(GetHashFromCreatedTx(ret,hash));
 
@@ -251,9 +251,8 @@ public:
 		}
 	}
 
-	bool DetectionAccount(uint64_t llSendValue) {
+	bool DetectionAccount(uint64_t llFuelValue) {
 		uint64_t rewardAmount(0);
-		uint64_t SelfFreezeAmount(0);
 		uint64_t freeValue(0);
 		uint64_t totalValue(0);
 		uint64_t scriptaccValue(0);
@@ -289,24 +288,11 @@ public:
 
 		}
 		totalValue += rewardAmount;
-		totalValue += SelfFreezeAmount;
 		totalValue += freeValue;
 		totalValue += scriptaccValue;
+		uint64_t uTotalRewardValue = 10 * COIN * (chainActive.Tip()->nHeight-1);
 		//检查总账平衡
-		BOOST_CHECK(totalValue  == 30000000*COIN);
-
-		uint64_t selfFreeze(0);
-		//检查主动冻结钱是否平衡
-		for(auto & item : vFreezeItem) {
-			if(mempool.mapTx.count(uint256(std::get<2>(item))) <= 0 ) //交易已被确认
-			if(std::get<0>(item) >  chainActive.Tip()->nHeight) {  //主动冻结还未解冻
-				selfFreeze += std::get<1>(item);
-			}
-		}
-//		cout << "SelfFreezeAmount:" << SelfFreezeAmount << endl;
-//		cout << "selfFreeze:" << selfFreeze << endl;
-
-		BOOST_CHECK(SelfFreezeAmount == selfFreeze);
+		BOOST_CHECK(totalValue + llFuelValue == (30000000 * COIN + uTotalRewardValue));
 
 		return true;
 	}
@@ -323,7 +309,7 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 {
 	//初始化环境,注册一个合约脚本，并且挖矿确认
 	InitRegScript();
-	BOOST_CHECK(DetectionAccount(0));
+//	BOOST_CHECK(DetectionAccount(1*COIN));
 	//随机创建6000个交易
 	CreateRandTx(iTxCount);
 	cout << endl;
@@ -343,6 +329,7 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 	int nConfirmTxCount(0);
 	uint64_t llRegAcctFee(0);
 	uint64_t llSendValue(0);
+	uint64_t llFuelValue(0);
 	while (nSize) {
 		//挖矿
 		map<string, string>::const_iterator iterAddr = GetRandAddress();
@@ -351,6 +338,7 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 		{
 			LOCK(cs_main);
 			CBlockIndex *pindex = chainActive.Tip();
+			llFuelValue += pindex->nFuel;
 			BOOST_CHECK(ReadBlockFromDisk(block, pindex));
 		}
 
@@ -379,17 +367,7 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 		}
 		//检测Block最大值
 		BOOST_CHECK(block.GetSerializeSize(SER_DISK, CLIENT_VERSION) <= MAX_BLOCK_SIZE);
-		//检测block是否按照手续费比字节数大小值排序确认
-		vector<std::shared_ptr<CBaseTransaction> >::iterator prePtx = block.vptx.begin()+1;
-		vector<std::shared_ptr<CBaseTransaction> >::iterator iterPTx = ++prePtx;
-		for(; iterPTx != block.vptx.end(); ++iterPTx){
-			int preProriry = prePtx->get()->GetFee() / prePtx->get()->GetSerializeSize(SER_DISK, CLIENT_VERSION);
-			int proriry = iterPTx->get()->GetFee() / iterPTx->get()->GetSerializeSize(SER_DISK, CLIENT_VERSION);
-			prePtx = iterPTx;
-//			cout << "preProriry:" << preProriry << endl;
-//			cout << "proriry:" << proriry << endl;
-			BOOST_CHECK(preProriry>= proriry);
-		}
+
 //		std::stable_sort(vptxSort.begin()+1, vptxSort.end(), [](const std::shared_ptr<CBaseTransaction> &pTx1, const std::shared_ptr<CBaseTransaction> &pTx2) {
 //					if ((pTx1->GetFee()/pTx1->GetSerializeSize(SER_DISK, CLIENT_VERSION)) > (pTx2->GetFee()/pTx2->GetSerializeSize(SER_DISK, CLIENT_VERSION)))
 //						return true;
@@ -413,7 +391,7 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 		llSendValue += block.GetFee();
 //		cout <<"llSendValue:" << llSendValue << endl;
 		//检测确认交易后总账是否平衡
-		BOOST_CHECK(DetectionAccount(llSendValue));
+		BOOST_CHECK(DetectionAccount(llFuelValue));
 	}
 	uint64_t totalFee(0);
 	for(auto &item : vSendFee) {
