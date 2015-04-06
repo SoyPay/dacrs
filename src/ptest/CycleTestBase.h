@@ -7,7 +7,7 @@
 
 #ifndef CYCLETESTBASE_H_
 #define CYCLETESTBASE_H_
-#include "../test/SysTestBase.h"
+#include "../test/systestbase.h"
 enum TEST_STATE{
 	this_state,
 	next_state,

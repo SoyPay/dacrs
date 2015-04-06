@@ -100,10 +100,17 @@ bool CTestBetTx::ASendP2PBet() {
 		scriptData << senddata;
 		string sendcontract = HexStr(scriptData);
 		uint64_t sendfee = GetRandomBetfee();
-		Value  sendret= CreateContractTx(scriptid,ADDR_A,sendcontract,0,0,betamount);
+
+		uint64_t nTempSend = 0;
+		if((int)senddata.noperateType == 0x01){
+			nTempSend = 0;
+		}else{
+			nTempSend = betamount;
+		}
+		Value  sendret= CreateContractTx(scriptid,ADDR_A,sendcontract,0,0,nTempSend);
 		if((int)senddata.noperateType == 0x01){
 			strAsendHash = "";
-			GetHashFromCreatedTx(sendret, strAsendHash);
+			BOOST_CHECK(GetHashFromCreatedTx(sendret, strAsendHash));
 			if(strAsendHash == "") {
 				return true;
 			}
@@ -141,9 +148,17 @@ bool CTestBetTx::BAcceptP2PBet(void) {
 		string acceptcontract = HexStr(scriptData);
 		int nCurHight;
 		GetBlockHeight(nCurHight);
-		Value vaccept = CreateContractTx(scriptid, ADDR_B, acceptcontract, nCurHight, 0,betamount);
+
+		uint64_t nTempSend = 0;
+		if((int)acceptdata.noperateType  == 0x01){
+			nTempSend = 0;
+		}else{
+			nTempSend = betamount;
+		}
+		Value vaccept = CreateContractTx(scriptid, ADDR_B, acceptcontract, nCurHight, 0,nTempSend);
 		string hash = "";
-		if(acceptdata.noperateType == 0x01){
+		cout<<"type"<<(int)acceptdata.noperateType<<endl;
+		if((int)acceptdata.noperateType == 0x01){
 
 			GetHashFromCreatedTx(vaccept, hash);
 			if(hash == "") {
@@ -156,10 +171,8 @@ bool CTestBetTx::BAcceptP2PBet(void) {
 			BOOST_CHECK(GetHashFromCreatedTx(vaccept, hash));
 			BOOST_CHECK(GenerateOneBlock());
 		}
-		BOOST_CHECK(GetHashFromCreatedTx(vaccept, strBacceptHash));
-		BOOST_CHECK(GenerateOneBlock());
 		string index = "";
-		if (basetest.GetTxConfirmedRegID(strBacceptHash, index)) {
+		if (basetest.GetTxConfirmedRegID(hash, index)) {
 				mCurStep++;
 				return true;
 		}
