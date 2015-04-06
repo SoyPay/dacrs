@@ -63,7 +63,7 @@ private:
 	 * @param listoperate: run the script return the code,check the code
 	 * @return : true check success
 	 */
-	bool CheckOperate(const vector<CVmOperate> &listoperate) const;
+	bool CheckOperate(const vector<CVmOperate> &listoperate);
 	/**
 	 *
 	 * @param listoperate: through the vm return code ,The accounts plus money and less money
@@ -141,21 +141,23 @@ public:
 
 enum ACCOUNT_TYPE {
 	// account type
-	ACCOUNTID = 0,			//!< Registration accountid
-	KEYID = 1,			    //!< pulickey
+	regid = 0x01,			//!< Registration accountid
+	base58addr = 0x02,			    //!< pulickey
 };
 /**
  * @brief after run the script,the script output the code
  */
 class CVmOperate{
 public:
-	unsigned char accountid[6];	//!< accountid
+	unsigned char nacctype;
+	unsigned char accountid[34];	//!< accountid
 	unsigned char opeatortype;		//!OperType
 	unsigned int  outheight;		//!< the transacion Timeout height
 	unsigned char money[8];			//!<The transfer amount
 	IMPLEMENT_SERIALIZE
 	(
-			for(int i = 0;i < 6;i++)
+			READWRITE(nacctype);
+			for(int i = 0;i < 34;i++)
 			READWRITE(accountid[i]);
 			READWRITE(opeatortype);
 			READWRITE(outheight);

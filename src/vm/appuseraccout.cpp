@@ -137,6 +137,11 @@ bool CAppUserAccout::MinusAppCFund(const CAppCFund& inFound) {
 	if (it != vFreezedFund.end()) { //如果找到了
 		if(it->getvalue() >= inFound.getvalue())
 			{
+			 if(it->getvalue() == inFound.getvalue())
+			 {
+				 vFreezedFund.erase(it);
+				 return true;
+			 }
 			  it->setValue(it->getvalue()  - inFound.getvalue());
 			  return true;
 			}
@@ -159,17 +164,20 @@ CAppUserAccout::~CAppUserAccout() {
 }
 bool CAppUserAccout::Operate(const vector<CAppFundOperate> &Op) {
 	assert(Op.size() > 0);
+	//LogPrint("acc","before:%s",toString());
 	for (auto const op : Op) {
 		if (!Operate(op)) {
 			return false;
 		}
 	}
+	//LogPrint("acc","after:%s",toString());
 	return true;
 }
 
 
 
 bool CAppUserAccout::Operate(const CAppFundOperate& Op) {
+	//LogPrint("acc","Op:%s",Op.toString());
 	if (Op.opeatortype == ADD_FREE_OP) {
 		llValues += Op.GetUint64Value();
 		return true;
@@ -230,9 +238,10 @@ string CAppUserAccout::toString() const {
 Object CAppFundOperate::toJSON() const {
 	Object result;
 	int timout = outheight;
+	string tep[] ={"error type","ADD_FREE_OP ","SUB_FREE_OP","ADD_TAG_OP","SUB_TAG_OP"};
 	result.push_back(Pair("userid", HexStr(GetAppUserTagV())));
 	result.push_back(Pair("vTag", HexStr(GetFundTagV())));
-	result.push_back(Pair("opeatortype", opeatortype));
+	result.push_back(Pair("opeatortype", tep[opeatortype]));
 	result.push_back(Pair("outheight", timout));
 //	result.push_back(Pair("outheight", outheight));
 	result.push_back(Pair("mMoney", mMoney));
