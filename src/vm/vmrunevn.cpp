@@ -75,10 +75,8 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 	m_ScriptDBTip = &VmDB;
 
 	CTransaction* tx = static_cast<CTransaction*>(Tx.get());
-	uint64_t maxstep = MAX_BLOCK_RUN_STEP;
-	if ((tx->llFees - CBaseTransaction::nMinTxFee) / nBurnFactor < MAX_BLOCK_RUN_STEP) {
-		maxstep = (tx->llFees - CBaseTransaction::nMinTxFee) / nBurnFactor;
-	}
+	uint64_t maxstep = min((tx->llFees-CBaseTransaction::nMinTxFee)/nBurnFactor, MAX_BLOCK_RUN_STEP);
+	tuple<bool, uint64_t, string> mytuple;
 	if (!intial(Tx, view, nheight)) {
 		return std::make_tuple (false, 0, string("VmScript inital Failed\n"));
 	}
@@ -88,7 +86,7 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 		return std::make_tuple(false, 0, string("VmScript run Failed\n"));
 	} else if (-1 == step) {
 		return std::make_tuple(false, 0, string("execure tx contranct run step exceed the max step limit\n"));
-//		uRunStep = maxstep;
+		//uRunStep = maxstep;
 	}else{
 		uRunStep = step;
 	}
@@ -140,18 +138,28 @@ shared_ptr<CAccount> CVmRunEvn::GetAccount(shared_ptr<CAccount>& Account) {
 }
 vector_unsigned_char CVmRunEvn::GetAccountID(CVmOperate value) {
 	vector_unsigned_char accountid;
-	//if (value.type == ACCOUNTID) {
-	//	accountid.assign(value.accountid, value.accountid + 6);
-	//} else if (value.type == KEYID) {
-		//accountid.assign(value.accountid, value.accountid + 20);
-	//}
+	if (value.nacctype == regid) {
+		accountid.assign(value.accountid, value.accountid + 6);
+	} else if (value.nacctype == base58addr) {
+		string addr(value.accountid,value.accountid+sizeof(value.accountid));
+		CKeyID KeyId = CKeyID(addr);
+		CRegID regid;
+		if(m_view->GetRegId(CUserID(KeyId), regid)){
+			accountid.assign(regid.GetVec6().begin(),regid.GetVec6().end());
+		}else{
+			accountid.assign(value.accountid, value.accountid + 34);
+		}
+	}
 	return accountid;
 }
-bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) const {
+bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 	// judge contract rulue
 	uint64_t addmoey = 0, miusmoney = 0;
 	uint64_t temp = 0;
 	for (auto& it : listoperate) {
+
+		if(it.nacctype != regid && it.nacctype != base58addr)
+			return false;
 
 		if (it.opeatortype == ADD_FREE ) {
 			memcpy(&temp,it.money,sizeof(it.money));
@@ -160,7 +168,10 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) const {
 
 		if (it.opeatortype == MINUS_FREE) {
 
-			vector<unsigned char > accountid(it.accountid,it.accountid+sizeof(it.accountid));
+			//vector<unsigned char > accountid(it.accountid,it.accountid+sizeof(it.accountid));
+			vector_unsigned_char accountid = GetAccountID(it);
+			if(accountid.size() != 6)
+				return false;
 			CRegID regId(accountid);
 			CTransaction* secure = static_cast<CTransaction*>(listTx.get());
 			/// current tx's script cant't mius other script's regid
@@ -168,17 +179,22 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) const {
 			{
 				return false;
 			}
+
 			memcpy(&temp,it.money,sizeof(it.money));
 			miusmoney += temp;
 		}
-		vector<unsigned char> accountid(it.accountid, it.accountid + sizeof(it.accountid));
-		CRegID regId(accountid);
-		if(regId.IsEmpty() || regId.getKeyID( *m_view) == uint160(0))
-			return false;
-		//  app only be allowed minus self money
-		if (!m_ScriptDBTip->HaveScript(regId) && it.opeatortype == MINUS_FREE) {
-			return false;
+		//vector<unsigned char> accountid(it.accountid, it.accountid + sizeof(it.accountid));
+		vector_unsigned_char accountid = GetAccountID(it);
+		if(accountid.size() == 6){
+			CRegID regId(accountid);
+			if(regId.IsEmpty() || regId.getKeyID( *m_view) == uint160(0))
+				return false;
+			//  app only be allowed minus self money
+			if (!m_ScriptDBTip->HaveScript(regId) && it.opeatortype == MINUS_FREE) {
+				return false;
+			}
 		}
+
 	}
 	if (addmoey != miusmoney)
 	{
@@ -212,10 +228,20 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 //		if (accountid.size() == 0) {
 //			return false;
 //		}
-		vector_unsigned_char accountid(it.accountid,it.accountid+sizeof(it.accountid));
-		CRegID regid(accountid);
-		CUserID userid(regid);
-		view.GetAccount(userid, *tem.get());
+//		vector_unsigned_char accountid(it.accountid,it.accountid+sizeof(it.accountid));
+		vector_unsigned_char accountid = GetAccountID(it);
+		CRegID userregId;
+		CKeyID userkeyid;
+
+		if(accountid.size() == 6){
+			userregId.SetRegID(accountid);
+			view.GetAccount(CUserID(userregId), *tem.get());
+		}else{
+			string dacrsaddr(accountid.begin(), accountid.end());
+			userkeyid = CKeyID(dacrsaddr);
+			view.GetAccount(CUserID(userkeyid), *tem.get());
+			}
+
 		shared_ptr<CAccount> vmAccount = GetAccount(tem);
 		if (vmAccount.get() == NULL) {
 			RawAccont.push_back(tem);
@@ -232,9 +258,9 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 			fund.nFundType = FREEDOM_FUND;
 		}
 
-//		LogPrint("vm", "account id:%s\r\n", HexStr(accountid).c_str());
-//		LogPrint("vm", "befer account:%s\r\n", vmAccount.get()->ToString().c_str());
-//		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
+		LogPrint("vm", "account id:%s\r\n", HexStr(accountid).c_str());
+		LogPrint("vm", "befer account:%s\r\n", vmAccount.get()->ToString().c_str());
+		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
 		bool ret = false;
 //		vector<CScriptDBOperLog> vAuthorLog;
 		//todolist
@@ -344,6 +370,7 @@ bool CVmRunEvn::OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFu
 				return false;
 
 			}
+			LogPrint("vm", "before user: %s\r\n", sptrAcc.get()->toString());
 			if (!sptrAcc.get()->Operate(tem.second)) {
 
 				int i = 0;
@@ -354,7 +381,7 @@ bool CVmRunEvn::OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFu
 						HexStr(tem.first));
 				return false;
 			}
-		//	cout << " writed acc:" << sptrAcc.get()->toString() << endl;
+			LogPrint("vm", "after user: %s\r\n", sptrAcc.get()->toString());
 			CScriptDBOperLog log;
 			view.SetScriptAcc(GetScriptRegID(), *sptrAcc.get(), log);
 			shared_ptr<vector<CScriptDBOperLog> > m_dblog = GetDbLog();
