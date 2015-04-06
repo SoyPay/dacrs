@@ -691,6 +691,12 @@ bool SysTestBase::GetRegID(string& strAddr,CRegID& regID) {
 	regID = account.regID;
 	return true;
 }
+bool SysTestBase::GetRegID(string& strAddr,string& regID){
+	Value value = GetAccountInfo(strAddr);
+
+	regID = "RegID";
+	return GetStrFromObj(value,regID);
+}
 bool SysTestBase::GetTxOperateLog(const uint256& txHash, vector<CAccountOperLog>& vLog) {
 		if (!GetTxOperLog(txHash, vLog))
 			return false;

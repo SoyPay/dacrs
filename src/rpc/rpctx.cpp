@@ -1688,16 +1688,36 @@ Value getappaccinfo(const Array& params, bool fHelp) {
 	CRegID script(params[0].get_str());
 	vector<unsigned char> key;
 
-	if(CRegID::IsSimpleRegIdStr( params[1].get_str())){
+/*	if(CRegID::IsSimpleRegIdStr( params[1].get_str())){
 		CRegID reg( params[1].get_str());
 		key.insert(key.begin(),reg.GetVec6().begin(),reg.GetVec6().end());
 	}else{
 		string addr = params[1].get_str();
 		key.assign(addr.c_str(),addr.c_str()+addr.length());
-	}
+	}*/
 
+	string addr = params[1].get_str();
+	key.assign(addr.c_str(),addr.c_str()+addr.length());
 	std::shared_ptr<CAppUserAccout> tem = make_shared<CAppUserAccout>();
 	contractScriptTemp.GetScriptAcc(script,key,*tem.get());
 	return Value(tem.get()->toJSON());
 }
+Value gethash(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 1) {
+		string msg = "gethash nrequired \"stri"
+				"\nregister script\n"
+				"\address:\n"
+				"\nExamples:\n" + HelpExampleCli("gethash", "5zQgdfghdfghdgfPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG") + "\nAs json rpc call\n"
+				+ HelpExampleRpc("gethash", "000000100000 0-7");
+		throw runtime_error(msg);
+	}
 
+	string str =params[0].get_str();
+	vector<unsigned char> vTemp;
+	vTemp.assign(str.c_str(),str.c_str()+str.length());
+	uint256 strhash = Hash(vTemp.begin(), vTemp.end());
+	Object obj;
+	obj.push_back(Pair("hash", strhash.ToString()));
+	return obj;
+
+}
