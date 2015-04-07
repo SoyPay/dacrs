@@ -1636,7 +1636,7 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 		Array ComfirmTx;
 		for (auto const &wtx : pwalletMain->mapInBlockTx) {
 			for (auto const & item : wtx.second.mapAccountTx) {
-				Object objtx = GetTxDetailJSON(item.first, false);
+				Object objtx = GetTxDetailJSON(item.first);
 				ComfirmTx.push_back(objtx);
 			}
 		}
@@ -1645,7 +1645,7 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 		Array UnComfirmTx;
 		CAccountViewCache view(*pAccountViewTip, true);
 		for (auto const &wtx : pwalletMain->UnConfirmTx) {
-			Object objtx = GetTxDetailJSON(wtx.first, false);
+			Object objtx = GetTxDetailJSON(wtx.first);
 			UnComfirmTx.push_back(objtx);
 		}
 		retObj.push_back(Pair("UnConfirmed", UnComfirmTx));
