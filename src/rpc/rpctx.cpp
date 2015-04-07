@@ -50,7 +50,7 @@ static  bool GetKeyId(string const &addr,CKeyID &KeyId) {
 	return true;
 };
 
-Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
+Object TxToJSON(CBaseTransaction *pTx) {
 	Object result;
 	result.push_back(Pair("hash", pTx->GetHash().GetHex()));
 	switch (pTx->nTxType) {
@@ -107,7 +107,7 @@ Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 	return result;
 }
 
-Object GetTxDetailJSON(const uint256& txhash,bool bPrintScriptContent = true ) {
+Object GetTxDetailJSON(const uint256& txhash) {
 	Object obj;
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 	{
@@ -115,7 +115,7 @@ Object GetTxDetailJSON(const uint256& txhash,bool bPrintScriptContent = true ) {
 		{
 			pBaseTx = mempool.lookup(txhash);
 			if (pBaseTx.get()) {
-				obj = TxToJSON(pBaseTx.get(),bPrintScriptContent);
+				obj = TxToJSON(pBaseTx.get());
 				return obj;
 			}
 		}
@@ -128,7 +128,7 @@ Object GetTxDetailJSON(const uint256& txhash,bool bPrintScriptContent = true ) {
 					file >> header;
 					fseek(file, postx.nTxOffset, SEEK_CUR);
 					file >> pBaseTx;
-					obj = TxToJSON(pBaseTx.get(),bPrintScriptContent);
+					obj = TxToJSON(pBaseTx.get());
 					obj.push_back(Pair("blockhash", header.GetHash().GetHex()));
 					obj.push_back(Pair("confirmHeight", (int) header.nHeight));
 				} catch (std::exception &e) {
