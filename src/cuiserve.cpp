@@ -66,7 +66,6 @@ void CUIServer::Accept_handler(sock_pt sock) {
 	if (CUIServer::IsInitalEnd == true) {
 		obj.push_back(Pair("type", "init"));
 		obj.push_back(Pair("msg", "initialize end"));
-		CUIServer::Send(write_string(Value(std::move(obj)), true));
 	} else {
 		obj.push_back(Pair("type", "hello"));
 		obj.push_back(Pair("msg", "hello asio"));

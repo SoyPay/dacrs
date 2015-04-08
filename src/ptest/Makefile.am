@@ -24,10 +24,8 @@ dacrs_ptest_LDADD += $(BDB_LIBS)
 dacrs_ptest_SOURCES = \
   p_test.cpp \
   main_tests.cpp \
-  miner_tests.cpp \
   updateaccount_tests.cpp \
   mining_tests.cpp	\
-  create_tx_tests.cpp \
   CDarkAndAnony.cpp	\
   ../test/systestbase.cpp \
   CycleSesureTrade_tests.cpp	\
