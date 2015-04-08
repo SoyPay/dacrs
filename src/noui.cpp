@@ -74,11 +74,12 @@ static void noui_BlockChanged(int64_t time,int64_t high,const uint256 &hash) {
 		CUIServer::Send(write_string(Value(std::move(obj)),true));
 	}
 }
+extern Object GetTxDetailJSON(const uint256& txhash);
 
 static bool noui_RevTransaction(const uint256 &hash){
 	Object obj;
 	obj.push_back(Pair("type",     "revtransaction"));
-	obj.push_back(Pair("hash",     hash.ToString()));
+	obj.push_back(Pair("transation",     GetTxDetailJSON(hash)));
 
 	if (CUIServer::HasConnection()) {
 		CUIServer::Send(write_string(Value(std::move(obj)),true));
