@@ -1748,8 +1748,8 @@ Value getappkeyvalue(const Array& params, bool fHelp) {
 			throw runtime_error("in getscriptdata :the key not exist!\n");
 		}
 		Object obj;
-		obj.push_back(Pair("hash",        array[i].get_str()));
-		obj.push_back(Pair("balance",     HexStr(value)));
+		obj.push_back(Pair("key",        array[i].get_str()));
+		obj.push_back(Pair("value",     HexStr(value)));
 		retArry.push_back(obj);
 	}
 
