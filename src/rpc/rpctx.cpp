@@ -50,7 +50,7 @@ static  bool GetKeyId(string const &addr,CKeyID &KeyId) {
 	return true;
 };
 
-Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
+Object TxToJSON(CBaseTransaction *pTx) {
 	Object result;
 	result.push_back(Pair("hash", pTx->GetHash().GetHex()));
 	switch (pTx->nTxType) {
@@ -107,7 +107,7 @@ Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 	return result;
 }
 
-Object GetTxDetailJSON(const uint256& txhash,bool bPrintScriptContent = true ) {
+Object GetTxDetailJSON(const uint256& txhash) {
 	Object obj;
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 	{
@@ -115,7 +115,7 @@ Object GetTxDetailJSON(const uint256& txhash,bool bPrintScriptContent = true ) {
 		{
 			pBaseTx = mempool.lookup(txhash);
 			if (pBaseTx.get()) {
-				obj = TxToJSON(pBaseTx.get(),bPrintScriptContent);
+				obj = TxToJSON(pBaseTx.get());
 				return obj;
 			}
 		}
@@ -128,9 +128,10 @@ Object GetTxDetailJSON(const uint256& txhash,bool bPrintScriptContent = true ) {
 					file >> header;
 					fseek(file, postx.nTxOffset, SEEK_CUR);
 					file >> pBaseTx;
-					obj = TxToJSON(pBaseTx.get(),bPrintScriptContent);
+					obj = TxToJSON(pBaseTx.get());
 					obj.push_back(Pair("blockhash", header.GetHash().GetHex()));
 					obj.push_back(Pair("confirmHeight", (int) header.nHeight));
+					obj.push_back(Pair("confirmedtime",header.nTime));
 				} catch (std::exception &e) {
 					throw runtime_error(tfm::format("%s : Deserialize or I/O error - %s", __func__, e.what()).c_str());
 				}
@@ -1636,7 +1637,7 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 		Array ComfirmTx;
 		for (auto const &wtx : pwalletMain->mapInBlockTx) {
 			for (auto const & item : wtx.second.mapAccountTx) {
-				Object objtx = GetTxDetailJSON(item.first, false);
+				Object objtx = GetTxDetailJSON(item.first);
 				ComfirmTx.push_back(objtx);
 			}
 		}
@@ -1645,7 +1646,7 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 		Array UnComfirmTx;
 		CAccountViewCache view(*pAccountViewTip, true);
 		for (auto const &wtx : pwalletMain->UnConfirmTx) {
-			Object objtx = GetTxDetailJSON(wtx.first, false);
+			Object objtx = GetTxDetailJSON(wtx.first);
 			UnComfirmTx.push_back(objtx);
 		}
 		retObj.push_back(Pair("UnConfirmed", UnComfirmTx));
