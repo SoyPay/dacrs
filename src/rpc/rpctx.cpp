@@ -73,7 +73,7 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		CTransaction *prtx = (CTransaction *) pTx;
 		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
 		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("srcaddr", RegIDToAddress(prtx->srcRegId)));
+		result.push_back(Pair("addr", RegIDToAddress(prtx->srcRegId)));
 		result.push_back(Pair("desaddr", RegIDToAddress(prtx->desUserId)));
 		result.push_back(Pair("money", prtx->llValues));
 		result.push_back(Pair("fees", prtx->llFees));
@@ -86,7 +86,7 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
 		result.push_back(Pair("ver", prtx->nVersion));
 		result.push_back(Pair("addr", RegIDToAddress(prtx->account)));
-		result.push_back(Pair("reward money", prtx->rewardValue));
+		result.push_back(Pair("money", prtx->rewardValue));
 		result.push_back(Pair("height", prtx->nHeight));
 		break;
 	}
@@ -131,7 +131,7 @@ Object GetTxDetailJSON(const uint256& txhash) {
 					obj = TxToJSON(pBaseTx.get());
 					obj.push_back(Pair("blockhash", header.GetHash().GetHex()));
 					obj.push_back(Pair("confirmHeight", (int) header.nHeight));
-					obj.push_back(Pair("confirmedtime",header.nTime));
+					obj.push_back(Pair("confirmedtime",(int)header.nTime));
 				} catch (std::exception &e) {
 					throw runtime_error(tfm::format("%s : Deserialize or I/O error - %s", __func__, e.what()).c_str());
 				}
