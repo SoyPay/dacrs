@@ -352,7 +352,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 //						}
 					}
 					newtx.AddTx(hashtx,sptx.get());
-
+					uiInterface.RevTransaction(sptx.get()->GetHash());
 				}
 				if(UnConfirmTx.count(hashtx)> 0){
 					db.EraseUnComFirmedTx(hashtx);
@@ -383,7 +383,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 								}
 							}
 					}
-					uiInterface.RevTransaction(sptx.get()->GetHash());
+
 					UnConfirmTx[sptx.get()->GetHash()] = sptx.get()->GetNewInstance();
 					db.WriteUnComFirmedTx(sptx.get()->GetHash(),UnConfirmTx[sptx.get()->GetHash()]);
 

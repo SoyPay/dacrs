@@ -1720,3 +1720,38 @@ Value gethash(const Array& params, bool fHelp) {
 	return obj;
 
 }
+Value getappkeyvalue(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 2) {
+		throw runtime_error("");
+	}
+
+	CRegID scriptid(params[0].get_str());
+	Array array = params[1].get_array();
+
+	int height = chainActive.Height();
+
+	if (scriptid.IsEmpty() == true) {
+		throw runtime_error("in getscriptdata :vscriptid size is error!\n");
+	}
+
+	if (!pScriptDBTip->HaveScript(scriptid)) {
+		throw runtime_error("in getscriptdata :vscriptid id is exist!\n");
+	}
+
+	Array retArry;
+	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+
+	for(int i =0;i <array.size();i++){
+		vector<unsigned char> key = ParseHex(array[i].get_str());
+		vector<unsigned char> value;
+		if (!contractScriptTemp.GetScriptData(height,scriptid, key, value)) {
+			throw runtime_error("in getscriptdata :the key not exist!\n");
+		}
+		Object obj;
+		obj.push_back(Pair("key",        array[i].get_str()));
+		obj.push_back(Pair("value",     HexStr(value)));
+		retArry.push_back(obj);
+	}
+
+	return retArry;
+}

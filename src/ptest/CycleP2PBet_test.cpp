@@ -99,7 +99,7 @@ bool CTestBetTx::ASendP2PBet() {
 		CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 		scriptData << senddata;
 		string sendcontract = HexStr(scriptData);
-		uint64_t sendfee = GetRandomBetfee();
+		//uint64_t sendfee = GetRandomBetfee();
 
 		uint64_t nTempSend = 0;
 		if((int)senddata.noperateType == 0x01){
@@ -110,7 +110,7 @@ bool CTestBetTx::ASendP2PBet() {
 		Value  sendret= CreateContractTx(scriptid,ADDR_A,sendcontract,0,0,nTempSend);
 		if((int)senddata.noperateType == 0x01){
 			strAsendHash = "";
-			BOOST_CHECK(GetHashFromCreatedTx(sendret, strAsendHash));
+			GetHashFromCreatedTx(sendret, strAsendHash);
 			if(strAsendHash == "") {
 				return true;
 			}
