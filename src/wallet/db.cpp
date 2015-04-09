@@ -37,18 +37,18 @@ CDBEnv bitdb;
 
 void CDBEnv::EnvShutdown()
 {
-    if (!fDbEnvInit)
-        return;
-
-    fDbEnvInit = false;
-  int ret = dbenv->close(0);
-   if (ret != 0)
-       LogPrint("CDB","CDBEnv::EnvShutdown: Error %d shutting down database environment: %s\n", ret, DbEnv::strerror(ret));
-    if (!fMockDb)
-    {
-    //	string te = path.string();
-     //   DbEnv(0).remove(te.c_str(), DB_FORCE);
-    }
+//    if (!fDbEnvInit)
+//        return;
+//
+//    fDbEnvInit = false;
+////    int ret = dbenv->close(0);
+////    if (ret != 0)
+////        LogPrint("CDB","CDBEnv::EnvShutdown: Error %d shutting down database environment: %s\n", ret, DbEnv::strerror(ret));
+//    if (!fMockDb)
+//    {
+//    	string te = path.string();
+//        DbEnv(0).remove(te.c_str(), DB_FORCE);
+//    }
 }
 
 void CDBEnv::Reset()
