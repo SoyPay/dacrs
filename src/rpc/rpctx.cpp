@@ -1099,8 +1099,7 @@ static int getDataFromSriptData(CScriptDBViewCache &cache, const CRegID &regid,
 		int pagesize, int index,
 		vector<
 				std::tuple<vector<unsigned char>,
-				vector<unsigned char>,
-				int> >&ret
+				vector<unsigned char> > >&ret
 				) {
 	int dbsize;
 	int nHeight = 0;
@@ -1119,14 +1118,14 @@ static int getDataFromSriptData(CScriptDBViewCache &cache, const CRegID &regid,
 				"in getscriptdata :the scirptid get data failed!\n");
 	}
 	if (index == 1) {
-		ret.push_back(std::make_tuple(vScriptKey, value, nHeight));
+		ret.push_back(std::make_tuple(vScriptKey, value));
 	}
 	int readCount(1);
 	while (--dbsize) {
 		if (cache.GetScriptData(height, regid, 1, vScriptKey, value)) {
 			++readCount;
 			if (readCount > pagesize * (index - 1)) {
-				ret.push_back(std::make_tuple(vScriptKey, value, nHeight));
+				ret.push_back(std::make_tuple(vScriptKey, value));
 			}
 		}
 		if (readCount >= pagesize * index) {
@@ -1181,18 +1180,16 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		int pagesize = params[1].get_int();
 		int index = params[2].get_int();
 
-		vector<std::tuple<vector<unsigned char>,vector<unsigned char>,int> >ret;
+		vector<std::tuple<vector<unsigned char>,vector<unsigned char> > >ret;
 		getDataFromSriptData(contractScriptTemp,regid,pagesize,index,ret);
 		Array retArray;
 		for(auto te:ret)
 		{
 			vector<unsigned char>key =  std::get<0>(te);
 			vector<unsigned char>valvue =  std::get<1>(te);
-			int high =  std::get<2>(te);
 			Object firt;
 			firt.push_back(Pair("key", HexStr(key)));
 			firt.push_back(Pair("value", HexStr(valvue)));
-			firt.push_back(Pair("height", high));
 			retArray.push_back(firt);
 		}
 		return retArray;
