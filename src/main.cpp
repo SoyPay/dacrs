@@ -4219,7 +4219,7 @@ string CBlockUndo::ToString() const {
 bool DisconnectBlockFromTip(CValidationState &state) {
 	return DisconnectTip(state);
 }
-bool GetTxOperLog(const uint256 &txHash, vector<CAccountOperLog> &vAccountOperLog) {
+bool GetTxOperLog(const uint256 &txHash, vector<CAccountLog> &vAccountLog) {
 if (SysCfg().IsTxIndex()) {
 		CDiskTxPos postx;
 		if (pblocktree->ReadTxIndex(txHash, postx)) {
@@ -4242,7 +4242,7 @@ if (SysCfg().IsTxIndex()) {
 
 				for(auto &txUndo : blockUndo.vtxundo) {
 					if(txUndo.txHash == txHash) {
-						vAccountOperLog = txUndo.vAccountOperLog;
+						vAccountLog = txUndo.vAccountLog;
 						return true;
 					}
 

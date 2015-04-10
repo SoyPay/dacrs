@@ -18,7 +18,7 @@
 #include "sync.h"
 #include "txmempool.h"
 #include "uint256.h"
-#include "account.h"
+#include "database.h"
 
 
 #include <algorithm>
@@ -558,7 +558,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp = NU
 bool DisconnectBlockFromTip(CValidationState &state);
 
 //get tx operate account log
-bool GetTxOperLog(const uint256 &txHash, vector<CAccountOperLog> &vAccountOperLog);
+bool GetTxOperLog(const uint256 &txHash, vector<CAccountLog> &vAccountLog);
 
 //get setBlockIndexValid
 Value ListSetBlockIndexValid();
