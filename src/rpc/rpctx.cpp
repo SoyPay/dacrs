@@ -1747,6 +1747,29 @@ Value getappkeyvalue(const Array& params, bool fHelp) {
 		Object obj;
 		obj.push_back(Pair("key",        array[i].get_str()));
 		obj.push_back(Pair("value",     HexStr(value)));
+		uint256 txhash(array[i].get_str());
+		std::shared_ptr<CBaseTransaction> pBaseTx;
+		int time = 0;
+		int height = 0;
+		if (SysCfg().IsTxIndex()) {
+		CDiskTxPos postx;
+		if (pblocktree->ReadTxIndex(txhash, postx)) {
+			CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
+			CBlockHeader header;
+			try {
+				file >> header;
+				fseek(file, postx.nTxOffset, SEEK_CUR);
+				file >> pBaseTx;
+				height = header.nHeight;
+				time = header.nTime;
+			} catch (std::exception &e) {
+				throw runtime_error(tfm::format("%s : Deserialize or I/O error - %s", __func__, e.what()).c_str());
+			}
+		  }
+		}
+
+		obj.push_back(Pair("confirmHeight", (int) height));
+		obj.push_back(Pair("confirmedtime",(int)time));
 		retArry.push_back(obj);
 	}
 
