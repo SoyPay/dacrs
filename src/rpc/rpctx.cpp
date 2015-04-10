@@ -1739,15 +1739,19 @@ Value getappkeyvalue(const Array& params, bool fHelp) {
 	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 
 	for(int i =0;i <array.size();i++){
-		vector<unsigned char> key = ParseHex(array[i].get_str());
-		vector<unsigned char> value;
-		if (!contractScriptTemp.GetScriptData(height,scriptid, key, value)) {
-			throw runtime_error("in getscriptdata :the key not exist!\n");
-		}
-		Object obj;
-		obj.push_back(Pair("key",        array[i].get_str()));
-		obj.push_back(Pair("value",     HexStr(value)));
 		uint256 txhash(array[i].get_str());
+		vector<unsigned char> key;// = ParseHex(array[i].get_str());
+		key.insert(key.begin(),txhash.begin(),txhash.end());
+		vector<unsigned char> value;
+		Object obj;
+		if (!contractScriptTemp.GetScriptData(height,scriptid, key, value)) {
+			obj.push_back(Pair("key",        array[i].get_str()));
+			obj.push_back(Pair("value",     HexStr(value)));
+		}else{
+			obj.push_back(Pair("key",        array[i].get_str()));
+			obj.push_back(Pair("value",     HexStr(value)));
+		}
+
 		std::shared_ptr<CBaseTransaction> pBaseTx;
 		int time = 0;
 		int height = 0;
