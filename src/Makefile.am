@@ -37,7 +37,7 @@ DACRS_CORE_H = \
   clientversion.h \
   compat\compat.h \
   core.h \
-  account.h \
+  database.h \
   crypter.h \
   hash.h \
   init.h \
@@ -85,14 +85,14 @@ VM_H = \
 	vm/vmrunevn.h \
 	vm/script.h \
 	vm/testmcu.h \
-	vm/appuseraccout.h
+	vm/appaccount.h
 
 VM_CPP = \
 	vm/vm8051.cpp \
 	vm/vmrunevn.cpp \
 	vm/script.cpp \
 	vm/testmcu.cpp \
-	vm/appuseraccout.cpp
+	vm/appaccount.cpp
   
 
 obj/build.h: FORCE
@@ -107,7 +107,7 @@ libdacrs_server_a_SOURCES = \
   alert.cpp \
   bloom.cpp \
   checkpoints.cpp \
-  account.cpp \
+  database.cpp \
   init.cpp \
   keystore.cpp \
   leveldbwrapper.cpp \

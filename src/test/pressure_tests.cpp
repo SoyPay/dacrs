@@ -141,10 +141,10 @@ public:
 		if(!CreateCommonTx(iterSrcAddr->second, newAddress))
 			return false;
 
-		int nfee = GetRandomFee();
-		Value result = registaccounttx(newAddress,nfee, "false");
+		int nfee = GetRandomFee() + 100000000;
+		Value result = registaccounttx(newAddress, nfee);
 		string txHash = "";
-		BOOST_CHECK(GetHashFromCreatedTx(value,txHash));
+		BOOST_CHECK(GetHashFromCreatedTx(value, txHash));
 
 		vTransactionHash.push_back(txHash);
 		if (mempool.mapTx.count(uint256(txHash)) > 0) {

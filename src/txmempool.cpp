@@ -5,7 +5,7 @@
 
 #include "core.h"
 #include "txmempool.h"
-#include "account.h"
+#include "database.h"
 #include "main.h"
 
 using namespace std;

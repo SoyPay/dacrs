@@ -201,11 +201,10 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 
 	NewAccont.clear();
 	for (auto& it : listoperate) {
-		CTransaction* tx = static_cast<CTransaction*>(listTx.get());
+//		CTransaction* tx = static_cast<CTransaction*>(listTx.get());
 		CFund fund;
 		memcpy(&fund.value,it.money,sizeof(it.money));
 		fund.nHeight = it.outheight;
-		fund.appId = boost::get<CRegID>(tx->desUserId).GetVec6();
 
 		auto tem = make_shared<CAccount>();
 //		vector_unsigned_char accountid = GetAccountID(it);
@@ -229,7 +228,7 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 			vmAccount.get()->CompactAccount(RunTimeHeight);
 		}
 		if ((OperType) it.opeatortype == ADD_FREE) {
-			fund.nFundType = FREEDOM_FUND;
+			//fund.nFundType = FREEDOM_FUND;
 		}
 
 //		LogPrint("vm", "account id:%s\r\n", HexStr(accountid).c_str());

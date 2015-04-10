@@ -27,6 +27,7 @@
 using namespace std;
 using namespace boost;
 std::string TxHash("");
+const int nNewAddrs = 1420;
 
 class CSysScriptTest:public SysTestBase
 {
@@ -234,7 +235,6 @@ public:
 
 		BOOST_CHECK(SetAddrGenerteBlock("mjSwCwMsvtKczMfta1tvr78z2FTsZA1JKw"));
 		Value temp1 = GetAccountInfo("010000000100");
-		BOOST_CHECK_EQUAL(GetValue(temp1,"value"),10000);
 		temp1 = GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
 		BOOST_CHECK_EQUAL(GetValue(temp1,"FreeValues"),999999899990000);
 
@@ -248,9 +248,9 @@ public:
 
 		BOOST_CHECK(SetAddrGenerteBlock("msdDQ1SXNmknrLuTDivmJiavu5J9VyX9fV"));
 		temp1 = GetAccountInfo("010000000100");
-		BOOST_CHECK_EQUAL(GetValue(temp1,"value"),0);
+		BOOST_CHECK_EQUAL(GetValue(temp1,"FreeValues"),0);
 		temp1 = GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
-		BOOST_CHECK_EQUAL(GetValue(temp1,"value"),10000);
+		BOOST_CHECK_EQUAL(GetValue(temp1,"FreeValues"),999999900000000);
 
 		//测试不能从其他脚本打钱到本APP脚本账户中
 		accountid = "020000000100";
@@ -475,34 +475,43 @@ public:
 	}
 	void TestMinner()
 	{
-		for(int i=0;i < 100;i++)
+		string hash = "";
+		vector<string> vNewAddress;
+		string strAddress("0-8");
+		for(int i=0; i < nNewAddrs; i++)
 		{
 			string newaddr;
-			srand(time(NULL));
-			int r = (rand() % 2);
-
-			BOOST_CHECK(GetNewAddr(newaddr,r));
-
-			int nfee = GetRandomFee();
-
-			Value value = CreateNormalTx(newaddr,nfee);
-
-			string hash = "";
+			BOOST_CHECK(GetNewAddr(newaddr,false));
+			vNewAddress.push_back(newaddr);
+			uint64_t nMoney = 10000 * COIN;
+			if( i == 800 ) {
+				strAddress = "0-7";
+			}
+			Value value = CreateNormalTx(strAddress, newaddr, nMoney);
 			BOOST_CHECK(GetHashFromCreatedTx(value,hash));
-			BOOST_CHECK(GenerateOneBlock());
-
-			Value value1 = registaccounttx(newaddr,nfee,r);
-			BOOST_CHECK(GetHashFromCreatedTx(value1,hash));
-			BOOST_CHECK(GenerateOneBlock());
-
-			for(int j=0; j<100 ;++j)
-			cout<<'\b';
-			cout << "TestMinner progress: "<<  (int)(((i+1)/(float)100) * 100) << "%";
 		}
-
-		BOOST_CHECK(DisConnectBlock(chainActive.Height()-1));
-		BOOST_CHECK(GenerateOneBlock());
-		BOOST_CHECK(GenerateOneBlock());
+		cout << "create new address completed!" << endl;
+		while (!IsMemoryPoolEmpty()) {
+			BOOST_CHECK(GenerateOneBlock());
+		}
+		cout << "new transation have been confirmed, current height:" << chainActive.Height() << endl;
+		for(size_t i=0; i < vNewAddress.size(); i++) {
+			int nfee = GetRandomFee();
+			Value value1 = registaccounttx(vNewAddress[i], nfee);
+			BOOST_CHECK(GetHashFromCreatedTx(value1,hash));
+		//	BOOST_CHECK(GenerateOneBlock());
+		}
+		cout << "new address register account transactions have been created completed!" << endl;
+		while (!IsMemoryPoolEmpty()) {
+			BOOST_CHECK(GenerateOneBlock());
+		}
+		cout << "all register transactions have been confirmed!" << endl;
+		while(chainActive.Height() != 2000) {
+			BOOST_CHECK(GenerateOneBlock());
+		}
+//		BOOST_CHECK(DisConnectBlock(chainActive.Height()-1));
+//		BOOST_CHECK(GenerateOneBlock());
+//		BOOST_CHECK(GenerateOneBlock());
 	}
 };
 

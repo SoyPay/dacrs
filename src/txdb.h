@@ -8,7 +8,7 @@
 
 #include "leveldbwrapper.h"
 #include "main.h"
-#include "account.h"
+#include "database.h"
 
 #include <map>
 #include <string>
