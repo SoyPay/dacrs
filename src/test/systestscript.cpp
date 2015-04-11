@@ -243,7 +243,7 @@ public:
 		param = 14;
 		temp = "";
 		temp += tinyformat::format("%02x%s",param,accountid);
-		resut =CreateContractTx("010000000100", "mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5", temp,10);
+		resut =CreateContractTx("010000000100", "mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5", temp,10,100000000);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 
 		BOOST_CHECK(SetAddrGenerteBlock("msdDQ1SXNmknrLuTDivmJiavu5J9VyX9fV"));

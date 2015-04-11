@@ -1,7 +1,7 @@
 #ifndef CYCLESESURETRADE_H_
 #define CYCLESESURETRADE_H_
 
-#include "../test/SysTestBase.h"
+#include "../test/systestbase.h"
 #include "CycleTestBase.h"
 
 #define BUYER	"01"
@@ -25,7 +25,7 @@
 #define MAX_ARBITRATOR 3
 #define HASH_SIZE		32
 
-#pragma pack(push) 
+#pragma pack(push)
 #pragma pack(1)
 typedef struct tag_INT64 {
 	unsigned char data[8];
@@ -59,11 +59,10 @@ typedef struct {
 	unsigned char hash[HASH_SIZE];
 	Int64 nMinus;
 }ARBIT_RES_CONTRACT;
-#pragma pack(pop) 
+#pragma pack(pop)
 
 class CSesureTradeHelp :public SysTestBase{
 public:
-	bool ModifyAuthor(unsigned char nUserData,const string& strSignAddr,string& strTxHash);
 	string GetReverseHash(const string& strTxHash);
 
 	string PutDataIntoString(char* pData, int nDateLen);

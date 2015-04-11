@@ -55,20 +55,6 @@ TEST_STATE CTestSesureTrade::run() {
 	return this_state;
 }
 
-bool CSesureTradeHelp::ModifyAuthor(unsigned char nUserData, const string& strSignAddr, string& strTxHash) {
-	vector<unsigned char> vUserDefine;
-	string strHash1, strHash2;
-	vUserDefine.push_back(nUserData);
-	CNetAuthorizate author(10000, vUserDefine, 100000, 1000000, 1000000);
-	Value valueRes = SysTestBase::ModifyAuthor(strSignAddr, strRegScriptID, 0, 10000, author);
-
-	if (!GetHashFromCreatedTx(valueRes, strTxHash)) {
-		return false;
-	}
-
-	return true;
-}
-
 bool CTestSesureTrade::Step1RegisterScript() {
 
 	const char* pKey[] = {
@@ -93,12 +79,8 @@ bool CTestSesureTrade::Step1ModifyAuthor() {
 		if (!GetTxConfirmedRegID(strStep1RegHash, strRegScriptID) ) {
 			return false;
 		}
-
-		if(ModifyAuthor(1, BUYER_ADDR,strStep1ModifyHash))
-		{
 			mCurStep++;
 			return true;
-		}
 	}
 	return false;
 }
@@ -110,7 +92,7 @@ bool CTestSesureTrade::Step1SendContract() {
      	string strData = PutDataIntoString((char*) &firstConstract, sizeof(firstConstract));
      	strData.assign((char*) &firstConstract, (char*) &firstConstract +  sizeof(firstConstract));
 
-		auto valueRes = CreateContractTxEx(strRegScriptID, VADDR_BUYER, strData, 0, 100000);
+		auto valueRes = CreateContractTx(strRegScriptID, VADDR_BUYER, strData, 0, 100000);
 		if (GetHashFromCreatedTx(valueRes, strStep1SendHash)) {
 			mCurStep++;
 			return true;
@@ -122,11 +104,8 @@ bool CTestSesureTrade::Step1SendContract() {
 bool CTestSesureTrade::Step2ModifyAuthor() {
 	if(VerifyTxInBlock(strStep1SendHash))
 	{
-		if(ModifyAuthor(2, SELLER_ADDR,strStep2ModifyHash))
-		{
 			mCurStep++;
 			return true;
-		}
 	}
 	return false;
 }
@@ -138,7 +117,7 @@ bool CTestSesureTrade::Step2SendContract() {
 		PacketNextContract(2, (unsigned char*) strReversFirstTxHash.c_str(), &secondContract);
 		string strData = PutDataIntoString((char*) &secondContract, sizeof(secondContract));
 
-		Value valueRes = CreateContractTxEx(strRegScriptID, VADDR_SELLER, strData, 0, 100000);
+		Value valueRes = CreateContractTx(strRegScriptID, VADDR_SELLER, strData, 0, 100000);
 		if (GetHashFromCreatedTx(valueRes, strStep2SendHash)) {
 			mCurStep++;
 			return true;
@@ -151,11 +130,8 @@ bool CTestSesureTrade::Step2SendContract() {
 bool CTestSesureTrade::Step3ModifyAuthor() {
 	if(VerifyTxInBlock(strStep2SendHash))
 		{
-			if(ModifyAuthor(1, ARBIT_ADDR,strStep3ModifyHash))
-			{
 				mCurStep++;
 				return true;
-			}
 		}
 		return false;
 }
@@ -167,7 +143,7 @@ bool CTestSesureTrade::Step3SendContract() {
 		PacketNextContract(3, (unsigned char*) strReversFirstTxHash.c_str(), &thirdContract);
 		string strData = PutDataIntoString((char*) &thirdContract, sizeof(thirdContract));
 
-		Value valueRes = CreateContractTxEx(strRegScriptID, VADDR_ARBIT, strData, 0, 100000);
+		Value valueRes = CreateContractTx(strRegScriptID, VADDR_ARBIT, strData, 0, 100000);
 		if (GetHashFromCreatedTx(valueRes, strStep3SendHash)) {
 			mCurStep++;
 			return true;
@@ -179,10 +155,8 @@ bool CTestSesureTrade::Step3SendContract() {
 
 bool CTestSesureTrade::Step4ModifyAuthor() {
 	if (VerifyTxInBlock(strStep3SendHash)) {
-		if (ModifyAuthor(3, ARBIT_ADDR, strStep4ModifyHash)) {
 			mCurStep++;
 			return true;
-		}
 	}
 	return false;
 }
@@ -194,7 +168,7 @@ bool CTestSesureTrade::Step4SendContract() {
 		PacketLastContract((unsigned char*) strReversFirstTxHash.c_str(), 100000, &arContract);
 		string strData = PutDataIntoString((char*) &arContract, sizeof(arContract));
 
-		Value valueRes = CreateContractTxEx(strRegScriptID, VADDR_ARBIT, strData, 0, 100000);
+		Value valueRes = CreateContractTx(strRegScriptID, VADDR_ARBIT, strData, 0, 100000);
 		if (GetHashFromCreatedTx(valueRes, strStep4SendHash)) {
 			mCurStep++;
 			return true;

@@ -53,4 +53,5 @@ extern Value getalltxinfo(const Array& params, bool fHelp);
 extern Value listauthor(const Array& params, bool fHelp);
 extern Value  getappaccinfo(const Array& params, bool fHelp);
 extern Value  gethash(const Array& params, bool fHelp);
+extern Value  getappkeyvalue(const Array& params, bool fHelp);
 #endif /* RPCTX_H_ */
