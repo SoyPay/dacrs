@@ -199,7 +199,7 @@ bool SysTestBase::ResetEnv() {
 
 int SysTestBase::GetRandomFee() {
 	srand(time(NULL));
-	int r = (rand() % 1000000);
+	int r = (rand() % 1000000) + 100000000;
 	return r;
 }
 
@@ -325,6 +325,15 @@ uint64_t SysTestBase::GetFreeMoney(const string& strID) {
 
 	uint64_t nMoney = result.get_int64();
 
+	result = find_value(valueRes.get_obj(), "FreedomFund");
+	Array arrayFreedom = result.get_array();
+
+	for (const auto& item : arrayFreedom) {
+		result = find_value(item.get_obj(), "value");
+		BOOST_CHECK(result.type() != null_type);
+		nMoney += result.get_int64();
+	}
+
 	return nMoney;
 }
 
@@ -404,7 +413,7 @@ Value SysTestBase::CreateNormalTx(const std::string &desAddr,uint64_t nMoney){
 	}
 	return value;
 }
-Value SysTestBase::registaccounttx(const std::string &addr, const int nfee) {
+Value SysTestBase::registaccounttx(const std::string &addr, const int nfee ,bool flag) {
 	//CommanRpc
 	char caddr[64] = { 0 };
 	strncpy(caddr, addr.c_str(), sizeof(caddr) - 1);
@@ -414,6 +423,11 @@ Value SysTestBase::registaccounttx(const std::string &addr, const int nfee) {
 		nCurFee = GetRandomFee();;
 	string fee =strprintf("%ld", nCurFee);
 
+	string param = "false";
+	if(flag)
+	{
+		param = "true";
+	}
 	const char *argv[] = { "rpctest", "registaccounttx", caddr, (char*)fee.c_str()};
 	int argc = sizeof(argv) / sizeof(char*);
 
@@ -521,10 +535,13 @@ boost::thread*SysTestBase::pThreadShutdown = NULL;
 bool SysTestBase::GenerateOneBlock() {
 	const char *argv[] = { "rpctest", "setgenerate", "true" ,"1"};
 	int argc = sizeof(argv) / sizeof(char*);
-    int high= chainActive.Height();
+    int high= 0;
+    GetBlockHeight(high);
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		BOOST_CHECK(high+1==chainActive.Height());
+		 int nHeight = 0;
+		GetBlockHeight(nHeight);
+		BOOST_CHECK(high+1==nHeight);
 		return true;
 	}
 	return false;
@@ -540,7 +557,8 @@ bool SysTestBase::SetAddrGenerteBlock(const char *addr) {
 	return false;
 }
 bool SysTestBase::DisConnectBlock(int nNum) {
-	int nFirstHeight = static_cast<int>(chainActive.Height() );
+	int nFirstHeight = 0;
+    GetBlockHeight(nFirstHeight);
 	if(nFirstHeight <=0)
 		return false;
 	BOOST_CHECK(nNum>0 && nNum<=nFirstHeight);
@@ -551,7 +569,8 @@ bool SysTestBase::DisConnectBlock(int nNum) {
 
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		int nHeightAfterDis = static_cast<int>(chainActive.Height() );
+		int nHeightAfterDis =0;
+		GetBlockHeight(nHeightAfterDis);
 		BOOST_CHECK(nHeightAfterDis == nFirstHeight-nNum);
 		return true;
 	}
@@ -672,7 +691,13 @@ bool SysTestBase::GetRegID(string& strAddr,CRegID& regID) {
 	regID = account.regID;
 	return true;
 }
-bool SysTestBase::GetTxOperateLog(const uint256& txHash, vector<CAccountLog>& vLog) {
+bool SysTestBase::GetRegID(string& strAddr,string& regID){
+	Value value = GetAccountInfo(strAddr);
+
+	regID = "RegID";
+	return GetStrFromObj(value,regID);
+}
+bool SysTestBase::GetTxOperateLog(const uint256& txHash, vector<CAccountOperLog>& vLog) {
 		if (!GetTxOperLog(txHash, vLog))
 			return false;
 
@@ -687,8 +712,4 @@ bool SysTestBase::PrintLog(){
 			return true;
 		}
 	return false;
-}
-
-bool SysTestBase::IsMemoryPoolEmpty() {
-	return mempool.mapTx.empty();
 }

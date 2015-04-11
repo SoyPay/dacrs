@@ -6,7 +6,12 @@
  */
 
 #include "CycleP2PBet_test.h"
-
+enum OPERATE{
+	OP_SYSTEMACC = 0x00,
+	OP_APPACC = 0x01,
+	OP_NULL = 0x02,
+};
+#define OUT_HEIGHT 20
 CTestBetTx::CTestBetTx() {
 	memset(nSdata, 0, sizeof(nSdata));
 	mCurStep = 0;
@@ -36,27 +41,13 @@ TEST_STATE CTestBetTx::run() {
 	case 3:
 		AOpenP2PBet();
 		break;
-	case 4:
-		CheckLastTx();
-		break;
 	default:
 		assert(0);
 		break;
 	}
-	return this_state;
+	return next_state;
 }
 
-bool CTestBetTx::VerifyTxInBlock(const string& strTxHash, bool bTryForever) {
-	string strScriptID;
-	do {
-		if (GetTxConfirmedRegID(strTxHash, strScriptID)) {
-			if (!strScriptID.empty())
-				return true;
-		}
-	} while (bTryForever);
-
-	return false;
-}
 
 bool CTestBetTx::RegScript(void) {
 
@@ -71,78 +62,144 @@ bool CTestBetTx::RegScript(void) {
 	GetBlockHeight(nCurHight);
 	//×¢²á¶Ô¶Ä½Å±¾
 	Value valueRes = RegisterScriptTx(ADDR_A, strFileName, nCurHight, nFee);
-	GetHashFromCreatedTx(valueRes, strRegScriptHash);
-	mCurStep++;
+	BOOST_CHECK(GetHashFromCreatedTx(valueRes, strRegScriptHash));
+	BOOST_CHECK(GenerateOneBlock());
+	if (basetest.GetTxConfirmedRegID(strRegScriptHash, scriptid)) {
+			mCurStep++;
+			return true;
+	}
+
 	return true;
 }
 
 bool CTestBetTx::ASendP2PBet() {
 
-	if(VerifyTxInBlock(strRegScriptHash))
-	{
-		if (!GetTxConfirmedRegID(strRegScriptHash, scriptid) ) {
-					return false;
-				}
-		int nCurHight;
-		GetBlockHeight(nCurHight);
+	if(scriptid == "")
+		return false;
 
-		GetRandomBetData(nSdata, sizeof(nSdata));
+		unsigned char randdata[32];
+		GetRandomData(randdata, sizeof(randdata));
+		int num = GetBetData();
+		cout<<"win:"<<num<<endl;
+		memcpy(nSdata,randdata,sizeof(randdata));
+		memcpy(&nSdata[32],&num,sizeof(char));
 		SEND_DATA senddata;
+
+		senddata.noperateType = GetRanOpType();
 		senddata.type = 1;
-		senddata.hight = nCurHight + 100;
+		senddata.hight = OUT_HEIGHT;
 		senddata.money = GetRandomBetAmount();
 		betamount = senddata.money;
 		memcpy(senddata.dhash, Hash(nSdata, nSdata + sizeof(nSdata)).begin(), sizeof(senddata.dhash));
+		vector<unsigned char>temp;
+		temp.assign(nSdata,nSdata + sizeof(nSdata));
+		vector<unsigned char>temp2;
+		temp2.assign(senddata.dhash,senddata.dhash + sizeof(senddata.dhash));
 
 		CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 		scriptData << senddata;
 		string sendcontract = HexStr(scriptData);
-		uint64_t sendfee = GetRandomBetfee();
-		Value vsend = PCreateContractTx(scriptid, VADDR_A, sendcontract, nCurHight,
-				sendfee);
-		GetHashFromCreatedTx(vsend, strAsendHash);
-		mCurStep++;
+		//uint64_t sendfee = GetRandomBetfee();
+
+		uint64_t nTempSend = 0;
+		if((int)senddata.noperateType == 0x01){
+			nTempSend = 0;
+		}else{
+			nTempSend = betamount;
+		}
+		Value  sendret= CreateContractTx(scriptid,ADDR_A,sendcontract,0,0,nTempSend);
+		if((int)senddata.noperateType == 0x01){
+			strAsendHash = "";
+			GetHashFromCreatedTx(sendret, strAsendHash);
+			if(strAsendHash == "") {
+				return true;
+			}
+			else{
+				BOOST_CHECK(GenerateOneBlock());
+			}
+		}else{
+			BOOST_CHECK(GetHashFromCreatedTx(sendret, strAsendHash));
+			BOOST_CHECK(GenerateOneBlock());
+		}
+
+		string index = "";
+		if (basetest.GetTxConfirmedRegID(strAsendHash, index)) {
+				mCurStep++;
+				return true;
+		}
 		return true;
-	}
 }
 
 bool CTestBetTx::BAcceptP2PBet(void) {
-	if (VerifyTxInBlock(strAsendHash)) {
-		unsigned char rdata[5];
-		GetRandomBetData(rdata, sizeof(rdata));
+		unsigned char cType;
+		RAND_bytes(&cType, sizeof(cType));
+		unsigned char  gussnum = cType % 2;
+		cout <<"guess:"<<(int)gussnum<<endl;
 		ACCEPT_DATA acceptdata;
 		acceptdata.type = 2;
+		acceptdata.noperateType = GetRanOpType();
 		acceptdata.money = betamount;
-		memcpy(acceptdata.targetkey, uint256(strAsendHash).begin(), sizeof(acceptdata.targetkey));
-		memcpy(acceptdata.data, rdata, sizeof(rdata));
+		acceptdata.data=gussnum;
+		memcpy(acceptdata.txhash, uint256(strAsendHash).begin(), sizeof(acceptdata.txhash));
+
 		CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 		scriptData << acceptdata;
+
 		string acceptcontract = HexStr(scriptData);
-		uint64_t acceptfee = GetRandomBetfee();
 		int nCurHight;
 		GetBlockHeight(nCurHight);
-		Value vaccept = PCreateContractTx(scriptid, VADDR_B, acceptcontract, nCurHight, acceptfee);
-		GetHashFromCreatedTx(vaccept, strBacceptHash);
-		mCurStep++;
+
+		uint64_t nTempSend = 0;
+		if((int)acceptdata.noperateType  == 0x01){
+			nTempSend = 0;
+		}else{
+			nTempSend = betamount;
+		}
+		Value vaccept = CreateContractTx(scriptid, ADDR_B, acceptcontract, nCurHight, 0,nTempSend);
+		string hash = "";
+		cout<<"type"<<(int)acceptdata.noperateType<<endl;
+		if((int)acceptdata.noperateType == 0x01){
+
+			GetHashFromCreatedTx(vaccept, hash);
+			if(hash == "") {
+				return true;
+			}
+			else{
+				BOOST_CHECK(GenerateOneBlock());
+			}
+		}else{
+			BOOST_CHECK(GetHashFromCreatedTx(vaccept, hash));
+			BOOST_CHECK(GenerateOneBlock());
+		}
+		string index = "";
+		if (basetest.GetTxConfirmedRegID(hash, index)) {
+				mCurStep++;
+				return true;
+		}
 		return true;
-	}
 }
 
 bool CTestBetTx::AOpenP2PBet(void) {
-	if (VerifyTxInBlock(strBacceptHash)) {
+
 		OPEN_DATA openA;
+		openA.noperateType = GetRanOpType();
 		openA.type = 3;
-		memcpy(openA.targetkey, uint256(strAsendHash).begin(), sizeof(openA.targetkey));
+		memcpy(openA.txhash, uint256(strAsendHash).begin(), sizeof(openA.txhash));
 		memcpy(openA.dhash, nSdata, sizeof(nSdata));
 		CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 		scriptData << openA;
 		string openAcontract = HexStr(scriptData);
-		uint64_t openfee = GetRandomBetfee();
+
 		int nCurHight;
 		GetBlockHeight(nCurHight);
-		Value vopenA = PCreateContractTx(scriptid, VADDR_A, openAcontract, nCurHight, openfee);
-		GetHashFromCreatedTx(vopenA, strAopenHash);
-		mCurStep++;
+		Value vopenA = CreateContractTx(scriptid, ADDR_A, openAcontract, nCurHight, 0);
+		BOOST_CHECK(GetHashFromCreatedTx(vopenA, strAopenHash));
+		BOOST_CHECK(GenerateOneBlock());
+		string index = "";
+		if (basetest.GetTxConfirmedRegID(strAopenHash, index)) {
+				mCurStep = 1;
+				return true;
+		}
 		return true;
-	}
 }
+

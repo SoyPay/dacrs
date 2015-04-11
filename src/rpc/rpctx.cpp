@@ -50,7 +50,7 @@ static  bool GetKeyId(string const &addr,CKeyID &KeyId) {
 	return true;
 };
 
-Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
+Object TxToJSON(CBaseTransaction *pTx) {
 	Object result;
 	result.push_back(Pair("hash", pTx->GetHash().GetHex()));
 	switch (pTx->nTxType) {
@@ -73,7 +73,7 @@ Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 		CTransaction *prtx = (CTransaction *) pTx;
 		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
 		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("srcaddr", RegIDToAddress(prtx->srcRegId)));
+		result.push_back(Pair("addr", RegIDToAddress(prtx->srcRegId)));
 		result.push_back(Pair("desaddr", RegIDToAddress(prtx->desUserId)));
 		result.push_back(Pair("money", prtx->llValues));
 		result.push_back(Pair("fees", prtx->llFees));
@@ -86,7 +86,7 @@ Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
 		result.push_back(Pair("ver", prtx->nVersion));
 		result.push_back(Pair("addr", RegIDToAddress(prtx->account)));
-		result.push_back(Pair("reward money", prtx->rewardValue));
+		result.push_back(Pair("money", prtx->rewardValue));
 		result.push_back(Pair("height", prtx->nHeight));
 		break;
 	}
@@ -107,7 +107,7 @@ Object TxToJSON(CBaseTransaction *pTx,bool bPrintScriptContent = true) {
 	return result;
 }
 
-Object GetTxDetailJSON(const uint256& txhash,bool bPrintScriptContent = true ) {
+Object GetTxDetailJSON(const uint256& txhash) {
 	Object obj;
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 	{
@@ -115,7 +115,7 @@ Object GetTxDetailJSON(const uint256& txhash,bool bPrintScriptContent = true ) {
 		{
 			pBaseTx = mempool.lookup(txhash);
 			if (pBaseTx.get()) {
-				obj = TxToJSON(pBaseTx.get(),bPrintScriptContent);
+				obj = TxToJSON(pBaseTx.get());
 				return obj;
 			}
 		}
@@ -128,9 +128,10 @@ Object GetTxDetailJSON(const uint256& txhash,bool bPrintScriptContent = true ) {
 					file >> header;
 					fseek(file, postx.nTxOffset, SEEK_CUR);
 					file >> pBaseTx;
-					obj = TxToJSON(pBaseTx.get(),bPrintScriptContent);
+					obj = TxToJSON(pBaseTx.get());
 					obj.push_back(Pair("blockhash", header.GetHash().GetHex()));
 					obj.push_back(Pair("confirmHeight", (int) header.nHeight));
+					obj.push_back(Pair("confirmedtime",(int)header.nTime));
 				} catch (std::exception &e) {
 					throw runtime_error(tfm::format("%s : Deserialize or I/O error - %s", __func__, e.what()).c_str());
 				}
@@ -523,11 +524,10 @@ Value listaddr(const Array& params, bool fHelp) {
 			};
 
 			Object obj;
-			obj.push_back(Pair("addr",       tem.first.ToAddress()));
-			obj.push_back(Pair("balance",    GetDetailInfo(curheight)));
-			obj.push_back(Pair("RegID",      tem.second.GetRegID().ToString()));
-			if(!tem.second.GetRegID().IsEmpty())
-			obj.push_back(Pair("RegID2",     HexStr(tem.second.GetRegID().GetVec6())));
+			obj.push_back(Pair("addr",        tem.first.ToAddress()));
+			obj.push_back(Pair("balance",     GetDetailInfo(curheight)));
+			obj.push_back(Pair("haveminerkey",tem.second.IsContainMinerKey()));
+			obj.push_back(Pair("regid",      tem.second.GetRegID().ToString()));
 			retArry.push_back(obj);
 		}
 	}
@@ -1086,8 +1086,7 @@ static int getDataFromSriptData(CScriptDBViewCache &cache, const CRegID &regid,
 		int pagesize, int index,
 		vector<
 				std::tuple<vector<unsigned char>,
-				vector<unsigned char>,
-				int> >&ret
+				vector<unsigned char> > >&ret
 				) {
 	int dbsize;
 	int nHeight = 0;
@@ -1106,14 +1105,14 @@ static int getDataFromSriptData(CScriptDBViewCache &cache, const CRegID &regid,
 				"in getscriptdata :the scirptid get data failed!\n");
 	}
 	if (index == 1) {
-		ret.push_back(std::make_tuple(vScriptKey, value, nHeight));
+		ret.push_back(std::make_tuple(vScriptKey, value));
 	}
 	int readCount(1);
 	while (--dbsize) {
 		if (cache.GetScriptData(height, regid, 1, vScriptKey, value)) {
 			++readCount;
 			if (readCount > pagesize * (index - 1)) {
-				ret.push_back(std::make_tuple(vScriptKey, value, nHeight));
+				ret.push_back(std::make_tuple(vScriptKey, value));
 			}
 		}
 		if (readCount >= pagesize * index) {
@@ -1168,18 +1167,16 @@ Value getscriptdata(const Array& params, bool fHelp) {
 		int pagesize = params[1].get_int();
 		int index = params[2].get_int();
 
-		vector<std::tuple<vector<unsigned char>,vector<unsigned char>,int> >ret;
+		vector<std::tuple<vector<unsigned char>,vector<unsigned char> > >ret;
 		getDataFromSriptData(contractScriptTemp,regid,pagesize,index,ret);
 		Array retArray;
 		for(auto te:ret)
 		{
 			vector<unsigned char>key =  std::get<0>(te);
 			vector<unsigned char>valvue =  std::get<1>(te);
-			int high =  std::get<2>(te);
 			Object firt;
 			firt.push_back(Pair("key", HexStr(key)));
 			firt.push_back(Pair("value", HexStr(valvue)));
-			firt.push_back(Pair("height", high));
 			retArray.push_back(firt);
 		}
 		return retArray;
@@ -1624,7 +1621,7 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 		Array ComfirmTx;
 		for (auto const &wtx : pwalletMain->mapInBlockTx) {
 			for (auto const & item : wtx.second.mapAccountTx) {
-				Object objtx = GetTxDetailJSON(item.first, false);
+				Object objtx = GetTxDetailJSON(item.first);
 				ComfirmTx.push_back(objtx);
 			}
 		}
@@ -1633,7 +1630,7 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 		Array UnComfirmTx;
 		CAccountViewCache view(*pAccountViewTip, true);
 		for (auto const &wtx : pwalletMain->UnConfirmTx) {
-			Object objtx = GetTxDetailJSON(wtx.first, false);
+			Object objtx = GetTxDetailJSON(wtx.first);
 			UnComfirmTx.push_back(objtx);
 		}
 		retObj.push_back(Pair("UnConfirmed", UnComfirmTx));
@@ -1706,4 +1703,66 @@ Value gethash(const Array& params, bool fHelp) {
 	obj.push_back(Pair("hash", strhash.ToString()));
 	return obj;
 
+}
+Value getappkeyvalue(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 2) {
+		throw runtime_error("");
+	}
+
+	CRegID scriptid(params[0].get_str());
+	Array array = params[1].get_array();
+
+	int height = chainActive.Height();
+
+	if (scriptid.IsEmpty() == true) {
+		throw runtime_error("in getscriptdata :vscriptid size is error!\n");
+	}
+
+	if (!pScriptDBTip->HaveScript(scriptid)) {
+		throw runtime_error("in getscriptdata :vscriptid id is exist!\n");
+	}
+
+	Array retArry;
+	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+
+	for(int i =0;i <array.size();i++){
+		uint256 txhash(array[i].get_str());
+		vector<unsigned char> key;// = ParseHex(array[i].get_str());
+		key.insert(key.begin(),txhash.begin(),txhash.end());
+		vector<unsigned char> value;
+		Object obj;
+		if (!contractScriptTemp.GetScriptData(height,scriptid, key, value)) {
+			obj.push_back(Pair("key",        array[i].get_str()));
+			obj.push_back(Pair("value",     HexStr(value)));
+		}else{
+			obj.push_back(Pair("key",        array[i].get_str()));
+			obj.push_back(Pair("value",     HexStr(value)));
+		}
+
+		std::shared_ptr<CBaseTransaction> pBaseTx;
+		int time = 0;
+		int height = 0;
+		if (SysCfg().IsTxIndex()) {
+		CDiskTxPos postx;
+		if (pblocktree->ReadTxIndex(txhash, postx)) {
+			CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
+			CBlockHeader header;
+			try {
+				file >> header;
+				fseek(file, postx.nTxOffset, SEEK_CUR);
+				file >> pBaseTx;
+				height = header.nHeight;
+				time = header.nTime;
+			} catch (std::exception &e) {
+				throw runtime_error(tfm::format("%s : Deserialize or I/O error - %s", __func__, e.what()).c_str());
+			}
+		  }
+		}
+
+		obj.push_back(Pair("confirmHeight", (int) height));
+		obj.push_back(Pair("confirmedtime",(int)time));
+		retArry.push_back(obj);
+	}
+
+	return retArry;
 }

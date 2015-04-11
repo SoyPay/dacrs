@@ -9,7 +9,7 @@
 using namespace std;
 using namespace boost;
 using namespace json_spirit;
-
+#include "../test/systestbase.h"
 map<string, string> mapDesAddress[] = {
         boost::assign::map_list_of
         ("000000000900",	"mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA")
@@ -116,7 +116,7 @@ public:
 };
 
 
-class CSendItem{
+class CSendItem:public SysTestBase{
 private:
 	string m_strRegId;
 	string m_strAddress;
@@ -161,12 +161,12 @@ public:
 		return m_strAddress;
 	}
 
-	string GetSendValue() {
+	uint64_t GetSendValue() {
 		char cSendValue[12] = {0};
 		sprintf(&cSendValue[0], "%lld", m_llSendValue);
 		string strSendValue(cSendValue);
 		cout << "GetSendValue:" << strSendValue << endl;
-		return strSendValue;
+		return m_llSendValue;
 	}
 
 
@@ -260,24 +260,9 @@ time_t string2time(const char * str,const char * formatStr)
   return mktime(&tm1);
 }
 BOOST_FIXTURE_TEST_SUITE(auto_mining_test, CSendItem)
-BOOST_AUTO_TEST_CASE(regscript) {
+BOOST_FIXTURE_TEST_CASE(regscript,CSendItem) {
 	//注册脚本交易
-	vector<string> param;
-	param.push_back("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA");
-	param.push_back("0");
-	param.push_back("D:\\cppwork\\vmsdk\\testUint\\Debug\\Exe\\test.bin");
-	param.push_back("100000000");
-	param.push_back("0");
-	param.push_back("test");
-	int64_t curTime = GetTime();
-	char charTime[20] = {0};
-	sprintf(charTime, "%lld", curTime);
-	param.push_back(charTime);
-	param.push_back("1000000000000");
-	param.push_back("100000000000000");
-	param.push_back("100000000000000");
-	param.push_back("userdefine");
-	CreateRegScriptTx(param);
+	SysTestBase::RegisterScriptTx("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin",0);
 }
 BOOST_FIXTURE_TEST_CASE(test1, CSendItem)
 {
@@ -285,43 +270,26 @@ BOOST_FIXTURE_TEST_CASE(test1, CSendItem)
 	int argc = sizeof(argv) / sizeof(char*);
 	CBaseParams::IntialParams(argc, argv);
 //	time_t t1 = string2time("2014-12-01 17:30:00","%d-%d-%d %d:%d:%d");
+
+	Value resulut = RegisterScriptTx("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin",0);
+	string scripthash = "";
+	BOOST_CHECK(GetHashFromCreatedTx(resulut,scripthash));
+	string scriptid = "";
+	BOOST_CHECK(GetTxConfirmedRegID(scripthash,scriptid));
+
 	int64_t runTime = GetTime()+llTime;
 	vector<string> param;
 	while(GetTime()<runTime) {
 		//创建客户端1->客户端2的普通交易
 		CSendItem sendItem = CSendItem::GetRandomSendItem(1);
 		CSendItem recItem = CSendItem::GetRandomSendItem(2);
-		param.clear();
-		param.push_back(sendItem.GetAddress());      	//源地址
-		param.push_back(recItem.GetAddress());    	    //目的地址
-		param.push_back(recItem.GetSendValue());	    //转账金额
-		CreateNormalTx(param);                          //创建普通交易
+		CreateNormalTx(sendItem.GetAddress(),recItem.GetAddress(),recItem.GetSendValue());                          //创建普通交易
 		MilliSleep(sleepTime);
 
 		//创建客户端1->客户端2的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(1);
-		CSendItem recItem1 = CSendItem::GetRandomSendItem(2);
-		CSendItem recItem2 = CSendItem::GetRandomSendItem(2);
-		CSendItem recItem3 = CSendItem::GetRandomSendItem(2);
-		param.clear();
-		param.push_back("020000000100");                     //脚本ID
-		param.push_back("[\""+sendItem1.GetAddress()+"\"]"); //交易发起地址
-		vector<unsigned char> vContranct;
-		vContranct.clear();
-		vector<unsigned char> vTemp;
-		vTemp.clear();
-		recItem1.GetContranctData(vTemp);
-		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
-		vTemp.clear();
-		recItem2.GetContranctData(vTemp);
-		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
-		vTemp.clear();
-		recItem3.GetContranctData(vTemp);
-		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
-		param.push_back(HexStr(vContranct));			//合约内容
-		param.push_back("100000000");					//手续费
-		param.push_back("0");                           //有效高度
-		CreateContractTx(param);                        //创建合约交易
+
+		CreateContractTx(scriptid,sendItem1.GetAddress(),"01",0);                        //创建合约交易
 		MilliSleep(sleepTime);
 	}
 }
@@ -331,41 +299,22 @@ BOOST_AUTO_TEST_CASE(test2)
 	int argc = sizeof(argv) / sizeof(char*);
 	CBaseParams::IntialParams(argc, argv);
 	int64_t runTime = GetTime()+llTime;
-	vector<string> param;
+	Value resulut = RegisterScriptTx("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin",0);
+	string scripthash = "";
+	BOOST_CHECK(GetHashFromCreatedTx(resulut,scripthash));
+	string scriptid = "";
+	BOOST_CHECK(GetTxConfirmedRegID(scripthash,scriptid));
+
 	while(GetTime()<runTime) {
 		//创建客户端2->客户端3的普通交易
 		CSendItem sendItem = CSendItem::GetRandomSendItem(2);
 		CSendItem recItem = CSendItem::GetRandomSendItem(3);
-		param.clear();
-		param.push_back(sendItem.GetAddress());      	//源地址
-		param.push_back(recItem.GetAddress());    	    //目的地址
-		param.push_back(recItem.GetSendValue());	    //转账金额
-		CreateNormalTx(param);                          //创建普通交易
+		CreateNormalTx(sendItem.GetAddress(),recItem.GetAddress(),recItem.GetSendValue());
 		MilliSleep(sleepTime);
 
 		//创建客户端2->客户端3的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(2);
-		CSendItem recItem1 = CSendItem::GetRandomSendItem(3);
-		CSendItem recItem2 = CSendItem::GetRandomSendItem(3);
-		CSendItem recItem3 = CSendItem::GetRandomSendItem(3);
-		param.clear();
-		param.push_back("020000000100");                     //脚本ID
-		param.push_back("[\""+sendItem1.GetAddress()+"\"]"); //交易发起地址
-		vector<unsigned char> vContranct;
-		vContranct.clear();
-		vector<unsigned char> vTemp;
-		vTemp.clear();
-		recItem1.GetContranctData(vTemp);
-		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
-		vTemp.clear();
-		recItem2.GetContranctData(vTemp);
-		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
-		recItem3.GetContranctData(vTemp);
-		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
-		param.push_back(HexStr(vContranct));			//合约内容
-		param.push_back("100000000");					//手续费
-		param.push_back("0");                           //有效高度
-		CreateContractTx(param);                        //创建合约交易
+		CreateContractTx(scriptid,sendItem1.GetAddress(),"01",0);                        //创建合约交易
 		MilliSleep(sleepTime);
 	}
 
@@ -376,41 +325,22 @@ BOOST_AUTO_TEST_CASE(test3)
 	int argc = sizeof(argv) / sizeof(char*);
 	CBaseParams::IntialParams(argc, argv);
 	int64_t runTime = GetTime()+llTime;
-	vector<string> param;
+
+	Value resulut = RegisterScriptTx("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin",0);
+	string scripthash = "";
+	BOOST_CHECK(GetHashFromCreatedTx(resulut,scripthash));
+	string scriptid = "";
+	BOOST_CHECK(GetTxConfirmedRegID(scripthash,scriptid));
 	while(GetTime()<runTime) {
 		//创建客户端3->客户端4的普通交易
 		CSendItem sendItem = CSendItem::GetRandomSendItem(3);
 		CSendItem recItem = CSendItem::GetRandomSendItem(4);
-		param.clear();
-		param.push_back(sendItem.GetAddress());      	//源地址
-		param.push_back(recItem.GetAddress());    	    //目的地址
-		param.push_back(recItem.GetSendValue());	    //转账金额
-		CreateNormalTx(param);                          //创建普通交易
+		CreateNormalTx(sendItem.GetAddress(),recItem.GetAddress(),recItem.GetSendValue());
 		MilliSleep(sleepTime);
 
 		//创建客户端3->客户端4的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(3);
-		CSendItem recItem1 = CSendItem::GetRandomSendItem(4);
-		CSendItem recItem2 = CSendItem::GetRandomSendItem(4);
-		CSendItem recItem3 = CSendItem::GetRandomSendItem(4);
-		param.clear();
-		param.push_back("020000000100");                     //脚本ID
-		param.push_back("[\""+sendItem1.GetAddress()+"\"]"); //交易发起地址
-		vector<unsigned char> vContranct;
-		vContranct.clear();
-		vector<unsigned char> vTemp;
-		vTemp.clear();
-		recItem1.GetContranctData(vTemp);
-		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
-		vTemp.clear();
-		recItem2.GetContranctData(vTemp);
-		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
-		recItem3.GetContranctData(vTemp);
-		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
-		param.push_back(HexStr(vContranct));			//合约内容
-		param.push_back("100000000");					//手续费
-		param.push_back("0");                           //有效高度
-		CreateContractTx(param);                        //创建合约交易
+		CreateContractTx(scriptid,sendItem1.GetAddress(),"01",0);
 		MilliSleep(sleepTime);
 	}
 }
@@ -422,41 +352,22 @@ BOOST_AUTO_TEST_CASE(test4)
 	int argc = sizeof(argv) / sizeof(char*);
 	CBaseParams::IntialParams(argc, argv);
 	int64_t runTime = GetTime()+llTime;
-	vector<string> param;
+
+	Value resulut = RegisterScriptTx("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin",0);
+	string scripthash = "";
+	BOOST_CHECK(GetHashFromCreatedTx(resulut,scripthash));
+	string scriptid = "";
+	BOOST_CHECK(GetTxConfirmedRegID(scripthash,scriptid));
 	while(GetTime()<runTime) {
 		//创建客户端4->客户端5的普通交易
 		CSendItem sendItem = CSendItem::GetRandomSendItem(4);
 		CSendItem recItem = CSendItem::GetRandomSendItem(5);
-		param.clear();
-		param.push_back(sendItem.GetAddress());      	//源地址
-		param.push_back(recItem.GetAddress());    	    //目的地址
-		param.push_back(recItem.GetSendValue());	    //转账金额
-		CreateNormalTx(param);                          //创建普通交易
+		CreateNormalTx(sendItem.GetAddress(),recItem.GetAddress(),recItem.GetSendValue());                     //创建普通交易
 		MilliSleep(sleepTime);
 
 		//创建客户端4->客户端5的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(4);
-		CSendItem recItem1 = CSendItem::GetRandomSendItem(5);
-		CSendItem recItem2 = CSendItem::GetRandomSendItem(5);
-		CSendItem recItem3 = CSendItem::GetRandomSendItem(5);
-		param.clear();
-		param.push_back("020000000100");                     //脚本ID
-		param.push_back("[\""+sendItem1.GetAddress()+"\"]"); //交易发起地址
-		vector<unsigned char> vContranct;
-		vContranct.clear();
-		vector<unsigned char> vTemp;
-		vTemp.clear();
-		recItem1.GetContranctData(vTemp);
-		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
-		vTemp.clear();
-		recItem2.GetContranctData(vTemp);
-		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
-		recItem3.GetContranctData(vTemp);
-		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
-		param.push_back(HexStr(vContranct));			//合约内容
-		param.push_back("100000000");					//手续费
-		param.push_back("0");                           //有效高度
-		CreateContractTx(param);                        //创建合约交易
+		CreateContractTx(scriptid,sendItem1.GetAddress(),"01",0);
 		MilliSleep(sleepTime);
 	}
 }
@@ -468,41 +379,21 @@ BOOST_AUTO_TEST_CASE(test5)
 	CBaseParams::IntialParams(argc, argv);
 
 	int64_t runTime = GetTime()+llTime;
-	vector<string> param;
+	Value resulut = RegisterScriptTx("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin",0);
+	string scripthash = "";
+	BOOST_CHECK(GetHashFromCreatedTx(resulut,scripthash));
+	string scriptid = "";
+	BOOST_CHECK(GetTxConfirmedRegID(scripthash,scriptid));
 	while(GetTime()<runTime) {
 		//创建客户端5->客户端1的普通交易
 		CSendItem sendItem = CSendItem::GetRandomSendItem(5);
 		CSendItem recItem = CSendItem::GetRandomSendItem(1);
-		param.clear();
-		param.push_back(sendItem.GetAddress());      	//源地址
-		param.push_back(recItem.GetAddress());    	    //目的地址
-		param.push_back(recItem.GetSendValue());	    //转账金额
-		CreateNormalTx(param);                          //创建普通交易
+		CreateNormalTx(sendItem.GetAddress(),recItem.GetAddress(),recItem.GetSendValue());
 		MilliSleep(sleepTime);
 
 		//创建客户端5->客户端1的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(5);
-		CSendItem recItem1 = CSendItem::GetRandomSendItem(1);
-		CSendItem recItem2 = CSendItem::GetRandomSendItem(1);
-		CSendItem recItem3 = CSendItem::GetRandomSendItem(1);
-		param.clear();
-		param.push_back("020000000100");                     //脚本ID
-		param.push_back("[\""+sendItem1.GetAddress()+"\"]"); //交易发起地址
-		vector<unsigned char> vContranct;
-		vContranct.clear();
-		vector<unsigned char> vTemp;
-		vTemp.clear();
-		recItem1.GetContranctData(vTemp);
-		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
-		vTemp.clear();
-		recItem2.GetContranctData(vTemp);
-		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
-		recItem3.GetContranctData(vTemp);
-		vContranct.insert(vContranct.end(), vTemp.begin(), vTemp.end());
-		param.push_back(HexStr(vContranct));			//合约内容
-		param.push_back("100000000");					//手续费
-		param.push_back("0");                           //有效高度
-		CreateContractTx(param);                        //创建合约交易
+		CreateContractTx(scriptid,sendItem1.GetAddress(),"01",0);
 		MilliSleep(sleepTime);
 	}
 
