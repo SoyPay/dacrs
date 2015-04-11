@@ -250,7 +250,7 @@ public:
 		temp1 = GetAccountInfo("010000000100");
 		BOOST_CHECK_EQUAL(GetValue(temp1,"FreeValues"),0);
 		temp1 = GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
-		BOOST_CHECK_EQUAL(GetValue(temp1,"FreeValues"),999999900000000);
+		BOOST_CHECK_EQUAL(GetValue(temp1,"FreeValues"),999999800000000);
 
 		//测试不能从其他脚本打钱到本APP脚本账户中
 		accountid = "020000000100";

@@ -356,7 +356,7 @@ bool CRegisterAccountTx::CheckTransction(CValidationState &state, CAccountViewCa
 
 bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
-
+	LogPrint("INFO", "Execute Transactions hash:%s\n", GetHash().GetHex());
 	CAccount srcAcct;
 	CAccount desAcct;
 	CAccountLog desAcctLog;
@@ -426,7 +426,7 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 			vAddress.insert(itemAccount->keyID);
 			userId = itemAccount->keyID;
 			CAccount oldAcct;
-			if(view.GetAccount(userId, oldAcct)) {
+			if(!view.GetAccount(userId, oldAcct)) {
 				return state.DoS(100,
 							ERRORMSG("ExecuteTx() : ContractTransaction ExecuteTx read account info error"),
 							UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
@@ -914,8 +914,8 @@ Object CAccount::ToJosnObj() const
 }
 string CAccount::ToString() const {
 	string str;
-	str += strprintf("regID=%s, keyID=%s, publicKey=%s, minerpubkey=%s, values=%ld\n",
-	regID.ToString(), keyID.GetHex().c_str(), PublicKey.ToString().c_str(), MinerPKey.ToString().c_str(), llValues);
+	str += strprintf("regID=%s, keyID=%s, publicKey=%s, minerpubkey=%s, values=%ld updateHeight=%d coinDay=%lld\n",
+	regID.ToString(), keyID.GetHex().c_str(), PublicKey.ToString().c_str(), MinerPKey.ToString().c_str(), llValues, nHeight, nCoinDay);
 	for (unsigned int i = 0; i < vRewardFund.size(); ++i) {
 		str += "    " + vRewardFund[i].ToString() + "\n";
 	}
@@ -960,6 +960,8 @@ bool CAccount::OperateAccount(OperType type, const CFund &fund) {
 		break;
 	}
 	case MINUS_FREE: {
+		if(fund.value > llValues)
+			return false;
 		uint64_t remainCoinDay = nCoinDay - fund.value / llValues * nCoinDay;
 		if(nCoinDay > llValues * SysCfg().GetIntervalPos()) {
 			if(remainCoinDay < llValues*SysCfg().GetIntervalPos())

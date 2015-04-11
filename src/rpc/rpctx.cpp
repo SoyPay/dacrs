@@ -1089,7 +1089,6 @@ static int getDataFromSriptData(CScriptDBViewCache &cache, const CRegID &regid,
 				vector<unsigned char> > >&ret
 				) {
 	int dbsize;
-	int nHeight = 0;
 	int height = chainActive.Height();
 	cache.GetScriptDataCount(regid, dbsize);
 	if (0 == dbsize) {
@@ -1725,7 +1724,7 @@ Value getappkeyvalue(const Array& params, bool fHelp) {
 	Array retArry;
 	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 
-	for(int i =0;i <array.size();i++){
+	for(size_t i =0;i <array.size();i++){
 		uint256 txhash(array[i].get_str());
 		vector<unsigned char> key;// = ParseHex(array[i].get_str());
 		key.insert(key.begin(),txhash.begin(),txhash.end());

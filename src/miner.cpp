@@ -239,6 +239,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 			LogPrint("ERROR", "CreatePosTx posacc zero\n");
 			continue;
 		}
+		LogPrint("INFO", "miner account:%s\n", item.ToString());
 		LogPrint("INFO", "target hash:%s\n", targetHash.ToString());
 		LogPrint("INFO", "posacc:%d\n", posacc);
 		uint256 adjusthash = GetAdjustHash(targetHash, posacc); //adjust nbits
