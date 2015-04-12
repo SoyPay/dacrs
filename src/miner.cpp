@@ -662,10 +662,10 @@ void static DacrsMiner(CWallet *pwallet) {
 			if (!pblocktemplate.get())
 				throw;
 			CBlock *pblock = &pblocktemplate.get()->block;
-			MiningBlock(pblock, pwallet, pindexPrev, LastTrsa, accview, txCache, ScriptDbTemp);
+			bool bRet = MiningBlock(pblock, pwallet, pindexPrev, LastTrsa, accview, txCache, ScriptDbTemp);
 			
 			if (SysCfg().NetworkID() != CBaseParams::MAIN)
-				if(SysCfg().GetBoolArg("-iscutmine", false)== false)
+				if(bRet== true)
 				{
 					SysCfg().SoftSetArgCover("-ismining", "0");
 				  throw boost::thread_interrupted();

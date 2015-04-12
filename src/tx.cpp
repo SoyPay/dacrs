@@ -356,7 +356,6 @@ bool CRegisterAccountTx::CheckTransction(CValidationState &state, CAccountViewCa
 
 bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
-	LogPrint("INFO", "Execute Transactions hash:%s\n", GetHash().GetHex());
 	CAccount srcAcct;
 	CAccount desAcct;
 	CAccountLog desAcctLog;

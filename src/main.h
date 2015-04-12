@@ -833,10 +833,8 @@ public:
 
     string ToString() const
     {
-        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
-            pprev, nHeight,
-            hashMerkleRoot.ToString().c_str(),
-            GetBlockHash().ToString().c_str());
+        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s, blockfee=%d, chainWork=%s, feePerKb=%lf)",
+            pprev, nHeight, hashMerkleRoot.ToString().c_str(), GetBlockHash().ToString().c_str(), nblockfee, nChainWork.ToString().c_str(), dFeePerKb);
     }
 
     void print() const
