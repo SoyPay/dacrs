@@ -506,9 +506,12 @@ public:
 			BOOST_CHECK(GenerateOneBlock());
 		}
 		cout << "all register transactions have been confirmed!" << endl;
-		while(chainActive.Height() != 2000) {
+		while(chainActive.Height() != 50) {
 			BOOST_CHECK(GenerateOneBlock());
+			cout << "cur heigh:" <<  chainActive.Height() <<endl;
+			MilliSleep(1500);
 		}
+		cout << "all register transactions have been confirmed!" << endl;
 //		BOOST_CHECK(DisConnectBlock(chainActive.Height()-1));
 //		BOOST_CHECK(GenerateOneBlock());
 //		BOOST_CHECK(GenerateOneBlock());
@@ -520,11 +523,18 @@ BOOST_FIXTURE_TEST_SUITE(sysScript_test,CSysScriptTest)
 
 BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 {
+
+
+
 	//// pass
 	ResetEnv();
 	BOOST_CHECK(0==chainActive.Height());
 	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
 	CheckSdk();
+
+
+
+
 
 	ResetEnv();
 	BOOST_CHECK(0==chainActive.Height());
