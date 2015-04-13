@@ -506,10 +506,10 @@ public:
 		while (!IsMemoryPoolEmpty()) {
 			BOOST_CHECK(GenerateOneBlock());
 		}
-
-		while(chainActive.Height() != 2000) {
+       int totalhigh = 20;
+		while(chainActive.Height() != totalhigh) {
 			BOOST_CHECK(GenerateOneBlock());
-			ShowProgress("GenerateOneBlock progress: ",chainActive.Height()/20);
+			ShowProgress("GenerateOneBlock progress: ",((float)chainActive.Height()/(float)totalhigh)*100);
 			MilliSleep(1500);
 		}
 
