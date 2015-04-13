@@ -162,28 +162,22 @@ Value setgenerate(const Array& params, bool fHelp)
 
     // -regtest mode: don't return until nGenProcLimit blocks are generated
 	if (SysCfg().NetworkID() != CBaseParams::MAIN) {
-		if (SysCfg().GetBoolArg("-iscutmine", false) == true) //如果是持续挖矿
-				{
-			GenerateDacrsBlock(fGenerate, pwalletMain, 1);
-		} else {//如果是一个一个地挖
+			//如果是一个一个地挖
+		int nHeightEnd = 0;
+		auto getcurhigh = [&]() {
+			LOCK(cs_main);
+			return chainActive.Height();
+		};
+		int curhigh = getcurhigh();
+		nHeightEnd = curhigh + nGenProcLimit;
+		int high = -1;
 
-			int nHeightEnd = 0;
-			auto getcurhigh = [&]() {
-				LOCK(cs_main);
-				return chainActive.Height();
-			};
-			int curhigh = getcurhigh();
-			nHeightEnd = curhigh + nGenProcLimit;
-
-			int high =-1;
-
-			while (getcurhigh()  < nHeightEnd) {
-				if (getcurhigh() != high) {
-					high = getcurhigh();
-					GenerateDacrsBlock(true, pwalletMain, 1);
-				}
-				MilliSleep(100);
+		while (getcurhigh() < nHeightEnd) {
+			if (getcurhigh() != high) {
+				high = getcurhigh();
+				GenerateDacrsBlock(true, pwalletMain, 1);
 			}
+			MilliSleep(100);
 		}
 
 	}

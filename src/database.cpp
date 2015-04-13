@@ -1,4 +1,4 @@
-#include "account.h"
+#include "database.h"
 #include "util.h"
 #include "serialize.h"
 #include "core.h"
@@ -90,13 +90,11 @@ bool CAccountViewCache::GetAccount(const CKeyID &keyId, CAccount &account) {
 }
 bool CAccountViewCache::SetAccount(const CKeyID &keyId, const CAccount &account) {
 	cacheAccounts[keyId] = account;
-	cacheAccounts[keyId].accountOperLog.SetNULL();
 	return true;
 }
 bool CAccountViewCache::SetAccount(const vector<unsigned char> &accountId, const CAccount &account) {
 	if(cacheKeyIds.count(accountId)) {
 		cacheAccounts[cacheKeyIds[accountId]] = account;
-		cacheAccounts[cacheKeyIds[accountId]].accountOperLog.SetNULL();
 		return true;
 	}
 	return false;
@@ -123,7 +121,6 @@ bool CAccountViewCache::BatchWrite(const map<CKeyID, CAccount> &mapAccounts, con
 			cacheAccounts.erase(it->first);
 		} else {
 			cacheAccounts[it->first] = it->second;
-			cacheAccounts[it->first].accountOperLog.SetNULL();
 		}
 	}
 
@@ -134,16 +131,11 @@ bool CAccountViewCache::BatchWrite(const map<CKeyID, CAccount> &mapAccounts, con
 }
 bool CAccountViewCache::BatchWrite(const vector<CAccount> &vAccounts) {
 	for (vector<CAccount>::const_iterator it = vAccounts.begin(); it != vAccounts.end(); ++it) {
-		if (it->keyID.ToString() == "4fb64dd1d825bb6812a7090a1d0dd2c75b55242e") {
-			LogPrint("INFO", "get account info:%s\n", it->ToString());
-		}
 		if (it->IsEmptyValue() && !it->IsRegister()) {
 			cacheAccounts[it->keyID] = *it;
 			cacheAccounts[it->keyID].keyID = uint160(0);
-			cacheAccounts[it->keyID].accountOperLog.SetNULL();
 		} else {
 			cacheAccounts[it->keyID] = *it;
-			cacheAccounts[it->keyID].accountOperLog.SetNULL();
 		}
 	}
 	return true;
@@ -235,7 +227,6 @@ bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAcco
 bool CAccountViewCache::SaveAccountInfo(const CRegID &regid, const CKeyID &keyId, const CAccount &account) {
 	cacheKeyIds[regid.GetVec6()] = keyId;
 	cacheAccounts[keyId] = account;
-	cacheAccounts[keyId].accountOperLog.SetNULL();
 	return true;
 }
 bool CAccountViewCache::GetAccount(const CUserID &userId, CAccount &account) {

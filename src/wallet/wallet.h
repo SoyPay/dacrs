@@ -347,7 +347,7 @@ public:
 	int blockhigh;
 //	set<uint256> Txhash;
 
-	map<uint256, vector<CAccountOperLog> > mapOperLog;
+
 
 	map<uint256, std::shared_ptr<CBaseTransaction> > mapAccountTx;
 public:
@@ -368,12 +368,7 @@ public:
 			pWallet = pwallet;
 		}
 	}
-	bool AddOperLog(const uint256 &hash, const vector<CAccountOperLog> &log)
-	{
-		assert(mapOperLog.count(hash) == 0 );
-		mapOperLog[hash] = log;
-		return true;
-	}
+
 	bool AddTx(const uint256 &hash, const CBaseTransaction*pTx) {
 		switch (pTx->nTxType) {
 		case COMMON_TX:

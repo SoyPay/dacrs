@@ -141,10 +141,10 @@ public:
 		if(!CreateCommonTx(iterSrcAddr->second, newAddress))
 			return false;
 
-		int nfee = GetRandomFee();
-		Value result = registaccounttx(newAddress,nfee, "false");
+		int nfee = GetRandomFee() + 100000000;
+		Value result = registaccounttx(newAddress, nfee);
 		string txHash = "";
-		BOOST_CHECK(GetHashFromCreatedTx(value,txHash));
+		BOOST_CHECK(GetHashFromCreatedTx(value, txHash));
 
 		vTransactionHash.push_back(txHash);
 		if (mempool.mapTx.count(uint256(txHash)) > 0) {
@@ -244,9 +244,7 @@ public:
 //			cout << "create tx order:" << i << "type:" <<nTxType << endl;
 			//putchar('\b');	//将当前行全部清空，用以显示最新的进度条状态
 			if(0 != i) {
-				for(int j=0; j<100 ;++j)
-					cout<<'\b';
-				cout << "create tx progress: "<<  (int)(((i+1)/(float)txCount) * 100) << "%";
+				ShowProgress("create tx progress: ",(int)(((i+1)/(float)txCount) * 100));
 			}
 		}
 	}

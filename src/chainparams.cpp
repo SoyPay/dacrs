@@ -113,7 +113,7 @@ string initPubKey[] = { //
 		"03ae28a4100145a4c354338c727a54800dc540069fa2f5fd5d4a1c80b4a35a1762"
 };
 unsigned int pnSeed[] = //
-		{ 0xa78a2879 };
+		{ /*0xa78a2879*/ };
 
 class CMainParams: public CBaseParams {
 public:
@@ -303,10 +303,9 @@ public:
 		pchMessageStart[2] = 0x2d;
 		pchMessageStart[3] = 0x3d;
 		nSubsidyHalvingInterval = 150;
-		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 8);        //00 00 ff ff
+		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 6);        //target:00000011 11111111 11111111
 		genesis.nTime = 1421808634;
-//		genesis.nTime = 1296688602;
-		genesis.nBits = 0x1fffffff;
+		genesis.nBits = 0x2003ffff;
 		genesis.nNonce = 888;
 		hashGenesisBlock = genesis.GetHash();
 		nDefaultPort = 18666;

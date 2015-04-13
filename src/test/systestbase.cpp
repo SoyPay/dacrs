@@ -324,16 +324,6 @@ uint64_t SysTestBase::GetFreeMoney(const string& strID) {
 	BOOST_CHECK(result.type() != null_type);
 
 	uint64_t nMoney = result.get_int64();
-
-	result = find_value(valueRes.get_obj(), "FreedomFund");
-	Array arrayFreedom = result.get_array();
-
-	for (const auto& item : arrayFreedom) {
-		result = find_value(item.get_obj(), "value");
-		BOOST_CHECK(result.type() != null_type);
-		nMoney += result.get_int64();
-	}
-
 	return nMoney;
 }
 
@@ -413,7 +403,7 @@ Value SysTestBase::CreateNormalTx(const std::string &desAddr,uint64_t nMoney){
 	}
 	return value;
 }
-Value SysTestBase::registaccounttx(const std::string &addr, const int nfee ,bool flag) {
+Value SysTestBase::registaccounttx(const std::string &addr, const int nfee) {
 	//CommanRpc
 	char caddr[64] = { 0 };
 	strncpy(caddr, addr.c_str(), sizeof(caddr) - 1);
@@ -423,11 +413,6 @@ Value SysTestBase::registaccounttx(const std::string &addr, const int nfee ,bool
 		nCurFee = GetRandomFee();;
 	string fee =strprintf("%ld", nCurFee);
 
-	string param = "false";
-	if(flag)
-	{
-		param = "true";
-	}
 	const char *argv[] = { "rpctest", "registaccounttx", caddr, (char*)fee.c_str()};
 	int argc = sizeof(argv) / sizeof(char*);
 
@@ -691,13 +676,8 @@ bool SysTestBase::GetRegID(string& strAddr,CRegID& regID) {
 	regID = account.regID;
 	return true;
 }
-bool SysTestBase::GetRegID(string& strAddr,string& regID){
-	Value value = GetAccountInfo(strAddr);
 
-	regID = "RegID";
-	return GetStrFromObj(value,regID);
-}
-bool SysTestBase::GetTxOperateLog(const uint256& txHash, vector<CAccountOperLog>& vLog) {
+bool SysTestBase::GetTxOperateLog(const uint256& txHash, vector<CAccountLog>& vLog) {
 		if (!GetTxOperLog(txHash, vLog))
 			return false;
 
@@ -712,4 +692,8 @@ bool SysTestBase::PrintLog(){
 			return true;
 		}
 	return false;
+}
+
+bool SysTestBase::IsMemoryPoolEmpty() {
+	return mempool.mapTx.empty();
 }

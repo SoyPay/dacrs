@@ -126,8 +126,10 @@ void Shutdown()
     {
         LOCK(cs_main);
 
-        if (pwalletMain)
+        if (pwalletMain) {
             pwalletMain->SetBestChain(chainActive.GetLocator());
+        	bitdb.Flush(true);
+        }
 
         if (pblocktree)
             pblocktree->Flush();
@@ -148,9 +150,7 @@ void Shutdown()
         delete pTxCacheTip; pTxCacheTip = NULL;
         delete pScriptDBTip; pScriptDBTip = NULL;
 
-
     }
-
 
     boost::filesystem::remove(GetPidFile());
     UnregisterAllWallets();
@@ -902,7 +902,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         return false;
     }
 
-    SysCfg().SetIntervalPos(SysCfg().GetArg("-intervalpos", 1));
+    SysCfg().SetIntervalPos(SysCfg().GetArg("-intervalpos", 1440));
 
     if (SysCfg().IsArgCount("-printblock"))
     {

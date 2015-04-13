@@ -18,7 +18,7 @@
 #include "sync.h"
 #include "txmempool.h"
 #include "uint256.h"
-#include "account.h"
+#include "database.h"
 
 
 #include <algorithm>
@@ -169,7 +169,7 @@ bool IsInitialBlockDownload();
 /** Format a string that describes several potential problems detected by the core */
 string GetWarnings(string strFor);
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
-bool GetTransaction(std::shared_ptr<CBaseTransaction> &pBaseTx, const uint256 &hash);
+bool GetTransaction(std::shared_ptr<CBaseTransaction> &pBaseTx, const uint256 &hash,bool bSearchMempool=true);
 /** Retrieve a transaction high comfirmed in block*/
 int GetTxComfirmHigh(const uint256 &hash);
 
@@ -558,7 +558,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp = NU
 bool DisconnectBlockFromTip(CValidationState &state);
 
 //get tx operate account log
-bool GetTxOperLog(const uint256 &txHash, vector<CAccountOperLog> &vAccountOperLog);
+bool GetTxOperLog(const uint256 &txHash, vector<CAccountLog> &vAccountLog);
 
 //get setBlockIndexValid
 Value ListSetBlockIndexValid();
@@ -833,10 +833,8 @@ public:
 
     string ToString() const
     {
-        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
-            pprev, nHeight,
-            hashMerkleRoot.ToString().c_str(),
-            GetBlockHash().ToString().c_str());
+        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s, blockfee=%d, chainWork=%s, feePerKb=%lf)",
+            pprev, nHeight, hashMerkleRoot.ToString().c_str(), GetBlockHash().ToString().c_str(), nblockfee, nChainWork.ToString().c_str(), dFeePerKb);
     }
 
     void print() const
