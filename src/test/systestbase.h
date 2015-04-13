@@ -205,7 +205,13 @@ public:
 	bool GetStrFromObj(const Value& valueRes,string& str);
 
 	bool ImportWalletKey(const char**address,int nCount);
-
+    bool ShowProgress(string const &msg,float rate)
+    {
+    	for(int j=0; j<100 ;++j)
+    	cout<<'\b';
+    	cout << msg <<  rate << "%";
+    	return true;
+    }
 	uint64_t GetRandomBetfee();
 
 	bool GetKeyId(string const &addr,CKeyID &KeyId);

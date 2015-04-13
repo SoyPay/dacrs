@@ -499,19 +499,20 @@ public:
 			int nfee = GetRandomFee();
 			Value value1 = registaccounttx(vNewAddress[i], nfee);
 			BOOST_CHECK(GetHashFromCreatedTx(value1,hash));
+
 		//	BOOST_CHECK(GenerateOneBlock());
 		}
 		cout << "new address register account transactions have been created completed!" << endl;
 		while (!IsMemoryPoolEmpty()) {
 			BOOST_CHECK(GenerateOneBlock());
 		}
-		cout << "all register transactions have been confirmed!" << endl;
-		while(chainActive.Height() != 50) {
+
+		while(chainActive.Height() != 2000) {
 			BOOST_CHECK(GenerateOneBlock());
-			cout << "cur heigh:" <<  chainActive.Height() <<endl;
+			ShowProgress("GenerateOneBlock progress: ",chainActive.Height()/20);
 			MilliSleep(1500);
 		}
-		cout << "all register transactions have been confirmed!" << endl;
+
 //		BOOST_CHECK(DisConnectBlock(chainActive.Height()-1));
 //		BOOST_CHECK(GenerateOneBlock());
 //		BOOST_CHECK(GenerateOneBlock());

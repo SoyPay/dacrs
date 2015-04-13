@@ -260,9 +260,8 @@ BOOST_FIXTURE_TEST_CASE(acct_process,CSystemTest)
 		map<int,string> mapData;
 		mapData.insert(make_pair(nIndex,strTxHash));
 		vDataInfo.push_back(std::move(mapData));
-		for(int j=0; j<100 ;++j)
-			cout<<'\b';
-			cout << "acct_process progress: "<<  (int)(((i+1)/(float)100) * 100) << "%";
+		ShowProgress("acct_process progress: ",(int)(((i+1)/(float)100) * 100));
+
 	}
 
 	for(int i = vDataInfo.size()-1;i>=0;i--) {
