@@ -408,7 +408,7 @@ static RET_DEFINE ExDesFunc(unsigned char *ipara,void * pVmScriptRun) {
 		else
 		{
 			//error
-			RetFalse(string(__FUNCTION__)+"para  err !");
+			return	RetFalse(string(__FUNCTION__)+"para  err !");
 		}
 	}
 
@@ -515,10 +515,9 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 
-	if (GetTransaction(pBaseTx, hash1)) {
+	if (GetTransaction(pBaseTx, hash1,false)) {
 		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
 		 (*tem.get()).push_back(tx->vContract);
-
 	}
 	return std::make_tuple (true, 0,tem);
 }
@@ -542,7 +541,7 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 
 	auto tem = make_shared<std::vector<vector<unsigned char> > >();
 
-	if (GetTransaction(pBaseTx, hash1)) {
+	if (GetTransaction(pBaseTx, hash1,false)) {
 		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
 		vector<unsigned char> item = boost::get<CRegID>(tx->srcRegId).GetVec6();
 		(*tem.get()).push_back(item);
@@ -574,18 +573,19 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 	CUserID userid(addrKeyId);
 	CAccount aAccount;
 	if (!pVmScript->GetCatchView()->GetAccount(userid, aAccount)) {
-		flag = false;
+		return RetFalse(string(__FUNCTION__)+"GetAccount  err !");
 	}
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     vector<char> te;
     tep << aAccount.PublicKey;
+    assert(aAccount.PublicKey.IsFullyValid());
     tep >>te;
     vector<unsigned char> tep1(te.begin(),te.end());
     (*tem.get()).push_back(tep1);
 
-	return std::make_tuple (flag,0, tem);
+	return std::make_tuple (true,0, tem);
 }
 /**
  *bool QueryAccountBalance(const unsigned char* const account,Int64* const pBalance)
@@ -936,7 +936,7 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmEvn)
 			m_dblog.get()->push_back(operlog);
 			flag = true;
 		}
-	}else {
+	}else {//!todo 这里为什么 获取都失败了 还要记日子。
 		if(!operlog.vKey.empty()) {
 			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmRunEvn->GetDbLog();
 			m_dblog.get()->push_back(operlog);
@@ -959,8 +959,6 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmEvn)
  */
 static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmEvn)
 {
-
-	unsigned char * pbuffer = ipara;
 	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
@@ -971,8 +969,13 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmEvn)
 	vector<CVmOperate> source;
 	CVmOperate temp;
 	int Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
-	int count = GetParaLen(pbuffer)/Size;
-	assert(GetParaLen(pbuffer)%Size == 0);
+	int datadsize = retdata.at(0)->size();
+	int count = datadsize/Size;
+	if(datadsize%Size != 0)
+	{
+	  assert(0);
+	 return RetFalse("para err");
+	}
 	CDataStream ss(*retdata.at(0),SER_DISK, CLIENT_VERSION);
 
 	while(count--)
@@ -1070,20 +1073,20 @@ enum COMPRESS_TYPE {
 	I64_TYPE = 5,					// I64_TYPE
 	NO_TYPE = 6,                   // NO_TYPE +n (tip char)
 };
-void Decompress(vector<unsigned char>& format,vector<unsigned char> &contact,std::vector<unsigned char> &ret){
+static bool Decompress(vector<unsigned char>& format,vector<unsigned char> &contact,std::vector<unsigned char> &ret){
 
-	CDataStream ds(contact,SER_DISK, CLIENT_VERSION);
-
-	CDataStream retdata(SER_DISK, CLIENT_VERSION);
-	for (auto item = format.begin(); item != format.end();item++) {
-		   switch(*item){
-			case U16_TYPE: {
-				unsigned short i = 0;
-				ds >> VARINT(i);
-				retdata<<i;
-				break;
-			}
-			case I16_TYPE:
+	try {
+		CDataStream ds(contact,SER_DISK, CLIENT_VERSION);
+		CDataStream retdata(SER_DISK, CLIENT_VERSION);
+		for (auto item = format.begin(); item != format.end();item++) {
+			switch(*item) {
+				case U16_TYPE: {
+					unsigned short i = 0;
+					ds >> VARINT(i);
+					retdata<<i;
+					break;
+				}
+				case I16_TYPE:
 				{
 					short i = 0;
 					ds >> VARINT(i);
@@ -1123,16 +1126,21 @@ void Decompress(vector<unsigned char>& format,vector<unsigned char> &contact,std
 					unsigned char temp = 0;
 					item++;
 					int te = *item;
-					while (te--){
+					while (te--) {
 						ds >> VARINT(temp);
 						retdata<<temp;
 					}
 					break;
 				}
 			}
-		 }
+		}
+		ret.insert(ret.begin(),retdata.begin(),retdata.end());
+	} catch (...) {
+		LogPrint("vm","seseril err in funciton:%s",__FUNCTION__);
+		return false;
+	}
+	return true;
 
-	ret.insert(ret.begin(),retdata.begin(),retdata.end());
 }
 
 static RET_DEFINE ExCurDeCompressContactFunc(unsigned char *ipara,void *pVmEvn){
@@ -1146,7 +1154,10 @@ static RET_DEFINE ExCurDeCompressContactFunc(unsigned char *ipara,void *pVmEvn){
 	vector<unsigned char> contact =((CVmRunEvn *)pVmEvn)->GetTxContact();
 
 	std::vector<unsigned char> outContact;
-	Decompress(*retdata.at(0),contact,outContact);
+	 if(!Decompress(*retdata.at(0),contact,outContact))
+	 {
+		return RetFalse(string(__FUNCTION__)+"para  err !");
+	 }
 
 	vector<unsigned char> item;
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -1164,15 +1175,14 @@ static RET_DEFINE ExDeCompressContactFunc(unsigned char *ipara,void *pVmEvn){
 	uint256 hash1(*retdata.at(1));
 //	LogPrint("vm","ExGetTxContractsFunc1:%s\n",hash1.GetHex().c_str());
 
-
 	std::shared_ptr<CBaseTransaction> pBaseTx;
-
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-
-	if (GetTransaction(pBaseTx, hash1)) {
+	if (GetTransaction(pBaseTx, hash1,false)) {
 		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
 		 std::vector<unsigned char> outContact;
-		 Decompress(*retdata.at(0),tx->vContract,outContact);
+		if (!Decompress(*retdata.at(0), tx->vContract, outContact)) {
+			return RetFalse(string(__FUNCTION__) + "para  err !");
+		}
 		 (*tem.get()).push_back(outContact);
 	}
 
