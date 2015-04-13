@@ -945,7 +945,9 @@ bool CAccount::IsFundValid(const CFund &fund) {
 }
 bool CAccount::OperateAccount(OperType type, const CFund &fund) {
 //	LogPrint("op_account", "before operate:%s\n", ToString());
-	assert(keyID != uint160(0));
+	if (keyID == uint160(0)) {
+		assert(0);
+	}
 	if (!IsFundValid(fund))
 		return false;
 

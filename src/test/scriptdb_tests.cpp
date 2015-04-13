@@ -133,7 +133,7 @@ void traversaldb(CScriptDBViewCache *pScriptDB, bool needEqual) {
 	vector<unsigned char> vScriptId = {0x01,0x00,0x00,0x00,0x02,0x00};
 	CRegID regScriptId(vScriptId);
 	bool ret = pScriptDB->GetScriptData(curheight,regScriptId, 0, vKey, vScript);
-	int nType(0);
+//	int nType(0);
 	if(ret)  {
 		traversalKey.push_back(vKey);
 		vector<unsigned char> dataKey = { 'd', 'a', 't', 'a' };
@@ -141,13 +141,13 @@ void traversaldb(CScriptDBViewCache *pScriptDB, bool needEqual) {
 		dataKey.push_back('_');
 		dataKey.insert(dataKey.end(), vKey.begin(), vKey.end());
 		if(pscriptDBView->mapDatas.count(dataKey)) {
-			nType = 0;
+//			nType = 0;
 		}else if(pTestView->mapDatas.count(dataKey)) {
-			nType = 1;
+//			nType = 1;
 		}else {
-			nType = 2;
+//			nType = 2;
 		}
-		cout << "script key:" << HexStr(vKey) <<" data at level:"<< nType<< endl;
+//		cout << "script key:" << HexStr(vKey) <<" data at level:"<< nType<< endl;
 	}
 
 	while(ret) {
@@ -158,19 +158,19 @@ void traversaldb(CScriptDBViewCache *pScriptDB, bool needEqual) {
 			dataKey.push_back('_');
 			dataKey.insert(dataKey.end(), vKey.begin(), vKey.end());
 			if(pscriptDBView->mapDatas.count(dataKey)) {
-				nType = 0;
+//				nType = 0;
 			}else if(pTestView->mapDatas.count(dataKey)) {
-				nType = 1;
+//				nType = 1;
 			}else {
-				nType = 2;
+//				nType = 2;
 			}
 			traversalKey.push_back(vKey);
-			cout << "script key:" << HexStr(vKey) <<" data at level:"<< nType<< endl;
+//			cout << "script key:" << HexStr(vKey) <<" data at level:"<< nType<< endl;
 		}
 	}
 	if(needEqual)
 		BOOST_CHECK(traversalKey == arrKey);
-	cout << "=======================traversaldb end======="<<++nCount<<"==============================="<<endl;
+//	cout << "=======================traversaldb end======="<<++nCount<<"==============================="<<endl;
 }
 void testscriptdatadb() {
 	vector<unsigned char> vScriptId = {0x01,0x00,0x00,0x00,0x02,0x00};
