@@ -37,5 +37,6 @@ dacrs_ptest_SOURCES = \
   CDarkAndAnony.h	\
   ../test/systestbase.h \
   CycleP2PBet_test.cpp \
-  CycleP2PBet_test.h
-  
+  CycleP2PBet_test.h \
+  createminterkey.cpp \
+  createminterkey.h

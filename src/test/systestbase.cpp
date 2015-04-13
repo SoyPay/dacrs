@@ -137,14 +137,8 @@ SysTestBase::SysTestBase() {
 SysTestBase::~SysTestBase() {
 	// todo Auto-generated destructor stub
 }
-
-bool SysTestBase::ResetEnv() {
-	const char *argv[] = { "rpctest", "resetclient"};
-
-	Value value;
-	if (!CommandLineRPC_GetValue(sizeof(argv) / sizeof(argv[0]), argv, value)) {
-		return false;
-	}
+bool SysTestBase::ImportAllPrivateKey()
+{
 
 	const char* pKey[] = {
 			        /*for bess test*/
@@ -193,6 +187,21 @@ bool SysTestBase::ResetEnv() {
 			return false;
 		}
 	}
+	return true;
+}
+
+bool SysTestBase::ResetEnv() {
+	const char *argv[] = { "rpctest", "resetclient"};
+
+	Value value;
+	if (!CommandLineRPC_GetValue(sizeof(argv) / sizeof(argv[0]), argv, value)) {
+		return false;
+	}
+
+    if(ImportAllPrivateKey() == false)
+    {
+    	return false;
+    }
 
 	return true;
 }

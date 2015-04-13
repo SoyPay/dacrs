@@ -562,6 +562,9 @@ BOOST_FIXTURE_TEST_CASE(minier,CSysScriptTest)
 	ResetEnv();
 	TestMinner();
 }
+
+
+
 BOOST_FIXTURE_TEST_CASE(appacc,CSysScriptTest){
 
 	ResetEnv();

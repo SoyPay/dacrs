@@ -667,8 +667,11 @@ void static DacrsMiner(CWallet *pwallet) {
 			if (SysCfg().NetworkID() != CBaseParams::MAIN)
 				if(bRet== true)
 				{
-					SysCfg().SoftSetArgCover("-ismining", "0");
-				  throw boost::thread_interrupted();
+					if(SysCfg().GetArg("-iscutmine",0)==0)
+					{
+						SysCfg().SoftSetArgCover("-ismining", "0");
+						throw boost::thread_interrupted();
+					}
 				}	
 		}
 	} catch (...) {
