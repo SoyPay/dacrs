@@ -631,7 +631,7 @@ bool SysTestBase::ImportWalletKey(const char**address, int nCount){
 
 uint64_t SysTestBase::GetRandomBetfee() {
 		srand(time(NULL));
-		int r = (rand() % 1000000) + 1000000;
+		int r = (rand() % 1000000) + 100000000;
 		return r;
 	}
 bool SysTestBase::GetKeyId(string const &addr,CKeyID &KeyId) {

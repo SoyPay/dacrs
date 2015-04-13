@@ -61,7 +61,7 @@ bool CTestBetTx::RegScript(void) {
 	int nCurHight;
 	GetBlockHeight(nCurHight);
 	//×¢²á¶Ô¶Ä½Å±¾
-	Value valueRes = RegisterScriptTx(ADDR_A, strFileName, nCurHight, nFee);
+	Value valueRes = RegisterScriptTx(ADDR_A, strFileName, nCurHight, 200000000);
 	BOOST_CHECK(GetHashFromCreatedTx(valueRes, strRegScriptHash));
 	BOOST_CHECK(GenerateOneBlock());
 	if (basetest.GetTxConfirmedRegID(strRegScriptHash, scriptid)) {
