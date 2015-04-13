@@ -799,15 +799,17 @@ int GetTxComfirmHigh(const uint256 &hash) {
 }
 
 // Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock
-bool GetTransaction(std::shared_ptr<CBaseTransaction> &pBaseTx, const uint256 &hash)
+bool GetTransaction(std::shared_ptr<CBaseTransaction> &pBaseTx, const uint256 &hash,bool bSearchMemPool)
 {
     {
         LOCK(cs_main);
         {
-        	pBaseTx = mempool.lookup(hash);
-            if (pBaseTx.get()) {
-            	return true;
-            }
+			if (bSearchMemPool == true) {
+				pBaseTx = mempool.lookup(hash);
+				if (pBaseTx.get()) {
+					return true;
+				}
+			}
         }
 
         if (SysCfg().IsTxIndex()) {
