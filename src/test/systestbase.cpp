@@ -644,6 +644,12 @@ bool SysTestBase::IsTxUnConfirmdInWallet(const uint256& txHash) {
 		}
 		return false;
 	}
+bool SysTestBase::GetRegID(string& strAddr,string& regID){
+	Value value = GetAccountInfo(strAddr);
+
+	regID = "RegID";
+	return GetStrFromObj(value,regID);
+}
 bool SysTestBase::IsTxInTipBlock(const uint256& txHash) {
 		CBlockIndex* pindex = chainActive.Tip();
 		CBlock block;
