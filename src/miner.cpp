@@ -130,18 +130,18 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
 	pblock->hashMerkleRoot = pblock->BuildMerkleTree();
 }
 
-
 struct CAccountComparator {
 	bool operator()(const CAccount &a, const CAccount&b) {
 		// First sort by acc over 30days
-		if (a.GetAccountPos(chainActive.Tip()->nHeight) < b.GetAccountPos(chainActive.Tip()->nHeight)) {
+		CAccount &a1 = const_cast<CAccount &>(a);
+		CAccount &b1 = const_cast<CAccount &>(b);
+		if (a1.GetAccountPos(chainActive.Tip()->nHeight+1) < b1.GetAccountPos(chainActive.Tip()->nHeight+1)) {
 			return false;
 		}
 
 		return true;
 	}
 };
-
 
 struct PosTxInfo {
 	int nVersion;
@@ -163,7 +163,6 @@ struct PosTxInfo {
 	}
 };
 
-
 uint256 GetAdjustHash(const uint256 TargetHash, const uint64_t nPos) {
 
 	uint64_t posacc = nPos/COIN;
@@ -183,6 +182,7 @@ uint256 GetAdjustHash(const uint256 TargetHash, const uint64_t nPos) {
 
 	return std::move(adjusthash);
 }
+
 bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setCreateKey, CAccountViewCache &view,
 		CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	set<CKeyID> setKeyID;
@@ -214,8 +214,9 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 			CAccount acctInfo;
 			if (view.GetAccount(userId, acctInfo)) {
 				//available
-				if (acctInfo.IsRegister() && acctInfo.GetAccountPos(pPrevIndex->nHeight) > 0) {
+				if (acctInfo.IsRegister() && acctInfo.GetAccountPos(pBlock->nHeight) > 0 && acctInfo.IsMiner(pBlock->nHeight)) {
 					setAcctInfo.insert(std::move(acctInfo));
+					LogPrint("miner", "miner account info:%s\n", acctInfo.ToString());
 				}
 			}
 		}
@@ -230,21 +231,25 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 
 	uint256 prevblockhash = pPrevIndex->GetBlockHash();
 	const uint256 targetHash = CBigNum().SetCompact(pBlock->nBits).getuint256(); //target hash difficult
-
-	for (const auto &item : setAcctInfo) {
-		uint64_t posacc = item.GetAccountPos(pPrevIndex->nHeight);
+	set<CAccount, CAccountComparator>::iterator iterAcct = setAcctInfo.begin();
+	for (;iterAcct!=setAcctInfo.end();++iterAcct) {
+		CAccount  &item = const_cast<CAccount&>(*iterAcct);
+		uint64_t posacc = item.GetAccountPos(pBlock->nHeight);
 		if (0 == posacc) {  //have no pos
 			LogPrint("ERROR", "CreatePosTx posacc zero\n");
 			continue;
 		}
-
+		LogPrint("INFO", "miner account:%s\n", item.ToString());
+		LogPrint("INFO", "target hash:%s\n", targetHash.ToString());
+		LogPrint("INFO", "posacc:%d\n", posacc);
 		uint256 adjusthash = GetAdjustHash(targetHash, posacc); //adjust nbits
+		LogPrint("INFO", "adjusthash:%s\n", adjusthash.ToString());
 
-//need compute this block proofofwork
+		//need compute this block proofofwork
 		struct PosTxInfo postxinfo;
 		postxinfo.nVersion = pBlock->nVersion;
 		postxinfo.hashPrevBlock = prevblockhash;
-		postxinfo.hashMerkleRoot = item.BuildMerkleTree(pPrevIndex->nHeight);
+		postxinfo.hashMerkleRoot = item.GetHash();
 		postxinfo.nValues = item.llValues;
 		postxinfo.nTime = pBlock->nTime; //max(pPrevIndex->GetMedianTimePast() + 1, GetAdjustedTime());
 		for (pBlock->nNonce = 0; pBlock->nNonce < maxNonce; ++pBlock->nNonce) {
@@ -320,10 +325,6 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 			if (uint256(0) != txCache.IsContainTx(pBaseTx->GetHash())) {
 				return ERRORMSG("VerifyPosTx duplicate tx hash:%s", pBaseTx->GetHash().GetHex());
 			}
-
-//			if (CONTRACT_TX == pBaseTx->nTxType) {
-//				LogPrint("vm", "tx hash=%s VerifyPosTx run contract\n", pBaseTx->GetHash().GetHex());
-//			}
 			CTxUndo txundo;
 			CValidationState state;
 			if (!pBaseTx->ExecuteTx(i, view, state, txundo, pBlock->nHeight, txCache, scriptDBView)) {
@@ -345,7 +346,8 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 //     		cout << "check block hash:" << pBlock->SignatureHash().GetHex() << endl;
 //			cout << "check signature:" << HexStr(pBlock->vSignature) << endl;
 //			cout <<"account miner"<< account.ToString()<< endl;
-
+			if(!account.IsMiner(pBlock->nHeight -1))
+				return ERRORMSG("coindays of account dismatch, can't be miner");
 			if (!account.PublicKey.Verify(pBlock->SignatureHash(), pBlock->vSignature)) {
 				if (!account.MinerPKey.Verify(pBlock->SignatureHash(), pBlock->vSignature)) {
 //					LogPrint("postx", "publickey:%s, keyid:%s\n", secureAcc.PublicKey.GetHash().GetHex(),
@@ -368,7 +370,7 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 	uint256 prevblockhash = pBlock->hashPrevBlock;
 	const uint256 targetHash = CBigNum().SetCompact(pBlock->nBits).getuint256(); //target hash difficult
 
-	uint64_t posacc = account.GetAccountPos(pBlock->nHeight-1);
+	uint64_t posacc = account.GetAccountPos(pBlock->nHeight);
 	if (posacc == 0) {
 		return ERRORMSG("Account have no pos");
 	}
@@ -379,7 +381,7 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 	struct PosTxInfo postxinfo;
 	postxinfo.nVersion = pBlock->nVersion;
 	postxinfo.hashPrevBlock = prevblockhash;
-	postxinfo.hashMerkleRoot = account.BuildMerkleTree(pBlock->nHeight-1);
+	postxinfo.hashMerkleRoot = account.GetHash();
 	postxinfo.nValues = account.llValues;
 	postxinfo.nTime = pBlock->nTime;
 	postxinfo.nNonce = pBlock->nNonce;
@@ -396,6 +398,7 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 
 	return true;
 }
+
 CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache){
 
 	//    // Create new block
@@ -559,7 +562,8 @@ bool CheckWork(CBlock* pblock, CWallet& wallet) {
 
 	return true;
 }
-bool static  MiningBlock(CBlock *pblock,CWallet *pwallet,CBlockIndex* pindexPrev,unsigned int nTransactionsUpdatedLast,CAccountViewCache &view, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache){
+
+bool static MiningBlock(CBlock *pblock,CWallet *pwallet,CBlockIndex* pindexPrev,unsigned int nTransactionsUpdatedLast,CAccountViewCache &view, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache){
 
 	int64_t nStart = GetTime();
 
@@ -613,6 +617,7 @@ bool static  MiningBlock(CBlock *pblock,CWallet *pwallet,CBlockIndex* pindexPrev
 	}
 	return false;
 }
+
 void static DacrsMiner(CWallet *pwallet) {
 	LogPrint("INFO","Miner started\n");
 
@@ -657,10 +662,10 @@ void static DacrsMiner(CWallet *pwallet) {
 			if (!pblocktemplate.get())
 				throw;
 			CBlock *pblock = &pblocktemplate.get()->block;
-			MiningBlock(pblock, pwallet, pindexPrev, LastTrsa, accview, txCache, ScriptDbTemp);
+			bool bRet = MiningBlock(pblock, pwallet, pindexPrev, LastTrsa, accview, txCache, ScriptDbTemp);
 			
 			if (SysCfg().NetworkID() != CBaseParams::MAIN)
-				if(SysCfg().GetBoolArg("-iscutmine", false)== false)
+				if(bRet== true)
 				{
 					SysCfg().SoftSetArgCover("-ismining", "0");
 				  throw boost::thread_interrupted();

@@ -41,7 +41,7 @@ static bool noui_ThreadSafeMessageBox(const std::string& message, const std::str
 	if (CUIServer::HasConnection()) {
 		CUIServer::Send(write_string(Value(std::move(obj)),true));
 	} else {
-		LogPrint("INFO", "%s\n", write_string(Value(std::move(obj)),true));
+		LogPrint("NOUI", "%s\n", write_string(Value(std::move(obj)),true));
 	}
 
     fprintf(stderr, "%s: %s\n", strCaption.c_str(), message.c_str());
@@ -60,7 +60,7 @@ static void noui_InitMessage(const std::string &message)
 		obj.push_back(Pair("msg",     message));
 		CUIServer::Send(write_string(Value(std::move(obj)),true));
 	}else{
-		LogPrint("INFO","init message: %s\n", message);
+		LogPrint("NOUI","init message: %s\n", message);
 	}
 }
 
@@ -84,7 +84,7 @@ static bool noui_RevTransaction(const uint256 &hash){
 	if (CUIServer::HasConnection()) {
 		CUIServer::Send(write_string(Value(std::move(obj)),true));
 	} else {
-		LogPrint("INFO", "%s\n", write_string(Value(std::move(obj)),true));
+		LogPrint("NOUI", "%s\n", write_string(Value(std::move(obj)),true));
 	}
 	return true;
 }

@@ -1,6 +1,6 @@
 #include "main.h"
 #include "txdb.h"
-#include "account.h"
+#include "database.h"
 #include <iostream>
 #include <boost/test/unit_test.hpp>
 #include  "boost/filesystem/operations.hpp"

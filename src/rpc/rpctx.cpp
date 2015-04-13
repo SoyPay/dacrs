@@ -497,9 +497,9 @@ Value listaddr(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 	Array retArry;
+	uint64_t totalCoin(0);
 	assert(pwalletMain != NULL);
 	{
-
 		map<CKeyID, CKeyStoreValue> pool =  pwalletMain->GetKeyPool();
 		set<CKeyID> setKeyID;
 
@@ -518,6 +518,8 @@ Value listaddr(const Array& params, bool fHelp) {
 				accView.GetAccount(userId, Lambaacc);
 				obj.push_back(Pair("free  amount", (double)Lambaacc.GetRawBalance(curheight)/ (double) COIN));
 				obj.push_back(Pair("Reward amount", (double)Lambaacc.GetRewardAmount(curheight)/ (double) COIN));
+				totalCoin += Lambaacc.GetRawBalance(curheight);
+				totalCoin += Lambaacc.GetRewardAmount(curheight);
 				return obj;
 			};
 
@@ -529,6 +531,7 @@ Value listaddr(const Array& params, bool fHelp) {
 			retArry.push_back(obj);
 		}
 	}
+	cout << "totalCoin:" << totalCoin << endl;
 	return retArry;
 }
 
@@ -763,33 +766,21 @@ Value sign(const Array& params, bool fHelp) {
 //	return obj;
 //}
 
-static Value COperFundToJson(const COperFund &opfound)
+static Value AccountLogToJson(const CAccountLog &accoutLog)
 {
 	Object obj;
-	obj.push_back(Pair("operType",  opfound.operType == 1 ? "ADD_VALUE":"MINUS_VALUE"));
+	obj.push_back(Pair("llValues",  accoutLog.llValues));
+	obj.push_back(Pair("nHeight",  accoutLog.nHeight));
+	obj.push_back(Pair("nCoinDay",  accoutLog.nCoinDay));
 	Array array;
-
-	static const vector<string> strname=
+	for(auto const &te: accoutLog.vRewardFund)
 	{
-	" ",
-	"FREEDOM",
-	"REWARD_FUND",
-	"FREEDOM_FUND",
-	"FREEZD_FUND",
-	"SELF_FREEZD_FUND",
-	"NULL_FUNDTYPE",
-	};
-	for(auto const &te: opfound.vFund)
-	{
-      assert(te.nFundType>=1 &&te.nFundType < strname.size());
       Object obj2;
-      obj2.push_back(Pair("FundType",  strname[te.nFundType]));
-      obj2.push_back(Pair("sriptID",  HexStr(te.appId)));
       obj2.push_back(Pair("value",  te.value));
       obj2.push_back(Pair("nHeight",  te.nHeight));
       array.push_back(obj2);
 	}
-	obj.push_back(Pair("vFund", array));
+	obj.push_back(Pair("vRewardFund", array));
 	return obj;
 }
 
@@ -815,7 +806,7 @@ Value gettxoperationlog(const Array& params, bool fHelp)
 	}
 	RPCTypeCheck(params, list_of(str_type));
 	uint256 txHash(params[0].get_str());
-	vector<CAccountOperLog> vLog;
+	vector<CAccountLog> vLog;
 	Object retobj;
 	retobj.push_back(Pair("hash",  txHash.GetHex()));
 	if(!GetTxOperLog(txHash, vLog))
@@ -827,11 +818,7 @@ Value gettxoperationlog(const Array& params, bool fHelp)
 			Object obj;
 			obj.push_back(Pair("addr",  te.keyID.ToAddress()));
 			Array array;
-			for(auto const &teOperFund: te.vOperFund)
-			{
-			  array.push_back(COperFundToJson(teOperFund));
-			}
-			obj.push_back(Pair("vOperFund",array));
+			array.push_back(AccountLogToJson(te));
 			arrayvLog.push_back(obj);
         }
         retobj.push_back(Pair("AccountOperLog",  arrayvLog));
@@ -1102,7 +1089,6 @@ static int getDataFromSriptData(CScriptDBViewCache &cache, const CRegID &regid,
 				vector<unsigned char> > >&ret
 				) {
 	int dbsize;
-	int nHeight = 0;
 	int height = chainActive.Height();
 	cache.GetScriptDataCount(regid, dbsize);
 	if (0 == dbsize) {
@@ -1738,7 +1724,7 @@ Value getappkeyvalue(const Array& params, bool fHelp) {
 	Array retArry;
 	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 
-	for(int i =0;i <array.size();i++){
+	for(size_t i =0;i <array.size();i++){
 		uint256 txhash(array[i].get_str());
 		vector<unsigned char> key;// = ParseHex(array[i].get_str());
 		key.insert(key.begin(),txhash.begin(),txhash.end());

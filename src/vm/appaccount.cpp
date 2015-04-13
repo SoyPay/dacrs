@@ -9,7 +9,7 @@
 #include <boost/foreach.hpp>
 #include "hash.h"
 #include "util.h"
-#include "account.h"
+#include "database.h"
 #include "main.h"
 #include <algorithm>
 #include "txdb.h"
@@ -19,7 +19,7 @@
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"
 #include "json/json_spirit_writer_template.h"
-#include "appuseraccout.h"
+#include "appaccount.h"
 using namespace json_spirit;
 
 

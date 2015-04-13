@@ -183,7 +183,7 @@ public:
 
 	Value CreateNormalTx(const std::string &desAddr,uint64_t nMoney);
 
-	Value registaccounttx(const std::string &addr, const int nfee =0,bool flag =false);
+	Value registaccounttx(const std::string &addr, const int nfee =0);
 
 	Value CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 			int nHeight,int nFee = 10000,uint64_t nMoney = 0);
@@ -205,7 +205,13 @@ public:
 	bool GetStrFromObj(const Value& valueRes,string& str);
 
 	bool ImportWalletKey(const char**address,int nCount);
-
+    bool ShowProgress(string const &msg,float rate)
+    {
+    	for(int j=0; j<100 ;++j)
+    	cout<<'\b';
+    	cout << msg <<  rate << "%";
+    	return true;
+    }
 	uint64_t GetRandomBetfee();
 
 	bool GetKeyId(string const &addr,CKeyID &KeyId);
@@ -218,11 +224,11 @@ public:
 
 	bool GetRegID(string& strAddr,CRegID& regID);
 
-	bool GetRegID(string& strAddr,string& regID);
-
-	bool GetTxOperateLog(const uint256& txHash, vector<CAccountOperLog>& vLog) ;
+	bool GetTxOperateLog(const uint256& txHash, vector<CAccountLog>& vLog) ;
 
 	bool PrintLog();
+
+	bool IsMemoryPoolEmpty();
 protected:
 	static boost::thread* pThreadShutdown ;
 	std::map<string, AccState> mapAccState;
