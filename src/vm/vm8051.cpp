@@ -943,7 +943,7 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmEvn)
 		}
 	}
 
-	step =(int64_t)((*retdata.at(1)).size()- vTemp.size() -1);
+	step =(((int64_t)(*retdata.at(1)).size())- (int64_t)(vTemp.size()) -1);
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << flag;
