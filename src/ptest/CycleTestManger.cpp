@@ -39,6 +39,13 @@ public:
 //		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
 		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
 		vTest.push_back(std::make_shared<CTestBetTx>()) ;
+		vTest.push_back(std::make_shared<CTestBetTx>()) ;
+		vTest.push_back(std::make_shared<CTestBetTx>()) ;
+		vTest.push_back(std::make_shared<CTestBetTx>()) ;
+		vTest.push_back(std::make_shared<CTestBetTx>()) ;
+		vTest.push_back(std::make_shared<CTestBetTx>()) ;
+		vTest.push_back(std::make_shared<CTestBetTx>()) ;
+		vTest.push_back(std::make_shared<CTestBetTx>()) ;
 //		string dir = SysCfg().GetArg("rsetdir", "d:\\bitcoin");
 //		if (dir != "d:\\bitcoin") {
 //			char *argv[] = { "progname", (char*)dir.c_str() };
