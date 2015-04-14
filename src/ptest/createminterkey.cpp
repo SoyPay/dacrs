@@ -47,19 +47,19 @@ void createminterkey::CreateMinerKey() {
 	const int nNewAddrs = 1420;
 	string hash = "";
 	vector<string> vNewAddress;
-	string strAddress("0-8");
+	string strAddress[] = {"0-1","0-2","0-3","0-4","0-5"};
+   int index = 0 ;
 	for (int i = 0; i < nNewAddrs; i++) {
 		string newaddr;
-		BOOST_CHECK(GetNewAddr(newaddr, false));
+		BOOST_CHECK(GetNewAddr(newaddr, true));
 		vNewAddress.push_back(newaddr);
-		uint64_t nMoney = 10000 * COIN;
-		if (i == 800) {
-			strAddress = "0-7";
+		if (i == 900) {
+			++index;
 		}
-		Value value = CreateNormalTx(strAddress, newaddr, nMoney);
+		Value value = CreateNormalTx(strAddress[index], newaddr, 10000 * COIN);
 		BOOST_CHECK(GetHashFromCreatedTx(value, hash));
 	}
-	cout << "create new address completed!" << endl;
+
 }
 
 createminterkey::~createminterkey() {

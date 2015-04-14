@@ -837,12 +837,12 @@ bool CAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
 		assert(0);
 		return false;
 	}
-	nCoinDay += llValues * (nCurHeight-nHeight);
+	nCoinDay += llValues * ((int64_t)nCurHeight-(int64_t)nHeight);
 	vector<CFund>::reverse_iterator iterFund = vFund.rbegin();
 	for (; iterFund != vFund.rend();) {
 		if (nCurHeight - iterFund->nHeight > COINBASE_MATURITY) {
 			llValues += iterFund->value;
-			nCoinDay += iterFund->value * (nCurHeight-iterFund->nHeight);
+			nCoinDay += iterFund->value * ((int64_t)nCurHeight-(int64_t)(iterFund->nHeight));
 			vFund.erase((iterFund++).base());
 			bHasMergd = true;
 		}
