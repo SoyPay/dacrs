@@ -37,7 +37,7 @@ public:
 //		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
 //		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
 //		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
-//		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
+		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
 		vTest.push_back(std::make_shared<CTestBetTx>()) ;
 //		string dir = SysCfg().GetArg("rsetdir", "d:\\bitcoin");
 //		if (dir != "d:\\bitcoin") {
