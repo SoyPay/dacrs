@@ -106,7 +106,7 @@ protected:
 
 public:
 
-
+	bool GetMemPoolSize(int &size) ;
 	SysTestBase();
 
 	~SysTestBase();

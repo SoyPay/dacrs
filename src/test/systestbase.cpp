@@ -356,6 +356,19 @@ bool SysTestBase::GetNewAddr(std::string &addr,bool flag) {
 	return false;
 }
 
+bool SysTestBase::GetMemPoolSize(int &size) {
+	const char *argv[] = { "rpctest", "getrawmempool"};
+	int argc = sizeof(argv) / sizeof(char*);
+	Value value;
+	if (CommandLineRPC_GetValue(argc, argv, value)) {
+
+		Array arry = value.get_array();
+		size = arry.size();
+		return true;
+	}
+	return false;
+}
+
 
 bool SysTestBase::GetBlockHeight(int &nHeight) {
 	const char *argv[] = { "rpctest", "getinfo"};

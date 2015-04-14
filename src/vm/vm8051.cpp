@@ -562,8 +562,6 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
     {
     	return RetFalse(string(__FUNCTION__)+"para  err !");
     }
-    bool flag = true;
-
 
 	 CKeyID addrKeyId;
 	 if (!GetKeyId(*(pVmScript->GetCatchView()),*retdata.at(0).get(), addrKeyId)) {
