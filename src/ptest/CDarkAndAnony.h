@@ -68,6 +68,9 @@ class CDarkAndAnony: public CycleTestBase {
   int step;
 	string sritpthash;
 	string buyerhash;
+	string sellerhash;
+	string buyerconfiredhash;
+	string buyercancelhash;
 	string scriptid ;
 	uint64_t sendmonye;
 public:
@@ -96,6 +99,11 @@ public:
 	bool SendSellerPackage();
 	bool SendBuyerConfirmedPackage();
 	bool SendBuyerCancelPackage();
+	bool WaitRegistScript();
+	bool WaitSendBuyerPackage();
+	bool WaitSendSellerPackage();
+	bool WaitSendBuyerConfirmedPackage();
+	bool WaitSendBuyerCancelPackage();
 };
 
 #endif /* CDARKANDANONY_H_ */
