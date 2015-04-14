@@ -17,8 +17,13 @@ enum TEST_STATE{
 class CycleTestBase {
 protected:
 	SysTestBase basetest;
+	static int totalsend;
 public:
 	CycleTestBase();
+	bool IncSentTotal(){
+		   cout<< "send total:" << ++totalsend<<endl;
+		   return true;
+	}
 	virtual TEST_STATE run();
 	virtual ~CycleTestBase();
 };

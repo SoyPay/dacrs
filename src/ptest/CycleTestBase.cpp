@@ -13,6 +13,7 @@ CycleTestBase::CycleTestBase() {
 TEST_STATE CycleTestBase::run() {
 	return end_state;
 }
+int CycleTestBase::totalsend = 0;
 
 CycleTestBase::~CycleTestBase() {
 
