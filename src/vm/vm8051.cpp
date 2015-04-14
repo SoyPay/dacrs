@@ -763,7 +763,7 @@ static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmEvn) {
 	int64_t nstep = 0;
 	vector<unsigned char> vValue;
 	if(scriptDB->GetScriptData(pVmRunEvn->GetComfirHeight(),scriptid, *retdata.at(0), vValue)){
-		nstep = -vValue.size()-1;
+		nstep = nstep - (int64_t)(vValue.size()+1);
 	}
 	if (!scriptDB->EraseScriptData(scriptid, *retdata.at(0), operlog)) {
 		LogPrint("vm", "ExDeleteDataDBFunc error key:%s!\n",HexStr(*retdata.at(0)));
@@ -1462,7 +1462,7 @@ int64_t CVm8051::run(uint64_t maxstep, CVmRunEvn *pVmEvn) {
 			return 0;
 		}
 		if (maxstep != 0 && (step >= MAX_BLOCK_RUN_STEP|| step >= maxstep)){//(step > maxstep || step >= MAX_BLOCK_RUN_STEP)) {
-		//	cout<<"max:"<<step<<endl;
+			LogPrint("CONTRACT_TX", "failed step:%ld\n", step);
 			return -1;		//force return
 		}
 	}
