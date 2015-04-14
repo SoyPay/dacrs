@@ -115,6 +115,7 @@ public:
 
 	static void StopServer();
 
+	bool ImportAllPrivateKey();
 	bool GetHashFromCreatedTx(const Value& valueRes,string& strHash)
 	{
 		if (valueRes.type() == null_type) {
