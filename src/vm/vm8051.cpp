@@ -1462,7 +1462,7 @@ int64_t CVm8051::run(uint64_t maxstep, CVmRunEvn *pVmEvn) {
 			return 0;
 		}
 		if (maxstep != 0 && (step >= MAX_BLOCK_RUN_STEP|| step >= maxstep)){//(step > maxstep || step >= MAX_BLOCK_RUN_STEP)) {
-
+		//	cout<<"max:"<<step<<endl;
 			return -1;		//force return
 		}
 	}

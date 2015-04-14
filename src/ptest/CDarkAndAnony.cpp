@@ -8,9 +8,14 @@
 #include "CDarkAndAnony.h"
 
 CDarkAndAnony::CDarkAndAnony() {
-	step  = 0;
-	buyerhash = "";
-	sendmonye = 0;
+	 step =0 ;
+	 sritpthash = "";
+	 buyerhash = "";
+	 sellerhash= "";
+	 buyerconfiredhash = "";
+	 buyercancelhash = "";
+	 scriptid = "";
+	 sendmonye = 0;
 }
 
 CDarkAndAnony::~CDarkAndAnony() {
@@ -25,13 +30,25 @@ TEST_STATE CDarkAndAnony::run()
     	 RegistScript();
     	 break;
      case 1:
-    	 SendBuyerPackage();
+    	 WaitRegistScript();
     	 break;
      case 2:
-    	 SendSellerPackage();
+    	 SendBuyerPackage();
     	 break;
      case 3:
+    	 WaitSendBuyerPackage();
+    	 break;
+     case 4:
+    	 SendSellerPackage();
+    	 break;
+     case 5:
+    	 WaitSendSellerPackage();
+    	 break;
+     case 6:
     	 SendBuyerConfirmedPackage();
+          break;
+     case 7:
+          WaitSendBuyerConfirmedPackage();
           break;
      }
 	return next_state;
@@ -49,14 +66,20 @@ bool CDarkAndAnony::RegistScript(){
 	basetest.GetBlockHeight(nCurHight);
 	//×¢²á¶Ô¶Ä½Å±¾
 	Value regscript = basetest.RegisterScriptTx(BUYER_A, strFileName, nCurHight, nFee);
-	BOOST_CHECK(basetest.GetHashFromCreatedTx(regscript, sritpthash));
-	BOOST_CHECK(basetest.GenerateOneBlock());
+	if(basetest.GetHashFromCreatedTx(regscript, sritpthash)){
+		step++;
+		return true;
+	}
+	return true;
+}
+bool CDarkAndAnony::WaitRegistScript(){
 	if (basetest.GetTxConfirmedRegID(sritpthash, scriptid)) {
 			step++;
 			return true;
 	}
-	return false;
+	return true;
 }
+
 bool CDarkAndAnony::SendBuyerPackage(){
 	if(scriptid == "")
 		return false;
@@ -76,16 +99,21 @@ bool CDarkAndAnony::SendBuyerPackage(){
 		sendmonye = GetPayMoney();
 		Value  buyerpack= basetest.CreateContractTx(scriptid,BUYER_A,sendcontract,0,0,sendmonye);
 
-		BOOST_CHECK(basetest.GetHashFromCreatedTx(buyerpack, buyerhash));
-		BOOST_CHECK(basetest.GenerateOneBlock());
-
-		string index = "";
-		if (basetest.GetTxConfirmedRegID(buyerhash, index)) {
+		if(basetest.GetHashFromCreatedTx(buyerpack, buyerhash)){
 			step++;
-				return true;
+			return true;
 		}
 		return true;
 }
+bool CDarkAndAnony::WaitSendBuyerPackage(){
+	string index = "";
+	if (basetest.GetTxConfirmedRegID(buyerhash, index)) {
+		step++;
+		return true;
+	}
+	return true;
+}
+
 bool CDarkAndAnony::SendSellerPackage(){
 	if(scriptid == "")
 		return false;
@@ -102,10 +130,14 @@ bool CDarkAndAnony::SendSellerPackage(){
 
 	Value  Sellerpack= basetest.CreateContractTx(scriptid,SELLER_B,sendcontract,0,0,sendmonye/2);
 
-	string sellerhash = "";
-	BOOST_CHECK(basetest.GetHashFromCreatedTx(Sellerpack, sellerhash));
-	BOOST_CHECK(basetest.GenerateOneBlock());
+	if(basetest.GetHashFromCreatedTx(Sellerpack, sellerhash)){
+		step++;
+		return true;
+	}
 
+	return true;
+}
+bool CDarkAndAnony::WaitSendSellerPackage(){
 	string index = "";
 	if (basetest.GetTxConfirmedRegID(sellerhash, index)) {
 		step++;
@@ -113,6 +145,7 @@ bool CDarkAndAnony::SendSellerPackage(){
 	}
 	return true;
 }
+
 bool CDarkAndAnony::SendBuyerConfirmedPackage(){
 	if(scriptid == "")
 		return false;
@@ -126,17 +159,22 @@ bool CDarkAndAnony::SendBuyerConfirmedPackage(){
 	string sendcontract = HexStr(scriptData);
 	Value  Sellerpack= basetest.CreateContractTx(scriptid,BUYER_A,sendcontract,0);
 
-	string sellerhash = "";
-	BOOST_CHECK(basetest.GetHashFromCreatedTx(Sellerpack, sellerhash));
-	BOOST_CHECK(basetest.GenerateOneBlock());
+	if(basetest.GetHashFromCreatedTx(Sellerpack, buyerconfiredhash)){
+		step++;
+		return true;
+	}
 
+	return true;
+}
+bool CDarkAndAnony::WaitSendBuyerConfirmedPackage(){
 	string index = "";
-	if (basetest.GetTxConfirmedRegID(sellerhash, index)) {
+	if (basetest.GetTxConfirmedRegID(buyerconfiredhash, index)) {
 		step = 1;
 			return true;
 	}
 	return true;
 }
+
 bool CDarkAndAnony::SendBuyerCancelPackage(){
 	if(scriptid == "")
 		return false;
@@ -150,14 +188,17 @@ bool CDarkAndAnony::SendBuyerCancelPackage(){
 	string sendcontract = HexStr(scriptData);
 	Value  Sellerpack= basetest.CreateContractTx(scriptid,BUYER_A,sendcontract,0);
 
-	string sellerhash = "";
-	BOOST_CHECK(basetest.GetHashFromCreatedTx(Sellerpack, sellerhash));
-	BOOST_CHECK(basetest.GenerateOneBlock());
-
+	if(basetest.GetHashFromCreatedTx(Sellerpack, buyercancelhash)){
+		step++;
+		return true;
+	}
+	return true;
+}
+bool CDarkAndAnony::WaitSendBuyerCancelPackage(){
 	string index = "";
-	if (basetest.GetTxConfirmedRegID(sellerhash, index)) {
+	if (basetest.GetTxConfirmedRegID(buyercancelhash, index)) {
 		step = 1;
-			return true;
+		return true;
 	}
 	return true;
 }

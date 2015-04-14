@@ -33,13 +33,25 @@ TEST_STATE CTestBetTx::run() {
 		RegScript();
 		break;
 	case 1:
-		ASendP2PBet();
+		WaiteRegScript();
 		break;
 	case 2:
-		BAcceptP2PBet();
+		ASendP2PBet();
 		break;
 	case 3:
+		WaitASendP2PBet();
+		break;
+	case 4:
+		BAcceptP2PBet();
+		break;
+	case 5:
+		WaitBAcceptP2PBet();
+		break;
+	case 6:
 		AOpenP2PBet();
+		break;
+	case 7:
+		WaitAOpenP2PBet();
 		break;
 	default:
 		assert(0);
@@ -62,8 +74,15 @@ bool CTestBetTx::RegScript(void) {
 	GetBlockHeight(nCurHight);
 	//×¢²á¶Ô¶Ä½Å±¾
 	Value valueRes = RegisterScriptTx(ADDR_A, strFileName, nCurHight, 200000000);
-	BOOST_CHECK(GetHashFromCreatedTx(valueRes, strRegScriptHash));
-	BOOST_CHECK(GenerateOneBlock());
+	//BOOST_CHECK(GetHashFromCreatedTx(valueRes, strRegScriptHash));
+	if(GetHashFromCreatedTx(valueRes, strRegScriptHash)){
+		mCurStep++;
+		return true;
+	}
+//	BOOST_CHECK(GenerateOneBlock());
+	return true;
+}
+bool CTestBetTx::WaiteRegScript(void){
 	if (basetest.GetTxConfirmedRegID(strRegScriptHash, scriptid)) {
 			mCurStep++;
 			return true;
@@ -71,7 +90,6 @@ bool CTestBetTx::RegScript(void) {
 
 	return true;
 }
-
 bool CTestBetTx::ASendP2PBet() {
 
 	if(scriptid == "")
@@ -108,28 +126,33 @@ bool CTestBetTx::ASendP2PBet() {
 			nTempSend = betamount;
 		}
 		Value  sendret= CreateContractTx(scriptid,ADDR_A,sendcontract,0,0,nTempSend);
-		if((int)senddata.noperateType == 0x01){
-			strAsendHash = "";
-			GetHashFromCreatedTx(sendret, strAsendHash);
-			if(strAsendHash == "") {
-				return true;
-			}
-			else{
-				BOOST_CHECK(GenerateOneBlock());
-			}
-		}else{
-			BOOST_CHECK(GetHashFromCreatedTx(sendret, strAsendHash));
-			BOOST_CHECK(GenerateOneBlock());
-		}
-
-		string index = "";
-		if (basetest.GetTxConfirmedRegID(strAsendHash, index)) {
-				mCurStep++;
-				return true;
+//		if((int)senddata.noperateType == 0x01){
+//			strAsendHash = "";
+//			GetHashFromCreatedTx(sendret, strAsendHash);
+//			if(strAsendHash == "") {
+//				return true;
+//			}
+//			else{
+//				BOOST_CHECK(GenerateOneBlock());
+//			}
+//		}else{
+//			BOOST_CHECK(GetHashFromCreatedTx(sendret, strAsendHash));
+//			BOOST_CHECK(GenerateOneBlock());
+//		}
+		if(GetHashFromCreatedTx(sendret, strAsendHash)){
+			mCurStep++;
+							return true;
 		}
 		return true;
 }
-
+bool CTestBetTx::WaitASendP2PBet(void){
+	string index = "";
+	if (basetest.GetTxConfirmedRegID(strAsendHash, index)) {
+			mCurStep++;
+			return true;
+	}
+	return true;
+}
 bool CTestBetTx::BAcceptP2PBet(void) {
 		unsigned char cType;
 		RAND_bytes(&cType, sizeof(cType));
@@ -158,7 +181,7 @@ bool CTestBetTx::BAcceptP2PBet(void) {
 		Value vaccept = CreateContractTx(scriptid, ADDR_B, acceptcontract, nCurHight, 0,nTempSend);
 		string hash = "";
 		cout<<"type"<<(int)acceptdata.noperateType<<endl;
-		if((int)acceptdata.noperateType == 0x01){
+/*		if((int)acceptdata.noperateType == 0x01){
 
 			GetHashFromCreatedTx(vaccept, hash);
 			if(hash == "") {
@@ -170,15 +193,22 @@ bool CTestBetTx::BAcceptP2PBet(void) {
 		}else{
 			BOOST_CHECK(GetHashFromCreatedTx(vaccept, hash));
 			BOOST_CHECK(GenerateOneBlock());
-		}
-		string index = "";
-		if (basetest.GetTxConfirmedRegID(hash, index)) {
-				mCurStep++;
-				return true;
+		}*/
+
+		if(GetHashFromCreatedTx(vaccept, strBacceptHash)){
+			mCurStep++;
+			return true;
 		}
 		return true;
 }
-
+bool CTestBetTx::WaitBAcceptP2PBet(void){
+	string index = "";
+	if (basetest.GetTxConfirmedRegID(strBacceptHash, index)) {
+			mCurStep++;
+			return true;
+	}
+	return true;
+}
 bool CTestBetTx::AOpenP2PBet(void) {
 
 		OPEN_DATA openA;
@@ -193,13 +223,17 @@ bool CTestBetTx::AOpenP2PBet(void) {
 		int nCurHight;
 		GetBlockHeight(nCurHight);
 		Value vopenA = CreateContractTx(scriptid, ADDR_A, openAcontract, nCurHight, 0);
-		BOOST_CHECK(GetHashFromCreatedTx(vopenA, strAopenHash));
-		BOOST_CHECK(GenerateOneBlock());
-		string index = "";
-		if (basetest.GetTxConfirmedRegID(strAopenHash, index)) {
-				mCurStep = 1;
+		if(GetHashFromCreatedTx(vopenA, strAopenHash)){
+			mCurStep++;
 				return true;
 		}
 		return true;
 }
-
+bool CTestBetTx::WaitAOpenP2PBet(void){
+	string index = "";
+	if (basetest.GetTxConfirmedRegID(strAopenHash, index)) {
+			mCurStep = 1;
+			return true;
+	}
+		return true;
+}

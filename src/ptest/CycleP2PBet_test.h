@@ -81,9 +81,13 @@ typedef struct {
 class CTestBetTx:public CycleTestBase,public SysTestBase
 {
 	bool RegScript(void);
+	bool WaiteRegScript(void);
 	bool ASendP2PBet(void);
+	bool WaitASendP2PBet(void);
 	bool BAcceptP2PBet(void);
+	bool WaitBAcceptP2PBet(void);
 	bool AOpenP2PBet(void);
+	bool WaitAOpenP2PBet(void);
 public:
 	CTestBetTx();
 	virtual TEST_STATE run();
