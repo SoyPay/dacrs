@@ -66,7 +66,7 @@ bool CDarkAndAnony::RegistScript(){
 	int nCurHight;
 	basetest.GetBlockHeight(nCurHight);
 	//×¢²á¶Ô¶Ä½Å±¾
-	Value regscript = basetest.RegisterScriptTx(BUYER_A, strFileName, nCurHight, nFee);
+	Value regscript = basetest.RegisterScriptTx(BUYER_A, strFileName, nCurHight, nFee+COIN);
 	if(basetest.GetHashFromCreatedTx(regscript, sritpthash)){
 		step++;
 		return true;
