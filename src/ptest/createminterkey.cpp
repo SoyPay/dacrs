@@ -60,22 +60,19 @@ void createminterkey::CreateMinerKey() {
 		BOOST_CHECK(GetHashFromCreatedTx(value, hash));
 	}
 	int size = 0 ;
-  while(1)
-  {
-	  if(!GetMemPoolSize(size))
-	  {
-		  cout << "GetMemPoolSize error" <<endl;
-	  }
-	  if(size > 0)
-	  {
-		  cout << "GetMemPoolSize size :"  << size <<endl;
-	  }
-	  else
-	  {
-		  break;
-	  }
+	GenerateOneBlock();
 
-  }
+	while (1) {
+		if (!GetMemPoolSize(size)) {
+			cout << "GetMemPoolSize error" << endl;
+		}
+		if (size > 0) {
+			cout << "GetMemPoolSize size :" << size << endl;
+		} else {
+			break;
+		}
+
+	}
 
 	for(size_t i=0; i < vNewAddress.size(); i++) {
 		int nfee = GetRandomFee();
@@ -83,22 +80,19 @@ void createminterkey::CreateMinerKey() {
 		BOOST_CHECK(GetHashFromCreatedTx(value1,hash));
 	}
 
-	  while(1)
-	  {
-		  if(!GetMemPoolSize(size))
-		  {
-			  cout << "GetMemPoolSize error" <<endl;
-		  }
-		  if(size > 0)
-		  {
-			  cout << "GetMemPoolSize size :"  << size <<endl;
-		  }
-		  else
-		  {
-			  break;
-		  }
+	GenerateOneBlock();
+	while (1) {
+		if (!GetMemPoolSize(size)) {
+			cout << "GetMemPoolSize error" << endl;
+		}
+		if (size > 0) {
+			cout << "GetMemPoolSize size :" << size << endl;
+		} else {
+			break;
+		}
 
-	  }
+	}
+
 	  cout << "all ok  "  <<  endl;
 }
 
