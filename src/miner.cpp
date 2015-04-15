@@ -82,16 +82,20 @@ uint64_t GetElementForBurn(CBlockIndex* pindex)
 	double dAverageFeePerKb(0.0);
 	int nBlock = SysCfg().GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
 	if (nBlock >= pindex->nHeight-1) {
-		return 100;
+		return INIT_FUEL_RATES;
 	} else {
 		CBlockIndex * pTemp = pindex;
 		for (int ii = 0; ii < nBlock; ii++) {
 			dTotalFeePerKb += pTemp->dFeePerKb;
-			pindex = pTemp->pprev;
+			pTemp = pTemp->pprev;
 		}
 		dAverageFeePerKb  = dTotalFeePerKb / nBlock;
-		int64_t newFuelRate = int64_t(INIT_FUEL_RATES * (pTemp->dFeePerKb / dAverageFeePerKb));
-		return newFuelRate;
+		if(0.0==dAverageFeePerKb || 0.0==pindex->dFeePerKb )
+			return INIT_FUEL_RATES;
+		else{
+			int64_t newFuelRate = int64_t(INIT_FUEL_RATES * (pindex->dFeePerKb / dAverageFeePerKb));
+			return newFuelRate;
+		}
 	}
 }
 
@@ -189,13 +193,17 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 
 	set<CAccount, CAccountComparator> setAcctInfo;
 
-	LogPrint("INFO","CreatePosTx block time:%d\n",  pBlock->nTime);
-
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
+
+		if(chainActive.Tip()->nHeight + 1 !=  pBlock->nHeight)
+			return false;
+
 		if (!pwalletMain->GetKeyIds(setKeyID, true)) {
 			return ERRORMSG("CreatePosTx setKeyID empty");
 		}
+
+		LogPrint("INFO","CreatePosTx block time:%d\n",  pBlock->nTime);
 
 		for(const auto &keyid:setKeyID) {
 			//find CAccount info by keyid

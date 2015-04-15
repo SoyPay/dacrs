@@ -1961,6 +1961,45 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 				return ERRORMSG("CheckBlockProofWorkWithCoinDay() : ConnectBlock %s failed", rIter->GetHash().ToString());
 		}
 
+		uint64_t nTotalRunStep(0);
+		int64_t nTotalFuel(0);
+		if (block.vptx.size() > 1) {
+			for (unsigned int i = 1; i < block.vptx.size(); i++) {
+				std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[i];
+				if (uint256(0) != txCacheTemp.IsContainTx((pBaseTx->GetHash()))) {
+					return state.DoS(100,
+							ERRORMSG("ConnectBlock() : the TxHash %s the confirm duplicate", pBaseTx->GetHash().GetHex()),
+							REJECT_INVALID, "bad-cb-amount");
+				}
+				if (!pBaseTx->IsValidHeight(mapBlockIndex[view.GetBestBlock()]->nHeight, SysCfg().GetTxCacheHeight())) {
+					return state.DoS(100,
+							ERRORMSG("ConnectBlock() : txhash=%s beyond the scope of valid height",
+									pBaseTx->GetHash().GetHex()), REJECT_INVALID, "tx-invalid-height");
+				}
+				CTxUndo txundo;
+				if(!pBaseTx->ExecuteTx(i, view, state, txundo, block.nHeight, txCacheTemp, scriptDBTemp)) {
+					return false;
+				}
+
+				nTotalRunStep += pBaseTx->nRunStep;
+				if (nTotalRunStep > MAX_BLOCK_RUN_STEP) {
+					return state.DoS(100,
+							ERRORMSG("block hash=%s total run steps exceed max run step", block.GetHash().GetHex()),
+							REJECT_INVALID, "exeed-max_step");
+				}
+				uint64_t llFuel = ceil(pBaseTx->nRunStep / 100.f) * GetElementForBurn(chainActive.Tip());
+				if(REG_APP_TX == pBaseTx->nTxType) {
+					if(llFuel < 1 * COIN){
+						llFuel = 1 * COIN;
+					}
+				}
+				nTotalFuel += llFuel;
+			}
+
+			if (nTotalFuel != block.nFuel) {
+				return ERRORMSG("fuel value at block header calculate error(actual fuel:%ld vs block fuel:%ld), block hash:%s", nTotalFuel, block.nFuel, block.GetHash().GetHex());
+			}
+		}
 		//校验pos交易
 		if (!VerifyPosTx(view, &block, txCacheTemp, scriptDBTemp, true)) {
 			return state.DoS(100,
