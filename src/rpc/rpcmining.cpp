@@ -160,19 +160,8 @@ Value setgenerate(const Array& params, bool fHelp)
         	throw JSONRPCError(RPC_INVALID_PARAMS, "mining block > 1000 is INVALID");
     }
 
-
-
-
     // -regtest mode: don't return until nGenProcLimit blocks are generated
 	if (SysCfg().NetworkID() != CBaseParams::MAIN) {
-
-	    if(SysCfg().GetArg("-iscutmine",0)==1)
-	    {
-	       	SysCfg().SoftSetArgCover("-gen", fGenerate ?"1" : "0");
-	        GenerateDacrsBlock(fGenerate, pwalletMain, nGenProcLimit);
-	   	    return Value::null;
-	    }
-
 
 			//如果是一个一个地挖
 		int nHeightEnd = 0;
@@ -189,7 +178,7 @@ Value setgenerate(const Array& params, bool fHelp)
 				high = getcurhigh();
 				GenerateDacrsBlock(true, pwalletMain, 1);
 			}
-			MilliSleep(100);
+			MilliSleep(1000);
 		}
 
 	}
