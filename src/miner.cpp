@@ -214,6 +214,8 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 			CAccount acctInfo;
 			if (view.GetAccount(userId, acctInfo)) {
 				//available
+//				LogPrint("miner", "account info:regid=%s keyid=%s ncoinday=%lld isMiner=%d\n", acctInfo.regID.ToString(),
+//						acctInfo.keyID.ToString(), acctInfo.GetAccountPos(pBlock->nHeight), acctInfo.IsMiner(pBlock->nHeight));
 				if (acctInfo.IsRegister() && acctInfo.GetAccountPos(pBlock->nHeight) > 0 && acctInfo.IsMiner(pBlock->nHeight)) {
 					setAcctInfo.insert(std::move(acctInfo));
 					LogPrint("miner", "miner account info:%s\n", acctInfo.ToString());
@@ -667,11 +669,8 @@ void static DacrsMiner(CWallet *pwallet) {
 			if (SysCfg().NetworkID() != CBaseParams::MAIN)
 				if(bRet== true)
 				{
-					if(SysCfg().GetArg("-iscutmine",0)==0)
-					{
 						SysCfg().SoftSetArgCover("-ismining", "0");
 						throw boost::thread_interrupted();
-					}
 				}	
 		}
 	} catch (...) {
