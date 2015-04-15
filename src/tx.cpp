@@ -827,14 +827,13 @@ bool CAccount::CompactAccount(int nCurHeight) {
 	if (nCurHeight <= 0) {
 		return false;
 	}
-	bool bMergeRewardRes = MergerFund(vRewardFund, nCurHeight);
-	return bMergeRewardRes;
+	return MergerFund(vRewardFund, nCurHeight);
 }
 bool CAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
 	stable_sort(vFund.begin(), vFund.end(), greater<CFund>());
 	bool bHasMergd(false);
 	if(nCurHeight < nHeight) {
-		assert(0);
+//		assert(0);
 		return false;
 	}
 	nCoinDay += llValues * ((int64_t)nCurHeight-(int64_t)nHeight);
