@@ -869,7 +869,8 @@ void CAccount::ClearAccPos() {
 	nCoinDay = 0;
 }
 uint64_t CAccount::GetAccountPos(int prevBlockHeight){
-	CompactAccount(prevBlockHeight);
+	if(!CompactAccount(prevBlockHeight))
+		return 0;
 	return nCoinDay;
 }
 uint64_t CAccount::GetRewardAmount(int nCurHeight) {
