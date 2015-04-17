@@ -11,6 +11,7 @@
 #include "util.h"
 #include "key.h"
 #include "tx.h"
+#include "main.h"
 
 #include <boost/assign/list_of.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
@@ -157,6 +158,7 @@ public:
 		genesis.nTime = 1231006505;
 		genesis.nBits = 0x1f3fffff;        //00 3f ff
 		genesis.nNonce = 888;
+		genesis.nFuelRate = INIT_FUEL_RATES;
 		genesis.nHeight = 0;
 		genesis.vSignature.clear();
 		hashGenesisBlock = genesis.GetHash();

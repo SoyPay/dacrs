@@ -185,7 +185,7 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 		}
 
 		nAmount = AmountToRawValue(params[2]);
-		if (pAccountViewTip->GetRawBalance(sendKeyId, chainActive.Tip()->nHeight) <= nAmount + SysCfg().GetTxFee()) {
+		if (pAccountViewTip->GetRawBalance(sendKeyId) <= nAmount + SysCfg().GetTxFee()) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM address not enough coins");
 		}
 		nFee = AmountToRawValue(params[3]);
@@ -202,7 +202,7 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 		}
 		nFee = AmountToRawValue(params[2]);
 		for (auto &te : sKeyid) {
-			if (pAccountViewTip->GetRawBalance(te, chainActive.Tip()->nHeight) >= nAmount + SysCfg().GetTxFee()) {
+			if (pAccountViewTip->GetRawBalance(te) >= nAmount + SysCfg().GetTxFee()) {
 				sendKeyId = te;
 				break;
 			}
@@ -403,7 +403,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 		}
 
 		nAmount = AmountToRawValue(params[2]);
-		if (pAccountViewTip->GetRawBalance(sendKeyId, chainActive.Tip()->nHeight) <= nAmount + SysCfg().GetTxFee()) {
+		if (pAccountViewTip->GetRawBalance(sendKeyId) <= nAmount + SysCfg().GetTxFee()) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM address not enough coins");
 		}
 	} else {
@@ -418,7 +418,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No Key In wallet \n");
 		}
 		for (auto &te : sKeyid) {
-			if (pAccountViewTip->GetRawBalance(te, chainActive.Tip()->nHeight) >= nAmount + SysCfg().GetTxFee()) {
+			if (pAccountViewTip->GetRawBalance(te) >= nAmount + SysCfg().GetTxFee()) {
 				sendKeyId = te;
 				break;
 			}
@@ -737,7 +737,7 @@ Value getwalletinfo(const Array& params, bool fHelp)
 
     Object obj;
     obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
-    obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetRawBalance(chainActive.Tip()->nHeight))));
+    obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetRawBalance())));
     obj.push_back(Pair("Inblocktx",       (int)pwalletMain->mapInBlockTx.size()));
     obj.push_back(Pair("uncomfirmedtx", (int)pwalletMain->UnConfirmTx.size()));
     if (pwalletMain->IsCrypted())

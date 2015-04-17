@@ -240,13 +240,33 @@ bool CBaseTransaction::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValid
 	return true;
 }
 uint64_t CBaseTransaction::GetFuel() {
-	uint64_t llFuel = ceil(nRunStep/100.0f) * GetElementForBurn(chainActive.Tip());
+	uint64_t llFuel = ceil(nRunStep/100.0f) * GetFuelRate();
 	if(REG_APP_TX == nTxType) {
 		if (llFuel < 1 * COIN) {
 			llFuel = 1 * COIN;
 		}
 	}
 	return llFuel;
+}
+
+int CBaseTransaction::GetFuelRate() {
+	if(0 == nFuelRate) {
+		CDiskTxPos postx;
+		if (pblocktree->ReadTxIndex(GetHash(), postx)) {
+			CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
+			CBlockHeader header;
+			try {
+				file >> header;
+			} catch (std::exception &e) {
+				return ERRORMSG("%s : Deserialize or I/O error - %s", __func__, e.what());
+			}
+			nFuelRate = header.nFuelRate;
+		}
+		else {
+			nFuelRate = GetElementForBurn(chainActive.Tip());
+		}
+	}
+	return nFuelRate;
 }
 
 bool CRegisterAccountTx::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
@@ -264,9 +284,7 @@ bool CRegisterAccountTx::ExecuteTx(int nIndex, CAccountViewCache &view, CValidat
 	}
 	account.PublicKey = boost::get<CPubKey>(userId);
 	if (llFees > 0) {
-		account.CompactAccount(nHeight);
-		CFund fund(llFees);
-		if(!account.OperateAccount(MINUS_FREE, fund))
+		if(!account.OperateAccount(MINUS_FREE, llFees))
 			return state.DoS(100, ERRORMSG("ExecuteTx() : not sufficient funds in account, keyid=%s", keyId.ToString()),
 					UPDATE_ACCOUNT_FAIL, "not-sufficiect-funds");
 	}
@@ -274,7 +292,6 @@ bool CRegisterAccountTx::ExecuteTx(int nIndex, CAccountViewCache &view, CValidat
 	account.regID = regId;
 	if (typeid(CPubKey) == minerId.type()) {
 		account.MinerPKey = boost::get<CPubKey>(minerId);
-
 		if (account.MinerPKey.IsValid() && !account.MinerPKey.IsFullyValid()) {
 			return state.DoS(100, ERRORMSG("ExecuteTx() : MinerPKey:%s Is Invalid", account.MinerPKey.ToString()),
 					UPDATE_ACCOUNT_FAIL, "MinerPKey Is Invalid");
@@ -360,14 +377,12 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 	CAccount desAcct;
 	CAccountLog desAcctLog;
 	uint64_t minusValue = llFees+llValues;
-	CFund minusFund(minusValue);
 	if (!view.GetAccount(srcRegId, srcAcct))
 		return state.DoS(100,
 				ERRORMSG("ExecuteTx() : read source addr %s account info error", boost::get<CRegID>(srcRegId).ToString()),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	CAccountLog srcAcctLog(srcAcct);
-	srcAcct.CompactAccount(nHeight);
-	if (!srcAcct.OperateAccount(MINUS_FREE, minusFund))
+	if (!srcAcct.OperateAccount(MINUS_FREE, minusValue))
 		return state.DoS(100, ERRORMSG("ExecuteTx() : accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
 				"bad-read-accountdb");
 	CUserID userId = srcAcct.keyID;
@@ -377,7 +392,6 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 	}
 
 	uint64_t addValue = llValues;
-	CFund addFund(addValue, nHeight);
 	if(!view.GetAccount(desUserId, desAcct)) {
 		if(COMMON_TX == nTxType) {
 			desAcct.keyID = boost::get<CKeyID>(desUserId);
@@ -389,9 +403,8 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 	}
 	else{
 		desAcctLog.SetValue(desAcct);
-		desAcct.CompactAccount(nHeight);
 	}
-	if (!desAcct.OperateAccount(ADD_FREE, addFund)) {
+	if (!desAcct.OperateAccount(ADD_FREE, addValue)) {
 		return state.DoS(100, ERRORMSG("ExecuteTx() : operate accounts error"), UPDATE_ACCOUNT_FAIL,
 				"bad-operate-account");
 	}
@@ -410,7 +423,7 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 		}
 		CVmRunEvn vmRunEvn;
 		std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
-		uint64_t el = GetElementForBurn(chainActive.Tip());
+		uint64_t el = GetFuelRate();
 		int64_t llTime = GetTimeMillis();
 		tuple<bool, uint64_t, string> ret = vmRunEvn.run(pTx, view, scriptCache, nHeight, el, nRunStep);
 		if (!std::get<0>(ret))
@@ -462,7 +475,7 @@ bool CTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view) {
 	if (CONTRACT_TX == nTxType) {
 		CVmRunEvn vmRunEvn;
 		std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
-		uint64_t el = GetElementForBurn(chainActive.Tip());
+		uint64_t el = GetFuelRate();
 		CScriptDBViewCache scriptDBView(*pScriptDBTip, true);
 		if (uint256(0) == pTxCacheTip->IsContainTx(GetHash())) {
 			CAccountViewCache accountView(view, true);
@@ -545,14 +558,21 @@ bool CRewardTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidat
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	}
 	CAccount acctInfoLog(acctInfo);
-	CFund fund(rewardValue, nHeight);
-	acctInfo.vRewardFund.push_back(fund);
-	acctInfo.CompactAccount(nHeight);
-	acctInfo.ClearAccPos();
+	if(0 == nIndex) {   //current block reward tx, need to clear coindays
+		acctInfo.ClearAccPos(nHeight);
+	}
+	else if(-1 == nIndex){ //maturity reward tx,only update values
+		acctInfo.llValues += rewardValue;
+	}
+	else {  //never go into this step
+		assert(0);
+	}
+
 	CUserID userId = acctInfo.keyID;
 	if (!view.SetAccount(userId, acctInfo))
 		return state.DoS(100, ERRORMSG("ExecuteTx() : write secure account info error"), UPDATE_ACCOUNT_FAIL,
 				"bad-save-accountdb");
+	txundo.Clear();
 	txundo.vAccountLog.push_back(acctInfoLog);
 	txundo.txHash = GetHash();
 	return true;
@@ -597,9 +617,7 @@ bool CRegisterAppTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidationSt
 	CAccount acctInfoLog(acctInfo);
 	uint64_t minusValue = llFees;
 	if (minusValue > 0) {
-		acctInfo.CompactAccount(nHeight);
-		CFund fund(minusValue);
-		if(!acctInfo.OperateAccount(MINUS_FREE, fund))
+		if(!acctInfo.OperateAccount(MINUS_FREE, minusValue))
 			return state.DoS(100, ERRORMSG("ExecuteTx() : OperateAccount account regId=%s error", boost::get<CRegID>(regAcctId).ToString()),
 					UPDATE_ACCOUNT_FAIL, "operate-account-failed");
 		txundo.vAccountLog.push_back(acctInfoLog);
@@ -724,7 +742,7 @@ bool CRegisterAppTx::CheckTransction(CValidationState &state, CAccountViewCache 
 			return state.DoS(100, ERRORMSG("CheckTransaction() : register app tx fee out of range"), REJECT_INVALID,
 					"bad-register-app-fee-toolarge");
 	}
-	uint64_t llFuel = ceil(script.size()/100) * GetElementForBurn(chainActive.Tip());
+	uint64_t llFuel = ceil(script.size()/100) * GetFuelRate();
 	if (llFuel < 1 * COIN) {
 		llFuel = 1 * COIN;
 	}
@@ -752,43 +770,40 @@ bool CRegisterAppTx::CheckTransction(CValidationState &state, CAccountViewCache 
 }
 
 
-bool CFund::IsMergeFund(const int & nCurHeight, int &nMergeType) const {
-	if (nCurHeight - nHeight > COINBASE_MATURITY) {
-		nMergeType = FREEDOM;  // Merget to Freedom;
-		return true;
-	}
-	return false;
-}
-Object CFund::ToJosnObj() const
-{
-	Object obj;
-	obj.push_back(Pair("value",     value));
-	obj.push_back(Pair("confirmed hight",     nHeight));
-	return obj;
-}
-string CFund::ToString() const {
-	string str;
-
-	str += strprintf("                value=%ld, nHeight=%d\n", value, nHeight);
-	return str;
-//	return write_string(Value(ToJosnObj()),true);
-}
-
-string COperFund::ToString() const {
-	string str("");
-	string strOperType[] = { "NULL_OPER_TYPE", "ADD_FUND", "MINUS_FUND" };
-	str += strprintf("        list funds: operType=%s\n", strOperType[operType]);
-	str += fund.ToString();
-	return str;
-}
+//bool CFund::IsMergeFund(const int & nCurHeight, int &nMergeType) const {
+//	if (nCurHeight - nHeight > COINBASE_MATURITY) {
+//		nMergeType = FREEDOM;  // Merget to Freedom;
+//		return true;
+//	}
+//	return false;
+//}
+//Object CFund::ToJosnObj() const
+//{
+//	Object obj;
+//	obj.push_back(Pair("value",     value));
+//	obj.push_back(Pair("confirmed hight",     nHeight));
+//	return obj;
+//}
+//string CFund::ToString() const {
+//	string str;
+//
+//	str += strprintf("                value=%ld, nHeight=%d\n", value, nHeight);
+//	return str;
+////	return write_string(Value(ToJosnObj()),true);
+//}
+//
+//string COperFund::ToString() const {
+//	string str("");
+//	string strOperType[] = { "NULL_OPER_TYPE", "ADD_FUND", "MINUS_FUND" };
+//	str += strprintf("        list funds: operType=%s\n", strOperType[operType]);
+//	str += fund.ToString();
+//	return str;
+//}
 
 string CAccountLog::ToString() const {
 	string str("");
 	str += strprintf("    Account log: keyId=%d llValues=%lld nHeight=%lld nCoinDay=%lld\n",
 			keyID.GetHex(), llValues, nHeight, nCoinDay);
-	vector<CFund>::const_iterator iterFund = vRewardFund.begin();
-	for (; iterFund != vRewardFund.end(); ++iterFund)
-		str += iterFund->ToString();
 	return str;
 }
 
@@ -823,68 +838,67 @@ bool CTxUndo::GetAccountOperLog(const CKeyID &keyId, CAccountLog &accountLog) {
 }
 
 
-bool CAccount::CompactAccount(int nCurHeight) {
-	if (nCurHeight <= 0) {
-		return false;
-	}
-	return MergerFund(vRewardFund, nCurHeight);
-}
-bool CAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
-	stable_sort(vFund.begin(), vFund.end(), greater<CFund>());
-	bool bHasMergd(false);
-	if(nCurHeight < nHeight) {
-//		assert(0);
-		return false;
-	}
-	nCoinDay += llValues * ((int64_t)nCurHeight-(int64_t)nHeight);
-	vector<CFund>::reverse_iterator iterFund = vFund.rbegin();
-	for (; iterFund != vFund.rend();) {
-		if (nCurHeight - iterFund->nHeight > COINBASE_MATURITY) {
-			llValues += iterFund->value;
-			nCoinDay += iterFund->value * ((int64_t)nCurHeight-(int64_t)(iterFund->nHeight));
-			vFund.erase((iterFund++).base());
-			bHasMergd = true;
-		}
-		else {
-			break;
-		}
-	}
-	nHeight = nCurHeight;
-	if(nCoinDay > GetMaxCoinDay(nCurHeight)) {
-		nCoinDay = GetMaxCoinDay(nCurHeight);
-	}
-	return bHasMergd;
-}
+//bool CAccount::CompactAccount(int nCurHeight) {
+//	if (nCurHeight <= 0) {
+//		return false;
+//	}
+//	return MergerFund(vRewardFund, nCurHeight);
+//}
+//bool CAccount::MergerFund(vector<CFund> &vFund, int nCurHeight) {
+//	stable_sort(vFund.begin(), vFund.end(), greater<CFund>());
+//	bool bHasMergd(false);
+//	if(nCurHeight < nHeight) {
+////		assert(0);
+//		return false;
+//	}
+//	nCoinDay += llValues * ((int64_t)nCurHeight-(int64_t)nHeight);
+//	vector<CFund>::reverse_iterator iterFund = vFund.rbegin();
+//	for (; iterFund != vFund.rend();) {
+//		if (nCurHeight - iterFund->nHeight > COINBASE_MATURITY) {
+//			llValues += iterFund->value;
+//			nCoinDay += iterFund->value * ((int64_t)nCurHeight-(int64_t)(iterFund->nHeight));
+//			vFund.erase((iterFund++).base());
+//			bHasMergd = true;
+//		}
+//		else {
+//			break;
+//		}
+//	}
+//	nHeight = nCurHeight;
+//	if(nCoinDay > GetMaxCoinDay(nCurHeight)) {
+//		nCoinDay = GetMaxCoinDay(nCurHeight);
+//	}
+//	return bHasMergd;
+//}
 
 bool CAccount::UndoOperateAccount(const CAccountLog & accountLog) {
 //	LogPrint("undo_account", "after operate:%s\n", ToString());
 	llValues = 	accountLog.llValues;
 	nHeight = accountLog.nHeight;
 	nCoinDay = accountLog.nCoinDay;
-	vRewardFund = accountLog.vRewardFund;
 //	LogPrint("undo_account", "before operate:%s\n", ToString().c_str());
 	return true;
 }
-void CAccount::ClearAccPos() {
+void CAccount::ClearAccPos(int nCurHeight) {
+	UpDateCoinDay(nCurHeight);
 	nCoinDay = 0;
 }
-uint64_t CAccount::GetAccountPos(int prevBlockHeight){
-	CompactAccount(prevBlockHeight);
+uint64_t CAccount::GetAccountPos(int nCurHeight){
+	UpDateCoinDay(nCurHeight);
 	return nCoinDay;
 }
-uint64_t CAccount::GetRewardAmount(int nCurHeight) {
-	CompactAccount(nCurHeight);
-	uint64_t balance = 0;
-
-	for(auto &fund:vRewardFund) {
-		balance += fund.value;
+bool CAccount::UpDateCoinDay(int nCurHeight) {
+	if(nCurHeight < nHeight)
+		return false;
+	nCoinDay += llValues * ((int64_t)nCurHeight-(int64_t)nHeight);
+	nHeight = nCurHeight;
+	if(nCoinDay > GetMaxCoinDay(nCurHeight)) {
+		nCoinDay = GetMaxCoinDay(nCurHeight);
 	}
-	return balance;
+	return true;
 }
-uint64_t CAccount::GetRawBalance(int nCurHeight) {
-	CompactAccount(nCurHeight);
-	uint64_t balance = llValues;
-	return balance;
+uint64_t CAccount::GetRawBalance() {
+	return llValues;
 }
 Object CAccount::ToJosnObj() const
 {
@@ -901,22 +915,12 @@ Object CAccount::ToJosnObj() const
 	obj.push_back(Pair("CoinDays", nCoinDay));
 	obj.push_back(Pair("UpdateHeight", nHeight));
 
-	Array RewardFund;
-	vector<CFund> te=vRewardFund;
-	stable_sort(te.begin(), te.end(), greater<CFund>());
-	for (auto const & rew:te) {
-		RewardFund.push_back(rew.ToJosnObj());
-	}
-	obj.push_back(Pair("RewardFund",     RewardFund));
 	return obj;
 }
 string CAccount::ToString() const {
 	string str;
 	str += strprintf("regID=%s, keyID=%s, publicKey=%s, minerpubkey=%s, values=%ld updateHeight=%d coinDay=%lld\n",
 	regID.ToString(), keyID.GetHex().c_str(), PublicKey.ToString().c_str(), MinerPKey.ToString().c_str(), llValues, nHeight, nCoinDay);
-	for (unsigned int i = 0; i < vRewardFund.size(); ++i) {
-		str += "    " + vRewardFund[i].ToString() + "\n";
-	}
 	return str;
 	//return  write_string(Value(ToJosnObj()),true);
 }
@@ -926,49 +930,37 @@ bool CAccount::IsMoneyOverflow(uint64_t nAddMoney) {
 		return false;
 
 	uint64_t nTotalMoney = 0;
-	nTotalMoney = GetVecMoney(vRewardFund)+llValues+nAddMoney;
+	nTotalMoney = llValues+nAddMoney;
 	return MoneyRange(static_cast<int64_t>(nTotalMoney) );
 }
-uint64_t CAccount::GetVecMoney(const vector<CFund>& vFund){
-	uint64_t nTotal = 0;
-	for(vector<CFund>::const_iterator it = vFund.begin();it != vFund.end();it++){
-		nTotal += it->value;
-	}
-	return nTotal;
-}
 
-bool CAccount::IsFundValid(const CFund &fund) {
-	if (!IsMoneyOverflow(fund.value))
-		return false;
-	return true;
-}
-bool CAccount::OperateAccount(OperType type, const CFund &fund) {
+
+bool CAccount::OperateAccount(OperType type, const uint64_t &value) {
 //	LogPrint("op_account", "before operate:%s\n", ToString());
 	if (keyID == uint160(0)) {
 		assert(0);
 	}
-	if (!IsFundValid(fund))
+	if(!IsMoneyOverflow(value))
 		return false;
 
-	if (!fund.value)
+	if (!value)
 		return true;
 
-	bool bRet = true;
 	switch (type) {
 	case ADD_FREE: {
-		llValues += fund.value;
+		llValues += value;
 		break;
 	}
 	case MINUS_FREE: {
-		if(fund.value > llValues)
+		if(value > llValues)
 			return false;
-		uint64_t remainCoinDay = nCoinDay - fund.value / llValues * nCoinDay;
+		uint64_t remainCoinDay = nCoinDay - value / llValues * nCoinDay;
 		if(nCoinDay > llValues * SysCfg().GetIntervalPos()) {
 			if(remainCoinDay < llValues*SysCfg().GetIntervalPos())
 				remainCoinDay = llValues*SysCfg().GetIntervalPos();
 		}
 		nCoinDay = remainCoinDay;
-		llValues -= fund.value;
+		llValues -= value;
 		break;
 	}
 	default:
@@ -976,5 +968,5 @@ bool CAccount::OperateAccount(OperType type, const CFund &fund) {
 	}
 //	LogPrint("op_account", "after operate:%s\n", ToString());
 //	LogPrint("account", "oper log list:%s\n", accountOperLog.ToString());
-	return bRet;
+	return true;
 }

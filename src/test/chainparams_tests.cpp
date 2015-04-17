@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(chain_regtest) {
 			"1939df127f63c6467cdf9c8e2c14b61104cf817d0b"
 			"780da337893ecc4aaff1309e536162dabbdb45200ca2b0a"));
 	BOOST_CHECK(SysParamsReg().GetDefaultPort() == 18666);
-	BOOST_CHECK(SysParamsReg().ProofOfWorkLimit() == CBigNum(~uint256(0) >> 8));
+	BOOST_CHECK(SysParamsReg().ProofOfWorkLimit() == CBigNum(~uint256(0) >> 6));
 	BOOST_CHECK(SysParamsReg().SubsidyHalvingInterval() == 150);
 	BOOST_CHECK(SysParamsReg().RequireRPCPassword() == false);
 	BOOST_CHECK(SysParamsReg().DataDir() == "regtest");

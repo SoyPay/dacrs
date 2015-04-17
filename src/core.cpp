@@ -81,14 +81,13 @@ int64_t CBlock::GetFee() const{
 
 void CBlock::print(CAccountViewCache &view) const
 {
-	LogPrint("INFO","CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%u, nFuel=%d)\n",
+	LogPrint("INFO","CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%u, nFuel=%d, nFuelRate=%d)\n",
         GetHash().ToString(),
         nVersion,
         hashPrevBlock.ToString(),
         hashMerkleRoot.ToString(),
         nTime, nBits, nNonce,
-        vptx.size(),
-        nFuel);
+        vptx.size(), nFuel, nFuelRate);
 //	LogPrint("INFO","list transactions: \n");
 //    for (unsigned int i = 0; i < vptx.size(); i++)
 //    {

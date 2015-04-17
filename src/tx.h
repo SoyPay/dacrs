@@ -174,6 +174,7 @@ public:
 	int nVersion;
 	int nValidHeight;
 	uint64_t nRunStep;
+	int nFuelRate;      //only in memory
 public:
 
 	CBaseTransaction(const CBaseTransaction &other) {
@@ -181,11 +182,11 @@ public:
 	}
 
 	CBaseTransaction(int _nVersion, unsigned char _nTxType) :
-			nTxType(_nTxType), nVersion(_nVersion), nValidHeight(0), nRunStep(0){
+			nTxType(_nTxType), nVersion(_nVersion), nValidHeight(0), nRunStep(0), nFuelRate(0){
 	}
 
 	CBaseTransaction() :
-			nTxType(COMMON_TX), nVersion(CURRENT_VERSION), nValidHeight(0), nRunStep(0) {
+			nTxType(COMMON_TX), nVersion(CURRENT_VERSION), nValidHeight(0), nRunStep(0), nFuelRate(0){
 	}
 
 	virtual ~CBaseTransaction() {
@@ -230,6 +231,8 @@ public:
 	virtual bool CheckTransction(CValidationState &state, CAccountViewCache &view) = 0;
 
 	virtual uint64_t GetFuel();
+
+	int GetFuelRate();
 };
 
 class CRegisterAccountTx: public CBaseTransaction {
@@ -315,98 +318,6 @@ public:
 
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
-
-//class CTransaction: public CBaseTransaction {
-//
-//public:
-//	mutable CUserID srcUserId;    //regid
-//	uint64_t llFees;
-//	uint64_t llValues;
-//	mutable CUserID desUserId;    //regid or keyid
-//	vector_unsigned_char signature;
-//public:
-//
-//	CTransaction(const CBaseTransaction *pBaseTx) {
-//		assert(COMMON_TX == pBaseTx->nTxType);
-//		*this = *(CTransaction *) pBaseTx;
-//		assert(srcUserId.type()==typeid(CRegID) || srcUserId.type()==typeid(CPubKey));
-//	}
-//
-//	CTransaction(const CUserID& send, const CUserID& rev,int64_t nAmount ,int high,int64_t Fee)
-//	{
-//		assert(send.type()==typeid(CRegID) || send.type()==typeid(CPubKey));
-//		srcUserId = send;
-//		desUserId=rev;
-//		llValues =nAmount;
-//		nValidHeight = high;
-//		llFees = Fee;
-//		signature.clear();
-//	}
-//	CTransaction() {
-//		signature.clear();
-//		llValues = 0;
-//		llFees = 0;
-//		nValidHeight = 0;
-//		nTxType = COMMON_TX;
-//	}
-//
-//	~CTransaction() {
-//
-//	}
-//
-//	IMPLEMENT_SERIALIZE
-//	(
-//			READWRITE(VARINT(this->nVersion));
-//			nVersion = this->nVersion;
-//			READWRITE(VARINT(nValidHeight));
-//			CID srcId(srcUserId);
-//			READWRITE(srcId);
-//			READWRITE(VARINT(llFees));
-//			READWRITE(VARINT(llValues));
-//			CID desId(desUserId);
-//			READWRITE(desId);
-//			READWRITE(signature);
-//			if(fRead) {
-//				srcUserId = srcId.GetUserId();
-//				desUserId = desId.GetUserId();
-//			}
-//	)
-//
-//	uint64_t GetFee() const {
-//		return llFees;
-//	}
-//
-//	uint256 GetHash() const {
-//		return std::move(SerializeHash(*this));
-//	}
-//
-//	double GetPriority() const {
-//		return llFees / GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
-//	}
-//
-//	uint256 SignatureHash() const {
-//		CHashWriter ss(SER_GETHASH, 0);
-//		CID srcId(srcUserId);
-//		CID desId(desUserId);
-//		ss << srcId << VARINT(llFees) << VARINT(llValues) << desId << VARINT(nValidHeight);
-//		return ss.GetHash();
-//	}
-//
-//	std::shared_ptr<CBaseTransaction> GetNewInstance() {
-//		return make_shared<CTransaction>(this);
-//	}
-//
-//	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view);
-//
-//	bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
-//
-//	string ToString(CAccountViewCache &view) const;
-//
-//	bool ExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
-//			CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
-//
-//	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
-//};
 
 class CTransaction : public CBaseTransaction {
 public:
@@ -659,73 +570,73 @@ public:
 	bool CheckTransction(CValidationState &state, CAccountViewCache &view);
 };
 
-class CFund {
-public:
-	uint64_t value;					//!< amount of money
-	int nHeight;					//!< confirm height
-public:
-	CFund() {
-		value = 0;
-		nHeight = 0;
-	}
-	CFund(uint64_t _value) {
-		value = _value;
-		nHeight = 0;
-	}
-	CFund(uint64_t _value, int _Height) {
-		value = _value;
-		nHeight = _Height;
-	}
-	CFund(const CFund &fund) {
-		value = fund.value;
-		nHeight = fund.nHeight;
-	}
-	CFund & operator =(const CFund &fund) {
-		if (this == &fund) {
-			return *this;
-		}
-		this->value = fund.value;
-		this->nHeight = fund.nHeight;
-		return *this;
-	}
-	~CFund() {
-	}
-	Object ToJosnObj() const;
-	bool IsMergeFund(const int & nCurHeight, int &mergeType) const;
-
-	uint256 GetHash() const {
-		CHashWriter ss(SER_GETHASH, 0);
-		ss << VARINT(value) << VARINT(nHeight);
-		return ss.GetHash();
-	}
-
-	friend bool operator <(const CFund &fa, const CFund &fb) {
-		if (fa.nHeight <= fb.nHeight)
-			return true;
-		else
-			return false;
-	}
-
-	friend bool operator >(const CFund &fa, const CFund &fb) {
-		return !operator<(fa, fb);
-	}
-
-	friend bool operator ==(const CFund &fa, const CFund &fb) {
-		if (fa.value != fb.value)
-			return false;
-		if (fa.nHeight != fb.nHeight)
-			return false;
-		return true;
-	}
-
-	IMPLEMENT_SERIALIZE
-	(
-		READWRITE(VARINT(value));
-		READWRITE(VARINT(nHeight));
-	)
-
-	string ToString() const;
-};
+//class CFund {
+//public:
+//	uint64_t value;					//!< amount of money
+//	int nHeight;					//!< confirm height
+//public:
+//	CFund() {
+//		value = 0;
+//		nHeight = 0;
+//	}
+//	CFund(uint64_t _value) {
+//		value = _value;
+//		nHeight = 0;
+//	}
+//	CFund(uint64_t _value, int _Height) {
+//		value = _value;
+//		nHeight = _Height;
+//	}
+//	CFund(const CFund &fund) {
+//		value = fund.value;
+//		nHeight = fund.nHeight;
+//	}
+//	CFund & operator =(const CFund &fund) {
+//		if (this == &fund) {
+//			return *this;
+//		}
+//		this->value = fund.value;
+//		this->nHeight = fund.nHeight;
+//		return *this;
+//	}
+//	~CFund() {
+//	}
+//	Object ToJosnObj() const;
+//	bool IsMergeFund(const int & nCurHeight, int &mergeType) const;
+//
+//	uint256 GetHash() const {
+//		CHashWriter ss(SER_GETHASH, 0);
+//		ss << VARINT(value) << VARINT(nHeight);
+//		return ss.GetHash();
+//	}
+//
+//	friend bool operator <(const CFund &fa, const CFund &fb) {
+//		if (fa.nHeight <= fb.nHeight)
+//			return true;
+//		else
+//			return false;
+//	}
+//
+//	friend bool operator >(const CFund &fa, const CFund &fb) {
+//		return !operator<(fa, fb);
+//	}
+//
+//	friend bool operator ==(const CFund &fa, const CFund &fb) {
+//		if (fa.value != fb.value)
+//			return false;
+//		if (fa.nHeight != fb.nHeight)
+//			return false;
+//		return true;
+//	}
+//
+//	IMPLEMENT_SERIALIZE
+//	(
+//		READWRITE(VARINT(value));
+//		READWRITE(VARINT(nHeight));
+//	)
+//
+//	string ToString() const;
+//};
 
 class CScriptDBOperLog {
 public:
@@ -763,81 +674,27 @@ public:
 	}
 };
 
-class COperFund {
-public:
-	unsigned char operType;  		//!<1:ADD_VALUE 2:MINUS_VALUE
-	CFund fund;
-
-	IMPLEMENT_SERIALIZE
-	(
-		READWRITE(operType);
-		READWRITE(fund);
-	)
-public:
-	COperFund() {
-		operType = NULL_OPER;
-	}
-
-	COperFund(unsigned char nType, const CFund& operFund) {
-		operType = nType;
-		fund = operFund;
-	}
-
-	string ToString() const;
-
-};
-
-//class CAccountOperLog {
+//class COperFund {
 //public:
-//	mutable CKeyID keyID;
-//	uint64_t llValues;										//!< freedom money which coinage greater than 30 days
-//	int nHeight;                                            //!< update height
-//	uint64_t nCoinDay;									    //!< coin day
-//	uint64_t nMaxCoinDay;                                   //!< max coin day
-//	mutable vector<COperFund> vOperFund;
+//	unsigned char operType;  		//!<1:ADD_VALUE 2:MINUS_VALUE
+//	CFund fund;
+//
 //	IMPLEMENT_SERIALIZE
 //	(
-//		vector<unsigned char> vData;
-//		if(fWrite || fGetSize) {
-//			if(keyID == uint160(0)) {
-//				vData.clear();
-//			}
-//			else {
-//				CDataStream ds(SER_DISK, CLIENT_VERSION);
-//				ds << keyID;
-//				ds << llValues;
-//				ds << nHeight;
-//				ds << nCoinDay;
-//				ds << nMaxCoinDay;
-//				ds << vOperFund;
-//				vData.insert(vData.end(), ds.begin(), ds.end());
-//			}
-//		}
-//		READWRITE(vData);
-//		if(fRead) {
-//			if(!vData.empty()) {
-//				CDataStream ds(vData, SER_DISK, CLIENT_VERSION);
-//				ds >> keyID;
-//				ds >> llValues;
-//				ds >> nHeight;
-//				ds >> nCoinDay;
-//				ds >> nMaxCoinDay;
-//				ds >> vOperFund;
-//			}
-//		}
-//
+//		READWRITE(operType);
+//		READWRITE(fund);
 //	)
 //public:
-//	void InsertOperateLog(const COperFund& op) {
-//		vOperFund.push_back(op);
+//	COperFund() {
+//		operType = NULL_OPER;
+//	}
+//
+//	COperFund(unsigned char nType, const CFund& operFund) {
+//		operType = nType;
+//		fund = operFund;
 //	}
 //
 //	string ToString() const;
-//
-//	void SetNULL() {
-//		keyID = uint160(0);
-//		vOperFund.clear();
-//	}
 //
 //};
 
@@ -855,6 +712,11 @@ public:
 
 public:
 	bool GetAccountOperLog(const CKeyID &keyId, CAccountLog &accountLog);
+	void Clear() {
+		txHash = 0;
+		vAccountLog.clear();
+		vScriptOperLog.clear();
+	}
 	string ToString() const;
 };
 
@@ -867,7 +729,6 @@ public:
 	uint64_t llValues;										//!< total money
 	int nHeight;                                            //!< update height
 	uint64_t nCoinDay;									    //!< coin day
-	vector<CFund> vRewardFund;								//!< reward money
 public :
 	/**
 	 * @brief operate account
@@ -878,7 +739,7 @@ public :
 	 * @param bCheckAuthorized
 	 * @return if operate successfully return ture,otherwise return false
 	 */
-	bool OperateAccount(OperType type, const CFund &fund);
+	bool OperateAccount(OperType type, const uint64_t &values);
 
 	bool UndoOperateAccount(const CAccountLog & accountLog);
 public:
@@ -903,7 +764,6 @@ public:
 		this->PublicKey = other.PublicKey;
 		this->MinerPKey = other.MinerPKey;
 		this->llValues = other.llValues;
-		this->vRewardFund = other.vRewardFund;
 		this->nHeight = other.nHeight;
 		this->nCoinDay = other.nCoinDay;
 	}
@@ -915,7 +775,6 @@ public:
 		this->PublicKey = other.PublicKey;
 		this->MinerPKey = other.MinerPKey;
 		this->llValues = other.llValues;
-		this->vRewardFund = other.vRewardFund;
 		this->nHeight = other.nHeight;
 		this->nCoinDay = other.nCoinDay;
 		return *this;
@@ -927,7 +786,6 @@ public:
 	bool IsMiner(int prevBlockHeight) {
 		if(prevBlockHeight < SysCfg().GetIntervalPos())
 			return true;
-		CompactAccount(prevBlockHeight);
 		return nCoinDay >= llValues * SysCfg().GetIntervalPos();
 
 	}
@@ -936,26 +794,24 @@ public:
 	}
 	bool SetRegId(const CRegID &regID){this->regID = regID;return true;};
 	bool GetRegId(CRegID &regID)const {regID = this->regID;return !regID.IsEmpty();};
-	uint64_t GetRewardAmount(int nCurHeight);
-	uint64_t GetRawBalance(int nCurHeight);
-	void ClearAccPos();
+	uint64_t GetRawBalance();
+	void ClearAccPos(int nCurHeight);
 	uint64_t GetAccountPos(int prevBlockHeight);
 	string ToString() const;
 	Object ToJosnObj() const;
 	bool IsEmptyValue() const {
 		return !(llValues > 0);
 	}
-	bool CompactAccount(int nCurHeight);
 	uint256 GetHash(){
-		stable_sort(vRewardFund.begin(), vRewardFund.end(), greater<CFund>());
 		CHashWriter ss(SER_GETHASH, 0);
 		ss << regID << keyID << PublicKey << MinerPKey << VARINT(llValues)
-		   << VARINT(nHeight) << VARINT(nCoinDay) << vRewardFund;
+		   << VARINT(nHeight) << VARINT(nCoinDay);
 		return ss.GetHash();
 	}
 	uint64_t GetMaxCoinDay(int nCurHeight) {
 		return llValues * SysCfg().GetIntervalPos() * 30;
 	}
+	bool UpDateCoinDay(int nCurHeight);
 	IMPLEMENT_SERIALIZE
 	(
 		READWRITE(regID);
@@ -965,15 +821,10 @@ public:
 		READWRITE(VARINT(llValues));
 		READWRITE(VARINT(nHeight));
 		READWRITE(VARINT(nCoinDay));
-		READWRITE(vRewardFund);
 	)
 
 private:
-	bool MergerFund(vector<CFund> &vFund, int nCurHeight);
-	bool IsFundValid(const CFund &fund);
-	bool MinusValue(const CFund &fund);
 	bool IsMoneyOverflow(uint64_t nAddMoney);
-	uint64_t GetVecMoney(const vector<CFund>& vFund);
 };
 
 class CAccountLog {
@@ -982,14 +833,13 @@ public:
 	uint64_t llValues;										//!< freedom money which coinage greater than 30 days
 	int nHeight;                                            //!< update height
 	uint64_t nCoinDay;									    //!< coin day
-	vector<CFund> vRewardFund;
+
 	IMPLEMENT_SERIALIZE
 	(
 		READWRITE(keyID);
-		READWRITE(llValues);
-		READWRITE(nHeight);
-		READWRITE(nCoinDay);
-		READWRITE(vRewardFund);
+		READWRITE(VARINT(llValues));
+		READWRITE(VARINT(nHeight));
+		READWRITE(VARINT(nCoinDay));
 	)
 public:
 	CAccountLog(const CAccount &acct) {
@@ -997,28 +847,24 @@ public:
 		llValues = acct.llValues;
 		nHeight = acct.nHeight;
 		nCoinDay = acct.nCoinDay;
-		vRewardFund = acct.vRewardFund;
 	}
 	CAccountLog(CKeyID &keyId) {
 		keyID = keyId;
 		llValues = 0;
 		nHeight = 0;
 		nCoinDay = 0;
-		vRewardFund.clear();
 	}
 	CAccountLog() {
 		keyID = uint160(0);
 		llValues = 0;
 		nHeight = 0;
 		nCoinDay = 0;
-		vRewardFund.clear();
 	}
 	void SetValue(const CAccount &acct) {
 		keyID = acct.keyID;
 		llValues = acct.llValues;
 		nHeight = acct.nHeight;
 		nCoinDay = acct.nCoinDay;
-		vRewardFund = acct.vRewardFund;
 	}
 	string ToString() const;
 };
