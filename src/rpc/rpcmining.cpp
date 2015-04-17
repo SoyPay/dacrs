@@ -174,7 +174,7 @@ Value setgenerate(const Array& params, bool fHelp)
 		while (getcurhigh() < nHeightEnd) {
 			if (getcurhigh() != high) {
 				high = getcurhigh();
-				cout<< "curhight: " << high <<endl;
+//				cout<< "curhight: " << high <<endl;
 				GenerateDacrsBlock(true, pwalletMain, 1);
 			}
 			MilliSleep(1000);

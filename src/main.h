@@ -683,6 +683,7 @@ public:
     unsigned int nBits;
     unsigned int nNonce;
     int64_t nFuel;
+    int nFuelRate;
     vector<unsigned char> vSignature;
 
     double dFeePerKb;
@@ -711,6 +712,7 @@ public:
         nBits          = 0;
         nNonce         = 0;
         nFuel          = 0;
+        nFuelRate      = INIT_FUEL_RATES;
         vSignature.clear();
     }
 
@@ -742,6 +744,7 @@ public:
         nBits          = block.nBits;
         nNonce         = block.nNonce;
         nFuel          = block.nFuel;
+        nFuelRate      = block.nFuelRate;
         vSignature     = block.vSignature;
     }
 
@@ -882,6 +885,7 @@ public:
         READWRITE(nBits);
         READWRITE(nNonce);
         READWRITE(nFuel);
+        READWRITE(nFuelRate);
         READWRITE(vSignature);
         READWRITE(dFeePerKb);
     )
@@ -897,6 +901,7 @@ public:
         block.nNonce          = nNonce;
         block.nHeight         = nHeight;
         block.nFuel           = nFuel;
+        block.nFuelRate       = nFuelRate;
         block.vSignature      = vSignature;
         return block.GetHash();
     }

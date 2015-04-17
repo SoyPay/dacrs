@@ -40,6 +40,7 @@ public:
     unsigned int nNonce;
     unsigned int nHeight;
     int64_t    nFuel;
+    int nFuelRate;
     vector<unsigned char> vSignature;
     CBlockHeader()
     {
@@ -57,6 +58,7 @@ public:
         READWRITE(nNonce);
         READWRITE(nHeight);
         READWRITE(nFuel);
+        READWRITE(nFuelRate);
         READWRITE(vSignature);
     )
 
@@ -69,6 +71,7 @@ public:
         nBits = 0;
         nNonce = 0;
         nHeight = 0;
+        nFuel = 0;
         vSignature.clear();
     }
 
@@ -131,7 +134,8 @@ public:
         block.nBits          = nBits;
         block.nNonce         = nNonce;
         block.nHeight        = nHeight;
-        block.nFuel     = nFuel;
+        block.nFuel          = nFuel;
+        block.nFuelRate      = nFuelRate;
         block.vSignature     = vSignature;
         return block;
     }

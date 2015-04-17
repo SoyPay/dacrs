@@ -76,8 +76,11 @@ uint64_t nLastBlockTx = 0;
 uint64_t nLastBlockSize = 0;
 
 //base on the last 500 blocks
-uint64_t GetElementForBurn(CBlockIndex* pindex)
+int GetElementForBurn(CBlockIndex* pindex)
 {
+	if(NULL == pindex) {
+		return INIT_FUEL_RATES;
+	}
 	double dTotalFeePerKb(0.0);
 	double dAverageFeePerKb(0.0);
 	int nBlock = SysCfg().GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
@@ -93,7 +96,7 @@ uint64_t GetElementForBurn(CBlockIndex* pindex)
 		if(0.0==dAverageFeePerKb || 0.0==pindex->dFeePerKb )
 			return INIT_FUEL_RATES;
 		else{
-			int64_t newFuelRate = int64_t(INIT_FUEL_RATES * (pindex->dFeePerKb / dAverageFeePerKb));
+			int64_t newFuelRate = int64_t(pindex->nFuelRate * (pindex->dFeePerKb / dAverageFeePerKb));
 			return newFuelRate;
 		}
 	}
@@ -196,7 +199,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
 
-		if(chainActive.Tip()->nHeight + 1 !=  pBlock->nHeight)
+		if((unsigned int)(chainActive.Tip()->nHeight + 1) !=  pBlock->nHeight)
 			return false;
 
 		if (!pwalletMain->GetKeyIds(setKeyID, true)) {
@@ -532,6 +535,7 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 			pblock->nNonce = 0;
 			pblock->nHeight = pIndexPrev->nHeight + 1;
 			pblock->nFuel = nTotalFuel;
+			pblock->nFuelRate = GetElementForBurn(pIndexPrev);
 		}
 
 		return pblocktemplate.release();

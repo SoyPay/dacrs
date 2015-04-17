@@ -611,7 +611,7 @@ static RET_DEFINE ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScri
 	if (!pVmScript->GetCatchView()->GetAccount(userid, aAccount)) {
 		flag = false;
 	}
-	uint64_t nbalance = aAccount.GetRawBalance(pVmScript->GetComfirHeight());
+	uint64_t nbalance = aAccount.GetRawBalance();
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << nbalance;
