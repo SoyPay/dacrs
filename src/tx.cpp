@@ -239,8 +239,8 @@ bool CBaseTransaction::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValid
 	}
 	return true;
 }
-uint64_t CBaseTransaction::GetFuel() {
-	uint64_t llFuel = ceil(nRunStep/100.0f) * GetFuelRate();
+uint64_t CBaseTransaction::GetFuel(int nfuelRate) {
+	uint64_t llFuel = ceil(nRunStep/100.0f) * nfuelRate;
 	if(REG_APP_TX == nTxType) {
 		if (llFuel < 1 * COIN) {
 			llFuel = 1 * COIN;
@@ -693,7 +693,7 @@ bool CRegisterAppTx::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValidat
 			return state.DoS(100, ERRORMSG("UndoUpdateAccount() : erase script account %s error", scriptId.ToString()),
 								UPDATE_ACCOUNT_FAIL, "bad-save-scriptdb");
 		}
-		LogPrint("INFO", "Delete regid %s app account", scriptId.ToString());
+//		LogPrint("INFO", "Delete regid %s app account\n", scriptId.ToString());
 	}
 
 	for(auto &itemLog : txundo.vAccountLog){

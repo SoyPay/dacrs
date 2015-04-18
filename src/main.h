@@ -36,7 +36,7 @@ class CInv;
 class CContractScript;
 
 /** the total blocks of burn fee need */
-static const unsigned int DEFAULT_BURN_BLOCK_SIZE = 500;
+static const unsigned int DEFAULT_BURN_BLOCK_SIZE = 50;
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 /** Default for -blockmaxsize and -blockminsize, which control the range of sizes the mining code will create **/
@@ -73,6 +73,7 @@ static const unsigned int BLOCK_DOWNLOAD_TIMEOUT = 60;
 static const unsigned long MAX_BLOCK_RUN_STEP = 12000000;
 static const int64_t POS_REWARD = 10 * COIN;
 static const int64_t INIT_FUEL_RATES = 100;   //100 unit / 100 step
+static const int64_t MIN_FUEL_RATES = 1;      //1 unit / 100 step
 
 #ifdef USE_UPNP
 static const int fHaveUPnP = true;
