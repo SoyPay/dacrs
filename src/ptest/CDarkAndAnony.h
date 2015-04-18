@@ -78,7 +78,7 @@ public:
 	virtual ~CDarkAndAnony();
 	int GetRandomFee() {
 		srand(time(NULL));
-		int r = (rand() % 1000000) + 1000000;
+		int r = (rand() % 1000000) + 100000000;
 		return r;
 	}
 	virtual TEST_STATE run() ;
