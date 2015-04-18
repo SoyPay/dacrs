@@ -94,3 +94,12 @@ qa/pull-tester/build-tests.sh
 /.project
 /src/leveldb/libmemenv.a
 /src/leveldb/libleveldb.a
+/src/blocks
+/src/wallet.dat
+/src/database
+/src/address.txt
+/src/.lock
+/src/block.info
+/src/peers.dat
+/src/leveldb/libleveldb.a
+/src/leveldb/libmemenv.a
