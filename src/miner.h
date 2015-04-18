@@ -71,9 +71,9 @@ bool CheckWork(CBlock* pblock, CWallet& wallet);
 /** Base sha256 mining transform */
 void SHA256Transform(void* pstate, void* pinput, const void* pinit);
 /** Get burn element */
-uint64_t GetElementForBurn(CBlockIndex *pindex);
+int GetElementForBurn(CBlockIndex *pindex);
 
-void GetPriorityTx(vector<TxPriority> &vecPriority);
+void GetPriorityTx(vector<TxPriority> &vecPriority, int nFuelRate);
 //extern double dHashesPerSec;
 //extern int64_t nHPSTimerStart;
 

@@ -53,13 +53,47 @@ void createminterkey::CreateMinerKey() {
 		string newaddr;
 		BOOST_CHECK(GetNewAddr(newaddr, true));
 		vNewAddress.push_back(newaddr);
-		if (i == 900) {
+		if (i == 800) {
 			++index;
 		}
 		Value value = CreateNormalTx(strAddress[index], newaddr, 10000 * COIN);
 		BOOST_CHECK(GetHashFromCreatedTx(value, hash));
 	}
+	int size = 0 ;
+	GenerateOneBlock();
 
+	while (1) {
+		if (!GetMemPoolSize(size)) {
+			cout << "GetMemPoolSize error" << endl;
+		}
+		if (size > 0) {
+			cout << "GetMemPoolSize size :" << size << endl;
+		} else {
+			break;
+		}
+
+	}
+
+	for(size_t i=0; i < vNewAddress.size(); i++) {
+		int nfee = GetRandomFee();
+		Value value1 = registaccounttx(vNewAddress[i], nfee);
+		BOOST_CHECK(GetHashFromCreatedTx(value1,hash));
+	}
+
+	GenerateOneBlock();
+	while (1) {
+		if (!GetMemPoolSize(size)) {
+			cout << "GetMemPoolSize error" << endl;
+		}
+		if (size > 0) {
+			cout << "GetMemPoolSize size :" << size << endl;
+		} else {
+			break;
+		}
+
+	}
+
+	  cout << "all ok  "  <<  endl;
 }
 
 createminterkey::~createminterkey() {

@@ -75,7 +75,10 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 	m_ScriptDBTip = &VmDB;
 
 	CTransaction* tx = static_cast<CTransaction*>(Tx.get());
-	uint64_t maxstep = (tx->llFees-CBaseTransaction::nMinTxFee)/nBurnFactor;
+	if(tx->llFees <= CBaseTransaction::nMinTxFee) {
+		return std::make_tuple (false, 0, string("vm run evn fee too litter\n"));
+	}
+	uint64_t maxstep = ((tx->llFees-CBaseTransaction::nMinTxFee)/ nBurnFactor) * 100;
 	
 	if(maxstep > MAX_BLOCK_RUN_STEP){
 		maxstep = MAX_BLOCK_RUN_STEP;
@@ -223,9 +226,11 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 	NewAccont.clear();
 	for (auto& it : listoperate) {
 //		CTransaction* tx = static_cast<CTransaction*>(listTx.get());
-		CFund fund;
-		memcpy(&fund.value,it.money,sizeof(it.money));
-		fund.nHeight = it.outheight;
+//		CFund fund;
+//		memcpy(&fund.value,it.money,sizeof(it.money));
+//		fund.nHeight = it.outheight;
+		uint64_t value;
+		memcpy(&value, it.money, sizeof(it.money));
 
 		auto tem = make_shared<CAccount>();
 //		vector_unsigned_char accountid = GetAccountID(it);
@@ -251,26 +256,14 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 			RawAccont.push_back(tem);
 			vmAccount = tem;
 		}
-		shared_ptr<CAccount> vnewAccount = GetNewAccount(tem);
-		//// 这个账号已经存在，需要合并
-		if (vnewAccount.get() != NULL) {
-			vmAccount = vnewAccount;
-		}else{
-			vmAccount.get()->CompactAccount(RunTimeHeight);
-		}
-		if ((OperType) it.opeatortype == ADD_FREE) {
-			//fund.nFundType = FREEDOM_FUND;
-		}
-
 		LogPrint("vm", "account id:%s\r\n", HexStr(accountid).c_str());
 		LogPrint("vm", "befer account:%s\r\n", vmAccount.get()->ToString().c_str());
-		LogPrint("vm", "fund:%s\r\n", fund.ToString().c_str());
 		bool ret = false;
 //		vector<CScriptDBOperLog> vAuthorLog;
 		//todolist
 //		if(IsSignatureAccount(vmAccount.get()->regID) || vmAccount.get()->regID == boost::get<CRegID>(tx->appRegId))
 		{
-			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype, fund);
+			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype, value);
 		}
 //		else{
 //			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype, fund, *m_ScriptDBTip, vAuthorLog,  height, &GetScriptRegID().GetVec6(), true);

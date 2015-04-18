@@ -163,7 +163,7 @@ public:
 
 	uint64_t GetSendValue() {
 		char cSendValue[12] = {0};
-		sprintf(&cSendValue[0], "%lld", m_llSendValue);
+		sprintf(&cSendValue[0], "%ld", m_llSendValue);
 		string strSendValue(cSendValue);
 		cout << "GetSendValue:" << strSendValue << endl;
 		return m_llSendValue;

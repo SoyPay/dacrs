@@ -1,6 +1,7 @@
 
 #include <string>
 #include <map>
+#include <deque>
 #include <math.h>
 #include "tx.h"
 #include "systestbase.h"
@@ -10,9 +11,12 @@
 #include <boost/assign/list_of.hpp>
 using namespace std;
 
-const unsigned int iTxCount = 6000;
+const unsigned int iTxCount = 100;
 vector<std::shared_ptr<CBaseTransaction> > vTransactions;
 vector<string> vTransactionHash;
+deque<uint64_t> dFee;
+deque<uint64_t> dFuel;
+uint64_t llTotalFee(0);
 
 map<string, string> mapAddress =
         boost::assign::map_list_of
@@ -87,12 +91,6 @@ public:
 		char fee[64] = {0};
 		int nfee = GetRandomFee();
 		sprintf(fee, "%d", nfee);
-//		char *argvFee[] = {"rpctest", "settxfee", fee};
-//		int argcFee = sizeof(argvFee) / sizeof(char*);
-//		Value value;
-//		if (!CommandLineRPC_GetValue(argcFee, argvFee, value)) {
-//			return false;
-//		}
 		char money[64] = {0};
 		int nmoney = GetRandomMoney();
 		sprintf(money, "%d00000000", nmoney);
@@ -100,12 +98,10 @@ public:
 		int argc = sizeof(argv) / sizeof(char*);
 		Value value;
 		if (!CommandLineRPC_GetValue(argc, argv, value)) {
-//			cout << "CreateCommonTx failed!" << endl;
 			return false;
 		}
 		const Value& result = find_value(value.get_obj(), "hash");
 		if(result == null_type) {
-//			cout << "CreateCommonTx failed!" << endl;
 			return false;
 		}
 		string txHash = result.get_str();
@@ -249,8 +245,7 @@ public:
 		}
 	}
 
-	bool DetectionAccount(uint64_t llFuelValue) {
-		uint64_t rewardAmount(0);
+	bool DetectionAccount(uint64_t llFuelValue, uint64_t llFees) {
 		uint64_t freeValue(0);
 		uint64_t totalValue(0);
 		uint64_t scriptaccValue(0);
@@ -264,8 +259,7 @@ public:
 				if (!accView.GetAccount(userId, account)) {
 					return false;
 				}
-				rewardAmount += account.GetRewardAmount(chainActive.Tip()->nHeight);
-				freeValue += account.GetRawBalance(chainActive.Tip()->nHeight);
+				freeValue += account.GetRawBalance();
 			}
 
 		}
@@ -280,18 +274,30 @@ public:
 				if (!accView.GetAccount(userId, account)) {
 					return false;
 				}
-				scriptaccValue += account.GetRewardAmount(chainActive.Tip()->nHeight);
-				scriptaccValue += account.GetRawBalance(chainActive.Tip()->nHeight);
+				scriptaccValue += account.GetRawBalance();
 			}
 
 		}
-		totalValue += rewardAmount;
 		totalValue += freeValue;
 		totalValue += scriptaccValue;
-		uint64_t uTotalRewardValue = 10 * COIN * (chainActive.Tip()->nHeight-1);
-		//检查总账平衡
-		BOOST_CHECK(totalValue + llFuelValue == (30000000 * COIN + uTotalRewardValue));
 
+		uint64_t uTotalRewardValue(0);
+		if (chainActive.Tip()->nHeight - 1 > COINBASE_MATURITY)  //height 1 is generate by another account
+			uTotalRewardValue = 10 * COIN * (chainActive.Tip()->nHeight - 101);
+		dFee.push_back(llFees);
+		dFuel.push_back(llFuelValue);
+		llTotalFee += llFees;
+
+		if (dFee.size() > 100) {
+			uint64_t feeTemp = dFee.front();
+			uint64_t fuelTemp = dFuel.front();
+			llTotalFee -= feeTemp;
+			llTotalFee += fuelTemp;
+			dFee.pop_front();
+			dFuel.pop_front();
+		}
+		//检查总账平衡
+		BOOST_CHECK(totalValue + llTotalFee == (30000000 * COIN + uTotalRewardValue));
 		return true;
 	}
 
@@ -308,96 +314,94 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 	//初始化环境,注册一个合约脚本，并且挖矿确认
 	InitRegScript();
 //	BOOST_CHECK(DetectionAccount(1*COIN));
-	//随机创建6000个交易
-	CreateRandTx(iTxCount);
-	cout << endl;
-//	cout << "vTransactions size:" << vTransactions.size() << endl;
-	//检测mempool中是否有6000个交易
-	BOOST_CHECK(vTransactions.size()==iTxCount);
-	{
-		//LOCK(pwalletMain->cs_wallet);
-		//检测钱包未确认交易数量是否正确
-		BOOST_CHECK(pwalletMain->UnConfirmTx.size() == iTxCount);
-		//检测钱包未确认交易hash是否正确
-		for(auto &item : vTransactionHash) {
-			BOOST_CHECK(pwalletMain->UnConfirmTx.count(uint256(item)) > 0);
-		}
-	}
-	unsigned int nSize = mempool.mapTx.size();
-	int nConfirmTxCount(0);
-	uint64_t llRegAcctFee(0);
-	uint64_t llSendValue(0);
-	uint64_t llFuelValue(0);
-	while (nSize) {
-		//挖矿
-		map<string, string>::const_iterator iterAddr = GetRandAddress();
-		BOOST_CHECK(SetBlockGenerte(iterAddr->second.c_str()));
-		CBlock block;
+	for(int i=0; i<1; ++i) {
+		//随机创建6000个交易
+
+		CreateRandTx(iTxCount);
+		//检测mempool中是否有6000个交易
+		BOOST_CHECK(vTransactions.size()==iTxCount);
 		{
-			LOCK(cs_main);
-			CBlockIndex *pindex = chainActive.Tip();
-			llFuelValue += pindex->nFuel;
-			BOOST_CHECK(ReadBlockFromDisk(block, pindex));
+			//LOCK(pwalletMain->cs_wallet);
+			//检测钱包未确认交易数量是否正确
+			BOOST_CHECK(pwalletMain->UnConfirmTx.size() == iTxCount);
+			//检测钱包未确认交易hash是否正确
+			for(auto &item : vTransactionHash) {
+				BOOST_CHECK(pwalletMain->UnConfirmTx.count(uint256(item)) > 0);
+			}
+
 		}
 
-		for(auto &item : block.vptx) {
+		unsigned int nSize = mempool.mapTx.size();
+		int nConfirmTxCount(0);
+		uint64_t llRegAcctFee(0);
+		uint64_t llSendValue(0);
+		uint64_t llFuelValue(0);
+		while (nSize) {
+			//挖矿
+			map<string, string>::const_iterator iterAddr = GetRandAddress();
+			BOOST_CHECK(SetBlockGenerte(iterAddr->second.c_str()));
+			CBlock block;
+			{
+				LOCK(cs_main);
+				CBlockIndex *pindex = chainActive.Tip();
+				llFuelValue += pindex->nFuel;
+				BOOST_CHECK(ReadBlockFromDisk(block, pindex));
+			}
+
+			for(auto &item : block.vptx) {
+				{
+					LOCK2(cs_main, pwalletMain->cs_wallet);
+					//检测钱包未确认列表中没有block中交易
+					BOOST_CHECK(!pwalletMain->UnConfirmTx.count(item->GetHash()) > 0);
+					//检测block中交易是否都在钱包已确认列表中
+					BOOST_CHECK(pwalletMain->mapInBlockTx[block.GetHash()].mapAccountTx.count(item->GetHash())>0);
+					//检测mempool中没有了block已确认交易
+					BOOST_CHECK(!mempool.mapTx.count(item->GetHash()) > 0);
+				}
+
+			}
 			{
 				LOCK2(cs_main, pwalletMain->cs_wallet);
-				//检测钱包未确认列表中没有block中交易
-				BOOST_CHECK(!pwalletMain->UnConfirmTx.count(item->GetHash()) > 0);
-				//检测block中交易是否都在钱包已确认列表中
-				BOOST_CHECK(pwalletMain->mapInBlockTx[block.GetHash()].mapAccountTx.count(item->GetHash())>0);
-				//检测mempool中没有了block已确认交易
-				BOOST_CHECK(!mempool.mapTx.count(item->GetHash()) > 0);
+				//检测block中交易总数和钱包已确认列表中总数相等
+				BOOST_CHECK(pwalletMain->mapInBlockTx[block.GetHash()].mapAccountTx.size() == block.vptx.size());
+				nConfirmTxCount += block.vptx.size() - 1;
+				//检测剩余mempool中交易总数与已确认交易和等于总的产生的交易数
+				nSize = mempool.mapTx.size();
+				BOOST_CHECK((nSize + nConfirmTxCount) == vTransactions.size());
+				//检测钱包中unconfirm交易和mempool中的相同
+				BOOST_CHECK((nSize == pwalletMain->UnConfirmTx.size()));
 			}
+			//检测Block最大值
+			BOOST_CHECK(block.GetSerializeSize(SER_DISK, CLIENT_VERSION) <= MAX_BLOCK_SIZE);
+			for(auto & ptx : block.vptx) {
+				if(ptx->IsCoinBase()) {
+					continue;
+				}
+				if(REG_ACCT_TX == ptx->nTxType) {
+					llRegAcctFee += ptx->GetFee();
+				}
+				if(COMMON_TX == ptx->nTxType) {
+					std::shared_ptr<CTransaction> pTransaction(dynamic_pointer_cast<CTransaction>(ptx));
+					if(typeid(pTransaction->desUserId) == typeid(CKeyID)) {
+						llSendValue += pTransaction->llValues;				}
+				}
+			}
+			llSendValue -= llRegAcctFee;
+			llSendValue += block.GetFee();
+			//检测确认交易后总账是否平衡
+			BOOST_CHECK(DetectionAccount(llFuelValue, block.GetFee()));
+		}
+		uint64_t totalFee(0);
+		for(auto &item : vSendFee) {
+			totalFee += item.second;
+		}
+		//校验总的手续费是否正确
+		BOOST_CHECK(totalFee == llSendValue);
 
-		}
-		{
-			LOCK2(cs_main, pwalletMain->cs_wallet);
-			//检测block中交易总数和钱包已确认列表中总数相等
-			BOOST_CHECK(pwalletMain->mapInBlockTx[block.GetHash()].mapAccountTx.size() == block.vptx.size());
-			nConfirmTxCount += block.vptx.size() - 1;
-			//检测剩余mempool中交易总数与已确认交易和等于总的产生的交易数
-			nSize = mempool.mapTx.size();
-			BOOST_CHECK((nSize + nConfirmTxCount) == vTransactions.size());
-			//检测钱包中unconfirm交易和mempool中的相同
-			BOOST_CHECK((nSize == pwalletMain->UnConfirmTx.size()));
-		}
-		//检测Block最大值
-		BOOST_CHECK(block.GetSerializeSize(SER_DISK, CLIENT_VERSION) <= MAX_BLOCK_SIZE);
-
-//		std::stable_sort(vptxSort.begin()+1, vptxSort.end(), [](const std::shared_ptr<CBaseTransaction> &pTx1, const std::shared_ptr<CBaseTransaction> &pTx2) {
-//					if ((pTx1->GetFee()/pTx1->GetSerializeSize(SER_DISK, CLIENT_VERSION)) > (pTx2->GetFee()/pTx2->GetSerializeSize(SER_DISK, CLIENT_VERSION)))
-//						return true;
-//					return false;
-//					});
-//		BOOST_CHECK(vptxSort == block.vptx);
-		for(auto & ptx : block.vptx) {
-			if(ptx->IsCoinBase()) {
-				continue;
-			}
-			if(REG_ACCT_TX == ptx->nTxType) {
-				llRegAcctFee += ptx->GetFee();
-			}
-			if(COMMON_TX == ptx->nTxType) {
-				std::shared_ptr<CTransaction> pTransaction(dynamic_pointer_cast<CTransaction>(ptx));
-				if(typeid(pTransaction->desUserId) == typeid(CKeyID)) {
-					llSendValue += pTransaction->llValues;				}
-			}
-		}
-		llSendValue -= llRegAcctFee;
-		llSendValue += block.GetFee();
-//		cout <<"llSendValue:" << llSendValue << endl;
-		//检测确认交易后总账是否平衡
-		BOOST_CHECK(DetectionAccount(llFuelValue));
+		vTransactions.clear();
+		vTransactionHash.clear();
+		vSendFee.clear();
 	}
-	uint64_t totalFee(0);
-	for(auto &item : vSendFee) {
-		totalFee += item.second;
-	}
-	//校验总的手续费是否正确
-	BOOST_CHECK(totalFee == llSendValue);
-
 
 }
 BOOST_AUTO_TEST_SUITE_END()

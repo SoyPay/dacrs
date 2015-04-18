@@ -52,6 +52,7 @@ TEST_STATE CTestBetTx::run() {
 		break;
 	case 7:
 		WaitAOpenP2PBet();
+
 		break;
 	default:
 		assert(0);
@@ -69,7 +70,6 @@ bool CTestBetTx::RegScript(void) {
 	basetest.ImportWalletKey(pKey, nCount);
 
 	string strFileName("p2pbet.bin");
-	int nFee = GetRandomBetfee();
 	int nCurHight;
 	GetBlockHeight(nCurHight);
 	//×¢²á¶Ô¶Ä½Å±¾
@@ -98,7 +98,7 @@ bool CTestBetTx::ASendP2PBet() {
 		unsigned char randdata[32];
 		GetRandomData(randdata, sizeof(randdata));
 		int num = GetBetData();
-		cout<<"win:"<<num<<endl;
+//		cout<<"win:"<<num<<endl;
 		memcpy(nSdata,randdata,sizeof(randdata));
 		memcpy(&nSdata[32],&num,sizeof(char));
 		SEND_DATA senddata;
@@ -126,23 +126,11 @@ bool CTestBetTx::ASendP2PBet() {
 			nTempSend = betamount;
 		}
 		Value  sendret= CreateContractTx(scriptid,ADDR_A,sendcontract,0,0,nTempSend);
-//		if((int)senddata.noperateType == 0x01){
-//			strAsendHash = "";
-//			GetHashFromCreatedTx(sendret, strAsendHash);
-//			if(strAsendHash == "") {
-//				return true;
-//			}
-//			else{
-//				BOOST_CHECK(GenerateOneBlock());
-//			}
-//		}else{
-//			BOOST_CHECK(GetHashFromCreatedTx(sendret, strAsendHash));
-//			BOOST_CHECK(GenerateOneBlock());
-//		}
-		if(GetHashFromCreatedTx(sendret, strAsendHash)){
-			mCurStep++;
-							return true;
-		}
+
+	if (GetHashFromCreatedTx(sendret, strAsendHash)) {
+		mCurStep++;
+		return true;
+	}
 		return true;
 }
 bool CTestBetTx::WaitASendP2PBet(void){
@@ -157,7 +145,6 @@ bool CTestBetTx::BAcceptP2PBet(void) {
 		unsigned char cType;
 		RAND_bytes(&cType, sizeof(cType));
 		unsigned char  gussnum = cType % 2;
-		cout <<"guess:"<<(int)gussnum<<endl;
 		ACCEPT_DATA acceptdata;
 		acceptdata.type = 2;
 		acceptdata.noperateType = GetRanOpType();
@@ -180,7 +167,7 @@ bool CTestBetTx::BAcceptP2PBet(void) {
 		}
 		Value vaccept = CreateContractTx(scriptid, ADDR_B, acceptcontract, nCurHight, 0,nTempSend);
 		string hash = "";
-		cout<<"type"<<(int)acceptdata.noperateType<<endl;
+//		cout<<"type"<<(int)acceptdata.noperateType<<endl;
 /*		if((int)acceptdata.noperateType == 0x01){
 
 			GetHashFromCreatedTx(vaccept, hash);
@@ -233,6 +220,7 @@ bool CTestBetTx::WaitAOpenP2PBet(void){
 	string index = "";
 	if (basetest.GetTxConfirmedRegID(strAopenHash, index)) {
 			mCurStep = 1;
+			 IncSentTotal();
 			return true;
 	}
 		return true;

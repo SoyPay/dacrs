@@ -530,7 +530,7 @@ DBErrors CWallet::LoadWallet(bool fFirstRunRet) {
 }
 string CWallet::strWalletFile="";
 
-int64_t CWallet::GetRawBalance(int ncurhigh) const
+int64_t CWallet::GetRawBalance() const
 {
 	int64_t ret = 0;
 	CAccountViewCache accView(*pAccountViewTip, true);
@@ -538,7 +538,7 @@ int64_t CWallet::GetRawBalance(int ncurhigh) const
 		LOCK2(cs_main, cs_wallet);
 		for(auto &te :mKeyPool)
 		{
-			ret +=accView.GetRawBalance(te.first,ncurhigh);
+			ret +=accView.GetRawBalance(te.first);
 		}
 
 	}
