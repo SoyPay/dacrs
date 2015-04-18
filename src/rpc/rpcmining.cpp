@@ -161,6 +161,10 @@ Value setgenerate(const Array& params, bool fHelp)
     // -regtest mode: don't return until nGenProcLimit blocks are generated
 	if (SysCfg().NetworkID() != CBaseParams::MAIN) {
 
+		if(fGenerate == false){
+			GenerateDacrsBlock(false, pwalletMain, 1);
+			return Value::null;
+		}
 			//如果是一个一个地挖
 		int nHeightEnd = 0;
 		auto getcurhigh = [&]() {
