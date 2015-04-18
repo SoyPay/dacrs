@@ -122,6 +122,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts() {
 				pindexNew->nStatus = diskindex.nStatus;
 				pindexNew->nTx = diskindex.nTx;
 				pindexNew->nFuel = diskindex.nFuel;
+				pindexNew->nFuelRate = diskindex.nFuelRate;
 				pindexNew->vSignature = diskindex.vSignature;
 				pindexNew->dFeePerKb = diskindex.dFeePerKb;
 

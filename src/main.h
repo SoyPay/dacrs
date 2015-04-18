@@ -36,7 +36,7 @@ class CInv;
 class CContractScript;
 
 /** the total blocks of burn fee need */
-static const unsigned int DEFAULT_BURN_BLOCK_SIZE = 500;
+static const unsigned int DEFAULT_BURN_BLOCK_SIZE = 50;
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 static const unsigned int MAX_BLOCK_SIZE = 1000000;
 /** Default for -blockmaxsize and -blockminsize, which control the range of sizes the mining code will create **/
@@ -73,6 +73,7 @@ static const unsigned int BLOCK_DOWNLOAD_TIMEOUT = 60;
 static const unsigned long MAX_BLOCK_RUN_STEP = 12000000;
 static const int64_t POS_REWARD = 10 * COIN;
 static const int64_t INIT_FUEL_RATES = 100;   //100 unit / 100 step
+static const int64_t MIN_FUEL_RATES = 1;      //1 unit / 100 step
 
 #ifdef USE_UPNP
 static const int fHaveUPnP = true;
@@ -683,6 +684,7 @@ public:
     unsigned int nBits;
     unsigned int nNonce;
     int64_t nFuel;
+    int nFuelRate;
     vector<unsigned char> vSignature;
 
     double dFeePerKb;
@@ -711,6 +713,7 @@ public:
         nBits          = 0;
         nNonce         = 0;
         nFuel          = 0;
+        nFuelRate      = INIT_FUEL_RATES;
         vSignature.clear();
     }
 
@@ -742,6 +745,7 @@ public:
         nBits          = block.nBits;
         nNonce         = block.nNonce;
         nFuel          = block.nFuel;
+        nFuelRate      = block.nFuelRate;
         vSignature     = block.vSignature;
     }
 
@@ -882,6 +886,7 @@ public:
         READWRITE(nBits);
         READWRITE(nNonce);
         READWRITE(nFuel);
+        READWRITE(nFuelRate);
         READWRITE(vSignature);
         READWRITE(dFeePerKb);
     )
@@ -897,6 +902,7 @@ public:
         block.nNonce          = nNonce;
         block.nHeight         = nHeight;
         block.nFuel           = nFuel;
+        block.nFuelRate       = nFuelRate;
         block.vSignature      = vSignature;
         return block.GetHash();
     }

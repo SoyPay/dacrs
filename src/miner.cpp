@@ -76,28 +76,55 @@ uint64_t nLastBlockTx = 0;
 uint64_t nLastBlockSize = 0;
 
 //base on the last 500 blocks
-uint64_t GetElementForBurn(CBlockIndex* pindex)
+int GetElementForBurn(CBlockIndex* pindex)
 {
+	if(NULL == pindex) {
+		return INIT_FUEL_RATES;
+	}
 	double dTotalFeePerKb(0.0);
-	double dAverageFeePerKb(0.0);
+	double dAverageFeePerKb1(0.0);
+	double dAverageFeePerKb2(0.0);
 	int nBlock = SysCfg().GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
-	if (nBlock >= pindex->nHeight-1) {
-		return 100;
+	if (nBlock * 2 >= pindex->nHeight-1) {
+		return INIT_FUEL_RATES;
 	} else {
 		CBlockIndex * pTemp = pindex;
-		for (int ii = 0; ii < nBlock; ii++) {
-			dTotalFeePerKb += pTemp->dFeePerKb;
-			pindex = pTemp->pprev;
+		if((pindex->nHeight-1) % nBlock == 0) {
+			for (int ii = 0; ii < nBlock; ii++) {
+				dTotalFeePerKb += pTemp->dFeePerKb;
+				pTemp = pTemp->pprev;
+			}
+			if(pindex->nChainTx - pTemp->nChainTx < 500) {
+				return pindex->nFuelRate;
+			}
+			uint64_t txNum = pTemp->nChainTx;
+			dAverageFeePerKb1  = dTotalFeePerKb / nBlock;
+			dTotalFeePerKb = 0.0;
+			for (int ii = 0; ii < nBlock; ii++) {
+				dTotalFeePerKb += pTemp->dFeePerKb;
+				pTemp = pTemp->pprev;
+			}
+			dAverageFeePerKb2  = dTotalFeePerKb / nBlock;
+			if(txNum - pTemp->nChainTx < 500) {
+				return pindex->nFuelRate;
+			}
+			if(0.0==dAverageFeePerKb1 || 0.0==dAverageFeePerKb2 )
+				return pindex->nFuelRate;
+			else{
+				int newFuelRate = int(pindex->nFuelRate * (dAverageFeePerKb2 / dAverageFeePerKb1));
+				if(newFuelRate < MIN_FUEL_RATES)
+					newFuelRate = MIN_FUEL_RATES;
+				return newFuelRate;
+			}
+		}else {
+			return pindex->nFuelRate;
 		}
-		dAverageFeePerKb  = dTotalFeePerKb / nBlock;
-		int64_t newFuelRate = int64_t(INIT_FUEL_RATES * (pTemp->dFeePerKb / dAverageFeePerKb));
-		return newFuelRate;
 	}
 }
 
 // We want to sort transactions by priority and fee, so:
 
-void GetPriorityTx(vector<TxPriority> &vecPriority) {
+void GetPriorityTx(vector<TxPriority> &vecPriority, int nFuelRate) {
 	vecPriority.reserve(mempool.mapTx.size());
 	// Priority order to process transactions
 	list<COrphan> vOrphan; // list memory doesn't move
@@ -107,7 +134,7 @@ void GetPriorityTx(vector<TxPriority> &vecPriority) {
 
 		if (uint256(0) == std::move(pTxCacheTip->IsContainTx(std::move(pBaseTx->GetHash())))) {
 			unsigned int nTxSize = ::GetSerializeSize(*pBaseTx, SER_NETWORK, PROTOCOL_VERSION);
-			double dFeePerKb = double(pBaseTx->GetFee() - pBaseTx->GetFuel())/ (double(nTxSize) / 1000.0);
+			double dFeePerKb = double(pBaseTx->GetFee() - pBaseTx->GetFuel(nFuelRate))/ (double(nTxSize) / 1000.0);
 			dPriority = 1000.0 / double(nTxSize);
 			vecPriority.push_back(TxPriority(dPriority, dFeePerKb, mi->second.GetTx()));
 		}
@@ -189,13 +216,17 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 
 	set<CAccount, CAccountComparator> setAcctInfo;
 
-	LogPrint("INFO","CreatePosTx block time:%d\n",  pBlock->nTime);
-
 	{
 		LOCK2(cs_main, pwalletMain->cs_wallet);
+
+		if((unsigned int)(chainActive.Tip()->nHeight + 1) !=  pBlock->nHeight)
+			return false;
+
 		if (!pwalletMain->GetKeyIds(setKeyID, true)) {
 			return ERRORMSG("CreatePosTx setKeyID empty");
 		}
+
+		LogPrint("INFO","CreatePosTx block time:%d\n",  pBlock->nTime);
 
 		for(const auto &keyid:setKeyID) {
 			//find CAccount info by keyid
@@ -214,6 +245,8 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 			CAccount acctInfo;
 			if (view.GetAccount(userId, acctInfo)) {
 				//available
+//				LogPrint("miner", "account info:regid=%s keyid=%s ncoinday=%lld isMiner=%d\n", acctInfo.regID.ToString(),
+//						acctInfo.keyID.ToString(), acctInfo.GetAccountPos(pBlock->nHeight), acctInfo.IsMiner(pBlock->nHeight));
 				if (acctInfo.IsRegister() && acctInfo.GetAccountPos(pBlock->nHeight) > 0 && acctInfo.IsMiner(pBlock->nHeight)) {
 					setAcctInfo.insert(std::move(acctInfo));
 					LogPrint("miner", "miner account info:%s\n", acctInfo.ToString());
@@ -334,7 +367,7 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 			if(nTotalRunStep > MAX_BLOCK_RUN_STEP) {
 				return ERRORMSG("block total run steps exceed max run step");
 			}
-			nTotalFuel += pBaseTx->GetFuel();
+			nTotalFuel += pBaseTx->GetFuel(pBlock->nFuelRate);
 		}
 
 		if(nTotalFuel != pBlock->nFuel) {
@@ -435,11 +468,11 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 		{
 			LOCK2(cs_main, mempool.cs);
 			CBlockIndex* pIndexPrev = chainActive.Tip();
+			pblock->nFuelRate = GetElementForBurn(pIndexPrev);
 
 			// This vector will be sorted into a priority queue:
 			vector<TxPriority> vecPriority;
-
-			GetPriorityTx(vecPriority);
+			GetPriorityTx(vecPriority, pblock->nFuelRate);
 
 			// Collect transactions into block
 			uint64_t nBlockSize = ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
@@ -506,7 +539,8 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 				nFees += pBaseTx->GetFee();
 				nBlockSize += stx->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
 				nTotalRunStep += pBaseTx->nRunStep;
-				nTotalFuel += pBaseTx->GetFuel();
+				nTotalFuel += pBaseTx->GetFuel(pblock->nFuelRate);
+				LogPrint("fuel", "miner total fuel:%d, tx fuel:%d runStep:%d fuelRate:%d txhash:%s\n",nTotalFuel, pBaseTx->GetFuel(pblock->nFuelRate), pBaseTx->nRunStep, pblock->nFuelRate, pBaseTx->GetHash().GetHex());
 			}
 
 			nLastBlockTx = nBlockTx;
@@ -667,11 +701,8 @@ void static DacrsMiner(CWallet *pwallet) {
 			if (SysCfg().NetworkID() != CBaseParams::MAIN)
 				if(bRet== true)
 				{
-					if(SysCfg().GetArg("-iscutmine",0)==0)
-					{
 						SysCfg().SoftSetArgCover("-ismining", "0");
 						throw boost::thread_interrupted();
-					}
 				}	
 		}
 	} catch (...) {

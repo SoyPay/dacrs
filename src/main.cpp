@@ -1219,15 +1219,31 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
     if (!blockUndo.ReadFromDisk(pos, pindex->pprev->GetBlockHash()))
         return ERRORMSG("DisconnectBlock() : failure reading undo data");
 
-    if (blockUndo.vtxundo.size() != block.vptx.size())
+    if ((blockUndo.vtxundo.size() != block.vptx.size()) && (blockUndo.vtxundo.size() != (block.vptx.size()+1)))
         return ERRORMSG("DisconnectBlock() : block and undo data inconsistent");
 
 //    LogPrint("INFO","height= %d\n,%s", pindex->nHeight,blockUndo.ToString());
 
 //    int64_t llTime = GetTimeMillis();
+    CTxUndo txundo;
+    if(pindex->nHeight - COINBASE_MATURITY > 0) {
+		//undo mature reward tx
+		txundo = blockUndo.vtxundo.back();
+		CBlockIndex *pMatureIndex = chainActive[pindex->nHeight - COINBASE_MATURITY];
+		if (NULL != pMatureIndex) {
+			CBlock matureBlock;
+			if (!ReadBlockFromDisk(matureBlock, pMatureIndex)) {
+				return state.DoS(100, ERRORMSG("ConnectBlock() : read mature block error"), REJECT_INVALID,
+						"bad-read-block");
+			}
+			if (!matureBlock.vptx[0]->UndoExecuteTx(-1, view, state, txundo, pindex->nHeight, txCache, scriptCache))
+				return ERRORMSG("ConnectBlock() : execure mature block reward tx error!");
+		}
+    }
+
     //undo reward tx
     std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[0];
-	CTxUndo txundo = blockUndo.vtxundo.back();
+	txundo = blockUndo.vtxundo.back();
 	if(!pBaseTx->UndoExecuteTx(0, view, state, txundo, pindex->nHeight, txCache, scriptCache))
 		return false;
 //	LogPrint("INFO", "reward tx undo elapse:%lld ms\n", GetTimeMillis() - llTime);
@@ -1352,6 +1368,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 						ERRORMSG("ConnectBlock() : the TxHash %s the confirm duplicate", pBaseTx->GetHash().GetHex()),
 						REJECT_INVALID, "bad-cb-amount");
 			}
+			assert(mapBlockIndex.count(view.GetBestBlock()));
 			if (!pBaseTx->IsValidHeight(mapBlockIndex[view.GetBestBlock()]->nHeight, SysCfg().GetTxCacheHeight())) {
 				return state.DoS(100,
 						ERRORMSG("ConnectBlock() : txhash=%s beyond the scope of valid height",
@@ -1372,14 +1389,14 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 						ERRORMSG("block hash=%s total run steps exceed max run step", block.GetHash().GetHex()),
 						REJECT_INVALID, "exeed-max_step");
 			}
-			uint64_t llFuel = ceil(pBaseTx->nRunStep / 100.f) * GetElementForBurn(chainActive.Tip());
+			uint64_t llFuel = ceil(pBaseTx->nRunStep / 100.f) * block.nFuelRate;
 			if(REG_APP_TX == pBaseTx->nTxType) {
 				if(llFuel < 1 * COIN){
 					llFuel = 1 * COIN;
 				}
 			}
 			nTotalFuel += llFuel;
-
+			LogPrint("fuel", "connect block total fuel:%d, tx fuel:%d runStep:%d fuelRate:%d txhash:%s \n",nTotalFuel, llFuel, pBaseTx->nRunStep,block.nFuelRate, pBaseTx->GetHash().GetHex());
 			vPos.push_back(make_pair(block.GetTxHash(i), pos));
 			pos.nTxOffset += ::GetSerializeSize(pBaseTx, SER_DISK, CLIENT_VERSION);
 			blockundo.vtxundo.push_back(txundo);
@@ -1402,12 +1419,26 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 		return state.DoS(100,
 				ERRORMSG("ConnectBlock() : coinbase pays too much (actual=%d vs limit=%d)", pRewardTx->rewardValue,
 						llValidReward), REJECT_INVALID, "bad-cb-amount");
-    //deal with reward_tx
+    //deal reward tx
     CTxUndo txundo;
     if(!block.vptx[0]->ExecuteTx(0, view, state, txundo, pindex->nHeight, txCache, scriptDBCache))
-    	return false;
+    	return ERRORMSG("ConnectBlock() : execure reward tx error!");
 	blockundo.vtxundo.push_back(txundo);
 
+	if (pindex->nHeight - COINBASE_MATURITY > 0) {
+		//deal mature reward tx
+		CBlockIndex *pMatureIndex = chainActive[pindex->nHeight - COINBASE_MATURITY];
+		if (NULL != pMatureIndex) {
+			CBlock matureBlock;
+			if (!ReadBlockFromDisk(matureBlock, pMatureIndex)) {
+				return state.DoS(100, ERRORMSG("ConnectBlock() : read mature block error"), REJECT_INVALID,
+						"bad-read-block");
+			}
+			if (!matureBlock.vptx[0]->ExecuteTx(-1, view, state, txundo, pindex->nHeight, txCache, scriptDBCache))
+				return ERRORMSG("ConnectBlock() : execure mature block reward tx error!");
+		}
+		blockundo.vtxundo.push_back(txundo);
+	}
     int64_t nTime = GetTimeMicros() - nStart;
     if (SysCfg().IsBenchmark())
         LogPrint("INFO","- Connect %u transactions: %.2fms (%.3fms/tx)\n", (unsigned)block.vptx.size(), 0.001 * nTime, 0.001 * nTime / block.vptx.size());
@@ -1500,14 +1531,14 @@ void static UpdateTip(CBlockIndex *pindexNew, const CBlock &block) {
     // New best block
     SysCfg().SetBestRecvTime(GetTime());
     mempool.AddTransactionsUpdated(1);
-    LogPrint("INFO","UpdateTip: new best=%s  height=%d  log2_work=%.8g  tx=%lu  date=%s progress=%f txnumber=%d\n",
+    LogPrint("INFO","UpdateTip: new best=%s  height=%d  log2_work=%.8g  tx=%lu  date=%s progress=%f txnumber=%d dFeePerKb=%lf nFuelRate=%d\n",
       chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), log(chainActive.Tip()->nChainWork.getdouble())/log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
       DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
-      Checkpoints::GuessVerificationProgress(chainActive.Tip()), block.vptx.size());
-    LogPrint("updatetip","UpdateTip: new best=%s  height=%d  log2_work=%.8g  tx=%lu  date=%s progress=%f\n",
+      Checkpoints::GuessVerificationProgress(chainActive.Tip()), block.vptx.size(), chainActive.Tip()->dFeePerKb, chainActive.Tip()->nFuelRate);
+    LogPrint("updatetip","UpdateTip: new best=%s  height=%d  log2_work=%.8g  tx=%lu  date=%s progress=%f\n txnumber=%d dFeePerKb=%lf nFuelRate=%d",
         chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), log(chainActive.Tip()->nChainWork.getdouble())/log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
         DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
-        Checkpoints::GuessVerificationProgress(chainActive.Tip()));
+        Checkpoints::GuessVerificationProgress(chainActive.Tip()), block.vptx.size(), chainActive.Tip()->dFeePerKb, chainActive.Tip()->nFuelRate);
     // Check the version of the last 100 blocks to see if we need to upgrade:
     if (!fIsInitialDownload)
     {
@@ -1961,6 +1992,45 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 				return ERRORMSG("CheckBlockProofWorkWithCoinDay() : ConnectBlock %s failed", rIter->GetHash().ToString());
 		}
 
+		uint64_t nTotalRunStep(0);
+		int64_t nTotalFuel(0);
+		if (block.vptx.size() > 1) {
+			for (unsigned int i = 1; i < block.vptx.size(); i++) {
+				std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[i];
+				if (uint256(0) != txCacheTemp.IsContainTx((pBaseTx->GetHash()))) {
+					return state.DoS(100,
+							ERRORMSG("ConnectBlock() : the TxHash %s the confirm duplicate", pBaseTx->GetHash().GetHex()),
+							REJECT_INVALID, "bad-cb-amount");
+				}
+				if (!pBaseTx->IsValidHeight(mapBlockIndex[view.GetBestBlock()]->nHeight, SysCfg().GetTxCacheHeight())) {
+					return state.DoS(100,
+							ERRORMSG("ConnectBlock() : txhash=%s beyond the scope of valid height",
+									pBaseTx->GetHash().GetHex()), REJECT_INVALID, "tx-invalid-height");
+				}
+				CTxUndo txundo;
+				if(!pBaseTx->ExecuteTx(i, view, state, txundo, block.nHeight, txCacheTemp, scriptDBTemp)) {
+					return false;
+				}
+
+				nTotalRunStep += pBaseTx->nRunStep;
+				if (nTotalRunStep > MAX_BLOCK_RUN_STEP) {
+					return state.DoS(100,
+							ERRORMSG("block hash=%s total run steps exceed max run step", block.GetHash().GetHex()),
+							REJECT_INVALID, "exeed-max_step");
+				}
+				uint64_t llFuel = ceil(pBaseTx->nRunStep / 100.f) * block.nFuelRate;
+				if(REG_APP_TX == pBaseTx->nTxType) {
+					if(llFuel < 1 * COIN){
+						llFuel = 1 * COIN;
+					}
+				}
+				nTotalFuel += llFuel;
+			}
+
+			if (nTotalFuel != block.nFuel) {
+				return ERRORMSG("fuel value at block header calculate error(actual fuel:%ld vs block fuel:%ld), block hash:%s", nTotalFuel, block.nFuel, block.GetHash().GetHex());
+			}
+		}
 		//校验pos交易
 		if (!VerifyPosTx(view, &block, txCacheTemp, scriptDBTemp, true)) {
 			return state.DoS(100,
@@ -2044,6 +2114,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         return state.DoS(100, ERRORMSG("CheckBlock() : first tx is not coinbase"),
                          REJECT_INVALID, "bad-cb-missing");
 
+//    if(block.nFuelRate != GetElementForBurn(mapBlockIndex[block.hashPrevBlock]))
+//    	return state.DoS(100, ERRORMSG("CheckBlock() : block nfuelrate dismatched"), REJECT_INVALID, "fuelrate-dismatch");
+
 	// Build the merkle tree already. We need it anyway later, and it makes the
 	// block cache the transaction hashes, which means they don't need to be
 	// recalculated many times during this block's validation.
@@ -2084,6 +2157,19 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 	LogPrint("acceptblock", "AcceptBlcok hash:%s\n", hash.GetHex());
 	if (mapBlockIndex.count(hash))
 		return state.Invalid(ERRORMSG("AcceptBlock() : block already in mapBlockIndex"), 0, "duplicate");
+
+//	for(auto & item : mapBlockIndex) {
+//		if(NULL == item.second) {
+//			LogPrint("BlockIndex", "key:%s \n", item.first.GetHex());
+//		}else {
+//			LogPrint("BlockIndex", "key:%s value:%s\n", item.first.GetHex(), (*(item.second)).ToString());
+//		}
+//	}
+
+	assert(mapBlockIndex.count(block.hashPrevBlock));
+	if(block.nFuelRate != GetElementForBurn(mapBlockIndex[block.hashPrevBlock]))
+    	return state.DoS(100, ERRORMSG("CheckBlock() : block nfuelrate dismatched"), REJECT_INVALID, "fuelrate-dismatch");
+
 
 	// Get prev block index
 	CBlockIndex* pindexPrev = NULL;
@@ -2549,7 +2635,6 @@ bool static LoadBlockIndexDB()
 	for (const auto& item : mapBlockIndex) {
 		CBlockIndex* pindex = item.second;
 		vSortedByHeight.push_back(make_pair(pindex->nHeight, pindex));
-		LogPrint("INFO","block hash:%s\n", pindex->GetBlockHash().GetHex());
 	}
     sort(vSortedByHeight.begin(), vSortedByHeight.end());
 	for (const auto& item : vSortedByHeight) {

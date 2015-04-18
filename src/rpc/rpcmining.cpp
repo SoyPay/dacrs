@@ -156,23 +156,10 @@ Value setgenerate(const Array& params, bool fHelp)
     if (params.size() == 2)
     {
         nGenProcLimit = params[1].get_int();
-        if (nGenProcLimit > 1000)
-        	throw JSONRPCError(RPC_INVALID_PARAMS, "mining block > 1000 is INVALID");
     }
-
-
-
 
     // -regtest mode: don't return until nGenProcLimit blocks are generated
 	if (SysCfg().NetworkID() != CBaseParams::MAIN) {
-
-	    if(SysCfg().GetArg("-iscutmine",0)==1)
-	    {
-	       	SysCfg().SoftSetArgCover("-gen", fGenerate ?"1" : "0");
-	        GenerateDacrsBlock(fGenerate, pwalletMain, nGenProcLimit);
-	   	    return Value::null;
-	    }
-
 
 			//如果是一个一个地挖
 		int nHeightEnd = 0;
@@ -187,9 +174,10 @@ Value setgenerate(const Array& params, bool fHelp)
 		while (getcurhigh() < nHeightEnd) {
 			if (getcurhigh() != high) {
 				high = getcurhigh();
+//				cout<< "curhight: " << high <<endl;
 				GenerateDacrsBlock(true, pwalletMain, 1);
 			}
-			MilliSleep(100);
+			MilliSleep(1000);
 		}
 
 	}

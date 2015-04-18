@@ -49,6 +49,7 @@ TEST_STATE CDarkAndAnony::run()
           break;
      case 7:
           WaitSendBuyerConfirmedPackage();
+
           break;
      }
 	return next_state;
@@ -65,7 +66,7 @@ bool CDarkAndAnony::RegistScript(){
 	int nCurHight;
 	basetest.GetBlockHeight(nCurHight);
 	//×¢²á¶Ô¶Ä½Å±¾
-	Value regscript = basetest.RegisterScriptTx(BUYER_A, strFileName, nCurHight, nFee);
+	Value regscript = basetest.RegisterScriptTx(BUYER_A, strFileName, nCurHight, nFee+COIN);
 	if(basetest.GetHashFromCreatedTx(regscript, sritpthash)){
 		step++;
 		return true;
@@ -95,7 +96,7 @@ bool CDarkAndAnony::SendBuyerPackage(){
 		CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 		scriptData << senddata;
 		string sendcontract = HexStr(scriptData);
-		cout <<sendcontract<<endl;
+//		cout <<sendcontract<<endl;
 		sendmonye = GetPayMoney();
 		Value  buyerpack= basetest.CreateContractTx(scriptid,BUYER_A,sendcontract,0,0,sendmonye);
 
@@ -119,14 +120,14 @@ bool CDarkAndAnony::SendSellerPackage(){
 		return false;
 
 	NEXT_CONTRACT Seller;
-	unsigned int Size = ::GetSerializeSize(Seller, SER_DISK, CLIENT_VERSION);
+
 	Seller.dnType = 0x02;
 	memcpy(Seller.hash, uint256(buyerhash).begin(), sizeof(Seller.hash));
 
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << Seller;
 	string sendcontract = HexStr(scriptData);
-	cout<<"size:"<<Size<<" " <<sendcontract<<endl;
+//	cout<<"size:"<<Size<<" " <<sendcontract<<endl;
 
 	Value  Sellerpack= basetest.CreateContractTx(scriptid,SELLER_B,sendcontract,0,0,sendmonye/2);
 
@@ -170,6 +171,7 @@ bool CDarkAndAnony::WaitSendBuyerConfirmedPackage(){
 	string index = "";
 	if (basetest.GetTxConfirmedRegID(buyerconfiredhash, index)) {
 		step = 1;
+        IncSentTotal();
 			return true;
 	}
 	return true;

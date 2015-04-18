@@ -106,7 +106,7 @@ protected:
 
 public:
 
-
+	bool GetMemPoolSize(int &size) ;
 	SysTestBase();
 
 	~SysTestBase();
@@ -187,8 +187,8 @@ public:
 	Value registaccounttx(const std::string &addr, const int nfee =0);
 
 	Value CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
-			int nHeight,int nFee = 10000,uint64_t nMoney = 0);
-	Value RegisterScriptTx(const string& strAddress, const string& strScript, int nHeight, int nFee = 10000);
+			int nHeight,int nFee = 0,uint64_t nMoney = 0);
+	Value RegisterScriptTx(const string& strAddress, const string& strScript, int nHeight, int nFee = 100000000);
 
 	Value SignSecureTx(const string &securetx);
 
