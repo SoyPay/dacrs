@@ -230,7 +230,7 @@ public:
 
 	virtual bool CheckTransction(CValidationState &state, CAccountViewCache &view) = 0;
 
-	virtual uint64_t GetFuel();
+	virtual uint64_t GetFuel(int nfuelRate);
 
 	int GetFuelRate();
 };

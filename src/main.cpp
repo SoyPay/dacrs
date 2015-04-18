@@ -1368,6 +1368,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 						ERRORMSG("ConnectBlock() : the TxHash %s the confirm duplicate", pBaseTx->GetHash().GetHex()),
 						REJECT_INVALID, "bad-cb-amount");
 			}
+			assert(mapBlockIndex.count(view.GetBestBlock()));
 			if (!pBaseTx->IsValidHeight(mapBlockIndex[view.GetBestBlock()]->nHeight, SysCfg().GetTxCacheHeight())) {
 				return state.DoS(100,
 						ERRORMSG("ConnectBlock() : txhash=%s beyond the scope of valid height",
@@ -1395,7 +1396,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 				}
 			}
 			nTotalFuel += llFuel;
-
+			LogPrint("fuel", "connect block total fuel:%d, tx fuel:%d runStep:%d fuelRate:%d txhash:%s \n",nTotalFuel, llFuel, pBaseTx->nRunStep,block.nFuelRate, pBaseTx->GetHash().GetHex());
 			vPos.push_back(make_pair(block.GetTxHash(i), pos));
 			pos.nTxOffset += ::GetSerializeSize(pBaseTx, SER_DISK, CLIENT_VERSION);
 			blockundo.vtxundo.push_back(txundo);
@@ -1530,14 +1531,14 @@ void static UpdateTip(CBlockIndex *pindexNew, const CBlock &block) {
     // New best block
     SysCfg().SetBestRecvTime(GetTime());
     mempool.AddTransactionsUpdated(1);
-    LogPrint("INFO","UpdateTip: new best=%s  height=%d  log2_work=%.8g  tx=%lu  date=%s progress=%f txnumber=%d\n",
+    LogPrint("INFO","UpdateTip: new best=%s  height=%d  log2_work=%.8g  tx=%lu  date=%s progress=%f txnumber=%d dFeePerKb=%lf nFuelRate=%d\n",
       chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), log(chainActive.Tip()->nChainWork.getdouble())/log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
       DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
-      Checkpoints::GuessVerificationProgress(chainActive.Tip()), block.vptx.size());
-    LogPrint("updatetip","UpdateTip: new best=%s  height=%d  log2_work=%.8g  tx=%lu  date=%s progress=%f\n",
+      Checkpoints::GuessVerificationProgress(chainActive.Tip()), block.vptx.size(), chainActive.Tip()->dFeePerKb, chainActive.Tip()->nFuelRate);
+    LogPrint("updatetip","UpdateTip: new best=%s  height=%d  log2_work=%.8g  tx=%lu  date=%s progress=%f\n txnumber=%d dFeePerKb=%lf nFuelRate=%d",
         chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), log(chainActive.Tip()->nChainWork.getdouble())/log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
         DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
-        Checkpoints::GuessVerificationProgress(chainActive.Tip()));
+        Checkpoints::GuessVerificationProgress(chainActive.Tip()), block.vptx.size(), chainActive.Tip()->dFeePerKb, chainActive.Tip()->nFuelRate);
     // Check the version of the last 100 blocks to see if we need to upgrade:
     if (!fIsInitialDownload)
     {
@@ -2113,8 +2114,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         return state.DoS(100, ERRORMSG("CheckBlock() : first tx is not coinbase"),
                          REJECT_INVALID, "bad-cb-missing");
 
-    if(block.nFuelRate != GetElementForBurn(mapBlockIndex[block.hashPrevBlock]))
-    	return state.DoS(100, ERRORMSG("CheckBlock() : block nfuelrate dismatched"), REJECT_INVALID, "fuelrate-dismatch");
+//    if(block.nFuelRate != GetElementForBurn(mapBlockIndex[block.hashPrevBlock]))
+//    	return state.DoS(100, ERRORMSG("CheckBlock() : block nfuelrate dismatched"), REJECT_INVALID, "fuelrate-dismatch");
 
 	// Build the merkle tree already. We need it anyway later, and it makes the
 	// block cache the transaction hashes, which means they don't need to be
@@ -2156,6 +2157,19 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 	LogPrint("acceptblock", "AcceptBlcok hash:%s\n", hash.GetHex());
 	if (mapBlockIndex.count(hash))
 		return state.Invalid(ERRORMSG("AcceptBlock() : block already in mapBlockIndex"), 0, "duplicate");
+
+//	for(auto & item : mapBlockIndex) {
+//		if(NULL == item.second) {
+//			LogPrint("BlockIndex", "key:%s \n", item.first.GetHex());
+//		}else {
+//			LogPrint("BlockIndex", "key:%s value:%s\n", item.first.GetHex(), (*(item.second)).ToString());
+//		}
+//	}
+
+	assert(mapBlockIndex.count(block.hashPrevBlock));
+	if(block.nFuelRate != GetElementForBurn(mapBlockIndex[block.hashPrevBlock]))
+    	return state.DoS(100, ERRORMSG("CheckBlock() : block nfuelrate dismatched"), REJECT_INVALID, "fuelrate-dismatch");
+
 
 	// Get prev block index
 	CBlockIndex* pindexPrev = NULL;
@@ -2621,7 +2635,6 @@ bool static LoadBlockIndexDB()
 	for (const auto& item : mapBlockIndex) {
 		CBlockIndex* pindex = item.second;
 		vSortedByHeight.push_back(make_pair(pindex->nHeight, pindex));
-		LogPrint("INFO","block hash:%s\n", pindex->GetBlockHash().GetHex());
 	}
     sort(vSortedByHeight.begin(), vSortedByHeight.end());
 	for (const auto& item : vSortedByHeight) {

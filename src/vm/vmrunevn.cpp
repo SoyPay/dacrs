@@ -75,7 +75,10 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 	m_ScriptDBTip = &VmDB;
 
 	CTransaction* tx = static_cast<CTransaction*>(Tx.get());
-	uint64_t maxstep = (tx->llFees-CBaseTransaction::nMinTxFee)/nBurnFactor;
+	if(tx->llFees <= CBaseTransaction::nMinTxFee) {
+		return std::make_tuple (false, 0, string("vm run evn fee too litter\n"));
+	}
+	uint64_t maxstep = ((tx->llFees-CBaseTransaction::nMinTxFee)/ nBurnFactor) * 100;
 	
 	if(maxstep > MAX_BLOCK_RUN_STEP){
 		maxstep = MAX_BLOCK_RUN_STEP;

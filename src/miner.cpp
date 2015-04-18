@@ -82,29 +82,49 @@ int GetElementForBurn(CBlockIndex* pindex)
 		return INIT_FUEL_RATES;
 	}
 	double dTotalFeePerKb(0.0);
-	double dAverageFeePerKb(0.0);
+	double dAverageFeePerKb1(0.0);
+	double dAverageFeePerKb2(0.0);
 	int nBlock = SysCfg().GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
-	if (nBlock >= pindex->nHeight-1) {
+	if (nBlock * 2 >= pindex->nHeight-1) {
 		return INIT_FUEL_RATES;
 	} else {
 		CBlockIndex * pTemp = pindex;
-		for (int ii = 0; ii < nBlock; ii++) {
-			dTotalFeePerKb += pTemp->dFeePerKb;
-			pTemp = pTemp->pprev;
-		}
-		dAverageFeePerKb  = dTotalFeePerKb / nBlock;
-		if(0.0==dAverageFeePerKb || 0.0==pindex->dFeePerKb )
-			return INIT_FUEL_RATES;
-		else{
-			int64_t newFuelRate = int64_t(pindex->nFuelRate * (pindex->dFeePerKb / dAverageFeePerKb));
-			return newFuelRate;
+		if((pindex->nHeight-1) % nBlock == 0) {
+			for (int ii = 0; ii < nBlock; ii++) {
+				dTotalFeePerKb += pTemp->dFeePerKb;
+				pTemp = pTemp->pprev;
+			}
+			if(pindex->nChainTx - pTemp->nChainTx < 500) {
+				return pindex->nFuelRate;
+			}
+			uint64_t txNum = pTemp->nChainTx;
+			dAverageFeePerKb1  = dTotalFeePerKb / nBlock;
+			dTotalFeePerKb = 0.0;
+			for (int ii = 0; ii < nBlock; ii++) {
+				dTotalFeePerKb += pTemp->dFeePerKb;
+				pTemp = pTemp->pprev;
+			}
+			dAverageFeePerKb2  = dTotalFeePerKb / nBlock;
+			if(txNum - pTemp->nChainTx < 500) {
+				return pindex->nFuelRate;
+			}
+			if(0.0==dAverageFeePerKb1 || 0.0==dAverageFeePerKb2 )
+				return pindex->nFuelRate;
+			else{
+				int newFuelRate = int(pindex->nFuelRate * (dAverageFeePerKb2 / dAverageFeePerKb1));
+				if(newFuelRate < MIN_FUEL_RATES)
+					newFuelRate = MIN_FUEL_RATES;
+				return newFuelRate;
+			}
+		}else {
+			return pindex->nFuelRate;
 		}
 	}
 }
 
 // We want to sort transactions by priority and fee, so:
 
-void GetPriorityTx(vector<TxPriority> &vecPriority) {
+void GetPriorityTx(vector<TxPriority> &vecPriority, int nFuelRate) {
 	vecPriority.reserve(mempool.mapTx.size());
 	// Priority order to process transactions
 	list<COrphan> vOrphan; // list memory doesn't move
@@ -114,7 +134,7 @@ void GetPriorityTx(vector<TxPriority> &vecPriority) {
 
 		if (uint256(0) == std::move(pTxCacheTip->IsContainTx(std::move(pBaseTx->GetHash())))) {
 			unsigned int nTxSize = ::GetSerializeSize(*pBaseTx, SER_NETWORK, PROTOCOL_VERSION);
-			double dFeePerKb = double(pBaseTx->GetFee() - pBaseTx->GetFuel())/ (double(nTxSize) / 1000.0);
+			double dFeePerKb = double(pBaseTx->GetFee() - pBaseTx->GetFuel(nFuelRate))/ (double(nTxSize) / 1000.0);
 			dPriority = 1000.0 / double(nTxSize);
 			vecPriority.push_back(TxPriority(dPriority, dFeePerKb, mi->second.GetTx()));
 		}
@@ -347,7 +367,7 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 			if(nTotalRunStep > MAX_BLOCK_RUN_STEP) {
 				return ERRORMSG("block total run steps exceed max run step");
 			}
-			nTotalFuel += pBaseTx->GetFuel();
+			nTotalFuel += pBaseTx->GetFuel(pBlock->nFuelRate);
 		}
 
 		if(nTotalFuel != pBlock->nFuel) {
@@ -448,11 +468,11 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 		{
 			LOCK2(cs_main, mempool.cs);
 			CBlockIndex* pIndexPrev = chainActive.Tip();
+			pblock->nFuelRate = GetElementForBurn(pIndexPrev);
 
 			// This vector will be sorted into a priority queue:
 			vector<TxPriority> vecPriority;
-
-			GetPriorityTx(vecPriority);
+			GetPriorityTx(vecPriority, pblock->nFuelRate);
 
 			// Collect transactions into block
 			uint64_t nBlockSize = ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
@@ -519,7 +539,8 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 				nFees += pBaseTx->GetFee();
 				nBlockSize += stx->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
 				nTotalRunStep += pBaseTx->nRunStep;
-				nTotalFuel += pBaseTx->GetFuel();
+				nTotalFuel += pBaseTx->GetFuel(pblock->nFuelRate);
+				LogPrint("fuel", "miner total fuel:%d, tx fuel:%d runStep:%d fuelRate:%d txhash:%s\n",nTotalFuel, pBaseTx->GetFuel(pblock->nFuelRate), pBaseTx->nRunStep, pblock->nFuelRate, pBaseTx->GetHash().GetHex());
 			}
 
 			nLastBlockTx = nBlockTx;
@@ -535,7 +556,6 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 			pblock->nNonce = 0;
 			pblock->nHeight = pIndexPrev->nHeight + 1;
 			pblock->nFuel = nTotalFuel;
-			pblock->nFuelRate = GetElementForBurn(pIndexPrev);
 		}
 
 		return pblocktemplate.release();
