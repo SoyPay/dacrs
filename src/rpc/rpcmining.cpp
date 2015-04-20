@@ -144,11 +144,12 @@ Value setgenerate(const Array& params, bool fHelp)
             + HelpExampleRpc("setgenerate", "true, 1")
         );
 
+    static bool fGenerate = false;
 
     set<CKeyID>dmuy;
     if(!pwalletMain->GetKeyIds(dmuy,true))
     	throw JSONRPCError(RPC_INVALID_PARAMS, "no key for mining");
-    bool fGenerate = false;
+
     if (params.size() > 0)
         fGenerate = params[0].get_bool();
 
@@ -182,6 +183,9 @@ Value setgenerate(const Array& params, bool fHelp)
 				GenerateDacrsBlock(true, pwalletMain, 1);
 			}
 			MilliSleep(1000);
+			if (fGenerate == false) {
+				return Value::null;
+			}
 		}
 
 	}
