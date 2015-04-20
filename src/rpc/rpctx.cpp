@@ -500,26 +500,21 @@ Value listaddr(const Array& params, bool fHelp) {
 		if (pool.size() == 0) {
 			return retArry;
 		}
-		int curheight = chainActive.Tip()->nHeight;
 		CAccountViewCache accView(*pAccountViewTip, true);
 
 		for (const auto &tem : pool) {
 			//find CAccount info by keyid
 			CUserID userId = tem.first;
-			auto GetDetailInfo = [&] (int curheight) {
-				Object obj;
-				CAccount Lambaacc;
-				accView.GetAccount(userId, Lambaacc);
-				obj.push_back(Pair("free  amount", (double)Lambaacc.GetRawBalance()/ (double) COIN));
-//				obj.push_back(Pair("Reward amount", (double)Lambaacc.GetRewardAmount(curheight)/ (double) COIN));
-					totalCoin += Lambaacc.GetRawBalance();
-//				totalCoin += Lambaacc.GetRewardAmount(curheight);
-					return obj;
-				};
+			if("mfzdtseoKfMpTd8V9N2xETEqUSWRujndgZ" == tem.first.ToAddress()) // regid 0-0 invalid address
+				continue;
+			CAccount Lambaacc;
+			accView.GetAccount(userId, Lambaacc);
+
+			totalCoin += Lambaacc.GetRawBalance();
 
 			Object obj;
 			obj.push_back(Pair("addr", tem.first.ToAddress()));
-			obj.push_back(Pair("balance", GetDetailInfo(curheight)));
+			obj.push_back(Pair("balance", (double)Lambaacc.GetRawBalance()/ (double) COIN));
 			obj.push_back(Pair("haveminerkey", tem.second.IsContainMinerKey()));
 			obj.push_back(Pair("regid", tem.second.GetRegID().ToString()));
 			retArry.push_back(obj);

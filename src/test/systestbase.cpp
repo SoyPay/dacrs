@@ -326,10 +326,10 @@ bool SysTestBase::IsScriptAccCreated(const string& strScript) {
 	return true;
 }
 
-uint64_t SysTestBase::GetFreeMoney(const string& strID) {
+uint64_t SysTestBase::GetBalance(const string& strID) {
 	Value valueRes = GetAccountInfo(strID);
 	BOOST_CHECK(valueRes.type() != null_type);
-	Value result = find_value(valueRes.get_obj(), "FreeValues");
+	Value result = find_value(valueRes.get_obj(), "Balance");
 	BOOST_CHECK(result.type() != null_type);
 
 	uint64_t nMoney = result.get_int64();

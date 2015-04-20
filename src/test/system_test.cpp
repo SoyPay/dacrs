@@ -230,12 +230,12 @@ BOOST_FIXTURE_TEST_CASE(acct_process,CSystemTest)
 		BOOST_CHECK(GetHashFromCreatedTx(valueRes,strTxHash));
 
 		//1:挖矿
-		nOldMoney = GetFreeMoney(strAddr1);
+		nOldMoney = GetBalance(strAddr1);
 		BOOST_CHECK(GenerateOneBlock());
 		SysTestBase::GetBlockHeight(nNewBlockHeight);
 
 		//2:确认钱已经扣除
-		nNewMoney = GetFreeMoney(strAddr1);
+		nNewMoney = GetBalance(strAddr1);
 		BOOST_CHECK(nNewMoney == nOldMoney - nFee);
 
 		//3:确认脚本账号已经生成
@@ -273,13 +273,13 @@ BOOST_FIXTURE_TEST_CASE(acct_process,CSystemTest)
 		uint256 txHash(strTxHash);
 
 		SysTestBase::GetBlockHeight(nOldBlockHeight);
-		nOldMoney = GetFreeMoney(strAddr1);
+		nOldMoney = GetBalance(strAddr1);
 
 		//8:回滚
 		BOOST_CHECK(DisConnectBlock(1));
 
 		//9.1:检查账户手续费是否回退
-		nNewMoney = GetFreeMoney(strAddr1);
+		nNewMoney = GetBalance(strAddr1);
 		SysTestBase::GetBlockHeight(nNewBlockHeight);
 		BOOST_CHECK(nOldBlockHeight - 1 == nNewBlockHeight);
 		BOOST_CHECK(nNewMoney-nFee == nOldMoney);

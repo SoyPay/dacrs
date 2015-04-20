@@ -911,7 +911,7 @@ Object CAccount::ToJosnObj() const
 	obj.push_back(Pair("RegID",     regID.ToString()));
 	obj.push_back(Pair("PublicKey",  PublicKey.ToString()));
 	obj.push_back(Pair("MinerPKey",  MinerPKey.ToString()));
-	obj.push_back(Pair("FreeValues",     llValues));
+	obj.push_back(Pair("Balance",     llValues));
 	obj.push_back(Pair("CoinDays", nCoinDay));
 	obj.push_back(Pair("UpdateHeight", nHeight));
 

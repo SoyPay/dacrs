@@ -122,6 +122,15 @@ Value getnetworkhashps(const Array& params, bool fHelp)
 }
 
 
+static bool IsMining = false;
+void SetMinerStatus(bool bstatue )
+{
+	IsMining =bstatue;
+}
+static bool getMiningInfo()
+{
+	return IsMining;
+}
 
 Value setgenerate(const Array& params, bool fHelp)
 {
@@ -183,7 +192,8 @@ Value setgenerate(const Array& params, bool fHelp)
 				GenerateDacrsBlock(true, pwalletMain, 1);
 			}
 			MilliSleep(1000);
-			if (fGenerate == false) {
+			if (fGenerate == false || ShutdownRequested()) {
+				GenerateDacrsBlock(false, pwalletMain, 1);
 				return Value::null;
 			}
 		}
@@ -197,7 +207,6 @@ Value setgenerate(const Array& params, bool fHelp)
 
     return Value::null;
 }
-
 
 
 Value getmininginfo(const Array& params, bool fHelp)
@@ -237,7 +246,7 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("nettype",          name[SysCfg().NetworkID()]));
     obj.push_back(Pair("posmaxnonce",      SysCfg().GetBlockMaxNonce()));
 
-    obj.push_back(Pair("generate",        SysCfg().GetBoolArg("-ismining", false)));
+    obj.push_back(Pair("generate",        getMiningInfo()));
     return obj;
 }
 

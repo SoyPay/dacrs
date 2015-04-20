@@ -21,7 +21,7 @@ protected:
 public:
 	CycleTestBase();
 	bool IncSentTotal(){
-		   cout<< "send total:" << ++totalsend<<endl;
+		basetest.ShowProgressTotal("Send Cycle:",++totalsend);
 		   return true;
 	}
 	virtual TEST_STATE run();

@@ -12,6 +12,7 @@
 
 #include "./wallet/wallet.h"
 extern CWallet* pwalletMain;
+extern void SetMinerStatus(bool bstatue );
 //////////////////////////////////////////////////////////////////////////////
 //
 // DacrsMiner
@@ -658,20 +659,21 @@ void static DacrsMiner(CWallet *pwallet) {
 	SetThreadPriority(THREAD_PRIORITY_LOWEST);
 	RenameThread("Dacrs-miner");
 
-	{
-		LOCK2(cs_main, pwalletMain->cs_wallet);
-		set<CKeyID> dummy;
-		if (!pwalletMain->GetKeyIds(dummy, true)) {
-			LogPrint("INFO","DacrsMiner  terminated\n");
-		    ERRORMSG("ERROR:%s ", "no key for minering\n");
-			SysCfg().SoftSetArgCover("-ismining", "0");
-		    throw ;
+	auto CheckIsHaveMinerKey = [&]() {
+		     LOCK2(cs_main, pwalletMain->cs_wallet);
+			set<CKeyID> dummy;
+			return pwalletMain->GetKeyIds(dummy, true);
+		};
+
+
+	if (!CheckIsHaveMinerKey()) {
+			LogPrint("INFO", "DacrsMiner  terminated\n");
+			ERRORMSG("ERROR:%s ", "no key for minering\n");
+            return ;
 		}
 
-	}
-
-
 	try {
+		SetMinerStatus(true);
 		while (true) {
 			if (SysCfg().NetworkID() != CBaseParams::REGTEST) {
 				// Busy-wait for the network to come online so we don't waste time mining
@@ -693,21 +695,20 @@ void static DacrsMiner(CWallet *pwallet) {
 			shared_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock(accview, txCache, ScriptDbTemp));
 			LogPrint("MINER", "CreateNewBlock blocksize%d used time :%d ms\n", pblocktemplate.get()->block.vptx.size(),
 					GetTimeMillis() - lasttime1);
-			if (!pblocktemplate.get())
+			if (!pblocktemplate.get()){
 				throw;
+			}
 			CBlock *pblock = &pblocktemplate.get()->block;
 			bool bRet = MiningBlock(pblock, pwallet, pindexPrev, LastTrsa, accview, txCache, ScriptDbTemp);
 			
 			if (SysCfg().NetworkID() != CBaseParams::MAIN)
-				if(bRet== true)
-				{
-						SysCfg().SoftSetArgCover("-ismining", "0");
+				if(bRet== true)	{
 						throw boost::thread_interrupted();
 				}	
 		}
 	} catch (...) {
 		LogPrint("INFO","DacrsMiner  terminated\n");
-		SysCfg().SoftSetArgCover("-ismining", "0");
+		SetMinerStatus(false);
 		throw;
 	}
 }
@@ -761,7 +762,7 @@ void GenerateDacrsBlock(bool fGenerate, CWallet* pwallet, int nThreads) {
 
 	if (minerThreads != NULL) {
 		minerThreads->interrupt_all();
-		SysCfg().SoftSetArgCover("-ismining", "0");
+		minerThreads->join_all();
 		delete minerThreads;
 		minerThreads = NULL;
 	}
@@ -772,7 +773,6 @@ void GenerateDacrsBlock(bool fGenerate, CWallet* pwallet, int nThreads) {
 	minerThreads = new boost::thread_group();
 	minerThreads->create_thread(boost::bind(&DacrsMiner, pwallet));
 
-	SysCfg().SoftSetArgCover("-ismining", "1");
 //	minerThreads->join_all();
 }
 

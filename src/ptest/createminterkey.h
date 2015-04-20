@@ -8,11 +8,19 @@
 #ifndef CREATEMINTERKEY_H_
 #define CREATEMINTERKEY_H_
 
-class createminterkey :public SysTestBase{
+class CCreateMinerkey :public SysTestBase{
 public:
-	void CreateMinerKey();
-	createminterkey();
-	virtual ~createminterkey();
+	void CreateAccount();
+	bool SelectAccounts();
+	string GetOneAccount();
+	CCreateMinerkey():argc(framework::master_test_suite().argc), argv(framework::master_test_suite().argv){};
+	virtual ~CCreateMinerkey();
+	int argc;
+	char **argv;
+private:
+	vector<string> vAccount;
+	map<string, uint64_t> mapSendValue;
+
 };
 
 #endif /* CREATEMINTERKEY_H_ */

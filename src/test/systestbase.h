@@ -174,7 +174,7 @@ public:
 
 	bool IsScriptAccCreated(const string& strScript);
 
-	uint64_t GetFreeMoney(const string& strID);
+	uint64_t GetBalance(const string& strID);
 
 	bool GetNewAddr(std::string &addr,bool flag);
 
@@ -213,6 +213,14 @@ public:
     	cout << msg <<  rate << "%";
     	return true;
     }
+    bool ShowProgressTotal(string const &msg,int rate)
+    {
+    	for(int j=0; j<100 ;++j)
+    	cout<<'\b';
+    	cout << msg << " Total: " << rate ;
+    	return true;
+    }
+
 	uint64_t GetRandomBetfee();
 
 	bool GetKeyId(string const &addr,CKeyID &KeyId);

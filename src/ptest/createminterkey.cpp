@@ -30,25 +30,62 @@
 #include "json/json_spirit_value.h"
 #include "json/json_spirit_stream_reader.h"
 #include "../tx.h"
+#include <boost/test/included/unit_test.hpp>
+
+#include <boost/test/parameterized_test.hpp>
+
+using namespace boost::unit_test;
 using namespace std;
 using namespace boost;
 
 
 #include "createminterkey.h"
 
-createminterkey::createminterkey() {
-	// LEARN Auto-generated constructor stub
+bool CCreateMinerkey::SelectAccounts() {
+	const char *argv[] = { "rpctest", "listaddr"};
+	int argc = sizeof(argv) / sizeof(char*);
 
+	Value value;
+	if (CommandLineRPC_GetValue(argc, argv, value)) {
+		if (value.type() == null_type) {
+			return false;
+		}
+		for(auto & item : value.get_array()) {
+			const Value& balance = find_value(item.get_obj(), "balance");
+			if(balance.get_real() > 1000000.0) {
+				const Value& regId = find_value(item.get_obj(), "regid");
+				vAccount.push_back(regId.get_str());
+			}
+		}
+	}
+	return true;
 }
 
-void createminterkey::CreateMinerKey() {
+string CCreateMinerkey::GetOneAccount() {
+	for(auto &item : vAccount) {
+		if(GetBalance(item) > 1000000 * COIN) {
+			mapSendValue[item] += 10000 * COIN;
+			if(mapSendValue[item] > 8000000 * COIN)
+				continue;
+			return item;
+		}
+	}
+	return "";
+}
 
+void CCreateMinerkey::CreateAccount() {
+	if(2 == argc){
+		const char* newArgv[] = {argv[0], argv[2] };
+		CBaseParams::IntialParams(2, newArgv);
+	}
+	if(!SelectAccounts())
+		return;
 	std::string TxHash("");
 	const int nNewAddrs = 1420;
 	string hash = "";
 	vector<string> vNewAddress;
-	string strAddress[] = {"0-1","0-2","0-3","0-4","0-5"};
-   int index = 0 ;
+//	string strAddress[] = {"0-1","0-2","0-3","0-4","0-5"};
+    int index = 0 ;
 	for (int i = 0; i < nNewAddrs; i++) {
 		string newaddr;
 		BOOST_CHECK(GetNewAddr(newaddr, true));
@@ -56,7 +93,12 @@ void createminterkey::CreateMinerKey() {
 		if (i == 800) {
 			++index;
 		}
-		Value value = CreateNormalTx(strAddress[index], newaddr, 10000 * COIN);
+		string srcAcct = GetOneAccount();
+		if("" == srcAcct) {
+			cout << "Get source acct failed" << endl;
+			return;
+		}
+		Value value = CreateNormalTx( srcAcct, newaddr, 10000 * COIN);
 		BOOST_CHECK(GetHashFromCreatedTx(value, hash));
 	}
 	int size = 0 ;
@@ -65,9 +107,11 @@ void createminterkey::CreateMinerKey() {
 	while (1) {
 		if (!GetMemPoolSize(size)) {
 			cout << "GetMemPoolSize error" << endl;
+			return;
 		}
 		if (size > 0) {
 			cout << "GetMemPoolSize size :" << size << endl;
+			MilliSleep(100);
 		} else {
 			break;
 		}
@@ -84,9 +128,11 @@ void createminterkey::CreateMinerKey() {
 	while (1) {
 		if (!GetMemPoolSize(size)) {
 			cout << "GetMemPoolSize error" << endl;
+			return;
 		}
 		if (size > 0) {
 			cout << "GetMemPoolSize size :" << size << endl;
+			MilliSleep(100);
 		} else {
 			break;
 		}
@@ -96,15 +142,19 @@ void createminterkey::CreateMinerKey() {
 	  cout << "all ok  "  <<  endl;
 }
 
-createminterkey::~createminterkey() {
+CCreateMinerkey::~CCreateMinerkey() {
 	// LEARN Auto-generated destructor stub
 }
 
-BOOST_FIXTURE_TEST_SUITE(CreateMinerKey,createminterkey)
 
-BOOST_FIXTURE_TEST_CASE(create,createminterkey)
+
+
+
+BOOST_FIXTURE_TEST_SUITE(CreateAccount, CCreateMinerkey)
+
+BOOST_FIXTURE_TEST_CASE(create, CCreateMinerkey)
 {
-	CreateMinerKey();
+	CreateAccount();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
