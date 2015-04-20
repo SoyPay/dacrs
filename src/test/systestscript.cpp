@@ -236,7 +236,7 @@ public:
 		BOOST_CHECK(SetAddrGenerteBlock("mjSwCwMsvtKczMfta1tvr78z2FTsZA1JKw"));
 		Value temp1 = GetAccountInfo("010000000100");
 		temp1 = GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
-		BOOST_CHECK_EQUAL(GetValue(temp1,"FreeValues"),999999899990000);
+		BOOST_CHECK_EQUAL(GetValue(temp1,"Balance"),999999899990000);
 
 
 		/// 脚本账户给普通账户打钱
@@ -248,9 +248,9 @@ public:
 
 		BOOST_CHECK(SetAddrGenerteBlock("msdDQ1SXNmknrLuTDivmJiavu5J9VyX9fV"));
 		temp1 = GetAccountInfo("010000000100");
-		BOOST_CHECK_EQUAL(GetValue(temp1,"FreeValues"),0);
+		BOOST_CHECK_EQUAL(GetValue(temp1,"Balance"),0);
 		temp1 = GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
-		BOOST_CHECK_EQUAL(GetValue(temp1,"FreeValues"),999999800000000);
+		BOOST_CHECK_EQUAL(GetValue(temp1,"Balance"),999999800000000);
 
 		//测试不能从其他脚本打钱到本APP脚本账户中
 		accountid = "020000000100";

@@ -33,7 +33,7 @@ BOOST_FIXTURE_TEST_CASE(transfer_test, CSysAccountTest)
 	BOOST_CHECK(GenerateOneBlock());
 
 	//确认转账成功
-	uint64_t nFreeMoney = GetFreeMoney(strRegAddr);
+	uint64_t nFreeMoney = GetBalance(strRegAddr);
 	BOOST_CHECK(nFreeMoney == nMoney);
 
 	//使用一个没有注册过的keyID地址测试，看是能够注册，用getaccountinfo 检查regid是否存在
@@ -60,7 +60,7 @@ BOOST_FIXTURE_TEST_CASE(transfer_test, CSysAccountTest)
 	BOOST_CHECK(GenerateOneBlock());
 
 	//确认转账成功
-	nFreeMoney = GetFreeMoney(strUnRegister);
+	nFreeMoney = GetBalance(strUnRegister);
 	BOOST_CHECK(nFreeMoney == nMoney);
 }
 
@@ -116,7 +116,7 @@ BOOST_FIXTURE_TEST_CASE(register_test,CSysAccountTest)
 	BOOST_CHECK(GenerateOneBlock());
 
 	//确认转账成功
-	uint64_t nFreeMoney = GetFreeMoney(strRegAddr2);
+	uint64_t nFreeMoney = GetBalance(strRegAddr2);
 	BOOST_CHECK(nFreeMoney == nMoney);
 
 	//再次检查失败的交易是否在memorypool中
@@ -131,7 +131,7 @@ BOOST_FIXTURE_TEST_CASE(register_test,CSysAccountTest)
 	BOOST_CHECK(GenerateOneBlock());
 
 	//确认转账成功
-	nFreeMoney = GetFreeMoney(strRegAddr1);
+	nFreeMoney = GetBalance(strRegAddr1);
 	BOOST_CHECK(nFreeMoney == nMoney);
 
 	string strSpecial;
