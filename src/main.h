@@ -170,9 +170,9 @@ bool IsInitialBlockDownload();
 /** Format a string that describes several potential problems detected by the core */
 string GetWarnings(string strFor);
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
-bool GetTransaction(std::shared_ptr<CBaseTransaction> &pBaseTx, const uint256 &hash,bool bSearchMempool=true);
+bool GetTransaction(std::shared_ptr<CBaseTransaction> &pBaseTx, const uint256 &hash, CScriptDBViewCache& scriptDBCache, bool bSearchMempool=true);
 /** Retrieve a transaction high comfirmed in block*/
-int GetTxComfirmHigh(const uint256 &hash);
+int GetTxComfirmHigh(const uint256 &hash, CScriptDBViewCache &scriptDBCache);
 
 /** Find the best known block, and make it the tip of the block chain */
 bool ActivateBestChain(CValidationState &state);

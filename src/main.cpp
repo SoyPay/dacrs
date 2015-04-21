@@ -593,7 +593,7 @@ bool CheckSignScript(const uint256 & sigHash, const std::vector<unsigned char> s
 	return true;
 }
 
-bool CheckTransaction(CBaseTransaction *ptx, CValidationState &state, CAccountViewCache &view)
+bool CheckTransaction(CBaseTransaction *ptx, CValidationState &state, CAccountViewCache &view, CScriptDBViewCache &scriptDB)
 {
 	if( REWARD_TX == ptx->nTxType)
 		return true;
@@ -602,7 +602,7 @@ bool CheckTransaction(CBaseTransaction *ptx, CValidationState &state, CAccountVi
 	if (::GetSerializeSize(ptx->GetNewInstance(), SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
 		return state.DoS(100, ERRORMSG("CheckTransaction() : size limits failed"), REJECT_INVALID, "bad-txns-oversize");
 
-	if(!ptx->CheckTransction(state, view))
+	if(!ptx->CheckTransction(state, view, scriptDB))
 		return false;
 
 	return true;
@@ -666,7 +666,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
 	}
 
 //  CAccountViewCache view(*pAccountViewTip, true);
-    if (!CheckTransaction(pBaseTx, state, *pool.pAccountViewCache))
+    if (!CheckTransaction(pBaseTx, state, *pool.pAccountViewCache, *pool.pScriptDBViewCache))
         return ERRORMSG("AcceptToMemoryPool: : CheckTransaction failed");
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
@@ -779,10 +779,10 @@ bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree)
     return ::AcceptToMemoryPool(mempool, state, pTx.get(), fLimitFree, NULL);
 }
 
-int GetTxComfirmHigh(const uint256 &hash) {
+int GetTxComfirmHigh(const uint256 &hash, CScriptDBViewCache &scriptDBCache) {
 	if (SysCfg().IsTxIndex()) {
 		CDiskTxPos postx;
-		if (pblocktree->ReadTxIndex(hash, postx)) {
+		if (scriptDBCache.ReadTxIndex(hash, postx)) {
 			CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
 			CBlockHeader header;
 			try {
@@ -799,7 +799,7 @@ int GetTxComfirmHigh(const uint256 &hash) {
 }
 
 // Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock
-bool GetTransaction(std::shared_ptr<CBaseTransaction> &pBaseTx, const uint256 &hash,bool bSearchMemPool)
+bool GetTransaction(std::shared_ptr<CBaseTransaction> &pBaseTx, const uint256 &hash, CScriptDBViewCache &scriptDBCache, bool bSearchMemPool)
 {
     {
         LOCK(cs_main);
@@ -814,7 +814,7 @@ bool GetTransaction(std::shared_ptr<CBaseTransaction> &pBaseTx, const uint256 &h
 
         if (SysCfg().IsTxIndex()) {
             CDiskTxPos postx;
-            if (pblocktree->ReadTxIndex(hash, postx)) {
+            if (scriptDBCache.ReadTxIndex(hash, postx)) {
                 CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
                 CBlockHeader header;
                 try {
@@ -1229,6 +1229,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
     if(pindex->nHeight - COINBASE_MATURITY > 0) {
 		//undo mature reward tx
 		txundo = blockUndo.vtxundo.back();
+		blockUndo.vtxundo.pop_back();
 		CBlockIndex *pMatureIndex = chainActive[pindex->nHeight - COINBASE_MATURITY];
 		if (NULL != pMatureIndex) {
 			CBlock matureBlock;
@@ -1244,6 +1245,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
     //undo reward tx
     std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[0];
 	txundo = blockUndo.vtxundo.back();
+	LogPrint("undo_account", "tx Hash:%s\n", pBaseTx->GetHash().ToString());
 	if(!pBaseTx->UndoExecuteTx(0, view, state, txundo, pindex->nHeight, txCache, scriptCache))
 		return false;
 //	LogPrint("INFO", "reward tx undo elapse:%lld ms\n", GetTimeMillis() - llTime);
@@ -1253,7 +1255,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
 //    	llTime = GetTimeMillis();
         std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[i];
         CTxUndo txundo = blockUndo.vtxundo[i-1];
-//      LogPrint("undo_account", "tx Hash:%s\n", pBaseTx->GetHash().ToString());
+        LogPrint("undo_account", "tx Hash:%s\n", pBaseTx->GetHash().ToString());
         if(!pBaseTx->UndoExecuteTx(i, view, state, txundo, pindex->nHeight, txCache, scriptCache))
         	return false;
       //  LogPrint("INFO", "tx type:%d,undo elapse:%lld ms\n", pBaseTx->nTxType, GetTimeMillis() - llTime);
@@ -1358,6 +1360,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
     vPos.push_back(make_pair(block.GetTxHash(0), pos));
     pos.nTxOffset += ::GetSerializeSize(block.vptx[0], SER_DISK, CLIENT_VERSION);
 
+    LogPrint("op_account", "block height:%d block hash:%s\n", block.nHeight, block.GetHash().GetHex());
     uint64_t nTotalRunStep(0);
     int64_t nTotalFuel(0);
     if (block.vptx.size() > 1) {
@@ -1378,6 +1381,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 			if (CONTRACT_TX == pBaseTx->nTxType) {
 				LogPrint("vm", "tx hash=%s ConnectBlock run contract\n", pBaseTx->GetHash().GetHex());
 			}
+			LogPrint("op_account", "tx index:%d tx hash:%s\n", i, pBaseTx->GetHash().GetHex());
 			CTxUndo txundo;
 			if(!pBaseTx->ExecuteTx(i, view, state, txundo, pindex->nHeight, txCache, scriptDBCache)) {
 				return false;
@@ -1420,6 +1424,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 				ERRORMSG("ConnectBlock() : coinbase pays too much (actual=%d vs limit=%d)", pRewardTx->rewardValue,
 						llValidReward), REJECT_INVALID, "bad-cb-amount");
     //deal reward tx
+	LogPrint("op_account", "tx index:%d tx hash:%s\n", 0, block.vptx[0]->GetHash().GetHex());
     CTxUndo txundo;
     if(!block.vptx[0]->ExecuteTx(0, view, state, txundo, pindex->nHeight, txCache, scriptDBCache))
     	return ERRORMSG("ConnectBlock() : execure reward tx error!");
@@ -1446,6 +1451,15 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
     if (fJustCheck)
         return true;
 
+    if (SysCfg().IsTxIndex()) {
+     	LogPrint("txindex", " add tx index, block hash:%s\n", pindex->GetBlockHash().GetHex());
+     	vector<CScriptDBOperLog> vTxIndexOperDB;
+     	if (!scriptDBCache.WriteTxIndex(vPos, vTxIndexOperDB))
+             return state.Abort(_("Failed to write transaction index"));
+     	auto itTxUndo = blockundo.vtxundo.rbegin();
+     	itTxUndo->vScriptOperLog.insert(itTxUndo->vScriptOperLog.begin(),vTxIndexOperDB.begin(), vTxIndexOperDB.end());
+     }
+
     // Write undo information to disk
     if (pindex->GetUndoPos().IsNull() || (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_SCRIPTS)
     {
@@ -1468,9 +1482,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
             return state.Abort(_("Failed to write block index"));
     }
 
-    if (SysCfg().IsTxIndex())
-        if (!pblocktree->WriteTxIndex(vPos))
-            return state.Abort(_("Failed to write transaction index"));
+
 
 	if (!txCache.AddBlockToCache(block))
 			return state.Abort(_("Connect tip block failed add block tx to txcache"));
@@ -2085,13 +2097,14 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // Check transactions
     CAccountViewCache view(*pAccountViewTip, true);
+    CScriptDBViewCache scriptDBCache(*pScriptDBTip, true);
 	// Check for duplicate txids. This is caught by ConnectInputs(),
 	// but catching it earlier avoids a potential DoS attack:
 	set<uint256> uniqueTx;
 	for (unsigned int i = 0; i < block.vptx.size(); i++) {
 		uniqueTx.insert(block.GetTxHash(i));
 
-		if (!CheckTransaction(block.vptx[i].get(), state, view))
+		if (!CheckTransaction(block.vptx[i].get(), state, view, scriptDBCache))
 			return ERRORMSG("CheckBlock() : CheckTransaction failed");
 		if(block.GetHash() != SysCfg().HashGenesisBlock()) {
 			if (0 != i && block.vptx[i]->IsCoinBase())
@@ -4270,7 +4283,7 @@ bool DisconnectBlockFromTip(CValidationState &state) {
 bool GetTxOperLog(const uint256 &txHash, vector<CAccountLog> &vAccountLog) {
 if (SysCfg().IsTxIndex()) {
 		CDiskTxPos postx;
-		if (pblocktree->ReadTxIndex(txHash, postx)) {
+		if (pScriptDBTip->ReadTxIndex(txHash, postx)) {
 			CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
 			CBlockHeader header;
 			try {

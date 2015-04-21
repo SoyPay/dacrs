@@ -120,7 +120,7 @@ Object GetTxDetailJSON(const uint256& txhash) {
 		}
 		if (SysCfg().IsTxIndex()) {
 			CDiskTxPos postx;
-			if (pblocktree->ReadTxIndex(txhash, postx)) {
+			if (pScriptDBTip->ReadTxIndex(txhash, postx)) {
 				CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
 				CBlockHeader header;
 				try {
@@ -1708,7 +1708,7 @@ Value getappkeyvalue(const Array& params, bool fHelp) {
 		int height = 0;
 		if (SysCfg().IsTxIndex()) {
 			CDiskTxPos postx;
-			if (pblocktree->ReadTxIndex(txhash, postx)) {
+			if (pScriptDBTip->ReadTxIndex(txhash, postx)) {
 				CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
 				CBlockHeader header;
 				try {

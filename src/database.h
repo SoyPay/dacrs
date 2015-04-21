@@ -11,6 +11,7 @@ using namespace std;
 class CAccount;
 class CKeyID;
 class uint256;
+class CDiskTxPos;
 
 class CAccountView
 {
@@ -94,7 +95,6 @@ public:
 	bool EraseId(const CUserID &userId);
 	bool HaveAccount(const CUserID &userId);
 	int64_t GetRawBalance(const CUserID &userId)const;
-
 	bool SaveAccountInfo(const CRegID &accountId, const CKeyID &keyId, const CAccount &account);
 	bool Flush();
 	unsigned int GetCacheSize();
@@ -114,6 +114,8 @@ public:
 	virtual bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex,
 			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData);
 	virtual Object ToJosnObj(string Prefix);
+	virtual bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);
+	virtual	bool WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB);
 	virtual ~CScriptDBView(){};
 };
 
@@ -130,6 +132,8 @@ public:
 	bool GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
 	bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex,
 			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData);
+	bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);
+	bool WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB);
 };
 
 class CScriptDBViewCache : public CScriptDBViewBacked {
@@ -178,7 +182,8 @@ public:
 	CScriptDBView * GetBaseScriptDB() {
 		return pBase;
 	}
-
+	bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);
+	bool WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB);
 private:
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
 	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);

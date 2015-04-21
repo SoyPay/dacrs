@@ -486,7 +486,7 @@ static RET_DEFINE ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
  */
 
 static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun) {
-
+	CVmRunEvn *pVmScript = (CVmRunEvn *)pVmScriptRun;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
     if(!GetData(ipara,retdata) ||retdata.size() != 1 || retdata.at(0).get()->size() != 32)
     {
@@ -500,7 +500,7 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 
-	if (GetTransaction(pBaseTx, hash1,false)) {
+	if (GetTransaction(pBaseTx, hash1, *pVmScript->GetScriptDB(), false)) {
 		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
 		 (*tem.get()).push_back(tx->vContract);
 	}
@@ -512,6 +512,7 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
  * 1.第一个是 hash
  */
 static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun) {
+	CVmRunEvn *pVmScript = (CVmRunEvn *)pVmScriptRun;
 	vector<std::shared_ptr<vector<unsigned char> > > retdata;
     if(!GetData(ipara,retdata) ||retdata.size() != 1|| retdata.at(0).get()->size() != 32)
     {
@@ -526,7 +527,7 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 
 	auto tem = make_shared<std::vector<vector<unsigned char> > >();
 
-	if (GetTransaction(pBaseTx, hash1,false)) {
+	if (GetTransaction(pBaseTx, hash1, *pVmScript->GetScriptDB(), false)) {
 		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
 		vector<unsigned char> item = boost::get<CRegID>(tx->srcRegId).GetVec6();
 		(*tem.get()).push_back(item);
@@ -611,6 +612,7 @@ static RET_DEFINE ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScri
  * 1.第一个是 hash,六个字节
  */
 static RET_DEFINE ExGetTxConFirmHeightFunc(unsigned char * ipara,void * pVmScriptRun) {
+	CVmRunEvn *pVmScript = (CVmRunEvn *)pVmScriptRun;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
     if(!GetData(ipara,retdata) ||retdata.size() != 1|| retdata.at(0).get()->size() != 32)
@@ -624,7 +626,7 @@ static RET_DEFINE ExGetTxConFirmHeightFunc(unsigned char * ipara,void * pVmScrip
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-	int nHeight = GetTxComfirmHigh(hash1);
+	int nHeight = GetTxComfirmHigh(hash1, *pVmScript->GetScriptDB());
 	if(-1 == nHeight)
 	{
 		std::make_tuple (false, tem);
@@ -1143,7 +1145,7 @@ static RET_DEFINE ExCurDeCompressContactFunc(unsigned char *ipara,void *pVmEvn){
 
 }
 static RET_DEFINE ExDeCompressContactFunc(unsigned char *ipara,void *pVmEvn){
-
+	CVmRunEvn *pVmScript = (CVmRunEvn *)pVmEvn;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
     if(!GetData(ipara,retdata) ||retdata.size() != 2 || retdata.at(1).get()->size() != 32)
     {
@@ -1154,7 +1156,7 @@ static RET_DEFINE ExDeCompressContactFunc(unsigned char *ipara,void *pVmEvn){
 
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-	if (GetTransaction(pBaseTx, hash1,false)) {
+	if (GetTransaction(pBaseTx, hash1, *pVmScript->GetScriptDB(), false)) {
 		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
 		 std::vector<unsigned char> outContact;
 		if (!Decompress(*retdata.at(0), tx->vContract, outContact)) {

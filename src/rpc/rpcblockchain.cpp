@@ -382,7 +382,7 @@ Value getscriptid(const Array& params, bool fHelp)
 	uint256 txhash(params[0].get_str());
 
 	int nIndex = 0;
-	int BlockHeight =GetTxComfirmHigh(txhash) ;
+	int BlockHeight =GetTxComfirmHigh(txhash, *pScriptDBTip) ;
 	if(BlockHeight > chainActive.Height() || BlockHeight == -1)
 	{
 		throw runtime_error("height lagre tip block \n");

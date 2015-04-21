@@ -178,6 +178,9 @@ struct PosTxInfo {
 	uint64_t nValues;
 	unsigned int nTime;
 	unsigned int nNonce;
+    unsigned int nHeight;
+    int64_t    nFuel;
+    int nFuelRate;
 	uint256 GetHash()
 	{
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
@@ -187,7 +190,14 @@ struct PosTxInfo {
 		ds<<nValues;
 		ds<<nTime;
 		ds<<nNonce;
+		ds<<nHeight;
+		ds<<nFuel;
+		ds<<nFuelRate;
 		return Hash(ds.begin(),ds.end());
+	}
+	string ToString() {
+		return strprintf("nVersion=%d, hashPreBlock=%s, hashMerkleRoot=%s, nValue=%ld, nTime=%ld, nNonce=%ld, nHeight=%d, nFuel=%ld nFuelRate=%d\n",
+		nVersion, hashPrevBlock.GetHex(), hashMerkleRoot.GetHex(), nValues, nTime, nNonce, nHeight, nFuel, nFuelRate);
 	}
 };
 
@@ -285,6 +295,9 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 		postxinfo.hashPrevBlock = prevblockhash;
 		postxinfo.hashMerkleRoot = item.GetHash();
 		postxinfo.nValues = item.llValues;
+		postxinfo.nHeight = pBlock->nHeight;
+		postxinfo.nFuel = pBlock->nFuel;
+		postxinfo.nFuelRate = pBlock->nFuelRate;
 		postxinfo.nTime = pBlock->nTime; //max(pPrevIndex->GetMedianTimePast() + 1, GetAdjustedTime());
 		for (pBlock->nNonce = 0; pBlock->nNonce < maxNonce; ++pBlock->nNonce) {
 			postxinfo.nNonce = pBlock->nNonce;
@@ -298,19 +311,14 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 					prtx->account = regid;
 					prtx->nHeight = pPrevIndex->nHeight+1;
 					pBlock->hashMerkleRoot = pBlock->BuildMerkleTree();
-					LogPrint("MINER", "Miner hight:%d time:%s addr = %s \r\n", prtx->nHeight,
-							DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()), item.keyID.ToAddress());
 					LogPrint("INFO", "find pos tx hash succeed: \n"
 									  "   pos hash:%s \n"
 									  "adjust hash:%s \r\n", curhash.GetHex(), adjusthash.GetHex());
-					LogPrint("INFO",
-							"nVersion=%d, hashPreBlock=%s, hashMerkleRoot=%s, nValue=%ld, nTime=%ld, nNonce=%ld\n",
-							postxinfo.nVersion, postxinfo.hashPrevBlock.GetHex(), postxinfo.hashMerkleRoot.GetHex(),
-							postxinfo.nValues, postxinfo.nTime, postxinfo.nNonce);
-//					LogPrint("INFO", "Miner account info:%s\n", item.ToString());
 					if (pwalletMain->Sign(item.keyID, pBlock->SignatureHash(), pBlock->vSignature,
 							item.MinerPKey.IsValid())) {
-						LogPrint("INFO", "Create new block,hash:%s\n", pBlock->GetHash().GetHex());
+						LogPrint("INFO", "Create new block hash:%s\n", pBlock->GetHash().GetHex());
+						LogPrint("miner", "Miner account info:%s\n", item.ToString());
+						LogPrint("miner", "CreatePosTx block hash:%s, postxinfo:%s\n",pBlock->GetHash().GetHex(), postxinfo.ToString().c_str());
 						return true;
 					} else {
 						LogPrint("ERROR", "sign fail\r\n");
@@ -361,6 +369,9 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 			}
 			CTxUndo txundo;
 			CValidationState state;
+			if (CONTRACT_TX == pBaseTx->nTxType) {
+				LogPrint("vm", "tx hash=%s VerifyPosTx run contract\n", pBaseTx->GetHash().GetHex());
+			}
 			if (!pBaseTx->ExecuteTx(i, view, state, txundo, pBlock->nHeight, txCache, scriptDBView)) {
 				return ERRORMSG("transaction UpdateAccount account error");
 			}
@@ -419,11 +430,14 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 	postxinfo.nValues = account.llValues;
 	postxinfo.nTime = pBlock->nTime;
 	postxinfo.nNonce = pBlock->nNonce;
+	postxinfo.nHeight = pBlock->nHeight;
+	postxinfo.nFuel = pBlock->nFuel;
+	postxinfo.nFuelRate = pBlock->nFuelRate;
 	uint256 curhash = postxinfo.GetHash();
 
-	LogPrint("INFO", "postxinfo.nVersion=%d, postxinfo.hashPreBlock=%s, postxinfo.hashMerkleRoot=%s, postxinfo.nValue=%ld, postxinfo.nTime=%ld, postxinfo.nNonce=%ld, postxinfo.blockHash=%s\n",
-			postxinfo.nVersion, postxinfo.hashPrevBlock.GetHex(), postxinfo.hashMerkleRoot.GetHex(), postxinfo.nValues,
-			postxinfo.nTime, postxinfo.nNonce, pBlock->GetHash().GetHex());
+	LogPrint("miner", "Miner account info:%s\n", account.ToString());
+	LogPrint("miner", "VerifyPosTx block hash:%s, postxinfo:%s\n", pBlock->GetHash().GetHex(), postxinfo.ToString().c_str());
+
 	if (curhash > adjusthash) {
 		return ERRORMSG("Account ProofOfWorkLimit error: \n"
 		           "   pos hash:%s \n"
@@ -647,7 +661,7 @@ bool static MiningBlock(CBlock *pblock,CWallet *pwallet,CBlockIndex* pindexPrev,
 			return true;
 		}
 
-		if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
+		if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast || GetTime() - nStart > 60)
 				return false;
 	}
 	return false;
@@ -762,7 +776,7 @@ void GenerateDacrsBlock(bool fGenerate, CWallet* pwallet, int nThreads) {
 
 	if (minerThreads != NULL) {
 		minerThreads->interrupt_all();
-		minerThreads->join_all();
+//		minerThreads->join_all();
 		delete minerThreads;
 		minerThreads = NULL;
 	}

@@ -773,7 +773,8 @@ bool CWallet::IsMine(CBaseTransaction* pTx) const{
 
 	set<CKeyID> vaddr;
 	CAccountViewCache view(*pAccountViewTip, true);
-	if (!pTx->GetAddress(vaddr, view)) {
+	CScriptDBViewCache scriptDB(*pScriptDBTip, true);
+	if (!pTx->GetAddress(vaddr, view, scriptDB)) {
 		return false;
 	}
 	for (auto &keyid : vaddr) {

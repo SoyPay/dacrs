@@ -384,7 +384,8 @@ bool CScriptDBView::GetScriptData(const int nCurBlockHeight, const vector<unsign
 		vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData) {
 	return false;
 }
-
+bool CScriptDBView::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos){return false;}
+bool CScriptDBView::WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB){return false;}
 Object CScriptDBView:: ToJosnObj(string Prefix){
 	Object obj;
 	return obj;
@@ -400,6 +401,9 @@ bool CScriptDBViewBacked::GetScriptData(const int nCurBlockHeight, const vector<
 		const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData) {
 	return pBase->GetScriptData(nCurBlockHeight, vScriptId, nIndex, vScriptKey, vScriptData);
 }
+bool CScriptDBViewBacked::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos){return pBase->ReadTxIndex(txid, pos);}
+bool CScriptDBViewBacked::WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB){return pBase->WriteTxIndex(list, vTxIndexOperDB);}
+
 
 
 CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScriptDBViewBacked(base) {
@@ -627,6 +631,49 @@ bool CScriptDBViewCache::Flush() {
 }
 unsigned int CScriptDBViewCache::GetCacheSize() {
 	return ::GetSerializeSize(mapDatas, SER_DISK, CLIENT_VERSION);
+}
+
+bool CScriptDBViewCache::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos){
+	CDataStream ds(SER_DISK, CLIENT_VERSION);
+	ds << txid;
+	vector<unsigned char> vTxHash = {'T'};
+	vTxHash.insert(vTxHash.end(), ds.begin(), ds.end());
+	vector<unsigned char> vTxPos;
+
+	if(mapDatas.count(vTxHash))  {
+		if(mapDatas[vTxHash].empty()) {
+			return false;
+		}
+		vTxPos = mapDatas[vTxHash];
+		CDataStream dsPos(vTxPos, SER_DISK, CLIENT_VERSION);
+		dsPos >> pos;
+	}else {
+		if(!GetData(vTxHash, vTxPos))
+			return false;
+		CDataStream dsPos(vTxPos, SER_DISK, CLIENT_VERSION);
+		dsPos >> pos;
+	}
+	return true;
+}
+bool CScriptDBViewCache::WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB){
+	for (vector<pair<uint256, CDiskTxPos> >::const_iterator it = list.begin(); it != list.end(); it++) {
+		LogPrint("txindex", "txhash:%s dispos: nFile=%d, nPos=%d nTxOffset=%d\n", it->first.GetHex(), it->second.nFile, it->second.nPos, it->second.nTxOffset);
+		CDataStream ds(SER_DISK, CLIENT_VERSION);
+		ds << it->first;
+		vector<unsigned char> vTxHash = { 'T' };
+		vTxHash.insert(vTxHash.end(), ds.begin(), ds.end());
+		vector<unsigned char> vTxPos;
+		CDataStream dsPos(SER_DISK, CLIENT_VERSION);
+		dsPos << it->second;
+		vTxPos.insert(vTxPos.end(), dsPos.begin(), dsPos.end());
+		CScriptDBOperLog txIndexOper;
+		txIndexOper.vKey = vTxHash;
+		GetData(vTxHash, txIndexOper.vValue);
+		vTxIndexOperDB.push_back(txIndexOper);
+		if(!SetData(vTxHash, vTxPos))
+			return false;
+	}
+	return true;
 }
 
 bool CScriptDBViewCache::GetScript(const vector<unsigned char> &vScriptId, vector<unsigned char> &vValue) {

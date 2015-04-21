@@ -63,16 +63,18 @@ bool CBlockTreeDB::ReadLastBlockFile(int &nFile) {
 	return Read('l', nFile);
 }
 
-bool CBlockTreeDB::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos) {
-	return Read(make_pair('t', txid), pos);
-}
-
-bool CBlockTreeDB::WriteTxIndex(const vector<pair<uint256, CDiskTxPos> >&vect) {
-	CLevelDBBatch batch;
-	for (vector<pair<uint256, CDiskTxPos> >::const_iterator it = vect.begin(); it != vect.end(); it++)
-		batch.Write(make_pair('t', it->first), it->second);
-	return WriteBatch(batch);
-}
+//bool CBlockTreeDB::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos) {
+//	return Read(make_pair('t', txid), pos);
+//}
+//
+//bool CBlockTreeDB::WriteTxIndex(const vector<pair<uint256, CDiskTxPos> >&vect) {
+//	CLevelDBBatch batch;
+//	for (vector<pair<uint256, CDiskTxPos> >::const_iterator it = vect.begin(); it != vect.end(); it++){
+//		LogPrint("txindex", "txhash:%s dispos: nFile=%d, nPos=%d nTxOffset=%d\n", it->first.GetHex(), it->second.nFile, it->second.nPos, it->second.nTxOffset);
+//		batch.Write(make_pair('t', it->first), it->second);
+//	}
+//	return WriteBatch(batch);
+//}
 
 bool CBlockTreeDB::WriteFlag(const string &name, bool fValue) {
 	return Write(make_pair('F', name), fValue ? '1' : '0');
@@ -247,6 +249,7 @@ bool CAccountViewDB::SaveAccountInfo(const vector<unsigned char> &accountId, con
 	batch.Write(make_pair('k', keyId), secureAccount);
 	return db.WriteBatch(batch, false);
 }
+
 
 CTransactionDB::CTransactionDB(size_t nCacheSize, bool fMemory, bool fWipe) :
 		db(GetDataDir() / "blocks" / "txcache", nCacheSize, fMemory, fWipe) {
