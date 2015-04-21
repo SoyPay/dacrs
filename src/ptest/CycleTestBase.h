@@ -24,7 +24,7 @@ public:
 		basetest.ShowProgressTotal("Send Cycle:",++totalsend);
 		   return true;
 	}
-	virtual TEST_STATE run();
+	virtual TEST_STATE Run();
 	virtual ~CycleTestBase();
 };
 

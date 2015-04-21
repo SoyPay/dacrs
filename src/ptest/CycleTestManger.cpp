@@ -37,10 +37,13 @@ public:
 //		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
 //		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
 //		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
-		for(int i = 0 ; i < 50 ;i++)
+		for(int i = 0 ; i < 100 ;i++)
 		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
-		for(int i = 0 ; i < 50 ;i++)
+		for(int i = 0 ; i < 100 ;i++)
 		vTest.push_back(std::make_shared<CTestBetTx>()) ;
+		for(int i = 0 ; i < 300 ;i++)
+		vTest.push_back(std::make_shared<CCreateNormalTxTest>()) ;
+
 
 //		string dir = SysCfg().GetArg("rsetdir", "d:\\bitcoin");
 //		if (dir != "d:\\bitcoin") {
@@ -56,7 +59,7 @@ public:
 			for (auto it = vTest.begin(); it != vTest.end();) {
 				bool flag = false;
 				try {
-					if (it->get()->run() == end_state) {
+					if (it->get()->Run() == end_state) {
 						flag = true;
 					};
 				} catch (...) {

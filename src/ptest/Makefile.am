@@ -26,6 +26,7 @@ dacrs_ptest_SOURCES = \
   main_tests.cpp \
   updateaccount_tests.cpp \
   mining_tests.cpp	\
+  create_tx_tests.cpp \
   CDarkAndAnony.cpp	\
   ../test/systestbase.cpp \
   CycleSesureTrade_tests.cpp	\

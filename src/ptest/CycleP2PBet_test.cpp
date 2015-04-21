@@ -27,7 +27,7 @@ CTestBetTx::CTestBetTx() {
 CTestBetTx::~CTestBetTx() {
 }
 
-TEST_STATE CTestBetTx::run() {
+TEST_STATE CTestBetTx::Run() {
 	switch (mCurStep) {
 	case 0:
 		RegScript();

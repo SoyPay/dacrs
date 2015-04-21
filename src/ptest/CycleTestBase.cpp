@@ -10,7 +10,7 @@ CycleTestBase::CycleTestBase() {
 
 }
 
-TEST_STATE CycleTestBase::run() {
+TEST_STATE CycleTestBase::Run() {
 	return end_state;
 }
 int CycleTestBase::totalsend = 0;

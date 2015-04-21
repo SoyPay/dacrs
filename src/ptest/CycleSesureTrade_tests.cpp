@@ -8,7 +8,7 @@ CTestSesureTrade::CTestSesureTrade() {
 //	GenerateOneBlock();
 }
 
-TEST_STATE CTestSesureTrade::run() {
+TEST_STATE CTestSesureTrade::Run() {
 //	cout << "CTestSesureTrade::run  step: " << mCurStep << endl;
 //	return  ++mCurStep > 5 ? end_state :next_state;
 //	bool bRes = false;

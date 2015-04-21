@@ -491,7 +491,7 @@ Value listaddr(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 	Array retArry;
-	uint64_t totalCoin(0);
+//	uint64_t totalCoin(0);
 	assert(pwalletMain != NULL);
 	{
 		map<CKeyID, CKeyStoreValue> pool = pwalletMain->GetKeyPool();
@@ -510,7 +510,7 @@ Value listaddr(const Array& params, bool fHelp) {
 			CAccount Lambaacc;
 			accView.GetAccount(userId, Lambaacc);
 
-			totalCoin += Lambaacc.GetRawBalance();
+//			totalCoin += Lambaacc.GetRawBalance();
 
 			Object obj;
 			obj.push_back(Pair("addr", tem.first.ToAddress()));
@@ -520,7 +520,7 @@ Value listaddr(const Array& params, bool fHelp) {
 			retArry.push_back(obj);
 		}
 	}
-	cout << "totalCoin:" << totalCoin << endl;
+//	cout << "totalCoin:" << totalCoin << endl;
 	return retArry;
 }
 

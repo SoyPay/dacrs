@@ -90,7 +90,7 @@ class CTestBetTx:public CycleTestBase,public SysTestBase
 	bool WaitAOpenP2PBet(void);
 public:
 	CTestBetTx();
-	virtual TEST_STATE run();
+	virtual TEST_STATE Run();
 	~CTestBetTx();
 	uint64_t GetRandomBetAmount() {
 		srand(time(NULL));

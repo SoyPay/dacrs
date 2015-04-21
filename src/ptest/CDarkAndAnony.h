@@ -81,7 +81,7 @@ public:
 		int r = (rand() % 1000000) + 100000000;
 		return r;
 	}
-	virtual TEST_STATE run() ;
+	virtual TEST_STATE Run() ;
 	uint64_t GetPayMoney() {
 		uint64_t r = 0;
 		while(true)
@@ -105,5 +105,22 @@ public:
 	bool WaitSendBuyerConfirmedPackage();
 	bool WaitSendBuyerCancelPackage();
 };
+
+class CCreateNormalTxTest : public CycleTestBase{
+public:
+	CCreateNormalTxTest(){nStep = 0;};
+	 ~CCreateNormalTxTest(){};
+	 bool  CreateTx();
+	 bool SelectAccounts();
+	 string SelectOneAccount();
+	 bool WaitComfirms();
+	 TEST_STATE Run();
+private:
+	string sendhash;
+	 int nStep ;
+	 vector<string> vAccount;
+};
+
+
 
 #endif /* CDARKANDANONY_H_ */

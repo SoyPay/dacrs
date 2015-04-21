@@ -95,7 +95,7 @@ class CTestSesureTrade:	public CycleTestBase,
 
 public:
 	CTestSesureTrade();
-	virtual TEST_STATE run();
+	virtual TEST_STATE Run();
 	~CTestSesureTrade();
 
 private:

@@ -22,7 +22,7 @@ CDarkAndAnony::~CDarkAndAnony() {
 	// todo Auto-generated destructor stub
 }
 
-TEST_STATE CDarkAndAnony::run()
+TEST_STATE CDarkAndAnony::Run()
 {
      switch(step)
      {
