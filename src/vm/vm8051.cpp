@@ -424,14 +424,9 @@ static RET_DEFINE ExVerifySignatureFunc(unsigned char *ipara,void * pVmScriptRun
 	CPubKey pk(retdata.at(1).get()->begin(),retdata.at(1).get()->end());
 	uint256 hash(*retdata.at(2).get());
 
-	bool rlt;
-	if(CheckSignScript(hash, *retdata.at(0), pk)) {
-		rlt = true;
-	}
-	else {
-		rlt = false;
-	}
-
+	bool rlt = CheckSignScript(hash, *retdata.at(0), pk);
+	if(!rlt)
+		LogPrint("INFO", "ExVerifySignatureFunc call CheckSignScript verify signature failed!\n");
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
     tep << rlt;
@@ -830,10 +825,10 @@ static RET_DEFINE ExGetDBSizeFunc(unsigned char * ipara,void * pVmEvn) {
  */
 static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmEvn) {
 
-	if (SysCfg().GetArg("-isdbtraversal", 0) == 0) {
-		LogPrint("INFO","%s","ExGetDBValueFunc can't use\n");
-    	return RetFalse(string(__FUNCTION__)+"para  err !");
-	}
+//	if (SysCfg().GetArg("-isdbtraversal", 0) == 0) {
+//		LogPrint("INFO","%s","ExGetDBValueFunc can't use\n");
+//    	return RetFalse(string(__FUNCTION__)+"para  err !");
+//	}
 	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 

@@ -13,10 +13,11 @@ public:
 	void CreateAccount();
 	bool SelectAccounts();
 	string GetOneAccount();
-	CCreateMinerkey():argc(framework::master_test_suite().argc), argv(framework::master_test_suite().argv){};
+//	CCreateMinerkey():argc(framework::master_test_suite().argc), argv(framework::master_test_suite().argv){};
+	CCreateMinerkey(){};
 	virtual ~CCreateMinerkey();
-	int argc;
-	char **argv;
+//	int argc;
+//	char **argv;
 private:
 	vector<string> vAccount;
 	map<string, uint64_t> mapSendValue;

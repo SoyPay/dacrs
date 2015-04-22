@@ -74,10 +74,10 @@ string CCreateMinerkey::GetOneAccount() {
 }
 
 void CCreateMinerkey::CreateAccount() {
-	if(2 == argc){
-		const char* newArgv[] = {argv[0], argv[2] };
-		CBaseParams::IntialParams(2, newArgv);
-	}
+//	if(2 == argc){
+//		const char* newArgv[] = {argv[0], argv[2] };
+//		CBaseParams::IntialParams(2, newArgv);
+//	}
 	if(!SelectAccounts())
 		return;
 	std::string TxHash("");

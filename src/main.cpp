@@ -588,7 +588,8 @@ bool CheckSignScript(const uint256 & sigHash, const std::vector<unsigned char> s
 	if (signatureCache.Get(sigHash, signatrue, pubKey))
 		return true;
 	if (!pubKey.Verify(sigHash, signatrue))
-		return ERRORMSG("CheckSignScript() : tx signature error");
+		return false;
+		//return ERRORMSG("CheckSignScript() : tx signature error");
 	signatureCache.Set(sigHash, signatrue, pubKey);
 	return true;
 }
