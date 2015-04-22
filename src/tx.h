@@ -784,8 +784,8 @@ public:
 		return make_shared<CAccount>(*this);
 	}
 
-	bool IsMiner(int prevBlockHeight) {
-		if(prevBlockHeight < SysCfg().GetIntervalPos())
+	bool IsMiner(int nCurHeight) {
+		if(nCurHeight < SysCfg().GetIntervalPos())
 			return true;
 		return nCoinDay >= llValues * SysCfg().GetIntervalPos();
 

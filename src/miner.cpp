@@ -391,8 +391,8 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 //     		cout << "check block hash:" << pBlock->SignatureHash().GetHex() << endl;
 //			cout << "check signature:" << HexStr(pBlock->vSignature) << endl;
 //			cout <<"account miner"<< account.ToString()<< endl;
-			if(!account.IsMiner(pBlock->nHeight -1))
-				return ERRORMSG("coindays of account dismatch, can't be miner");
+			if(account.GetAccountPos(pBlock->nHeight) <= 0 || !account.IsMiner(pBlock->nHeight))
+				return ERRORMSG("coindays of account dismatch, can't be miner, account info:%s", account.ToString());
 			if (!account.PublicKey.Verify(pBlock->SignatureHash(), pBlock->vSignature)) {
 				if (!account.MinerPKey.Verify(pBlock->SignatureHash(), pBlock->vSignature)) {
 //					LogPrint("postx", "publickey:%s, keyid:%s\n", secureAcc.PublicKey.GetHash().GetHex(),
