@@ -5,7 +5,7 @@
  *      Author: spark.huang
  */
 
-#include "CycleP2PBet_test.h"
+#include "CycleP2PBet_tests.h"
 enum OPERATE{
 	OP_SYSTEMACC = 0x00,
 	OP_APPACC = 0x01,

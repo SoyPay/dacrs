@@ -1,12 +1,12 @@
 /*
- * CDarkAndAnony.h
+ * CBlackHalo_tests.h
  *
  *  Created on: 2014Äê12ÔÂ30ÈÕ
  *      Author: ranger.shi
  */
 
-#ifndef CDARKANDANONY_H_
-#define CDARKANDANONY_H_
+#ifndef CBLACKHALO_TESTS_H_
+#define CBLACKHALO_TESTS_H_
 
 #include "CycleTestBase.h"
 #include <stdlib.h>
@@ -64,7 +64,7 @@ enum TXTYPE{
 #define SELLER_B    "mjSwCwMsvtKczMfta1tvr78z2FTsZA1JKw"
 
 
-class CDarkAndAnony: public CycleTestBase {
+class CBlackHalo: public CycleTestBase {
   int step;
 	string sritpthash;
 	string buyerhash;
@@ -74,8 +74,8 @@ class CDarkAndAnony: public CycleTestBase {
 	string scriptid ;
 	uint64_t sendmonye;
 public:
-	CDarkAndAnony();
-	virtual ~CDarkAndAnony();
+	CBlackHalo();
+	virtual ~CBlackHalo();
 	int GetRandomFee() {
 		srand(time(NULL));
 		int r = (rand() % 1000000) + 100000000;
@@ -106,21 +106,4 @@ public:
 	bool WaitSendBuyerCancelPackage();
 };
 
-class CCreateNormalTxTest : public CycleTestBase{
-public:
-	CCreateNormalTxTest(){nStep = 0;};
-	 ~CCreateNormalTxTest(){};
-	 bool  CreateTx();
-	 bool SelectAccounts();
-	 string SelectOneAccount();
-	 bool WaitComfirms();
-	 TEST_STATE Run();
-private:
-	string sendhash;
-	 int nStep ;
-	 vector<string> vAccount;
-};
-
-
-
-#endif /* CDARKANDANONY_H_ */
+#endif /* CBLACKHALO_TESTS_H_ */

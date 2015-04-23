@@ -96,7 +96,7 @@ struct AccOperLog {
 
 class SysTestBase {
 protected:
-	int GetRandomFee();
+
 
 	int GetRandomMoney();
 
@@ -105,8 +105,6 @@ protected:
 	Value GetAccountInfo(const string& strID);
 
 public:
-
-	bool GetMemPoolSize(int &size) ;
 	SysTestBase();
 
 	~SysTestBase();
@@ -115,7 +113,12 @@ public:
 
 	static void StopServer();
 
+	int GetRandomFee();
+
+	bool GetMemPoolSize(int &size);
+
 	bool ImportAllPrivateKey();
+
 	bool GetHashFromCreatedTx(const Value& valueRes,string& strHash)
 	{
 		if (valueRes.type() == null_type) {
@@ -170,7 +173,7 @@ public:
 
 	bool ResetEnv();
 
-	bool CommandLineRPC_GetValue(int argc, const char *argv[], Value &value);
+	static bool CommandLineRPC_GetValue(int argc, const char *argv[], Value &value);
 
 	bool IsScriptAccCreated(const string& strScript);
 
@@ -184,10 +187,11 @@ public:
 
 	Value CreateNormalTx(const std::string &desAddr,uint64_t nMoney);
 
-	Value registaccounttx(const std::string &addr, const int nfee =0);
+	Value RegistAccountTx(const std::string &addr, const int nfee =0);
 
 	Value CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 			int nHeight,int nFee = 0,uint64_t nMoney = 0);
+
 	Value RegisterScriptTx(const string& strAddress, const string& strScript, int nHeight, int nFee = 100000000);
 
 	Value SignSecureTx(const string &securetx);
@@ -199,6 +203,7 @@ public:
 	bool GetBlockMinerAddr(const std::string &blockhash, std::string &addr);
 
 	bool GenerateOneBlock();
+
 	bool SetAddrGenerteBlock(const char *addr);
 
 	bool DisConnectBlock(int nNum);
@@ -206,18 +211,21 @@ public:
 	bool GetStrFromObj(const Value& valueRes,string& str);
 
 	bool ImportWalletKey(const char**address,int nCount);
-    bool ShowProgress(string const &msg,float rate)
+
+	bool ShowProgress(string const &msg,float rate)
     {
     	for(int j=0; j<100 ;++j)
     	cout<<'\b';
     	cout << msg <<  rate << "%";
     	return true;
     }
-    bool ShowProgressTotal(string const &msg,int rate)
+
+
+	bool ShowProgressTotal(string const &msg,int rate)
     {
     	for(int j=0; j<100 ;++j)
     	cout<<'\b';
-    	cout << msg << " Total: " << rate ;
+    	cout << msg << " Total: " << rate;
     	return true;
     }
 

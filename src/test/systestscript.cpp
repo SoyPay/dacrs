@@ -497,7 +497,7 @@ public:
 		cout << "new transation have been confirmed, current height:" << chainActive.Height() << endl;
 		for(size_t i=0; i < vNewAddress.size(); i++) {
 			int nfee = GetRandomFee();
-			Value value1 = registaccounttx(vNewAddress[i], nfee);
+			Value value1 = RegistAccountTx(vNewAddress[i], nfee);
 			BOOST_CHECK(GetHashFromCreatedTx(value1,hash));
 
 		//	BOOST_CHECK(GenerateOneBlock());

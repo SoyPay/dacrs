@@ -58,6 +58,7 @@ bool PrintTestNotSetPara()
 
 	return true;
 }
+
 bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {
 	bool fRet = false;
 	try {
@@ -128,8 +129,6 @@ std::tuple<bool, boost::thread*> RunDacrs(int argc, char* argv[]) {
 	return std::make_tuple(fRet, detectShutdownThread);
 }
 
-
-
 SysTestBase::SysTestBase() {
 	// todo Auto-generated constructor stub
 }
@@ -137,6 +136,7 @@ SysTestBase::SysTestBase() {
 SysTestBase::~SysTestBase() {
 	// todo Auto-generated destructor stub
 }
+
 bool SysTestBase::ImportAllPrivateKey()
 {
 
@@ -208,11 +208,9 @@ bool SysTestBase::ResetEnv() {
 
 int SysTestBase::GetRandomFee() {
 	srand(time(NULL));
-	int r = (rand() % 1000000) + 100000000;
+	int r = (rand() % 1000000);
 	return r;
 }
-
-
 
 int SysTestBase::GetRandomMoney() {
 	srand(time(NULL));
@@ -306,7 +304,7 @@ bool SysTestBase::CommandLineRPC_GetValue(int argc, const char *argv[], Value &v
 
 	if (strPrint != "") {
 		if (false == nRes) {
-//			cout<<strPrint<<endl;
+			cout<<strPrint<<endl;
 		}
 //	    fprintf((nRes == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
 	}
@@ -335,7 +333,6 @@ uint64_t SysTestBase::GetBalance(const string& strID) {
 	uint64_t nMoney = result.get_int64();
 	return nMoney;
 }
-
 
 bool SysTestBase::GetNewAddr(std::string &addr,bool flag) {
 	//CommanRpc
@@ -368,7 +365,6 @@ bool SysTestBase::GetMemPoolSize(int &size) {
 	}
 	return false;
 }
-
 
 bool SysTestBase::GetBlockHeight(int &nHeight) {
 	const char *argv[] = { "rpctest", "getinfo"};
@@ -425,7 +421,8 @@ Value SysTestBase::CreateNormalTx(const std::string &desAddr,uint64_t nMoney){
 	}
 	return value;
 }
-Value SysTestBase::registaccounttx(const std::string &addr, const int nfee) {
+
+Value SysTestBase::RegistAccountTx(const std::string &addr, const int nfee) {
 	//CommanRpc
 	char caddr[64] = { 0 };
 	strncpy(caddr, addr.c_str(), sizeof(caddr) - 1);
@@ -538,7 +535,9 @@ bool SysTestBase::GetBlockMinerAddr(const std::string &blockhash, std::string &a
 	}
 	return false;
 }
+
 boost::thread*SysTestBase::pThreadShutdown = NULL;
+
 bool SysTestBase::GenerateOneBlock() {
 	const char *argv[] = { "rpctest", "setgenerate", "true" ,"1"};
 	int argc = sizeof(argv) / sizeof(char*);
@@ -553,6 +552,7 @@ bool SysTestBase::GenerateOneBlock() {
 	}
 	return false;
 }
+
 bool SysTestBase::SetAddrGenerteBlock(const char *addr) {
 	const char *argv[] = { "rpctest", "generateblock", addr };
 	int argc = sizeof(argv) / sizeof(char*);
@@ -563,6 +563,7 @@ bool SysTestBase::SetAddrGenerteBlock(const char *addr) {
 	}
 	return false;
 }
+
 bool SysTestBase::DisConnectBlock(int nNum) {
 	int nFirstHeight = 0;
     GetBlockHeight(nFirstHeight);
@@ -608,6 +609,7 @@ void SysTestBase::StopServer() {
 	}
 	Shutdown();
 }
+
 bool SysTestBase::GetStrFromObj(const Value& valueRes,string& str)
 {
 	if (valueRes.type() == null_type) {
@@ -623,6 +625,7 @@ bool SysTestBase::GetStrFromObj(const Value& valueRes,string& str)
 		}
 	return true;
 }
+
 bool SysTestBase::ImportWalletKey(const char**address, int nCount){
 	for (int i = 0; i < nCount; i++) {
 		const char *argv2[] = { "rpctest", "importprivkey", address[i]};
@@ -641,6 +644,7 @@ uint64_t SysTestBase::GetRandomBetfee() {
 		int r = (rand() % 1000000) + 100000000;
 		return r;
 	}
+
 bool SysTestBase::GetKeyId(string const &addr,CKeyID &KeyId) {
 	if (!CRegID::GetKeyID(addr, KeyId)) {
 		KeyId=CKeyID(addr);
@@ -649,6 +653,7 @@ bool SysTestBase::GetKeyId(string const &addr,CKeyID &KeyId) {
 	}
 	return true;
 };
+
 bool SysTestBase::IsTxInMemorypool(const uint256& txHash) {
 	for (const auto& entry : mempool.mapTx) {
 		if (entry.first == txHash)
@@ -666,12 +671,14 @@ bool SysTestBase::IsTxUnConfirmdInWallet(const uint256& txHash) {
 		}
 		return false;
 	}
+
 bool SysTestBase::GetRegID(string& strAddr,string& regID){
 	Value value = GetAccountInfo(strAddr);
 
 	regID = "RegID";
 	return GetStrFromObj(value,regID);
 }
+
 bool SysTestBase::IsTxInTipBlock(const uint256& txHash) {
 		CBlockIndex* pindex = chainActive.Tip();
 		CBlock block;
@@ -686,6 +693,7 @@ bool SysTestBase::IsTxInTipBlock(const uint256& txHash) {
 
 		return true;
 	}
+
 bool SysTestBase::GetRegID(string& strAddr,CRegID& regID) {
 	CAccount account;
 	CKeyID keyid;
@@ -698,6 +706,10 @@ bool SysTestBase::GetRegID(string& strAddr,CRegID& regID) {
 	LOCK(cs_main);
 	CAccountViewCache accView(*pAccountViewTip, true);
 	if (!accView.GetAccount(userId, account)) {
+		return false;
+	}
+	if((!account.IsRegister())||account.regID.IsEmpty())
+	{
 		return false;
 	}
 

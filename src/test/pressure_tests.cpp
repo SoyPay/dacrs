@@ -138,7 +138,7 @@ public:
 			return false;
 
 		int nfee = GetRandomFee() + 100000000;
-		Value result = registaccounttx(newAddress, nfee);
+		Value result = RegistAccountTx(newAddress, nfee);
 		string txHash = "";
 		BOOST_CHECK(GetHashFromCreatedTx(value, txHash));
 

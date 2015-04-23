@@ -22,12 +22,12 @@ dacrs_ptest_LDADD = $(LIBBITCOIN_SERVER) \
 dacrs_ptest_LDADD += $(BDB_LIBS)
 
 dacrs_ptest_SOURCES = \
-  p_test.cpp \
-  main_tests.cpp \
-  updateaccount_tests.cpp \
-  mining_tests.cpp	\
-  create_tx_tests.cpp \
-  CDarkAndAnony.cpp	\
+  P_test.cpp \
+  Main_tests.cpp \
+  UpdateAccount_tests.cpp \
+  Mining_tests.cpp	\
+  CreateTx_tests.cpp \
+  CBlackHalo_tests.cpp	\
   ../test/systestbase.cpp \
   CycleSesureTrade_tests.cpp	\
   CycleTestBase.cpp	\
@@ -35,9 +35,10 @@ dacrs_ptest_SOURCES = \
   CycleTestManger.h	\
   CycleTestBase.h	\
   CycleSesureTrade_tests.h	\
-  CDarkAndAnony.h	\
+  CBlackHalo_tests.h	\
+  CreateTx_tests.h  \
   ../test/systestbase.h \
-  CycleP2PBet_test.cpp \
-  CycleP2PBet_test.h \
-  createminterkey.cpp \
-  createminterkey.h
+  CycleP2PBet_tests.cpp \
+  CycleP2PBet_tests.h \
+  CreateMinterKey_tests.cpp \
+  CreateMinterKey_tests.h

@@ -16,76 +16,64 @@
 #include <boost/test/unit_test.hpp>
 
 #include "json/json_spirit_writer_template.h"
-#include "CDarkAndAnony.h"
+#include "CBlackHalo_tests.h"
 #include "./rpc/rpcclient.h"
 
-#include "CycleP2PBet_test.h"
+#include "CycleP2PBet_tests.h"
 
 using namespace std;
 using namespace boost;
 using namespace json_spirit;
-#include "CycleTestBase.h"
+
 #include "CycleTestManger.h"
 #include "CycleSesureTrade_tests.h"
-class CycleTestManger {
+#include "CreateTx_tests.h"
 
-	vector<std::shared_ptr<CycleTestBase> > vTest;
+void CycleTestManger::Initialize() {
+//	vTest.push_back(std::make_shared<CTestSesureTrade>());
+//	vTest.push_back(std::make_shared<CTestSesureTrade>());
+//	vTest.push_back(std::make_shared<CTestSesureTrade>());
+	for (int i = 0; i < 100; i++)
+		vTest.push_back(std::make_shared<CBlackHalo>());
+	for (int i = 0; i < 100; i++)
+		vTest.push_back(std::make_shared<CTestBetTx>());
+	for (int i = 0; i < 300; i++)
+		vTest.push_back(std::make_shared<CCreateTxTest>());
+}
 
-public:
-	CycleTestManger(){
-//		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
-//		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
-//		vTest.push_back(std::make_shared<CTestSesureTrade>()) ;
-//		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
-		for(int i = 0 ; i < 100 ;i++)
-		vTest.push_back(std::make_shared<CDarkAndAnony>()) ;
-		for(int i = 0 ; i < 100 ;i++)
-		vTest.push_back(std::make_shared<CTestBetTx>()) ;
-		for(int i = 0 ; i < 300 ;i++)
-		vTest.push_back(std::make_shared<CCreateNormalTxTest>()) ;
+void CycleTestManger::Initialize(vector<std::shared_ptr<CycleTestBase> > &vTestIn) {
+	vTest = vTestIn;
+}
 
-
-//		string dir = SysCfg().GetArg("rsetdir", "d:\\bitcoin");
-//		if (dir != "d:\\bitcoin") {
-//			char *argv[] = { "progname", (char*)dir.c_str() };
-//			int argc = sizeof(argv) / sizeof(char*);
-//			CBaseParams::IntialParams(argc, argv);
-//		}
-
-	};
-	void run() {
-
-		while (vTest.size() > 0) {
-			for (auto it = vTest.begin(); it != vTest.end();) {
-				bool flag = false;
-				try {
-					if (it->get()->Run() == end_state) {
-						flag = true;
-					};
-				} catch (...) {
+void CycleTestManger::Run() {
+	while (vTest.size() > 0) {
+		for (auto it = vTest.begin(); it != vTest.end();) {
+			bool flag = false;
+			try {
+				if (it->get()->Run() == end_state) {
 					flag = true;
-				}
-
-				if (flag)
-					it = vTest.erase(it);
-				else
-					++it;
-
+				};
+			} catch (...) {
+				flag = true;
 			}
-			MilliSleep(1000);
+
+			if (flag)
+				it = vTest.erase(it);
+			else
+				++it;
 
 		}
+		MilliSleep(1000);
 	}
-	virtual ~CycleTestManger(){};
-
-};
+}
 
 
 BOOST_FIXTURE_TEST_SUITE(CycleTest,CycleTestManger)
 
 BOOST_FIXTURE_TEST_CASE(Cycle,CycleTestManger)
 {
-	run();
+	Initialize();
+	Run();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

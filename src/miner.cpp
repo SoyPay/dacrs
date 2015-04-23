@@ -115,6 +115,7 @@ int GetElementForBurn(CBlockIndex* pindex)
 				int newFuelRate = int(pindex->nFuelRate * (dAverageFeePerKb2 / dAverageFeePerKb1));
 				if(newFuelRate < MIN_FUEL_RATES)
 					newFuelRate = MIN_FUEL_RATES;
+				LogPrint("fuel", "preFuelRate=%d fuelRate=%d, nHeight=%d, dAveragerFeePerKb1=%lf, dAverageFeePerKb2=%lf\n", pindex->nFuelRate, newFuelRate, pindex->nHeight, dAverageFeePerKb1, dAverageFeePerKb2);
 				return newFuelRate;
 			}
 		}else {

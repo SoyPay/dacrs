@@ -5,9 +5,9 @@
  *      Author: ranger.shi
  */
 
-#include "CDarkAndAnony.h"
+#include "CBlackHalo_tests.h"
 
-CDarkAndAnony::CDarkAndAnony() {
+CBlackHalo::CBlackHalo() {
 	 step =0 ;
 	 sritpthash = "";
 	 buyerhash = "";
@@ -18,11 +18,11 @@ CDarkAndAnony::CDarkAndAnony() {
 	 sendmonye = 0;
 }
 
-CDarkAndAnony::~CDarkAndAnony() {
+CBlackHalo::~CBlackHalo() {
 	// todo Auto-generated destructor stub
 }
 
-TEST_STATE CDarkAndAnony::Run()
+TEST_STATE CBlackHalo::Run()
 {
      switch(step)
      {
@@ -55,7 +55,7 @@ TEST_STATE CDarkAndAnony::Run()
 	return next_state;
 }
 
-bool CDarkAndAnony::RegistScript(){
+bool CBlackHalo::RegistScript(){
 	const char* pKey[] = { "cNcJkU44oG3etbWoEvY46i5qWPeE8jVb7K44keXxEQxsXUZ85MKU",
 			"cVFWoy8jmJVVSNnMs3YRizkR7XEekMTta4MzvuRshKuQEEJ4kbNg", };
 	int nCount = sizeof(pKey) / sizeof(char*);
@@ -73,7 +73,7 @@ bool CDarkAndAnony::RegistScript(){
 	}
 	return true;
 }
-bool CDarkAndAnony::WaitRegistScript(){
+bool CBlackHalo::WaitRegistScript(){
 	if (basetest.GetTxConfirmedRegID(sritpthash, scriptid)) {
 			step++;
 			return true;
@@ -81,7 +81,7 @@ bool CDarkAndAnony::WaitRegistScript(){
 	return true;
 }
 
-bool CDarkAndAnony::SendBuyerPackage(){
+bool CBlackHalo::SendBuyerPackage(){
 	if(scriptid == "")
 		return false;
 
@@ -106,7 +106,7 @@ bool CDarkAndAnony::SendBuyerPackage(){
 		}
 		return true;
 }
-bool CDarkAndAnony::WaitSendBuyerPackage(){
+bool CBlackHalo::WaitSendBuyerPackage(){
 	string index = "";
 	if (basetest.GetTxConfirmedRegID(buyerhash, index)) {
 		step++;
@@ -115,7 +115,7 @@ bool CDarkAndAnony::WaitSendBuyerPackage(){
 	return true;
 }
 
-bool CDarkAndAnony::SendSellerPackage(){
+bool CBlackHalo::SendSellerPackage(){
 	if(scriptid == "")
 		return false;
 
@@ -138,7 +138,7 @@ bool CDarkAndAnony::SendSellerPackage(){
 
 	return true;
 }
-bool CDarkAndAnony::WaitSendSellerPackage(){
+bool CBlackHalo::WaitSendSellerPackage(){
 	string index = "";
 	if (basetest.GetTxConfirmedRegID(sellerhash, index)) {
 		step++;
@@ -147,7 +147,7 @@ bool CDarkAndAnony::WaitSendSellerPackage(){
 	return true;
 }
 
-bool CDarkAndAnony::SendBuyerConfirmedPackage(){
+bool CBlackHalo::SendBuyerConfirmedPackage(){
 	if(scriptid == "")
 		return false;
 
@@ -167,7 +167,7 @@ bool CDarkAndAnony::SendBuyerConfirmedPackage(){
 
 	return true;
 }
-bool CDarkAndAnony::WaitSendBuyerConfirmedPackage(){
+bool CBlackHalo::WaitSendBuyerConfirmedPackage(){
 	string index = "";
 	if (basetest.GetTxConfirmedRegID(buyerconfiredhash, index)) {
 		step = 1;
@@ -177,7 +177,7 @@ bool CDarkAndAnony::WaitSendBuyerConfirmedPackage(){
 	return true;
 }
 
-bool CDarkAndAnony::SendBuyerCancelPackage(){
+bool CBlackHalo::SendBuyerCancelPackage(){
 	if(scriptid == "")
 		return false;
 
@@ -196,7 +196,7 @@ bool CDarkAndAnony::SendBuyerCancelPackage(){
 	}
 	return true;
 }
-bool CDarkAndAnony::WaitSendBuyerCancelPackage(){
+bool CBlackHalo::WaitSendBuyerCancelPackage(){
 	string index = "";
 	if (basetest.GetTxConfirmedRegID(buyercancelhash, index)) {
 		step = 1;

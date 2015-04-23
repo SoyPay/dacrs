@@ -383,9 +383,12 @@ Value getscriptid(const Array& params, bool fHelp)
 
 	int nIndex = 0;
 	int BlockHeight =GetTxComfirmHigh(txhash, *pScriptDBTip) ;
-	if(BlockHeight > chainActive.Height() || BlockHeight == -1)
+	if(BlockHeight > chainActive.Height())
 	{
-		throw runtime_error("height lagre tip block \n");
+		throw runtime_error("height larger than tip block \n");
+	}
+	else if(BlockHeight == -1){
+		throw runtime_error("tx hash unconfirmed \n");
 	}
 	CBlockIndex* pindex = chainActive[BlockHeight];
 	CBlock block;
