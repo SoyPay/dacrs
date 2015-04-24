@@ -186,7 +186,7 @@ Value setgenerate(const Array& params, bool fHelp)
 		int high = -1;
 
 		while (getcurhigh() < nHeightEnd) {
-			if (getcurhigh() != high) {
+			if (getcurhigh() != high || !getMiningInfo()) {
 				high = getcurhigh();
 //				cout<< "curhight: " << high <<endl;
 				GenerateDacrsBlock(true, pwalletMain, 1);
@@ -198,6 +198,7 @@ Value setgenerate(const Array& params, bool fHelp)
 			}
 		}
 
+		GenerateDacrsBlock(false, pwalletMain, 1);//跑完之后需要退出
 	}
     else // Not -regtest: start generate thread, return immediately
     {
