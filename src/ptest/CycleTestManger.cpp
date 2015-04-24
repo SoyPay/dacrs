@@ -37,8 +37,8 @@ void CycleTestManger::Initialize() {
 		vTest.push_back(std::make_shared<CBlackHalo>());
 	for (int i = 0; i < 100; i++)
 		vTest.push_back(std::make_shared<CTestBetTx>());
-	for (int i = 0; i < 300; i++)
-		vTest.push_back(std::make_shared<CCreateTxTest>());
+//	for (int i = 0; i < 300; i++)
+//		vTest.push_back(std::make_shared<CCreateTxTest>());
 }
 
 void CycleTestManger::Initialize(vector<std::shared_ptr<CycleTestBase> > &vTestIn) {

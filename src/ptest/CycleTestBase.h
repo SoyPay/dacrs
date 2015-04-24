@@ -18,12 +18,17 @@ class CycleTestBase {
 protected:
 	SysTestBase basetest;
 	static int totalsend;
+	static vector<string> vAccount;
 public:
 	CycleTestBase();
 	bool IncSentTotal(){
 		basetest.ShowProgressTotal("Send Cycle:",++totalsend);
 		   return true;
 	}
+	static bool SelectAccounts(vector<string> &vAccount);
+	bool SelectOneAccount(string &selectAddr);
+	bool WaitComfirmed(string &strTxHash, string &regId);
+	int Str2Int(string &strValue);
 	virtual TEST_STATE Run();
 	virtual ~CycleTestBase();
 };
