@@ -218,7 +218,7 @@ int SysTestBase::GetRandomMoney() {
 	return r;
 }
 
-Value SysTestBase::CreateRegScriptTx(const string& strAddress, const string& strScript, bool bRigsterScript, int nFee,
+Value SysTestBase::CreateRegAppTx(const string& strAddress, const string& strScript, bool bRigsterScript, int nFee,
 		int nHeight) {
 
 	string filepath = SysCfg().GetDefaultTestDataPath() + strScript;
@@ -230,7 +230,7 @@ Value SysTestBase::CreateRegScriptTx(const string& strAddress, const string& str
 	string strFee = strprintf("%d",nFee);
 	string strHeight = strprintf("%d",nHeight);
 
-	const char *argv[] = { "rpctest", "registerscripttx", (char*) strAddress.c_str(), (char*) filepath.c_str(), (char*) strFee.c_str(),(char*) strHeight.c_str(),"this is description"};
+	const char *argv[] = { "rpctest", "registerapptx", (char*) strAddress.c_str(), (char*) filepath.c_str(), (char*) strFee.c_str(),(char*) strHeight.c_str(),"this is description"};
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
@@ -470,8 +470,8 @@ Value SysTestBase::CreateContractTx(const std::string &scriptid, const std::stri
 	return value;
 }
 
-Value SysTestBase::RegisterScriptTx(const string& strAddress, const string& strScript, int nHeight, int nFee) {
-	return CreateRegScriptTx(strAddress, strScript, true, nFee, nHeight);
+Value SysTestBase::RegisterAppTx(const string& strAddress, const string& strScript, int nHeight, int nFee) {
+	return CreateRegAppTx(strAddress, strScript, true, nFee, nHeight);
 }
 
 Value SysTestBase::SignSecureTx(const string &securetx) {
