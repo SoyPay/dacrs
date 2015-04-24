@@ -72,7 +72,7 @@ bool CWallet::AddPubKey(const CPubKey& pk)
 		return false;
 	}
 	mKeyPool[tem.GetCKeyID()] = tem;
-	return db.WriteKeyStoreValue(tem.GetCKeyID(),tem);
+	return CWalletDB(strWalletFile).WriteKeyStoreValue(tem.GetCKeyID(),tem);
 }
 
 
@@ -91,7 +91,7 @@ bool CWallet::AddKey(const CKey& secret) {
 
 	if (!IsCrypted()) {
 		mKeyPool[tem.GetCKeyID()] = tem;
-		return db.WriteKeyStoreValue(tem.GetCKeyID(),tem);
+		return CWalletDB(strWalletFile).WriteKeyStoreValue(tem.GetCKeyID(),tem);
 	}
 	else
 	{
@@ -106,7 +106,7 @@ bool CWallet::AddKey(const CKeyStoreValue& storeValue) {
 	}
 	if (!IsCrypted()) {
 		mKeyPool[Pk.GetKeyID()] = storeValue;
-		return db.WriteKeyStoreValue(Pk.GetKeyID(),storeValue);
+		return CWalletDB(strWalletFile).WriteKeyStoreValue(Pk.GetKeyID(),storeValue);
 	} else {
 		assert(0 && "fix me");
 	}
@@ -124,7 +124,7 @@ bool CWallet::AddKey(const CKey& secret,const CKey& minerKey) {
 
 	if (!IsCrypted()) {
 		mKeyPool[tem.GetCKeyID()] = tem;
-		return db.WriteKeyStoreValue(tem.GetCKeyID(),tem);
+		return CWalletDB(strWalletFile).WriteKeyStoreValue(tem.GetCKeyID(),tem);
 	}
 	else
 	{
@@ -355,7 +355,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 					uiInterface.RevTransaction(sptx.get()->GetHash());
 				}
 				if(UnConfirmTx.count(hashtx)> 0){
-					db.EraseUnComFirmedTx(hashtx);
+					CWalletDB(strWalletFile).EraseUnComFirmedTx(hashtx);
 					UnConfirmTx.erase(hashtx);
 				}
 			}
@@ -385,12 +385,12 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 					}
 
 					UnConfirmTx[sptx.get()->GetHash()] = sptx.get()->GetNewInstance();
-					db.WriteUnComFirmedTx(sptx.get()->GetHash(),UnConfirmTx[sptx.get()->GetHash()]);
+					CWalletDB(strWalletFile).WriteUnComFirmedTx(sptx.get()->GetHash(),UnConfirmTx[sptx.get()->GetHash()]);
 
 				}
 			}
 			if (mapInBlockTx.count(blockhash)) {
-				db.EraseBlockTx(blockhash);
+				CWalletDB(strWalletFile).EraseBlockTx(blockhash);
 				mapInBlockTx.erase(blockhash);
 
 			}
@@ -497,7 +497,7 @@ void CWallet::ResendWalletTransactions() {
 		}
 	}
 	for (auto const & tee : erase) {
-		db.EraseUnComFirmedTx(tee);
+		CWalletDB(strWalletFile).EraseUnComFirmedTx(tee);
 		UnConfirmTx.erase(tee);
 	}
 }
@@ -517,7 +517,7 @@ std::tuple<bool, string> CWallet::CommitTransaction(CBaseTransaction *pTx) {
 	}
 	uint256 txhash = pTx->GetHash();
 	UnConfirmTx[txhash] = pTx->GetNewInstance();
-	bool flag =  db.WriteUnComFirmedTx(txhash,UnConfirmTx[txhash]);
+	bool flag =  CWalletDB(strWalletFile).WriteUnComFirmedTx(txhash,UnConfirmTx[txhash]);
 	::RelayTransaction(pTx, txhash);
 	return std::make_tuple (flag,txhash.ToString());
 
@@ -525,7 +525,7 @@ std::tuple<bool, string> CWallet::CommitTransaction(CBaseTransaction *pTx) {
 
 DBErrors CWallet::LoadWallet(bool fFirstRunRet) {
 //	  fFirstRunRet = false;
-	  return db.LoadWallet(this);
+	  return CWalletDB(strWalletFile).LoadWallet(this);
 
 }
 string CWallet::strWalletFile="";
@@ -763,7 +763,7 @@ bool CWallet::SynchronizRegId(const CKeyID& keyid, const CAccountViewCache& invi
 	CAccountViewCache view(inview);
 	if (count(keyid) > 0) {
 		if (mKeyPool[keyid].SynchronizSys(view)) {
-			return db.WriteKeyStoreValue(keyid, mKeyPool[keyid]);
+			return CWalletDB(strWalletFile).WriteKeyStoreValue(keyid, mKeyPool[keyid]);
 		}
 	}
 	return false;
@@ -810,22 +810,22 @@ bool CWallet::CleanAll() {
 
 	for_each(UnConfirmTx.begin(), UnConfirmTx.end(),
 			[&](std::map<uint256, std::shared_ptr<CBaseTransaction> >::reference a) {
-				db.EraseUnComFirmedTx(a.first);
+		CWalletDB(strWalletFile).EraseUnComFirmedTx(a.first);
 			});
 	UnConfirmTx.clear();
 
 	for_each(mapInBlockTx.begin(), mapInBlockTx.end(), [&](std::map<uint256, CAccountTx >::reference a) {
-		db.EraseUnComFirmedTx(a.first);
+		CWalletDB(strWalletFile).EraseUnComFirmedTx(a.first);
 	});
 	mapInBlockTx.clear();
 
 	bestBlock.SetNull();
 
 	for_each(mKeyPool.begin(), mKeyPool.end(), [&](std::map<CKeyID, CKeyStoreValue >::reference a) {
-		db.EraseKeyStoreValue(a.first);
+		CWalletDB(strWalletFile).EraseKeyStoreValue(a.first);
 	});
 	mKeyPool.clear();
-	db.EraseMasterKey();
+	CWalletDB(strWalletFile).EraseMasterKey();
 	MasterKey.SetNull();
 	return true;
 }
@@ -1040,7 +1040,7 @@ bool CWallet::IsReadyForCoolMiner() const {
 bool CWallet::ClearAllCkeyForCoolMiner() {
 	for (auto &te : mKeyPool) {
 			if (te.second.cleanCkey()) {
-				db.WriteKeyStoreValue(te.first,te.second);
+				CWalletDB(strWalletFile).WriteKeyStoreValue(te.first,te.second);
 			}
 		}
 		return true;
@@ -1060,7 +1060,7 @@ bool CWallet::count(const CKeyID& address) const {
 	return mKeyPool.count(address) > 0;
 }
 
-CWallet::CWallet(string strWalletFileIn) :db(strWalletFileIn) {
+CWallet::CWallet(string strWalletFileIn)  {
 	SetNull();
 	strWalletFile = strWalletFileIn;
 }

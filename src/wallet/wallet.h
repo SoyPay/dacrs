@@ -93,7 +93,7 @@ private:
 	CBlockLocator  bestBlock;
 	uint256 GetCheckSum()const;
 public:
-	CWalletDB db;
+//	CWalletDB db;
 	map<CKeyID, CKeyStoreValue> mKeyPool;
 	CPubKey vchDefaultKey ;
 	static string strWalletFile;
@@ -436,7 +436,7 @@ public:
 	}
 
 	bool WriteToDisk() {
-		return pWallet->db.WriteBlockTx(blockHash, *this);
+		return CWalletDB(pWallet->strWalletFile).WriteBlockTx(blockHash, *this);
 	}
 
 	Object ToJosnObj(CKeyID const &key = CKeyID()) const;
