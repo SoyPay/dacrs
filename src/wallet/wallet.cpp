@@ -873,11 +873,15 @@ bool CKeyStoreValue::UnSersailFromJson(const Object& obj){
 		mCkey.Set(tem1.begin(),tem1.end(),true);
 		auto const &tem2=::ParseHex(find_value(obj, "mMinerCkey").get_str());
 		mMinerCkey.Set(tem2.begin(),tem2.end(),true);
-		if(mMinerCkey.IsValid()){
 		mMinerPk= ::ParseHex(find_value(obj, "mMinerPk").get_str());
+		if (mMinerCkey.IsValid()) {
+			assert(mMinerCkey.GetPubKey() == mMinerPk);
+		}
+		if (mCkey.IsValid()) {
+			assert(mCkey.GetPubKey() == mPKey);
 		}
 		nCreationTime =find_value(obj, "nCreationTime").get_int64();
-		assert(mCkey.GetPubKey() == mPKey);
+
 	} catch (...) {
 		ERRORMSG("UnSersailFromJson Failed !");
 		return false;
