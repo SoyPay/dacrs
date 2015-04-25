@@ -8,7 +8,7 @@
 #include "CAnony_tests.h"
 #include "CycleTestManger.h"
 
-CAnonyTest::CAnonyTest():nNum(0), nStep(0), strTxHash(""), strAppRegId("") {
+CAnonyTest::CAnonyTest():nNum(0), nStep(0), strTxHash(""), strAppRegId(""),regId("") {
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i) {
 		string strArgv = boost::unit_test::framework::master_test_suite().argv[i];
 		string::size_type pos = strArgv.find("-number=");
@@ -25,13 +25,19 @@ TEST_STATE CAnonyTest::Run(){
 	case 0:
 	{
 		if(RegistScript())
-			nStep = 2;
+			nStep = 3;
 		break;
 	}
 	case 1:
-		CreateAnonyTx();
+		if(CreateAnonyTx())
+			nStep = 2;
 		break;
 	case 2:
+		if(WaitComfirmed(strTxHash, regId)) {
+			nStep = 1;
+		}
+		break;
+	case 3:
 		if(WaitComfirmed(strTxHash, strAppRegId)) {
 			nStep = 1;
 		}
@@ -68,33 +74,41 @@ bool CAnonyTest::CreateAnonyTx(){
 	for(int i=0; i< nNum;) {
 		if(SelectOneAccount(regId)) {
 			if(vRegId.end() == find(vRegId.begin(), vRegId.end(), regId)) {
-				vRegId.push_back(regId);
+				CRegID nRegid(regId);
+				string strTemp = HexStr(nRegid.GetVec6());
+				vRegId.push_back(strTemp);
 				++i;
 			}
 		}
 		else
 			return false;
 	}
-	int accountInfoSize = sizeof(ACCOUNT_INFO);
-	unsigned short length = nNum-1 * accountInfoSize;
-	unsigned char pAccountInfo[length];
-	memset(pAccountInfo, 0, length);
 	ACCOUNT_INFO accountInfo;
-	string sendRegId = vRegId[0];
+	int accountInfoSize = ::GetSerializeSize(accountInfo, SER_NETWORK, PROTOCOL_VERSION);
+	unsigned short length = (nNum-1) * accountInfoSize;
+
+	ACCOUNT_INFO pAccountInfo[nNum-1];
+	memset(pAccountInfo, 0, length);
+
+	vector<unsigned char> sendRegId = ParseHex(vRegId[0]);
 	int64_t llSendTotal(0);
 	for(int i=1; i<nNum; ++i) {
-		memcpy(&accountInfo.account, vRegId[i].c_str(), vRegId[i].length());
+		vector<unsigned char> vTemp =ParseHex(vRegId[i]);
+		memcpy(&accountInfo.account, &vTemp.at(0),vTemp.size());
 		accountInfo.nReciMoney = i*100*COIN;
 		llSendTotal += accountInfo.nReciMoney;
-		memcpy(pAccountInfo+(i-1)*accountInfoSize, &accountInfo, accountInfoSize);
+		pAccountInfo[i-1] = accountInfo;
+		//memcpy(pAccountInfo+(i-1)*accountInfoSize, &accountInfo, accountInfoSize);
 	}
-	unsigned char pContract [sizeof(CONTRACT)+length-1];
-	memset(pContract, 0, sizeof(CONTRACT)+length-1);
-	memcpy(pContract, sendRegId.c_str(), sendRegId.length());
-	memcpy(pContract+6, &llSendTotal, 8);
-	memcpy(pContract+14, &length, 2);
-	memcpy(pContract+16, pAccountInfo, length);
-	CDataStream ds((char*)pContract, (char*)pContract+sizeof(CONTRACT)+length-1, SER_DISK, CLIENT_VERSION);
+	CONTRACT head;
+	memcpy(head.Sender, &sendRegId.at(0), sendRegId.size());
+	head.nPayMoney = llSendTotal;
+	head.len = length;
+	CDataStream ds(SER_DISK, CLIENT_VERSION);
+	ds<<head;
+	for(int i=1; i<nNum; ++i)
+		ds<<pAccountInfo[i-1];
+
 	string contract = HexStr(ds);
 	Value  retValue = basetest.CreateContractTx(strAppRegId, vRegId[0], contract, 0, 0, llSendTotal);
 	if(basetest.GetHashFromCreatedTx(retValue, strTxHash)){
@@ -109,7 +123,7 @@ void CAnonyTest::Initialize(){
 	if(0 == nNum) { //if don't have input param -number, default create 100 CCreateTxText instance defalue;
 		nNum = 100;
 	}
-	for(int i=0; i< nNum; ++i)
+	for(int i=0; i< 1; ++i)
 	{
 		vTest.push_back(std::make_shared<CAnonyTest>());
 	}
