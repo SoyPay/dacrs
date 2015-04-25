@@ -189,8 +189,8 @@ Array RPCConvertValues(const string &strMethod, const vector<string> &strParams)
     if (strMethod == "registaccounttx"          && n > 1) ConvertTo<int64_t>(params[1]);
  //   if (strMethod == "registaccounttx"          && n > 2) ConvertTo<bool>(params[2]);
 
-    if (strMethod == "registerscripttx"          && n > 2) ConvertTo<int64_t>(params[2]);
-    if (strMethod == "registerscripttx"          && n > 3) ConvertTo<int>(params[3]);
+    if (strMethod == "registerapptx"          && n > 2) ConvertTo<int64_t>(params[2]);
+    if (strMethod == "registerapptx"          && n > 3) ConvertTo<int>(params[3]);
 
     if (strMethod == "createcontracttx"          && n > 2) ConvertTo<int64_t>(params[2]);
     if (strMethod == "createcontracttx"          && n > 4) ConvertTo<int64_t>(params[4]);

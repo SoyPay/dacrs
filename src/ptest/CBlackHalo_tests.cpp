@@ -1,5 +1,5 @@
 /*
- * CDarkAndAnony.cpp
+ * CBlackHalo_tests.cpp
  *
  *  Created on: 2014年12月30日
  *      Author: ranger.shi
@@ -66,7 +66,7 @@ bool CBlackHalo::RegistScript(){
 	int nCurHight;
 	basetest.GetBlockHeight(nCurHight);
 	//注册对赌脚本
-	Value regscript = basetest.RegisterScriptTx(BUYER_A, strFileName, nCurHight, nFee+COIN);
+	Value regscript = basetest.RegisterAppTx(BUYER_A, strFileName, nCurHight, nFee+COIN);
 	if(basetest.GetHashFromCreatedTx(regscript, sritpthash)){
 		step++;
 		return true;

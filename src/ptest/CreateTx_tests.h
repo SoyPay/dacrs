@@ -19,15 +19,10 @@ public:
 	CCreateTxTest();
 	 ~CCreateTxTest(){};
 	 bool  CreateTx(int nTxType);
-	 static bool SelectAccounts();
-	 bool SelectOneAccount(string &selectAddr);
-	 bool WaitComfirms();
 	 void Initialize();
-	 int Str2Int(string &strValue);
 	 TEST_STATE Run();
 private:
-	 static vector<string> vAccount;
-	 static  int conter ;
+	 static  int nCount ;
 	 int nTxType;
 	 int nNum;
 	 int nStep ;

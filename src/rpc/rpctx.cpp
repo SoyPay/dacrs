@@ -343,9 +343,9 @@ Value createcontracttx(const Array& params, bool fHelp) {
 }
 
 //create a register script tx
-Value registerscripttx(const Array& params, bool fHelp) {
+Value registerapptx(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 3) {
-		string msg = "registerscripttx nrequired \"addr\" \"script\" fee height\n"
+		string msg = "registerapptx nrequired \"addr\" \"script\" fee height\n"
 				"\nregister script\n"
 				"\nArguments:\n"
 				"1.\"addr\": (string required)\n"
@@ -356,9 +356,9 @@ Value registerscripttx(const Array& params, bool fHelp) {
 				"\nResult:\n"
 				"\"txhash\": (string)\n"
 				"\nExamples:\n"
-				+ HelpExampleCli("registerscripttx",
+				+ HelpExampleCli("registerapptx",
 						"\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" 010203040506 100000 1") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("registerscripttx",
+				+ HelpExampleRpc("registerapptx",
 						"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 010203040506 100000 1");
 		throw runtime_error(msg);
 	}
@@ -370,7 +370,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	string path = params[1].get_str();
 	FILE* file = fopen(path.c_str(), "rb+");
 	if (!file) {
-		throw runtime_error("create registerscripttx open script file" + path + "error");
+		throw runtime_error("create registerapptx open script file" + path + "error");
 	}
 	long lSize;
 	fseek(file, 0, SEEK_END);
@@ -409,12 +409,12 @@ Value registerscripttx(const Array& params, bool fHelp) {
 	}
 
 	if (fee > 0 && fee < CTransaction::nMinTxFee) {
-		throw runtime_error("in registerscripttx :fee is smaller than nMinTxFee\n");
+		throw runtime_error("in registerapptx :fee is smaller than nMinTxFee\n");
 	}
 	//get keyid
 	CKeyID keyid;
 	if (!GetKeyId(params[0].get_str(), keyid)) {
-		throw runtime_error("in registerscripttx :send address err\n");
+		throw runtime_error("in registerapptx :send address err\n");
 	}
 
 	assert(pwalletMain != NULL);
@@ -433,15 +433,15 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		}
 
 		if (!account.IsRegister()) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "in registerscripttx Error: Account is not registered.");
+			throw JSONRPCError(RPC_WALLET_ERROR, "in registerapptx Error: Account is not registered.");
 		}
 
 		if (!pwalletMain->count(keyid)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "in registerscripttx Error: WALLET file is not correct.");
+			throw JSONRPCError(RPC_WALLET_ERROR, "in registerapptx Error: WALLET file is not correct.");
 		}
 
 		if (balance < fee) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "in registerscripttx Error: Account balance is insufficient.");
+			throw JSONRPCError(RPC_WALLET_ERROR, "in registerapptx Error: Account balance is insufficient.");
 		}
 
 		auto GetUserId =
@@ -451,7 +451,7 @@ Value registerscripttx(const Array& params, bool fHelp) {
 					if (view.GetAccount(CUserID(mkeyId), acct)) {
 						return acct.regID;
 					}
-					throw runtime_error(tinyformat::format("registerscripttx :account id %s is not exist\n", mkeyId.ToAddress()));
+					throw runtime_error(tinyformat::format("registerapptx :account id %s is not exist\n", mkeyId.ToAddress()));
 				};
 
 		tx.regAcctId = GetUserId(keyid);
@@ -464,14 +464,14 @@ Value registerscripttx(const Array& params, bool fHelp) {
 		tx.nValidHeight = height;
 
 		if (!pwalletMain->Sign(keyid, tx.SignatureHash(), tx.signature)) {
-			throw JSONRPCError(RPC_WALLET_ERROR, "registerscripttx Error: Sign failed.");
+			throw JSONRPCError(RPC_WALLET_ERROR, "registerapptx Error: Sign failed.");
 		}
 	}
 
 	std::tuple<bool, string> ret;
 	ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
 	if (!std::get<0>(ret)) {
-		throw JSONRPCError(RPC_WALLET_ERROR, "registerscripttx Error:" + std::get<1>(ret));
+		throw JSONRPCError(RPC_WALLET_ERROR, "registerapptx Error:" + std::get<1>(ret));
 	}
 	Object obj;
 	obj.push_back(Pair("hash", std::get<1>(ret)));
@@ -1353,7 +1353,7 @@ Value createcontracttxraw(const Array& params, bool fHelp) {
 Value registerscripttxraw(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 4) {
 		string msg =
-				"registerscripttx nrequired \"addr\" \"script\" fee height\n"
+				"registerapptx nrequired \"addr\" \"script\" fee height\n"
 						"\nregister script\n"
 						"\nArguments:\n"
 						"1.\"height\": (numeric required)valid height\n"
@@ -1391,7 +1391,7 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 		string path = params[4].get_str();
 		FILE* file = fopen(path.c_str(), "rb+");
 		if (!file) {
-			throw runtime_error("create registerscripttx open script file" + path + "error");
+			throw runtime_error("create registerapptx open script file" + path + "error");
 		}
 		long lSize;
 //		 size_t nSize = 1;
@@ -1432,12 +1432,12 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 	}
 
 	if (fee > 0 && fee < CTransaction::nMinTxFee) {
-		throw runtime_error("in registerscripttx :fee is smaller than nMinTxFee\n");
+		throw runtime_error("in registerapptx :fee is smaller than nMinTxFee\n");
 	}
 	//get keyid
 	CKeyID keyid;
 	if (!GetKeyId(params[2].get_str(), keyid)) {
-		throw runtime_error("in registerscripttx :send address err\n");
+		throw runtime_error("in registerapptx :send address err\n");
 	}
 
 	//balance
@@ -1485,7 +1485,7 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 
 Value sigstr(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 2) {
-		string msg = "registerscripttx nrequired \"addr\" \"script\" fee height\n"
+		string msg = "registerapptx nrequired \"addr\" \"script\" fee height\n"
 				"\nregister script\n"
 				"\nArguments:\n"
 				"1.\"str\": (str) sig str\n"
@@ -1605,7 +1605,7 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 
 Value printblokdbinfo(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {
-		string msg = "registerscripttx nrequired \"addr\" \"script\" fee height\n"
+		string msg = "registerapptx nrequired \"addr\" \"script\" fee height\n"
 				"\nregister script\n"
 				"\nArguments:\n"
 				"\nExamples:\n" + HelpExampleCli("printblokdbinfo", "") + "\nAs json rpc call\n"

@@ -114,7 +114,7 @@ string initPubKey[] = { //
 		"03ae28a4100145a4c354338c727a54800dc540069fa2f5fd5d4a1c80b4a35a1762"
 };
 unsigned int pnSeed[] = //
-		{ /*0xa78a2879*/ };
+		{0xa78a2879};
 
 class CMainParams: public CBaseParams {
 public:

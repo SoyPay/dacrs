@@ -97,10 +97,7 @@ struct AccOperLog {
 class SysTestBase {
 protected:
 
-
 	int GetRandomMoney();
-
-
 
 	Value GetAccountInfo(const string& strID);
 
@@ -168,7 +165,7 @@ public:
 		return true;
 	}
 
-	Value CreateRegScriptTx(const string& strAddress, const string& strScript, bool bRigsterScript, int nFee,
+	Value CreateRegAppTx(const string& strAddress, const string& strScript, bool bRigsterScript, int nFee,
 			int nHeight);
 
 	bool ResetEnv();
@@ -192,7 +189,7 @@ public:
 	Value CreateContractTx(const std::string &scriptid, const std::string &addrs, const std::string &contract,
 			int nHeight,int nFee = 0,uint64_t nMoney = 0);
 
-	Value RegisterScriptTx(const string& strAddress, const string& strScript, int nHeight, int nFee = 100000000);
+	Value RegisterAppTx(const string& strAddress, const string& strScript, int nHeight, int nFee = 100000000);
 
 	Value SignSecureTx(const string &securetx);
 

@@ -34,7 +34,7 @@ using namespace json_spirit;
 
 typedef struct  {
 	unsigned char dnType;					//!<类型
-	unsigned char seller[6];						//!<卖家ID（采用6字节的账户ID）
+	unsigned char seller[6];			    //!<卖家ID（采用6字节的账户ID）
 	IMPLEMENT_SERIALIZE
 	(
 			READWRITE(dnType);
@@ -45,7 +45,7 @@ typedef struct  {
 
 typedef struct {
 	unsigned char dnType;				//!<交易类型
-	unsigned char hash[32];		//!<上一个交易包的哈希
+	unsigned char hash[32];		        //!<上一个交易包的哈希
 	IMPLEMENT_SERIALIZE
 	(
 		READWRITE(dnType);

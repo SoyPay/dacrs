@@ -28,6 +28,7 @@ dacrs_ptest_SOURCES = \
   Mining_tests.cpp	\
   CreateTx_tests.cpp \
   CBlackHalo_tests.cpp	\
+  CAnony_tests.cpp     \
   ../test/systestbase.cpp \
   CycleSesureTrade_tests.cpp	\
   CycleTestBase.cpp	\
@@ -36,6 +37,7 @@ dacrs_ptest_SOURCES = \
   CycleTestBase.h	\
   CycleSesureTrade_tests.h	\
   CBlackHalo_tests.h	\
+  CAnony_tests.h   \
   CreateTx_tests.h  \
   ../test/systestbase.h \
   CycleP2PBet_tests.cpp \

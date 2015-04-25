@@ -24,7 +24,7 @@ extern Value sendtoaddressraw(const Array& params, bool fHelp);
 extern Value createcontracttx(const Array& params, bool fHelp);
 extern Value signcontracttx(const Array& params, bool fHelp);
 extern Value createfreezetx(const Array& params, bool fHelp);
-extern Value registerscripttx(const Array& params, bool fHelp);
+extern Value registerapptx(const Array& params, bool fHelp);
 
 extern Value listaddr(const Array& params, bool fHelp);
 extern Value listtx(const Array& params, bool fHelp);
