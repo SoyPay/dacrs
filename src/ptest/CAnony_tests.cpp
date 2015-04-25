@@ -25,19 +25,13 @@ TEST_STATE CAnonyTest::Run(){
 	case 0:
 	{
 		if(RegistScript())
-			nStep = 3;
+			nStep = 2;
 		break;
 	}
 	case 1:
-		if(CreateAnonyTx())
-			nStep = 2;
+		CreateAnonyTx();
 		break;
 	case 2:
-		if(WaitComfirmed(strTxHash, regId)) {
-			nStep = 1;
-		}
-		break;
-	case 3:
 		if(WaitComfirmed(strTxHash, strAppRegId)) {
 			nStep = 1;
 		}
@@ -123,7 +117,7 @@ void CAnonyTest::Initialize(){
 	if(0 == nNum) { //if don't have input param -number, default create 100 CCreateTxText instance defalue;
 		nNum = 100;
 	}
-	for(int i=0; i< 1; ++i)
+	for(int i=0; i< nNum; ++i)
 	{
 		vTest.push_back(std::make_shared<CAnonyTest>());
 	}
