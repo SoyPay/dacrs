@@ -2106,7 +2106,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 		uniqueTx.insert(block.GetTxHash(i));
 
 		if (!CheckTransaction(block.vptx[i].get(), state, view, scriptDBCache))
-			return ERRORMSG("CheckBlock() : CheckTransaction failed");
+			return ERRORMSG("CheckBlock() :tx hash:%s CheckTransaction failed", block.vptx[i]->GetHash().GetHex());
 		if(block.GetHash() != SysCfg().HashGenesisBlock()) {
 			if (0 != i && block.vptx[i]->IsCoinBase())
 				return state.DoS(100, ERRORMSG("CheckBlock() : more than one coinbase"), REJECT_INVALID, "bad-cb-multiple");
@@ -2277,7 +2277,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     // Preliminary checks
     if (!CheckBlock(*pblock, state)) {
     	LogPrint("INFO", "CheckBlock() id: %d elapse time:%lld ms\n",chainActive.Height(),GetTimeMillis() - llBeginCheckBlockTime);
-        return ERRORMSG("ProcessBlock() : CheckBlock FAILED");
+        return ERRORMSG("ProcessBlock() :block hash:%s CheckBlock FAILED", pblock->GetHash().GetHex());
     }
     LogPrint("INFO", "CheckBlock() elapse time:%lld ms\n", GetTimeMillis() - llBeginCheckBlockTime);
     CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
