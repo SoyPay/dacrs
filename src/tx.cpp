@@ -145,6 +145,9 @@ void CRegID::SetRegID(string strRegID){
 	memcpy(&nHeight,&vRegID[0],sizeof(nHeight));
 	memcpy(&nIndex,&vRegID[sizeof(nHeight)],sizeof(nIndex));
 	}
+	else{
+		assert(0);
+	}
 
 }
 void CRegID::SetRegID(const vector<unsigned char>& vIn) {

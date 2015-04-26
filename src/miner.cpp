@@ -373,6 +373,7 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 			if (CONTRACT_TX == pBaseTx->nTxType) {
 				LogPrint("vm", "tx hash=%s VerifyPosTx run contract\n", pBaseTx->GetHash().GetHex());
 			}
+			pBaseTx->nFuelRate = pBlock->nFuelRate;
 			if (!pBaseTx->ExecuteTx(i, view, state, txundo, pBlock->nHeight, txCache, scriptDBView)) {
 				return ERRORMSG("transaction UpdateAccount account error");
 			}
@@ -544,6 +545,7 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 				}
 				CAccountViewCache viewTemp(view, true);
 				CScriptDBViewCache scriptCacheTemp(scriptCache, true);
+				pBaseTx->nFuelRate = pblock->nFuelRate;
 				if (!pBaseTx->ExecuteTx(nBlockTx + 1, viewTemp, state, txundo, pIndexPrev->nHeight + 1,
 						txCache, scriptCacheTemp)) {
 					continue;

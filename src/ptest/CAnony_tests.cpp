@@ -76,7 +76,7 @@ bool CAnonyTest::CreateAnonyTx(){
 			return false;
 	}
 	int accountInfoSize = sizeof(ACCOUNT_INFO);
-	unsigned short length = nNum-1 * accountInfoSize;
+	unsigned short length = (nNum-1) * accountInfoSize;
 	unsigned char pAccountInfo[length];
 	memset(pAccountInfo, 0, length);
 	ACCOUNT_INFO accountInfo;

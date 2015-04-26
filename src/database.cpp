@@ -93,6 +93,9 @@ bool CAccountViewCache::SetAccount(const CKeyID &keyId, const CAccount &account)
 	return true;
 }
 bool CAccountViewCache::SetAccount(const vector<unsigned char> &accountId, const CAccount &account) {
+	if(accountId.empty()) {
+		return false;
+	}
 	if(cacheKeyIds.count(accountId)) {
 		cacheAccounts[cacheKeyIds[accountId]] = account;
 		return true;
@@ -153,10 +156,14 @@ bool CAccountViewCache::EraseAccount(const CKeyID &keyId) {
 	return true;
 }
 bool CAccountViewCache::SetKeyId(const vector<unsigned char> &accountId, const CKeyID &keyId) {
+	if(accountId.empty())
+		return false;
 	cacheKeyIds[accountId] = keyId;
 	return true;
 }
 bool CAccountViewCache::GetKeyId(const vector<unsigned char> &accountId, CKeyID &keyId) {
+	if(accountId.empty())
+		return false;
 	if(cacheKeyIds.count(accountId)){
 		keyId = cacheKeyIds[accountId];
 		if(keyId != uint160(0))
@@ -175,6 +182,8 @@ bool CAccountViewCache::GetKeyId(const vector<unsigned char> &accountId, CKeyID 
 }
 
 bool CAccountViewCache::EraseKeyId(const vector<unsigned char> &accountId) {
+	if(accountId.empty())
+		return false;
 	if (cacheKeyIds.count(accountId))
 		cacheKeyIds[accountId] = uint160(0);
 	else {
@@ -186,6 +195,9 @@ bool CAccountViewCache::EraseKeyId(const vector<unsigned char> &accountId) {
 	return true;
 }
 bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAccount &account) {
+	if(accountId.empty()) {
+		return false;
+	}
 	if(cacheKeyIds.count(accountId)) {
 		CKeyID keyId(cacheKeyIds[accountId]);
 		if(keyId != uint160(0)) {
