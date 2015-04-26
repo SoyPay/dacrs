@@ -547,7 +547,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 bool AddToBlockIndex(CBlock& block, CValidationState& state, const CDiskBlockPos& pos);
 
 // Context-independent validity checks
-bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
+bool CheckBlock(const CBlock& block, CValidationState& state, CAccountViewCache &view, CScriptDBViewCache &scriptDBCache, bool fCheckTx = true, bool fCheckMerkleRoot = true);
 
 bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CValidationState& state);
 
