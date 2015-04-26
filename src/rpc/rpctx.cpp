@@ -268,11 +268,9 @@ Value createcontracttx(const Array& params, bool fHelp) {
 
 	RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(str_type)(int_type)(int_type));
 
-	CRegID userId;
+	CRegID userId(params[0].get_str());
 	CKeyID srckeyid;
-	if (CRegID::IsRegIdStr(params[0].get_str())) {
-		userId.SetRegID(params[0].get_str());
-	} else {
+	if (userId.IsEmpty()) {
 		if (!GetKeyId(params[0].get_str(), srckeyid)) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Source Invalid  address");
 		}

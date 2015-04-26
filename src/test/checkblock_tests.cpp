@@ -50,7 +50,8 @@ BOOST_AUTO_TEST_CASE(May15)
     // http://sourceforge.net/projects/bitcoin/files/Bitcoin/blockchain/Mar12Fork.dat/download
     unsigned int tMay15 = 1368576000;
     SetMockTime(tMay15); // Test as if it was right at May 15
-
+    CAccountViewCache view(*pAccountViewTip, true);
+    CScriptDBViewCache scriptDBCache(*pScriptDBTip, true);
     CBlock forkingBlock;
     if (read_block("Mar12Fork.dat", forkingBlock))
     {
@@ -58,7 +59,7 @@ BOOST_AUTO_TEST_CASE(May15)
 
         // After May 15'th, big blocks are OK:
         forkingBlock.nTime = tMay15; // Invalidates PoW
-        BOOST_CHECK(CheckBlock(forkingBlock, state, false, false));
+        BOOST_CHECK(CheckBlock(forkingBlock, state, view, scriptDBCache, false, false));
     }
 
     SetMockTime(0);
