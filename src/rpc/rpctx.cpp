@@ -389,6 +389,11 @@ Value registerapptx(const Array& params, bool fHelp) {
 	}
 
 	vmScript.Rom.insert(vmScript.Rom.end(), buffer, buffer + lSize);
+	if (params.size() > 4) {
+		string scriptDesc = params[4].get_str();
+		vmScript.ScriptExplain.insert(vmScript.ScriptExplain.end(), scriptDesc.begin(), scriptDesc.end());
+	}
+
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	ds << vmScript;
 	vscript.assign(ds.begin(), ds.end());
@@ -403,10 +408,6 @@ Value registerapptx(const Array& params, bool fHelp) {
 	if (params.size() > 3)
 		height = params[3].get_int();
 
-	if (params.size() > 4) {
-		string scriptDesc = params[4].get_str();
-		vmScript.ScriptExplain.insert(vmScript.ScriptExplain.end(), scriptDesc.begin(), scriptDesc.end());
-	}
 
 	if (fee > 0 && fee < CTransaction::nMinTxFee) {
 		throw runtime_error("in registerapptx :fee is smaller than nMinTxFee\n");
