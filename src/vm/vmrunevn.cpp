@@ -56,7 +56,10 @@ bool CVmRunEvn::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& vie
 		LogPrint("ERROR", "%s\r\n", "CVmScriptRun::intial() vmScript.IsValid error");
 		return false;
 	}
-
+	if(secure->vContract.size() >=4*1024 ){
+		LogPrint("ERROR", "%s\r\n", "CVmScriptRun::intial() vContract context size lager 4096");
+		return false;
+	}
 	pMcu = make_shared<CVm8051>(vmScript.Rom, secure->vContract);
 	return true;
 }

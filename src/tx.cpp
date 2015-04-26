@@ -103,8 +103,9 @@ bool CRegID::IsSimpleRegIdStr(const string & str)
 			if (!isdigit(te))
 				return false;
 		}
+		return true;
 	}
-	return true;
+	return false;
 }
 bool CRegID::GetKeyID(const string & str,CKeyID &keyId)
 {
