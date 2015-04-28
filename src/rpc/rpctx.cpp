@@ -1616,7 +1616,7 @@ Value printblokdbinfo(const Array& params, bool fHelp) {
 		throw runtime_error("Failed to write to account database\n");
 	if (!pScriptDBTip->Flush())
 		throw runtime_error("Failed to write to account database\n");
-	WriteBlockLog(false);
+	WriteBlockLog(false, "");
 	return Value::null;
 }
 

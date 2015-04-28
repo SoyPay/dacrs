@@ -35,6 +35,7 @@ public:
     int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
+    uint256 hashPos;
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
@@ -53,6 +54,7 @@ public:
         nVersion = this->nVersion;
         READWRITE(hashPrevBlock);
         READWRITE(hashMerkleRoot);
+        READWRITE(hashPos);
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
@@ -67,11 +69,13 @@ public:
         nVersion = CBlockHeader::CURRENT_VERSION;
         hashPrevBlock = 0;
         hashMerkleRoot = 0;
+        hashPos = 0;
         nTime = 0;
         nBits = 0;
         nNonce = 0;
         nHeight = 0;
         nFuel = 0;
+        nFuelRate = 100;
         vSignature.clear();
     }
 
@@ -130,6 +134,7 @@ public:
         block.nVersion       = nVersion;
         block.hashPrevBlock  = hashPrevBlock;
         block.hashMerkleRoot = hashMerkleRoot;
+        block.hashPos        = hashPos;
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;

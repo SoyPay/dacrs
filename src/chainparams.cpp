@@ -154,6 +154,7 @@ public:
 		assert(CreateGenesisRewardTx(genesis.vptx));
 		genesis.hashPrevBlock = 0;
 		genesis.hashMerkleRoot = genesis.BuildMerkleTree();
+		genesis.hashPos = 0;
 		genesis.nVersion = 1;
 		genesis.nTime = 1231006505;
 		genesis.nBits = 0x1f3fffff;        //00 3f ff

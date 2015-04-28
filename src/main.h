@@ -680,6 +680,7 @@ public:
     // block header
     int nVersion;
     uint256 hashMerkleRoot;
+    uint256 hashPos;
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
@@ -709,6 +710,7 @@ public:
 
         nVersion       = 0;
         hashMerkleRoot = 0;
+        hashPos        = 0;
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
@@ -741,6 +743,7 @@ public:
 
         nVersion       = block.nVersion;
         hashMerkleRoot = block.hashMerkleRoot;
+        hashPos        = block.hashPos;
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
@@ -774,6 +777,7 @@ public:
         if (pprev)
             block.hashPrevBlock = pprev->GetBlockHash();
         block.hashMerkleRoot = hashMerkleRoot;
+        block.hashPos        = hashPos;
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
@@ -882,6 +886,7 @@ public:
         READWRITE(this->nVersion);
         READWRITE(hashPrev);
         READWRITE(hashMerkleRoot);
+        READWRITE(hashPos);
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
@@ -897,6 +902,7 @@ public:
         block.nVersion        = nVersion;
         block.hashPrevBlock   = hashPrev;
         block.hashMerkleRoot  = hashMerkleRoot;
+        block.hashPos         = hashPos;
         block.nTime           = nTime;
         block.nBits           = nBits;
         block.nNonce          = nNonce;
@@ -1069,7 +1075,7 @@ extern CTransactionDBCache *pTxCacheTip;
 extern CScriptDBViewCache *pScriptDBTip;
 
 extern std::tuple<bool, boost::thread*> RunDacrs(int argc, char* argv[]);
-extern bool WriteBlockLog(bool falg);
+extern bool WriteBlockLog(bool falg, string suffix);
 //extern set<uint256> setTxHashCache;
 //extern map<uint256, set<uint256> > mapTxHashCacheByPrev;
 

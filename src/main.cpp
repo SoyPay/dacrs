@@ -155,11 +155,16 @@ struct CMainSignals {
 } g_signals;
 }
 
-bool WriteBlockLog(bool falg) {
+bool WriteBlockLog(bool falg, string suffix) {
 	if (NULL == chainActive.Tip()) {
 		return false;
 	}
-
+	char splitChar;
+	#ifdef WIN32
+		splitChar = '\\';
+	#else
+		splitChar = '/';
+	#endif
 
 	boost::filesystem::path LogDirpath = GetDataDir() / "BlockLog";
 	if(!falg){
@@ -170,31 +175,32 @@ bool WriteBlockLog(bool falg) {
 	}
 
 	ofstream file;
+	int high = chainActive.Height();
 	string strLogFilePath = LogDirpath.string();
-	strLogFilePath += "\\" + chainActive.Tip()->GetBlockHash().ToString();
-    int high = chainActive.Height();
-	string strScriptLog = strLogFilePath + strprintf("_%d",high)+"_scriptDB.txt";
+	strLogFilePath += splitChar + strprintf("%d_",high) +chainActive.Tip()->GetBlockHash().ToString();
+
+	string strScriptLog = strLogFilePath +"_scriptDB_"+ suffix +".txt";
 	file.open(strScriptLog);
 	if (!file.is_open())
 		return false;
 	file << write_string(Value(pScriptDBTip->ToJosnObj()), true);
 	file.close();
 
-	string strAccountViewLog = strLogFilePath + strprintf("_%d",high)+"_AccountView.txt";
+	string strAccountViewLog = strLogFilePath +"_AccountView_"+ suffix +".txt";
 	file.open(strAccountViewLog);
 	if (!file.is_open())
 		return false;
 	file << write_string(Value(pAccountViewTip->ToJosnObj()), true);
 	file.close();
 
-	string strCacheLog = strLogFilePath + strprintf("_%d",high)+"_Cache.txt";
+	string strCacheLog = strLogFilePath + "_Cache_" + suffix +".txt";
 	file.open(strCacheLog);
 	if (!file.is_open())
 		return false;
 	file << write_string(Value(pTxCacheTip->ToJosnObj()), true);
 	file.close();
 
-	string strundoLog = strLogFilePath + strprintf("_%d",high)+"_undo.txt";
+	string strundoLog = strLogFilePath +"_undo.txt";
 	file.open(strundoLog);
 	if (!file.is_open())
 		return false;
@@ -1630,6 +1636,19 @@ bool static DisconnectTip(CValidationState &state) {
 			if (!AcceptToMemoryPool(mempool, stateDummy, ptx.get(), false, NULL))
 				mempool.remove(ptx.get(), removed, true);
 	}
+
+	if(SysCfg().GetArg("-blocklog", 0) !=0 )
+	{
+		if (chainActive.Height()%SysCfg().GetArg("-blocklog", 0) == 0) {
+		  if (!pAccountViewTip->Flush())
+			return state.Abort(_("Failed to write to account database"));
+		if (!pTxCacheTip->Flush())
+			return state.Abort(_("Failed to write to tx cache database"));
+		if (! pScriptDBTip->Flush())
+			return state.Abort(_("Failed to write to script db database"));
+			WriteBlockLog(true, "DisConnectTip");
+		}
+	}
     return true;
 }
 
@@ -1713,7 +1732,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
   			return state.Abort(_("Failed to write to tx cache database"));
   		if (! pScriptDBTip->Flush())
   			return state.Abort(_("Failed to write to script db database"));
-  			WriteBlockLog(true);
+  			WriteBlockLog(true, "ConnectTip");
   		}
       }
 
@@ -1749,7 +1768,8 @@ void static FindMostWorkChain() {
             if (pindexTest->nStatus & BLOCK_FAILED_MASK) {
                 // Candidate has an invalid ancestor, remove entire chain from the set.
                 if (pindexBestInvalid == NULL || pindexNew->nChainWork > pindexBestInvalid->nChainWork)
-                    pindexBestInvalid = pindexNew;                CBlockIndex *pindexFailed = pindexNew;
+                    pindexBestInvalid = pindexNew;
+                CBlockIndex *pindexFailed = pindexNew;
                 while (pindexTest != pindexFailed) {
                     pindexFailed->nStatus |= BLOCK_FAILED_CHILD;
                     setBlockIndexValid.erase(pindexFailed);
@@ -2141,14 +2161,6 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 	LogPrint("acceptblock", "AcceptBlcok hash:%s\n", hash.GetHex());
 	if (mapBlockIndex.count(hash))
 		return state.Invalid(ERRORMSG("AcceptBlock() : block already in mapBlockIndex"), 0, "duplicate");
-
-//	for(auto & item : mapBlockIndex) {
-//		if(NULL == item.second) {
-//			LogPrint("BlockIndex", "key:%s \n", item.first.GetHex());
-//		}else {
-//			LogPrint("BlockIndex", "key:%s value:%s\n", item.first.GetHex(), (*(item.second)).ToString());
-//		}
-//	}
 
 	assert(mapBlockIndex.count(block.hashPrevBlock));
 	if(block.nFuelRate != GetElementForBurn(mapBlockIndex[block.hashPrevBlock]))
