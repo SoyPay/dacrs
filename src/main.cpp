@@ -155,11 +155,16 @@ struct CMainSignals {
 } g_signals;
 }
 
-bool WriteBlockLog(bool falg) {
+bool WriteBlockLog(bool falg, string suffix) {
 	if (NULL == chainActive.Tip()) {
 		return false;
 	}
-
+	char splitChar;
+	#ifdef WIN32
+		splitChar = '\\';
+	#else
+		splitChar = '/';
+	#endif
 
 	boost::filesystem::path LogDirpath = GetDataDir() / "BlockLog";
 	if(!falg){
@@ -170,31 +175,32 @@ bool WriteBlockLog(bool falg) {
 	}
 
 	ofstream file;
+	int high = chainActive.Height();
 	string strLogFilePath = LogDirpath.string();
-	strLogFilePath += "\\" + chainActive.Tip()->GetBlockHash().ToString();
-    int high = chainActive.Height();
-	string strScriptLog = strLogFilePath + strprintf("_%d",high)+"_scriptDB.txt";
+	strLogFilePath += splitChar + strprintf("%d_",high) +chainActive.Tip()->GetBlockHash().ToString();
+
+	string strScriptLog = strLogFilePath +"_scriptDB_"+ suffix +".txt";
 	file.open(strScriptLog);
 	if (!file.is_open())
 		return false;
 	file << write_string(Value(pScriptDBTip->ToJosnObj()), true);
 	file.close();
 
-	string strAccountViewLog = strLogFilePath + strprintf("_%d",high)+"_AccountView.txt";
+	string strAccountViewLog = strLogFilePath +"_AccountView_"+ suffix +".txt";
 	file.open(strAccountViewLog);
 	if (!file.is_open())
 		return false;
 	file << write_string(Value(pAccountViewTip->ToJosnObj()), true);
 	file.close();
 
-	string strCacheLog = strLogFilePath + strprintf("_%d",high)+"_Cache.txt";
+	string strCacheLog = strLogFilePath + "_Cache_" + suffix +".txt";
 	file.open(strCacheLog);
 	if (!file.is_open())
 		return false;
 	file << write_string(Value(pTxCacheTip->ToJosnObj()), true);
 	file.close();
 
-	string strundoLog = strLogFilePath + strprintf("_%d",high)+"_undo.txt";
+	string strundoLog = strLogFilePath +"_undo.txt";
 	file.open(strundoLog);
 	if (!file.is_open())
 		return false;
@@ -1231,7 +1237,11 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &
 		//undo mature reward tx
 		txundo = blockUndo.vtxundo.back();
 		blockUndo.vtxundo.pop_back();
-		CBlockIndex *pMatureIndex = chainActive[pindex->nHeight - COINBASE_MATURITY];
+		//CBlockIndex *pMatureIndex = chainActive[pindex->nHeight - COINBASE_MATURITY];
+		CBlockIndex *pMatureIndex = pindex;
+		for(int i=0; i<COINBASE_MATURITY; ++i) {
+			pMatureIndex = pMatureIndex->pprev;
+		}
 		if (NULL != pMatureIndex) {
 			CBlock matureBlock;
 			if (!ReadBlockFromDisk(matureBlock, pMatureIndex)) {
@@ -1324,7 +1334,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 {
     AssertLockHeld(cs_main);
     // Check it again in case a previous version let a bad block in
-    if (!CheckBlock(block, state, !fJustCheck, !fJustCheck))
+    if (!CheckBlock(block, state, view, scriptDBCache, !fJustCheck, !fJustCheck))
         return false;
 
     // verify that the view's current state corresponds to the previous block
@@ -1384,6 +1394,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 			}
 			LogPrint("op_account", "tx index:%d tx hash:%s\n", i, pBaseTx->GetHash().GetHex());
 			CTxUndo txundo;
+			pBaseTx->nFuelRate = block.nFuelRate;
 			if(!pBaseTx->ExecuteTx(i, view, state, txundo, pindex->nHeight, txCache, scriptDBCache)) {
 				return false;
 			}
@@ -1433,7 +1444,11 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 
 	if (pindex->nHeight - COINBASE_MATURITY > 0) {
 		//deal mature reward tx
-		CBlockIndex *pMatureIndex = chainActive[pindex->nHeight - COINBASE_MATURITY];
+		//CBlockIndex *pMatureIndex = chainActive[pindex->nHeight - COINBASE_MATURITY];
+		CBlockIndex * pMatureIndex = pindex;
+		for(int i = 0; i<COINBASE_MATURITY; ++i) {
+			pMatureIndex = pMatureIndex->pprev;
+		}
 		if (NULL != pMatureIndex) {
 			CBlock matureBlock;
 			if (!ReadBlockFromDisk(matureBlock, pMatureIndex)) {
@@ -1621,6 +1636,19 @@ bool static DisconnectTip(CValidationState &state) {
 			if (!AcceptToMemoryPool(mempool, stateDummy, ptx.get(), false, NULL))
 				mempool.remove(ptx.get(), removed, true);
 	}
+
+	if(SysCfg().GetArg("-blocklog", 0) !=0 )
+	{
+		if (chainActive.Height()%SysCfg().GetArg("-blocklog", 0) == 0) {
+		  if (!pAccountViewTip->Flush())
+			return state.Abort(_("Failed to write to account database"));
+		if (!pTxCacheTip->Flush())
+			return state.Abort(_("Failed to write to tx cache database"));
+		if (! pScriptDBTip->Flush())
+			return state.Abort(_("Failed to write to script db database"));
+			WriteBlockLog(true, "DisConnectTip");
+		}
+	}
     return true;
 }
 
@@ -1704,7 +1732,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
   			return state.Abort(_("Failed to write to tx cache database"));
   		if (! pScriptDBTip->Flush())
   			return state.Abort(_("Failed to write to script db database"));
-  			WriteBlockLog(true);
+  			WriteBlockLog(true, "ConnectTip");
   		}
       }
 
@@ -1740,7 +1768,8 @@ void static FindMostWorkChain() {
             if (pindexTest->nStatus & BLOCK_FAILED_MASK) {
                 // Candidate has an invalid ancestor, remove entire chain from the set.
                 if (pindexBestInvalid == NULL || pindexNew->nChainWork > pindexBestInvalid->nChainWork)
-                    pindexBestInvalid = pindexNew;                CBlockIndex *pindexFailed = pindexNew;
+                    pindexBestInvalid = pindexNew;
+                CBlockIndex *pindexFailed = pindexNew;
                 while (pindexTest != pindexFailed) {
                     pindexFailed->nStatus |= BLOCK_FAILED_CHILD;
                     setBlockIndexValid.erase(pindexFailed);
@@ -2062,7 +2091,7 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 
 }
 
-bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot)
+bool CheckBlock(const CBlock& block, CValidationState& state, CAccountViewCache &view, CScriptDBViewCache &scriptDBCache, bool fCheckTx, bool fCheckMerkleRoot)
 {
     // These are checks that are independent of context
     // that can be verified before saving an orphan block.
@@ -2097,15 +2126,15 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 	block.BuildMerkleTree();
 
     // Check transactions
-    CAccountViewCache view(*pAccountViewTip, true);
-    CScriptDBViewCache scriptDBCache(*pScriptDBTip, true);
+//    CAccountViewCache view(*pAccountViewTip, true);
+//    CScriptDBViewCache scriptDBCache(*pScriptDBTip, true);
 	// Check for duplicate txids. This is caught by ConnectInputs(),
 	// but catching it earlier avoids a potential DoS attack:
 	set<uint256> uniqueTx;
 	for (unsigned int i = 0; i < block.vptx.size(); i++) {
 		uniqueTx.insert(block.GetTxHash(i));
 
-		if (!CheckTransaction(block.vptx[i].get(), state, view, scriptDBCache))
+		if (fCheckTx && !CheckTransaction(block.vptx[i].get(), state, view, scriptDBCache))
 			return ERRORMSG("CheckBlock() :tx hash:%s CheckTransaction failed", block.vptx[i]->GetHash().GetHex());
 		if(block.GetHash() != SysCfg().HashGenesisBlock()) {
 			if (0 != i && block.vptx[i]->IsCoinBase())
@@ -2132,14 +2161,6 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 	LogPrint("acceptblock", "AcceptBlcok hash:%s\n", hash.GetHex());
 	if (mapBlockIndex.count(hash))
 		return state.Invalid(ERRORMSG("AcceptBlock() : block already in mapBlockIndex"), 0, "duplicate");
-
-//	for(auto & item : mapBlockIndex) {
-//		if(NULL == item.second) {
-//			LogPrint("BlockIndex", "key:%s \n", item.first.GetHex());
-//		}else {
-//			LogPrint("BlockIndex", "key:%s value:%s\n", item.first.GetHex(), (*(item.second)).ToString());
-//		}
-//	}
 
 	assert(mapBlockIndex.count(block.hashPrevBlock));
 	if(block.nFuelRate != GetElementForBurn(mapBlockIndex[block.hashPrevBlock]))
@@ -2274,8 +2295,10 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         return state.Invalid(ERRORMSG("ProcessBlock() : already have block (orphan) %s", hash.ToString()), 0, "duplicate");
 
     int64_t llBeginCheckBlockTime = GetTimeMillis();
+	CAccountViewCache view(*pAccountViewTip, true);
+	CScriptDBViewCache scriptDBCache(*pScriptDBTip, true);
     // Preliminary checks
-    if (!CheckBlock(*pblock, state)) {
+    if (!CheckBlock(*pblock, state, view, scriptDBCache, false)) {
     	LogPrint("INFO", "CheckBlock() id: %d elapse time:%lld ms\n",chainActive.Height(),GetTimeMillis() - llBeginCheckBlockTime);
         return ERRORMSG("ProcessBlock() :block hash:%s CheckBlock FAILED", pblock->GetHash().GetHex());
     }
@@ -2673,7 +2696,7 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth)
     LogPrint("INFO","Verifying last %i blocks at level %i\n", nCheckDepth, nCheckLevel);
     CAccountViewCache view(*pAccountViewTip, true);
     CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
-    CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+    CScriptDBViewCache scriptDBCache(*pScriptDBTip, true);
     CBlockIndex* pindexState = chainActive.Tip();
     CBlockIndex* pindexFailure = NULL;
     int nGoodTransactions = 0;
@@ -2691,7 +2714,7 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth)
         if (!ReadBlockFromDisk(block, pindex))
             return ERRORMSG("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
         // check level 1: verify block validity
-        if (nCheckLevel >= 1 && !CheckBlock(block, state))
+        if (nCheckLevel >= 1 && !CheckBlock(block, state, view, scriptDBCache))
             return ERRORMSG("VerifyDB() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
         // check level 2: verify undo validity
         if (nCheckLevel >= 2 && pindex) {
@@ -2706,7 +2729,7 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth)
         if (nCheckLevel >= 3 && pindex == pindexState /*&& (coins.GetCacheSize() + pcoinsTip->GetCacheSize()) <= 2*nCoinCacheSize + 32000*/) {
             bool fClean = true;
 
-            if (!DisconnectBlock(block, state, view, pindex, txCacheTemp, contractScriptTemp, &fClean))
+            if (!DisconnectBlock(block, state, view, pindex, txCacheTemp, scriptDBCache, &fClean))
                 return ERRORMSG("VerifyDB() : *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
             pindexState = pindex->pprev;
             if (!fClean) {
@@ -2729,7 +2752,7 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth)
             CBlock block;
             if (!ReadBlockFromDisk(block, pindex))
                 return ERRORMSG("VerifyDB() : *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
-            if (!ConnectBlock(block, state, view, pindex, txCacheTemp, contractScriptTemp, false))
+            if (!ConnectBlock(block, state, view, pindex, txCacheTemp, scriptDBCache, false))
                 return ERRORMSG("VerifyDB() : *** found unconnectable block at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
         }
     }

@@ -16,7 +16,7 @@ uint256 CBlockHeader::GetHash() const
 uint256 CBlockHeader::SignatureHash() const
 {
 	CHashWriter ss(SER_GETHASH, CLIENT_VERSION);
-	ss << nVersion << hashPrevBlock << hashMerkleRoot << nTime << nBits << nNonce << nHeight;
+	ss << nVersion << hashPrevBlock << hashMerkleRoot << hashPos << nTime << nBits << nNonce << nHeight << nFuel << nFuelRate;
 	return ss.GetHash();
 }
 
@@ -81,11 +81,12 @@ int64_t CBlock::GetFee() const{
 
 void CBlock::print(CAccountViewCache &view) const
 {
-	LogPrint("INFO","CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%u, nFuel=%d, nFuelRate=%d)\n",
+	LogPrint("INFO","CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, hashPos=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%u, nFuel=%d, nFuelRate=%d)\n",
         GetHash().ToString(),
         nVersion,
         hashPrevBlock.ToString(),
         hashMerkleRoot.ToString(),
+        hashPos.ToString(),
         nTime, nBits, nNonce,
         vptx.size(), nFuel, nFuelRate);
 //	LogPrint("INFO","list transactions: \n");

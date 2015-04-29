@@ -312,6 +312,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 					prtx->account = regid;
 					prtx->nHeight = pPrevIndex->nHeight+1;
 					pBlock->hashMerkleRoot = pBlock->BuildMerkleTree();
+					pBlock->hashPos = curhash;
 					LogPrint("INFO", "find pos tx hash succeed: \n"
 									  "   pos hash:%s \n"
 									  "adjust hash:%s \r\n", curhash.GetHex(), adjusthash.GetHex());
@@ -373,6 +374,7 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 			if (CONTRACT_TX == pBaseTx->nTxType) {
 				LogPrint("vm", "tx hash=%s VerifyPosTx run contract\n", pBaseTx->GetHash().GetHex());
 			}
+			pBaseTx->nFuelRate = pBlock->nFuelRate;
 			if (!pBaseTx->ExecuteTx(i, view, state, txundo, pBlock->nHeight, txCache, scriptDBView)) {
 				return ERRORMSG("transaction UpdateAccount account error");
 			}
@@ -380,7 +382,9 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 			if(nTotalRunStep > MAX_BLOCK_RUN_STEP) {
 				return ERRORMSG("block total run steps exceed max run step");
 			}
+
 			nTotalFuel += pBaseTx->GetFuel(pBlock->nFuelRate);
+			LogPrint("fuel", "VerifyPosTx total fuel:%d, tx fuel:%d runStep:%d fuelRate:%d txhash:%s \n",nTotalFuel, pBaseTx->GetFuel(pBlock->nFuelRate), pBaseTx->nRunStep, pBlock->nFuelRate, pBaseTx->GetHash().GetHex());
 		}
 
 		if(nTotalFuel != pBlock->nFuel) {
@@ -438,7 +442,11 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 
 	LogPrint("miner", "Miner account info:%s\n", account.ToString());
 	LogPrint("miner", "VerifyPosTx block hash:%s, postxinfo:%s\n", pBlock->GetHash().GetHex(), postxinfo.ToString().c_str());
-
+	if(pBlock->hashPos != curhash) {
+		return ERRORMSG("PosHash Error: \n"
+					" computer PoS hash:%s \n"
+					" block PoS hash:%s\n", curhash.GetHex(),  pBlock->hashPos.GetHex());
+	}
 	if (curhash > adjusthash) {
 		return ERRORMSG("Account ProofOfWorkLimit error: \n"
 		           "   pos hash:%s \n"
@@ -544,6 +552,7 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 				}
 				CAccountViewCache viewTemp(view, true);
 				CScriptDBViewCache scriptCacheTemp(scriptCache, true);
+				pBaseTx->nFuelRate = pblock->nFuelRate;
 				if (!pBaseTx->ExecuteTx(nBlockTx + 1, viewTemp, state, txundo, pIndexPrev->nHeight + 1,
 						txCache, scriptCacheTemp)) {
 					continue;

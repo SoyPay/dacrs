@@ -142,11 +142,10 @@ void CRegID::SetRegID(string strRegID){
 	}
 	else if(strRegID.length()==12)
 	{
-	vRegID = ::ParseHex(strRegID);
-	memcpy(&nHeight,&vRegID[0],sizeof(nHeight));
-	memcpy(&nIndex,&vRegID[sizeof(nHeight)],sizeof(nIndex));
+		vRegID = ::ParseHex(strRegID);
+		memcpy(&nHeight,&vRegID[0],sizeof(nHeight));
+		memcpy(&nIndex,&vRegID[sizeof(nHeight)],sizeof(nIndex));
 	}
-
 }
 void CRegID::SetRegID(const vector<unsigned char>& vIn) {
 	assert(vIn.size() == 6);

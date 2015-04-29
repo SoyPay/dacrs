@@ -268,11 +268,9 @@ Value createcontracttx(const Array& params, bool fHelp) {
 
 	RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(str_type)(int_type)(int_type));
 
-	CRegID userId;
+	CRegID userId(params[0].get_str());
 	CKeyID srckeyid;
-	if (CRegID::IsRegIdStr(params[0].get_str())) {
-		userId.SetRegID(params[0].get_str());
-	} else {
+	if (userId.IsEmpty()) {
 		if (!GetKeyId(params[0].get_str(), srckeyid)) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Source Invalid  address");
 		}
@@ -389,6 +387,11 @@ Value registerapptx(const Array& params, bool fHelp) {
 	}
 
 	vmScript.Rom.insert(vmScript.Rom.end(), buffer, buffer + lSize);
+	if (params.size() > 4) {
+		string scriptDesc = params[4].get_str();
+		vmScript.ScriptExplain.insert(vmScript.ScriptExplain.end(), scriptDesc.begin(), scriptDesc.end());
+	}
+
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	ds << vmScript;
 	vscript.assign(ds.begin(), ds.end());
@@ -403,10 +406,6 @@ Value registerapptx(const Array& params, bool fHelp) {
 	if (params.size() > 3)
 		height = params[3].get_int();
 
-	if (params.size() > 4) {
-		string scriptDesc = params[4].get_str();
-		vmScript.ScriptExplain.insert(vmScript.ScriptExplain.end(), scriptDesc.begin(), scriptDesc.end());
-	}
 
 	if (fee > 0 && fee < CTransaction::nMinTxFee) {
 		throw runtime_error("in registerapptx :fee is smaller than nMinTxFee\n");
@@ -1617,7 +1616,7 @@ Value printblokdbinfo(const Array& params, bool fHelp) {
 		throw runtime_error("Failed to write to account database\n");
 	if (!pScriptDBTip->Flush())
 		throw runtime_error("Failed to write to account database\n");
-	WriteBlockLog(false);
+	WriteBlockLog(false, "");
 	return Value::null;
 }
 

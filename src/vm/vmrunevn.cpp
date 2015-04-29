@@ -86,7 +86,7 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 	if(maxstep > MAX_BLOCK_RUN_STEP){
 		maxstep = MAX_BLOCK_RUN_STEP;
 	}
-
+	LogPrint("vm", "tx hash:%s fees=%lld fuelrate=%lld maxstep:%d\n", Tx->GetHash().GetHex(), tx->llFees, nBurnFactor, maxstep);
 	tuple<bool, uint64_t, string> mytuple;
 	if (!intial(Tx, view, nheight)) {
 		return std::make_tuple (false, 0, string("VmScript inital Failed\n"));
