@@ -26,62 +26,62 @@ map<string, vector<string> > CBaseParams::m_mapMultiArgs;
 
 
 //	{
-//        "addr" : "mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA",
+//        "addr" : "dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem",
 //        "RegID" : "0-9",
 //        "RegID2" : "000000000900"
 //    },
 //    {
-//        "addr" : "mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5",
+//        "addr" : "dsGb9GyDGYnnHdjSvRfYbj9ox2zPbtgtpo",
 //        "RegID" : "0-5",
 //        "RegID2" : "000000000500"
 //    },
 //    {
-//        "addr" : "mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y",
+//        "addr" : "dejEcGCsBkwsZaiUH1hgMapjbJqPdPNV9U",
 //        "RegID" : "0-3",
 //        "RegID2" : "000000000300"
 //    },
 //    {
-//        "addr" : "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb",
+//        "addr" : "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz",
 //        "RegID" : "0-8",
 //        "RegID2" : "000000000800"
 //    },
 //    {
-//        "addr" : "mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7",
+//        "addr" : "dd936HZcwj9dQkefHPqZpxzUuKZZ2QEsbN",
 //        "RegID" : "0-7",
 //        "RegID2" : "000000000700"
 //    },
 //    {
-//        "addr" : "moZJZgsGFC4qvwRdjzS7Bj3fHrtpUfEVEE",
+//        "addr" : "dkoEsWuW3aoKaGduFbmjVDbvhmjxFnSbyL",
 //        "RegID" : "0-4",
 //        "RegID2" : "000000000400"
 //    },
 //    {
-//        "addr" : "mfzdtseoKfMpTd8V9N2xETEqUSWRujndgZ",
+//        "addr" : "ddEaChh3846J6xLkeyNaXwo6tMMZdHUTx6",
 //        "RegID" : " ",
 //        "RegID2" : "000000000000"
 //    },
 //    {
-//        "addr" : "mjSwCwMsvtKczMfta1tvr78z2FTsZA1JKw",
+//        "addr" : "dggsWmQ7jH46dgtA5dEZ9bhFSAK1LASALw",
 //        "RegID" : "0-1",
 //        "RegID2" : "000000000100"
 //    },
 //    {
-//        "addr" : "msdDQ1SXNmknrLuTDivmJiavu5J9VyX9fV",
+//        "addr" : "dps9hqUmBAVGVg7ijLGPcD9CJz9HHiTw6H",
 //        "RegID" : "0-10",
 //        "RegID2" : "000000000a00"
 //    },
 //    {
-//        "addr" : "mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz",
+//        "addr" : "dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr",
 //        "RegID" : " ",
 //        "RegID2" : "000000000000"
 //    },
 //    {
-//        "addr" : "mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v",
+//        "addr" : "doym966kgNUKr2M9P7CmjJeZdddqvoU5RZ",
 //        "RegID" : "0-6",
 //        "RegID2" : "000000000600"
 //    },
 //    {
-//        "addr" : "mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc",
+//        "addr" : "dtKsuK9HUvLLHtBQL8Psk5fUnTLTFC83GS",
 //        "RegID" : "0-2",
 //        "RegID2" : "000000000200"
 //    }
@@ -89,7 +89,7 @@ map<string, vector<string> > CBaseParams::m_mapMultiArgs;
 // Main network
 //
 string initPubKey[] = { //
-
+//		"02094571540d156ac611775a556924d39b55b4f8609818bf22457a93da82edc6e5"
 		"03d308757fc1f8efd69f2da329db560cd7d3cba951eb09786c375cf1709f9165ba",
 		"024126ccf4b5f6463a3f874f234b77d02e9f5c2057c6c382160dc17c7f9ba2b333",
 		"0221b571330617821e8c508416b90988e81e8dc8623576b8f6e942797e9f381111",
@@ -178,7 +178,8 @@ public:
         vSeeds.push_back(CDNSSeedData("soypay.org.cn", "seed_cn_0.dspay.org"));
         vSeeds.push_back(CDNSSeedData("soypay.org.us", "seed_us_0.dspay.org"));
 
-		base58Prefixes[PUBKEY_ADDRESS] = {0};
+//		base58Prefixes[PUBKEY_ADDRESS] = {0};
+        base58Prefixes[PUBKEY_ADDRESS] = {0x1f};
 		base58Prefixes[SCRIPT_ADDRESS] = {5};
 		base58Prefixes[SECRET_KEY] = {128};
 		base58Prefixes[EXT_PUBLIC_KEY] = {0x04,0x88,0xB2,0x1E};
@@ -275,9 +276,10 @@ public:
 //		vSeeds.push_back(CDNSSeedData("Dacrs.petertodd.org", "testnet-seed.Dacrs.petertodd.org"));
 //		vSeeds.push_back(CDNSSeedData("bluematt.me", "testnet-seed.bluematt.me"));
 
-		base58Prefixes[PUBKEY_ADDRESS] = {111};
+//		base58Prefixes[PUBKEY_ADDRESS] = {111};
+		base58Prefixes[PUBKEY_ADDRESS] = {0x5b};
 		base58Prefixes[SCRIPT_ADDRESS] = {196};
-		base58Prefixes[SECRET_KEY] = {239};
+		base58Prefixes[SECRET_KEY]     = {239};
 		base58Prefixes[EXT_PUBLIC_KEY] = {0x04,0x35,0x87,0xCF};
 		base58Prefixes[EXT_SECRET_KEY] = {0x04,0x35,0x83,0x94};
 	}

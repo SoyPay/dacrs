@@ -46,7 +46,7 @@ int TestCallRPC(std::string strMethod, const std::vector<std::string> &vParams, 
 static void CreateRegisterTx() {
 	//cout <<"CreateRegisterTx" << endl;
 	int argc = 5;
-	const char *argv[5] = { "rpctest", "registaccounttx", "mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz", "0", "10" };
+	const char *argv[5] = { "rpctest", "registaccounttx", "dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr", "0", "10" };
 	CommandLineRPC(argc, const_cast<char**>(argv));
 }
 
@@ -54,7 +54,7 @@ void CreateNormalTx() {
 	//cout <<"CreateNormalTx" << endl;
 	int argc = 7;
 	const char *argv[7] = { "rpctest", "createnormaltx", "5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG",
-			"mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz", "1000000000", "1000000", "0" };
+			"dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr", "1000000000", "1000000", "0" };
 	CommandLineRPC(argc, const_cast<char**>(argv));
 }
 
@@ -252,7 +252,7 @@ void DisconnectBlock(int number) {
 
 void GetAccountState() {
 	GetAccountInfo("5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG");
-	GetAccountInfo("mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz");
+	GetAccountInfo("dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr");
 	GetAccountInfo("5j9hghjMKwAcY33kQoSxPDJPvokt75dDeYpU5LVgUc");
 }
 
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(get_account_info)
 {
 	//cout << "=====================get account info ==================================" << endl;
 	GetAccountInfo("5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG");
-	GetAccountInfo("mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz");
+	GetAccountInfo("dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr");
 	GetAccountInfo("5j9hghjMKwAcY33kQoSxPDJPvokt75dDeYpU5LVgUc");
 	GetAccountInfo("5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9");
 }
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(connect_block_test)
 	//cout << "=====================init account info ========================" << endl;
 	GetAccountState();
 	//MilliSleep(1000);
-	CreateNormalTx();//"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG" "mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz"
+	CreateNormalTx();//"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG" "dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr"
 	GenerateMiner();
 	//MilliSleep(1000);
 	//cout << "=====================block height 1 account info ==============" << endl;
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(connect_block_test)
 	//cout << "=====================block height 2 account info ==============" << endl;
 	GetAccountState();
 	CreateNormalTx();
-	CreateRegisterTx();//"mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz"
+	CreateRegisterTx();//"dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr"
 	CreateRegScriptTx();//"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9"
 	GenerateMiner();
 	//MilliSleep(1000);

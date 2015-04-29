@@ -20,9 +20,9 @@ uint64_t llTotalFee(0);
 
 map<string, string> mapAddress =
         boost::assign::map_list_of
-        ("000000000100",	"mjSwCwMsvtKczMfta1tvr78z2FTsZA1JKw")
-        ("000000000200",	"mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc")
-        ("000000000300",	"mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y");
+        ("000000000100",	"dggsWmQ7jH46dgtA5dEZ9bhFSAK1LASALw")
+        ("000000000200",	"dtKsuK9HUvLLHtBQL8Psk5fUnTLTFC83GS")
+        ("000000000300",	"dejEcGCsBkwsZaiUH1hgMapjbJqPdPNV9U");
 
 vector<std::tuple<int, uint64_t, string> > vFreezeItem;
 vector<pair<string, uint64_t> > vSendFee;
@@ -77,8 +77,8 @@ public:
 	bool InitRegScript() {
 		ResetEnv();
 		string hash = "";
-		BOOST_CHECK(CreateRegScriptTx(false, hash,"mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v"));
-		BOOST_CHECK(SetBlockGenerte("mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v"));
+		BOOST_CHECK(CreateRegScriptTx(false, hash,"doym966kgNUKr2M9P7CmjJeZdddqvoU5RZ"));
+		BOOST_CHECK(SetBlockGenerte("doym966kgNUKr2M9P7CmjJeZdddqvoU5RZ"));
 		BOOST_CHECK(GetTxConfirmedRegID(hash,regScriptId));
 		return true;
 	}

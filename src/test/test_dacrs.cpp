@@ -25,13 +25,27 @@ extern void noui_connect();
 
 struct TestingSetup {
 	TestingSetup() {
-			int argc = 2;
+		int argc = 2;
+		string param1("dacrs-d.exe");
+		string param2("");
+
+		bool bSetDataDir(false);
+		for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i) {
+			string strArgv = boost::unit_test::framework::master_test_suite().argv[i];
+			if (string::npos != strArgv.find("-datadir=")) {
+				param1 = boost::unit_test::framework::master_test_suite().argv[0];
+				param2 = strArgv.c_str();
+				bSetDataDir = true;
+				break;
+			}
+		}
+		if (!bSetDataDir) {
 			char findchar;
-			#ifdef WIN32
+#ifdef WIN32
 			findchar = '\\';
-			#else
+#else
 			findchar = '/';
-			#endif
+#endif
 
 			string strCurDir = boost::filesystem::initial_path<boost::filesystem::path>().string();
 			int index = strCurDir.find_last_of(findchar);
@@ -41,19 +55,20 @@ struct TestingSetup {
 				strCurDir = strCurDir.substr(0, index);
 
 			}
+#ifdef WIN32
+			strCurDir += "\\dacrs_test";
+			param2 = "-datadir=";
+			param2 += strCurDir;
 
-			#ifdef WIN32
-			strCurDir +="\\dacrs_test";
-			string param = "-datadir=";
-			param +=strCurDir;
-			const char* argv[] = { "D:\\cppwork\\soypay\\src\\dacrs-d.exe", param.c_str() };
-			#else
+#else
 			strCurDir +="/dacrs_test";
-			string param = "-datadir=";
-			param +=strCurDir;
-			const char* argv[] = { "D:\\cppwork\\soypay\\src\\dacrs_d.exe", param.c_str() };
-			#endif
-			SysTestBase::StartServer(argc, argv);
+			param2 = "-datadir=";
+			param2 +=strCurDir;
+#endif
+		}
+		const char* argv[] = { param1.c_str(), param2.c_str()};
+		SysTestBase::StartServer(argc, argv);
+
 		}
 		~TestingSetup()
 		{

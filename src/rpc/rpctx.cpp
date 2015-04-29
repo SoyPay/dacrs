@@ -504,7 +504,7 @@ Value listaddr(const Array& params, bool fHelp) {
 		for (const auto &tem : pool) {
 			//find CAccount info by keyid
 			CUserID userId = tem.first;
-			if("mfzdtseoKfMpTd8V9N2xETEqUSWRujndgZ" == tem.first.ToAddress()) // regid 0-0 invalid address
+			if("ddEaChh3846J6xLkeyNaXwo6tMMZdHUTx6" == tem.first.ToAddress()) // regid 0-0 invalid address
 				continue;
 			CAccount Lambaacc;
 			accView.GetAccount(userId, Lambaacc);

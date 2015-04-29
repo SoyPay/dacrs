@@ -219,7 +219,7 @@ Value stop(const Array& params, bool fHelp)
 //
 extern Value resetclient(const Array& params, bool fHelp);
 extern Value gettxoperationlog(const Array& params, bool fHelp);
-extern Value prepareforcoolmining(const Array& params, bool fHelp);
+extern Value dropprivkey(const Array& params, bool fHelp);
 
 static const CRPCCommand vRPCCommands[] =
 { //  name                      actor (function)         okSafeMode threadSafe reqWallet
@@ -278,14 +278,14 @@ static const CRPCCommand vRPCCommands[] =
     { "listunconfirmedtx",      &listunconfirmedtx,      true,      false,      true },
     { "getwalletinfo",          &getwalletinfo,          true,      false,      true },
     { "importprivkey",          &importprivkey,          false,     false,      true },
-    { "prepareforcoolmining",   &prepareforcoolmining,   false,     false,      true },
+    { "dropprivkey",   			&dropprivkey,   		 false,     false,      true },
 
     { "importwallet",           &importwallet,           false,     false,      true },
     { "listaddr",               &listaddr,       	     true,      false,      true },
     { "listtx",                 &listtx,       	         true,      false,      true },
-    { "registaccounttx",        &registaccounttx,      true,      false,        true },
+    { "registaccounttx",        &registaccounttx,      	 true,      false,      true },
 	{ "createcontracttx",       &createcontracttx,       true,      false,      true },
-	{ "registerapptx",       &registerapptx,       true,      false,      true },
+	{ "registerapptx",       	&registerapptx,          true,      false,      true },
 	{ "settxfee",               &settxfee,               false,     false,      true },
 	{ "walletlock",             &walletlock,             true,      false,      true },
 	{ "walletpassphrasechange", &walletpassphrasechange, false,     false,      true },

@@ -58,7 +58,7 @@ public:
 		nOldMoney = 0;
 		nNewMoney = 0;
 		strFileName = "unit_test.bin";
-		strAddr1 = "mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA";
+		strAddr1 = "dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem";
 	}
 
 	~CSystemTest(){
@@ -179,6 +179,8 @@ public:
 
 		CVmScript vmScript;
 		vmScript.Rom.insert(vmScript.Rom.end(), buffer, buffer + lSize);
+		string desp("this is description");
+		vmScript.ScriptExplain.assign(desp.begin(), desp.end());
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
 		ds << vmScript;
 

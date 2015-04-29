@@ -12,15 +12,15 @@ using namespace json_spirit;
 #include "../test/systestbase.h"
 map<string, string> mapDesAddress[] = {
         boost::assign::map_list_of
-        ("000000000900",	"mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA")
-        ("000000000500",	"mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5")
-        ("000000000300",	"mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y")
-        ("000000000800",	"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb")
-        ("000000000700",	"mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7")
-        ("000000000400",	"moZJZgsGFC4qvwRdjzS7Bj3fHrtpUfEVEE")
-        ("000000000100",	"mjSwCwMsvtKczMfta1tvr78z2FTsZA1JKw")
-        ("000000000600",	"mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v")
-        ("000000000200",	"mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc"),
+        ("000000000900",	"dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem")
+        ("000000000500",	"dsGb9GyDGYnnHdjSvRfYbj9ox2zPbtgtpo")
+        ("000000000300",	"dejEcGCsBkwsZaiUH1hgMapjbJqPdPNV9U")
+        ("000000000800",	"e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz")
+        ("000000000700",	"dd936HZcwj9dQkefHPqZpxzUuKZZ2QEsbN")
+        ("000000000400",	"dkoEsWuW3aoKaGduFbmjVDbvhmjxFnSbyL")
+        ("000000000100",	"dggsWmQ7jH46dgtA5dEZ9bhFSAK1LASALw")
+        ("000000000600",	"doym966kgNUKr2M9P7CmjJeZdddqvoU5RZ")
+        ("000000000200",	"dtKsuK9HUvLLHtBQL8Psk5fUnTLTFC83GS"),
 
         boost::assign::map_list_of
         ("010000003300",	"mm8f5877wY4u2WhhX2JtGWPTPKwLbGJi37")
@@ -262,7 +262,7 @@ time_t string2time(const char * str,const char * formatStr)
 BOOST_FIXTURE_TEST_SUITE(auto_mining_test, CSendItem)
 BOOST_FIXTURE_TEST_CASE(regscript,CSendItem) {
 	//×¢²á½Å±¾½»Ò×
-	SysTestBase::RegisterAppTx("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin",0);
+	SysTestBase::RegisterAppTx("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin",0);
 }
 BOOST_FIXTURE_TEST_CASE(test1, CSendItem)
 {
@@ -271,7 +271,7 @@ BOOST_FIXTURE_TEST_CASE(test1, CSendItem)
 	CBaseParams::IntialParams(argc, argv);
 //	time_t t1 = string2time("2014-12-01 17:30:00","%d-%d-%d %d:%d:%d");
 
-	Value resulut = RegisterAppTx("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin",0);
+	Value resulut = RegisterAppTx("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin",0);
 	string scripthash = "";
 	BOOST_CHECK(GetHashFromCreatedTx(resulut,scripthash));
 	string scriptid = "";
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(test2)
 	int argc = sizeof(argv) / sizeof(char*);
 	CBaseParams::IntialParams(argc, argv);
 	int64_t runTime = GetTime()+llTime;
-	Value resulut = RegisterAppTx("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin",0);
+	Value resulut = RegisterAppTx("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin",0);
 	string scripthash = "";
 	BOOST_CHECK(GetHashFromCreatedTx(resulut,scripthash));
 	string scriptid = "";
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(test3)
 	CBaseParams::IntialParams(argc, argv);
 	int64_t runTime = GetTime()+llTime;
 
-	Value resulut = RegisterAppTx("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin",0);
+	Value resulut = RegisterAppTx("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin",0);
 	string scripthash = "";
 	BOOST_CHECK(GetHashFromCreatedTx(resulut,scripthash));
 	string scriptid = "";
@@ -353,7 +353,7 @@ BOOST_AUTO_TEST_CASE(test4)
 	CBaseParams::IntialParams(argc, argv);
 	int64_t runTime = GetTime()+llTime;
 
-	Value resulut = RegisterAppTx("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin",0);
+	Value resulut = RegisterAppTx("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin",0);
 	string scripthash = "";
 	BOOST_CHECK(GetHashFromCreatedTx(resulut,scripthash));
 	string scriptid = "";
@@ -379,7 +379,7 @@ BOOST_AUTO_TEST_CASE(test5)
 	CBaseParams::IntialParams(argc, argv);
 
 	int64_t runTime = GetTime()+llTime;
-	Value resulut = RegisterAppTx("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin",0);
+	Value resulut = RegisterAppTx("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin",0);
 	string scripthash = "";
 	BOOST_CHECK(GetHashFromCreatedTx(resulut,scripthash));
 	string scriptid = "";

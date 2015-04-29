@@ -60,8 +60,8 @@ enum TXTYPE{
 	TX_BUYERCONFIM = 0x03,
 	TX_BUYERCANCEL = 0x04,
 };
-#define BUYER_A    "mnnS4upLeY7RZpNnvoGMZzs9ELscQjtvqy"
-#define SELLER_B    "mjSwCwMsvtKczMfta1tvr78z2FTsZA1JKw"
+#define BUYER_A    "dk2NNjraSvquD9b4SQbysVRQeFikA55HLi"
+#define SELLER_B    "dggsWmQ7jH46dgtA5dEZ9bhFSAK1LASALw"
 
 
 class CBlackHalo: public CycleTestBase {

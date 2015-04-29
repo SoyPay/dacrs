@@ -70,7 +70,7 @@ struct CTxTest :public SysTestBase{
 		nRunTimeHeight = 0;
 		strRegID = "000000000900";
 		strKeyID = "a4529134008a4e09e68bec89045ccea6c013bd0b";
-		strSignAddr = "mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA";
+		strSignAddr = "dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem";
 
 		CKeyID keyID;
 		keyID.SetHex(strKeyID);

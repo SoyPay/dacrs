@@ -72,10 +72,10 @@ typedef struct {
 
 #pragma pack(pop)
 
-#define ADDR_A    "mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v"   // 0-6
-#define VADDR_A   "[\"mrjpqG4WsyjrCh8ssVs9Rp6JDini8suA7v\"]"
-#define ADDR_B    "mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7"
-#define VADDR_B   "[\"mfu6nTXP9LR9mRSPmnVwXUSDVQiRCBDJi7\"]"  //0-7
+#define ADDR_A    "doym966kgNUKr2M9P7CmjJeZdddqvoU5RZ"   // 0-6
+#define VADDR_A   "[\"doym966kgNUKr2M9P7CmjJeZdddqvoU5RZ\"]"
+#define ADDR_B    "dd936HZcwj9dQkefHPqZpxzUuKZZ2QEsbN"
+#define VADDR_B   "[\"dd936HZcwj9dQkefHPqZpxzUuKZZ2QEsbN\"]"  //0-7
 
 
 class CTestBetTx:public CycleTestBase,public SysTestBase

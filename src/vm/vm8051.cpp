@@ -825,10 +825,10 @@ static RET_DEFINE ExGetDBSizeFunc(unsigned char * ipara,void * pVmEvn) {
  */
 static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmEvn) {
 
-//	if (SysCfg().GetArg("-isdbtraversal", 0) == 0) {
-//		LogPrint("INFO","%s","ExGetDBValueFunc can't use\n");
-//    	return RetFalse(string(__FUNCTION__)+"para  err !");
-//	}
+	if (SysCfg().GetArg("-isdbtraversal", 0) == 0) {
+		LogPrint("INFO","%s","ExGetDBValueFunc can't use\n");
+    	return RetFalse(string(__FUNCTION__)+"para  err !");
+	}
 	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
@@ -866,8 +866,10 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmEvn) {
 	}
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+
     (*tem.get()).push_back(vScriptKey);
 	(*tem.get()).push_back(vValue);
+
 	return std::make_tuple (flag,0, tem);
 }
 static RET_DEFINE ExGetCurTxHash(unsigned char * ipara,void * pVmEvn) {

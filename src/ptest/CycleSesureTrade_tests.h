@@ -8,17 +8,17 @@
 #define SELLER	"02"
 #define ARBIT	"03"
 
-#define BUYER_ADDR 		"mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc"
-#define SELLER_ADDR 	"mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y"
-#define ARBIT_ADDR		"moZJZgsGFC4qvwRdjzS7Bj3fHrtpUfEVEE"
+#define BUYER_ADDR 		"dtKsuK9HUvLLHtBQL8Psk5fUnTLTFC83GS"
+#define SELLER_ADDR 	"dejEcGCsBkwsZaiUH1hgMapjbJqPdPNV9U"
+#define ARBIT_ADDR		"dkoEsWuW3aoKaGduFbmjVDbvhmjxFnSbyL"
 
 #define BUYER_ID 		"000000000200"
 #define SELLER_ID 		"000000000300"
 #define ARBIT_ID		"000000000400"
 
-#define VADDR_BUYER   	"[\"mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc\"]"
-#define VADDR_SELLER   	"[\"mhVJJSAdPNDPvFWCmQN446GUBPzFm8aN4y\"]"
-#define VADDR_ARBIT   	"[\"moZJZgsGFC4qvwRdjzS7Bj3fHrtpUfEVEE\"]"
+#define VADDR_BUYER   	"[\"dtKsuK9HUvLLHtBQL8Psk5fUnTLTFC83GS\"]"
+#define VADDR_SELLER   	"[\"dejEcGCsBkwsZaiUH1hgMapjbJqPdPNV9U\"]"
+#define VADDR_ARBIT   	"[\"dkoEsWuW3aoKaGduFbmjVDbvhmjxFnSbyL\"]"
 
 #define MAX_ACCOUNT_LEN 20
 #define ACCOUNT_ID_SIZE 6

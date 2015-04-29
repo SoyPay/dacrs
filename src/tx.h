@@ -893,7 +893,7 @@ void Serialize(Stream& os, const std::shared_ptr<CBaseTransaction> &pa, int nTyp
 		Serialize(os, *((CRegisterAppTx *) (pa.get())), nType, nVersion);
 	}
 	else {
-		assert(0);
+		throw ios_base::failure("seiralize tx type value error, must be ranger(1...5)");
 	}
 
 }
@@ -923,7 +923,7 @@ void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, i
 		Unserialize(is, *((CRegisterAppTx *) (pa.get())), nType, nVersion);
 	}
 	else {
-		assert(0);
+		throw ios_base::failure("unseiralize tx type value error, must be ranger(1...5)");
 	}
 	pa->nTxType = nTxType;
 }

@@ -70,7 +70,7 @@ string DecodeDumpString(const string &str) {
     return ret.str();
 }
 
-Value prepareforcoolmining(const Array& params, bool fHelp){
+Value dropprivkey(const Array& params, bool fHelp){
 	if (fHelp || params.size() != 0)
 		throw runtime_error("this cmd have no params\n");
 

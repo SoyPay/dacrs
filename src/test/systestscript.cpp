@@ -97,26 +97,26 @@ public:
 	void CheckSdk()
 	{
 		string param ="01";
-		Value resut =CreateContractTx("010000000100", "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10);
+		Value resut =CreateContractTx("010000000100", "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,TxHash));
 		BOOST_CHECK(GenerateOneBlock());
 		uint256 hash(TxHash.c_str());
 		param ="02";
 		param += HexStr(hash);
 		string temp;
-		resut =CreateContractTx("010000000100", "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10);
+		resut =CreateContractTx("010000000100", "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 		BOOST_CHECK(GenerateOneBlock());
 
 		param ="03";
-		resut =CreateContractTx("010000000100", "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10);
+		resut =CreateContractTx("010000000100", "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz", param,10);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 		BOOST_CHECK(GenerateOneBlock());
 
 		param ="05";
 		param += HexStr(hash);
 
-		resut =CreateContractTx("010000000100", "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,10000000);
+		resut =CreateContractTx("010000000100", "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz", param,10,10000000);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 		BOOST_CHECK(GenerateOneBlock());
 	}
@@ -136,7 +136,8 @@ public:
 		char buffer[3] = {0};
 		sprintf(buffer,"%02x",param);
 		string temp;
-		Value resut =CreateContractTx("010000000100", "5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d", buffer,10);
+		//Value resut =CreateContractTx("010000000100", "5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d", buffer,10);
+		Value resut =CreateContractTx("010000000100", "ddMuEBkAwhcb5K5QJ83MqQHrgHRn4EbRdh", buffer, 10, 1*COIN);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 		BOOST_CHECK(GenerateOneBlock());
 		return temp;
@@ -199,9 +200,9 @@ public:
 	}
 	bool CreateScriptAndCheck()
 	{
-		CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
+		CreateRegScript("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin");
 
-		CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
+		CreateRegScript("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin");
 
 		string strRegID = "010000000100";
 
@@ -230,12 +231,12 @@ public:
 		int param = 13;
 		string temp = "";
 		temp += tinyformat::format("%02x%s",param,accountid);
-		Value resut =CreateContractTx("010000000100", "mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5", temp,10,100000000,10000);
+		Value resut =CreateContractTx("010000000100", "dsGb9GyDGYnnHdjSvRfYbj9ox2zPbtgtpo", temp,10,100000000,10000);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 
-		BOOST_CHECK(SetAddrGenerteBlock("mjSwCwMsvtKczMfta1tvr78z2FTsZA1JKw"));
+		BOOST_CHECK(SetAddrGenerteBlock("dggsWmQ7jH46dgtA5dEZ9bhFSAK1LASALw"));
 		Value temp1 = GetAccountInfo("010000000100");
-		temp1 = GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
+		temp1 = GetAccountInfo("dsGb9GyDGYnnHdjSvRfYbj9ox2zPbtgtpo");
 		BOOST_CHECK_EQUAL(GetValue(temp1,"Balance"),999999899990000);
 
 
@@ -243,13 +244,13 @@ public:
 		param = 14;
 		temp = "";
 		temp += tinyformat::format("%02x%s",param,accountid);
-		resut =CreateContractTx("010000000100", "mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5", temp,10,100000000);
+		resut =CreateContractTx("010000000100", "dsGb9GyDGYnnHdjSvRfYbj9ox2zPbtgtpo", temp,10,100000000);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 
-		BOOST_CHECK(SetAddrGenerteBlock("msdDQ1SXNmknrLuTDivmJiavu5J9VyX9fV"));
+		BOOST_CHECK(SetAddrGenerteBlock("dps9hqUmBAVGVg7ijLGPcD9CJz9HHiTw6H"));
 		temp1 = GetAccountInfo("010000000100");
 		BOOST_CHECK_EQUAL(GetValue(temp1,"Balance"),0);
-		temp1 = GetAccountInfo("mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5");
+		temp1 = GetAccountInfo("dsGb9GyDGYnnHdjSvRfYbj9ox2zPbtgtpo");
 		BOOST_CHECK_EQUAL(GetValue(temp1,"Balance"),999999800000000);
 
 		//测试不能从其他脚本打钱到本APP脚本账户中
@@ -257,7 +258,7 @@ public:
 		param = 19;
 		temp = "";
 		temp += tinyformat::format("%02x%s",param,accountid);
-		resut =CreateContractTx("010000000100", "mv2eqSvyUA4JeJXBQpKvJEbYY89FqoRbX5", temp,10);
+		resut =CreateContractTx("010000000100", "dsGb9GyDGYnnHdjSvRfYbj9ox2zPbtgtpo", temp,10);
 		BOOST_CHECK(!GetHashFromCreatedTx(resut,temp));
 
 	}
@@ -331,7 +332,7 @@ public:
 	void CreateTx(string pcontact,string addr)
 	{
 		string temp =addr;
-		Value resut =CreateContractTx("010000000100", temp, pcontact,10);
+		Value resut =CreateContractTx("010000000100", temp, pcontact, 10, 1*COIN);
 		string strReturn;
 		BOOST_CHECK(GetHashFromCreatedTx(resut,strReturn));
 		BOOST_CHECK(GenerateOneBlock());
@@ -371,7 +372,7 @@ public:
 	}
 	string CreatWriteTx(string &hash)
 	{
-		string shash = CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
+		string shash = CreateRegScript("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin");
 		string scriptid;
 		GetTxConfirmedRegID(shash, scriptid);
 		BOOST_CHECK(scriptid !="");
@@ -404,7 +405,7 @@ public:
 				string temp = "";
 				temp += tinyformat::format("%02x%s%02x",param,HexStr(hash),height);
 			//	cout<<"cont:"<<temp<<endl;
-				CreateTx(temp,"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
+				CreateTx(temp,"e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz");
 
 				vector<unsigned char> key;
 				const char *key1="2_error";
@@ -436,7 +437,7 @@ public:
 		int param =17;
 		string temp = "";
 		temp += tinyformat::format("%02x%02x",param,11);
-		CreateTx(temp,"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
+		CreateTx(temp,"e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz");
 		vector<unsigned char> key;
 		const char *key1="3_error";
 		key.insert(key.begin(),key1, key1 + strlen(key1) +1);
@@ -452,7 +453,7 @@ public:
     		int param =18;
     		string temp = "";
     		temp += tinyformat::format("%02x",param);
-    		CreateTx(temp,"n4muwAThwzWvuLUh74nL3KYwujhihke1Kb");
+    		CreateTx(temp,"e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz");
   //  		cout<<"cont:"<<endl;
    // 		cout<<chainActive.Height()<<endl;
         	CheckScriptDB(height,scriptid,writetxhash,true);
@@ -530,7 +531,7 @@ BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 	//// pass
 	ResetEnv();
 	BOOST_CHECK(0==chainActive.Height());
-	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
+	CreateRegScript("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin");
 	CheckSdk();
 
 
@@ -539,7 +540,7 @@ BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 
 	ResetEnv();
 	BOOST_CHECK(0==chainActive.Height());
-	CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
+	CreateRegScript("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin");
 	CheckRollBack();
 
 	//// pass
@@ -569,7 +570,7 @@ BOOST_FIXTURE_TEST_CASE(appacc,CSysScriptTest){
 
 	ResetEnv();
 	BOOST_CHECK(0==chainActive.Height());
-	string shash = CreateRegScript("mvVp2PDRuG4JJh6UjkJFzXUC8K5JVbMFFA","unit_test.bin");
+	string shash = CreateRegScript("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin");
 	string sriptid ="";
 	BOOST_CHECK(GetTxConfirmedRegID(shash,sriptid));
 	int temp = 22;
@@ -577,7 +578,7 @@ BOOST_FIXTURE_TEST_CASE(appacc,CSysScriptTest){
 	string param = strprintf("%02x",temp);
 	string hash ="";
 	uint64_t nMoney = 1000000000;
-	Value resut =CreateContractTx(sriptid, "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,10000000,nMoney);
+	Value resut =CreateContractTx(sriptid, "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz", param,10,10000000,nMoney);
 	BOOST_CHECK(GetHashFromCreatedTx(resut,hash));
 	BOOST_CHECK(GenerateOneBlock());
 
@@ -588,20 +589,20 @@ BOOST_FIXTURE_TEST_CASE(appacc,CSysScriptTest){
 		temp += 1;
 		param = strprintf("%02x%s",temp,HexStr(vtemp));
 		//cout<<i<<endl;
-		resut =CreateContractTx(sriptid, "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,10000000,0);
+		resut =CreateContractTx(sriptid, "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz", param,10,10000000,0);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,hash));
 		BOOST_CHECK(GenerateOneBlock());
 	}
 
 	temp += 1;
 	param = strprintf("%02x%s",temp,HexStr(vtemp));
-	resut =CreateContractTx(sriptid, "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,10000000,0);
+	resut =CreateContractTx(sriptid, "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz", param,10,10000000,0);
 	BOOST_CHECK(GetHashFromCreatedTx(resut,hash));
 	BOOST_CHECK(GenerateOneBlock());
 
 	temp += 1;
 	param = strprintf("%02x%s",temp,HexStr(vtemp));
-	resut =CreateContractTx(sriptid, "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb", param,10,10000000,0);
+	resut =CreateContractTx(sriptid, "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz", param,10,10000000,0);
 	BOOST_CHECK(!GetHashFromCreatedTx(resut,hash));
 
 
@@ -612,7 +613,7 @@ BOOST_FIXTURE_TEST_CASE(appacc,CSysScriptTest){
 	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 	CRegID script(sriptid);
 	CRegID strreg;
-	string address = "n4muwAThwzWvuLUh74nL3KYwujhihke1Kb";
+	string address = "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz";
 
 	BOOST_CHECK(SysTestBase::GetRegID(address,strreg));
 	std::shared_ptr<CAppUserAccout> tem = make_shared<CAppUserAccout>();

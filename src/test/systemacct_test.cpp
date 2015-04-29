@@ -26,7 +26,7 @@ BOOST_FIXTURE_TEST_CASE(transfer_test, CSysAccountTest)
 	ResetEnv();
 	BOOST_CHECK(0==chainActive.Height());
 	//转账
-	string strRegAddr = "mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz";
+	string strRegAddr = "dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr";
 	string strSrcRegID = "000000000400";
 	uint64_t nMoney = 10000000;
 	BOOST_CHECK(SendMoney(strSrcRegID,strRegAddr,nMoney));
@@ -45,7 +45,7 @@ BOOST_FIXTURE_TEST_CASE(transfer_test, CSysAccountTest)
 	BOOST_CHECK(false == regID.IsEmpty());
 
 	//使用一个注册过的keyID地址测试，看是否能够注册成功
-	string strResigterd("msdDQ1SXNmknrLuTDivmJiavu5J9VyX9fV");
+	string strResigterd("dps9hqUmBAVGVg7ijLGPcD9CJz9HHiTw6H");
 	BOOST_CHECK(!RegisterAccount(strRegAddr,10000,strTxHash));
 
 	//用getnewaddress获取一个没有设置挖坑的公钥地址，注册账户最后一个参数是true，看此地址是否能够注册成功
@@ -70,7 +70,7 @@ BOOST_FIXTURE_TEST_CASE(register_test,CSysAccountTest)
 	BOOST_CHECK(0==chainActive.Height());
 	string strTxHash;
 	CRegID regID;
-	string strRegAddr1("mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz");
+	string strRegAddr1("dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr");
 	string strRegAddr2 = "";
 	BOOST_CHECK(GetNewAddr(strRegAddr2,false));
 	uint64_t nFee = 10000;
@@ -94,7 +94,7 @@ BOOST_FIXTURE_TEST_CASE(register_test,CSysAccountTest)
 	vFailedTxHash.push_back(strTxHash);
 
 	//重复注册的地址
-	string strReRegisrerAddr("mw5wbV73gXbreYy8pX4FSb7DNYVKU3LENc");
+	string strReRegisrerAddr("dtKsuK9HUvLLHtBQL8Psk5fUnTLTFC83GS");
 	BOOST_CHECK(!RegisterAccount(strReRegisrerAddr, nFee, strTxHash));
 	vFailedTxHash.push_back(strTxHash);
 
@@ -126,7 +126,7 @@ BOOST_FIXTURE_TEST_CASE(register_test,CSysAccountTest)
 		BOOST_CHECK(!IsTxUnConfirmdInWallet(txHash));
 	}
 
-	//给地址为：mo51PMpnadiFx5JcZaeUdWBa4ngLBVgoGz 的账户转账
+	//给地址为：dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr 的账户转账
 	BOOST_CHECK(SendMoney(strSrcRegID, strRegAddr1, nMoney));
 	BOOST_CHECK(GenerateOneBlock());
 
