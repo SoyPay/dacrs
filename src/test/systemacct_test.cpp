@@ -53,7 +53,7 @@ BOOST_FIXTURE_TEST_CASE(transfer_test, CSysAccountTest)
 	BOOST_CHECK(GetNewAddr(strNewKeyID,true));
 
 	//用一个注册的地址和一个未注册的地址来发一个交易，看是否能够发送成功
-	string strUnRegister("mydRNvqewpZt9tyNtBSmBCrKr1NTiii5JH");
+	string strUnRegister("dgZjR2S98gmdvXDzwKASxKiaGr9Dw1GD8F");
 	vector<unsigned char> vRegID = regID.GetVec6();
 	nMoney = nMoney/10;
 	BOOST_CHECK(SendMoney(HexStr(vRegID),strUnRegister,nMoney, 10000));
