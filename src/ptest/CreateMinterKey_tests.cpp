@@ -41,6 +41,8 @@ using namespace boost;
 
 #include "CreateMinterKey_tests.h"
 
+
+const uint64_t sendMoney = 1000 * COIN;
 bool CCreateMinerkey::SelectAccounts() {
 	const char *argv[] = { "rpctest", "listaddr"};
 	int argc = sizeof(argv) / sizeof(char*);
@@ -54,7 +56,8 @@ bool CCreateMinerkey::SelectAccounts() {
 			const Value& balance = find_value(item.get_obj(), "balance");
 			if(balance.get_real() > 1000000.0) {
 				const Value& regId = find_value(item.get_obj(), "regid");
-				vAccount.push_back(regId.get_str());
+				if("" != regId.get_str() && " "!=regId.get_str())
+					vAccount.push_back(regId.get_str());
 			}
 		}
 	}
@@ -64,7 +67,7 @@ bool CCreateMinerkey::SelectAccounts() {
 string CCreateMinerkey::GetOneAccount() {
 	for(auto &item : vAccount) {
 		if(GetBalance(item) > 1000000 * COIN) {
-			mapSendValue[item] += 10000 * COIN;
+			mapSendValue[item] += sendMoney;
 			if(mapSendValue[item] > 8000000 * COIN)
 				continue;
 			return item;
@@ -81,24 +84,21 @@ void CCreateMinerkey::CreateAccount() {
 	if(!SelectAccounts())
 		return;
 	std::string TxHash("");
-	const int nNewAddrs = 1420;
+	const int nNewAddrs = 1440;
 	string hash = "";
 	vector<string> vNewAddress;
 //	string strAddress[] = {"0-1","0-2","0-3","0-4","0-5"};
-    int index = 0 ;
+
 	for (int i = 0; i < nNewAddrs; i++) {
 		string newaddr;
 		BOOST_CHECK(GetNewAddr(newaddr, true));
 		vNewAddress.push_back(newaddr);
-		if (i == 800) {
-			++index;
-		}
 		string srcAcct = GetOneAccount();
 		if("" == srcAcct) {
 			cout << "Get source acct failed" << endl;
 			return;
 		}
-		Value value = CreateNormalTx( srcAcct, newaddr, 10000 * COIN);
+		Value value = CreateNormalTx( srcAcct, newaddr, sendMoney);
 		BOOST_CHECK(GetHashFromCreatedTx(value, hash));
 	}
 	int size = 0 ;

@@ -379,15 +379,15 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 	uint64_t minusValue = llFees+llValues;
 	if (!view.GetAccount(srcRegId, srcAcct))
 		return state.DoS(100,
-				ERRORMSG("ExecuteTx() : ContractTransaction ExecuteTx, read source addr %s account info error", boost::get<CRegID>(srcRegId).ToString()),
+				ERRORMSG("ExecuteTx() : CTransaction ExecuteTx, read source addr %s account info error", boost::get<CRegID>(srcRegId).ToString()),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	CAccountLog srcAcctLog(srcAcct);
 	if (!srcAcct.OperateAccount(MINUS_FREE, minusValue))
-		return state.DoS(100, ERRORMSG("ExecuteTx() : ContractTransaction ExecuteTx, accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
+		return state.DoS(100, ERRORMSG("ExecuteTx() : CTransaction ExecuteTx, accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
 				"bad-operate-account");
 	CUserID userId = srcAcct.keyID;
 	if(!view.SetAccount(userId, srcAcct)){
-		return state.DoS(100, ERRORMSG("UpdataAccounts() :ContractTransaction ExecuteTx, save account%s info error",  boost::get<CRegID>(srcRegId).ToString()),
+		return state.DoS(100, ERRORMSG("UpdataAccounts() :CTransaction ExecuteTx, save account%s info error",  boost::get<CRegID>(srcRegId).ToString()),
 				UPDATE_ACCOUNT_FAIL, "bad-write-accountdb");
 	}
 
@@ -405,11 +405,11 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 		desAcctLog.SetValue(desAcct);
 	}
 	if (!desAcct.OperateAccount(ADD_FREE, addValue)) {
-		return state.DoS(100, ERRORMSG("ExecuteTx() : ContractTransaction ExecuteTx, operate accounts error"), UPDATE_ACCOUNT_FAIL,
+		return state.DoS(100, ERRORMSG("ExecuteTx() : CTransaction ExecuteTx, operate accounts error"), UPDATE_ACCOUNT_FAIL,
 				"bad-operate-account");
 	}
 	if (!view.SetAccount(desUserId, desAcct)) {
-		return state.DoS(100, ERRORMSG("ExecuteTx() : ContractTransaction ExecuteTx, save account error, kyeId=%s", desAcct.keyID.ToString()),
+		return state.DoS(100, ERRORMSG("ExecuteTx() : CTransaction ExecuteTx, save account error, kyeId=%s", desAcct.keyID.ToString()),
 				UPDATE_ACCOUNT_FAIL, "bad-save-account");
 	}
 	txundo.vAccountLog.push_back(srcAcctLog);
@@ -868,12 +868,12 @@ bool CAccount::OperateAccount(OperType type, const uint64_t &value) {
 	if (keyID == uint160(0)) {
 		assert(0);
 	}
-	if (!IsMoneyOverflow(value))
-		return false;
 	if (!value)
 		return true;
 	switch (type) {
 	case ADD_FREE: {
+		if (!IsMoneyOverflow(value))
+			return false;
 		llValues += value;
 		break;
 	}
