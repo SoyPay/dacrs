@@ -73,8 +73,8 @@ BOOST_AUTO_TEST_CASE(key_test1)
 	}
 
 	if (fRegTest || fTestNet) {
-		strSecret1C = string("cPRVcTPYmbwiZaLt4mez6v2a3sHKL3np5pc781BYUTYQEUue1j4K");
-		strSecret2C = string("cRNvsxg5RGLnp8UDf86TK4uRZZ2qZjNDFHSiAos3rdvB6SX2VC4G");
+		strSecret1C = string("cRj6ybhjS297ovjMgCCySgbsYYmPHutBguWL7K7MssWEN1twRDmv");
+		strSecret2C = string("cVJ4gxvCWZbobVzvVkw5NGy6MDYT4uV8NYHzn3hPkkDk6M5jRKnL");
 	} else {
 		strSecret1C = string("Kwr371tjA9u2rFSMZjTNun2PXXP3WPZu2afRHTcta6KxEUdm1vEw");
 		strSecret2C = string("L3Hq7a8FEQwJkW1M2GNKDW28546Vp5miewcCzSqUD9kCAXrJdS3g");
@@ -105,8 +105,8 @@ BOOST_AUTO_TEST_CASE(key_test1)
 //    BOOST_CHECK(addr1C.Get() == CTxDestination(pubkey1C.GetID()));
 //    BOOST_CHECK(addr2C.Get() == CTxDestination(pubkey2C.GetID()));
 	if (fRegTest || fTestNet) {
-		CDacrsAddress addr1Ct("n4PwAoA9zQ3SrndjB4wp8QWb9xPpNdtLsW");
-		CDacrsAddress addr2Ct("mfu2Z1UfUBkWQACSXVDr25h5UVU7LmC3xB");
+		CDacrsAddress addr1Ct("dgZjR2S98gmdvXDzwKASxKiaGr9Dw1GD8F");
+		CDacrsAddress addr2Ct("dw3Ard8fFMvt7nRppEr9cDAoRCCvNxj6vE");
 
 		BOOST_CHECK(addr1Ct.Get() == CTxDestination(pubkey1C.GetKeyID()));
 		BOOST_CHECK(addr2Ct.Get() == CTxDestination(pubkey2C.GetKeyID()));
