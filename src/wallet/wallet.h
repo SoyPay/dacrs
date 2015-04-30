@@ -35,7 +35,6 @@ class CAccountingEntry;
 
 class CKeyStoreValue {
 private:
-	CRegID mregId;
 	CPubKey mPKey;
 	CKey  mCkey;
 	CPubKey  mMinerPk; //only used for miner
@@ -63,13 +62,9 @@ public:
 	bool IsContainMinerKey()const;
 	bool IsContainReadyMinerKey()const;
 	CKeyID GetCKeyID() const ;
-	CRegID GetRegID() const ;
-
 
 	IMPLEMENT_SERIALIZE
 	(
-
-			READWRITE(mregId);
 			READWRITE(mPKey);
 			READWRITE(mCkey);
 			READWRITE(mMinerPk);
@@ -134,16 +129,16 @@ public:
     bool AddKey(const CKey& secret,const CKey& minerKey);
     bool AddKey(const CKeyStoreValue& store);
 	bool AddPubKey(const CPubKey& pk);
-	bool SynchronizSys(const CAccountViewCache &inview) ;
+
 	bool IsCrypted() const;
 	bool GetPubKey(const CKeyID &address, CPubKey& pubKey,bool IsMiner = false);
 	bool GetKey(const CKeyID &keyid, CKey& secretKey, bool IsMiner = false) const ;
 	bool GetKey(const CUserID &userid, CKey& secretKey,bool IsMiner = false) const ;
-	bool GetRegId(const CUserID &userid, CRegID& IdOut) const;
+
 	bool GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner = false)const ;
 	bool CleanAll(); //just for unit test
     bool count(const CKeyID &keyid) const;
-    bool IsReadyForCoolMiner()const;
+    bool IsReadyForCoolMiner(const CAccountViewCache& view)const;
     bool ClearAllCkeyForCoolMiner();
 
 	CWallet(string strWalletFileIn);

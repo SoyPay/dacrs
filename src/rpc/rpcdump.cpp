@@ -75,7 +75,7 @@ Value dropprivkey(const Array& params, bool fHelp){
 		throw runtime_error("this cmd have no params\n");
 
 	EnsureWalletIsUnlocked();
-	if (!pwalletMain->IsReadyForCoolMiner()) {
+	if (!pwalletMain->IsReadyForCoolMiner(*pAccountViewTip)) {
 		throw runtime_error("there is no cool miner key  or miner key in on regist to blockchain\n");
 	}
 
@@ -134,8 +134,6 @@ Value importprivkey(const Array& params, bool fHelp)
        if (!pwalletMain->AddKey(key))
            throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
 
-        pwalletMain->SynchronizRegId(vchAddress,*pAccountViewTip);
-
     }
     Object reply2;
     reply2.push_back(Pair("imorpt key address",pubkey.GetKeyID().ToAddress()));
@@ -185,7 +183,6 @@ Value importwallet(const Array& params, bool fHelp)
     		CKeyStoreValue tep;
     		tep.UnSersailFromJson(te.get_obj());
     		pwalletMain->AddKey(tep);
-    		pwalletMain->SynchronizRegId(tep.GetCKeyID(),*pAccountViewTip);
     	}
     }
     file.close();
