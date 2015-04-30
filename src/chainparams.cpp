@@ -256,7 +256,7 @@ public:
 						"abbdb45200ca2b0a");
 		nDefaultPort = 18668;
 		nRPCPort = 18669;
-		strDataDir = "testnet3";
+		strDataDir = "testnet";
 
 		// Modify the testnet genesis block so the timestamp is valid for a later start.
 		genesis.nTime = 1296688602;
