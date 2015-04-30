@@ -272,7 +272,8 @@ public:
 //		}
 //		assert(hashGenesisBlock == uint256("0xeeae033352027ab2603e0d32c0585a0eb3b2e5f720d4de8eedec24050c66436f"));
 
-//		vFixedSeeds.clear();
+		for(auto & item : vFixedSeeds)
+			item.SetPort(GetDefaultPort());
 //		vSeeds.clear();
 //		vSeeds.push_back(CDNSSeedData("Dacrs.petertodd.org", "testnet-seed.Dacrs.petertodd.org"));
 //		vSeeds.push_back(CDNSSeedData("bluematt.me", "testnet-seed.bluematt.me"));
