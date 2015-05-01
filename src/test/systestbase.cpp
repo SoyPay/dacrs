@@ -62,6 +62,9 @@ bool PrintTestNotSetPara()
 		MilliSleep(500);
 		exit(0);
 	}
+//			const boost::filesystem::path p=GetDataDir();
+//			boost::filesystem::remove_all(p);
+
 
 	return true;
 }

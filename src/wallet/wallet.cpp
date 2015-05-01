@@ -754,7 +754,7 @@ bool CWallet::GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner) const {
 		if (IsMiner == false) {
 			setKeyID.insert(tem.first);
 		} else if (pAccountViewTip->GetRegId(CUserID(tem.first),dummy)) {			//only the reged key is useful fo miner
-			if(tem.second.IsContainMinerKey()||tem.second.IsContainMinerKey())
+			if(tem.second.IsContainMinerKey()||tem.second.IsContainMainKey())
 			setKeyID.insert(tem.first);
 		}
 	}
