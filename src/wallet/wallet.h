@@ -35,7 +35,6 @@ class CAccountingEntry;
 
 class CKeyStoreValue {
 private:
-	CRegID mregId;
 	CPubKey mPKey;
 	CKey  mCkey;
 	CPubKey  mMinerPk; //only used for miner
@@ -56,20 +55,15 @@ public:
 	bool getCKey(CKey& keyOut,bool IsMiner = false) const ;
 	bool CreateANewKey();
 	bool GetPubKey(CPubKey &mOutKey,bool IsMiner = false) const;
-	bool SynchronizSys(CAccountViewCache &view);
     bool cleanCkey();
     bool CleanAll();
 	bool IsCrypted() ;
 	bool IsContainMinerKey()const;
-	bool IsContainReadyMinerKey()const;
+	bool IsContainMainKey()const;
 	CKeyID GetCKeyID() const ;
-	CRegID GetRegID() const ;
-
 
 	IMPLEMENT_SERIALIZE
 	(
-
-			READWRITE(mregId);
 			READWRITE(mPKey);
 			READWRITE(mCkey);
 			READWRITE(mMinerPk);
@@ -129,21 +123,21 @@ public:
 	)
 	virtual ~CWallet(){};
 	int64_t GetRawBalance()const;
-    bool SynchronizRegId(const CKeyID &keyid,const CAccountViewCache &inview);
+
     bool Sign(const CUserID &keyID,const uint256 &hash,vector<unsigned char> &signature,bool IsMiner=false)const;
     bool AddKey(const CKey& secret,const CKey& minerKey);
     bool AddKey(const CKeyStoreValue& store);
 	bool AddPubKey(const CPubKey& pk);
-	bool SynchronizSys(const CAccountViewCache &inview) ;
+
 	bool IsCrypted() const;
 	bool GetPubKey(const CKeyID &address, CPubKey& pubKey,bool IsMiner = false);
 	bool GetKey(const CKeyID &keyid, CKey& secretKey, bool IsMiner = false) const ;
 	bool GetKey(const CUserID &userid, CKey& secretKey,bool IsMiner = false) const ;
-	bool GetRegId(const CUserID &userid, CRegID& IdOut) const;
+
 	bool GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner = false)const ;
 	bool CleanAll(); //just for unit test
     bool count(const CKeyID &keyid) const;
-    bool IsReadyForCoolMiner()const;
+    bool IsReadyForCoolMiner(const CAccountViewCache& view)const;
     bool ClearAllCkeyForCoolMiner();
 
 	CWallet(string strWalletFileIn);

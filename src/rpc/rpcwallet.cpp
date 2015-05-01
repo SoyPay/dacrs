@@ -245,7 +245,7 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 	CRegID revreg;
 
 
-	if (!pwalletMain->GetRegId(sendKeyId, sendreg)) {
+	if (!pAccountViewTip->GetRegId(CUserID(sendKeyId), sendreg)) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 	}
 
@@ -433,7 +433,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 	CRegID revreg;
 	CUserID rev;
 
-	if (!pwalletMain->GetRegId(sendKeyId, sendreg)) {
+	if (!pAccountViewTip->GetRegId(CUserID(sendKeyId),sendreg)) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 	}
 

@@ -342,7 +342,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 				//confirm the tx is mine
 				if (IsMine(sptx.get())) {
 					if (sptx->nTxType == REG_ACCT_TX) {
-						fIsNeedUpDataRegID = true;
+						//fIsNeedUpDataRegID = true;
 					} else if (sptx->nTxType == CONTRACT_TX) {
 //						vector<CAccountOperLog> Log;
 //						if (GetTxOperLog(hashtx, Log) == true) {
@@ -375,14 +375,6 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 				}
 				CRegID regid(index, i++);
 				if(IsMine(sptx.get())) {
-					if (sptx->nTxType == REG_ACCT_TX) {
-						for (auto &te : mKeyPool) {
-								if(te.second.GetRegID() == regid){
-									mKeyPool.erase(te.first);
-									break;
-								}
-							}
-					}
 
 					UnConfirmTx[sptx.get()->GetHash()] = sptx.get()->GetNewInstance();
 					CWalletDB(strWalletFile).WriteUnComFirmedTx(sptx.get()->GetHash(),UnConfirmTx[sptx.get()->GetHash()]);
@@ -415,9 +407,6 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 		LogPrint("todo","acept in mempool tx %s\r\n",pTx->GetHash().ToString());
     }
 
-	if (fIsNeedUpDataRegID == true) {
-		SynchronizSys(*pAccountViewTip);
-	}
 
 }
 
@@ -706,25 +695,7 @@ uint256 CWallet::GetCheckSum() const {
 	return ss.GetHash();
 }
 
-bool CWallet::GetRegId(const CUserID& userid, CRegID& IdOut) const  {
-	AssertLockHeld(cs_wallet);
-	if (userid.type() == typeid(CRegID)) {
-		IdOut = boost::get<CRegID>(userid);
-		return !IdOut.IsEmpty();
-	} else if (userid.type() == typeid(CKeyID)) {
-		CKeyID te = boost::get<CKeyID>(userid);
-		if (count(te)) {
-			auto tep = mKeyPool.find(te);
-			if (tep != mKeyPool.end()) {
-				IdOut = tep->second.GetRegID();
-				return !IdOut.IsEmpty();
-			}
-		}
-	} else {
-		assert(0 && "to fixme");
-	}
-	return false;
-}
+
 
 bool CWallet::GetKey(const CUserID& userid, CKey& keyOut,bool IsMiner) const{
 	AssertLockHeld(cs_wallet);
@@ -759,16 +730,6 @@ bool CWallet::GetPubKey(const CKeyID& keyid, CPubKey& secretKey, bool IsMiner) {
 
 }
 
-bool CWallet::SynchronizRegId(const CKeyID& keyid, const CAccountViewCache& inview) {
-	CAccountViewCache view(inview);
-	if (count(keyid) > 0) {
-		if (mKeyPool[keyid].SynchronizSys(view)) {
-			return CWalletDB(strWalletFile).WriteKeyStoreValue(keyid, mKeyPool[keyid]);
-		}
-	}
-	return false;
-}
-
 bool CWallet::IsMine(CBaseTransaction* pTx) const{
 
 	set<CKeyID> vaddr;
@@ -785,21 +746,15 @@ bool CWallet::IsMine(CBaseTransaction* pTx) const{
 	return false;
 }
 
-bool CWallet::SynchronizSys(const CAccountViewCache& inview) {
-	CAccountViewCache view(const_cast<CAccountViewCache &>(inview), true);
-	for (auto &te : mKeyPool) {
-		te.second.SynchronizSys(view);
-	}
-	return true;
-}
-
 bool CWallet::GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner) const {
 	AssertLockHeld(cs_wallet);
 	setKeyID.clear();
+	CRegID dummy;
 	for (auto const & tem : mKeyPool) {
 		if (IsMiner == false) {
 			setKeyID.insert(tem.first);
-		} else if (!tem.second.GetRegID().IsEmpty()) {			//only the reged key is useful fo miner
+		} else if (pAccountViewTip->GetRegId(CUserID(tem.first),dummy)) {			//only the reged key is useful fo miner
+			if(tem.second.IsContainMinerKey()||tem.second.IsContainMinerKey())
 			setKeyID.insert(tem.first);
 		}
 	}
@@ -847,7 +802,7 @@ bool CWallet::Sign(const CUserID& Userid, const uint256& hash, vector<unsigned c
 
 Object CKeyStoreValue::ToJsonObj()const {
 	Object reply;
-	reply.push_back(Pair("mregId",mregId.ToString()));
+
 	reply.push_back(Pair("mPKey",mPKey.ToString()));
 	reply.push_back(Pair("address",mPKey.GetKeyID().ToAddress()));
 
@@ -867,7 +822,7 @@ Object CKeyStoreValue::ToJsonObj()const {
 bool CKeyStoreValue::UnSersailFromJson(const Object& obj){
 	try {
 		Object reply;
-		mregId = (find_value(obj, "mregId").get_str());
+
 		mPKey= ::ParseHex(find_value(obj, "mPKey").get_str());
 		auto const &tem1 = ::ParseHex(find_value(obj, "mCkey").get_str());
 		mCkey.Set(tem1.begin(),tem1.end(),true);
@@ -906,28 +861,6 @@ bool CKeyStoreValue::SelfCheck()const {
 	  }
   }
   return true;
-}
-
-bool CKeyStoreValue::SynchronizSys(CAccountViewCache& view) {
-	CAccount account;
-	if (!view.GetAccount(CUserID(mPKey.GetKeyID()), account)) {
-		mregId.clean();
-	} else if (account.PublicKey.IsValid())			//是注册的账户
-	{
-		mregId = account.regID;
-		if (account.PublicKey != mPKey) {
-			ERRORMSG("shit %s acc %s mPKey:%s\r\n", "not fix the bug", account.ToString(), this->ToString());
-			assert(0);
-		}
-		if (account.MinerPKey.IsValid())
-			assert(account.MinerPKey == mMinerCkey.GetPubKey());
-	} else			//有可能是没有注册的账户
-	{
-		mregId.clean();
-	}
-
-	LogPrint("wallet", "%s \r\n", this->ToString());
-	return true;
 }
 
 bool CKeyStoreValue::IsCrypted() {
@@ -984,14 +917,14 @@ bool CKeyStoreValue::GetPubKey(CPubKey& mOutKey, bool IsMiner) const {
 		return false;
 	}
 
-	assert(mCkey.IsValid());
+//	assert(mCkey.IsValid());
 	mOutKey =mPKey;
-	assert(mCkey.GetPubKey() == mPKey);
+//	assert(mCkey.GetPubKey() == mPKey);
 	return  true;
 }
 
 string CKeyStoreValue::ToString() const{
-			return strprintf("CRegID:%s CPubKey:%s CKey:%s mMinerCkey:%s CreationTime:%d",mregId.ToString(),mPKey.ToString(),mCkey.ToString(),mMinerCkey.ToString(),nCreationTime);
+			return strprintf("CPubKey:%s CKey:%s mMinerCkey:%s CreationTime:%d",mPKey.ToString(),mCkey.ToString(),mMinerCkey.ToString(),nCreationTime);
 }
 
 bool CKeyStoreValue::getCKey(CKey& keyOut, bool IsMiner) const {
@@ -1020,21 +953,17 @@ int64_t CKeyStoreValue::getBirthDay() const {
 			return nCreationTime;
 }
 
-bool CKeyStoreValue::IsContainReadyMinerKey() const{
-			return mMinerCkey.IsValid()&&(!mregId.IsEmpty());
-}
+
 
 CKeyID CKeyStoreValue::GetCKeyID() const {
 	return (mPKey.GetKeyID());
 }
 
-CRegID CKeyStoreValue::GetRegID() const {
-	return mregId;
-}
 
-bool CWallet::IsReadyForCoolMiner() const {
+bool CWallet::IsReadyForCoolMiner(const CAccountViewCache& view) const {
+	CRegID dummy;
 	for (auto const &te : mKeyPool) {
-		if (te.second.IsContainReadyMinerKey()) {
+		if (te.second.IsContainMinerKey()&&view.GetRegId(te.first,dummy)) {
 			return true;
 		}
 	}
@@ -1088,3 +1017,8 @@ int CWallet::GetVersion() {
 bool CKeyStoreValue::IsContainMinerKey() const {
 	return mMinerCkey.IsValid();
 }
+bool CKeyStoreValue::IsContainMainKey() const {
+	return mCkey.IsValid();
+}
+
+

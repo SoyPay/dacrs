@@ -274,9 +274,11 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		if (!GetKeyId(params[0].get_str(), srckeyid)) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Source Invalid  address");
 		}
-		if (!pwalletMain->GetRegId(srckeyid, userId)) {
+		if(!pAccountViewTip->GetRegId(CUserID(srckeyid),userId))
+		{
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "address not regist");
 		}
+
 	}
 
 	CRegID appId(params[1].get_str());
@@ -515,7 +517,7 @@ Value listaddr(const Array& params, bool fHelp) {
 			obj.push_back(Pair("addr", tem.first.ToAddress()));
 			obj.push_back(Pair("balance", (double)Lambaacc.GetRawBalance()/ (double) COIN));
 			obj.push_back(Pair("haveminerkey", tem.second.IsContainMinerKey()));
-			obj.push_back(Pair("regid", tem.second.GetRegID().ToString()));
+			obj.push_back(Pair("regid",Lambaacc.regID.ToString()));
 			retArry.push_back(obj);
 		}
 	}
