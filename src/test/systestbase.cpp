@@ -62,7 +62,15 @@ bool PrintTestNotSetPara()
 		MilliSleep(500);
 		exit(0);
 	}
-//			const boost::filesystem::path p=GetDataDir();
+
+
+    if (filesystem::exists( GetDataDir() / "blocks"))
+    {
+		cout<<"Waring the test of must del " <<(GetDataDir() / "blocks").string() <<endl;
+		MilliSleep(500);
+		exit(0);
+    }
+
 //			boost::filesystem::remove_all(p);
 
 
