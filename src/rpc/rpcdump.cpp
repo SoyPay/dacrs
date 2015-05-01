@@ -75,9 +75,9 @@ Value dropprivkey(const Array& params, bool fHelp){
 		throw runtime_error("this cmd have no params\n");
 
 	EnsureWalletIsUnlocked();
-	if (!pwalletMain->IsReadyForCoolMiner(*pAccountViewTip)) {
-		throw runtime_error("there is no cool miner key  or miner key in on regist to blockchain\n");
-	}
+//	if (!pwalletMain->IsReadyForCoolMiner(*pAccountViewTip)) {
+//		throw runtime_error("there is no cool miner key  or miner key in on regist to blockchain\n");
+//	}
 
 	pwalletMain->ClearAllCkeyForCoolMiner();
 	Object reply2;
@@ -127,7 +127,6 @@ Value importprivkey(const Array& params, bool fHelp)
     if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
 
     CPubKey pubkey = key.GetPubKey();
-    CKeyID vchAddress = pubkey.GetKeyID();
     {
         LOCK2(cs_main, pwalletMain->cs_wallet);
 

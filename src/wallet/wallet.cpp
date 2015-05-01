@@ -754,6 +754,7 @@ bool CWallet::GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner) const {
 		if (IsMiner == false) {
 			setKeyID.insert(tem.first);
 		} else if (pAccountViewTip->GetRegId(CUserID(tem.first),dummy)) {			//only the reged key is useful fo miner
+			if(tem.second.IsContainMinerKey()||tem.second.IsContainMinerKey())
 			setKeyID.insert(tem.first);
 		}
 	}
@@ -916,9 +917,9 @@ bool CKeyStoreValue::GetPubKey(CPubKey& mOutKey, bool IsMiner) const {
 		return false;
 	}
 
-	assert(mCkey.IsValid());
+//	assert(mCkey.IsValid());
 	mOutKey =mPKey;
-	assert(mCkey.GetPubKey() == mPKey);
+//	assert(mCkey.GetPubKey() == mPKey);
 	return  true;
 }
 
@@ -952,9 +953,7 @@ int64_t CKeyStoreValue::getBirthDay() const {
 			return nCreationTime;
 }
 
-bool CKeyStoreValue::IsContainReadyMinerKey() const{
-			return mMinerCkey.IsValid();
-}
+
 
 CKeyID CKeyStoreValue::GetCKeyID() const {
 	return (mPKey.GetKeyID());
@@ -964,7 +963,7 @@ CKeyID CKeyStoreValue::GetCKeyID() const {
 bool CWallet::IsReadyForCoolMiner(const CAccountViewCache& view) const {
 	CRegID dummy;
 	for (auto const &te : mKeyPool) {
-		if (te.second.IsContainReadyMinerKey()&&view.GetRegId(te.first,dummy)) {
+		if (te.second.IsContainMinerKey()&&view.GetRegId(te.first,dummy)) {
 			return true;
 		}
 	}
@@ -1018,3 +1017,8 @@ int CWallet::GetVersion() {
 bool CKeyStoreValue::IsContainMinerKey() const {
 	return mMinerCkey.IsValid();
 }
+bool CKeyStoreValue::IsContainMainKey() const {
+	return mCkey.IsValid();
+}
+
+

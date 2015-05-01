@@ -55,12 +55,11 @@ public:
 	bool getCKey(CKey& keyOut,bool IsMiner = false) const ;
 	bool CreateANewKey();
 	bool GetPubKey(CPubKey &mOutKey,bool IsMiner = false) const;
-	bool SynchronizSys(CAccountViewCache &view);
     bool cleanCkey();
     bool CleanAll();
 	bool IsCrypted() ;
 	bool IsContainMinerKey()const;
-	bool IsContainReadyMinerKey()const;
+	bool IsContainMainKey()const;
 	CKeyID GetCKeyID() const ;
 
 	IMPLEMENT_SERIALIZE
@@ -124,7 +123,7 @@ public:
 	)
 	virtual ~CWallet(){};
 	int64_t GetRawBalance()const;
-    bool SynchronizRegId(const CKeyID &keyid,const CAccountViewCache &inview);
+
     bool Sign(const CUserID &keyID,const uint256 &hash,vector<unsigned char> &signature,bool IsMiner=false)const;
     bool AddKey(const CKey& secret,const CKey& minerKey);
     bool AddKey(const CKeyStoreValue& store);
