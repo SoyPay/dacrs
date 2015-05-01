@@ -15,8 +15,20 @@
 #include <memory>
 
 /** No amount larger than this (in satoshi) is valid */
-static const int64_t MAX_MONEY = 10000000 * COIN;
-inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
+static const int64_t MAX_MONEY = 1000000000 * COIN;
+static const int64_t MAX_MONEY_TEST_NET = 10000000 * COIN;
+
+
+inline int64_t GetMaxMoney()
+{
+	if(SysCfg().NetworkID() == CBaseParams::TESTNET) {
+		return MAX_MONEY_TEST_NET;
+	}
+	else {
+		return MAX_MONEY;
+	}
+}
+inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= GetMaxMoney()); }
 
 class CAccountViewCache;
 

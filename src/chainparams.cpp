@@ -86,33 +86,40 @@ map<string, vector<string> > CBaseParams::m_mapMultiArgs;
 //        "RegID2" : "000000000200"
 //    }
 //
-// Main network
+// testnet network
 //
-string initPubKey[] = { //
+vector<string> intPubKey_mainNet = {
+		"0388a07c89727f9065703100e94c00ce82bda6987215a88abee65db9b37f52f9e0"
+};
+
+vector<string> initPubKey_testNet = { //
 		"0388a07c89727f9065703100e94c00ce82bda6987215a88abee65db9b37f52f9e0",
 		"0360328964121d4625ca827c3e111f99fb005d5b30455d2609ac0ac3bbe17df601"
-//		"03d308757fc1f8efd69f2da329db560cd7d3cba951eb09786c375cf1709f9165ba",
-//		"024126ccf4b5f6463a3f874f234b77d02e9f5c2057c6c382160dc17c7f9ba2b333",
-//		"0221b571330617821e8c508416b90988e81e8dc8623576b8f6e942797e9f381111",
-//		"02e5c2fbea1055139e3d46621ef49aede5eb3ca1629fc3520986c5aba203706e74",
-//		"0295c3d0f4a913fd8dccf7a0782ae59fae282057169214a136b3722d5299248683",
-//		"03a616686dd872e301eb317a1ff4b53530d69492e8a39f6468afbd018043623166",
-//		"02ac35dabc82e297697e9774a2a3f9b1ddd5dc536da0c9bba7f5e95eb525aa4706",
-//		"0324da799ffc36177c9d401a81b6a1b4d90e7553ac4165fb263bbb8b60940a2b1d",
-//		"0311ca277a0f3880eefed349727cc954354c4e539b8128c79f18a87c6f2b979186",
-//		"02be4a840cf29bcbf84e3b7a0243adff77a32b9d76083ff254c1110734ea6b5792",
-//		"029bbfd75711ac071b361e133679d21c1cc6314a6c3fd71e91880956b91e640948",
-//
-//		"02a3e7998d3f8dd6dedfc6bf06e46adf98041bf4ca8e9af103d62f85c6f0a0a9bf",
-//		"024ee551da4a0ca765f21a2c9d33ad61826f36eba8912ad80e8d5bf75c397f3ee2",
-//		"03e6cda0f68b8028a74bcbbde1a164a022dad8956eabaa61bd40935d06c6fb55a4",
-//		"03ec7e8f2521cc5d88be7e603c35ba9d4ecda09abe8f96a28514956c16ac7d9019",
-//		"03e7f41495038767d7eb522938de5bc4556ef2e1075432245b9fc0e348c0516baf",
-//		"03a61b40def5330abbb9f7491b11d586283b5fd2fb2e5cd546b0265f21e9cf9356",
-//		"025a1c65b72c72569559edf54491dcf45e7ed0299886ee3eaa3cf5d5765b5b606b",
-//		"035a998c0adb99003c0552ed44ac3f46e80f542b2d26cb94dd3356027b1c844b99",
-//		"03f61c32ccc409ce5b55844f7cd2b62c52a8fe3d790efbc0644140cda33547aa67",
-//		"03ae28a4100145a4c354338c727a54800dc540069fa2f5fd5d4a1c80b4a35a1762"
+};
+
+vector<string> initPubkey_regTest = {
+		"03d308757fc1f8efd69f2da329db560cd7d3cba951eb09786c375cf1709f9165ba",
+		"024126ccf4b5f6463a3f874f234b77d02e9f5c2057c6c382160dc17c7f9ba2b333",
+		"0221b571330617821e8c508416b90988e81e8dc8623576b8f6e942797e9f381111",
+		"02e5c2fbea1055139e3d46621ef49aede5eb3ca1629fc3520986c5aba203706e74",
+		"0295c3d0f4a913fd8dccf7a0782ae59fae282057169214a136b3722d5299248683",
+		"03a616686dd872e301eb317a1ff4b53530d69492e8a39f6468afbd018043623166",
+		"02ac35dabc82e297697e9774a2a3f9b1ddd5dc536da0c9bba7f5e95eb525aa4706",
+		"0324da799ffc36177c9d401a81b6a1b4d90e7553ac4165fb263bbb8b60940a2b1d",
+		"0311ca277a0f3880eefed349727cc954354c4e539b8128c79f18a87c6f2b979186",
+		"02be4a840cf29bcbf84e3b7a0243adff77a32b9d76083ff254c1110734ea6b5792",
+		"029bbfd75711ac071b361e133679d21c1cc6314a6c3fd71e91880956b91e640948",
+
+		"02a3e7998d3f8dd6dedfc6bf06e46adf98041bf4ca8e9af103d62f85c6f0a0a9bf",
+		"024ee551da4a0ca765f21a2c9d33ad61826f36eba8912ad80e8d5bf75c397f3ee2",
+		"03e6cda0f68b8028a74bcbbde1a164a022dad8956eabaa61bd40935d06c6fb55a4",
+		"03ec7e8f2521cc5d88be7e603c35ba9d4ecda09abe8f96a28514956c16ac7d9019",
+		"03e7f41495038767d7eb522938de5bc4556ef2e1075432245b9fc0e348c0516baf",
+		"03a61b40def5330abbb9f7491b11d586283b5fd2fb2e5cd546b0265f21e9cf9356",
+		"025a1c65b72c72569559edf54491dcf45e7ed0299886ee3eaa3cf5d5765b5b606b",
+		"035a998c0adb99003c0552ed44ac3f46e80f542b2d26cb94dd3356027b1c844b99",
+		"03f61c32ccc409ce5b55844f7cd2b62c52a8fe3d790efbc0644140cda33547aa67",
+		"03ae28a4100145a4c354338c727a54800dc540069fa2f5fd5d4a1c80b4a35a1762"
 };
 unsigned int pnSeed[] = //
 		{0xa78a2879, 0x532d1fac, 0x85a21c73};
@@ -152,7 +159,7 @@ public:
 //        txNew.vout[0].nValue = 50 * COIN;
 //        txNew.vout[0].scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
 //        genesis.vtx.push_back(txNew);
-		assert(CreateGenesisRewardTx(genesis.vptx));
+		assert(CreateGenesisRewardTx(genesis.vptx, intPubKey_mainNet));
 		genesis.hashPrevBlock = 0;
 		genesis.hashMerkleRoot = genesis.BuildMerkleTree();
 		genesis.hashPos = 0;
@@ -218,19 +225,6 @@ public:
 		return vFixedSeeds;
 	}
 
-	virtual bool CreateGenesisRewardTx(vector<shared_ptr<CBaseTransaction> > &vRewardTx) {
-		int length = sizeof(initPubKey) / (sizeof(initPubKey[0]));
-		for (int i = 0; i < length; ++i) {
-			shared_ptr<CRewardTransaction> pRewardTx = make_shared<CRewardTransaction>(ParseHex(initPubKey[i].c_str()), 10000000 * COIN, 0);
-//		shared_ptr<CRewardTransaction>(
-//					new CRewardTransaction(ParseHex(initPubKey[i].c_str()), 10000000 * COIN, 0));
-			if (pRewardTx.get())
-				vRewardTx.push_back(pRewardTx);
-			else
-				return false;
-		}
-		return true;
-	}
 protected:
 	CBlock genesis;
 	vector<CAddress> vFixedSeeds;
@@ -262,18 +256,13 @@ public:
 		// Modify the testnet genesis block so the timestamp is valid for a later start.
 		genesis.nTime = 1296688602;
 		genesis.nNonce = 888;
+		genesis.vptx.clear();
+		assert(CreateGenesisRewardTx(genesis.vptx, initPubKey_testNet));
+		genesis.hashMerkleRoot = genesis.BuildMerkleTree();
 		hashGenesisBlock = genesis.GetHash();
-//		{
-//			CBigNum bnTarget;
-//			bnTarget.SetCompact(genesis.nBits);
-//			cout << "test bnTarget:" << bnTarget.getuint256().GetHex() << endl;
-//			cout << "test hashGenesisBlock:\r\n" << hashGenesisBlock.ToString() << endl;
-//			cout << "test hashMerkleRoot:\r\n" << genesis.hashMerkleRoot.ToString() << endl;
-//		}
-//		assert(hashGenesisBlock == uint256("0xeeae033352027ab2603e0d32c0585a0eb3b2e5f720d4de8eedec24050c66436f"));
-
 		for(auto & item : vFixedSeeds)
 			item.SetPort(GetDefaultPort());
+
 //		vSeeds.clear();
 //		vSeeds.push_back(CDNSSeedData("Dacrs.petertodd.org", "testnet-seed.Dacrs.petertodd.org"));
 //		vSeeds.push_back(CDNSSeedData("bluematt.me", "testnet-seed.bluematt.me"));
@@ -314,6 +303,9 @@ public:
 		genesis.nTime = 1421808634;
 		genesis.nBits = 0x2003ffff;
 		genesis.nNonce = 888;
+		genesis.vptx.clear();
+		assert(CreateGenesisRewardTx(genesis.vptx, initPubkey_regTest));
+		genesis.hashMerkleRoot = genesis.BuildMerkleTree();
 		hashGenesisBlock = genesis.GetHash();
 		nDefaultPort = 18666;
 		nTargetSpacing = 20;
@@ -328,6 +320,7 @@ public:
 //		}
 //		assert(hashGenesisBlock == uint256("0x891b4240b4005d26af25c634dcc886e5d3aaefb06da860e2a0ffc0132bd9df5a"));
 
+		vFixedSeeds.clear();
 		vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
 	}
 
@@ -556,6 +549,19 @@ void CBaseParams::ParseParameters(int argc, const char* const argv[]) {
 	}
 #endif
 }
+
+bool CBaseParams::CreateGenesisRewardTx(vector<std::shared_ptr<CBaseTransaction> > &vRewardTx, const vector<string> &vInitPubKey) {
+	int length = vInitPubKey.size();
+	for (int i = 0; i < length; ++i) {
+		shared_ptr<CRewardTransaction> pRewardTx = make_shared<CRewardTransaction>(ParseHex(vInitPubKey[i].c_str()), 10000000 * COIN, 0);
+		if (pRewardTx.get())
+			vRewardTx.push_back(pRewardTx);
+		else
+			return false;
+	}
+	return true;
+
+};
 
 bool CBaseParams::IntialParams(int argc, const char* const argv[]) {
 	ParseParameters(argc, argv);

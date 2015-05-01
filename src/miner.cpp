@@ -717,7 +717,7 @@ void static DacrsMiner(CWallet *pwallet) {
 			CScriptDBViewCache ScriptDbTemp(*pScriptDBTip, true);
 			int64_t lasttime1 = GetTimeMillis();
 			shared_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock(accview, txCache, ScriptDbTemp));
-			LogPrint("MINER", "CreateNewBlock blocksize%d used time :%d ms\n", pblocktemplate.get()->block.vptx.size(),
+			LogPrint("MINER", "CreateNewBlock tx count:%d used time :%d ms\n", pblocktemplate.get()->block.vptx.size(),
 					GetTimeMillis() - lasttime1);
 			if (!pblocktemplate.get()){
 				throw;

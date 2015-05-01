@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(chain_test) {
 //	BOOST_CHECK(SysParamsTest().ProofOfWorkLimit() == CBigNum(~uint256(0) >> 8));
 	BOOST_CHECK(SysParamsTest().SubsidyHalvingInterval() == 210000);
 	BOOST_CHECK(SysParamsTest().RequireRPCPassword() == true);
-	BOOST_CHECK(SysParamsTest().DataDir() == "testnet3");
+	BOOST_CHECK(SysParamsTest().DataDir() == "testnet");
 	BOOST_CHECK(SysParamsTest().NetworkID() == CBaseParams::TESTNET);
 	BOOST_CHECK(SysParamsTest().RPCPort() == 18669);
 }

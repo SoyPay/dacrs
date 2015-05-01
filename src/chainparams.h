@@ -325,7 +325,7 @@ public:
 	virtual ~CBaseParams() {
 	}
 
-	virtual bool CreateGenesisRewardTx(vector<std::shared_ptr<CBaseTransaction> > &vRewardTx) = 0;
+	bool CreateGenesisRewardTx(vector<std::shared_ptr<CBaseTransaction> > &vRewardTx, const vector<string> &vInitPubKey);
 	static void ParseParameters(int argc, const char* const argv[]);
 
 	static const vector<string> &GetMultiArgs(const string& strArg);

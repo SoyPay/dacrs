@@ -11,7 +11,7 @@
 #include <boost/assign/list_of.hpp>
 using namespace std;
 
-const unsigned int iTxCount = 100;
+const unsigned int iTxCount = 6000;
 vector<std::shared_ptr<CBaseTransaction> > vTransactions;
 vector<string> vTransactionHash;
 deque<uint64_t> dFee;
@@ -164,7 +164,7 @@ public:
 		iIndex +=20;
 		string contact =strprintf("%02x",iIndex);
 
-		int nfee = GetRandomFee();
+		int nfee = GetRandomFee() + 100000;
 		uint64_t llmoney = GetRandomMoney() * COIN;
 		Value value = SysTestBase::CreateContractTx(regScriptId,srcAddr, contact,0,nfee, llmoney);
 		string txHash = "";

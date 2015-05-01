@@ -99,7 +99,7 @@ BOOST_FIXTURE_TEST_CASE(tx_add_free,CTxTest) {
 //	CFund fund(1, CHAIN_HEIGHT + 1);
 	BOOST_CHECK(accOperate.OperateAccount(ADD_FREE, 1));
 //	fund.value = MAX_MONEY;
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_FREE, MAX_MONEY));
+	BOOST_CHECK(!accOperate.OperateAccount(ADD_FREE, GetMaxMoney()));
 
 //	accOperate.CompactAccount(CHAIN_HEIGHT);
 

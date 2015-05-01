@@ -645,7 +645,7 @@ int64_t GetMinFee(const CBaseTransaction *pBaseTx, unsigned int nBytes, bool fAl
     }
 
     if (!MoneyRange(nMinFee))
-        nMinFee = MAX_MONEY;
+        nMinFee = GetMaxMoney();
     return nMinFee;
 }
 
