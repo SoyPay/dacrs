@@ -56,6 +56,13 @@ bool PrintTestNotSetPara()
 		exit(0);
 	}
 
+	if(!SysCfg().GetArg("-regtest",flag))
+	{
+		cout<<"Waring the test of config file the regtest param must be 1"<<endl;
+		MilliSleep(500);
+		exit(0);
+	}
+
 	return true;
 }
 
