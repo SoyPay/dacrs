@@ -89,7 +89,7 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
     obj.push_back(Pair("nettype",       name[SysCfg().NetworkID()]));
     obj.push_back(Pair("chainwork", 	chainActive.Tip()->nChainWork.GetHex()));
-
+    obj.push_back(Pair("tipblocktime", 	(int)chainActive.Tip()->nTime));
     if (pwalletMain && pwalletMain->IsCrypted())
 	 obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
 	 obj.push_back(Pair("paytxfee",      ValueFromAmount(SysCfg().GetTxFee())));

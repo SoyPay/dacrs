@@ -51,6 +51,13 @@ static bool GetKeyId(string const &addr, CKeyID &KeyId) {
 ;
 
 Object TxToJSON(CBaseTransaction *pTx) {
+
+	auto getregidstring = [&](CUserID const &userId) {
+		if(userId.type() == typeid(CRegID))
+			return boost::get<CRegID>(userId).ToString();
+		return string(" ");
+	};
+
 	Object result;
 	result.push_back(Pair("hash", pTx->GetHash().GetHex()));
 	switch (pTx->nTxType) {
@@ -72,9 +79,9 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		CTransaction *prtx = (CTransaction *) pTx;
 		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
 		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("regid", boost::get<CRegID>(prtx->srcRegId).ToString()));
+		result.push_back(Pair("regid", getregidstring(prtx->srcRegId)));
 		result.push_back(Pair("addr", RegIDToAddress(prtx->srcRegId)));
-		result.push_back(Pair("desregid", boost::get<CRegID>(prtx->desUserId).ToString()));
+		result.push_back(Pair("desregid", getregidstring(prtx->desUserId)));
 		result.push_back(Pair("desaddr", RegIDToAddress(prtx->desUserId)));
 		result.push_back(Pair("money", prtx->llValues));
 		result.push_back(Pair("fees", prtx->llFees));
@@ -86,7 +93,7 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		CRewardTransaction *prtx = (CRewardTransaction *) pTx;
 		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
 		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("regid", boost::get<CRegID>(prtx->account).ToString()));
+		result.push_back(Pair("regid", getregidstring(prtx->account)));
 		result.push_back(Pair("addr", RegIDToAddress(prtx->account)));
 		result.push_back(Pair("money", prtx->rewardValue));
 		result.push_back(Pair("height", prtx->nHeight));
@@ -96,7 +103,7 @@ Object TxToJSON(CBaseTransaction *pTx) {
 		CRegisterAppTx *prtx = (CRegisterAppTx *) pTx;
 		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
 		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("regid", boost::get<CRegID>(prtx->regAcctId).ToString()));
+		result.push_back(Pair("regid", getregidstring(prtx->regAcctId)));
 		result.push_back(Pair("addr", RegIDToAddress(prtx->regAcctId)));
 		result.push_back(Pair("script", "script_content"));
 		result.push_back(Pair("fees", prtx->llFees));
