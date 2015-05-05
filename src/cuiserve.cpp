@@ -37,6 +37,7 @@ CUIServer* CUIServer::getInstance() {
 void CUIServer::Send(const string& strData) {
 	if(NULL == instance)
 		return ;
+	LogPrint("TOUI","init message: %s\n", strData);
 	instance->SendData(strData);
 }
 

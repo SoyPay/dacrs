@@ -54,24 +54,31 @@ static void noui_InitMessage(const std::string &message)
 	{
 		CUIServer::IsInitalEnd = true;
 	}
+	Object obj;
+	obj.push_back(Pair("type",     "init"));
+	obj.push_back(Pair("msg",     message));
 	if(CUIServer::HasConnection()){
-		Object obj;
-		obj.push_back(Pair("type",     "init"));
-		obj.push_back(Pair("msg",     message));
+
 		CUIServer::Send(write_string(Value(std::move(obj)),true));
 	}else{
-		LogPrint("NOUI","init message: %s\n", message);
+		LogPrint("NOUI","init message: %s\n", write_string(Value(std::move(obj)),true));
 	}
 }
 
 static void noui_BlockChanged(int64_t time,int64_t high,const uint256 &hash) {
+
+	Object obj;
+	obj.push_back(Pair("type",     "blockchanged"));
+	obj.push_back(Pair("time",     (int)time));
+	obj.push_back(Pair("high",     (int)high));
+	obj.push_back(Pair("hash",     hash.ToString()));
+
 	if (CUIServer::HasConnection()) {
-		Object obj;
-		obj.push_back(Pair("type",     "blockchanged"));
-		obj.push_back(Pair("time",     (int)time));
-		obj.push_back(Pair("high",     (int)high));
-		obj.push_back(Pair("hash",     hash.ToString()));
+
 		CUIServer::Send(write_string(Value(std::move(obj)),true));
+	}else
+	 {
+			LogPrint("NOUI", "%s\n", write_string(Value(std::move(obj)),true));
 	}
 }
 extern Object GetTxDetailJSON(const uint256& txhash);
