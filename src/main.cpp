@@ -52,6 +52,9 @@ map<uint256, CBlockIndex*> mapBlockIndex;
 CChain chainActive;
 CChain chainMostWork;
 
+
+map<uint256, std::tuple<std::shared_ptr<CAccountViewCache>, std::shared_ptr<CTransactionDBCache>, std::shared_ptr<CScriptDBViewCache> > > mapCache;
+
 CSignatureCache signatureCache;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
@@ -1337,9 +1340,11 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
     if (!CheckBlock(block, state, view, scriptDBCache, !fJustCheck, !fJustCheck))
         return false;
 
-    // verify that the view's current state corresponds to the previous block
-    uint256 hashPrevBlock = pindex->pprev == NULL ? uint256(0) : pindex->pprev->GetBlockHash();
-    assert(hashPrevBlock == view.GetBestBlock());
+    if(!fJustCheck) {
+		// verify that the view's current state corresponds to the previous block
+		uint256 hashPrevBlock = pindex->pprev == NULL ? uint256(0) : pindex->pprev->GetBlockHash();
+		assert(hashPrevBlock == view.GetBestBlock());
+    }
 
     // Special case for the genesis block, skipping connection of its transactions
     // (its coinbase is unspendable)
@@ -1539,7 +1544,7 @@ bool static WriteChainState(CValidationState &state) {
         	return state.Abort(_("Failed to write to tx cache database"));
         if (!pScriptDBTip->Flush())
         	return state.Abort(_("Failed to write to script db database"));
-
+        mapCache.clear();
         nLastWrite = GetTimeMicros();
     }
     return true;
@@ -1677,7 +1682,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     // Read block from disk.
     CBlock block;
     if (!ReadBlockFromDisk(block, pindexNew))
-        return state.Abort(_("Failed to read block"));
+        return state.Abort(strprintf("Failed to read block hash:%s\n", pindexNew->GetBlockHash().GetHex()));
     // Apply the block atomically to the chain state.
     int64_t nStart = GetTimeMicros();
     {
@@ -2000,45 +2005,97 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 }
 
 bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockIndex, CValidationState& state) {
-	CAccountViewCache view(*pAccountViewTip, true);
-	CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
-	CScriptDBViewCache scriptDBTemp(*pScriptDBTip, true);
+//	CAccountViewCache view(*pAccountViewTip, true);
+//	CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
+//	CScriptDBViewCache scriptDBTemp(*pScriptDBTip, true);
+
+	std::shared_ptr<CAccountViewCache> pForkAcctViewCache;
+	std::shared_ptr<CTransactionDBCache> pForkTxCache;
+	std::shared_ptr<CScriptDBViewCache> pForkScriptDBCache;
+	std::shared_ptr<CAccountViewCache> pAcctViewCache = make_shared<CAccountViewCache>(*pAccountViewTip, true);
+	std::shared_ptr<CTransactionDBCache> pTxCache = make_shared<CTransactionDBCache>(*pTxCacheTip, true);
+	std::shared_ptr<CScriptDBViewCache> pScriptDBCache = make_shared<CScriptDBViewCache>(*pScriptDBTip, true);
+	uint256 preBlockHash(0);
+	bool bFindForkChainTip(false);
 	vector<CBlock> vPreBlocks;
 	if (pPreBlockIndex->GetBlockHash() != chainActive.Tip()->GetBlockHash()) {
 		while (!chainActive.Contains(pPreBlockIndex)){
-			CBlock block;
-			if (!ReadBlockFromDisk(block, pPreBlockIndex))
-				return state.Abort(_("Failed to read block"));
-			//vPreBlocks.insert(vPreBlocks.begin(), block);
-			vPreBlocks.push_back(block);                   //将支链的block保存起来
+			if(mapCache.count(pPreBlockIndex->GetBlockHash()) > 0) {
+				preBlockHash = pPreBlockIndex->GetBlockHash();
+				bFindForkChainTip = true;
+			}
+			if(!bFindForkChainTip) {
+				CBlock block;
+				if (!ReadBlockFromDisk(block, pPreBlockIndex))
+					return state.Abort(_("Failed to read block"));
+				//vPreBlocks.insert(vPreBlocks.begin(), block);
+				vPreBlocks.push_back(block);                   //将支链的block保存起来
+			}
 			pPreBlockIndex = pPreBlockIndex->pprev;
 			map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(pPreBlockIndex->GetBlockHash());
 			if (mi == mapBlockIndex.end())
 				return state.DoS(10, ERRORMSG("AcceptBlock() : prev block not found"), 0, "bad-prevblk");
 		}//如果进来的preblock hash不为tip的hash,找到主链中分叉处
 
-		CBlockIndex *pBlockIndex = chainActive.Tip();
-		while (pPreBlockIndex != pBlockIndex) {       //数据库状态回滚到主链分叉处
-			CBlock block;
-			if (!ReadBlockFromDisk(block, pBlockIndex))
-				return state.Abort(_("Failed to read block"));
-			bool bfClean = true;
-			if (!DisconnectBlock(block, state, view, pBlockIndex, txCacheTemp, scriptDBTemp, &bfClean)) {
-				return ERRORMSG("CheckBlockProofWorkWithCoinDay() : DisconnectBlock %s failed", pBlockIndex->GetBlockHash().ToString());
+		int64_t tempTime = GetTimeMillis();
+		if (mapCache.count(pPreBlockIndex->GetBlockHash()) > 0 ) {
+			pAcctViewCache = std::get<0>(mapCache[pPreBlockIndex->GetBlockHash()]);
+			pTxCache = std::get<1>(mapCache[pPreBlockIndex->GetBlockHash()]);
+			pScriptDBCache = std::get<2>(mapCache[pPreBlockIndex->GetBlockHash()]);
+		} else {
+			CBlockIndex *pBlockIndex = chainActive.Tip();
+			while (pPreBlockIndex != pBlockIndex) {       //数据库状态回滚到主链分叉处
+				LogPrint("INFO", "CheckBlockProofWorkWithCoinDay() DisconnectBlock block nHieght=%d hash=%s\n",
+						pBlockIndex->nHeight, pBlockIndex->GetBlockHash().GetHex());
+				CBlock block;
+				if (!ReadBlockFromDisk(block, pBlockIndex))
+					return state.Abort(_("Failed to read block"));
+				bool bfClean = true;
+				if (!DisconnectBlock(block, state, *pAcctViewCache, pBlockIndex, *pTxCache, *pScriptDBCache,
+						&bfClean)) {
+					return ERRORMSG("CheckBlockProofWorkWithCoinDay() : DisconnectBlock %s failed",
+							pBlockIndex->GetBlockHash().ToString());
+				}
+				pBlockIndex = pBlockIndex->pprev;
 			}
-			pBlockIndex = pBlockIndex->pprev;
+			std::tuple<std::shared_ptr<CAccountViewCache>, std::shared_ptr<CTransactionDBCache>,
+					std::shared_ptr<CScriptDBViewCache> > forkCache = std::make_tuple(pAcctViewCache, pTxCache,
+					pScriptDBCache);
+			mapCache[pPreBlockIndex->GetBlockHash()] = forkCache;
 		}
+
+		LogPrint("INFO", "CheckBlockProofWorkWithCoinDay() DisconnectBlock elapse :%lld ms\n", GetTimeMillis() - tempTime);
+		if(bFindForkChainTip) {
+			pForkAcctViewCache = std::get<0>(mapCache[preBlockHash]);
+			pForkTxCache = std::get<1>(mapCache[preBlockHash]);
+			pForkScriptDBCache = std::get<2>(mapCache[preBlockHash]);
+			pForkAcctViewCache->SetBaseData(pAcctViewCache.get());
+			pForkTxCache->SetBaseData(pTxCache.get());
+			pForkScriptDBCache->SetBaseData(pScriptDBCache.get());
+		}
+		else{
+			pForkAcctViewCache.reset(new CAccountViewCache(*pAcctViewCache, true));
+			pForkTxCache.reset(new CTransactionDBCache(*pTxCache, true));
+			pForkScriptDBCache.reset(new CScriptDBViewCache(*pScriptDBCache, true));
+		}
+
 		vector<CBlock>::reverse_iterator rIter = vPreBlocks.rbegin();
 		for(; rIter != vPreBlocks.rend(); ++rIter) { //连接支链的block
-			if (!ConnectBlock(*rIter, state, view, mapBlockIndex[rIter->GetHash()], txCacheTemp, scriptDBTemp, false))
+			if (!ConnectBlock(*rIter, state, *pForkAcctViewCache, mapBlockIndex[rIter->GetHash()], *pForkTxCache, *pForkScriptDBCache, false))
 				return ERRORMSG("CheckBlockProofWorkWithCoinDay() : ConnectBlock %s failed", rIter->GetHash().ToString());
 		}
 
 		//校验pos交易
-		if (!VerifyPosTx(view, &block, txCacheTemp, scriptDBTemp, true)) {
+		if (!VerifyPosTx(*pForkAcctViewCache, &block, *pForkTxCache, *pForkScriptDBCache, true)) {
 			return state.DoS(100,
 					ERRORMSG("CheckBlockProofWorkWithCoinDay() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
 					REJECT_INVALID, "bad-pos-tx");
+		}
+		CAccount acctInfo;
+		CRegID regId("0-14");
+		if(pForkAcctViewCache->GetAccount(regId, acctInfo)) {
+			LogPrint("miner", "CheckBlockProofWorkWithCoinDay connect block hash:%s\n", block.GetHash().GetHex());
+			LogPrint("miner", "CheckBlockProofWorkWithCoinDay accout info:%s\n", acctInfo.ToString());
 		}
 		//校验利息是否正常
 		std::shared_ptr<CRewardTransaction> pRewardTx = dynamic_pointer_cast<CRewardTransaction>(block.vptx[0]);
@@ -2050,14 +2107,25 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 
 		for(auto & item : block.vptx) {
 			//校验交易是否在有效高度
-			if (!item->IsValidHeight(mapBlockIndex[view.GetBestBlock()]->nHeight, SysCfg().GetTxCacheHeight())) {
+			if (!item->IsValidHeight(mapBlockIndex[pForkAcctViewCache->GetBestBlock()]->nHeight, SysCfg().GetTxCacheHeight())) {
 				return state.DoS(100,
 						ERRORMSG("CheckBlockProofWorkWithCoinDay() : txhash=%s beyond the scope of valid height\n ",
 								item->GetHash().GetHex()), REJECT_INVALID, "tx-invalid-height");
 			}
 			//校验是否有重复确认交易
-			if(uint256(0) != txCacheTemp.IsContainTx(item->GetHash()))
+			if(uint256(0) != pForkTxCache->IsContainTx(item->GetHash()))
 				return state.DoS(100, ERRORMSG("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed\n", item->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
+		}
+
+		vector<CBlock>::iterator iterBlock = vPreBlocks.begin();
+		if(iterBlock != vPreBlocks.end()) {
+			if(bFindForkChainTip) {
+				LogPrint("INFO", "delete mapCache Key:%s\n", preBlockHash.GetHex());
+				mapCache.erase(preBlockHash);
+			}
+			std::tuple<std::shared_ptr<CAccountViewCache>, std::shared_ptr<CTransactionDBCache>, std::shared_ptr<CScriptDBViewCache> > cache = std::make_tuple(pForkAcctViewCache, pForkTxCache, pForkScriptDBCache);
+			LogPrint("INFO", "add mapCache Key:%s\n", iterBlock->GetHash().GetHex());
+			mapCache[iterBlock->GetHash()] = cache;
 		}
 	} else {
 //		uint64_t nInterest = 0;

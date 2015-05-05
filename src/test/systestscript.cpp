@@ -97,14 +97,14 @@ public:
 	void CheckSdk()
 	{
 		string param ="01";
-		Value resut =CreateContractTx("010000000100", "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz", param, 10);
+		Value resut =CreateContractTx("010000000100", "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz", param, 10, 10000000);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,TxHash));
 		BOOST_CHECK(GenerateOneBlock());
 		uint256 hash(TxHash.c_str());
 		param ="02";
 		param += HexStr(hash);
 		string temp;
-		resut =CreateContractTx("010000000100", "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz", param, 10);
+		resut =CreateContractTx("010000000100", "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz", param, 10, 10000000);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,temp));
 		BOOST_CHECK(GenerateOneBlock());
 

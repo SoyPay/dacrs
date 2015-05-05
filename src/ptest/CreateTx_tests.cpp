@@ -74,11 +74,9 @@ bool CCreateTxTest::CreateTx(int nTxType)
 		string srcAcct("");
 		if(!SelectOneAccount(srcAcct))
 			return false;
-		string desAcct("");
-		do {
-			if (!SelectOneAccount(desAcct))
-				return false;
-		} while (desAcct == srcAcct);
+		string desAcct = srcAcct;
+		if (!SelectOneAccount(desAcct, true))
+			return false;
 		Value value = basetest.CreateNormalTx(srcAcct, desAcct, 100 * COIN);
 		if (basetest.GetHashFromCreatedTx(value, sendhash)) {
 			cout << "src regId:" << srcAcct<<" create normal tx hash:" << sendhash << endl;

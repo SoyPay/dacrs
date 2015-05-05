@@ -45,15 +45,26 @@ bool CycleTestBase::SelectAccounts(vector<string> &vAccounts) {
 	return !vAccounts.empty();
 }
 
-bool CycleTestBase::SelectOneAccount(string &selectAddr) {
+bool CycleTestBase::SelectOneAccount(string &selectAddr, bool flag) {
 	srand(time(NULL));
-	if(vAccount.empty())
+	if(vAccount.empty() || (flag && vAccount.size() < 2))
 	{
 		if(!SelectAccounts(vAccount))
 			return false;
 	}
 	int r = (rand() % vAccount.size());
-	selectAddr = vAccount.at(r);
+	if(flag) {
+		string strAddr("");
+		while(true){
+		strAddr = vAccount.at(r);
+		if(selectAddr != strAddr)
+			break;
+		r = (rand() % vAccount.size());
+		}
+		selectAddr = strAddr;
+	}else {
+		selectAddr = vAccount.at(r);
+	}
 	return true;
 }
 

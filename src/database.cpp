@@ -386,6 +386,10 @@ Object CAccountViewCache::ToJosnObj() const {
 	return obj;
 }
 
+void CAccountViewCache::SetBaseData(CAccountView * pNewBase){
+	pBase = pNewBase;
+}
+
 bool CScriptDBView::GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue) {	return false;}
 bool CScriptDBView::SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue) {return false;}
 bool CScriptDBView::BatchWrite(const map<vector<unsigned char>, vector<unsigned char> > &mapDatas) {return false;}
@@ -1317,6 +1321,20 @@ Object CScriptDBViewCache::ToJosnObj() const {
 	obj.push_back(Pair("mapDatas", arrayObj));
 	return obj;
 }
+void CScriptDBViewCache::SetBaseData(CScriptDBView * pNewBase){
+	pBase = pNewBase;
+}
+string CScriptDBViewCache::ToString(){
+	string str("");
+	vector<unsigned char> vPrefix = {'d', 'a', 't', 'a'};
+	for(auto & item : mapDatas) {
+		vector<unsigned char> vTemp(item.first.begin(), item.first.begin()+4);
+		if(vTemp ==  vPrefix){
+			str = strprintf("vKey=%s\n vData=%s\n", HexStr(item.first), HexStr(item.second));
+		}
+	}
+	return str;
+}
 
 
 uint256 CTransactionDBView::IsContainTx(const uint256 & txHash) { return std::move(uint256(0)); }
@@ -1485,6 +1503,10 @@ Object CTransactionDBCache::ToJosnObj() const {
 	return std::move(retobj);
 
 }
+void CTransactionDBCache::SetBaseData(CTransactionDBView *pNewBase){
+	pBase = pNewBase;
+}
+
 
 bool CScriptDBViewCache::GetScriptAcc(const CRegID& scriptId, const vector<unsigned char> &vAccKey, CAppUserAccout& appAccOut) {
 	vector<unsigned char> scriptKey = {'a','c','c','t'};

@@ -553,7 +553,11 @@ void CBaseParams::ParseParameters(int argc, const char* const argv[]) {
 bool CBaseParams::CreateGenesisRewardTx(vector<std::shared_ptr<CBaseTransaction> > &vRewardTx, const vector<string> &vInitPubKey) {
 	int length = vInitPubKey.size();
 	for (int i = 0; i < length; ++i) {
-		shared_ptr<CRewardTransaction> pRewardTx = make_shared<CRewardTransaction>(ParseHex(vInitPubKey[i].c_str()), 10000000 * COIN, 0);
+		int64_t money(0);
+		if( i > 0) {
+			money = 10000000 * COIN;
+		}
+		shared_ptr<CRewardTransaction> pRewardTx = make_shared<CRewardTransaction>(ParseHex(vInitPubKey[i].c_str()), money, 0);
 		if (pRewardTx.get())
 			vRewardTx.push_back(pRewardTx);
 		else

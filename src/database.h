@@ -99,6 +99,8 @@ public:
 	bool Flush();
 	unsigned int GetCacheSize();
 	Object ToJosnObj()const;
+	void SetBaseData(CAccountView * pBase);
+
 
 };
 
@@ -184,6 +186,8 @@ public:
 	}
 	bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);
 	bool WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB);
+	void SetBaseData(CScriptDBView * pBase);
+	string ToString();
 private:
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
 	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
@@ -337,6 +341,7 @@ public:
 	void Clear();
 	Object ToJosnObj() const;
 	int GetSize();
+	void SetBaseData(CTransactionDBView *pNewBase);
 };
 
 #endif

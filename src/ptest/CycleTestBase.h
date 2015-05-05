@@ -26,7 +26,7 @@ public:
 		   return true;
 	}
 	static bool SelectAccounts(vector<string> &vAccount);
-	bool SelectOneAccount(string &selectAddr);
+	bool SelectOneAccount(string &selectAddr, bool falg=false);
 	bool WaitComfirmed(string &strTxHash, string &regId);
 	int Str2Int(string &strValue);
 	virtual TEST_STATE Run();
