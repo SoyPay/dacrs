@@ -89,11 +89,23 @@ static bool noui_RevTransaction(const uint256 &hash){
 	return true;
 }
 
+static bool noui_RevAppTransaction(const uint256 &hash){
+	Object obj;
+	obj.push_back(Pair("type",     "rev_app_transaction"));
+	obj.push_back(Pair("transation",     GetTxDetailJSON(hash)));
 
+	if (CUIServer::HasConnection()) {
+		CUIServer::Send(write_string(Value(std::move(obj)),true));
+	} else {
+		LogPrint("NOUI", "%s\n", write_string(Value(std::move(obj)),true));
+	}
+	return true;
+}
 void noui_connect()
 {
     // Connect Dacrsd signal handlers
 	uiInterface.RevTransaction.connect(noui_RevTransaction);
+	uiInterface.RevAppTransaction.connect(noui_RevAppTransaction);
     uiInterface.ThreadSafeMessageBox.connect(noui_ThreadSafeMessageBox);
     uiInterface.InitMessage.connect(noui_InitMessage);
     uiInterface.NotifyBlocksChanged.connect(noui_BlockChanged);
