@@ -729,14 +729,20 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 		vector<unsigned char> vDataValue;
 		vDataKey.clear();
 		vDataValue.clear();
-		for (auto &item : mapDatas) {   //遍历本级缓存数据，找出合法的最小的key值
-			vector<unsigned char> vTemp(item.first.begin(),item.first.begin()+vScriptId.size()+5);
-			if(vKey == vTemp) {
-				if(item.second.empty()) {
+		map<vector<unsigned char>, vector<unsigned char> >::iterator iterFindKey = mapDatas.upper_bound(vKey);
+		while (iterFindKey != mapDatas.end()) {
+			vector<unsigned char> vKeyTemp(vKey.begin(), vKey.begin() + vScriptId.size() + 5);
+			vector<unsigned char> vTemp(iterFindKey->first.begin(), iterFindKey->first.begin() + vScriptId.size() + 5);
+			if (vKeyTemp == vTemp) {
+				if (iterFindKey->second.empty()) {
+					++iterFindKey;
 					continue;
+				} else {
+					vDataKey = iterFindKey->first;
+					vDataValue = iterFindKey->second;
+					break;
 				}
-				vDataKey = item.first;
-				vDataValue = item.second;
+			} else {
 				break;
 			}
 		}
