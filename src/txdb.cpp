@@ -437,7 +437,7 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 		try {
 			leveldb::Slice slKey = pcursor->key();
 			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
-			if (0 == strncmp((char *)&ssKey[0], (char *)&ssKeySet[0], 11)) {
+			if (0 == memcmp((char *)&ssKey[0], (char *)&ssKeySet[0], 11)) {
 				if (-1 == i) {
 					vector<unsigned char> vValue;
 					leveldb::Slice slValue = pcursor->value();
