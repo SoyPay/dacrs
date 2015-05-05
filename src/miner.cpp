@@ -734,7 +734,7 @@ void static DacrsMiner(CWallet *pwallet,int targetConter) {
 			MiningBlock(pblock, pwallet, pindexPrev, LastTrsa, accview, txCache, ScriptDbTemp);
 			
 			if (SysCfg().NetworkID() != CBaseParams::MAIN)
-				if(targetConter >= getcurhigh())	{
+				if(targetConter <= getcurhigh())	{
 						throw boost::thread_interrupted();
 				}	
 		}
