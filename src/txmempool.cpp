@@ -53,18 +53,18 @@ void CTxMemPool::SetScriptDBViewDB(CScriptDBViewCache *pScriptDBViewCacheIn) {
 	pScriptDBViewCache = make_shared<CScriptDBViewCache>(*pScriptDBViewCacheIn, false);
 }
 
-void CTxMemPool::ReScanMemPoolTx(const CBlock &block, CAccountViewCache *pAccountViewCacheIn, CScriptDBViewCache *pScriptDBViewCacheIn) {
+void CTxMemPool::ReScanMemPoolTx(CAccountViewCache *pAccountViewCacheIn, CScriptDBViewCache *pScriptDBViewCacheIn) {
 	pAccountViewCache.reset(new CAccountViewCache(*pAccountViewCacheIn, true));
 	pScriptDBViewCache.reset(new CScriptDBViewCache(*pScriptDBViewCacheIn, true));
 	{
 		LOCK(cs);
-		for(auto &pTxItem : block.vptx){
-			mapTx.erase(pTxItem->GetHash());
-		}
+//		for(auto &pTxItem : block.vptx){
+//			mapTx.erase(pTxItem->GetHash());
+//		}
 		CValidationState state;
 		list<std::shared_ptr<CBaseTransaction> > removed;
 		for(map<uint256, CTxMemPoolEntry >::iterator iterTx = mapTx.begin(); iterTx != mapTx.end(); ) {
-			if (!CheckTxInMemPool(iterTx->first, iterTx->second, state)) {
+			if (!CheckTxInMemPool(iterTx->first, iterTx->second, state, false)) {
 				iterTx = mapTx.erase(iterTx++);
 				continue;
 			}
@@ -101,7 +101,7 @@ void CTxMemPool::remove(CBaseTransaction *pBaseTx, list<std::shared_ptr<CBaseTra
 	}
 }
 
-bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &entry, CValidationState &state) {
+bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &entry, CValidationState &state, bool bExcute) {
 	CTxUndo txundo;
 	CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
 	// is it already confirmed in block
@@ -115,9 +115,11 @@ bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &en
 	if (CONTRACT_TX == entry.GetTx()->nTxType) {
 		LogPrint("vm", "tx hash=%s CheckTxInMemPool run contract\n", entry.GetTx()->GetHash().GetHex());
 	}
-	if (!entry.GetTx()->ExecuteTx(0, *pAccountViewCache, state, txundo, chainActive.Tip()->nHeight + 1,
-			txCacheTemp, *pScriptDBViewCache)) {
-		return false;
+	if(bExcute) {
+		if (!entry.GetTx()->ExecuteTx(0, *pAccountViewCache, state, txundo, chainActive.Tip()->nHeight + 1,
+				txCacheTemp, *pScriptDBViewCache)) {
+			return false;
+		}
 	}
 	return true;
 }

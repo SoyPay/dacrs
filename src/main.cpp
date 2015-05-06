@@ -1629,12 +1629,11 @@ bool static DisconnectTip(CValidationState &state) {
 //	}
 
 	// Update chainActive and related variables.
-    UpdateTip(pindexDelete->pprev, block);
-
-    mempool.ReScanMemPoolTx(block, pAccountViewTip, pScriptDBTip);
-	// Resurrect mempool transactions from the disconnected block.
+    UpdateTip(pindexDelete->pprev, block);  
+    // Resurrect mempool transactions from the disconnected block.
 	for (const auto &ptx : block.vptx) {
 		// ignore validation errors in resurrected transactions
+		mempool.mapTx.erase(ptx->GetHash());
 		list<std::shared_ptr<CBaseTransaction> > removed;
 		CValidationState stateDummy;
 		if (!ptx->IsCoinBase())
@@ -1728,20 +1727,22 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
     UpdateTip(pindexNew, block);
 
     // Write new block info to log, if necessary.
-      if(SysCfg().GetArg("-blocklog", 0) !=0 )
-      {
-  		if (chainActive.Height()%SysCfg().GetArg("-blocklog", 0) == 0) {
-  		  if (!pAccountViewTip->Flush())
-  			return state.Abort(_("Failed to write to account database"));
-  		if (!pTxCacheTip->Flush())
-  			return state.Abort(_("Failed to write to tx cache database"));
-  		if (! pScriptDBTip->Flush())
-  			return state.Abort(_("Failed to write to script db database"));
-  			WriteBlockLog(true, "ConnectTip");
-  		}
-      }
-
-    mempool.ReScanMemPoolTx(block, pAccountViewTip, pScriptDBTip);
+	if(SysCfg().GetArg("-blocklog", 0) !=0 )
+	{
+		if (chainActive.Height()%SysCfg().GetArg("-blocklog", 0) == 0) {
+		  if (!pAccountViewTip->Flush())
+			return state.Abort(_("Failed to write to account database"));
+		if (!pTxCacheTip->Flush())
+			return state.Abort(_("Failed to write to tx cache database"));
+		if (! pScriptDBTip->Flush())
+			return state.Abort(_("Failed to write to script db database"));
+			WriteBlockLog(true, "ConnectTip");
+		}
+	}
+	for(auto &pTxItem : block.vptx){
+		mempool.mapTx.erase(pTxItem->GetHash());
+	}
+//  mempool.ReScanMemPoolTx(pAccountViewTip, pScriptDBTip);
     return true;
 }
 
@@ -1815,6 +1816,9 @@ bool ActivateBestChain(CValidationState &state) {
         while (chainActive.Tip() && !chainMostWork.Contains(chainActive.Tip())) {
             if (!DisconnectTip(state))
                 return false;
+            if(chainActive.Tip() && chainMostWork.Contains(chainActive.Tip())) {
+            	mempool.ReScanMemPoolTx(pAccountViewTip, pScriptDBTip);
+            }
         }
 
         // Connect new blocks.
@@ -1833,7 +1837,12 @@ bool ActivateBestChain(CValidationState &state) {
                     return false;
                 }
             }
+            
+            if(chainActive.Contains(chainMostWork.Tip())) {
+				mempool.ReScanMemPoolTx(pAccountViewTip, pScriptDBTip);
+            }
         }
+
     }
 
     if (chainActive.Tip() != pindexOldTip) {
@@ -3539,8 +3548,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         // Find the last block the caller has in the main chain
         CBlockIndex* pindex = chainActive.FindFork(locator);
         CBlockIndex* pContinueIndex = mapBlockIndex[pfrom->hashContinue];
-        if(NULL != pContinueIndex && (pContinueIndex->nHeight > pindex->nHeight) && (uint256(0) == hashStop)) {
-        	pindex = pContinueIndex;
+        CBlockIndex* pStopIndex = mapBlockIndex[hashStop];
+        if(NULL != pContinueIndex && (pContinueIndex->nHeight > pindex->nHeight) /*&& (uint256(0) == hashStop)*/) {
+        	if(NULL == pStopIndex || pStopIndex->nHeight > pContinueIndex->nHeight)
+        		pindex = pContinueIndex;
         }
         // Send the rest of the chain
         if (pindex)
@@ -3552,7 +3563,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             if (pindex->GetBlockHash() == hashStop)
             {
                 LogPrint("net", "  getblocks stopping at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
-                pfrom->hashContinue = uint256(0);  //add by frank
+                pfrom->hashContinue = hashStop;  //add by frank
                 break;
             }
             pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
@@ -3561,7 +3572,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 // When this block is requested, we'll send an inv that'll make them
                 // getblocks the next batch of inventory.
                 LogPrint("net", "  getblocks stopping at limit %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
-                if(NULL != pContinueIndex && (pindex->nHeight > pContinueIndex->nHeight))
+                if(NULL == pContinueIndex || (pindex->nHeight > pContinueIndex->nHeight))
                 	pfrom->hashContinue = pindex->GetBlockHash();
                 break;
             }

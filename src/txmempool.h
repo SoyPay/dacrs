@@ -101,9 +101,9 @@ public:
 
     void SetScriptDBViewDB(CScriptDBViewCache *pScriptDBViewCacheIn);
 
-    bool CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &entry, CValidationState &state);
+    bool CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &entry, CValidationState &state, bool bExcute=true);
 
-    void ReScanMemPoolTx(const CBlock &block, CAccountViewCache *pAccountViewCacheIn, CScriptDBViewCache *pScriptDBViewCacheIn);
+    void ReScanMemPoolTx(CAccountViewCache *pAccountViewCacheIn, CScriptDBViewCache *pScriptDBViewCacheIn);
 };
 
 
