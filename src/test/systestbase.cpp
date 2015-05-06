@@ -564,8 +564,16 @@ bool SysTestBase::GenerateOneBlock() {
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
 		 int nHeight = 0;
-		GetBlockHeight(nHeight);
-		BOOST_CHECK(high+1==nHeight);
+		 int conter = 0;
+		do{
+			MilliSleep(1000);
+	    	GetBlockHeight(nHeight);
+	    	if(conter++ > 80)
+	    	{
+	    		break;
+	    	}
+		}while(high+1 > nHeight);
+		BOOST_CHECK(conter < 80);
 		return true;
 	}
 	return false;

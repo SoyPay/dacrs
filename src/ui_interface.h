@@ -78,6 +78,9 @@ public:
     /** rev tran box. */
      boost::signals2::signal<bool (const uint256 &hash) > RevTransaction;
 
+    /** rev app tran . */
+     boost::signals2::signal<bool (const uint256 &hash) > RevAppTransaction;
+
     /** Progress message during initialization. */
     boost::signals2::signal<void (const string &message)> InitMessage;
 

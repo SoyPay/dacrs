@@ -166,47 +166,23 @@ Value setgenerate(const Array& params, bool fHelp)
     if (params.size() == 2)
     {
         nGenProcLimit = params[1].get_int();
+        if(nGenProcLimit <= 0)
+        {
+        	throw JSONRPCError(RPC_INVALID_PARAMS, "limit conter err for mining");
+        }
     }
+    Object obj;
+	if(fGenerate == false){
+		GenerateDacrsBlock(false, pwalletMain, 1);
 
-    // -regtest mode: don't return until nGenProcLimit blocks are generated
-	if (SysCfg().NetworkID() != CBaseParams::MAIN) {
-
-		if(fGenerate == false){
-			GenerateDacrsBlock(false, pwalletMain, 1);
-			return Value::null;
-		}
-			//如果是一个一个地挖
-		int nHeightEnd = 0;
-		auto getcurhigh = [&]() {
-			LOCK(cs_main);
-			return chainActive.Height();
-		};
-		int curhigh = getcurhigh();
-		nHeightEnd = curhigh + nGenProcLimit;
-		int high = -1;
-
-		while (getcurhigh() < nHeightEnd) {
-			if (getcurhigh() != high || !getMiningInfo()) {
-				high = getcurhigh();
-//				cout<< "curhight: " << high <<endl;
-				GenerateDacrsBlock(true, pwalletMain, 1);
-			}
-			MilliSleep(1000);
-			if (fGenerate == false || ShutdownRequested()) {
-				GenerateDacrsBlock(false, pwalletMain, 1);
-				return Value::null;
-			}
-		}
-
-		GenerateDacrsBlock(false, pwalletMain, 1);//跑完之后需要退出
+	    obj.push_back(Pair("msg","stoping  mining"));
+		 return obj;
 	}
-    else // Not -regtest: start generate thread, return immediately
-    {
-    	SysCfg().SoftSetArgCover("-gen", fGenerate ?"1" : "0");
-        GenerateDacrsBlock(fGenerate, pwalletMain, nGenProcLimit);
-    }
 
-    return Value::null;
+	GenerateDacrsBlock(true, pwalletMain, nGenProcLimit);//跑完之后需要退出
+	obj.push_back(Pair("msg","in  mining"));
+	return obj;
+
 }
 
 

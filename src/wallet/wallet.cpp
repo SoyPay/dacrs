@@ -311,6 +311,11 @@ void CWallet::SetBestChain(const CBlockLocator& loc) {
 
 void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const CBlock* pblock) {
 
+	static std::shared_ptr<vector<string> > monitoring_appid = NULL;
+    if(monitoring_appid == NULL)
+    {
+    	monitoring_appid = SysCfg().GetMultiArgsMap("appid");
+    }
 	LOCK2(cs_main, cs_wallet);
 
 	assert(pTx != NULL || pblock != NULL);
@@ -339,6 +344,13 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 			CAccountTx newtx(this, blockhash,pblock->nHeight);
 			for (const auto &sptx : pblock->vptx) {
 				uint256 hashtx = sptx->GetHash();
+				if(sptx->nTxType == CONTRACT_TX){
+					string thisapp = boost::get<CRegID>(static_cast<CTransaction const*>(sptx.get())->desUserId).ToString();
+					auto it = find_if(monitoring_appid->begin(), monitoring_appid->end(), [&](const string& appid) {
+						return appid ==  thisapp;});
+			        if(monitoring_appid->end() != it)
+					uiInterface.RevAppTransaction(hashtx);
+				}
 				//confirm the tx is mine
 				if (IsMine(sptx.get())) {
 					if (sptx->nTxType == REG_ACCT_TX) {
