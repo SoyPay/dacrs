@@ -37,7 +37,10 @@ CUIServer* CUIServer::getInstance() {
 void CUIServer::Send(const string& strData) {
 	if(NULL == instance)
 		return ;
-	LogPrint("TOUI","init message: %s\n", strData);
+//	LogPrint("TOUI","send message: %s\n", strData);
+	string sendData(strData);
+	PackageData(sendData);
+	LogPrint("TOUI","send message: %s\n", sendData);
 	instance->SendData(strData);
 }
 
@@ -99,3 +102,15 @@ void CUIServer::RunServer(){
 }
 
 CUIServer* CUIServer::instance = NULL;
+
+
+void CUIServer::PackageData(string &strData) {
+	string dataIn("");
+	unsigned short nDataLen = strData.length();
+	if(0 == nDataLen)
+		return;
+	char *cLen[3]={0};
+	memcpy(cLen, &nDataLen, 2);
+	strprintf(dataIn, "<%s%s>", cLen, strData.c_str());
+	strData = dataIn;
+}
