@@ -76,7 +76,9 @@ void CUIServer::Accept_handler(sock_pt sock) {
 	}
 
 	Accept();
-	sock->async_write_some(asio::buffer(write_string(Value(std::move(obj)),true)), bind(&CUIServer::write_handler, this));
+	string sendData = write_string(Value(std::move(obj)),true);
+	PackageData(sendData);
+	sock->async_write_some(asio::buffer(sendData), bind(&CUIServer::write_handler, this));
 	std::shared_ptr<vector<char> > str(new vector<char>(100, 0));
 	memset(data_,0,max_length);
 	sock->async_read_some(asio::buffer(data_,max_length),
