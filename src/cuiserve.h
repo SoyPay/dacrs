@@ -21,6 +21,7 @@ public:
 	static bool HasConnection();
 	static void StopServer();
 	static bool IsInitalEnd;
+	static void PackageData(string &strData);
 
 private:
 	CUIServer() :m_acceptor(m_iosev, tcp::endpoint(tcp::v4(), SysCfg().GetArg("-uiport", 18999))) {
