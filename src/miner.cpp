@@ -522,9 +522,6 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 				unsigned int nTxSize = ::GetSerializeSize(*pBaseTx, SER_NETWORK, PROTOCOL_VERSION);
 				if (nBlockSize + nTxSize >= nBlockMaxSize)
 					continue;
-				// Run step limits
-				if(nTotalRunStep + pBaseTx->nRunStep >= MAX_BLOCK_RUN_STEP)
-					continue;
 				// Skip free transactions if we're past the minimum block size:
 				if (fSortedByFee && (dFeePerKb < CTransaction::nMinRelayTxFee) && (nBlockSize + nTxSize >= nBlockMinSize))
 					continue;
@@ -557,14 +554,17 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 						txCache, scriptCacheTemp)) {
 					continue;
 				}
+				// Run step limits
+				if(nTotalRunStep + pBaseTx->nRunStep >= MAX_BLOCK_RUN_STEP)
+					continue;
 				assert(viewTemp.Flush());
 				assert(scriptCacheTemp.Flush());
-				nBlockTx++;
-				pblock->vptx.push_back(stx);
 				nFees += pBaseTx->GetFee();
 				nBlockSize += stx->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
 				nTotalRunStep += pBaseTx->nRunStep;
 				nTotalFuel += pBaseTx->GetFuel(pblock->nFuelRate);
+				nBlockTx++;
+				pblock->vptx.push_back(stx);
 				LogPrint("fuel", "miner total fuel:%d, tx fuel:%d runStep:%d fuelRate:%d txhash:%s\n",nTotalFuel, pBaseTx->GetFuel(pblock->nFuelRate), pBaseTx->nRunStep, pblock->nFuelRate, pBaseTx->GetHash().GetHex());
 			}
 
