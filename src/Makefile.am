@@ -123,7 +123,7 @@ libdacrs_server_a_SOURCES = \
   rpc/rpcserver.cpp \
   txdb.cpp \
   txmempool.cpp \
-  cuiserve.cpp	\
+  cuiserver.cpp	\
   $(VM_CPP) \
   $(VM_H) \
   $(JSON_H) \

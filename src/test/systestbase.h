@@ -25,7 +25,7 @@
 #include "rpc/rpcserver.h"
 #include "noui.h"
 #include "ui_interface.h"
-#include "cuiserve.h"
+#include "cuiserver.h"
 #include <boost/algorithm/string/predicate.hpp>
 
 using namespace std;

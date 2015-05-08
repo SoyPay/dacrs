@@ -10,7 +10,7 @@
 #include "noui.h"
 #include "ui_interface.h"
 #include "util.h"
-#include "cuiserve.h"
+#include "cuiserver.h"
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 

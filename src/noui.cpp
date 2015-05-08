@@ -13,7 +13,7 @@
 #include "json/json_spirit_value.h"
 #include "json/json_spirit_writer_template.h"
 using namespace json_spirit;
-#include "cuiserve.h"
+#include "cuiserver.h"
 #include "net.h"
 static bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
 {

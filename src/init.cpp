@@ -18,7 +18,7 @@
 #include "txdb.h"
 #include "ui_interface.h"
 #include "util.h"
-#include "cuiserve.h"
+#include "cuiserver.h"
 #include "tx.h"
 #include "./wallet/wallet.h"
 #include "./wallet/walletdb.h"
