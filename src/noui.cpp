@@ -82,6 +82,7 @@ static void noui_BlockChanged(int64_t time,int64_t high,const uint256 &hash) {
 			LogPrint("NOUI", "%s\n", write_string(Value(std::move(obj)),true));
 	}
 }
+
 extern Object GetTxDetailJSON(const uint256& txhash);
 
 static bool noui_RevTransaction(const uint256 &hash){
@@ -109,6 +110,19 @@ static bool noui_RevAppTransaction(const uint256 &hash){
 	}
 	return true;
 }
+
+static void noui_NotifyMessage(const std::string &message)
+{
+	Object obj;
+	obj.push_back(Pair("type","notify"));
+	obj.push_back(Pair("msg",message));
+	if(CUIServer::HasConnection()){
+		CUIServer::Send(write_string(Value(std::move(obj)),true));
+	}else{
+		LogPrint("NOUI","init message: %s\n", write_string(Value(std::move(obj)),true));
+	}
+}
+
 void noui_connect()
 {
     // Connect Dacrsd signal handlers
@@ -117,4 +131,5 @@ void noui_connect()
     uiInterface.ThreadSafeMessageBox.connect(noui_ThreadSafeMessageBox);
     uiInterface.InitMessage.connect(noui_InitMessage);
     uiInterface.NotifyBlocksChanged.connect(noui_BlockChanged);
+    uiInterface.NotifyMessage.connect(noui_NotifyMessage);
 }

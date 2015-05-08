@@ -458,7 +458,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 #endif
 #endif
 
-    CUIServer::StartServer(threadGroup);
+    CUIServer::StartServer();
     // ********************************************************* Step 2: parameter interactions
 
     if (SysCfg().IsArgCount("-bind")) {

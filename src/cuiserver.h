@@ -16,7 +16,7 @@ public:
 	typedef boost::shared_ptr<tcp::socket> sock_pt;
 
 public:
-	static void StartServer(boost::thread_group & group);
+	static void StartServer();
 	static void Send(const string& strData);
 	static bool HasConnection();
 	static void StopServer();
@@ -39,7 +39,7 @@ private:
 
 private:
 	static const int PORT=18999;
-
+	static boost::thread_group m_threadGroup;
 	static CUIServer* instance;
 	asio::io_service m_iosev;
 	tcp::acceptor m_acceptor;
@@ -48,4 +48,5 @@ private:
 	enum { max_length = 1024 };
 	char data_[max_length];
 	bool m_bRunFlag;
+
 };

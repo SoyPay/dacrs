@@ -101,6 +101,8 @@ public:
 
     /** A wallet has been loaded. */
     boost::signals2::signal<void (CWallet* wallet)> LoadWallet;
+
+    boost::signals2::signal<void (const string &message)> NotifyMessage;
 };
 
 extern CClientUIInterface uiInterface;

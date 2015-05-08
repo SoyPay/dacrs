@@ -3,6 +3,9 @@
 #include "json/json_spirit_value.h"
 #include "json/json_spirit_writer_template.h"
 using namespace json_spirit;
+
+boost::thread_group CUIServer::m_threadGroup;
+
 bool CUIServer::HasConnection(){
 	if(NULL == instance)
 		return false;
@@ -10,8 +13,8 @@ bool CUIServer::HasConnection(){
 	return instance->m_bConnect;
 }
 
-void CUIServer::StartServer(boost::thread_group & group) {
-	group.create_thread(boost::bind(&CUIServer::RunThreadPorc, CUIServer::getInstance()));
+void CUIServer::StartServer() {
+	m_threadGroup.create_thread(boost::bind(&CUIServer::RunThreadPorc, CUIServer::getInstance()));
 }
 
 void CUIServer::StopServer(){
@@ -19,6 +22,8 @@ void CUIServer::StopServer(){
 		return ;
 	instance->m_iosev.stop();
 	instance->m_bRunFlag = false;
+	m_threadGroup.interrupt_all();
+	m_threadGroup.join_all();
 }
 
 void CUIServer::RunThreadPorc(CUIServer* pThis) {

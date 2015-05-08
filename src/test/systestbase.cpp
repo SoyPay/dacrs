@@ -16,11 +16,12 @@ void DetectShutdownThread(boost::thread_group* threadGroup) {
 		MilliSleep(200);
 		fShutdown = ShutdownRequested();
 	}
-	CUIServer::StopServer();
+
 	if (threadGroup) {
 		threadGroup->interrupt_all();
 		threadGroup->join_all();
 	}
+	CUIServer::StopServer();
 }
 
 bool PrintTestNotSetPara()
