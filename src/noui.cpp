@@ -12,6 +12,7 @@
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"
 #include "json/json_spirit_writer_template.h"
+#include "main.h"
 using namespace json_spirit;
 #include "cuiserver.h"
 #include "net.h"
@@ -70,7 +71,7 @@ static void noui_BlockChanged(int64_t time,int64_t high,const uint256 &hash) {
 
 	Object obj;
 	obj.push_back(Pair("type",     "blockchanged"));
-	obj.push_back(Pair("time",     (int)time));
+	obj.push_back(Pair("tips",     g_nSyncTipHeight));
 	obj.push_back(Pair("high",     (int)high));
 	obj.push_back(Pair("hash",     hash.ToString()));
     obj.push_back(Pair("connections",   (int)vNodes.size()));

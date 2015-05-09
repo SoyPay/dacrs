@@ -51,7 +51,7 @@ CTxMemPool mempool;
 map<uint256, CBlockIndex*> mapBlockIndex;
 CChain chainActive;
 CChain chainMostWork;
-
+int g_nSyncTipHeight(0);
 
 map<uint256, std::tuple<std::shared_ptr<CAccountViewCache>, std::shared_ptr<CTransactionDBCache>, std::shared_ptr<CScriptDBViewCache> > > mapCache;
 
@@ -1913,6 +1913,8 @@ bool AddToBlockIndex(CBlock& block, CValidationState& state, const CDiskBlockPos
     if (!pblocktree->Flush())
         return state.Abort(_("Failed to sync block index"));
 
+    if(chainActive.Tip()->nHeight > g_nSyncTipHeight)
+    	g_nSyncTipHeight = chainActive.Tip()->nHeight;
     uiInterface.NotifyBlocksChanged(pindexNew->GetBlockTime(),chainActive.Height(),
     		chainActive.Tip()->GetBlockHash());
     return true;
@@ -2408,6 +2410,8 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     {
         LogPrint("INFO","ProcessBlock: ORPHAN BLOCK %lu hash=%s, prev=%s\n", (unsigned long)mapOrphanBlocks.size(), pblock->GetHash().GetHex(), pblock->hashPrevBlock.ToString());
 
+        if (pblock->nHeight > g_nSyncTipHeight)
+			g_nSyncTipHeight = pblock->nHeight;
         // Accept orphans as long as there is a node to request its parents from
         if (pfrom) {
             PruneOrphanBlocks();
@@ -4212,6 +4216,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // Start block sync
         if (pto->fStartSync && !SysCfg().IsImporting() && !SysCfg().IsReindex()) {
             pto->fStartSync = false;
+            g_nSyncTipHeight = pto->nStartingHeight;
             PushGetBlocks(pto, chainActive.Tip(), uint256(0));
         }
 

@@ -1074,6 +1074,9 @@ extern CTransactionDBCache *pTxCacheTip;
 /** contract script data cache */
 extern CScriptDBViewCache *pScriptDBTip;
 
+/** nSyncTipHight  */
+extern int g_nSyncTipHeight;
+
 extern std::tuple<bool, boost::thread*> RunDacrs(int argc, char* argv[]);
 extern bool WriteBlockLog(bool falg, string suffix);
 //extern set<uint256> setTxHashCache;

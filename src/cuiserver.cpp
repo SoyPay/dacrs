@@ -112,7 +112,7 @@ CUIServer* CUIServer::instance = NULL;
 
 
 void CUIServer::PackageData(string &strData) {
-	char cDataTemp[65536] = {0};
+	unsigned char cDataTemp[65536] = {0};
 	unsigned short nDataLen = strData.length();
 	if(0 == nDataLen)
 		return;
