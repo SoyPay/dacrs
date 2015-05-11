@@ -460,17 +460,15 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 }
 bool CTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view, CScriptDBViewCache &scriptDB) {
 	CKeyID keyId;
-	if(!view.GetKeyId(srcRegId, keyId))
+	if (!view.GetKeyId(srcRegId, keyId))
 		return false;
+
 	vAddr.insert(keyId);
 	CKeyID desKeyId;
-	if(desUserId.type() == typeid(CKeyID)) {
-		desKeyId = boost::get<CKeyID>(desUserId);
-	} else if(desUserId.type() == typeid(CRegID)){
-		if (!view.GetKeyId(desUserId, desKeyId))
-			return false;
-	} else
+	if (!view.GetKeyId(desUserId, desKeyId))
 		return false;
+	vAddr.insert(desKeyId);
+
 
 	if (CONTRACT_TX == nTxType) {
 		CVmRunEvn vmRunEvn;

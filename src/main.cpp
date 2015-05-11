@@ -4217,6 +4217,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         if (pto->fStartSync && !SysCfg().IsImporting() && !SysCfg().IsReindex()) {
             pto->fStartSync = false;
             g_nSyncTipHeight = pto->nStartingHeight;
+            uiInterface.NotifyBlocksChanged(0, chainActive.Tip()->nHeight, chainActive.Tip()->GetBlockHash());
             PushGetBlocks(pto, chainActive.Tip(), uint256(0));
         }
 
