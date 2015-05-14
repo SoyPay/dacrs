@@ -2241,8 +2241,8 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 	if (mapBlockIndex.count(hash))
 		return state.Invalid(ERRORMSG("AcceptBlock() : block already in mapBlockIndex"), 0, "duplicate");
 
-	assert(mapBlockIndex.count(block.hashPrevBlock));
-	if(block.nFuelRate != GetElementForBurn(mapBlockIndex[block.hashPrevBlock]))
+	assert(block.GetHash() == SysCfg().HashGenesisBlock() || mapBlockIndex.count(block.hashPrevBlock));
+	if(block.GetHash() != SysCfg().HashGenesisBlock() && block.nFuelRate != GetElementForBurn(mapBlockIndex[block.hashPrevBlock]))
     	return state.DoS(100, ERRORMSG("CheckBlock() : block nfuelrate dismatched"), REJECT_INVALID, "fuelrate-dismatch");
 
 
@@ -2349,8 +2349,10 @@ void PushGetBlocks(CNode* pnode, CBlockIndex* pindexBegin, uint256 hashEnd)
 {
     AssertLockHeld(cs_main);
     // Filter out duplicate requests
-    if (pindexBegin == pnode->pindexLastGetBlocksBegin && hashEnd == pnode->hashLastGetBlocksEnd)
-        return;
+    if (pindexBegin == pnode->pindexLastGetBlocksBegin && hashEnd == pnode->hashLastGetBlocksEnd){
+    	LogPrint("GetLocator", "filter the same GetLocator");
+    	return;
+    }
     pnode->pindexLastGetBlocksBegin = pindexBegin;
     pnode->hashLastGetBlocksEnd = hashEnd;
     CBlockLocator blockLocator = chainActive.GetLocator(pindexBegin);
