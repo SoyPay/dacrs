@@ -226,7 +226,9 @@ Value getblockhash(const Array& params, bool fHelp)
         throw runtime_error("Block number out of range.");
 
     CBlockIndex* pblockindex = chainActive[nHeight];
-    return pblockindex->GetBlockHash().GetHex();
+    Object result;
+    result.push_back(Pair("hash", pblockindex->GetBlockHash().GetHex()));
+    return result;
 }
 
 Value getblock(const Array& params, bool fHelp)
