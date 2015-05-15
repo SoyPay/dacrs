@@ -866,7 +866,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         } while(false);
 
         uiInterface.InitMessage(_("Verifying Finished"));
-
+        uiInterface.InitMessage(_("Sync Tx"));
         if (!fLoaded) {
             // first suggest a reindex
             if (!fReset) {

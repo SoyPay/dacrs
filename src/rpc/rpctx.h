@@ -17,7 +17,7 @@ using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
 
-
+class CBaseTransaction;
 
 extern Value registaccounttx(const Array& params, bool fHelp);
 extern Value sendtoaddressraw(const Array& params, bool fHelp);
@@ -54,4 +54,7 @@ extern Value listauthor(const Array& params, bool fHelp);
 extern Value  getappaccinfo(const Array& params, bool fHelp);
 extern Value  gethash(const Array& params, bool fHelp);
 extern Value  getappkeyvalue(const Array& params, bool fHelp);
+
+
+extern Object TxToJSON(CBaseTransaction *pTx);
 #endif /* RPCTX_H_ */
