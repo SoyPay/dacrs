@@ -16,6 +16,7 @@
 #include "rpc/rpctx.h"
 #include "wallet/wallet.h"
 #include "init.h"
+#include "util.h"
 using namespace json_spirit;
 #include "cuiserver.h"
 #include "net.h"
@@ -58,49 +59,42 @@ static bool noui_SyncTx()
 {
 	Array arrayObj;
 	map<uint256, CAccountTx>::iterator iterAccountTx = pwalletMain->mapInBlockTx.begin();
-	int i=0;
 	for(; iterAccountTx != pwalletMain->mapInBlockTx.end(); ++iterAccountTx)
 	{
-		Object obj;
+		Object objTx;
 		map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx = iterAccountTx->second.mapAccountTx.begin();
-		obj = TxToJSON(iterTx->second.get());
-		obj.push_back(Pair("blockhash", iterAccountTx->first.GetHex()));
+		objTx = TxToJSON(iterTx->second.get());
+		objTx.push_back(Pair("blockhash", iterAccountTx->first.GetHex()));
 		if(mapBlockIndex.count(iterAccountTx->first)) {
-			obj.push_back(Pair("confirmHeight", mapBlockIndex[iterAccountTx->first]->nHeight));
-			obj.push_back(Pair("confirmedtime", (int)mapBlockIndex[iterAccountTx->first]->nTime));
+			objTx.push_back(Pair("confirmHeight", mapBlockIndex[iterAccountTx->first]->nHeight));
+			objTx.push_back(Pair("confirmedtime", (int)mapBlockIndex[iterAccountTx->first]->nTime));
 		}
-		arrayObj.push_back(obj);
-		if((0 == (++i % 10)) || (iterAccountTx ==pwalletMain->mapInBlockTx.end())) {
-			Object obj;
-			obj.push_back(Pair("type",     "SyncTx"));
-			obj.push_back(Pair("msg",  arrayObj));// write_string(Value(arrayObj),true)));
-			if(CUIServer::HasConnection()){
-				CUIServer::Send(write_string(Value(std::move(obj)),true));
-			}
-			else
-			{
-				LogPrint("NOUI","init message: %s\n", write_string(Value(std::move(obj)),true));
-			}
-			arrayObj.clear();
+		Object obj;
+		obj.push_back(Pair("type",     "SyncTx"));
+		obj.push_back(Pair("msg",  objTx));// write_string(Value(arrayObj),true)));
+		if(CUIServer::HasConnection()){
+			CUIServer::Send(write_string(Value(std::move(obj)),true));
+			MilliSleep(10);
+		}
+		else
+		{
+			LogPrint("NOUI","init message: %s\n", write_string(Value(std::move(obj)),true));
 		}
 	}
-	arrayObj.clear();
-	i = 0;
 	map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx =  pwalletMain->UnConfirmTx.begin();
 	for(; iterTx != pwalletMain->UnConfirmTx.end(); ++iterTx)
 	{
 		Object objTx = TxToJSON(iterTx->second.get());
 		arrayObj.push_back(objTx);
-		if((0 == (++i % 10)) || (iterTx ==pwalletMain->UnConfirmTx.end())) {
-			Object obj;
-			obj.push_back(Pair("type",     "SyncTx"));
-			obj.push_back(Pair("msg",   arrayObj));
-			if(CUIServer::HasConnection()){
-				CUIServer::Send(write_string(Value(std::move(obj)),true));
-			}else{
-				LogPrint("NOUI","init message: %s\n", write_string(Value(std::move(obj)),true));
-			}
-			arrayObj.clear();
+
+		Object obj;
+		obj.push_back(Pair("type",     "SyncTx"));
+		obj.push_back(Pair("msg",   objTx));
+		if(CUIServer::HasConnection()){
+			CUIServer::Send(write_string(Value(std::move(obj)),true));
+			MilliSleep(10);
+		}else{
+			LogPrint("NOUI","init message: %s\n", write_string(Value(std::move(obj)),true));
 		}
 	}
 	return true;
