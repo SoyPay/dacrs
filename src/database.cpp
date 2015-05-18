@@ -1521,6 +1521,8 @@ bool CScriptDBViewCache::GetScriptAcc(const CRegID& scriptId, const vector<unsig
 	scriptKey.push_back( '_');
 	scriptKey.insert(scriptKey.end(), vAccKey.begin(), vAccKey.end());
 	vector<unsigned char> vValue;
+
+	//LogPrint("vm","%s",HexStr(scriptKey));
 	if(!GetData(scriptKey, vValue))
 		return false;
 	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
@@ -1543,7 +1545,7 @@ bool CScriptDBViewCache::SetScriptAcc(const CRegID& scriptId, const CAppUserAcco
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 
 	ds << appAccOut;
-
+	//LogPrint("vm","%s",HexStr(scriptKey));
 	vValue.clear();
 	vValue.insert(vValue.end(), ds.begin(), ds.end());
 	return SetData(scriptKey, vValue);

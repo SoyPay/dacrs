@@ -239,7 +239,7 @@ Object CAppFundOperate::toJSON() const {
 	Object result;
 	int timout = outheight;
 	string tep[] ={"error type","ADD_FREE_OP ","SUB_FREE_OP","ADD_TAG_OP","SUB_TAG_OP"};
-	result.push_back(Pair("userid", HexStr(GetAppUserTagV())));
+	result.push_back(Pair("userid", HexStr(GetAppUserV())));
 	result.push_back(Pair("vTag", HexStr(GetFundTagV())));
 	result.push_back(Pair("opeatortype", tep[opeatortype]));
 	result.push_back(Pair("outheight", timout));

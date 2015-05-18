@@ -135,7 +135,8 @@ public:
 		vector<unsigned char> tag(&vFundTag[0], &vFundTag[FundTaglen]);
 		return (tag);
 	}
-	const vector<unsigned char> GetAppUserTagV() const {
+	const vector<unsigned char> GetAppUserV() const {
+	//	cout<<appuserIDlen<<endl;
 		assert(sizeof(vAppuser) >= appuserIDlen && appuserIDlen > 0);
 		vector<unsigned char> tag(&vAppuser[0], &vAppuser[appuserIDlen]);
 		return (tag);
