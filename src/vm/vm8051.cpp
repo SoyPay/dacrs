@@ -1282,7 +1282,6 @@ static RET_DEFINE ExWriteOutAppOperateFunc(unsigned char * ipara,void * pVmEvn)
 	while(count--)
 	{
 		ss >> temp;
-		cout<<count<<endl;
 		pVmRunEvn->InsertOutAPPOperte(temp.GetAppUserV(),temp);
 		step +=Size;
 	}
