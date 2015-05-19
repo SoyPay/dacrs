@@ -247,12 +247,17 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 
 		if(accountid.size() == 6){
 			userregId.SetRegID(accountid);
-			view.GetAccount(CUserID(userregId), *tem.get());
+			if(!view.GetAccount(CUserID(userregId), *tem.get())){
+				return false;                                           /// 账户不存在
+			}
 		}else{
 			string dacrsaddr(accountid.begin(), accountid.end());
 			userkeyid = CKeyID(dacrsaddr);
-			view.GetAccount(CUserID(userkeyid), *tem.get());
-			}
+			 if(!view.GetAccount(CUserID(userkeyid), *tem.get()))
+			 {
+				return false;                                           /// 账户不存在
+			 }
+		}
 
 		shared_ptr<CAccount> vmAccount = GetAccount(tem);
 		if (vmAccount.get() == NULL) {

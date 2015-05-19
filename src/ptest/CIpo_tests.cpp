@@ -65,6 +65,20 @@ TEST_STATE CIpoTest::Run(){
 					break;
 				}
 	}
+	int64_t money = 10;
+	for(int i=0;i <max_user;i++)
+	{
+		string des =strprintf("%s", userarray[i].address);
+		basetest.CreateNormalTx(des,money);
+	}
+
+	while(true)
+	{
+		if(!basetest.IsMemoryPoolEmpty())
+			break;
+		sleep(100);
+	}
+
 	SendIpoTx();
 }
 
