@@ -104,7 +104,7 @@ bool CIpoTest::RegistScript(){
 	int nCount = sizeof(pKey) / sizeof(char*);
 	basetest.ImportWalletKey(pKey, nCount);
 
-	string strFileName("Ipo.bin");
+	string strFileName("IpoApp.bin");
 	int nFee = basetest.GetRandomFee();
 	int nCurHight;
 	basetest.GetBlockHeight(nCurHight);

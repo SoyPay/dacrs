@@ -1657,8 +1657,12 @@ Value getappaccinfo(const Array& params, bool fHelp) {
 		key.assign(addr.c_str(), addr.c_str() + addr.length());
 	}
 
+
 	std::shared_ptr<CAppUserAccout> tem = make_shared<CAppUserAccout>();
-	contractScriptTemp.GetScriptAcc(script, key, *tem.get());
+	if (!contractScriptTemp.GetScriptAcc(script, key, *tem.get())) {
+			tem = make_shared<CAppUserAccout>(key);
+	}
+	tem.get()->AutoMergeFreezeToFree(chainActive.Tip()->nHeight);
 	return Value(tem.get()->toJSON());
 }
 Value gethash(const Array& params, bool fHelp) {
