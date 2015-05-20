@@ -23,14 +23,17 @@ typedef struct {
 	)
 }IPO_USER;
 
-#define max_user 3
+//#define max_user 3
 
-const static IPO_USER userarray[max_user]=
-{
-		{"ddMuEBkAwhcb5K5QJ83MqQHrgHRn4EbRdh",10000,200,22},
-		{"duKfNyq6zsuy2CMGMFVrQLuGi95UC7w6DV",10000,200,22},
-		{"djhuAYvWsfFyjF42qDqTSm88nkfZbDW1BZ",10000,200,22}                   /// 这个没有注册的账户必须先打点钱
-};
+#define max_user 100
+//const static IPO_USER userarray[max_user]=
+//{
+//		{"ddMuEBkAwhcb5K5QJ83MqQHrgHRn4EbRdh",10000,200,22},
+//		{"duKfNyq6zsuy2CMGMFVrQLuGi95UC7w6DV",10000,200,22},
+//		{"djhuAYvWsfFyjF42qDqTSm88nkfZbDW1BZ",10000,200,22}                   /// 这个没有注册的账户必须先打点钱
+//};
+
+ static IPO_USER userarray[max_user];
 CIpoTest::CIpoTest():nNum(0), nStep(0), strTxHash(""), strAppRegId("") {
 
 }
@@ -57,6 +60,17 @@ TEST_STATE CIpoTest::Run(){
 //	}
 //	return next_state;
 
+
+	for (int i = 0; i < max_user; i++) {
+		string newaddr;
+		BOOST_CHECK(basetest.GetNewAddr(newaddr, true));
+		memcpy((char*)userarray[i].address,(char*)newaddr.c_str(),sizeof(userarray[i].address));
+		userarray[i].money = 10000;
+		userarray[i].freemoney = 200;
+		userarray[i].freeMothmoney = 22;
+	}
+
+
 	RegistScript();
 
 	while(true)
@@ -78,6 +92,7 @@ TEST_STATE CIpoTest::Run(){
 			break;
 		sleep(100);
 	}
+
 
 	SendIpoTx();
 }
