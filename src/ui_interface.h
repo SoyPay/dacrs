@@ -15,6 +15,7 @@ using std::string;
 class CBasicKeyStore;
 class CWallet;
 class uint256;
+class CBlock;
 
 /** General change type (added, updated, removed). */
 enum ChangeType
@@ -79,7 +80,7 @@ public:
      boost::signals2::signal<bool (const uint256 &hash) > RevTransaction;
 
     /** rev app tran . */
-     boost::signals2::signal<bool (const uint256 &hash) > RevAppTransaction;
+     boost::signals2::signal<bool (const CBlock *pBlock ,int nIndex) > RevAppTransaction;
 
     /** Progress message during initialization. */
     boost::signals2::signal<void (const string &message)> InitMessage;
