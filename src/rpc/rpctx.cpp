@@ -123,13 +123,6 @@ Object GetTxDetailJSON(const uint256& txhash) {
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 	{
 		LOCK(cs_main);
-		{
-			pBaseTx = mempool.lookup(txhash);
-			if (pBaseTx.get()) {
-				obj = TxToJSON(pBaseTx.get());
-				return obj;
-			}
-		}
 		if (SysCfg().IsTxIndex()) {
 			CDiskTxPos postx;
 			if (pScriptDBTip->ReadTxIndex(txhash, postx)) {
@@ -149,6 +142,14 @@ Object GetTxDetailJSON(const uint256& txhash) {
 				return obj;
 			}
 		}
+		{
+			pBaseTx = mempool.lookup(txhash);
+			if (pBaseTx.get()) {
+				obj = TxToJSON(pBaseTx.get());
+				return obj;
+			}
+		}
+
 	}
 	return obj;
 }
