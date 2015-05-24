@@ -63,22 +63,24 @@ static bool noui_SyncTx()
 	{
 		Object objTx;
 		map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx = iterAccountTx->second.mapAccountTx.begin();
-		objTx = TxToJSON(iterTx->second.get());
-		objTx.push_back(Pair("blockhash", iterAccountTx->first.GetHex()));
-		if(mapBlockIndex.count(iterAccountTx->first)) {
-			objTx.push_back(Pair("confirmHeight", mapBlockIndex[iterAccountTx->first]->nHeight));
-			objTx.push_back(Pair("confirmedtime", (int)mapBlockIndex[iterAccountTx->first]->nTime));
-		}
-		Object obj;
-		obj.push_back(Pair("type",     "SyncTx"));
-		obj.push_back(Pair("msg",  objTx));// write_string(Value(arrayObj),true)));
-		if(CUIServer::HasConnection()){
-			CUIServer::Send(write_string(Value(std::move(obj)),true));
-			MilliSleep(10);
-		}
-		else
-		{
-			LogPrint("NOUI","init message: %s\n", write_string(Value(std::move(obj)),true));
+		for(;iterTx != iterAccountTx->second.mapAccountTx.end(); ++iterTx) {
+			objTx = TxToJSON(iterTx->second.get());
+			objTx.push_back(Pair("blockhash", iterAccountTx->first.GetHex()));
+			if(mapBlockIndex.count(iterAccountTx->first)) {
+				objTx.push_back(Pair("confirmHeight", mapBlockIndex[iterAccountTx->first]->nHeight));
+				objTx.push_back(Pair("confirmedtime", (int)mapBlockIndex[iterAccountTx->first]->nTime));
+			}
+			Object obj;
+			obj.push_back(Pair("type",     "SyncTx"));
+			obj.push_back(Pair("msg",  objTx));// write_string(Value(arrayObj),true)));
+			if(CUIServer::HasConnection()){
+				CUIServer::Send(write_string(Value(std::move(obj)),true));
+				MilliSleep(10);
+			}
+			else
+			{
+				LogPrint("NOUI","init message: %s\n", write_string(Value(std::move(obj)),true));
+			}
 		}
 	}
 	map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx =  pwalletMain->UnConfirmTx.begin();

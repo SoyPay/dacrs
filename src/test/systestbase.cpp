@@ -762,5 +762,14 @@ bool SysTestBase::PrintLog(){
 }
 
 bool SysTestBase::IsMemoryPoolEmpty() {
-	return mempool.mapTx.empty();
+	//return mempool.mapTx.empty();
+	const char *argv[] = { "rpctest", "getrawmempool"};
+	int argc = sizeof(argv) / sizeof(char*);
+
+	Value value;
+	if (CommandLineRPC_GetValue(argc, argv, value)) {
+		json_spirit::Value::Array narray = value.get_array();
+		return narray.size();
+	}
+	return true;
 }

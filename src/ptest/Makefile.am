@@ -43,4 +43,6 @@ dacrs_ptest_SOURCES = \
   CycleP2PBet_tests.cpp \
   CycleP2PBet_tests.h \
   CreateMinterKey_tests.cpp \
-  CreateMinterKey_tests.h
+  CreateMinterKey_tests.h  \
+  CIpo_tests.h \
+  CIpo_tests.cpp

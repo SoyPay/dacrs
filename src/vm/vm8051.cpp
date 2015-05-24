@@ -113,6 +113,12 @@ static bool GetData(unsigned char * ipara, vector<std::shared_ptr < std::vector<
 		return false;
 	}
 
+	if(totallen>= CVm8051::MAX_SHARE_RAM)
+	{
+		LogPrint("vm","%s\r\n","data over flaw");
+		return false;
+	}
+
 	while (totallen > 0) {
 		unsigned short length = GetParaLen(ipara);
 		totallen -= (length + 2);
@@ -1242,7 +1248,7 @@ static RET_DEFINE GetUserAppAccFoudWithTag(unsigned char * ipara,void * pVmScrip
    	shared_ptr<CAppUserAccout> sptrAcc;
 
    	CAppCFund fund;
-	if(pVmScriptRun->GetAppUserAccout(userfund.GetAppUserTagV(),sptrAcc))
+	if(pVmScriptRun->GetAppUserAccout(userfund.GetAppUserV(),sptrAcc))
 	{
 		if(!sptrAcc->GetAppCFund(fund,userfund.GetFundTagV(),userfund.outheight))	{
 			return RetFalse(string(__FUNCTION__)+"tag err !");
@@ -1276,9 +1282,7 @@ static RET_DEFINE ExWriteOutAppOperateFunc(unsigned char * ipara,void * pVmEvn)
 	while(count--)
 	{
 		ss >> temp;
-//	 	cout<<"write:"<<endl;
-//	 	cout<<temp.toString().c_str()<<endl;
-		pVmRunEvn->InsertOutAPPOperte(temp.GetAppUserTagV(),temp);
+		pVmRunEvn->InsertOutAPPOperte(temp.GetAppUserV(),temp);
 		step +=Size;
 	}
 
