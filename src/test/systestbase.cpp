@@ -531,7 +531,7 @@ bool SysTestBase::GetBlockHash(const int nHeight, std::string &blockhash) {
 
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		blockhash = value.get_str();
+		blockhash = find_value(value.get_obj(), "hash").get_str();
 		LogPrint("test_miners", "GetBlockHash:%s\r\n", blockhash.c_str());
 		return true;
 	}

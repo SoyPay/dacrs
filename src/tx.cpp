@@ -284,7 +284,7 @@ bool CRegisterAccountTx::ExecuteTx(int nIndex, CAccountViewCache &view, CValidat
 	}
 	account.PublicKey = boost::get<CPubKey>(userId);
 	if (llFees > 0) {
-		if(!account.OperateAccount(MINUS_FREE, llFees))
+		if(!account.OperateAccount(MINUS_FREE, llFees, nHeight))
 			return state.DoS(100, ERRORMSG("ExecuteTx() : CRegisterAccountTx ExecuteTx, not sufficient funds in account, keyid=%s", keyId.ToString()),
 					UPDATE_ACCOUNT_FAIL, "not-sufficiect-funds");
 	}
@@ -382,7 +382,7 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 				ERRORMSG("ExecuteTx() : CTransaction ExecuteTx, read source addr %s account info error", boost::get<CRegID>(srcRegId).ToString()),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	CAccountLog srcAcctLog(srcAcct);
-	if (!srcAcct.OperateAccount(MINUS_FREE, minusValue))
+	if (!srcAcct.OperateAccount(MINUS_FREE, minusValue, nHeight))
 		return state.DoS(100, ERRORMSG("ExecuteTx() : CTransaction ExecuteTx, accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
 				"bad-operate-account");
 	CUserID userId = srcAcct.keyID;
@@ -404,7 +404,7 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 	else{
 		desAcctLog.SetValue(desAcct);
 	}
-	if (!desAcct.OperateAccount(ADD_FREE, addValue)) {
+	if (!desAcct.OperateAccount(ADD_FREE, addValue, nHeight)) {
 		return state.DoS(100, ERRORMSG("ExecuteTx() : CTransaction ExecuteTx, operate accounts error"), UPDATE_ACCOUNT_FAIL,
 				"bad-operate-account");
 	}
@@ -618,7 +618,7 @@ bool CRegisterAppTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidationSt
 	CAccount acctInfoLog(acctInfo);
 	uint64_t minusValue = llFees;
 	if (minusValue > 0) {
-		if(!acctInfo.OperateAccount(MINUS_FREE, minusValue))
+		if(!acctInfo.OperateAccount(MINUS_FREE, minusValue, nHeight))
 			return state.DoS(100, ERRORMSG("ExecuteTx() : CRegisterAppTx ExecuteTx, operate account failed ,regId=%s", boost::get<CRegID>(regAcctId).ToString()),
 					UPDATE_ACCOUNT_FAIL, "operate-account-failed");
 		txundo.vAccountLog.push_back(acctInfoLog);
@@ -861,7 +861,7 @@ bool CAccount::IsMoneyOverflow(uint64_t nAddMoney) {
 	nTotalMoney = llValues+nAddMoney;
 	return MoneyRange(static_cast<int64_t>(nTotalMoney) );
 }
-bool CAccount::OperateAccount(OperType type, const uint64_t &value) {
+bool CAccount::OperateAccount(OperType type, const uint64_t &value, const int nCurHeight) {
 //	LogPrint("op_account", "before operate:%s\n", ToString());
 	if (keyID == uint160(0)) {
 		assert(0);
@@ -872,7 +872,13 @@ bool CAccount::OperateAccount(OperType type, const uint64_t &value) {
 	case ADD_FREE: {
 		if (!IsMoneyOverflow(value))
 			return false;
+		if(nCurHeight > 25000) {
+			if(llValues == 0) {
+				nHeight = nCurHeight;
+			}
+		}
 		llValues += value;
+
 		break;
 	}
 	case MINUS_FREE: {
