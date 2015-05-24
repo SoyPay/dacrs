@@ -314,7 +314,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 	static std::shared_ptr<vector<string> > monitoring_appid = NULL;
     if(monitoring_appid == NULL)
     {
-    	monitoring_appid = SysCfg().GetMultiArgsMap("appid");
+    	monitoring_appid = SysCfg().GetMultiArgsMap("-appid");
     }
 	LOCK2(cs_main, cs_wallet);
 
