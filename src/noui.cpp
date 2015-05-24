@@ -154,10 +154,14 @@ static bool noui_RevTransaction(const uint256 &hash){
 	return true;
 }
 
-static bool noui_RevAppTransaction(const uint256 &hash){
+static bool noui_RevAppTransaction(const CBlock *pBlock ,int nIndex){
 	Object obj;
 	obj.push_back(Pair("type",     "rev_app_transaction"));
-	obj.push_back(Pair("transation",     GetTxDetailJSON(hash)));
+	Object objTx = TxToJSON(pBlock->vptx[nIndex].get());
+	objTx.push_back(Pair("blockhash", pBlock->GetHash().GetHex()));
+	objTx.push_back(Pair("confirmHeight", (int) pBlock->nHeight));
+	objTx.push_back(Pair("confirmedtime", (int) pBlock->nTime));
+	obj.push_back(Pair("transation",     objTx));
 
 	if (CUIServer::HasConnection()) {
 		CUIServer::Send(write_string(Value(std::move(obj)),true));

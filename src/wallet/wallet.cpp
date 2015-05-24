@@ -310,12 +310,12 @@ void CWallet::SetBestChain(const CBlockLocator& loc) {
 
 
 void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const CBlock* pblock) {
-
 	static std::shared_ptr<vector<string> > monitoring_appid = NULL;
-    if(monitoring_appid == NULL)
-    {
-    	monitoring_appid = SysCfg().GetMultiArgsMap("-appid");
-    }
+	if(monitoring_appid == NULL)
+	{
+		monitoring_appid = SysCfg().GetMultiArgsMap("-appid");
+	}
+
 	LOCK2(cs_main, cs_wallet);
 
 	assert(pTx != NULL || pblock != NULL);
@@ -342,6 +342,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 
 		auto ConnectBlockProgress = [&]() {
 			CAccountTx newtx(this, blockhash,pblock->nHeight);
+			int i=0;
 			for (const auto &sptx : pblock->vptx) {
 				uint256 hashtx = sptx->GetHash();
 				if(sptx->nTxType == CONTRACT_TX){
@@ -349,7 +350,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 					auto it = find_if(monitoring_appid->begin(), monitoring_appid->end(), [&](const string& appid) {
 						return appid ==  thisapp;});
 			        if(monitoring_appid->end() != it)
-					uiInterface.RevAppTransaction(hashtx);
+					uiInterface.RevAppTransaction(pblock, i);
 				}
 				//confirm the tx is mine
 				if (IsMine(sptx.get())) {
@@ -370,6 +371,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 					CWalletDB(strWalletFile).EraseUnComFirmedTx(hashtx);
 					UnConfirmTx.erase(hashtx);
 				}
+				++i;
 			}
 			if (newtx.GetTxSize() > 0 ) //write to disk
 			{

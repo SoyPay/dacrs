@@ -2410,7 +2410,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     // If we don't already have its previous block, shunt it off to holding area until we get it
     if (pblock->hashPrevBlock != 0 && !mapBlockIndex.count(pblock->hashPrevBlock))
     {
-        LogPrint("INFO","ProcessBlock: ORPHAN BLOCK %lu hash=%s, prev=%s\n", (unsigned long)mapOrphanBlocks.size(), pblock->GetHash().GetHex(), pblock->hashPrevBlock.ToString());
+        LogPrint("INFO","ProcessBlock: ORPHAN BLOCK %lu height=%d hash=%s, prev=%s\n", (unsigned long)mapOrphanBlocks.size(), pblock->nHeight, pblock->GetHash().GetHex(), pblock->hashPrevBlock.ToString());
 
         if (pblock->nHeight > (unsigned int)g_nSyncTipHeight)
 			g_nSyncTipHeight = pblock->nHeight;
