@@ -1165,6 +1165,50 @@ Value getscriptdata(const Array& params, bool fHelp) {
 	return script;
 }
 
+
+Value getscriptvalidedata(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 4) {
+			string msg = "getscriptdata nrequired \"scriptid\" \"\n"
+					"\ncreate contract\n"
+					"\nArguments:\n"
+					"1.\"scriptid\": (string)\n"
+					"2.[pagesize]: (int)\n"
+					"3.\"index\": (int )\n"
+					"\"contract tx str\": (string)\n";
+			throw runtime_error(msg);
+	}
+	int height = chainActive.Height();
+	RPCTypeCheck(params, list_of(str_type)(int_type)(int_type)(int_type));
+	CRegID regid(params[0].get_str());
+	if (regid.IsEmpty() == true) {
+		throw runtime_error("in getscriptdata :vscriptid size is error!\n");
+	}
+
+	if (!pScriptDBTip->HaveScript(regid)) {
+		throw runtime_error("in getscriptdata :vscriptid id is exist!\n");
+	}
+	Object obj;
+	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+	int pagesize = params[2].get_int();
+	int nIndex = params[3].get_int();
+
+	CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
+	ds << height;
+	std::vector<unsigned char> vScriptKey(ds.begin(), ds.end());
+	std::vector<unsigned char> vValue;
+	Array retArray;
+	int nReadCount = 0;
+	while (contractScriptTemp.GetScriptData(height, regid, 1, vScriptKey, vValue)) {
+		Object item;
+		++nReadCount;
+		if (nReadCount > pagesize * (nIndex - 1)) {
+			item.push_back(Pair("key", HexStr(vScriptKey)));
+			item.push_back(Pair("value", HexStr(vValue)));
+			retArray.push_back(item);
+		}
+	}
+	return retArray;
+}
 Value saveblocktofile(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 2) {
 		string msg = "saveblocktofile nrequired"
