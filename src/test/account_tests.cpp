@@ -59,10 +59,10 @@ struct CTxTest :public SysTestBase{
 //			accOperate.vRewardFund.push_back(CFund(RANDOM_FUND_MONEY, random(5)));
 //		}
 
-		for (int i = 0; i < TEST_SIZE; i++) {
-			int nFundHeight = CHAIN_HEIGHT - MONTH_BLOCKS;
-			accOperate.OperateAccount(ADD_FREE, nFundHeight+random(MONTH_BLOCKS));
-		}
+//		for (int i = 0; i < TEST_SIZE; i++) {
+//			int nFundHeight = CHAIN_HEIGHT - MONTH_BLOCKS;
+//			accOperate.OperateAccount(ADD_FREE, nFundHeight+random(MONTH_BLOCKS), nFundHeight);
+//		}
 	}
 
 	void Init() {
@@ -97,9 +97,10 @@ BOOST_FIXTURE_TEST_SUITE(tx_tests,CTxTest)
 BOOST_FIXTURE_TEST_CASE(tx_add_free,CTxTest) {
 	//invalid data
 //	CFund fund(1, CHAIN_HEIGHT + 1);
-	BOOST_CHECK(accOperate.OperateAccount(ADD_FREE, 1));
+	int nHeight = chainActive.Tip()->nHeight;
+	BOOST_CHECK(accOperate.OperateAccount(ADD_FREE, 1, nHeight));
 //	fund.value = MAX_MONEY;
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_FREE, GetMaxMoney()));
+	BOOST_CHECK(!accOperate.OperateAccount(ADD_FREE, GetMaxMoney(), nHeight));
 
 //	accOperate.CompactAccount(CHAIN_HEIGHT);
 
@@ -107,7 +108,7 @@ BOOST_FIXTURE_TEST_CASE(tx_add_free,CTxTest) {
 	//	uint64_t nOld = accOperate.GetRewardAmount(CHAIN_HEIGHT)+accOperate.GetRawBalance(CHAIN_HEIGHT);
 		uint64_t randValue = random(10);
 	//	CFund fundReward(randValue, CHAIN_HEIGHT - 1);
-		BOOST_CHECK(accOperate.OperateAccount(ADD_FREE, randValue));
+		BOOST_CHECK(accOperate.OperateAccount(ADD_FREE, randValue, nHeight));
 		//BOOST_CHECK(accOperate.GetRewardAmount(CHAIN_HEIGHT)+accOperate.GetRawBalance(CHAIN_HEIGHT) == nOld + randValue);
 
 	}

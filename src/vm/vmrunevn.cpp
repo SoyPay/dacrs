@@ -67,7 +67,7 @@ bool CVmRunEvn::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& vie
 CVmRunEvn::~CVmRunEvn() {
 
 }
-tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view, CScriptDBViewCache& VmDB, int nheight,
+tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view, CScriptDBViewCache& VmDB, int nHeight,
 		uint64_t nBurnFactor, uint64_t &uRunStep) {
 
 	if(nBurnFactor == 0)
@@ -88,7 +88,7 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 	}
 	LogPrint("vm", "tx hash:%s fees=%lld fuelrate=%lld maxstep:%d\n", Tx->GetHash().GetHex(), tx->llFees, nBurnFactor, maxstep);
 	tuple<bool, uint64_t, string> mytuple;
-	if (!intial(Tx, view, nheight)) {
+	if (!intial(Tx, view, nHeight)) {
 		return std::make_tuple (false, 0, string("VmScript inital Failed\n"));
 	}
 
@@ -108,7 +108,7 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 		return std::make_tuple (false, 0, string("VmScript CheckOperate Failed \n"));
 
 	}
-	if (!OpeatorAccount(m_output, view)) {
+	if (!OpeatorAccount(m_output, view, nHeight)) {
 		return std::make_tuple (false, 0, string("VmScript OpeatorAccount Failed\n"));
 	}
 
@@ -224,7 +224,7 @@ shared_ptr<vector<CVmOperate>> CVmRunEvn::GetOperate() const {
 	return tem;
 }
 
-bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountViewCache& view) {
+bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountViewCache& view, const int nCurHeight) {
 
 	NewAccont.clear();
 	for (auto& it : listoperate) {
@@ -266,7 +266,7 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 		//todolist
 //		if(IsSignatureAccount(vmAccount.get()->regID) || vmAccount.get()->regID == boost::get<CRegID>(tx->appRegId))
 		{
-			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype, value);
+			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype, value, nCurHeight);
 		}
 //		else{
 //			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype, fund, *m_ScriptDBTip, vAuthorLog,  height, &GetScriptRegID().GetVec6(), true);

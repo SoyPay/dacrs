@@ -70,7 +70,7 @@ private:
 	 * @param view:
 	 * @return true operate account success
 	 */
-	bool OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountViewCache& view);
+	bool OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountViewCache& view, const int nCurHeight);
 	/**
 	 * @brief find the vOldAccount from NewAccont if find success remove it from NewAccont
 	 * @param vOldAccount: the argument

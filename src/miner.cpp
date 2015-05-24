@@ -205,7 +205,11 @@ struct PosTxInfo {
 uint256 GetAdjustHash(const uint256 TargetHash, const uint64_t nPos) {
 
 	uint64_t posacc = nPos/COIN;
-	posacc = posacc / 100;
+	if(chainActive.Height() > 20000) {
+		posacc /= SysCfg().GetIntervalPos();
+	}else {
+		posacc = posacc / 100;
+	}
 	posacc = max(posacc, (uint64_t) 1);
 	uint256 adjusthash = TargetHash; //adjust nbits
 	uint256 minhash = SysCfg().ProofOfWorkLimit().getuint256();

@@ -740,7 +740,7 @@ public :
 	 * @param bCheckAuthorized
 	 * @return if operate successfully return ture,otherwise return false
 	 */
-	bool OperateAccount(OperType type, const uint64_t &values);
+	bool OperateAccount(OperType type, const uint64_t &values,const int nCurHeight);
 
 	bool UndoOperateAccount(const CAccountLog & accountLog);
 public:
