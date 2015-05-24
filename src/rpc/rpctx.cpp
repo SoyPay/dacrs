@@ -25,6 +25,7 @@
 #include "json/json_spirit_value.h"
 
 #include "boost/tuple/tuple.hpp"
+#define revert(height) ((height<<24) | (height << 8 & 0xff0000) |  (height>>8 & 0xff00) | (height >> 24))
 
 using namespace std;
 using namespace boost;
@@ -1165,9 +1166,8 @@ Value getscriptdata(const Array& params, bool fHelp) {
 	return script;
 }
 
-
 Value getscriptvalidedata(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 4) {
+	if (fHelp || params.size() != 3) {
 			string msg = "getscriptdata nrequired \"scriptid\" \"\n"
 					"\ncreate contract\n"
 					"\nArguments:\n"
@@ -1178,7 +1178,7 @@ Value getscriptvalidedata(const Array& params, bool fHelp) {
 			throw runtime_error(msg);
 	}
 	int height = chainActive.Height();
-	RPCTypeCheck(params, list_of(str_type)(int_type)(int_type)(int_type));
+	RPCTypeCheck(params, list_of(str_type)(int_type)(int_type));
 	CRegID regid(params[0].get_str());
 	if (regid.IsEmpty() == true) {
 		throw runtime_error("in getscriptdata :vscriptid size is error!\n");
@@ -1189,11 +1189,12 @@ Value getscriptvalidedata(const Array& params, bool fHelp) {
 	}
 	Object obj;
 	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
-	int pagesize = params[2].get_int();
-	int nIndex = params[3].get_int();
+	int pagesize = params[1].get_int();
+	int nIndex = params[2].get_int();
 
+	int nKey = revert(height);
 	CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
-	ds << height;
+	ds << nKey;
 	std::vector<unsigned char> vScriptKey(ds.begin(), ds.end());
 	std::vector<unsigned char> vValue;
 	Array retArray;
@@ -1209,6 +1210,7 @@ Value getscriptvalidedata(const Array& params, bool fHelp) {
 	}
 	return retArray;
 }
+
 Value saveblocktofile(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 2) {
 		string msg = "saveblocktofile nrequired"
