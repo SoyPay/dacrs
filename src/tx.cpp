@@ -872,7 +872,7 @@ bool CAccount::OperateAccount(OperType type, const uint64_t &value, const int nC
 	case ADD_FREE: {
 		if (!IsMoneyOverflow(value))
 			return false;
-		if(nCurHeight > 20000) {
+		if(nCurHeight > 25000) {
 			if(llValues == 0) {
 				nHeight = nCurHeight;
 			}
