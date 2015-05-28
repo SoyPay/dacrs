@@ -841,9 +841,11 @@ Object CAccount::ToJosnObj() const
 	obj.push_back(Pair("PublicKey",  PublicKey.ToString()));
 	obj.push_back(Pair("MinerPKey",  MinerPKey.ToString()));
 	obj.push_back(Pair("Balance",     llValues));
-	obj.push_back(Pair("CoinDays", nCoinDay));
+	obj.push_back(Pair("CoinDays", nCoinDay/SysCfg().GetIntervalPos()/COIN));
 	obj.push_back(Pair("UpdateHeight", nHeight));
-
+	std::shared_ptr<CAccount> pNewAcct = GetNewInstance();
+	pNewAcct->UpDateCoinDay(chainActive.Tip()->nHeight);
+	obj.push_back(Pair("CurCoinDays", pNewAcct->nCoinDay/SysCfg().GetIntervalPos()/COIN));
 	return obj;
 }
 string CAccount::ToString() const {
