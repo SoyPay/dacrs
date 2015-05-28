@@ -53,6 +53,7 @@ CChain chainActive;
 CChain chainMostWork;
 int g_nSyncTipHeight(0);
 
+int g_firstForkHeigh = 30000;
 map<uint256, std::tuple<std::shared_ptr<CAccountViewCache>, std::shared_ptr<CTransactionDBCache>, std::shared_ptr<CScriptDBViewCache> > > mapCache;
 
 CSignatureCache signatureCache;
@@ -67,6 +68,7 @@ static CMedianFilter<int> cPeerBlockCounts(8, 0); // Amount of blocks that other
 struct COrphanBlock {
     uint256 hashBlock;
     uint256 hashPrev;
+    int     height;
     vector<unsigned char> vchBlock;
 };
 map<uint256, COrphanBlock*> mapOrphanBlocks;
@@ -107,6 +109,17 @@ namespace {
     CBlockIndex *pindexBestInvalid;
     // may contain all CBlockIndex*'s that have validness >=BLOCK_VALID_TRANSACTIONS, and must contain those who aren't failed
     set<CBlockIndex*, CBlockIndexWorkComparator> setBlockIndexValid;
+
+
+    struct COrphanBlockComparator
+    {
+    	bool operator()(COrphanBlock* pa, COrphanBlock*pb) {
+    		if (pa->height > pb->height) return false;
+    		if (pa->height < pb->height) return true;
+    		return false;
+    	}
+    };
+    set<COrphanBlock*, COrphanBlockComparator> setOrphanBlock;
 
     CCriticalSection cs_LastBlockFile;
     CBlockFileInfo infoLastBlockFile;
@@ -926,28 +939,57 @@ uint256 static GetOrphanRoot(const uint256& hash)
 }
 
 // Remove a random orphan block (which does not have any dependent orphans).
-void static PruneOrphanBlocks()
+bool static PruneOrphanBlocks(int nHeight)
 {
     if (mapOrphanBlocksByPrev.size() <= MAX_ORPHAN_BLOCKS)
-        return;
+        return true;
 
     // Pick a random orphan block.
-    int pos = insecure_rand() % mapOrphanBlocksByPrev.size();
-    multimap<uint256, COrphanBlock*>::iterator it = mapOrphanBlocksByPrev.begin();
-    while (pos--) it++;
-
-    // As long as this block has other orphans depending on it, move to one of those successors.
-    do {
-        multimap<uint256, COrphanBlock*>::iterator it2 = mapOrphanBlocksByPrev.find(it->second->hashBlock);
-        if (it2 == mapOrphanBlocksByPrev.end())
-            break;
-        it = it2;
-    } while(1);
-
-    uint256 hash = it->second->hashBlock;
-    delete it->second;
-    mapOrphanBlocksByPrev.erase(it);
+//    int pos = insecure_rand() % mapOrphanBlocksByPrev.size();
+//    multimap<uint256, COrphanBlock*>::iterator it = mapOrphanBlocksByPrev.begin();
+//    while (pos--) it++;
+//
+//    // As long as this block has other orphans depending on it, move to one of those successors.
+//    do {
+//        multimap<uint256, COrphanBlock*>::iterator it2 = mapOrphanBlocksByPrev.find(it->second->hashBlock);
+//        if (it2 == mapOrphanBlocksByPrev.end())
+//            break;
+//        it = it2;
+//    } while(1);
+	//for debug test, release version drop it 
+	LogPrint("OrphanBlock", "\n\n\n mapOrphanBlocks size:%d\n", mapOrphanBlocks.size());
+	LogPrint("OrphanBlock", "OrphanBlock set size:%d\n", setOrphanBlock.size());
+	set<COrphanBlock*, COrphanBlockComparator>::reverse_iterator it1 = setOrphanBlock.rbegin();
+	int nSize = setOrphanBlock.size();
+	for(; it1!= setOrphanBlock.rend(); ++it1)
+	{
+		LogPrint("OrphanBlock", "OrphanBlock %d height=%d hash=%s\n", nSize--, (*it1)->height, (*it1)->hashBlock.GetHex());
+	}
+	
+    set<COrphanBlock*, COrphanBlockComparator>::reverse_iterator it = setOrphanBlock.rbegin();
+	COrphanBlock *pOrphanBlock = *it;
+	if(pOrphanBlock->height <= nHeight)
+		return false;
+	LogPrint("INFO", " Update OrphanBlock height=%d hash=%s\n", (*it)->height, (*it)->hashBlock.GetHex());
+	LogPrint("OrphanBlock", " Update OrphanBlock height=%d hash=%s\n", (*it)->height, (*it)->hashBlock.GetHex());
+    uint256 hash = pOrphanBlock->hashBlock;
+    uint256 prevHash = pOrphanBlock->hashPrev;
+	setOrphanBlock.erase(pOrphanBlock);
+	multimap<uint256, COrphanBlock*>::iterator beg = mapOrphanBlocksByPrev.lower_bound(prevHash);
+	multimap<uint256, COrphanBlock*>::iterator end = mapOrphanBlocksByPrev.upper_bound(prevHash);
+    while(beg != end)
+	{
+		if(beg->second->hashBlock == hash) {
+			LogPrint("INFO", " Update PreOrphanBlockMap key=%s value=%s\n", beg->first.GetHex(), beg->second->hashBlock.GetHex());
+			LogPrint("OrphanBlock", " Update PreOrphanBlockMap key=%s value=%s\n", beg->first.GetHex(), beg->second->hashBlock.GetHex());
+			mapOrphanBlocksByPrev.erase(beg);
+			break;
+		}
+        ++beg;
+    }
     mapOrphanBlocks.erase(hash);
+	delete pOrphanBlock;
+	return true;
 }
 
 int64_t GetBlockValue(int nHeight, int64_t nFees)
@@ -2350,7 +2392,7 @@ void PushGetBlocks(CNode* pnode, CBlockIndex* pindexBegin, uint256 hashEnd)
     AssertLockHeld(cs_main);
     // Filter out duplicate requests
     if (pindexBegin == pnode->pindexLastGetBlocksBegin && hashEnd == pnode->hashLastGetBlocksEnd){
-    	LogPrint("GetLocator", "filter the same GetLocator");
+    	LogPrint("GetLocator", "filter the same GetLocator\n");
     	return;
     }
     pnode->pindexLastGetBlocksBegin = pindexBegin;
@@ -2410,25 +2452,31 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     // If we don't already have its previous block, shunt it off to holding area until we get it
     if (pblock->hashPrevBlock != 0 && !mapBlockIndex.count(pblock->hashPrevBlock))
     {
-        LogPrint("INFO","ProcessBlock: ORPHAN BLOCK %lu height=%d hash=%s, prev=%s\n", (unsigned long)mapOrphanBlocks.size(), pblock->nHeight, pblock->GetHash().GetHex(), pblock->hashPrevBlock.ToString());
+//      LogPrint("INFO","ProcessBlock: ORPHAN BLOCK %lu height=%d hash=%s, prev=%s\n", (unsigned long)mapOrphanBlocks.size(), pblock->nHeight, pblock->GetHash().GetHex(), pblock->hashPrevBlock.ToString());
 
         if (pblock->nHeight > (unsigned int)g_nSyncTipHeight)
 			g_nSyncTipHeight = pblock->nHeight;
         // Accept orphans as long as there is a node to request its parents from
         if (pfrom) {
-            PruneOrphanBlocks();
-            COrphanBlock* pblock2 = new COrphanBlock();
-            {
-                CDataStream ss(SER_DISK, CLIENT_VERSION);
-                ss << *pblock;
-                pblock2->vchBlock = vector<unsigned char>(ss.begin(), ss.end());
-            }
-            pblock2->hashBlock = hash;
-            pblock2->hashPrev = pblock->hashPrevBlock;
-            mapOrphanBlocks.insert(make_pair(hash, pblock2));
-            mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrev, pblock2));
-
+            if(PruneOrphanBlocks(pblock->nHeight)) {
+				COrphanBlock* pblock2 = new COrphanBlock();
+				{
+					CDataStream ss(SER_DISK, CLIENT_VERSION);
+					ss << *pblock;
+					pblock2->vchBlock = vector<unsigned char>(ss.begin(), ss.end());
+				}
+				pblock2->hashBlock = hash;
+				pblock2->hashPrev = pblock->hashPrevBlock;
+				pblock2->height   = pblock->nHeight;
+				mapOrphanBlocks.insert(make_pair(hash, pblock2));
+				mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrev, pblock2));
+				setOrphanBlock.insert(pblock2);
+				LogPrint("INFO", "ProcessBlock: ORPHAN BLOCK %lu insert height=%d hash=%s, prev=%s\n", (unsigned long)mapOrphanBlocks.size(), pblock->nHeight, pblock->GetHash().GetHex(), pblock->hashPrevBlock.ToString());
+			}else {
+				LogPrint("INFO", "ProcessBlock: ORPHAN BLOCK %lu abandon height=%d hash=%s, prev=%s\n", (unsigned long)mapOrphanBlocks.size(), pblock->nHeight, pblock->GetHash().GetHex(), pblock->hashPrevBlock.ToString());
+			}
             // Ask this guy to fill in what we're missing
+			LogPrint("net", "receive orphanblocks heignt=%d hash=%s lead to getblocks\n", pblock->nHeight, pblock->GetHash().GetHex());
             PushGetBlocks(pfrom, chainActive.Tip(), GetOrphanRoot(hash));
         }
         return true;
@@ -2462,7 +2510,8 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
             CValidationState stateDummy;
             if (AcceptBlock(block, stateDummy))
                 vWorkQueue.push_back(mi->second->hashBlock);
-            mapOrphanBlocks.erase(mi->second->hashBlock);
+            setOrphanBlock.erase(mi->second);
+			mapOrphanBlocks.erase(mi->second->hashBlock);
             delete mi->second;
         }
         mapOrphanBlocksByPrev.erase(hashPrev);
@@ -3209,7 +3258,7 @@ void static ProcessGetData(CNode* pfrom)
                         vector<CInv> vInv;
                         vInv.push_back(CInv(MSG_BLOCK, chainActive.Tip()->GetBlockHash()));
                         pfrom->PushMessage("inv", vInv);
-//                      pfrom->hashContinue = 0;
+                        pfrom->hashContinue = 0;
                         LogPrint("net", "reset node hashcontinue\n");
                     }
                 }
@@ -3503,7 +3552,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             if(mapBlockIndex.count(inv.hash) && inv.type == MSG_BLOCK) {
             	nBlockHeight = mapBlockIndex[inv.hash]->nHeight;
             }
-            LogPrint("net", "  got inventory: %s  %s %d from node:%s\n", inv.ToString(), fAlreadyHave ? "have" : "new", nBlockHeight, pfrom->addr.ToString());
+            LogPrint("net", "  got inventory [%d]: %s  %s %d from node:%s\n", nInv, inv.ToString(), fAlreadyHave ? "have" : "new", nBlockHeight, pfrom->addr.ToString());
 
             if (!fAlreadyHave) {
                 if (!SysCfg().IsImporting() && !SysCfg().IsReindex()) {
@@ -3513,7 +3562,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                         pfrom->AskFor(inv);
                 }
             } else if (inv.type == MSG_BLOCK && mapOrphanBlocks.count(inv.hash)) {
-                PushGetBlocks(pfrom, chainActive.Tip(), GetOrphanRoot(inv.hash));
+            	COrphanBlock * pOrphanBlock = mapOrphanBlocks[inv.hash];
+            	LogPrint("net", "receive orphan block inv heignt=%d hash=%s lead to getblocks\n", pOrphanBlock->height, inv.hash.GetHex());
+            	PushGetBlocks(pfrom, chainActive.Tip(), GetOrphanRoot(inv.hash));
             }
 
             // Track requests for our stuff
@@ -3566,13 +3617,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         LogPrint("net", "getblocks %d to %s limit %d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString(), nLimit);
         for (; pindex; pindex = chainActive.Next(pindex))
         {
-            if (pindex->GetBlockHash() == hashStop)
-            {
-                LogPrint("net", "  getblocks stopping at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
-                pfrom->hashContinue = hashStop;  //add by frank
-                break;
-            }
+
             pfrom->PushInventory(CInv(MSG_BLOCK, pindex->GetBlockHash()));
+            if (pindex->GetBlockHash() == hashStop)
+			{
+				LogPrint("net", "  getblocks stopping at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
+				pfrom->hashContinue = hashStop;  //add by frank
+				break;
+			}
             if (--nLimit <= 0)
             {
                 // When this block is requested, we'll send an inv that'll make them
@@ -3722,7 +3774,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CBlock block;
         vRecv >> block;
 
-        LogPrint("net", "received block %s\n", block.GetHash().ToString());
+        LogPrint("net", "received block %s from %s\n", block.GetHash().ToString(), pfrom->addr.ToString());
         // block.print();
 
         CInv inv(MSG_BLOCK, block.GetHash());
@@ -4220,6 +4272,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             pto->fStartSync = false;
             g_nSyncTipHeight = pto->nStartingHeight;
             uiInterface.NotifyBlocksChanged(0, chainActive.Tip()->nHeight, chainActive.Tip()->GetBlockHash());
+            LogPrint("net", "start block sync lead to getblocks\n");
             PushGetBlocks(pto, chainActive.Tip(), uint256(0));
         }
 
@@ -4296,15 +4349,17 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // Message: getdata (blocks)
         //
         vector<CInv> vGetData;
+        int nIndex(0);
         while (!pto->fDisconnect && state.nBlocksToDownload && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             uint256 hash = state.vBlocksToDownload.front();
             vGetData.push_back(CInv(MSG_BLOCK, hash));
             MarkBlockAsInFlight(pto->GetId(), hash);
-            LogPrint("net", "Requesting block %s from %s\n", hash.ToString().c_str(), state.name.c_str());
+            LogPrint("net", "Requesting block [%d] %s from %s\n", ++nIndex, hash.ToString().c_str(), state.name.c_str());
             if (vGetData.size() >= 1000)
             {
                 pto->PushMessage("getdata", vGetData);
                 vGetData.clear();
+                nIndex = 0;
             }
         }
 
