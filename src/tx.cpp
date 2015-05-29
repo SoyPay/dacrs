@@ -819,6 +819,8 @@ uint64_t CAccount::GetAccountPos(int nCurHeight){
 bool CAccount::UpDateCoinDay(int nCurHeight) {
 	if(nCurHeight < nHeight)
 		return false;
+	if(nCurHeight == nHeight)
+		return true;
 	nCoinDay += llValues * ((int64_t)nCurHeight-(int64_t)nHeight);
 	nHeight = nCurHeight;
 	if(nCoinDay > GetMaxCoinDay(nCurHeight)) {
@@ -841,9 +843,11 @@ Object CAccount::ToJosnObj() const
 	obj.push_back(Pair("PublicKey",  PublicKey.ToString()));
 	obj.push_back(Pair("MinerPKey",  MinerPKey.ToString()));
 	obj.push_back(Pair("Balance",     llValues));
-	obj.push_back(Pair("CoinDays", nCoinDay));
+	obj.push_back(Pair("CoinDays", nCoinDay/SysCfg().GetIntervalPos()/COIN));
 	obj.push_back(Pair("UpdateHeight", nHeight));
-
+	std::shared_ptr<CAccount> pNewAcct = GetNewInstance();
+	pNewAcct->UpDateCoinDay(chainActive.Tip()->nHeight);
+	obj.push_back(Pair("CurCoinDays", pNewAcct->nCoinDay/SysCfg().GetIntervalPos()/COIN));
 	return obj;
 }
 string CAccount::ToString() const {
@@ -863,6 +867,14 @@ bool CAccount::IsMoneyOverflow(uint64_t nAddMoney) {
 }
 bool CAccount::OperateAccount(OperType type, const uint64_t &value, const int nCurHeight) {
 //	LogPrint("op_account", "before operate:%s\n", ToString());
+
+	if(nCurHeight > g_firstForkHeigh) {
+		if (UpDateCoinDay(nCurHeight) < 0) {
+			LogPrint("INFO", "call UpDateCoinDay failed: cur height less than update height\n");
+			return false;
+		}
+	}
+
 	if (keyID == uint160(0)) {
 		assert(0);
 	}
@@ -872,13 +884,7 @@ bool CAccount::OperateAccount(OperType type, const uint64_t &value, const int nC
 	case ADD_FREE: {
 		if (!IsMoneyOverflow(value))
 			return false;
-		if(nCurHeight > g_firstForkHeigh) {
-			if(llValues == 0) {
-				nHeight = nCurHeight;
-			}
-		}
 		llValues += value;
-
 		break;
 	}
 	case MINUS_FREE: {
