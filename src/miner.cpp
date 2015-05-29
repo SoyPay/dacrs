@@ -265,7 +265,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 //						acctInfo.keyID.ToString(), acctInfo.GetAccountPos(pBlock->nHeight), acctInfo.IsMiner(pBlock->nHeight));
 				if (acctInfo.IsRegister() && acctInfo.GetAccountPos(pBlock->nHeight) > 0 && acctInfo.IsMiner(pBlock->nHeight)) {
 					setAcctInfo.insert(std::move(acctInfo));
-					LogPrint("miner", "miner account info:%s\n", acctInfo.ToString());
+//					LogPrint("miner", "miner account info:%s\n", acctInfo.ToString());
 				}
 			}
 		}
@@ -288,7 +288,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 			LogPrint("ERROR", "CreatePosTx posacc zero\n");
 			continue;
 		}
-//		LogPrint("INFO", "miner account:%s\n", item.ToString());
+		LogPrint("miner", "miner account:%s\n", item.ToString());
 //		LogPrint("INFO", "target hash:%s\n", targetHash.ToString());
 //		LogPrint("INFO", "posacc:%d\n", posacc);
 		uint256 adjusthash = GetAdjustHash(targetHash, posacc); //adjust nbits
