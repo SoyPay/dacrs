@@ -202,10 +202,10 @@ struct PosTxInfo {
 	}
 };
 
-uint256 GetAdjustHash(const uint256 TargetHash, const uint64_t nPos) {
+uint256 GetAdjustHash(const uint256 TargetHash, const uint64_t nPos, const int nCurHeight) {
 
 	uint64_t posacc = nPos/COIN;
-	if(chainActive.Height() > g_firstForkHeigh) {
+	if(nCurHeight > g_firstForkHeigh) {
 		posacc /= SysCfg().GetIntervalPos();
 	}else {
 		posacc = posacc / 100;
@@ -291,7 +291,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 		LogPrint("miner", "miner account:%s\n", item.ToString());
 //		LogPrint("INFO", "target hash:%s\n", targetHash.ToString());
 //		LogPrint("INFO", "posacc:%d\n", posacc);
-		uint256 adjusthash = GetAdjustHash(targetHash, posacc); //adjust nbits
+		uint256 adjusthash = GetAdjustHash(targetHash, posacc, pBlock->nHeight-1); //adjust nbits
 //		LogPrint("INFO", "adjusthash:%s\n", adjusthash.ToString());
 
 		//need compute this block proofofwork
@@ -429,7 +429,7 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 		return ERRORMSG("Account have no pos");
 	}
 
-	uint256 adjusthash = GetAdjustHash(targetHash, posacc); //adjust nbits
+	uint256 adjusthash = GetAdjustHash(targetHash, posacc, pBlock->nHeight-1); //adjust nbits
 
     //need compute this block proofofwork
 	struct PosTxInfo postxinfo;
