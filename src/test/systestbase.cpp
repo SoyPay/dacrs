@@ -769,7 +769,7 @@ bool SysTestBase::IsMemoryPoolEmpty() {
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
 		json_spirit::Value::Array narray = value.get_array();
-		return narray.size();
+		return narray.size() > 0 ? false : true;
 	}
 	return true;
 }

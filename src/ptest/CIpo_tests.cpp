@@ -94,7 +94,7 @@ TEST_STATE CIpoTest::Run(){
 
 	while(true)
 	{
-		if(!basetest.IsMemoryPoolEmpty())
+		if(basetest.IsMemoryPoolEmpty())
 			break;
 		sleep(100);
 	}

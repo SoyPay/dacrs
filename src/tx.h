@@ -780,7 +780,7 @@ public:
 		this->nCoinDay = other.nCoinDay;
 		return *this;
 	}
-	std::shared_ptr<CAccount> GetNewInstance() {
+	std::shared_ptr<CAccount> GetNewInstance() const{
 		return make_shared<CAccount>(*this);
 	}
 
