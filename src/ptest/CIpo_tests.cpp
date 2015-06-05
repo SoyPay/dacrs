@@ -8,11 +8,18 @@
 #include "CIpo_tests.h"
 #include "CycleTestManger.h"
 
-typedef struct {
+typedef struct user{
 	unsigned char address[35];
 	int64_t money;
 	int64_t freemoney;
 	int64_t freeMothmoney;
+	user()
+	{
+		memset(address,0,35);
+		money = 0;
+		freemoney = 0;
+		freeMothmoney = 0;
+	}
 	IMPLEMENT_SERIALIZE
 	(
 			for(int i = 0;i < 35;i++)
@@ -60,7 +67,6 @@ TEST_STATE CIpoTest::Run(){
 //	}
 //	return next_state;
 
-
 	for (int i = 0; i < max_user; i++) {
 		string newaddr;
 		BOOST_CHECK(basetest.GetNewAddr(newaddr, true));
@@ -79,7 +85,7 @@ TEST_STATE CIpoTest::Run(){
 					break;
 				}
 	}
-	int64_t money = 10;
+	int64_t money = COIN;
 	for(int i=0;i <max_user;i++)
 	{
 		string des =strprintf("%s", userarray[i].address);
@@ -93,8 +99,9 @@ TEST_STATE CIpoTest::Run(){
 		sleep(100);
 	}
 
-
+   cout<<"SendIpoTx start"<<endl;
 	SendIpoTx();
+	 cout<<"SendIpoTx end"<<endl;
 }
 
 bool CIpoTest::RegistScript(){
@@ -146,6 +153,17 @@ BOOST_FIXTURE_TEST_SUITE(CreateIpoTxTest,CIpoTest)
 
 BOOST_FIXTURE_TEST_CASE(Test,CIpoTest)
 {
+//	while(true)
+//	{
+//		string newaddr;
+//		BOOST_CHECK(basetest.GetNewAddr(newaddr, true));
+//		cout<<"len:"<<newaddr.length()<<endl;
+//		if(newaddr.length() != 34)
+//		{
+//			cout<<"address:"<<newaddr.c_str()<<endl;
+//			break;
+//		}
+//	}
 	Run();
 }
 
