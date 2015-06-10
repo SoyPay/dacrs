@@ -107,7 +107,7 @@ TEST_STATE CIpoTest::Run(){
 bool CIpoTest::RegistScript(){
 
 	const char* pKey[] = { "cNcJkU44oG3etbWoEvY46i5qWPeE8jVb7K44keXxEQxsXUZ85MKU",
-			"dk2NNjraSvquD9b4SQbysVRQeFikA55HLi"};
+			"cNcJkU44oG3etbWoEvY46i5qWPeE8jVb7K44keXxEQxsXUZ85MKU"};
 	int nCount = sizeof(pKey) / sizeof(char*);
 	basetest.ImportWalletKey(pKey, nCount);
 
