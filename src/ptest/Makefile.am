@@ -45,4 +45,5 @@ dacrs_ptest_SOURCES = \
   CreateMinterKey_tests.cpp \
   CreateMinterKey_tests.h  \
   CIpo_tests.h \
-  CIpo_tests.cpp
+  CIpo_tests.cpp \
+  CRedPacket_tests.cpp 
