@@ -439,9 +439,8 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
 			if (0 == memcmp((char *)&ssKey[0], (char *)&ssKeySet[0], 11)) {
 				if (-1 == i) {
-					vector<unsigned char> vValue;
 					leveldb::Slice slValue = pcursor->value();
-					CDataStream ssValue(slValue.data()+1, slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
 					ssValue >> vScriptData;
 					vScriptKey.clear();
 					vScriptKey.insert(vScriptKey.end(), slKey.data() + iPrefixLen + iScriptIdLen + iSpaceLen,

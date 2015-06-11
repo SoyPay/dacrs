@@ -715,8 +715,9 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 		return false;
 	if(vValue.empty())
 		return false;
-	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
-	ds >> vScriptData;
+	vScriptData = vValue;
+//	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
+//	ds >> vScriptData;
 	return true;
 }
 bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vScriptId,
@@ -785,8 +786,11 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 //				}
 //			}
 			if (vDataKey.empty()) {   //缓存中没有符合条件的key，直接返回上级的查询结果
-				if(mapDatas.count(dataKeyTemp) <= 0)
+				if(mapDatas.count(dataKeyTemp) <= 0) {
+//					CDataStream ds(vScriptData, SER_DISK, CLIENT_VERSION);
+//					ds >> vScriptData;
 					return true;
+				}
 				else {
 //					LogPrint("INFO", "local level contains dataKeyTemp,but the value is empty,need redo getscriptdata()\n");
 					continue;			 //重新从数据库中获取下一条数据
@@ -809,8 +813,9 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 					vScriptKey.clear();
 					vScriptData.clear();
 					vScriptKey.insert(vScriptKey.end(), vDataKey.begin() + 11, vDataKey.end());
-					CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
-					ds >> vScriptData;
+					vScriptData = vDataValue;
+//					CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
+//					ds >> vScriptData;
 					return true;
 				}
 			}
@@ -825,8 +830,9 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 				if (vDataValue.empty()) {
 					return false;
 				}
-				CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
-				ds >> vScriptData;
+				vScriptData = vDataValue;
+//				CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
+//				ds >> vScriptData;
 				return true;
 			}
 		}
@@ -896,8 +902,11 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 //				}
 //			}
 			if (vDataKey.empty()) {   //缓存中没有符合条件的key，直接返回上级的查询结果
-				if(mapDatas.count(dataKeyTemp) <= 0)
+				if(mapDatas.count(dataKeyTemp) <= 0) {
+//					CDataStream ds(vScriptData, SER_DISK, CLIENT_VERSION);
+//					ds >> vScriptData;
 					return true;
+				}
 				else {
 //					LogPrint("INFO", "local level contains dataKeyTemp,but the value is empty,need redo getscriptdata()\n");
 					continue;			 //重新从数据库中获取下一条数据
@@ -919,8 +928,9 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 					vScriptKey.clear();
 					vScriptData.clear();
 					vScriptKey.insert(vScriptKey.end(), vDataKey.begin() + 11, vDataKey.end());
-					CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
-					ds >> vScriptData;
+					vScriptData = vDataValue;
+//					CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
+//					ds >> vScriptData;
 					return true;
 				}
 			}
@@ -935,8 +945,9 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 				if (vDataValue.empty()) {
 					return false;
 				}
-				CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
-				ds >> vScriptData;
+				vScriptData = vDataValue;
+//				CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
+//				ds >> vScriptData;
 				return true;
 			}
 		}
@@ -1099,9 +1110,9 @@ bool CScriptDBViewCache::SetScriptData(const vector<unsigned char> &vScriptId, c
 	vKey.push_back('_');
 	vKey.insert(vKey.end(), vScriptKey.begin(), vScriptKey.end());
   //  LogPrint("vm","add data:%s",HexStr(vScriptKey).c_str());
-	CDataStream ds(SER_DISK, CLIENT_VERSION);
-	ds << vScriptData;
-	vector<unsigned char> vValue(ds.begin(), ds.end());
+//	CDataStream ds(SER_DISK, CLIENT_VERSION);
+//	ds << vScriptData;
+	vector<unsigned char> vValue(vScriptData.begin(), vScriptData.end());
 	if (!HaveScriptData(vScriptId, vScriptKey)) {
 		int nCount(0);
 		GetScriptDataCount(vScriptId, nCount);

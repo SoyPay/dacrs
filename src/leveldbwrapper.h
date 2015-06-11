@@ -37,11 +37,16 @@ public:
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
 		if (typeid(key) == typeid(std::vector<unsigned char>)) {
-			slKey = leveldb::Slice(&ssKey[1], ssKey.size() - 1);
+			CDataStream ssKeyTemp(ssKey.begin(), ssKey.end(), SER_DISK, CLIENT_VERSION);
+			vector<unsigned char> vKey;
+			ssKeyTemp >> vKey;
+ 			int iStartPos = 0;
+			int nVKeySize = vKey.size();
+			iStartPos = GetSizeOfCompactSize(nVKeySize);
+			slKey = leveldb::Slice(&ssKey[iStartPos], ssKey.size() - iStartPos);
 		} else {
 			slKey = leveldb::Slice(&ssKey[0], ssKey.size());
 		}
-
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         ssValue.reserve(ssValue.GetSerializeSize(value));
         ssValue << value;
@@ -55,7 +60,13 @@ public:
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
 		if (typeid(key) == typeid(std::vector<unsigned char>)) {
-			slKey = leveldb::Slice(&ssKey[1], ssKey.size() - 1);
+			CDataStream ssKeyTemp(ssKey.begin(), ssKey.end(), SER_DISK, CLIENT_VERSION);
+			vector<unsigned char> vKey;
+			ssKeyTemp >> vKey;
+			int iStartPos = 0;
+			int nVKeySize = vKey.size();
+			iStartPos = GetSizeOfCompactSize(nVKeySize);
+			slKey = leveldb::Slice(&ssKey[iStartPos], ssKey.size() - iStartPos);
 		} else {
 			slKey = leveldb::Slice(&ssKey[0], ssKey.size());
 		}
@@ -95,10 +106,17 @@ public:
     template<typename K, typename V> bool Read(const K& key, V& value) throw(leveldb_error) {
     	leveldb::Slice slKey;
     	CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+
 		ssKey.reserve(ssKey.GetSerializeSize(key));
 		ssKey << key;
     	if(typeid(key) == typeid(std::vector<unsigned char>)) {
-			slKey = leveldb::Slice(&ssKey[1], ssKey.size()-1);
+    		CDataStream ssKeyTemp(ssKey.begin(), ssKey.end(), SER_DISK, CLIENT_VERSION);
+    		vector<unsigned char> vKey;
+    		ssKeyTemp >> vKey;
+    		int iStartPos = 0;
+    		int nVKeySize = vKey.size();
+			iStartPos = GetSizeOfCompactSize(nVKeySize);
+    		slKey = leveldb::Slice(&ssKey[iStartPos], ssKey.size()-iStartPos);
         }else{
         	slKey = leveldb::Slice(&ssKey[0], ssKey.size());
         }
@@ -131,7 +149,13 @@ public:
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
 		if (typeid(key) == typeid(std::vector<unsigned char>)) {
-			slKey = leveldb::Slice(&ssKey[1], ssKey.size() - 1);
+			CDataStream ssKeyTemp(ssKey.begin(), ssKey.end(), SER_DISK, CLIENT_VERSION);
+			vector<unsigned char> vKey;
+			ssKeyTemp >> vKey;
+			int iStartPos = 0;
+			int nVKeySize = vKey.size();
+			iStartPos = GetSizeOfCompactSize(nVKeySize);
+			slKey = leveldb::Slice(&ssKey[iStartPos], ssKey.size() - iStartPos);
 		} else {
 			slKey = leveldb::Slice(&ssKey[0], ssKey.size());
 		}
