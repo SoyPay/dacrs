@@ -15,7 +15,25 @@ using namespace std;
 #define RANDOM_FUND_MONEY (random(MAX_FUND_MONEY)+1)
 #define random(x) (rand()%x)
 
+#define txhash "022596466a"
+#define amount 100*COIN
+#define number 20
 
+bool GetRpcHash(const string &hash, string &retHash)
+{
+	const char *argv[] = { "rpctest", "gethash", hash.c_str()};
+	int argc = sizeof(argv) / sizeof(char*);
+	Value value;
+	if (!SysTestBase::CommandLineRPC_GetValue(argc, argv, value)) {
+		return false;
+	}
+	const Value& result = find_value(value.get_obj(), "hash");
+	if(result == null_type) {
+		return false;
+	}
+	retHash = result.get_str();
+	return true;
+}
 //bool IsEqual(const vector<CFund>& vSrc, const vector<CFund>& vDest) {
 //	if (vSrc.size() != vDest.size()) {
 //		return false;
@@ -148,5 +166,40 @@ BOOST_FIXTURE_TEST_CASE(tx_minus_free,CTxTest) {
 
 }
 
+BOOST_FIXTURE_TEST_CASE(red_packet, CTxTest) {
+	//gethash
+	string retHash;
+	vector<int> vRetPacket;
+	int64_t nTotal = 0;
+	do{
+		string initHash = txhash;
+		BOOST_CHECK(GetRpcHash(initHash, retHash));
+		initHash = retHash;
+		vector<unsigned char> vRet = ParseHex(retHash);
+		for(size_t i=0; i< vRet.size(); )
+		{
+			int data = vRet[i] << 16 | vRet[i+1];
+			vRetPacket.push_back(data % 1000 + 1000);
+			nTotal += data % 1000 + 1000;
+			if (vRetPacket.size() == number)
+				break;
+			i += 2;
+		}
+	}while(vRetPacket.size() != number);
+	vector<int> vRedPacket;
+	int64_t total_packet = 0;
+	for(size_t j=0; j<vRetPacket.size(); ++j)
+	{
+		int64_t redAmount = vRetPacket[j] * amount / nTotal;
+		vRedPacket.push_back(redAmount);
+		total_packet += redAmount;
+		double dRedAmount = redAmount/COIN;
+		cout << "index"<< j << ", redPackets:" <<redAmount << " " <<dRedAmount<< endl;
+	}
+	double dTotalPacket = total_packet/COIN;
+	cout << "total:" <<total_packet<< " "<<dTotalPacket<< endl;
+
+}
 
 BOOST_AUTO_TEST_SUITE_END()
+
