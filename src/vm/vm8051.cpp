@@ -1232,7 +1232,7 @@ static RET_DEFINE GetUserAppAccFoudWithTag(unsigned char * ipara,void * pVmScrip
 	CVmRunEvn *pVmScriptRun = (CVmRunEvn *)pVmScript;
 
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
-	CVmOperate temp;
+	CAppFundOperate temp;
 	unsigned int Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
 
     if(!GetData(ipara,retdata) ||retdata.size() != 1
