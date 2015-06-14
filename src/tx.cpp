@@ -393,7 +393,7 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 
 	uint64_t addValue = llValues;
 	if(!view.GetAccount(desUserId, desAcct)) {
-		if(COMMON_TX == nTxType) {
+		if(COMMON_TX == nTxType && desUserId.type() == typeid(CKeyID)) {
 			desAcct.keyID = boost::get<CKeyID>(desUserId);
 			desAcctLog.keyID = desAcct.keyID;
 		}
