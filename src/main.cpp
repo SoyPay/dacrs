@@ -1015,7 +1015,7 @@ int64_t GetBlockValue(int nHeight, int64_t nFees)
 unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
 {
 	const CBigNum &bnLimit = SysCfg().ProofOfWorkLimit();
-	LogPrint("INFO", "bnLimit:%s\n", bnLimit.getuint256().GetHex());
+//	LogPrint("INFO", "bnLimit:%s\n", bnLimit.getuint256().GetHex());
 		CBigNum bnResult;
 		bnResult.SetCompact(nBase);
 		bnResult *= 2;
@@ -1058,7 +1058,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 		bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
 		bnNew /= ((nInterval + 1) * nTargetSpacing);
 
-		if (bnNew > SysCfg().ProofOfWorkLimit())
+		if (bnNew > SysCfg().ProofOfWorkLimit() || bnNew < 0)
 			bnNew = SysCfg().ProofOfWorkLimit();
 
 		return bnNew.GetCompact();
@@ -2443,7 +2443,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         if (bnNewBlock > bnRequired)
         {
             return state.DoS(100, ERRORMSG("ProcessBlock() : block with too little proof-of-work\n"
-            		"bnNewBlock:%s, bnRequired:%s", bnNewBlock.getuint256().GetHex(), bnRequired.getuint256().GetHex()),
+            		" bnNewBlock:%s \n bnRequired:%s \n hash:%s \n prevHash:%s", bnNewBlock.getuint256().GetHex(), bnRequired.getuint256().GetHex(), pblock->GetHash().GetHex(), pblock->hashPrevBlock.GetHex()),
                              REJECT_INVALID, "bad-diffbits");
         }
     }
