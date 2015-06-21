@@ -66,9 +66,13 @@ static bool noui_SyncTx()
 		for(;iterTx != iterAccountTx->second.mapAccountTx.end(); ++iterTx) {
 			objTx = TxToJSON(iterTx->second.get());
 			objTx.push_back(Pair("blockhash", iterAccountTx->first.GetHex()));
-			if(mapBlockIndex.count(iterAccountTx->first)) {
+			if(mapBlockIndex.count(iterAccountTx->first) && chainActive.Contains(mapBlockIndex[iterAccountTx->first])) {
 				objTx.push_back(Pair("confirmHeight", mapBlockIndex[iterAccountTx->first]->nHeight));
 				objTx.push_back(Pair("confirmedtime", (int)mapBlockIndex[iterAccountTx->first]->nTime));
+			}
+			else {
+				LogPrint("NOUI", "block hash=%s in wallet map invalid\n", iterAccountTx->first.GetHex());
+				continue;
 			}
 			Object obj;
 			obj.push_back(Pair("type",     "SyncTx"));

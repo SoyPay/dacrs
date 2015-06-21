@@ -54,6 +54,7 @@ CChain chainMostWork;
 int g_nSyncTipHeight(0);
 
 int g_firstForkHeigh = 30000;
+int g_secondForkHeigh = 52933;
 map<uint256, std::tuple<std::shared_ptr<CAccountViewCache>, std::shared_ptr<CTransactionDBCache>, std::shared_ptr<CScriptDBViewCache> > > mapCache;
 
 CSignatureCache signatureCache;
@@ -1058,8 +1059,11 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 		bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
 		bnNew /= ((nInterval + 1) * nTargetSpacing);
 
-		if (bnNew > SysCfg().ProofOfWorkLimit() || bnNew < 0)
+		if (bnNew > SysCfg().ProofOfWorkLimit() || bnNew < 0) {
+			LogPrint("INFO", "bnNew:%s\n", bnNew.getuint256().GetHex());
 			bnNew = SysCfg().ProofOfWorkLimit();
+		}
+
 
 		return bnNew.GetCompact();
 }
@@ -2426,27 +2430,27 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         return ERRORMSG("ProcessBlock() :block hash:%s CheckBlock FAILED", pblock->GetHash().GetHex());
     }
     LogPrint("INFO", "CheckBlock() elapse time:%lld ms\n", GetTimeMillis() - llBeginCheckBlockTime);
-    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
-    if (pcheckpoint && pblock->hashPrevBlock != (chainActive.Tip() ? chainActive.Tip()->GetBlockHash() : uint256(0)))
-    {
-        // Extra checks to prevent "fill up memory by spamming with bogus blocks"
-        int64_t deltaTime = pblock->GetBlockTime() - pcheckpoint->nTime;
-        if (deltaTime < 0)
-        {
-            return state.DoS(100, ERRORMSG("ProcessBlock() : block with timestamp before last checkpoint"),
-                             REJECT_CHECKPOINT, "time-too-old");
-        }
-        CBigNum bnNewBlock;
-        bnNewBlock.SetCompact(pblock->nBits);
-        CBigNum bnRequired;
-        bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
-        if (bnNewBlock > bnRequired)
-        {
-            return state.DoS(100, ERRORMSG("ProcessBlock() : block with too little proof-of-work\n"
-            		" bnNewBlock:%s \n bnRequired:%s \n hash:%s \n prevHash:%s", bnNewBlock.getuint256().GetHex(), bnRequired.getuint256().GetHex(), pblock->GetHash().GetHex(), pblock->hashPrevBlock.GetHex()),
-                             REJECT_INVALID, "bad-diffbits");
-        }
-    }
+//    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+//    if (pcheckpoint && pblock->hashPrevBlock != (chainActive.Tip() ? chainActive.Tip()->GetBlockHash() : uint256(0)))
+//    {
+//        // Extra checks to prevent "fill up memory by spamming with bogus blocks"
+//        int64_t deltaTime = pblock->GetBlockTime() - pcheckpoint->nTime;
+//        if (deltaTime < 0)
+//        {
+//            return state.DoS(100, ERRORMSG("ProcessBlock() : block with timestamp before last checkpoint"),
+//                             REJECT_CHECKPOINT, "time-too-old");
+//        }
+//        CBigNum bnNewBlock;
+//        bnNewBlock.SetCompact(pblock->nBits);
+//        CBigNum bnRequired;
+//        bnRequired.SetCompact(ComputeMinWork(pcheckpoint->nBits, deltaTime));
+//        if (bnNewBlock > bnRequired)
+//        {
+//            return state.DoS(100, ERRORMSG("ProcessBlock() : block with too little proof-of-work\n"
+//            		" bnNewBlock:%s \n bnRequired:%s \n hash:%s \n prevHash:%s", bnNewBlock.getuint256().GetHex(), bnRequired.getuint256().GetHex(), pblock->GetHash().GetHex(), pblock->hashPrevBlock.GetHex()),
+//                             REJECT_INVALID, "bad-diffbits");
+//        }
+//    }
 
 
     // If we don't already have its previous block, shunt it off to holding area until we get it

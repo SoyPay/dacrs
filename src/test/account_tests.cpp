@@ -171,8 +171,8 @@ BOOST_FIXTURE_TEST_CASE(red_packet, CTxTest) {
 	string retHash;
 	vector<int> vRetPacket;
 	int64_t nTotal = 0;
+	string initHash = txhash;
 	do{
-		string initHash = txhash;
 		BOOST_CHECK(GetRpcHash(initHash, retHash));
 		initHash = retHash;
 		vector<unsigned char> vRet = ParseHex(retHash);
