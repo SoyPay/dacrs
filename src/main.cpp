@@ -1582,16 +1582,16 @@ bool static WriteChainState(CValidationState &state) {
        if (!CheckDiskSpace(cachesize))
             return state.Error("out of disk space");
 
-        FlushBlockFile();
-        pblocktree->Sync();
-        if (!pAccountViewTip->Flush())
+       FlushBlockFile();
+       pblocktree->Sync();
+       if (!pAccountViewTip->Flush())
             return state.Abort(_("Failed to write to account database"));
-        if (!pTxCacheTip->Flush())
+       if (!pTxCacheTip->Flush())
         	return state.Abort(_("Failed to write to tx cache database"));
-        if (!pScriptDBTip->Flush())
+       if (!pScriptDBTip->Flush())
         	return state.Abort(_("Failed to write to script db database"));
-        mapCache.clear();
-        nLastWrite = GetTimeMicros();
+       mapCache.clear();
+       nLastWrite = GetTimeMicros();
     }
     return true;
 }

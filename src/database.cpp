@@ -1459,9 +1459,18 @@ bool CTransactionDBCache::BatchWrite(const map<uint256, vector<uint256> > &mapTx
 }
 bool CTransactionDBCache::Flush() {
 	bool bRet = pBase->BatchWrite(mapTxHashByBlockHash);
-//	if (bRet) {
-//		mapTxHashByBlockHash.clear();
-//	}
+	if (bRet) {
+		map<uint256, vector<uint256> >::iterator iter = mapTxHashByBlockHash.begin();
+		for(; iter != mapTxHashByBlockHash.end(); )
+		{
+			if(iter->second.empty()) {
+				mapTxHashByBlockHash.erase(iter++);
+			}
+			else{
+				iter++;
+			}
+		}
+	}
 	return bRet;
 }
 void CTransactionDBCache::AddTxHashCache(const uint256 & blockHash, const vector<uint256> &vTxHash) {

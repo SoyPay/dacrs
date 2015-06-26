@@ -207,7 +207,7 @@ bool CAccountViewDB::BatchWrite(const map<CKeyID, CAccount> &mapAccounts,
 	if (uint256(0) != hashBlock)
 		batch.Write('B', hashBlock);
 
-	return db.WriteBatch(batch, false);
+	return db.WriteBatch(batch, true);
 }
 
 bool CAccountViewDB::BatchWrite(const vector<CAccount> &vAccounts) {
@@ -270,11 +270,11 @@ bool CTransactionDB::BatchWrite(const map<uint256, vector<uint256> > &mapTxHashB
 		if(item.second.empty()) {
 			batch.Erase(make_pair('h', item.first));
 		} else {
-			batch.Write(make_pair('h', item.first), item.second);
+			if(!db.Exists(make_pair('h', item.first)))
+				batch.Write(make_pair('h', item.first), item.second);
 		}
 	}
-
-	return db.WriteBatch(batch, false);
+	return db.WriteBatch(batch, true);
 }
 
 bool CTransactionDB::LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash) {
@@ -335,7 +335,7 @@ bool CScriptDB::BatchWrite(const map<vector<unsigned char>, vector<unsigned char
 			batch.Write(item.first, item.second);
 		}
 	}
-	return db.WriteBatch(batch);
+	return db.WriteBatch(batch, true);
 }
 bool CScriptDB::EraseKey(const vector<unsigned char> &vKey) {
 	return db.Erase(vKey);
