@@ -463,26 +463,22 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
 Value backupwallet(const Array& params, bool fHelp)
 {
-	  //!@todo  todo work list
-	    throw JSONRPCError(RPC_INVALID_PARAMETER, "todo work list ");
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "backupwallet \"destination\"\n"
+            "\nSafely copies wallet.dat to destination, which can be a directory or a path with filename.\n"
+            "\nArguments:\n"
+            "1. \"destination\"   (string) The destination directory or file\n"
+            "\nExamples:\n"
+            + HelpExampleCli("backupwallet", "\"backup.dat\"")
+            + HelpExampleRpc("backupwallet", "\"backup.dat\"")
+        );
 
+    string strDest = params[0].get_str();
+    if (!BackupWallet(*pwalletMain, strDest))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: Wallet backup failed!");
 
-//    if (fHelp || params.size() != 1)
-//        throw runtime_error(
-//            "backupwallet \"destination\"\n"
-//            "\nSafely copies wallet.dat to destination, which can be a directory or a path with filename.\n"
-//            "\nArguments:\n"
-//            "1. \"destination\"   (string) The destination directory or file\n"
-//            "\nExamples:\n"
-//            + HelpExampleCli("backupwallet", "\"backup.dat\"")
-//            + HelpExampleRpc("backupwallet", "\"backup.dat\"")
-//        );
-//
-//    string strDest = params[0].get_str();
-//    if (!BackupWallet(*pwalletMain, strDest))
-//        throw JSONRPCError(RPC_WALLET_ERROR, "Error: Wallet backup failed!");
-//
-//    return Value::null;
+    return Value::null;
 }
 
 
@@ -637,8 +633,6 @@ Value walletlock(const Array& params, bool fHelp)
 
 Value encryptwallet(const Array& params, bool fHelp)
 {
-  //!@todo  todo work list
-    throw JSONRPCError(RPC_INVALID_PARAMETER, "todo work list ");
 //    if (!pwalletMain->IsCrypted() && (fHelp || params.size() != 1))
 //        throw runtime_error(
 //            "encryptwallet \"passphrase\"\n"
@@ -681,12 +675,12 @@ Value encryptwallet(const Array& params, bool fHelp)
 //
 //    if (!pwalletMain->EncryptWallet(strWalletPass))
 //        throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Failed to encrypt the wallet.");
-
-    // BDB seems to have a bad habit of writing old data into
-    // slack space in .dat files; that is bad if the old data is
-    // unencrypted private keys. So:
-    StartShutdown();
-    return "wallet encrypted; Dacrs server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.";
+//
+//     BDB seems to have a bad habit of writing old data into
+//     slack space in .dat files; that is bad if the old data is
+//     unencrypted private keys. So:
+//    StartShutdown();
+//    return "wallet encrypted; Dacrs server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.";
 }
 
 Value settxfee(const Array& params, bool fHelp)
