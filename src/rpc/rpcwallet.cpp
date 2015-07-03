@@ -493,7 +493,7 @@ static void LockWallet(CWallet* pWallet)
 {
     LOCK(cs_nWalletUnlockTime);
     nWalletUnlockTime = 0;
-//    pWallet->Lock();
+    pWallet->Lock();
 }
 
 Value walletpassphrase(const Array& params, bool fHelp)
@@ -587,8 +587,9 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
 
     if (!pwalletMain->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass))
         throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
-
-    return Value::null;
+    Object retObj;
+    retObj.push_back(Pair("chgpwd", true));
+    return retObj;
 }
 
 
@@ -677,7 +678,10 @@ Value encryptwallet(const Array& params, bool fHelp)
     //slack space in .dat files; that is bad if the old data is
     //unencrypted private keys. So:
     StartShutdown();
-    return "wallet encrypted; Dacrs server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.";
+    Object retObj;
+    retObj.push_back(Pair("encrypt", true));
+    return retObj;
+    //return "wallet encrypted; Dacrs server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.";
 }
 
 Value settxfee(const Array& params, bool fHelp)
