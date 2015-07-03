@@ -7,7 +7,7 @@
 
 #include "support/cleanse.h"
 #ifdef WIN32
-#include "compat.h" // for Windows API
+#include "compat/compat.h" // for Windows API
 #endif
 #include "serialize.h"        // for begin_ptr(vec)
 #include "util.h"             // for LogPrint()
