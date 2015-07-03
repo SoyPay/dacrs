@@ -273,17 +273,17 @@ inline void PrintHex(const vector<unsigned char>& vch, const char* pszFormat = "
 	LogPrint("INFO",pszFormat, HexStr(vch, fSpaces).c_str());
 }
 
-inline int64_t GetPerformanceCounter() {
-	int64_t nCounter = 0;
-#ifdef WIN32
-	QueryPerformanceCounter((LARGE_INTEGER*) &nCounter);
-#else
-	timeval t;
-	gettimeofday(&t, NULL);
-	nCounter = (int64_t) t.tv_sec * 1000000 + t.tv_usec;
-#endif
-	return nCounter;
-}
+//inline int64_t GetPerformanceCounter() {
+//	int64_t nCounter = 0;
+//#ifdef WIN32
+//	QueryPerformanceCounter((LARGE_INTEGER*) &nCounter);
+//#else
+//	timeval t;
+//	gettimeofday(&t, NULL);
+//	nCounter = (int64_t) t.tv_sec * 1000000 + t.tv_usec;
+//#endif
+//	return nCounter;
+//}
 
 inline int64_t GetTimeMillis() {
 	return (boost::posix_time::ptime(boost::posix_time::microsec_clock::universal_time())
@@ -318,19 +318,19 @@ inline bool IsSwitchChar(char c) {
  *
  * @return random value
  */
-extern uint32_t insecure_rand_Rz;
-extern uint32_t insecure_rand_Rw;
-static inline uint32_t insecure_rand(void) {
-	insecure_rand_Rz = 36969 * (insecure_rand_Rz & 65535) + (insecure_rand_Rz >> 16);
-	insecure_rand_Rw = 18000 * (insecure_rand_Rw & 65535) + (insecure_rand_Rw >> 16);
-	return (insecure_rand_Rw << 16) + insecure_rand_Rz;
-}
+//extern uint32_t insecure_rand_Rz;
+//extern uint32_t insecure_rand_Rw;
+//static inline uint32_t insecure_rand(void) {
+//	insecure_rand_Rz = 36969 * (insecure_rand_Rz & 65535) + (insecure_rand_Rz >> 16);
+//	insecure_rand_Rw = 18000 * (insecure_rand_Rw & 65535) + (insecure_rand_Rw >> 16);
+//	return (insecure_rand_Rw << 16) + insecure_rand_Rz;
+//}
 
 /**
  * Seed insecure_rand using the random pool.
  * @param Deterministic Use a determinstic seed
  */
-void seed_insecure_rand(bool fDeterministic = false);
+//void seed_insecure_rand(bool fDeterministic = false);
 
 /**
  * Timing-attack-resistant comparison.

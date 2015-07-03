@@ -9,9 +9,47 @@
 #include "key.h"
 #include "sync.h"
 #include <set>
-
+#include "json/json_spirit_value.h"
+#include "json/json_spirit_writer_template.h"
+#include "json/json_spirit_utils.h"
 #include <boost/signals2/signal.hpp>
 
+using namespace json_spirit;
+
+class CKeyCombi {
+private:
+	CKey  mMainCkey;
+	CKey  mMinerCkey; //only used for miner
+	int64_t nCreationTime;
+
+public:
+	CKeyCombi();
+	CKeyCombi(CKey const &inkey,CKey const &minerKey);
+	CKeyCombi(CKey const &inkey);
+
+	string ToString() const;
+
+	Object ToJsonObj()const;
+	bool UnSersailFromJson(const Object&);
+	int64_t GetBirthDay()const;
+	bool GetCKey(CKey& keyOut,bool IsMine = false) const ;
+	bool CreateANewKey();
+	bool GetPubKey(CPubKey &mOutKey,bool IsMine = false) const;
+    bool CleanMainKey();
+    bool CleanAll();
+	bool IsContainMinerKey()const;
+	bool IsContainMainKey()const;
+	CKeyID GetCKeyID() const ;
+	void SetMainKey(CKey& mainKey);
+	void SetMinerKey(CKey & minerKey);
+
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(mMainCkey);
+		READWRITE(mMinerCkey);
+		READWRITE(nCreationTime);
+	)
+};
 
 /** A virtual base class for key stores */
 class CKeyStore
@@ -23,14 +61,15 @@ public:
     virtual ~CKeyStore() {}
 
     // Add a key to the store.
-    virtual bool AddKeyPubKey(const CKey &key, const CPubKey &pubkey) =0;
-    virtual bool AddKey(const CKey &key);
+    virtual bool AddKeyCombi(const CKeyID & keyId, const CKeyCombi &keyCombi) = 0;
+//    virtual bool AddKeyPubKey(const CKey &key, const CPubKey &pubkey) =0;
+//    virtual bool AddKey(const CKey &key);
 
     // Check whether a key corresponding to a given address is present in the store.
     virtual bool HaveKey(const CKeyID &address) const =0;
-    virtual bool GetKey(const CKeyID &address, CKey& keyOut) const =0;
-    virtual void GetKeys(set<CKeyID> &setAddress) const =0;
-    virtual bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
+    virtual bool GetKey(const CKeyID &address, CKey& keyOut, bool IsMine) const =0;
+    virtual void GetKeys(set<CKeyID> &setAddress, bool bFlag) const =0;
+    virtual bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut, bool IsMine) const;
 
     // Support for BIP 0013 : see https://github.com/bitcoin/bips/blob/master/bip-0013.mediawiki
 //    virtual bool AddCScript(const CScript& redeemScript) =0;
@@ -38,7 +77,7 @@ public:
 //    virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const =0;
 };
 
-typedef map<CKeyID, CKey> KeyMap;
+typedef map<CKeyID, CKeyCombi> KeyMap;
 //typedef map<CScriptID, CScript > ScriptMap;
 
 /** Basic key store, that keeps keys in an address->secret map */
@@ -49,7 +88,7 @@ protected:
   //  ScriptMap mapScripts;
 
 public:
-    bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
+    bool AddKeyCombi(const CKeyID & keyId, const CKeyCombi &keyCombi);
     bool HaveKey(const CKeyID &address) const
     {
         bool result;
@@ -59,7 +98,7 @@ public:
         }
         return result;
     }
-    void GetKeys(set<CKeyID> &setAddress) const
+    void GetKeys(set<CKeyID> &setAddress, bool bFlag=false) const
     {
         setAddress.clear();
         {
@@ -67,24 +106,35 @@ public:
             KeyMap::const_iterator mi = mapKeys.begin();
             while (mi != mapKeys.end())
             {
-                setAddress.insert((*mi).first);
+            	if(!bFlag)   //return all address in wallet
+            		setAddress.insert((*mi).first);
+            	else if(mi->second.IsContainMinerKey() || mi->second.IsContainMainKey())  //only return satisfied mining address
+            		setAddress.insert((*mi).first);
                 mi++;
             }
         }
     }
-    bool GetKey(const CKeyID &address, CKey &keyOut) const
+    bool GetKey(const CKeyID &address, CKey &keyOut, bool IsMine=false) const
     {
         {
             LOCK(cs_KeyStore);
             KeyMap::const_iterator mi = mapKeys.find(address);
             if (mi != mapKeys.end())
             {
-                keyOut = mi->second;
-                return true;
+            	return mi->second.GetCKey(keyOut, IsMine);
             }
         }
         return false;
     }
+    virtual bool GetKeyCombi(const CKeyID & address, CKeyCombi & keyCombiOut) const;
+    bool IsContainMainKey() {
+    	for(auto &item : mapKeys) {
+    		if(item.second.IsContainMainKey())
+    			return true;
+    	}
+    	return false;
+    }
+
 //    virtual bool AddCScript(const CScript& redeemScript);
 //    virtual bool HaveCScript(const CScriptID &hash) const;
 //    virtual bool GetCScript(const CScriptID &hash, CScript& redeemScriptOut) const;

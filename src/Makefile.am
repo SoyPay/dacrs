@@ -52,9 +52,11 @@ DACRS_CORE_H = \
   net.h \
   noui.h \
   protocol.h \
+  random.h   \
   rpc/rpcclient.h \
   rpc/rpcprotocol.h \
   rpc/rpcserver.h \
+  support/cleanse.h \
   serialize.h \
   sync.h \
   threadsafety.h \
@@ -109,7 +111,6 @@ libdacrs_server_a_SOURCES = \
   checkpoints.cpp \
   database.cpp \
   init.cpp \
-  keystore.cpp \
   leveldbwrapper.cpp \
   main.cpp \
   miner.cpp \
@@ -133,7 +134,8 @@ libdacrs_wallet_a_SOURCES = \
   wallet/db.cpp  \
   crypter.cpp \
   rpc/rpcdump.cpp \
-  rpc/rpcwallet.cpp \ 
+  rpc/rpcwallet.cpp \
+  keystore.cpp \ 
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
   rpc/rpctx.cpp \
@@ -148,7 +150,9 @@ libdacrs_common_a_SOURCES = \
   key.cpp \
   netbase.cpp \
   protocol.cpp \
+  random.cpp  \
   rpc/rpcprotocol.cpp \
+  support/cleanse.cpp \
   sync.cpp \
   util.cpp \
   version.cpp \

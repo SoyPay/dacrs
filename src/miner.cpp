@@ -229,6 +229,7 @@ uint256 GetAdjustHash(const uint256 TargetHash, const uint64_t nPos, const int n
 bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setCreateKey, CAccountViewCache &view,
 		CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache) {
 	set<CKeyID> setKeyID;
+	setKeyID.clear();
 
 	set<CAccount, CAccountComparator> setAcctInfo;
 
@@ -237,13 +238,12 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 
 		if((unsigned int)(chainActive.Tip()->nHeight + 1) !=  pBlock->nHeight)
 			return false;
-
-		if (!pwalletMain->GetKeyIds(setKeyID, true)) {
+		pwalletMain->GetKeys(setKeyID, true);
+		if (setKeyID.empty()) {
 			return ERRORMSG("CreatePosTx setKeyID empty");
 		}
 
 		LogPrint("INFO","CreatePosTx block time:%d\n",  pBlock->nTime);
-
 		for(const auto &keyid:setKeyID) {
 			//find CAccount info by keyid
 			if(setCreateKey.size()) {
@@ -688,9 +688,11 @@ void static DacrsMiner(CWallet *pwallet,int targetConter) {
 	RenameThread("Dacrs-miner");
 
 	auto CheckIsHaveMinerKey = [&]() {
-		     LOCK2(cs_main, pwalletMain->cs_wallet);
-			set<CKeyID> dummy;
-			return pwalletMain->GetKeyIds(dummy, true);
+		    LOCK2(cs_main, pwalletMain->cs_wallet);
+			set<CKeyID> setMineKey;
+			setMineKey.clear();
+			pwalletMain->GetKeys(setMineKey, true);
+			return !setMineKey.empty();
 		};
 
 

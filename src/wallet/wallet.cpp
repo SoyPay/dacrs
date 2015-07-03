@@ -8,7 +8,7 @@
 
 #include "base58.h"
 #include "checkpoints.h"
-//#include "coincontrol.h"
+#include "random.h"
 #include "net.h"
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -63,250 +63,157 @@ string CWallet:: defaultFilename("");
 //	}
 //	return false;
 //}
-bool CWallet::AddPubKey(const CPubKey& pk)
-{
-	AssertLockHeld(cs_wallet);
-	CKeyStoreValue tem(pk);
-	if (mKeyPool.count(tem.GetCKeyID()) > 0) {
-		LogPrint("CWallet", "this key is in the CWallet");
-		return false;
-	}
-	mKeyPool[tem.GetCKeyID()] = tem;
-	return CWalletDB(strWalletFile).WriteKeyStoreValue(tem.GetCKeyID(),tem);
-}
+//bool CWallet::AddPubKey(const CPubKey& pk)
+//{
+//	AssertLockHeld(cs_wallet);
+//	CKeyCombi tem(pk);
+//	if (mKeyPool.count(tem.GetCKeyID()) > 0) {
+//		LogPrint("CWallet", "this key is in the CWallet");
+//		return false;
+//	}
+//	mKeyPool[tem.GetCKeyID()] = tem;
+//	return CWalletDB(strWalletFile).WriteKeyStoreValue(tem.GetCKeyID(),tem);
+//}
 
 
-bool CWallet::AddKey(const CKey& secret) {
-	AssertLockHeld(cs_wallet);
+//bool CWallet::AddKey(const CKey& secret) {
+//	AssertLockHeld(cs_wallet);
+//
+//	CKeyStoreValue tem(secret);
+//	CKeyID kid = tem.GetCKeyID();
+//	if (mKeyPool.count(kid) > 0) {
+//		CKey dumy;
+//		if (mKeyPool[kid].getCKey(dumy, false) == true) {
+//			LogPrint("CWallet", "this key is in the CWallet");
+//			return false;
+//		}
+//	}
+//
+//	if (!fFileBacked)
+//	    return true;
+//
+//	if (!IsCrypted()) {
+//		mKeyPool[tem.GetCKeyID()] = tem;
+//		return CWalletDB(strWalletFile).WriteKeyStoreValue(tem.GetCKeyID(),tem);
+//	}
+//	else
+//	{
+//		assert(0);//to add code
+//	}
+//	return true;
+//}
+//bool CWallet::AddKey(const CKeyCombi& keyCombi) {
+//	CPubKey Pk;
+//	if (!keyCombi.GetPubKey(Pk)) {
+//		return false;
+//	}
+//	if (!fFileBacked)
+//	    return true;
+//	if (!IsCrypted()) {
+//		return CWalletDB(strWalletFile).WriteKeyStoreValue(Pk.GetKeyID(),keyCombi);
+//	} else {
+//		assert(0 && "fix me");
+//	}
+//	return false;
+//}
 
-	CKeyStoreValue tem(secret);
-	CKeyID kid = tem.GetCKeyID();
-	if (mKeyPool.count(kid) > 0) {
-		CKey dumy;
-		if (mKeyPool[kid].getCKey(dumy, false) == true) {
-			LogPrint("CWallet", "this key is in the CWallet");
-			return false;
-		}
-	}
+//bool CWallet::AddKey(const CKey& secret,const CKey& minerKey) {
+//	AssertLockHeld(cs_wallet);
+//
+//	CKeyCombi tem(secret,minerKey);
+//	if(mKeyPool.count(tem.GetCKeyID()) > 0)	{
+//		  LogPrint("CWallet","this key is in the CWallet");
+//		 return false;
+//		}
+//
+//	if (!IsCrypted()) {
+//		mKeyPool[tem.GetCKeyID()] = tem;
+//		return CWalletDB(strWalletFile).WriteKeyStoreValue(tem.GetCKeyID(),tem);
+//	}
+//	else
+//	{
+//		assert(0);//to add code
+//	}
+//	return true;
+//}
 
-	if (!IsCrypted()) {
-		mKeyPool[tem.GetCKeyID()] = tem;
-		return CWalletDB(strWalletFile).WriteKeyStoreValue(tem.GetCKeyID(),tem);
-	}
-	else
+
+
+bool CWallet::Unlock(const SecureString& strWalletPassphrase) {
+	CCrypter crypter;
+	CKeyingMaterial vMasterKey;
+
 	{
-		assert(0);//to add code
-	}
-	return true;
-}
-bool CWallet::AddKey(const CKeyStoreValue& storeValue) {
-	CPubKey Pk;
-	if (!storeValue.GetPubKey(Pk)) {
-		return false;
-	}
-	if (!IsCrypted()) {
-		mKeyPool[Pk.GetKeyID()] = storeValue;
-		return CWalletDB(strWalletFile).WriteKeyStoreValue(Pk.GetKeyID(),storeValue);
-	} else {
-		assert(0 && "fix me");
+		LOCK(cs_wallet);
+		for (const auto& pMasterKey : mapMasterKeys) {
+			if (!crypter.SetKeyFromPassphrase(strWalletPassphrase, pMasterKey.second.vchSalt,
+					pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
+				return false;
+			if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey))
+				continue; // try another master key
+			if (CCryptoKeyStore::Unlock(vMasterKey))
+				return true;
+		}
 	}
 	return false;
 }
 
-bool CWallet::AddKey(const CKey& secret,const CKey& minerKey) {
-	AssertLockHeld(cs_wallet);
+bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
+		const SecureString& strNewWalletPassphrase) {
+	bool fWasLocked = IsLocked();
 
-	CKeyStoreValue tem(secret,minerKey);
-	if(mKeyPool.count(tem.GetCKeyID()) > 0)	{
-		  LogPrint("CWallet","this key is in the CWallet");
-		 return false;
-		}
-
-	if (!IsCrypted()) {
-		mKeyPool[tem.GetCKeyID()] = tem;
-		return CWalletDB(strWalletFile).WriteKeyStoreValue(tem.GetCKeyID(),tem);
-	}
-	else
 	{
-		assert(0);//to add code
+		LOCK(cs_wallet);
+		Lock();
+
+		CCrypter crypter;
+		CKeyingMaterial vMasterKey;
+		for (auto& pMasterKey : mapMasterKeys) {
+			if (!crypter.SetKeyFromPassphrase(strOldWalletPassphrase, pMasterKey.second.vchSalt,
+					pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
+				return false;
+			if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey))
+				return false;
+			if (CCryptoKeyStore::Unlock(vMasterKey)) {
+				int64_t nStartTime = GetTimeMillis();
+				crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pMasterKey.second.vchSalt,
+						pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod);
+				pMasterKey.second.nDeriveIterations = pMasterKey.second.nDeriveIterations
+						* (100 / ((double) (GetTimeMillis() - nStartTime)));
+
+				nStartTime = GetTimeMillis();
+				crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pMasterKey.second.vchSalt,
+						pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod);
+				pMasterKey.second.nDeriveIterations = (pMasterKey.second.nDeriveIterations
+						+ pMasterKey.second.nDeriveIterations * 100 / ((double) (GetTimeMillis() - nStartTime))) / 2;
+
+				if (pMasterKey.second.nDeriveIterations < 25000)
+					pMasterKey.second.nDeriveIterations = 25000;
+
+				LogPrint("INFO","Wallet passphrase changed to an nDeriveIterations of %i\n",
+						pMasterKey.second.nDeriveIterations);
+
+				if (!crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pMasterKey.second.vchSalt,
+						pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
+					return false;
+				if (!crypter.Encrypt(vMasterKey, pMasterKey.second.vchCryptedKey))
+					return false;
+				 CWalletDB(strWalletFile).WriteMasterKey(pMasterKey.first, pMasterKey.second);
+				if (fWasLocked)
+					Lock();
+				return true;
+			}
+		}
 	}
-	return true;
+
+	return false;
 }
-
-
-
-//bool CWallet::Unlock(const SecureString& strWalletPassphrase) {
-////	CCrypter crypter;
-////	CKeyingMaterial vMasterKey;
-////
-////	{
-////		LOCK(cs_wallet);
-////		for (const auto& pMasterKey : mapMasterKeys) {
-////			if (!crypter.SetKeyFromPassphrase(strWalletPassphrase, pMasterKey.second.vchSalt,
-////					pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
-////				return false;
-////			if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey))
-////				continue; // try another master key
-////			if (CCryptoKeyStore::Unlock(vMasterKey))
-////				return true;
-////		}
-////	}
-//	return false;
-//}
-//
-//bool CWallet::ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,
-//		const SecureString& strNewWalletPassphrase) {
-////	bool fWasLocked = IsLocked();
-////
-////	{
-////		LOCK(cs_wallet);
-////		Lock();
-////
-////		CCrypter crypter;
-////		CKeyingMaterial vMasterKey;
-////		for (auto& pMasterKey : mapMasterKeys) {
-////			if (!crypter.SetKeyFromPassphrase(strOldWalletPassphrase, pMasterKey.second.vchSalt,
-////					pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
-////				return false;
-////			if (!crypter.Decrypt(pMasterKey.second.vchCryptedKey, vMasterKey))
-////				return false;
-////			if (CCryptoKeyStore::Unlock(vMasterKey)) {
-////				int64_t nStartTime = GetTimeMillis();
-////				crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pMasterKey.second.vchSalt,
-////						pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod);
-////				pMasterKey.second.nDeriveIterations = pMasterKey.second.nDeriveIterations
-////						* (100 / ((double) (GetTimeMillis() - nStartTime)));
-////
-////				nStartTime = GetTimeMillis();
-////				crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pMasterKey.second.vchSalt,
-////						pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod);
-////				pMasterKey.second.nDeriveIterations = (pMasterKey.second.nDeriveIterations
-////						+ pMasterKey.second.nDeriveIterations * 100 / ((double) (GetTimeMillis() - nStartTime))) / 2;
-////
-////				if (pMasterKey.second.nDeriveIterations < 25000)
-////					pMasterKey.second.nDeriveIterations = 25000;
-////
-////				LogPrint("INFO","Wallet passphrase changed to an nDeriveIterations of %i\n",
-////						pMasterKey.second.nDeriveIterations);
-////
-////				if (!crypter.SetKeyFromPassphrase(strNewWalletPassphrase, pMasterKey.second.vchSalt,
-////						pMasterKey.second.nDeriveIterations, pMasterKey.second.nDerivationMethod))
-////					return false;
-////				if (!crypter.Encrypt(vMasterKey, pMasterKey.second.vchCryptedKey))
-////					return false;
-////				db.WriteMasterKey(pMasterKey.first, pMasterKey.second);
-////				if (fWasLocked)
-////					Lock();
-////				return true;
-////			}
-////		}
-////	}
-//
-//	return false;
-//}
 
 void CWallet::SetBestChain(const CBlockLocator& loc) {
 	AssertLockHeld(cs_wallet);
 	bestBlock = loc;
 
 }
-
-
-//
-//bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase) {
-////	if (IsCrypted())
-////		return false;
-////
-////	CKeyingMaterial vMasterKey;
-////	RandAddSeedPerfmon();
-////
-////	vMasterKey.resize(WALLET_CRYPTO_KEY_SIZE);
-////	RAND_bytes(&vMasterKey[0], WALLET_CRYPTO_KEY_SIZE);
-////
-////	CMasterKey kMasterKey;
-////
-////	RandAddSeedPerfmon();
-////	kMasterKey.vchSalt.resize(WALLET_CRYPTO_SALT_SIZE);
-////	RAND_bytes(&kMasterKey.vchSalt[0], WALLET_CRYPTO_SALT_SIZE);
-////
-////	CCrypter crypter;
-////	int64_t nStartTime = GetTimeMillis();
-////	crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, 25000, kMasterKey.nDerivationMethod);
-////	kMasterKey.nDeriveIterations = 2500000 / ((double) (GetTimeMillis() - nStartTime));
-////
-////	nStartTime = GetTimeMillis();
-////	crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, kMasterKey.nDeriveIterations,
-////			kMasterKey.nDerivationMethod);
-////	kMasterKey.nDeriveIterations = (kMasterKey.nDeriveIterations
-////			+ kMasterKey.nDeriveIterations * 100 / ((double) (GetTimeMillis() - nStartTime))) / 2;
-////
-////	if (kMasterKey.nDeriveIterations < 25000)
-////		kMasterKey.nDeriveIterations = 25000;
-////
-////	LogPrint("INFO","Encrypting Wallet with an nDeriveIterations of %i\n", kMasterKey.nDeriveIterations);
-////
-////	if (!crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, kMasterKey.nDeriveIterations,
-////			kMasterKey.nDerivationMethod))
-////		return false;
-////	if (!crypter.Encrypt(vMasterKey, kMasterKey.vchCryptedKey))
-////		return false;
-////
-////	{
-////		LOCK(cs_wallet);
-////		mapMasterKeys[++nMasterKeyMaxID] = kMasterKey;
-////		if (fFileBacked) {
-////			pwalletdbEncryption = new CWalletDB(strWalletFile);
-////			if (!pwalletdbEncryption->TxnBegin())
-////				return false;
-////			pwalletdbEncryption->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
-////		}
-////
-////		if (!EncryptKeys(vMasterKey)) {
-////			if (fFileBacked)
-////				pwalletdbEncryption->TxnAbort();
-////			exit(1); //We now probably have half of our keys encrypted in memory, and half not...die and let the user reload their unencrypted wallet.
-////		}
-////
-////		// Encryption was introduced in version 0.4.0
-//////		SetMinVersion(FEATURE_WALLETCRYPT, pwalletdbEncryption, true);
-////
-////		if (fFileBacked) {
-////			if (!pwalletdbEncryption->TxnCommit())
-////				exit(1); //We now have keys encrypted in memory, but no on disk...die to avoid confusion and let the user reload their unencrypted wallet.
-////
-////			delete pwalletdbEncryption;
-////			pwalletdbEncryption = NULL;
-////		}
-////
-////		Lock();
-////		Unlock(strWalletPassphrase);
-//////		NewKeyPool();
-////		Lock();
-////
-////		// Need to completely rewrite the wallet file; if we don't, bdb might keep
-////		// bits of the unencrypted private key in slack space in the database file.
-////		CDB::Rewrite(strWalletFile);
-////
-////	}
-////	NotifyStatusChanged(this);
-//
-//	return true;
-//}
-
-//int64_t CWallet::IncOrderPosNext(CWalletDB *pwalletdb) {
-//	AssertLockHeld(cs_wallet); // nOrderPosNext
-//	int64_t nRet = nOrderPosNext++;
-//	if (pwalletdb) {
-//		pwalletdb->WriteOrderPosNext(nOrderPosNext);
-//	} else {
-//		db.WriteOrderPosNext(nOrderPosNext);
-//	}
-//	return nRet;
-//}
-
-
-
-
 
 
 void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const CBlock* pblock) {
@@ -319,25 +226,22 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 	LOCK2(cs_main, cs_wallet);
 
 	assert(pTx != NULL || pblock != NULL);
-	bool fIsNeedUpDataRegID = false;
+
 	if(hash == 0 && pTx == NULL) //this is block Sync
 	{
 		uint256 blockhash = pblock->GetHash();
 		auto GenesisBlockProgress = [&]() {
-			unsigned short i = 0;
-			for (const auto &sptx : pblock->vptx) {
-				//confirm the tx GenesisBlock
-				CRewardTransaction* prtx = (CRewardTransaction*) sptx.get();
-				CPubKey pubkey = boost::get<CPubKey>(prtx->account);
-//				CKeyID keyid = pubkey.GetKeyID();
-				CRegID regid(0, i);
-				CAccount account;
-				if (IsMine(sptx.get())) {
-					AddPubKey(pubkey);
-					fIsNeedUpDataRegID = true;
-				}
-				i++;
-			}
+//			unsigned short i = 0;
+//			for (const auto &sptx : pblock->vptx) {
+//				//confirm the tx GenesisBlock
+//				CRewardTransaction* prtx = (CRewardTransaction*) sptx.get();
+//				CPubKey pubkey = boost::get<CPubKey>(prtx->account);
+//				CAccount account;
+//				if (IsMine(sptx.get())) {
+//					AddPubKey(pubkey);
+//				}
+//				i++;
+//			}
 		};
 
 		auto ConnectBlockProgress = [&]() {
@@ -531,7 +435,7 @@ DBErrors CWallet::LoadWallet(bool fFirstRunRet) {
 	  return CWalletDB(strWalletFile).LoadWallet(this);
 
 }
-string CWallet::strWalletFile="";
+
 
 int64_t CWallet::GetRawBalance() const
 {
@@ -539,11 +443,12 @@ int64_t CWallet::GetRawBalance() const
 	CAccountViewCache accView(*pAccountViewTip, true);
 	{
 		LOCK2(cs_main, cs_wallet);
-		for(auto &te :mKeyPool)
+		set<CKeyID> setKeyId;
+		GetKeys(setKeyId);
+		for(auto &keyId :setKeyId)
 		{
-			ret +=accView.GetRawBalance(te.first);
+			ret +=accView.GetRawBalance(keyId);
 		}
-
 	}
 	return ret;
 }
@@ -581,7 +486,98 @@ int64_t CWallet::GetRawBalance() const
 //
 //}
 
+bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
+{
+    if (IsCrypted())
+        return false;
 
+    CKeyingMaterial vMasterKey;
+    RandAddSeedPerfmon();
+
+    vMasterKey.resize(WALLET_CRYPTO_KEY_SIZE);
+    GetRandBytes(&vMasterKey[0], WALLET_CRYPTO_KEY_SIZE);
+
+    CMasterKey kMasterKey;
+    RandAddSeedPerfmon();
+
+    kMasterKey.vchSalt.resize(WALLET_CRYPTO_SALT_SIZE);
+    GetRandBytes(&kMasterKey.vchSalt[0], WALLET_CRYPTO_SALT_SIZE);
+
+    CCrypter crypter;
+    int64_t nStartTime = GetTimeMillis();
+    crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, 25000, kMasterKey.nDerivationMethod);
+    kMasterKey.nDeriveIterations = 2500000 / ((double)(GetTimeMillis() - nStartTime));
+
+    nStartTime = GetTimeMillis();
+    crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, kMasterKey.nDeriveIterations, kMasterKey.nDerivationMethod);
+    kMasterKey.nDeriveIterations = (kMasterKey.nDeriveIterations + kMasterKey.nDeriveIterations * 100 / ((double)(GetTimeMillis() - nStartTime))) / 2;
+
+    if (kMasterKey.nDeriveIterations < 25000)
+        kMasterKey.nDeriveIterations = 25000;
+
+    LogPrint("INFO", "Encrypting Wallet with an nDeriveIterations of %i\n", kMasterKey.nDeriveIterations);
+
+    if (!crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.vchSalt, kMasterKey.nDeriveIterations, kMasterKey.nDerivationMethod))
+        return false;
+    if (!crypter.Encrypt(vMasterKey, kMasterKey.vchCryptedKey))
+        return false;
+
+    {
+        LOCK(cs_wallet);
+        mapMasterKeys[++nMasterKeyMaxID] = kMasterKey;
+        if (fFileBacked)
+        {
+            assert(!pwalletdbEncryption);
+            pwalletdbEncryption = new CWalletDB(strWalletFile);
+            if (!pwalletdbEncryption->TxnBegin()) {
+                delete pwalletdbEncryption;
+                pwalletdbEncryption = NULL;
+                return false;
+            }
+            pwalletdbEncryption->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
+        }
+
+        if (!EncryptKeys(vMasterKey))
+        {
+            if (fFileBacked) {
+                pwalletdbEncryption->TxnAbort();
+                delete pwalletdbEncryption;
+            }
+            // We now probably have half of our keys encrypted in memory, and half not...
+            // die and let the user reload their unencrypted wallet.
+            assert(false);
+        }
+
+        // Encryption was introduced in version 0.4.0
+    //    SetMinVersion(FEATURE_WALLETCRYPT, pwalletdbEncryption, true);
+
+        if (fFileBacked)
+        {
+            if (!pwalletdbEncryption->TxnCommit()) {
+                delete pwalletdbEncryption;
+                // We now have keys encrypted in memory, but not on disk...
+                // die to avoid confusion and let the user reload their unencrypted wallet.
+                assert(false);
+            }
+
+            delete pwalletdbEncryption;
+            pwalletdbEncryption = NULL;
+        }
+
+        Lock();
+        Unlock(strWalletPassphrase);
+//        NewKeyPool();
+        Lock();
+
+        // Need to completely rewrite the wallet file; if we don't, bdb might keep
+        // bits of the unencrypted private key in slack space in the database file.
+        CDB::Rewrite(strWalletFile);
+
+    }
+    NotifyStatusChanged(this);
+
+    return true;
+}
 
 void CWallet::UpdatedTransaction(const uint256 &hashTx) {
 	{
@@ -593,7 +589,7 @@ void CWallet::UpdatedTransaction(const uint256 &hashTx) {
 	}
 }
 
-bool CWallet::StartUp() {
+bool CWallet::StartUp(string &strWalletFile) {
 //	[](int i) { return i+4; };
 	auto InitError = [] (const string &str)
 	{
@@ -666,9 +662,10 @@ bool CWallet::StartUp() {
 
 CWallet* CWallet::getinstance() {
 
-	if(StartUp())
+	string strWalletFile("");
+	if(StartUp(strWalletFile))
 	{
-		return new CWallet(defaultFilename);
+		return new CWallet(strWalletFile);
 	}
 	assert(0);
 	return NULL;
@@ -705,44 +702,42 @@ Object CAccountTx::ToJosnObj(CKeyID const  &key) const {
 
 uint256 CWallet::GetCheckSum() const {
 	CHashWriter ss(SER_GETHASH, CLIENT_VERSION);
-	ss << nWalletVersion << bestBlock << MasterKey << mKeyPool << mapInBlockTx;
+	ss << nWalletVersion << bestBlock << mapMasterKeys  << mapInBlockTx << UnConfirmTx;
 	return ss.GetHash();
 }
 
+//bool CWallet::GetKey(const CUserID& userid, CKey& keyOut,bool IsMiner) const{
+//	AssertLockHeld(cs_wallet);
+//	CAccountViewCache dumy(*pAccountViewTip,true);
+//	CKeyID keyid;
+//	if (dumy.GetKeyId(userid, keyid)) {
+//		if (mKeyPool.count(keyid)) {
+//			auto tep = mKeyPool.find(keyid);
+//			if (tep != mKeyPool.end())
+//				return tep->second.getCKey(keyOut, IsMiner);
+//		}
+//	}
+//	return false;
+//}
 
+//bool CWallet::GetKey(const CKeyID& keyid, CKey& secretKey, bool IsMiner) const {
+//	AssertLockHeld(cs_wallet);
+//	if (mKeyPool.count(keyid)) {
+//		auto tep = mKeyPool.find(keyid);
+//		if(tep != mKeyPool.end())
+//		return tep->second.getCKey(secretKey,IsMiner);
+//	}
+//	return false;
+//}
 
-bool CWallet::GetKey(const CUserID& userid, CKey& keyOut,bool IsMiner) const{
-	AssertLockHeld(cs_wallet);
-	CAccountViewCache dumy(*pAccountViewTip,true);
-	CKeyID keyid;
-	if (dumy.GetKeyId(userid, keyid)) {
-		if (mKeyPool.count(keyid)) {
-			auto tep = mKeyPool.find(keyid);
-			if (tep != mKeyPool.end())
-				return tep->second.getCKey(keyOut, IsMiner);
-		}
-	}
-	return false;
-}
-
-bool CWallet::GetKey(const CKeyID& keyid, CKey& secretKey, bool IsMiner) const {
-	AssertLockHeld(cs_wallet);
-	if (mKeyPool.count(keyid)) {
-		auto tep = mKeyPool.find(keyid);
-		if(tep != mKeyPool.end())
-		return tep->second.getCKey(secretKey,IsMiner);
-	}
-	return false;
-}
-
-bool CWallet::GetPubKey(const CKeyID& keyid, CPubKey& secretKey, bool IsMiner) {
-	AssertLockHeld(cs_wallet);
-	if (mKeyPool.count(keyid)) {
-		return mKeyPool[keyid].GetPubKey(secretKey,IsMiner);
-	}
-	return false;
-
-}
+//bool CWallet::GetPubKey(const CKeyID& keyid, CPubKey& secretKey, bool IsMiner) {
+//	AssertLockHeld(cs_wallet);
+//	if (mKeyPool.count(keyid)) {
+//		return mKeyPool[keyid].GetPubKey(secretKey,IsMiner);
+//	}
+//	return false;
+//
+//}
 
 bool CWallet::IsMine(CBaseTransaction* pTx) const{
 
@@ -753,27 +748,27 @@ bool CWallet::IsMine(CBaseTransaction* pTx) const{
 		return false;
 	}
 	for (auto &keyid : vaddr) {
-		if (count(keyid) > 0) {
+		if (HaveKey(keyid) > 0) {
 			return true;
 		}
 	}
 	return false;
 }
 
-bool CWallet::GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner) const {
-	AssertLockHeld(cs_wallet);
-	setKeyID.clear();
-	CRegID dummy;
-	for (auto const & tem : mKeyPool) {
-		if (IsMiner == false) {
-			setKeyID.insert(tem.first);
-		} else if (pAccountViewTip->GetRegId(CUserID(tem.first),dummy)) {			//only the reged key is useful fo miner
-			if(tem.second.IsContainMinerKey()||tem.second.IsContainMainKey())
-			setKeyID.insert(tem.first);
-		}
-	}
-	return setKeyID.size() > 0;
-}
+//bool CWallet::GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner) const {
+//	AssertLockHeld(cs_wallet);
+//	setKeyID.clear();
+//	CRegID dummy;
+//	for (auto const & tem : mKeyPool) {
+//		if (IsMiner == false) {
+//			setKeyID.insert(tem.first);
+//		} else if (pAccountViewTip->GetRegId(CUserID(tem.first),dummy)) {			//only the reged key is useful fo miner
+//			if(tem.second.IsContainMinerKey()||tem.second.IsContainMainKey())
+//			setKeyID.insert(tem.first);
+//		}
+//	}
+//	return setKeyID.size() > 0;
+//}
 
 bool CWallet::CleanAll() {
 
@@ -790,194 +785,79 @@ bool CWallet::CleanAll() {
 
 	bestBlock.SetNull();
 
-	for_each(mKeyPool.begin(), mKeyPool.end(), [&](std::map<CKeyID, CKeyStoreValue >::reference a) {
-		CWalletDB(strWalletFile).EraseKeyStoreValue(a.first);
-	});
-	mKeyPool.clear();
-	CWalletDB(strWalletFile).EraseMasterKey();
-	MasterKey.SetNull();
+	if(!IsCrypted()) {
+		for_each(mapKeys.begin(), mapKeys.end(), [&](std::map<CKeyID, CKeyCombi> ::reference item) {
+			CWalletDB(strWalletFile).EraseKeyStoreValue(item.first);
+		});
+		mapKeys.clear();
+	}
+	else {
+		return ERRORMSG("wallet encrypt forbid clear data failed!");
+	}
 	return true;
 }
 
-bool CWallet::Sign(const CUserID& Userid, const uint256& hash, vector<unsigned char> &signature,bool IsMiner)const {
+bool CWallet::Sign(const CKeyID& keyId, const uint256& hash, vector<unsigned char> &signature,bool IsMiner)const {
 	CKey key;
-	if(GetKey(Userid, key,IsMiner)){
+	if(GetKey(keyId, key, IsMiner)){
 //		if(IsMiner == true)
 //		{
 //			cout <<"Sign miner key PubKey"<< key.GetPubKey().ToString()<< endl;
 //			cout <<"Sign miner hash"<< hash.ToString()<< endl;
 //			cout <<"Sign user Id" << boost::get<CKeyID>(Userid).ToString() << endl;
 //		}
-	return(key.Sign(hash, signature));
+		return(key.Sign(hash, signature));
 	}
 	return false;
-
 }
 
-Object CKeyStoreValue::ToJsonObj()const {
-	Object reply;
+bool CWallet::AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)
+{
+    if (!CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret))
+        return false;
+    if (!fFileBacked)
+        return true;
+    {
+        LOCK(cs_wallet);
+        if (pwalletdbEncryption)
+            return pwalletdbEncryption->WriteCryptedKey(vchPubKey, vchCryptedSecret);
+        else
+            return CWalletDB(strWalletFile).WriteCryptedKey(vchPubKey, vchCryptedSecret);
+    }
+    return false;
+}
 
-	reply.push_back(Pair("mPKey",mPKey.ToString()));
-	reply.push_back(Pair("address",mPKey.GetKeyID().ToAddress()));
-
-	reply.push_back(Pair("mCkey",mCkey.ToString()));
-	if(mCkey.IsValid())
-	reply.push_back(Pair("mCkeyBase58",CDacrsSecret(mCkey).ToString()));
-
-
-	reply.push_back(Pair("mMinerCkey",mMinerCkey.ToString()));
-	if(mMinerCkey.IsValid()){
-	reply.push_back(Pair("mMinerCkeyBase58",CDacrsSecret(mMinerCkey).ToString()));
-	reply.push_back(Pair("mMinerPk",mMinerPk.ToString()));
+bool CWallet::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)
+{
+	return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret);
+}
+bool CWallet::AddKey(const CKey& secret,const CKey& minerKey)
+{
+	CKeyCombi keyCombi(secret, minerKey);
+	return AddKey(keyCombi);
+}
+bool CWallet::AddKey(const CKeyCombi& keyCombi)
+{
+	CCryptoKeyStore::AddKeyCombi(keyCombi.GetCKeyID(), keyCombi);
+	if (!fFileBacked)
+	      return true;
+	if (!IsCrypted()) {
+	     return CWalletDB(strWalletFile).WriteKeyStoreValue(keyCombi.GetCKeyID(), keyCombi);
 	}
-	reply.push_back(Pair("nCreationTime",nCreationTime));
-    return std::move(reply);
-}
-bool CKeyStoreValue::UnSersailFromJson(const Object& obj){
-	try {
-		Object reply;
-
-		mPKey= ::ParseHex(find_value(obj, "mPKey").get_str());
-		auto const &tem1 = ::ParseHex(find_value(obj, "mCkey").get_str());
-		mCkey.Set(tem1.begin(),tem1.end(),true);
-		auto const &tem2=::ParseHex(find_value(obj, "mMinerCkey").get_str());
-		mMinerCkey.Set(tem2.begin(),tem2.end(),true);
-		mMinerPk= ::ParseHex(find_value(obj, "mMinerPk").get_str());
-		if (mMinerCkey.IsValid()) {
-			assert(mMinerCkey.GetPubKey() == mMinerPk);
-		}
-		if (mCkey.IsValid()) {
-			assert(mCkey.GetPubKey() == mPKey);
-		}
-		nCreationTime =find_value(obj, "nCreationTime").get_int64();
-
-	} catch (...) {
-		ERRORMSG("UnSersailFromJson Failed !");
-		return false;
-	}
-
-    return true;
-}
-
-bool CKeyStoreValue::SelfCheck()const {
-  if(mCkey.IsValid())
-  {
-	  if(mCkey.GetPubKey() != mPKey)
-	  {
-		  return false;
-	  }
-  }
-  if(mMinerCkey.IsValid())
-  {
-	  if(mMinerCkey.GetPubKey() != mMinerPk)
-	  {
-		  return false;
-	  }
-  }
-  return true;
-}
-
-bool CKeyStoreValue::IsCrypted() {
-	return mCkey.size() == 0;
-
-}
-
-bool CKeyStoreValue::CleanAll() {
-	mCkey.Clear();
-	mPKey= CPubKey();
-	mMinerCkey.Clear();
-    mMinerPk = CPubKey();
-	nCreationTime = 0 ;
-    return true;
-}
-
-bool CKeyStoreValue::cleanCkey(){
-		return mCkey.Clear();
-  }
-
-CKeyStoreValue::CKeyStoreValue(const CKey& inkey) {
-	assert(inkey.IsValid());
-	 CleanAll();
-	mCkey = inkey ;
-	nCreationTime = GetTime();
-	mPKey = mCkey.GetPubKey();
-
-}
-
-CKeyStoreValue::CKeyStoreValue(const CKey& inkey, const CKey& minerKey) {
-	assert(inkey.IsValid());
-	assert(minerKey.IsValid());
-	 CleanAll();
-	mMinerCkey = minerKey;
-	mCkey = inkey ;
-	nCreationTime = GetTime();
-	mPKey = mCkey.GetPubKey();
-	mMinerPk = mMinerCkey.GetPubKey();
-}
-
-CKeyStoreValue::CKeyStoreValue(const CPubKey& pubkey) {
-	assert(mCkey.IsValid() == false && pubkey.IsFullyValid()); //the ckey mustbe unvalid
-	CleanAll();
-	nCreationTime = GetTime();
-	mPKey = pubkey;
-}
-
-bool CKeyStoreValue::GetPubKey(CPubKey& mOutKey, bool IsMiner) const {
-	if(IsMiner == true){
-		if(mMinerCkey.IsValid()){
-			mOutKey = mMinerCkey.GetPubKey();
-			return true;
-		}
-		return false;
-	}
-
-//	assert(mCkey.IsValid());
-	mOutKey =mPKey;
-//	assert(mCkey.GetPubKey() == mPKey);
-	return  true;
-}
-
-string CKeyStoreValue::ToString() const{
-			return strprintf("CPubKey:%s CKey:%s mMinerCkey:%s CreationTime:%d",mPKey.ToString(),mCkey.ToString(),mMinerCkey.ToString(),nCreationTime);
-}
-
-bool CKeyStoreValue::getCKey(CKey& keyOut, bool IsMiner) const {
-	if(IsMiner == true && mMinerCkey.IsValid()) {
-		keyOut = mMinerCkey;
-	} else {
-		keyOut = mCkey;
-	}
-	return keyOut.IsValid();
-
-}
-
-bool CKeyStoreValue::CreateANewKey() {
-	CleanAll();
-	mCkey.MakeNewKey();
-	mPKey = mCkey.GetPubKey();
-	nCreationTime = GetTime();
 	return true;
 }
 
-CKeyStoreValue::CKeyStoreValue() {
-		 CleanAll();
-}
-
-int64_t CKeyStoreValue::getBirthDay() const {
-			return nCreationTime;
-}
-
-
-
-CKeyID CKeyStoreValue::GetCKeyID() const {
-	return (mPKey.GetKeyID());
+bool CWallet::AddKey(const CKey& key)
+{
+	CKeyCombi keyCombi(key);
+	return AddKey(keyCombi);
 }
 
 
 bool CWallet::IsReadyForCoolMiner(const CAccountViewCache& view) const {
-	CRegID dummy;
-	for (auto const &te : mKeyPool) {
-		if (te.second.IsContainMinerKey()&&view.GetRegId(te.first,dummy)) {
+	CRegID regId;
+	for (auto const &item : mapKeys) {
+		if (item.second.IsContainMinerKey()&&view.GetRegId(item.first,regId)) {
 			return true;
 		}
 	}
@@ -985,35 +865,25 @@ bool CWallet::IsReadyForCoolMiner(const CAccountViewCache& view) const {
 }
 
 bool CWallet::ClearAllCkeyForCoolMiner() {
-	for (auto &te : mKeyPool) {
-			if (te.second.cleanCkey()) {
-				CWalletDB(strWalletFile).WriteKeyStoreValue(te.first,te.second);
-			}
+	for (auto &item : mapKeys) {
+		if (item.second.CleanMainKey()) {
+			CWalletDB(strWalletFile).WriteKeyStoreValue(item.first, item.second);
 		}
-		return true;
-}
-
-map<CKeyID, CKeyStoreValue> CWallet::GetKeyPool() const {
-	AssertLockHeld(cs_wallet);
-	return mKeyPool;
-}
-
-bool CWallet::IsCrypted() const {
-	return false;
-}
-
-bool CWallet::count(const CKeyID& address) const {
-	AssertLockHeld(cs_wallet);
-	return mKeyPool.count(address) > 0;
+	}
+	return true;
 }
 
 CWallet::CWallet(string strWalletFileIn)  {
 	SetNull();
 	strWalletFile = strWalletFileIn;
+	fFileBacked = true;
 }
 
 void CWallet::SetNull() {
 	nWalletVersion = 0;
+	fFileBacked = false;
+	nMasterKeyMaxID = 0;
+	pwalletdbEncryption = NULL;
 }
 
 bool CWallet::LoadMinVersion(int nVersion) {
@@ -1028,11 +898,5 @@ int CWallet::GetVersion() {
 	return nWalletVersion;
 }
 
-bool CKeyStoreValue::IsContainMinerKey() const {
-	return mMinerCkey.IsValid();
-}
-bool CKeyStoreValue::IsContainMainKey() const {
-	return mCkey.IsValid();
-}
 
 

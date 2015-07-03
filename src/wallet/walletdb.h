@@ -27,7 +27,7 @@ class uint160;
 class uint256;
 class CRegID;
 class CAccountTx;
-class CKeyStoreValue;
+class CKeyCombi;
 
 /** Error statuses for the wallet database */
 enum DBErrors
@@ -82,17 +82,19 @@ private:
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
 public:
-    bool WriteKeyStoreValue(const CKeyID &keyId, const CKeyStoreValue& KeyStoreValue);
+    bool WriteCryptedKey(const CPubKey& pubkey, const std::vector<unsigned char>& vchCryptedSecret);
+    bool WriteKeyStoreValue(const CKeyID &keyId, const CKeyCombi& KeyStoreValue);
     bool EraseKeyStoreValue(const CKeyID &keyId);
     bool WriteBlockTx(const uint256 &hash, const CAccountTx& atx);
     bool EraseBlockTx(const uint256& hash);
     bool WriteUnComFirmedTx(const uint256 &hash, const std::shared_ptr<CBaseTransaction> &tx);
     bool EraseUnComFirmedTx(const uint256& hash);
-    bool WriteMasterKey(const CMasterKey& kMasterKey);
-    bool EraseMasterKey();
+    bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
+    bool EraseMasterKey(unsigned int nID);
     bool WriteVersion(const int version) ;
     bool WriteMinVersion(const int version) ;
     int GetMinVersion(void);
+
 
 
     int GetVersion(void);

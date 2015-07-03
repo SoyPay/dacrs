@@ -35,11 +35,18 @@ string HelpRequiringPassphrase()
 
 void EnsureWalletIsUnlocked()
 {
-    if (pwalletMain->IsCrypted())
+    if (pwalletMain->IsLocked())
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 }
 
-
+Value islocked(const Array& params,  bool fHelp)
+{
+	if(fHelp)
+		return true;
+	Object obj;
+	obj.push_back(Pair("islock", pwalletMain->IsLocked()));
+	return obj;
+}
 
 
 Value getnewaddress(const Array& params, bool fHelp)
@@ -53,10 +60,6 @@ Value getnewaddress(const Array& params, bool fHelp)
             + HelpExampleCli("getnewaddress", "")
             + HelpExampleCli("getnewaddress", "true")
         );
-
-    // Parse the account first so we don't generate a key if there's an error
-    string str;
-
 
     CKey  mCkey;
     mCkey.MakeNewKey();
@@ -196,8 +199,10 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 
 		nAmount = AmountToRawValue(params[1]);
 		set<CKeyID> sKeyid;
-		if (!pwalletMain->GetKeyIds(sKeyid)) //get addrs
-				{
+		sKeyid.clear();
+		pwalletMain->GetKeys(sKeyid);
+		if (sKeyid.empty()) //get addrs
+		{
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No Key In wallet \n");
 		}
 		nFee = AmountToRawValue(params[2]);
@@ -413,8 +418,10 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
 		nAmount = AmountToRawValue(params[1]);
 		set<CKeyID> sKeyid;
-		if (!pwalletMain->GetKeyIds(sKeyid)) //get addrs
-				{
+		sKeyid.clear();
+		pwalletMain->GetKeys(sKeyid); //get addrs
+		if(sKeyid.empty())
+		{
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No Key In wallet \n");
 		}
 		for (auto &te : sKeyid) {
@@ -433,7 +440,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 	CRegID revreg;
 	CUserID rev;
 
-	if (!pAccountViewTip->GetRegId(CUserID(sendKeyId),sendreg)) {
+	if (!pAccountViewTip->GetRegId(CUserID(sendKeyId), sendreg)) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 	}
 
@@ -446,7 +453,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
 	CTransaction tx(sendreg, rev, SysCfg().GetTxFee(), nAmount, chainActive.Height());
 
-	if (!pwalletMain->Sign(sendreg,tx.SignatureHash(), tx.signature)) {
+	if (!pwalletMain->Sign(sendKeyId, tx.SignatureHash(), tx.signature)) {
 		throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
 	}
 
@@ -491,11 +498,6 @@ static void LockWallet(CWallet* pWallet)
 
 Value walletpassphrase(const Array& params, bool fHelp)
 {
-
-	  //!@todo  todo work list
-	    throw JSONRPCError(RPC_INVALID_PARAMETER, "todo work list ");
-
-
     if (pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
         throw runtime_error(
             "walletpassphrase \"passphrase\" timeout\n"
@@ -516,6 +518,8 @@ Value walletpassphrase(const Array& params, bool fHelp)
             + HelpExampleRpc("walletpassphrase", "\"my pass phrase\", 60")
         );
 
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
     if (fHelp)
         return true;
     if (!pwalletMain->IsCrypted())
@@ -527,19 +531,16 @@ Value walletpassphrase(const Array& params, bool fHelp)
     // TODO: get rid of this .c_str() by implementing SecureString::operator=(string)
     // Alternately, find a way to make params[0] mlock()'d to begin with.
     strWalletPass = params[0].get_str().c_str();
-				 LogPrint("TODO"," ");
 	//assert(0);
     if (strWalletPass.length() > 0)
     {
-//        if (!pwalletMain->Unlock(strWalletPass))
-//            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
+        if (!pwalletMain->Unlock(strWalletPass))
+            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
     }
     else
         throw runtime_error(
             "walletpassphrase <passphrase> <timeout>\n"
             "Stores the wallet decryption key in memory for <timeout> seconds.");
-
-//    pwalletMain->TopUpKeyPool();
 
     int64_t nSleepTime = params[1].get_int64();
     LOCK(cs_nWalletUnlockTime);
@@ -633,54 +634,54 @@ Value walletlock(const Array& params, bool fHelp)
 
 Value encryptwallet(const Array& params, bool fHelp)
 {
-//    if (!pwalletMain->IsCrypted() && (fHelp || params.size() != 1))
-//        throw runtime_error(
-//            "encryptwallet \"passphrase\"\n"
-//            "\nEncrypts the wallet with 'passphrase'. This is for first time encryption.\n"
-//            "After this, any calls that interact with private keys such as sending or signing \n"
-//            "will require the passphrase to be set prior the making these calls.\n"
-//            "Use the walletpassphrase call for this, and then walletlock call.\n"
-//            "If the wallet is already encrypted, use the walletpassphrasechange call.\n"
-//            "Note that this will shutdown the server.\n"
-//            "\nArguments:\n"
-//            "1. \"passphrase\"    (string) The pass phrase to encrypt the wallet with. It must be at least 1 character, but should be long.\n"
-//            "\nExamples:\n"
-//            "\nEncrypt you wallet\n"
-//            + HelpExampleCli("encryptwallet", "\"my pass phrase\"") +
-//            "\nNow set the passphrase to use the wallet, such as for signing or sending Dacrs\n"
-//            + HelpExampleCli("walletpassphrase", "\"my pass phrase\"") +
-//            "\nNow we can so something like sign\n"
-//            + HelpExampleCli("signmessage", "\"Dacrsaddress\" \"test message\"") +
-//            "\nNow lock the wallet again by removing the passphrase\n"
-//            + HelpExampleCli("walletlock", "") +
-//            "\nAs a json rpc call\n"
-//            + HelpExampleRpc("encryptwallet", "\"my pass phrase\"")
-//        );
-//
-//    if (fHelp)
-//        return true;
-//    if (pwalletMain->IsCrypted())
-//        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an encrypted wallet, but encryptwallet was called.");
-//
-//    // TODO: get rid of this .c_str() by implementing SecureString::operator=(string)
-//    // Alternately, find a way to make params[0] mlock()'d to begin with.
-//    SecureString strWalletPass;
-//    strWalletPass.reserve(100);
-//    strWalletPass = params[0].get_str().c_str();
-//
-//    if (strWalletPass.length() < 1)
-//        throw runtime_error(
-//            "encryptwallet <passphrase>\n"
-//            "Encrypts the wallet with <passphrase>.");
-//
-//    if (!pwalletMain->EncryptWallet(strWalletPass))
-//        throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Failed to encrypt the wallet.");
-//
-//     BDB seems to have a bad habit of writing old data into
-//     slack space in .dat files; that is bad if the old data is
-//     unencrypted private keys. So:
-//    StartShutdown();
-//    return "wallet encrypted; Dacrs server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.";
+    if (!pwalletMain->IsCrypted() && (fHelp || params.size() != 1))
+        throw runtime_error(
+            "encryptwallet \"passphrase\"\n"
+            "\nEncrypts the wallet with 'passphrase'. This is for first time encryption.\n"
+            "After this, any calls that interact with private keys such as sending or signing \n"
+            "will require the passphrase to be set prior the making these calls.\n"
+            "Use the walletpassphrase call for this, and then walletlock call.\n"
+            "If the wallet is already encrypted, use the walletpassphrasechange call.\n"
+            "Note that this will shutdown the server.\n"
+            "\nArguments:\n"
+            "1. \"passphrase\"    (string) The pass phrase to encrypt the wallet with. It must be at least 1 character, but should be long.\n"
+            "\nExamples:\n"
+            "\nEncrypt you wallet\n"
+            + HelpExampleCli("encryptwallet", "\"my pass phrase\"") +
+            "\nNow set the passphrase to use the wallet, such as for signing or sending Dacrs\n"
+            + HelpExampleCli("walletpassphrase", "\"my pass phrase\"") +
+            "\nNow we can so something like sign\n"
+            + HelpExampleCli("signmessage", "\"Dacrsaddress\" \"test message\"") +
+            "\nNow lock the wallet again by removing the passphrase\n"
+            + HelpExampleCli("walletlock", "") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("encryptwallet", "\"my pass phrase\"")
+        );
+
+    if (fHelp)
+        return true;
+    if (pwalletMain->IsCrypted())
+        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an encrypted wallet, but encryptwallet was called.");
+
+    // TODO: get rid of this .c_str() by implementing SecureString::operator=(string)
+    // Alternately, find a way to make params[0] mlock()'d to begin with.
+    SecureString strWalletPass;
+    strWalletPass.reserve(100);
+    strWalletPass = params[0].get_str().c_str();
+
+    if (strWalletPass.length() < 1)
+        throw runtime_error(
+            "encryptwallet <passphrase>\n"
+            "Encrypts the wallet with <passphrase>.");
+
+    if (!pwalletMain->EncryptWallet(strWalletPass))
+        throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Failed to encrypt the wallet.");
+
+    //BDB seems to have a bad habit of writing old data into
+    //slack space in .dat files; that is bad if the old data is
+    //unencrypted private keys. So:
+    StartShutdown();
+    return "wallet encrypted; Dacrs server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.";
 }
 
 Value settxfee(const Array& params, bool fHelp)

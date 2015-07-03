@@ -8,7 +8,7 @@
 #include "core.h"
 #include "crypter.h"
 #include "key.h"
-//#include "keystore.h"
+#include "keystore.h"
 #include "main.h"
 #include "ui_interface.h"
 #include "util.h"
@@ -33,80 +33,45 @@ static const int nHighTransactionFeeWarning = 0.01 * COIN;
 
 class CAccountingEntry;
 
-class CKeyStoreValue {
-private:
-	CPubKey mPKey;
-	CKey  mCkey;
-	CPubKey  mMinerPk; //only used for miner
-	CKey  mMinerCkey; //only used for miner
-	int64_t nCreationTime;
-public:
-	CKeyStoreValue();
-	CKeyStoreValue(const CPubKey &pubkey);
-	CKeyStoreValue(CKey const &inkey,CKey const &minerKey);
-	CKeyStoreValue(CKey const &inkey);
-
-	bool SelfCheck() const;
-	string ToString() const;
-
-	Object ToJsonObj()const;
-	bool UnSersailFromJson(const Object&);
-	int64_t getBirthDay()const;
-	bool getCKey(CKey& keyOut,bool IsMiner = false) const ;
-	bool CreateANewKey();
-	bool GetPubKey(CPubKey &mOutKey,bool IsMiner = false) const;
-    bool cleanCkey();
-    bool CleanAll();
-	bool IsCrypted() ;
-	bool IsContainMinerKey()const;
-	bool IsContainMainKey()const;
-	CKeyID GetCKeyID() const ;
-
-	IMPLEMENT_SERIALIZE
-	(
-			READWRITE(mPKey);
-			READWRITE(mCkey);
-			READWRITE(mMinerPk);
-			READWRITE(mMinerCkey);
-			READWRITE(nCreationTime);
-	)
-
-};
-
 /** A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
  * and provides the ability to create new transactions.
  */
-class CWallet : public CWalletInterface{
+class CWallet : public CCryptoKeyStore, public CWalletInterface{
 private:
 	CWallet();
 
-	static bool StartUp();
+	CWalletDB *pwalletdbEncryption;
 
-	CMasterKey MasterKey;
+	static bool StartUp(string &strWalletFile);
+
+//	CMasterKey MasterKey;
 	int nWalletVersion;
 	CBlockLocator  bestBlock;
 	uint256 GetCheckSum()const;
 public:
-//	CWalletDB db;
-	map<CKeyID, CKeyStoreValue> mKeyPool;
+//	map<CKeyID, CKeyStoreValue> mKeyPool;
 	CPubKey vchDefaultKey ;
-	static string strWalletFile;
+
+	bool fFileBacked;
+	string strWalletFile;
+
 	map<uint256, CAccountTx> mapInBlockTx;
 	map<uint256, std::shared_ptr<CBaseTransaction> > UnConfirmTx;
 	mutable CCriticalSection cs_wallet;
-	map<CKeyID, CKeyStoreValue> GetKeyPool() const;
+	//map<CKeyID, CKeyCombi> GetKeyPool() const;
 
+	typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
+	MasterKeyMap mapMasterKeys;
+	unsigned int nMasterKeyMaxID;
 public:
 
 	IMPLEMENT_SERIALIZE
 	(
 			LOCK(cs_wallet);
 			{
-
 				READWRITE(nWalletVersion);
 				READWRITE(bestBlock);
-				READWRITE(MasterKey);
-				READWRITE(mKeyPool);
+				READWRITE(mapMasterKeys);
 				READWRITE(mapInBlockTx);
 				READWRITE(UnConfirmTx);
 				uint256 sun(0);
@@ -124,27 +89,32 @@ public:
 	virtual ~CWallet(){};
 	int64_t GetRawBalance()const;
 
-    bool Sign(const CUserID &keyID,const uint256 &hash,vector<unsigned char> &signature,bool IsMiner=false)const;
+    bool Sign(const CKeyID &keyID,const uint256 &hash,vector<unsigned char> &signature,bool IsMiner=false) const;
+    //! Adds an encrypted key to the store, and saves it to disk.
+    bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+    bool LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+
+    //! Adds a key to the store, without saving it to disk (used by LoadWallet)
+    bool LoadKeyCombi(const CKeyID & keyId, const CKeyCombi& keycombi) { return CBasicKeyStore::AddKeyCombi(keyId, keycombi);}
+    // Adds a key to the store, and saves it to disk.
     bool AddKey(const CKey& secret,const CKey& minerKey);
-    bool AddKey(const CKeyStoreValue& store);
-	bool AddPubKey(const CPubKey& pk);
+    bool AddKey(const CKeyCombi& store);
+    bool AddKey(const CKey& key);
+//	bool AddPubKey(const CPubKey& pk);
 
-	bool IsCrypted() const;
-	bool GetPubKey(const CKeyID &address, CPubKey& pubKey,bool IsMiner = false);
-	bool GetKey(const CKeyID &keyid, CKey& secretKey, bool IsMiner = false) const ;
-	bool GetKey(const CUserID &userid, CKey& secretKey,bool IsMiner = false) const ;
+//	bool GetPubKey(const CKeyID &address, CPubKey& pubKey,bool IsMiner = false);
+//	bool GetKey(const CKeyID &keyid, CKey& secretKey, bool IsMiner = false) const ;
+//	bool GetKey(const CUserID &userid, CKey& secretKey,bool IsMiner = false) const ;
 
-	bool GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner = false)const ;
+//	bool GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner = false)const ;
 	bool CleanAll(); //just for unit test
-    bool count(const CKeyID &keyid) const;
     bool IsReadyForCoolMiner(const CAccountViewCache& view)const;
     bool ClearAllCkeyForCoolMiner();
 
 	CWallet(string strWalletFileIn);
 	void SetNull() ;
 
-	// Adds a key to the store, and saves it to disk.
-	bool AddKey(const CKey& key);
+
 
 	bool LoadMinVersion(int nVersion);
 
@@ -162,7 +132,11 @@ public:
 
 	void UpdatedTransaction(const uint256 &hashTx);
 
+	bool EncryptWallet(const SecureString& strWalletPassphrase);
 
+	bool Unlock(const SecureString& strWalletPassphrase);
+
+	bool ChangeWalletPassphrase(const SecureString& strOldWalletPassphrase,	const SecureString& strNewWalletPassphrase);
 
 	// get the current wallet format (the oldest client version guaranteed to understand this wallet)
 	int GetVersion() ;

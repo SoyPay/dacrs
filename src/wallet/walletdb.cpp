@@ -50,18 +50,38 @@ bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,str
 			}
 
 		} else if (strType == "keystore") {
-			CKeyStoreValue vKeyStore;
+			CKeyCombi keyCombi;
 			CKeyID cKeyid;
 			ssKey >> cKeyid;
-			ssValue >> vKeyStore;
-			if (vKeyStore.SelfCheck() != true || cKeyid != vKeyStore.GetCKeyID()) {
-				strErr = "Error reading wallet database: keystore corrupt";
-				return false;
+			ssValue >> keyCombi;
+			if(keyCombi.IsContainMainKey()) {
+				if (cKeyid != keyCombi.GetCKeyID()) {
+					strErr = "Error reading wallet database: keystore corrupt";
+					return false;
+				}
 			}
 			if (pwallet != NULL)
-				pwallet->mKeyPool[cKeyid] = std::move(vKeyStore);
+				pwallet->LoadKeyCombi(cKeyid, keyCombi);
 
-		} else if (strType == "blocktx") {
+		} else if (strType == "ckey") {
+			CPubKey pubKey;
+			std::vector<unsigned char> vchCryptedSecret;
+			ssKey >> pubKey;
+			ssValue >> vchCryptedSecret;
+			if(pwallet != NULL)
+				pwallet->LoadCryptedKey(pubKey, vchCryptedSecret);
+
+		} else if(strType == "mkey") {
+			unsigned int ID;
+			CMasterKey kMasterKey;
+			ssKey >> ID;
+			ssValue >> kMasterKey;
+			if(pwallet != NULL) {
+				pwallet->nMasterKeyMaxID = ID;
+				pwallet->mapMasterKeys.insert(make_pair(ID, kMasterKey));
+			}
+		}
+		else if (strType == "blocktx") {
 			uint256 hash;
 			CAccountTx atx;
 			CKeyID cKeyid;
@@ -73,6 +93,7 @@ bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,str
 			if (pwallet != NULL)
 				ssValue >> pwallet->vchDefaultKey;
 		} else if (strType != "version" && "minversion" != strType) {
+			ERRORMSG("load wallet error! read invalid key type:%s\n", strType);
 			assert(0);
 		}
 	} catch (...) {
@@ -175,7 +196,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 	    if ( GetMinVersion()< CLIENT_VERSION) // Update
 	    	WriteVersion( GetMinVersion());
 
-	if (pwallet->mKeyPool.size() == 0) {
+	if (pwallet->IsEmpty()) {
 		CKey mCkey;
 		mCkey.MakeNewKey();
 		if (!pwallet->AddKey(mCkey)) {
@@ -184,61 +205,6 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 	}
 
 	  return result;
-
-
-
-//    pwallet->vchDefaultKey = CPubKey();
-////    bool fNoncriticalErrors = false;
-//    DBErrors result = DB_LOAD_OK;
-////
-////    try {
-////        LOCK(pwallet->cs_wallet);
-////    	leveldb::Iterator *pcursor = db.NewIterator();
-////    	// Load mapBlockIndex
-////       	pcursor->SeekToFirst();
-////    	while (pcursor->Valid()) {
-////    		boost::this_thread::interruption_point();
-////    		try {
-////    			leveldb::Slice slKey = pcursor->key();
-////    			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
-////    			leveldb::Slice slValue = pcursor->value();
-////    			CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-////      		     // Try to be tolerant of single corrupt records:
-////       		      string strType, strErr;
-////    			if(!ReadKeyValue(pwallet,ssKey,ssValue,strType,strErr))
-////    				{
-////    				   if (strType == "keystore")
-////    					 	delete pcursor;
-////    				    return  DB_CORRUPT;
-////    				};
-////    			pcursor->Next();
-////    			}
-////    	 catch (std::exception &e) {
-////    			delete pcursor;
-////    			 ERRORMSG("%s : Deserialize or I/O error - %s", __func__, e.what());
-////    			 return DB_CORRUPT;
-////    		}
-////    	}
-////    	delete pcursor;
-////
-////    }
-////    catch (boost::thread_interrupted) {
-////        throw;
-////    }
-////    catch (...) {
-////        result = DB_CORRUPT;
-////    }
-////    /// if the wallet not address ,create a new address
-////    if(pwallet->mKeyPool.size() == 0){
-////        CKey  mCkey;
-////        mCkey.MakeNewKey();
-////         if (!pwallet->AddKey(mCkey)) {
-////       		throw runtime_error("add key failed ");
-////       	}
-////    }
-////
-//   return result;
-
 }
 
 
@@ -337,10 +303,11 @@ bool CWalletDB::EraseBlockTx(const uint256 &hash)
 	return Erase(make_pair(string("blocktx"), hash));
 }
 
-bool CWalletDB::WriteKeyStoreValue(const CKeyID &keyId, const CKeyStoreValue& KeyStoreValue)
+bool CWalletDB::WriteKeyStoreValue(const CKeyID &keyId, const CKeyCombi& KeyCombi)
 {
 	nWalletDBUpdated++;
-	return Write(make_pair(string("keystore"), keyId), KeyStoreValue,true);
+//	cout << "keystore:" << "Keyid=" << keyId.ToAddress() << " KeyCombi:" << KeyCombi.ToString() << endl;
+	return Write(make_pair(string("keystore"), keyId), KeyCombi, true);
 }
 
 bool CWalletDB::EraseKeyStoreValue(const CKeyID& keyId) {
@@ -348,7 +315,21 @@ bool CWalletDB::EraseKeyStoreValue(const CKeyID& keyId) {
 	return Erase(make_pair(string("keystore"), keyId));
 }
 
-
+bool CWalletDB::WriteCryptedKey(const CPubKey& pubkey, const std::vector<unsigned char>& vchCryptedSecret)
+{
+	 if (!Write(std::make_pair(std::string("ckey"), pubkey), vchCryptedSecret, true))
+	        return false;
+	 CKeyCombi keyCombi;
+	 CKeyID keyId = pubkey.GetKeyID();
+	 if(Read(make_pair(string("keystore"), keyId), keyCombi))
+	 {
+		 keyCombi.CleanMainKey();
+		 if(!Write(make_pair(string("keystore"), keyId), keyCombi, true)) {
+			 return false;
+		 }
+	 }
+	 return true;
+}
 
 
 bool CWalletDB::WriteUnComFirmedTx(const uint256& hash, const std::shared_ptr<CBaseTransaction>& tx) {
@@ -379,16 +360,15 @@ int CWalletDB::GetMinVersion(void) {
 	return Read(string("minversion"),verion);
 }
 
-
-bool CWalletDB::WriteMasterKey(const CMasterKey& kMasterKey)
+bool CWalletDB::WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey)
 {
     nWalletDBUpdated++;
-    return Write(string("mkey"), kMasterKey, true);
+    return Write(std::make_pair(std::string("mkey"), nID), kMasterKey, true);
 }
 
-bool CWalletDB::EraseMasterKey() {
+bool CWalletDB::EraseMasterKey(unsigned int nID) {
     nWalletDBUpdated++;
-    return Erase(string("mkey"));
+    return Erase(std::make_pair(std::string("mkey"), nID));
 }
 
 CWalletDB::CWalletDB(const string& strFilename):CDB((GetDataDir() / strFilename).string(),"cr+")

@@ -75,9 +75,9 @@ Value dropprivkey(const Array& params, bool fHelp){
 		throw runtime_error("this cmd have no params\n");
 
 	EnsureWalletIsUnlocked();
-//	if (!pwalletMain->IsReadyForCoolMiner(*pAccountViewTip)) {
-//		throw runtime_error("there is no cool miner key  or miner key in on regist to blockchain\n");
-//	}
+	if (!pwalletMain->IsReadyForCoolMiner(*pAccountViewTip)) {
+		throw runtime_error("there is no cool miner key  or miner key in on regist to blockchain\n");
+	}
 
 	pwalletMain->ClearAllCkeyForCoolMiner();
 	Object reply2;
@@ -156,6 +156,7 @@ Value importwallet(const Array& params, bool fHelp)
             + HelpExampleRpc("importwallet", "\"test\"")
         );
 
+    LOCK2(cs_main, pwalletMain->cs_wallet);
 
     EnsureWalletIsUnlocked();
 
@@ -164,10 +165,10 @@ Value importwallet(const Array& params, bool fHelp)
     if (!file.is_open())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 
-//    int64_t nTimeBegin = chainActive.Tip()->nTime;
+//  int64_t nTimeBegin = chainActive.Tip()->nTime;
 
-//    bool fGood = true;
-//    int64_t nFilesize = max((int64_t)1, (int64_t)file.tellg());
+//  bool fGood = true;
+//  int64_t nFilesize = max((int64_t)1, (int64_t)file.tellg());
     file.seekg(0, file.beg);
     int inmsizeport = 0;
     pwalletMain->ShowProgress(_("Importing..."), 0); // show progress dialog in GUI
@@ -177,12 +178,12 @@ Value importwallet(const Array& params, bool fHelp)
     	const Value & keyobj = find_value(reply.get_obj(),"key");
     	const Array & keyarry = keyobj.get_array();
     	inmsizeport = keyarry.size();
-    	for(auto const &te :keyarry)
-    	{
-    		CKeyStoreValue tep;
-    		tep.UnSersailFromJson(te.get_obj());
-    		pwalletMain->AddKey(tep);
-    	}
+//    	for(auto const &te :keyarry)
+//    	{
+//    		CKeyStoreValue tep;
+//    		tep.UnSersailFromJson(te.get_obj());
+//    		pwalletMain->AddKey(tep);
+//    	}
     }
     file.close();
     pwalletMain->ShowProgress("", 100); // hide progress dialog in GUI
@@ -261,17 +262,29 @@ Value dumpwallet(const Array& params, bool fHelp) {
 	reply.push_back(Pair("Best block index hight ", chainActive.Height()));
 	reply.push_back(Pair("Best block hash ", chainActive.Tip()->GetBlockHash().ToString()));
 
-	map<CKeyID, CKeyStoreValue> tepmKeyPool = pwalletMain->GetKeyPool();
-//	int index = 0;
+	set<CKeyID> setKeyId;
+	pwalletMain->GetKeys(setKeyId);
 	Array key;
-	for (auto &te : tepmKeyPool) {
-		key.push_back(te.second.ToJsonObj());
+	for(auto & keyId : setKeyId)
+	{
+		CKeyCombi keyCombi;
+		pwalletMain->GetKeyCombi(keyId, keyCombi);
+		key.push_back(keyCombi.ToJsonObj());
 	}
 	reply.push_back(Pair("key",key));
 	file <<  write_string(Value(reply), true);
 	file.close();
+//	map<CKeyID, CKeyStoreValue> tepmKeyPool = pwalletMain->GetKeyPool();
+////	int index = 0;
+//	Array key;
+//	for (auto &te : tepmKeyPool) {
+//		key.push_back(te.second.ToJsonObj());
+//	}
+//	reply.push_back(Pair("key",key));
+//	file <<  write_string(Value(reply), true);
+//	file.close();
 	Object reply2;
 	reply2.push_back(Pair("info","dump ok"));
-	reply2.push_back(Pair("key size",(int)tepmKeyPool.size()));
+	reply2.push_back(Pair("key size",(int)setKeyId.size()));
 	return reply2;
 }

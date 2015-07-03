@@ -450,7 +450,7 @@ Value registerapptx(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registerapptx Error: Account is not registered.");
 		}
 
-		if (!pwalletMain->count(keyid)) {
+		if (!pwalletMain->HaveKey(keyid)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "in registerapptx Error: WALLET file is not correct.");
 		}
 
@@ -505,36 +505,31 @@ Value listaddr(const Array& params, bool fHelp) {
 		throw runtime_error(msg);
 	}
 	Array retArry;
-//	uint64_t totalCoin(0);
 	assert(pwalletMain != NULL);
 	{
-		map<CKeyID, CKeyStoreValue> pool = pwalletMain->GetKeyPool();
-		set<CKeyID> setKeyID;
-
-		if (pool.size() == 0) {
+		set<CKeyID> setKeyId;
+		pwalletMain->GetKeys(setKeyId);
+		if (setKeyId.size() == 0) {
 			return retArry;
 		}
 		CAccountViewCache accView(*pAccountViewTip, true);
 
-		for (const auto &tem : pool) {
-			//find CAccount info by keyid
-			CUserID userId = tem.first;
-			if("ddEaChh3846J6xLkeyNaXwo6tMMZdHUTx6" == tem.first.ToAddress()) // regid 0-0 invalid address
-				continue;
-			CAccount Lambaacc;
-			accView.GetAccount(userId, Lambaacc);
-
-//			totalCoin += Lambaacc.GetRawBalance();
+		for (const auto &keyId : setKeyId) {
+			CUserID userId(keyId);
+			CAccount acctInfo;
+			accView.GetAccount(userId, acctInfo);
+			CKeyCombi keyCombi;
+			pwalletMain->GetKeyCombi(keyId, keyCombi);
 
 			Object obj;
-			obj.push_back(Pair("addr", tem.first.ToAddress()));
-			obj.push_back(Pair("balance", (double)Lambaacc.GetRawBalance()/ (double) COIN));
-			obj.push_back(Pair("haveminerkey", tem.second.IsContainMinerKey()));
-			obj.push_back(Pair("regid",Lambaacc.regID.ToString()));
+			obj.push_back(Pair("addr", keyId.ToAddress()));
+			obj.push_back(Pair("balance", (double)acctInfo.GetRawBalance()/ (double) COIN));
+			obj.push_back(Pair("haveminerkey", keyCombi.IsContainMinerKey()));
+			obj.push_back(Pair("regid",acctInfo.regID.ToString()));
 			retArry.push_back(obj);
 		}
 	}
-//	cout << "totalCoin:" << totalCoin << endl;
+
 	return retArry;
 }
 

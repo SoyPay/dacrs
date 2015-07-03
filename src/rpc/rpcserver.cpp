@@ -302,12 +302,13 @@ static const CRPCCommand vRPCCommands[] =
     { "getbalance",             &getbalance,             false,     false,      true },
     { "sendtoaddressraw",       &sendtoaddressraw,       false,     false,      true },
     { "registaccounttxraw",     &registaccounttxraw,     true,      false,      true },
-    { "submittx",      			&submittx,       	 	 true,      false,      false },
+    { "submittx",      			&submittx,       	 	 true,      false,      false},
     { "createcontracttxraw",    &createcontracttxraw,    true,      false,      true },
     { "registerscripttxraw",    &registerscripttxraw,    true,      false,      true },
     { "sigstr",    				&sigstr,    			 true,      false,      true },
-    { "getappaccinfo",    		&getappaccinfo,    			 true,      false,      true },
-    { "getappkeyvalue",    		&getappkeyvalue,    			 true,      false,      true },
+    { "getappaccinfo",    		&getappaccinfo,    		 true,      false,      true },
+    { "getappkeyvalue",    		&getappkeyvalue,    	 true,      false,      true },
+    { "islocked",               &islocked,               true ,     false,      true },
 
 //for test code
 	{ "gettxoperationlog",      &gettxoperationlog,      false,     false,      false },

@@ -126,7 +126,7 @@ private:
 
     CKeyingMaterial vMasterKey;
 
-    // if fUseCrypto is true, mapKeys must be empty
+    // if fUseCrypto is true, mainKey in mapKeys must be empty
     // if fUseCrypto is false, vMasterKey must be empty
     bool fUseCrypto;
 
@@ -162,8 +162,14 @@ public:
 
     bool Lock();
 
+    bool IsEmpty() {
+    	return mapCryptedKeys.empty() && mapKeys.empty();
+    }
     virtual bool AddCryptedKey(const CPubKey &vchPubKey, const vector<unsigned char> &vchCryptedSecret);
-    bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
+    bool AddKeyCombi(const CKeyID & keyId, const CKeyCombi &keyCombi);
+    bool AddKey(const CKey & key);
+    bool AddKey(const CKey& secret,const CKey& minerKey);
+//  bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
     bool HaveKey(const CKeyID &address) const
     {
         {
@@ -174,24 +180,32 @@ public:
         }
         return false;
     }
-    bool GetKey(const CKeyID &address, CKey& keyOut) const;
-    bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
-    void GetKeys(set<CKeyID> &setAddress) const
+    bool GetKey(const CKeyID &address, CKey& keyOut, bool IsMine=false) const;
+    bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut, bool IsMine=false) const;
+    void GetKeys(set<CKeyID> &setAddress, bool bFlag=false) const
     {
         if (!IsCrypted())
         {
-            CBasicKeyStore::GetKeys(setAddress);
+            CBasicKeyStore::GetKeys(setAddress, bFlag);
             return;
         }
         setAddress.clear();
         CryptedKeyMap::const_iterator mi = mapCryptedKeys.begin();
         while (mi != mapCryptedKeys.end())
         {
-            setAddress.insert((*mi).first);
+        	if(!bFlag)
+        		setAddress.insert((*mi).first);
+        	else {
+        		CKeyCombi keyCombi;
+        		if(GetKeyCombi((*mi).first, keyCombi)) {
+        			if(keyCombi.IsContainMinerKey() || keyCombi.IsContainMainKey())  //only return satisfied mining address
+        			    setAddress.insert((*mi).first);
+        		}
+        	}
             mi++;
         }
     }
-
+    bool GetKeyCombi(const CKeyID & address, CKeyCombi & keyCombiOut) const;
     /* Wallet status (encrypted, locked) changed.
      * Note: Called without locks held.
      */

@@ -155,8 +155,21 @@ Value setgenerate(const Array& params, bool fHelp)
 
     static bool fGenerate = false;
 
-    set<CKeyID>dmuy;
-    if(!pwalletMain->GetKeyIds(dmuy,true))
+    set<CKeyID> setKeyId;
+    setKeyId.clear();
+    pwalletMain->GetKeys(setKeyId, true);
+
+    bool bSetEmpty(true);
+    for(auto & keyId : setKeyId) {
+      	CUserID userId(keyId);
+      	CAccount acctInfo;
+      	if (pAccountViewTip->GetAccount(userId, acctInfo)) {
+      		bSetEmpty = false;
+      		break;
+      	}
+    }
+
+    if(bSetEmpty)
     	throw JSONRPCError(RPC_INVALID_PARAMS, "no key for mining");
 
     if (params.size() > 0)
