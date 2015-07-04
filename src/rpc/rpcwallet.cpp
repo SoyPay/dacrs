@@ -546,8 +546,9 @@ Value walletpassphrase(const Array& params, bool fHelp)
     LOCK(cs_nWalletUnlockTime);
     nWalletUnlockTime = GetTime() + nSleepTime;
     RPCRunLater("lockwallet", boost::bind(LockWallet, pwalletMain), nSleepTime);
-
-    return Value::null;
+    Object retObj;
+    retObj.push_back(Pair("passphrase", true));
+    return retObj;
 }
 
 
@@ -654,6 +655,7 @@ Value encryptwallet(const Array& params, bool fHelp)
             "\nAs a json rpc call\n"
             + HelpExampleRpc("encryptwallet", "\"my pass phrase\"")
         );
+    LOCK2(cs_main, pwalletMain->cs_wallet);
 
     if (fHelp)
         return true;
