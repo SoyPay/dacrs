@@ -72,7 +72,9 @@ bool fDaemon = false;
 string strMiscWarning;
 bool fNoListen = false;
 volatile bool fReopenDebugLog = false;
+
 CClientUIInterface uiInterface;
+CClientUIInterface * pUIInterface = &uiInterface;
 
 // Init OpenSSL library multithreading support
 static CCriticalSection** ppmutexOpenSSL;

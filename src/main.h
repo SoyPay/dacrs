@@ -14,7 +14,6 @@
 #include "chainparams.h"
 #include "core.h"
 #include "net.h"
-//#include "script.h"
 #include "sync.h"
 #include "txmempool.h"
 #include "uint256.h"
@@ -34,6 +33,7 @@ class CBlockIndex;
 class CBloomFilter;
 class CInv;
 class CContractScript;
+
 
 /** the total blocks of burn fee need */
 static const unsigned int DEFAULT_BURN_BLOCK_SIZE = 50;

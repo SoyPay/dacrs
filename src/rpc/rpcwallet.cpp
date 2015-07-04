@@ -60,6 +60,7 @@ Value getnewaddress(const Array& params, bool fHelp)
             + HelpExampleCli("getnewaddress", "")
             + HelpExampleCli("getnewaddress", "true")
         );
+	EnsureWalletIsUnlocked();
 
     CKey  mCkey;
     mCkey.MakeNewKey();
@@ -71,7 +72,6 @@ Value getnewaddress(const Array& params, bool fHelp)
 		Minter.MakeNewKey();
 		IsForMiner = params[0].get_bool();
 	}
-
 
     CPubKey newKey = mCkey.GetPubKey();
 
@@ -596,36 +596,35 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
 
 Value walletlock(const Array& params, bool fHelp)
 {
-	  //!@todo  todo work list
-	    throw JSONRPCError(RPC_INVALID_PARAMETER, "todo work list ");
-//    if (pwalletMain->IsCrypted() && (fHelp || params.size() != 0))
-//        throw runtime_error(
-//            "walletlock\n"
-//            "\nRemoves the wallet encryption key from memory, locking the wallet.\n"
-//            "After calling this method, you will need to call walletpassphrase again\n"
-//            "before being able to call any methods which require the wallet to be unlocked.\n"
-//            "\nExamples:\n"
-//            "\nSet the passphrase for 2 minutes to perform a transaction\n"
-//            + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 120") +
-//            "\nPerform a send (requires passphrase set)\n"
-//            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 1.0") +
-//            "\nClear the passphrase since we are done before 2 minutes is up\n"
-//            + HelpExampleCli("walletlock", "") +
-//            "\nAs json rpc call\n"
-//            + HelpExampleRpc("walletlock", "")
-//        );
+    if (pwalletMain->IsCrypted() && (fHelp || params.size() != 0))
+        throw runtime_error(
+            "walletlock\n"
+            "\nRemoves the wallet encryption key from memory, locking the wallet.\n"
+            "After calling this method, you will need to call walletpassphrase again\n"
+            "before being able to call any methods which require the wallet to be unlocked.\n"
+            "\nExamples:\n"
+            "\nSet the passphrase for 2 minutes to perform a transaction\n"
+            + HelpExampleCli("walletpassphrase", "\"my pass phrase\" 120") +
+            "\nPerform a send (requires passphrase set)\n"
+            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 1.0") +
+            "\nClear the passphrase since we are done before 2 minutes is up\n"
+            + HelpExampleCli("walletlock", "") +
+            "\nAs json rpc call\n"
+            + HelpExampleRpc("walletlock", "")
+        );
 
-//    if (fHelp)
-//        return true;
-//    if (!pwalletMain->IsCrypted())
-//        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletlock was called.");
-//
-//    {
-//        LOCK(cs_nWalletUnlockTime);
-//        pwalletMain->Lock();
-//        nWalletUnlockTime = 0;
-//    }
-
+    if (fHelp)
+        return true;
+    if (!pwalletMain->IsCrypted())
+        throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletlock was called.");
+    {
+        LOCK(cs_nWalletUnlockTime);
+        pwalletMain->Lock();
+        nWalletUnlockTime = 0;
+    }
+    Object retObj;
+    retObj.push_back(Pair("walletlock", true));
+    return retObj;
     return Value::null;
 }
 
@@ -680,6 +679,13 @@ Value encryptwallet(const Array& params, bool fHelp)
     //slack space in .dat files; that is bad if the old data is
     //unencrypted private keys. So:
     StartShutdown();
+
+//    string defaultFilename = SysCfg().GetArg("-wallet", "wallet.dat");
+//    string strFileCopy = defaultFilename + ".rewrite";
+//
+//    boost::filesystem::remove(GetDataDir() / defaultFilename);
+//    boost::filesystem::rename(GetDataDir() / strFileCopy, GetDataDir() / defaultFilename);
+
     Object retObj;
     retObj.push_back(Pair("encrypt", true));
     return retObj;

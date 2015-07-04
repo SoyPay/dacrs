@@ -8,6 +8,7 @@
 
 #include "key.h"
 #include "sync.h"
+#include "wallet/walletdb.h"
 #include <set>
 #include "json/json_spirit_value.h"
 #include "json/json_spirit_writer_template.h"
@@ -18,6 +19,8 @@ using namespace json_spirit;
 
 class CKeyCombi {
 private:
+	CPubKey mMainPKey;
+	CPubKey mMinerPk;
 	CKey  mMainCkey;
 	CKey  mMinerCkey; //only used for miner
 	int64_t nCreationTime;
@@ -45,7 +48,13 @@ public:
 
 	IMPLEMENT_SERIALIZE
 	(
+		if(0 == nVersion) {
+			READWRITE(mMainPKey);
+		}
 		READWRITE(mMainCkey);
+		if(0 == nVersion) {
+			READWRITE(mMinerPk);
+		}
 		READWRITE(mMinerCkey);
 		READWRITE(nCreationTime);
 	)

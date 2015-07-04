@@ -28,7 +28,7 @@ using namespace boost;
 
 
 
-bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,string& strType, string& strErr)
+bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,string& strType, string& strErr, int MinVersion)
 {
 	try {
 		// Unserialize
@@ -50,6 +50,10 @@ bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,str
 			}
 
 		} else if (strType == "keystore") {
+			if(-1 != MinVersion) {
+				ssKey.SetVersion(MinVersion);
+				ssValue.SetVersion(MinVersion);
+			}
 			CKeyCombi keyCombi;
 			CKeyID cKeyid;
 			ssKey >> cKeyid;
@@ -141,7 +145,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 
 	            // Try to be tolerant of single corrupt records:
 	            string strType, strErr;
-	            if (!ReadKeyValue(pwallet, ssKey, ssValue, strType, strErr))
+	            if (!ReadKeyValue(pwallet, ssKey, ssValue, strType, strErr, GetMinVersion()))
 	            {
 	                // losing keys is considered a catastrophic error, anything else
 	                // we assume the user can live with:
@@ -263,8 +267,7 @@ bool CWalletDB::Recover(CDBEnv& dbenv, string filename, bool fOnlyKeys)
             CDataStream ssKey(row.first, SER_DISK, CLIENT_VERSION);
             CDataStream ssValue(row.second, SER_DISK, CLIENT_VERSION);
             string strType, strErr;
-            bool fReadOK = ReadKeyValue(NULL, ssKey, ssValue,
-                                         strType, strErr);
+            bool fReadOK = ReadKeyValue(NULL, ssKey, ssValue, strType, strErr, -1);
             if (strType != "keystore")
                 continue;
             if (!fReadOK)
@@ -317,6 +320,7 @@ bool CWalletDB::EraseKeyStoreValue(const CKeyID& keyId) {
 
 bool CWalletDB::WriteCryptedKey(const CPubKey& pubkey, const std::vector<unsigned char>& vchCryptedSecret)
 {
+	nWalletDBUpdated++;
 	 if (!Write(std::make_pair(std::string("ckey"), pubkey), vchCryptedSecret, true))
 	        return false;
 	 CKeyCombi keyCombi;
@@ -345,7 +349,7 @@ bool CWalletDB::EraseUnComFirmedTx(const uint256& hash) {
 
 bool CWalletDB::WriteVersion(const int version) {
 	nWalletDBUpdated++;
-	return Erase(make_pair(string("version"), version));
+	return Write(string("version"), version);
 }
 int CWalletDB::GetVersion(void) {
 	int verion;
@@ -353,7 +357,7 @@ int CWalletDB::GetVersion(void) {
 }
 bool CWalletDB::WriteMinVersion(const int version) {
 	nWalletDBUpdated++;
-	return Erase(make_pair(string("minversion"), version));
+	return Write(string("minversion"), version);
 }
 int CWalletDB::GetMinVersion(void) {
 	int verion;
@@ -371,10 +375,6 @@ bool CWalletDB::EraseMasterKey(unsigned int nID) {
     return Erase(std::make_pair(std::string("mkey"), nID));
 }
 
-CWalletDB::CWalletDB(const string& strFilename):CDB((GetDataDir() / strFilename).string(),"cr+")
-{
-	nWalletDBUpdated = 0 ;
-}
 unsigned int CWalletDB::nWalletDBUpdated = 0;
 
 //extern CDBEnv bitdb;

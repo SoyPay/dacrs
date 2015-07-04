@@ -432,7 +432,7 @@ std::tuple<bool, string> CWallet::CommitTransaction(CBaseTransaction *pTx) {
 
 DBErrors CWallet::LoadWallet(bool fFirstRunRet) {
 //	  fFirstRunRet = false;
-	  return CWalletDB(strWalletFile).LoadWallet(this);
+	  return CWalletDB(strWalletFile, "cr+").LoadWallet(this);
 
 }
 
@@ -549,7 +549,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         }
 
         // Encryption was introduced in version 0.4.0
-    //    SetMinVersion(FEATURE_WALLETCRYPT, pwalletdbEncryption, true);
+        SetMinVersion(FEATURE_WALLETCRYPT, pwalletdbEncryption);
 
         if (fFileBacked)
         {
@@ -577,6 +577,25 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
     return true;
 }
+
+bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn)
+{
+    LOCK(cs_wallet); // nWalletVersion
+    if (nWalletVersion >= nVersion)
+        return true;
+
+    nWalletVersion = nVersion;
+    if (fFileBacked)
+    {
+        CWalletDB* pwalletdb = pwalletdbIn ? pwalletdbIn : new CWalletDB(strWalletFile);
+        pwalletdb->WriteMinVersion(nWalletVersion);
+        if (!pwalletdbIn)
+            delete pwalletdb;
+    }
+
+    return true;
+}
+
 
 void CWallet::UpdatedTransaction(const uint256 &hashTx) {
 	{

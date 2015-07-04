@@ -26,7 +26,12 @@
 #include <memory>
 
 
+enum WalletFeature
+{
+    FEATURE_BASE = 0, // initialize version
 
+    FEATURE_WALLETCRYPT = 10000, // wallet encryption
+};
 
 // -paytxfee will warn if called with a higher fee than this amount (in satoshis) per KB
 static const int nHighTransactionFeeWarning = 0.01 * COIN;
@@ -63,6 +68,8 @@ public:
 	typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
 	MasterKeyMap mapMasterKeys;
 	unsigned int nMasterKeyMaxID;
+
+	static string defaultFilename;
 public:
 
 	IMPLEMENT_SERIALIZE
@@ -141,7 +148,8 @@ public:
 	// get the current wallet format (the oldest client version guaranteed to understand this wallet)
 	int GetVersion() ;
 
-	static string defaultFilename ;
+	bool SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn);
+
 
 	static CWallet* getinstance();
 

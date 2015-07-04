@@ -169,8 +169,8 @@ CDBEnv::VerifyResult CDBEnv::Verify(std::string strFile, bool (*recoverFunc)(CDB
         return RECOVER_FAIL;
 
     // Try to recover:
-    bool fRecovered = (*recoverFunc)(*this, strFile);
-    return (fRecovered ? RECOVER_OK : RECOVER_FAIL);
+  bool fRecovered = (*recoverFunc)(*this, strFile);
+  return (fRecovered ? RECOVER_OK : RECOVER_FAIL);
 }
 
 bool CDBEnv::Salvage(std::string strFile, bool fAggressive, std::vector<CDBEnv::KeyValPair>& vResult)
@@ -410,14 +410,14 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                         delete pdbCopy;
                     }
                 }
-                if (fSuccess) {
-                    Db dbA(bitdb.dbenv, 0);
-                    if (dbA.remove(strFile.c_str(), NULL, 0))
-                        fSuccess = false;
-                    Db dbB(bitdb.dbenv, 0);
-                    if (dbB.rename(strFileRes.c_str(), NULL, strFile.c_str(), 0))
-                        fSuccess = false;
-                }
+				if (fSuccess) {
+					Db dbA(bitdb.dbenv, 0);
+					if (dbA.remove(strFile.c_str(), NULL, 0))
+						fSuccess = false;
+					Db dbB(bitdb.dbenv, 0);
+					if (dbB.rename(strFileRes.c_str(), NULL, strFile.c_str(), 0))
+						fSuccess = false;
+				}
                 if (!fSuccess)
                     LogPrint("CDB","CDB::Rewrite: Failed to rewrite database file %s\n", strFileRes);
                 return fSuccess;

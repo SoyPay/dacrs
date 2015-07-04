@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "ui_interface.h"
 
 #ifndef WIN32
 #include <sys/resource.h>
@@ -92,6 +93,7 @@ extern bool fServer;
 extern string strMiscWarning;
 extern bool fNoListen;
 extern volatile bool fReopenDebugLog;
+extern CClientUIInterface * pUIInterface;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();

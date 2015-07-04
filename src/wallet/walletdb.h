@@ -77,7 +77,9 @@ class CWalletDB : public CDB
 {
 
 public:
-    CWalletDB(const string& strFilename);
+	CWalletDB(const std::string& strFilename, const char* pszMode = "r+", bool fFlushOnClose = true) : CDB(strFilename, pszMode, fFlushOnClose)
+	{
+	}
 private:
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
@@ -101,9 +103,9 @@ public:
 
 
     DBErrors LoadWallet(CWallet* pwallet);
-   static unsigned int nWalletDBUpdated ;
-   static bool Recover(CDBEnv& dbenv, string filename, bool fOnlyKeys);
-   static bool Recover(CDBEnv& dbenv, string filename);
+    static unsigned int nWalletDBUpdated ;
+    static bool Recover(CDBEnv& dbenv, string filename, bool fOnlyKeys);
+    static bool Recover(CDBEnv& dbenv, string filename);
 };
 
 bool BackupWallet(const CWallet& wallet, const string& strDest);
