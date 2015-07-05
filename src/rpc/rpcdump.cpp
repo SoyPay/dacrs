@@ -274,15 +274,6 @@ Value dumpwallet(const Array& params, bool fHelp) {
 	reply.push_back(Pair("key",key));
 	file <<  write_string(Value(reply), true);
 	file.close();
-//	map<CKeyID, CKeyStoreValue> tepmKeyPool = pwalletMain->GetKeyPool();
-////	int index = 0;
-//	Array key;
-//	for (auto &te : tepmKeyPool) {
-//		key.push_back(te.second.ToJsonObj());
-//	}
-//	reply.push_back(Pair("key",key));
-//	file <<  write_string(Value(reply), true);
-//	file.close();
 	Object reply2;
 	reply2.push_back(Pair("info","dump ok"));
 	reply2.push_back(Pair("key size",(int)setKeyId.size()));

@@ -14,9 +14,10 @@ Object CKeyCombi::ToJsonObj()const {
 	Object reply;
 	reply.push_back(Pair("address",mMainCkey.GetPubKey().GetKeyID().ToAddress()));
 	reply.push_back(Pair("mCkey",mMainCkey.ToString()));
-	if(mMainCkey.IsValid())
+	if(mMainCkey.IsValid()) {
 		reply.push_back(Pair("mCkeyBase58",CDacrsSecret(mMainCkey).ToString()));
-
+		reply.push_back(Pair("mMainPk",mMainCkey.GetPubKey().ToString()));
+	}
 
 	reply.push_back(Pair("mMinerCkey",mMinerCkey.ToString()));
 	if(mMinerCkey.IsValid()){
