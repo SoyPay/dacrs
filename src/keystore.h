@@ -20,15 +20,15 @@ using namespace json_spirit;
 class CKeyCombi {
 private:
 	CPubKey mMainPKey;
-	CPubKey mMinerPk;
+	CPubKey mMinerPKey;
 	CKey  mMainCkey;
 	CKey  mMinerCkey; //only used for miner
 	int64_t nCreationTime;
 
 public:
 	CKeyCombi();
-	CKeyCombi(CKey const &inkey,CKey const &minerKey);
-	CKeyCombi(CKey const &inkey);
+	CKeyCombi(CKey const &inkey,CKey const &minerKey, int nVersion);
+	CKeyCombi(CKey const &inkey, int nVersion);
 
 	string ToString() const;
 
@@ -53,7 +53,7 @@ public:
 		}
 		READWRITE(mMainCkey);
 		if(0 == nVersion) {
-			READWRITE(mMinerPk);
+			READWRITE(mMinerPKey);
 		}
 		READWRITE(mMinerCkey);
 		READWRITE(nCreationTime);

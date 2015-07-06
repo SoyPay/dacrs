@@ -8,12 +8,14 @@
 #include "uint256.h"
 
 #include <stdint.h>
+#include "syncdatadb.h"
 
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 
 namespace Checkpoints
 {
     typedef map<int, uint256> MapCheckpoints;
+    CCriticalSection cs_checkPoint;
 
     // How many times we expect transactions after the last checkpoint to
     // be slower. This number is a compromise, as it can't be accurate for
@@ -23,7 +25,7 @@ namespace Checkpoints
     static const double SIGCHECK_VERIFICATION_FACTOR = 5.0;
 
     struct CCheckpointData {
-        const MapCheckpoints *mapCheckpoints;
+        MapCheckpoints *mapCheckpoints;
         int64_t nTimeLastCheckpoint;
         int64_t nTransactionsLastCheckpoint;
         double fTransactionsPerDay;
@@ -157,4 +159,35 @@ namespace Checkpoints
         }
         return NULL;
     }
+
+	bool LoadCheckpoint() {
+		LOCK(cs_checkPoint);
+		SyncData::CSyncDataDb db;
+		return db.LoadCheckPoint(*Checkpoints().mapCheckpoints);
+	}
+
+	bool GetCheckpointByHeight(const int nHeight, std::vector<int> &vCheckpoints) {
+		LOCK(cs_checkPoint);
+		MapCheckpoints& checkpoints = *Checkpoints().mapCheckpoints;
+		std::map<int, uint256>::iterator iterMap = checkpoints.upper_bound(nHeight);
+		while (iterMap != checkpoints.end()) {
+			vCheckpoints.push_back(iterMap->first);
+			++iterMap;
+		}
+		return !vCheckpoints.empty();
+	}
+
+	bool AddCheckpoint(int nHeight, uint256 hash) {
+		LOCK(cs_checkPoint);
+		MapCheckpoints& checkpoints = *Checkpoints().mapCheckpoints;
+		checkpoints.insert(checkpoints.end(), make_pair(nHeight, hash));
+		return true;
+	}
+
+	void GetCheckpointMap(std::map<int, uint256> &mapCheckpoints) {
+		LOCK(cs_checkPoint);
+		const MapCheckpoints& checkpoints = *Checkpoints().mapCheckpoints;
+		mapCheckpoints = checkpoints;
+	}
+
 }

@@ -201,19 +201,6 @@ bool CCryptoKeyStore::AddKeyCombi(const CKeyID & keyId, const CKeyCombi &keyComb
 	return true;
 }
 
-bool CCryptoKeyStore::AddKey(const CKey &key)
-{
-	CKeyCombi keyCombi(key);
-	return AddKeyCombi(key.GetPubKey().GetKeyID(), keyCombi);
-}
-
-bool CCryptoKeyStore::AddKey(const CKey& mainKey,const CKey& minerKey)
-{
-	CKeyCombi keyCombi(mainKey, minerKey);
-	return AddKeyCombi(mainKey.GetPubKey().GetKeyID(), keyCombi);
-}
-
-
 bool CCryptoKeyStore::AddCryptedKey(const CPubKey &vchPubKey, const vector<unsigned char> &vchCryptedSecret)
 {
     {

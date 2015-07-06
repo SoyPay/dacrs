@@ -309,7 +309,7 @@ public:
 	int RPCPort() const {
 		return nRPCPort;
 	}
-
+	const string& GetPublicKey() const {return publicKey;}
 	/******************************paras**************************************/
 	static bool IntialParams(int argc, const char* const argv[]);
 	static int64_t GetArg(const string& strArg, int64_t nDefault);
@@ -359,6 +359,7 @@ protected:
 	vector<unsigned char> vAlertPubKey;
 	int nDefaultPort;
 	int nRPCPort;
+	string publicKey;
 	CBigNum bnProofOfStakeLimit;
 	int nSubsidyHalvingInterval;
 	string strDataDir;

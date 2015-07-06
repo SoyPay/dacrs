@@ -154,6 +154,8 @@ libdacrs_common_a_SOURCES = \
   rpc/rpcprotocol.cpp \
   support/cleanse.cpp \
   sync.cpp \
+  syncdata.cpp \
+  syncdatadb.cpp \
   util.cpp \
   version.cpp \
   json/json_spirit_reader.cpp \

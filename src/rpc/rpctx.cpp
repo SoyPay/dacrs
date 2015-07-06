@@ -15,8 +15,10 @@
 #include "util.h"
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
-
+#include "syncdatadb.h"
+#include "checkpoints.h"
 #include "miner.h"
+#include "main.h"
 #include "vm/script.h"
 #include <stdint.h>
 
@@ -1707,6 +1709,7 @@ Value getappaccinfo(const Array& params, bool fHelp) {
 	tem.get()->AutoMergeFreezeToFree(chainActive.Tip()->nHeight);
 	return Value(tem.get()->toJSON());
 }
+
 Value gethash(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
 		//	string msg = "gethash nrequired \"stri""
@@ -1726,6 +1729,7 @@ Value gethash(const Array& params, bool fHelp) {
 	return obj;
 
 }
+
 Value getappkeyvalue(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 2) {
 		throw runtime_error("");
@@ -1787,4 +1791,102 @@ Value getappkeyvalue(const Array& params, bool fHelp) {
 	}
 
 	return retArry;
+}
+
+Value sendcheckpoint(const Array& params, bool fHelp)
+{
+	if(fHelp || params.size() != 2)
+	{
+		throw runtime_error(
+				 "sendcheckpoint \n"
+				 "\nArguments:\n"
+				 "1. \"hight\"         (int64, required) the hight of the check point \n"
+				 "2. \"password\"      (string, required) the password to get the private key\n" );
+	}
+	boost::int32_t intTemp = params[0].get_int();
+	std::string password = params[1].get_str();
+	std::vector<unsigned char> tep;
+//	lotto::DspayKeyFile.ReadPrivateKey(0, password, tep);
+	if (!tep.empty() && intTemp > 0) //&& intTemp <= chainActive.Height())
+	{
+		SyncData::CSyncData data;
+		SyncData::CSyncCheckPoint point;
+		CDataStream sstream(SER_NETWORK, PROTOCOL_VERSION);
+		point.m_height = intTemp;
+		CBlock block;
+//		ReadObjFromFile("blockfile.data",0,block);
+//		LogPrintf("sendcheckpoint");
+//		block.print();
+		point.m_hashCheckpoint = block.GetHash();//chainActive[intTemp]->GetBlockHash();
+		LogPrint("CHECKPOINT","send hash = %s",block.GetHash().ToString());
+		sstream << point;
+		if (data.Sign(tep, std::vector<unsigned char>(sstream.begin(), sstream.end()))
+			&& data.CheckSignature(SysCfg().GetPublicKey()))
+		{
+			SyncData::CSyncDataDb db;
+			std::vector<SyncData::CSyncData> vdata;
+			db.WriteCheckpoint(intTemp, data);
+			Checkpoints::AddCheckpoint(point.m_height, point.m_hashCheckpoint);
+			CheckActiveChain(point.m_height, point.m_hashCheckpoint);
+			vdata.push_back(data);
+			LOCK(cs_vNodes);
+			BOOST_FOREACH(CNode* pnode, vNodes)
+			{
+				if (pnode->setcheckPointKnown.count(intTemp) == 0)
+				{
+					pnode->setcheckPointKnown.insert(intTemp);
+					pnode->PushMessage("checkpoint", vdata);
+				}
+			}
+		}
+	}
+	return tfm::format("sendcheckpoint :%d\n", intTemp);
+}
+
+Value sendcheckpointchain(const Array& params, bool fHelp)
+{
+	if(fHelp || params.size() != 2)
+	{
+		throw runtime_error(
+				 "sendcheckpoint \n"
+				 "\nArguments:\n"
+				 "1. \"hight\"         (int64, required) the hight of the check point \n"
+				 "2. \"password\"      (string, required) the password to get the private key\n" );
+	}
+	boost::int64_t intTemp = params[0].get_int64();
+	std::string password = params[1].get_str();
+	std::vector<unsigned char> tep;
+//	lotto::DspayKeyFile.ReadPrivateKey(0, password, tep);
+	if (!tep.empty() && intTemp > 0 && intTemp <= chainActive.Height())
+	{
+		SyncData::CSyncData data;
+		SyncData::CSyncCheckPoint point;
+		CDataStream sstream(SER_NETWORK, PROTOCOL_VERSION);
+		point.m_height = intTemp;
+		assert(chainActive[intTemp]);
+		point.m_hashCheckpoint = chainActive[intTemp]->GetBlockHash();
+		LogPrint("CHECKPOINT","send hash = %s",point.m_hashCheckpoint.GetHex());
+		sstream << point;
+		if (data.Sign(tep, std::vector<unsigned char>(sstream.begin(), sstream.end()))
+			&& data.CheckSignature(SysCfg().GetPublicKey()))
+		{
+			SyncData::CSyncDataDb db;
+			std::vector<SyncData::CSyncData> vdata;
+			db.WriteCheckpoint(intTemp, data);
+			Checkpoints::AddCheckpoint(point.m_height, point.m_hashCheckpoint);
+			CheckActiveChain(point.m_height, point.m_hashCheckpoint);
+			vdata.push_back(data);
+			LOCK(cs_vNodes);
+			BOOST_FOREACH(CNode* pnode, vNodes)
+			{
+				if (pnode->setcheckPointKnown.count(intTemp) == 0)
+				{
+					pnode->setcheckPointKnown.insert(intTemp);
+					pnode->PushMessage("checkpoint", vdata);
+				}
+			}
+		}
+		return tfm::format("sendcheckpoint: height=%d hash=%s\n", intTemp, chainActive[intTemp]->GetBlockHash().GetHex());
+	}
+	return std::string("sendcheckpoint: failed\n");
 }

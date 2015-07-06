@@ -6,6 +6,7 @@
 #define DACRS_CHECKPOINT_H
 
 #include <map>
+#include <vector>
 
 class CBlockIndex;
 class uint256;
@@ -25,6 +26,14 @@ namespace Checkpoints
     CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex);
 
     double GuessVerificationProgress(CBlockIndex *pindex, bool fSigchecks = true);
+
+    bool AddCheckpoint(int nHeight, uint256 hash);
+
+    bool GetCheckpointByHeight(const int nHeight, std::vector<int> &vCheckpoints);
+
+    bool LoadCheckpoint();
+
+    void GetCheckpointMap(std::map<int, uint256> &checkpoints);
 
     extern bool fEnabled;
 }

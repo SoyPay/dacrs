@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "keystore.h"
-
+#include "wallet/wallet.h"
 #include "crypter.h"
 #include "key.h"
 #include "base58.h"
@@ -48,6 +48,8 @@ bool CKeyCombi::UnSersailFromJson(const Object& obj){
 bool CKeyCombi::CleanAll() {
 	mMainCkey.Clear();
 	mMinerCkey.Clear();
+	mMainPKey = CPubKey();
+	mMinerPKey = CPubKey();
 	nCreationTime = 0 ;
     return true;
 }
@@ -56,19 +58,25 @@ bool CKeyCombi::CleanMainKey(){
 	return mMainCkey.Clear();
 }
 
-CKeyCombi::CKeyCombi(const CKey& inkey) {
+CKeyCombi::CKeyCombi(const CKey& inkey, int nVersion) {
 	assert(inkey.IsValid());
 	CleanAll();
 	mMainCkey = inkey ;
+	if(FEATURE_BASE == nVersion)
+		mMainPKey = mMainCkey.GetPubKey();
 	nCreationTime = GetTime();
 }
 
-CKeyCombi::CKeyCombi(const CKey& inkey, const CKey& minerKey) {
+CKeyCombi::CKeyCombi(const CKey& inkey, const CKey& minerKey, int nVersion) {
 	assert(inkey.IsValid());
 	assert(minerKey.IsValid());
 	CleanAll();
 	mMinerCkey = minerKey;
 	mMainCkey = inkey ;
+	if(FEATURE_BASE == nVersion) {
+		mMainPKey = mMainCkey.GetPubKey();
+		mMinerPKey = mMinerCkey.GetPubKey();
+	}
 	nCreationTime = GetTime();
 }
 

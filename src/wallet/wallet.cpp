@@ -851,7 +851,7 @@ bool CWallet::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigne
 }
 bool CWallet::AddKey(const CKey& secret,const CKey& minerKey)
 {
-	CKeyCombi keyCombi(secret, minerKey);
+	CKeyCombi keyCombi(secret, minerKey, nWalletVersion);
 	return AddKey(keyCombi);
 }
 bool CWallet::AddKey(const CKeyCombi& keyCombi)
@@ -860,14 +860,14 @@ bool CWallet::AddKey(const CKeyCombi& keyCombi)
 	if (!fFileBacked)
 	      return true;
 	if (!IsCrypted()) {
-	     return CWalletDB(strWalletFile).WriteKeyStoreValue(keyCombi.GetCKeyID(), keyCombi);
+	     return CWalletDB(strWalletFile).WriteKeyStoreValue(keyCombi.GetCKeyID(), keyCombi, nWalletVersion);
 	}
 	return true;
 }
 
 bool CWallet::AddKey(const CKey& key)
 {
-	CKeyCombi keyCombi(key);
+	CKeyCombi keyCombi(key, nWalletVersion);
 	return AddKey(keyCombi);
 }
 

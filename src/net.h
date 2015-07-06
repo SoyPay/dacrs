@@ -258,6 +258,7 @@ public:
     mruset<CAddress> setAddrKnown;
     bool fGetAddr;
     set<uint256> setKnown;
+    std::set<int> setcheckPointKnown;
 
     // inventory based relay
     mruset<CInv> setInventoryKnown;

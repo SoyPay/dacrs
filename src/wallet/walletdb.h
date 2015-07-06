@@ -85,7 +85,7 @@ private:
     void operator=(const CWalletDB&);
 public:
     bool WriteCryptedKey(const CPubKey& pubkey, const std::vector<unsigned char>& vchCryptedSecret);
-    bool WriteKeyStoreValue(const CKeyID &keyId, const CKeyCombi& KeyStoreValue);
+    bool WriteKeyStoreValue(const CKeyID &keyId, const CKeyCombi& KeyStoreValue, int nVersion);
     bool EraseKeyStoreValue(const CKeyID &keyId);
     bool WriteBlockTx(const uint256 &hash, const CAccountTx& atx);
     bool EraseBlockTx(const uint256& hash);

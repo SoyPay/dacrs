@@ -148,7 +148,7 @@ protected:
     }
 
     template <typename K, typename T>
-    bool Write(const K& key, const T& value, bool fOverwrite = true)
+    bool Write(const K& key, const T& value, bool fOverwrite = true, int nVersion=CLIENT_VERSION)
     {
         if (!pdb)
             return false;
@@ -162,7 +162,7 @@ protected:
         Dbt datKey(&ssKey[0], ssKey.size());
 
         // Value
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        CDataStream ssValue(SER_DISK, nVersion);
         ssValue.reserve(10000);
         ssValue << value;
         Dbt datValue(&ssValue[0], ssValue.size());

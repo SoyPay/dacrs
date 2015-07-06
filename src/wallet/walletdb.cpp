@@ -117,9 +117,13 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
 
 	    try {
 	        LOCK(pwallet->cs_wallet);
-	          if (GetMinVersion() > CLIENT_VERSION)
-	                return DB_TOO_NEW;
-
+	        int nMinVersion = 0;
+			if (Read((string)"minversion", nMinVersion))
+			{
+				 if (nMinVersion > CLIENT_VERSION)
+					  return DB_TOO_NEW;
+				 pwallet->LoadMinVersion(nMinVersion);
+			}
 
 	        // Get cursor
 	        Dbc* pcursor = GetCursor();
@@ -306,11 +310,11 @@ bool CWalletDB::EraseBlockTx(const uint256 &hash)
 	return Erase(make_pair(string("blocktx"), hash));
 }
 
-bool CWalletDB::WriteKeyStoreValue(const CKeyID &keyId, const CKeyCombi& KeyCombi)
+bool CWalletDB::WriteKeyStoreValue(const CKeyID &keyId, const CKeyCombi& KeyCombi, int nVersion)
 {
 	nWalletDBUpdated++;
 //	cout << "keystore:" << "Keyid=" << keyId.ToAddress() << " KeyCombi:" << KeyCombi.ToString() << endl;
-	return Write(make_pair(string("keystore"), keyId), KeyCombi, true);
+	return Write(make_pair(string("keystore"), keyId), KeyCombi, true, nVersion);
 }
 
 bool CWalletDB::EraseKeyStoreValue(const CKeyID& keyId) {

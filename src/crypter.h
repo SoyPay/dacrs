@@ -167,9 +167,6 @@ public:
     }
     virtual bool AddCryptedKey(const CPubKey &vchPubKey, const vector<unsigned char> &vchCryptedSecret);
     bool AddKeyCombi(const CKeyID & keyId, const CKeyCombi &keyCombi);
-    bool AddKey(const CKey & key);
-    bool AddKey(const CKey& secret,const CKey& minerKey);
-//  bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
     bool HaveKey(const CKeyID &address) const
     {
         {

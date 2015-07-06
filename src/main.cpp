@@ -18,6 +18,7 @@
 #include "util.h"
 #include "miner.h"
 #include "tx.h"
+#include "syncdatadb.h"
 #include "vm/vmrunevn.h"
 #include <sstream>
 
@@ -2526,7 +2527,135 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     return true;
 }
 
+bool CheckActiveChain(int nHeight, uint256 hash) {
 
+	LogPrint("CHECKPOINT", "CheckActiveChain Enter====\n");
+	LogPrint("CHECKPOINT", "check point hash:%s\n", hash.ToString());
+	if (nHeight < 1) {
+		return true;
+	}
+	LOCK(cs_main);
+	CBlockIndex *pindexOldTip = chainActive.Tip();
+	LogPrint("CHECKPOINT", "Current tip block:\n");
+	pindexOldTip->print();
+	//Find the active chain dismatch checkpoint
+	if (NULL == chainActive[nHeight] || hash != chainActive[nHeight]->GetBlockHash()) {
+		CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+		LogPrint("CHECKPOINT", "Get Last check point:\n");
+		if (pcheckpoint) {
+			pcheckpoint->print();
+			chainMostWork.SetTip(pcheckpoint);
+			bool bInvalidBlock = false;
+			std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexValid.rbegin();
+			for (; (it != setBlockIndexValid.rend()) && !chainMostWork.Contains(*it);) {
+				bInvalidBlock = false;
+				CBlockIndex *pIndexTest = *it;
+				LogPrint("CHECKPOINT", "iterator:height=%d, hash=%s\n",pIndexTest->nHeight, pIndexTest->GetBlockHash().GetHex());
+				if (pcheckpoint->nHeight < nHeight) {
+					if(pIndexTest->nHeight >= nHeight){
+						LogPrint("CHECKPOINT", "CheckActiveChain delete blockindex:%s\n",pIndexTest->GetBlockHash().GetHex());
+						setBlockIndexValid.erase(pIndexTest);
+						it = setBlockIndexValid.rbegin();
+						bInvalidBlock = true;
+					}
+
+				} else {
+					if (!chainMostWork.Contains(pIndexTest)) {
+						CBlockIndex *pIndexCheck = pIndexTest->pprev;
+						while (pIndexCheck && !chainMostWork.Contains(pIndexCheck)) {
+							pIndexCheck = pIndexCheck->pprev;
+						}
+						if (NULL == pIndexCheck || pIndexCheck->nHeight < pcheckpoint->nHeight) {
+							CBlockIndex *pIndexFailed = pIndexCheck;
+							while (pIndexTest != pIndexFailed) {
+								LogPrint("CHECKPOINT", "CheckActiveChain delete blockindex height=%d hash=%s\n", pIndexTest->nHeight, pIndexTest->GetBlockHash().GetHex());
+								setBlockIndexValid.erase(pIndexTest);
+								it = setBlockIndexValid.rbegin();
+								bInvalidBlock = true;
+								pIndexTest = pIndexTest->pprev;
+							}
+						}
+						if (chainMostWork.Contains(pIndexCheck) && chainMostWork.Height() == pIndexCheck->nHeight
+								&& pIndexTest->nChainWork > chainMostWork.Tip()->nChainWork) {
+							chainMostWork.SetTip(pIndexTest);
+							LogPrint("CHECKPOINT", "chainMostWork tip:height=%d, hash=%s\n", pIndexTest->nHeight,
+									pIndexTest->GetBlockHash().GetHex());
+						}
+
+					}
+				}
+				if(!bInvalidBlock)
+					++it;
+			}
+
+		} else {
+			if(NULL == chainActive[nHeight])
+				return true;
+			bool bInvalidBlock = false;
+//			CBlockIndex * pInvalidBlockIndex = chainActive[nHeight];
+			std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexValid.rbegin();
+			for (; it != setBlockIndexValid.rend(); ) {
+				bInvalidBlock = false;
+				CBlockIndex *pBlockTest = *it;
+				while(pBlockTest->nHeight > nHeight){
+					pBlockTest = pBlockTest->pprev;
+				}
+				if(pBlockTest->GetBlockHash() != hash){
+					CBlockIndex *pBlockIndexFailed = *it;
+					while(pBlockIndexFailed != pBlockTest){
+						LogPrint("CHECKPOINT", "CheckActiveChain delete blockindex height=%d hash=%s\n", pBlockIndexFailed->nHeight, pBlockIndexFailed->GetBlockHash().GetHex());
+						setBlockIndexValid.erase(pBlockIndexFailed);
+						pBlockIndexFailed = pBlockIndexFailed->pprev;
+						it = setBlockIndexValid.rbegin();
+						bInvalidBlock = true;
+						LogPrint("CHECKPOINT", "setBlockIndexValid size:%d\n", setBlockIndexValid.size());
+					}
+				}
+				if(!bInvalidBlock)
+					++it;
+			}
+			Assert(chainActive[nHeight - 1]);
+			chainMostWork.SetTip(chainActive[nHeight - 1]);
+		}
+
+		// Check whether we have something to do.
+		if (chainMostWork.Tip() == NULL)
+			return false;
+		CValidationState state;
+		while (chainActive.Tip() && !chainMostWork.Contains(chainActive.Tip())) {
+			if (!DisconnectTip(state))
+				return false;
+		}
+		while (NULL != chainMostWork[chainActive.Height() + 1]) {
+			CBlockIndex *pindexConnect = chainMostWork[chainActive.Height() + 1];
+			if (!ConnectTip(state, pindexConnect)) {
+				if (state.IsInvalid()) {
+					// The block violates a consensus rule.
+					if (!state.CorruptionPossible())
+						InvalidChainFound(chainMostWork.Tip());
+					state = CValidationState();
+					break;
+				} else {
+					// A system error occurred (disk space, database error, ...).
+					return false;
+				}
+			}
+			setBlockIndexValid.insert(pindexConnect);
+		}
+
+
+	}
+
+	if (chainActive.Tip() != pindexOldTip) {
+		std::string strCmd = SysCfg().GetArg("-blocknotify", "");
+		if (!IsInitialBlockDownload() && !strCmd.empty()) {
+			boost::replace_all(strCmd, "%s", chainActive.Tip()->GetBlockHash().GetHex());
+			boost::thread t(runCommand, strCmd); // thread runs free
+		}
+	}
+	LogPrint("CHECKPOINT", "CheckActiveChain End====\n");
+	return true;
+}
 
 
 
@@ -3447,6 +3576,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         LOCK(cs_main);
         cPeerBlockCounts.input(pfrom->nStartingHeight);
+
+		if (pfrom->nStartingHeight > Checkpoints::GetTotalBlocksEstimate())
+		{
+			pfrom->PushMessage("getcheck", Checkpoints::GetTotalBlocksEstimate());
+		}
     }
 
 
@@ -4026,7 +4160,65 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             LogPrint("net", "Reject %s\n", SanitizeString(s));
         }
     }
-
+	else if (strCommand == "checkpoint")
+	{
+		LogPrint("CHECKPOINT", "enter checkpoint\n");
+		std::vector<int> vIndex;
+		std::vector<SyncData::CSyncData> vdata;
+		vRecv >> vdata;
+		BOOST_FOREACH(SyncData::CSyncData& data, vdata)
+		{
+			if (data.CheckSignature(SysCfg().GetPublicKey()))
+			{
+				SyncData::CSyncCheckPoint point;
+				point.SetData(data);
+				SyncData::CSyncDataDb db;
+				if (!db.ExistCheckpoint(point.m_height))
+				{
+					db.WriteCheckpoint(point.m_height, data);
+					Checkpoints::AddCheckpoint(point.m_height, point.m_hashCheckpoint);
+					CheckActiveChain(point.m_height, point.m_hashCheckpoint);
+					pfrom->setcheckPointKnown.insert(point.m_height);
+					vIndex.push_back(point.m_height);
+				}
+			}
+		}
+		if (vIndex.size() == 1 && vIndex.size() == vdata.size())
+		{
+			LOCK(cs_vNodes);
+			BOOST_FOREACH(CNode* pnode, vNodes)
+			{
+				if (pnode->setcheckPointKnown.count(vIndex[0]) == 0)
+				{
+					pnode->setcheckPointKnown.insert(vIndex[0]);
+					pnode->PushMessage("checkpoint", vdata);
+				}
+			}
+		}
+	}
+	else if (strCommand == "getcheck")
+	{
+		int height = 0;
+		vRecv >> height;
+		SyncData::CSyncDataDb db;
+		std::vector<SyncData::CSyncData> vdata;
+		std::vector<int> vheight;
+		Checkpoints::GetCheckpointByHeight(height, vheight);
+		for (std::size_t i = 0; i < vheight.size(); ++i)
+		{
+			SyncData::CSyncData data;
+			if (pfrom->setcheckPointKnown.count(vheight[i]) == 0
+				&& db.ReadCheckpoint(vheight[i], data))
+			{
+				pfrom->setcheckPointKnown.insert(vheight[i]);
+				vdata.push_back(data);
+			}
+		}
+		if (!vdata.empty())
+		{
+			pfrom->PushMessage("checkpoint", vdata);
+		}
+	}
     else
     {
         // Ignore unknown commands for extensibility

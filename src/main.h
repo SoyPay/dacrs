@@ -179,6 +179,9 @@ bool ActivateBestChain(CValidationState &state);
 int64_t GetBlockValue(int nHeight, int64_t nFees);
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
 
+/** receive checkpoint check make active chain accord to the checkpoint **/
+bool CheckActiveChain(int nHeight,  uint256 hash);
+
 void UpdateTime(CBlockHeader& block, const CBlockIndex* pindexPrev);
 
 /** Create a new block index entry for a given block hash */
