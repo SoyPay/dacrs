@@ -885,7 +885,7 @@ bool CWallet::IsReadyForCoolMiner(const CAccountViewCache& view) const {
 bool CWallet::ClearAllCkeyForCoolMiner() {
 	for (auto &item : mapKeys) {
 		if (item.second.CleanMainKey()) {
-			CWalletDB(strWalletFile).WriteKeyStoreValue(item.first, item.second);
+			CWalletDB(strWalletFile).WriteKeyStoreValue(item.first, item.second, nWalletVersion);
 		}
 	}
 	return true;
