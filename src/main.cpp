@@ -1679,8 +1679,6 @@ bool static DisconnectTip(CValidationState &state) {
     UpdateTip(pindexDelete->pprev, block);  
     // Resurrect mempool transactions from the disconnected block.
 	for (const auto &ptx : block.vptx) {
-		// ignore validation errors in resurrected transactions
-		mempool.mapTx.erase(ptx->GetHash());
 		list<std::shared_ptr<CBaseTransaction> > removed;
 		CValidationState stateDummy;
 		if (!ptx->IsCoinBase())

@@ -48,7 +48,6 @@ Value islocked(const Array& params,  bool fHelp)
 	return obj;
 }
 
-
 Value getnewaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -137,7 +136,6 @@ Value signmessage(const Array& params, bool fHelp)
 
     return EncodeBase64(&vchSig[0], vchSig.size());
 }
-
 
 Value sendtoaddresswithfee(const Array& params, bool fHelp)
  {
@@ -267,7 +265,6 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 	obj.push_back(Pair(std::get<0>(ret) ? "hash" : "error code", std::get<1>(ret)));
 	return obj;
 }
-
 
 Value sendtoaddressraw(const Array& params, bool fHelp)
 {
@@ -466,8 +463,6 @@ Value sendtoaddress(const Array& params, bool fHelp)
 	return obj;
 }
 
-
-
 Value backupwallet(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -487,7 +482,6 @@ Value backupwallet(const Array& params, bool fHelp)
 
     return Value::null;
 }
-
 
 static void LockWallet(CWallet* pWallet)
 {
@@ -551,7 +545,6 @@ Value walletpassphrase(const Array& params, bool fHelp)
     return retObj;
 }
 
-
 Value walletpassphrasechange(const Array& params, bool fHelp)
 {
     if (pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
@@ -593,7 +586,6 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
     return retObj;
 }
 
-
 Value walletlock(const Array& params, bool fHelp)
 {
     if (pwalletMain->IsCrypted() && (fHelp || params.size() != 0))
@@ -627,7 +619,6 @@ Value walletlock(const Array& params, bool fHelp)
     return retObj;
     return Value::null;
 }
-
 
 Value encryptwallet(const Array& params, bool fHelp)
 {

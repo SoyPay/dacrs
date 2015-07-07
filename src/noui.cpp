@@ -187,6 +187,32 @@ static void noui_NotifyMessage(const std::string &message)
 	}
 }
 
+static bool noui_ReleaseTransaction(const uint256 &hash){
+	Object obj;
+	obj.push_back(Pair("type",     "releasetx"));
+	obj.push_back(Pair("hash",   hash.ToString()));
+
+	if (CUIServer::HasConnection()) {
+		CUIServer::Send(write_string(Value(std::move(obj)),true));
+	} else {
+		LogPrint("NOUI", "%s\n", write_string(Value(std::move(obj)),true));
+	}
+	return true;
+}
+
+static bool noui_RemoveTransaction(const uint256 &hash) {
+	Object obj;
+	obj.push_back(Pair("type",     "rmtx"));
+	obj.push_back(Pair("hash",   hash.ToString()));
+
+	if (CUIServer::HasConnection()) {
+		CUIServer::Send(write_string(Value(std::move(obj)),true));
+	} else {
+		LogPrint("NOUI", "%s\n", write_string(Value(std::move(obj)),true));
+	}
+	return true;
+}
+
 void noui_connect()
 {
     // Connect Dacrsd signal handlers
@@ -196,4 +222,6 @@ void noui_connect()
     uiInterface.InitMessage.connect(noui_InitMessage);
     uiInterface.NotifyBlocksChanged.connect(noui_BlockChanged);
     uiInterface.NotifyMessage.connect(noui_NotifyMessage);
+    uiInterface.ReleaseTransaction.connect(noui_ReleaseTransaction);
+    uiInterface.RemoveTransaction.connect(noui_RemoveTransaction);
 }

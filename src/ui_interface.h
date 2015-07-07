@@ -104,6 +104,14 @@ public:
     boost::signals2::signal<void (CWallet* wallet)> LoadWallet;
 
     boost::signals2::signal<void (const string &message)> NotifyMessage;
+
+    /** release transaction from block  */
+    boost::signals2::signal<bool (const uint256 &hash) > ReleaseTransaction;
+
+    /** remove transaction from mempool */
+    boost::signals2::signal<bool (const uint256 &hash) > RemoveTransaction;
+
+
 };
 
 extern CClientUIInterface uiInterface;

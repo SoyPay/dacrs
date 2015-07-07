@@ -293,16 +293,14 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 				}
 				CRegID regid(index, i++);
 				if(IsMine(sptx.get())) {
-
 					UnConfirmTx[sptx.get()->GetHash()] = sptx.get()->GetNewInstance();
 					CWalletDB(strWalletFile).WriteUnComFirmedTx(sptx.get()->GetHash(),UnConfirmTx[sptx.get()->GetHash()]);
-
+					uiInterface.ReleaseTransaction(sptx.get()->GetHash());
 				}
 			}
 			if (mapInBlockTx.count(blockhash)) {
 				CWalletDB(strWalletFile).EraseBlockTx(blockhash);
 				mapInBlockTx.erase(blockhash);
-
 			}
 			};
 		auto IsConnect = [&]() // test is connect or disconct
