@@ -171,6 +171,7 @@ public:
 		genesis.nHeight = 0;
 		genesis.vSignature.clear();
 		hashGenesisBlock = genesis.GetHash();
+		publicKey = "022570ffc7887fd8b9451c4082134b3a455969346fa2e98634b86d5f53052e5d8c";
 //		{
 //			CBigNum bnTarget;
 //			bnTarget.SetCompact(genesis.nBits);
@@ -252,7 +253,7 @@ public:
 		nDefaultPort = 18668;
 		nRPCPort = 18669;
 		strDataDir = "testnet";
-
+		publicKey = "036e15523feb9e329b4fdf53c227fc89ea45a1a36342e7e38fad7fe6e3777243af";
 		// Modify the testnet genesis block so the timestamp is valid for a later start.
 		genesis.nTime = 1296688602;
 		genesis.nNonce = 888;

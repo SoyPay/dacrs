@@ -39,4 +39,20 @@ bool CSyncData::Sign(const std::vector<unsigned char>& priKey, const std::vector
 	return true;
 }
 
+bool CSyncData::Sign(const CKey& priKey, const std::vector<unsigned char>& syncData)
+{
+	m_vchMsg.assign(syncData.begin(), syncData.end());
+    if (!priKey.Sign(Hash(m_vchMsg.begin(), m_vchMsg.end()), m_vchSig))
+    {
+    	return ERRORMSG("CSyncCheckpoint::Sign: Unable to sign checkpoint, check private key?");
+    }
+	return true;
+}
+
+json_spirit::Object CSyncData::ToJsonObj()
+{
+	Object obj;
+	return obj;
+}
+
 } /* namespace SyncData */

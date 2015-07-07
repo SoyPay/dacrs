@@ -1681,9 +1681,13 @@ bool static DisconnectTip(CValidationState &state) {
 	for (const auto &ptx : block.vptx) {
 		list<std::shared_ptr<CBaseTransaction> > removed;
 		CValidationState stateDummy;
-		if (!ptx->IsCoinBase())
-			if (!AcceptToMemoryPool(mempool, stateDummy, ptx.get(), false, NULL))
+		if (!ptx->IsCoinBase()) {
+			if (!AcceptToMemoryPool(mempool, stateDummy, ptx.get(), false, NULL)) {
 				mempool.remove(ptx.get(), removed, true);
+				uiInterface.RemoveTransaction(ptx->GetHash());
+			}else
+				uiInterface.ReleaseTransaction(ptx->GetHash());
+		}
 	}
 
 	if(SysCfg().GetArg("-blocklog", 0) !=0 )

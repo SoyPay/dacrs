@@ -1233,6 +1233,8 @@ Value saveblocktofile(const Array& params, bool fHelp) {
 		CAutoFile fileout = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
 		if (!fileout)
 			throw JSONRPCError(RPC_MISC_ERROR, "open file:" + strblockhash + "failed!");
+		if(chainActive.Contains(pIndex))
+			fileout << pIndex->nHeight;
 		fileout << blockInfo;
 		fflush(fileout);
 		//fileout object auto free fp point, don't need double free fp point.
@@ -1793,54 +1795,76 @@ Value getappkeyvalue(const Array& params, bool fHelp) {
 	return retArry;
 }
 
-Value sendcheckpoint(const Array& params, bool fHelp)
+Value getcheckpoint(const Array& params, bool fHelp)
 {
 	if(fHelp || params.size() != 2)
 	{
 		throw runtime_error(
 				 "sendcheckpoint \n"
 				 "\nArguments:\n"
-				 "1. \"hight\"         (int64, required) the hight of the check point \n"
-				 "2. \"password\"      (string, required) the password to get the private key\n" );
+				 "1. \"Dacrsprivkey\"  (string, required) the password to get the private key\n"
+				 "2. \"filepath\"  (string, required) check point block path\n");
 	}
-	boost::int32_t intTemp = params[0].get_int();
-	std::string password = params[1].get_str();
-	std::vector<unsigned char> tep;
-//	lotto::DspayKeyFile.ReadPrivateKey(0, password, tep);
-	if (!tep.empty() && intTemp > 0) //&& intTemp <= chainActive.Height())
+	std::string strSecret = params[0].get_str();
+	std::string filePath = params[1].get_str();
+	CDacrsSecret vchSecret;
+	bool fGood = vchSecret.SetString(strSecret);
+
+	if (!fGood) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
+
+	CKey key = vchSecret.GetKey();
+	if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+
+	string file = params[1].get_str();
+	int nHeight(0);
+	CBlock block;
+	try {
+		FILE* fp = fopen(file.c_str(), "r");
+		CAutoFile fileout = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
+		if (!fileout)
+			throw JSONRPCError(RPC_MISC_ERROR, "open file:" + file + "failed!");
+		fileout >> nHeight;
+		fileout >> block;
+		fflush(fileout);
+	} catch (std::exception &e) {
+		throw JSONRPCError(RPC_MISC_ERROR, "save block to file error");
+	}
+
+	SyncData::CSyncData data;
+	SyncData::CSyncCheckPoint point;
+	CDataStream sstream(SER_NETWORK, PROTOCOL_VERSION);
+	point.m_height = nHeight;
+	point.m_hashCheckpoint = block.GetHash();//chainActive[intTemp]->GetBlockHash();
+	LogPrint("CHECKPOINT","send hash = %s",block.GetHash().ToString());
+	sstream << point;
+	Object obj;
+	if (data.Sign(key, std::vector<unsigned char>(sstream.begin(), sstream.end()))
+		&& data.CheckSignature(SysCfg().GetPublicKey()))
 	{
-		SyncData::CSyncData data;
-		SyncData::CSyncCheckPoint point;
-		CDataStream sstream(SER_NETWORK, PROTOCOL_VERSION);
-		point.m_height = intTemp;
-		CBlock block;
-//		ReadObjFromFile("blockfile.data",0,block);
-//		LogPrintf("sendcheckpoint");
-//		block.print();
-		point.m_hashCheckpoint = block.GetHash();//chainActive[intTemp]->GetBlockHash();
-		LogPrint("CHECKPOINT","send hash = %s",block.GetHash().ToString());
-		sstream << point;
-		if (data.Sign(tep, std::vector<unsigned char>(sstream.begin(), sstream.end()))
-			&& data.CheckSignature(SysCfg().GetPublicKey()))
+		obj.push_back(Pair("chenkpoint", data.ToJsonObj()));
+		return obj;
+	}
+
+
+	{
+		SyncData::CSyncDataDb db;
+		std::vector<SyncData::CSyncData> vdata;
+		db.WriteCheckpoint(nHeight, data);
+		Checkpoints::AddCheckpoint(point.m_height, point.m_hashCheckpoint);
+		CheckActiveChain(point.m_height, point.m_hashCheckpoint);
+		vdata.push_back(data);
+		LOCK(cs_vNodes);
+		BOOST_FOREACH(CNode* pnode, vNodes)
 		{
-			SyncData::CSyncDataDb db;
-			std::vector<SyncData::CSyncData> vdata;
-			db.WriteCheckpoint(intTemp, data);
-			Checkpoints::AddCheckpoint(point.m_height, point.m_hashCheckpoint);
-			CheckActiveChain(point.m_height, point.m_hashCheckpoint);
-			vdata.push_back(data);
-			LOCK(cs_vNodes);
-			BOOST_FOREACH(CNode* pnode, vNodes)
+			if (pnode->setcheckPointKnown.count(nHeight) == 0)
 			{
-				if (pnode->setcheckPointKnown.count(intTemp) == 0)
-				{
-					pnode->setcheckPointKnown.insert(intTemp);
-					pnode->PushMessage("checkpoint", vdata);
-				}
+				pnode->setcheckPointKnown.insert(nHeight);
+				pnode->PushMessage("checkpoint", vdata);
 			}
 		}
 	}
-	return tfm::format("sendcheckpoint :%d\n", intTemp);
+
+	return tfm::format("sendcheckpoint :%d\n", nHeight);
 }
 
 Value sendcheckpointchain(const Array& params, bool fHelp)
