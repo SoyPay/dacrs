@@ -25,6 +25,7 @@
 #include <boost/assign/list_of.hpp>
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"
+#include "json/json_spirit_reader.h"
 
 #include "boost/tuple/tuple.hpp"
 #define revert(height) ((height<<24) | (height << 8 & 0xff0000) |  (height>>8 & 0xff00) | (height >> 24))
@@ -1795,7 +1796,7 @@ Value getappkeyvalue(const Array& params, bool fHelp) {
 	return retArry;
 }
 
-Value getcheckpoint(const Array& params, bool fHelp)
+Value gencheckpoint(const Array& params, bool fHelp)
 {
 	if(fHelp || params.size() != 2)
 	{
@@ -1844,73 +1845,61 @@ Value getcheckpoint(const Array& params, bool fHelp)
 		obj.push_back(Pair("chenkpoint", data.ToJsonObj()));
 		return obj;
 	}
-
-
-	{
-		SyncData::CSyncDataDb db;
-		std::vector<SyncData::CSyncData> vdata;
-		db.WriteCheckpoint(nHeight, data);
-		Checkpoints::AddCheckpoint(point.m_height, point.m_hashCheckpoint);
-		CheckActiveChain(point.m_height, point.m_hashCheckpoint);
-		vdata.push_back(data);
-		LOCK(cs_vNodes);
-		BOOST_FOREACH(CNode* pnode, vNodes)
-		{
-			if (pnode->setcheckPointKnown.count(nHeight) == 0)
-			{
-				pnode->setcheckPointKnown.insert(nHeight);
-				pnode->PushMessage("checkpoint", vdata);
-			}
-		}
-	}
-
-	return tfm::format("sendcheckpoint :%d\n", nHeight);
+	return obj;
 }
 
-Value sendcheckpointchain(const Array& params, bool fHelp)
+Value setcheckpoint(const Array& params, bool fHelp)
 {
-	if(fHelp || params.size() != 2)
+	if(fHelp || params.size() != 1)
 	{
 		throw runtime_error(
 				 "sendcheckpoint \n"
 				 "\nArguments:\n"
-				 "1. \"hight\"         (int64, required) the hight of the check point \n"
-				 "2. \"password\"      (string, required) the password to get the private key\n" );
+				 "1. \"filepath\"  (string, required) check point block path\n");
 	}
-	boost::int64_t intTemp = params[0].get_int64();
-	std::string password = params[1].get_str();
-	std::vector<unsigned char> tep;
-//	lotto::DspayKeyFile.ReadPrivateKey(0, password, tep);
-	if (!tep.empty() && intTemp > 0 && intTemp <= chainActive.Height())
+	SyncData::CSyncData data;
+	ifstream file;
+	file.open(params[0].get_str().c_str(), ios::in | ios::ate);
+	if (!file.is_open())
+	      throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open check point dump file");
+	file.seekg(0, file.beg);
+    if (file.good()){
+    	Value reply;
+    	json_spirit::read(file,reply);
+    	const Value & checkpoint = find_value(reply.get_obj(),"chenkpoint");
+    	if(checkpoint.type() ==  json_spirit::null_type) {
+    		throw JSONRPCError(RPC_INVALID_PARAMETER, "read check point failed");
+    	}
+    	const Value & msg = find_value(checkpoint.get_obj(), "msg");
+    	const Value & sig = find_value(checkpoint.get_obj(), "sig");
+    	if(msg.type() == json_spirit::null_type || sig.type() == json_spirit::null_type) {
+    		throw JSONRPCError(RPC_INVALID_PARAMETER, "read msg or sig failed");
+    	}
+    	data.m_vchMsg = ParseHex(msg.get_str());
+    	data.m_vchSig = ParseHex(msg.get_str());
+    }
+    file.close();
+    if(data.CheckSignature(SysCfg().GetPublicKey())) {
+    	throw JSONRPCError(RPC_INVALID_PARAMETER, "check signature failed");
+    }
+	SyncData::CSyncDataDb db;
+	std::vector<SyncData::CSyncData> vdata;
+	SyncData::CSyncCheckPoint point;
+	CDataStream sstream(data.m_vchMsg, SER_NETWORK, PROTOCOL_VERSION);
+	sstream >> point;
+	db.WriteCheckpoint(point.m_height, data);
+	Checkpoints::AddCheckpoint(point.m_height, point.m_hashCheckpoint);
+	CheckActiveChain(point.m_height, point.m_hashCheckpoint);
+	vdata.push_back(data);
+	LOCK(cs_vNodes);
+	BOOST_FOREACH(CNode* pnode, vNodes)
 	{
-		SyncData::CSyncData data;
-		SyncData::CSyncCheckPoint point;
-		CDataStream sstream(SER_NETWORK, PROTOCOL_VERSION);
-		point.m_height = intTemp;
-		assert(chainActive[intTemp]);
-		point.m_hashCheckpoint = chainActive[intTemp]->GetBlockHash();
-		LogPrint("CHECKPOINT","send hash = %s",point.m_hashCheckpoint.GetHex());
-		sstream << point;
-		if (data.Sign(tep, std::vector<unsigned char>(sstream.begin(), sstream.end()))
-			&& data.CheckSignature(SysCfg().GetPublicKey()))
+		if (pnode->setcheckPointKnown.count(point.m_height) == 0)
 		{
-			SyncData::CSyncDataDb db;
-			std::vector<SyncData::CSyncData> vdata;
-			db.WriteCheckpoint(intTemp, data);
-			Checkpoints::AddCheckpoint(point.m_height, point.m_hashCheckpoint);
-			CheckActiveChain(point.m_height, point.m_hashCheckpoint);
-			vdata.push_back(data);
-			LOCK(cs_vNodes);
-			BOOST_FOREACH(CNode* pnode, vNodes)
-			{
-				if (pnode->setcheckPointKnown.count(intTemp) == 0)
-				{
-					pnode->setcheckPointKnown.insert(intTemp);
-					pnode->PushMessage("checkpoint", vdata);
-				}
-			}
+			pnode->setcheckPointKnown.insert(point.m_height);
+			pnode->PushMessage("checkpoint", vdata);
 		}
-		return tfm::format("sendcheckpoint: height=%d hash=%s\n", intTemp, chainActive[intTemp]->GetBlockHash().GetHex());
 	}
-	return std::string("sendcheckpoint: failed\n");
+	return tfm::format("sendcheckpoint :%d\n", point.m_height);
 }
+

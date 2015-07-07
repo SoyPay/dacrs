@@ -44,7 +44,14 @@ Value islocked(const Array& params,  bool fHelp)
 	if(fHelp)
 		return true;
 	Object obj;
-	obj.push_back(Pair("islock", pwalletMain->IsLocked()));
+	if(!pwalletMain->IsCrypted()) {        //decrypted
+		obj.push_back(Pair("islock", 0));
+	}
+	else if (!pwalletMain->IsLocked()) {   //encryped and unlocked
+		obj.push_back(Pair("islock", 1));
+	}else {
+		obj.push_back(Pair("islock", 2)); //encryped and locked
+	}
 	return obj;
 }
 

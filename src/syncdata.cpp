@@ -52,6 +52,8 @@ bool CSyncData::Sign(const CKey& priKey, const std::vector<unsigned char>& syncD
 json_spirit::Object CSyncData::ToJsonObj()
 {
 	Object obj;
+	obj.push_back(Pair("msg", HexStr(m_vchMsg)));
+	obj.push_back(Pair("sig", HexStr(m_vchSig)));
 	return obj;
 }
 

@@ -55,6 +55,8 @@ extern Value listauthor(const Array& params, bool fHelp);
 extern Value  getappaccinfo(const Array& params, bool fHelp);
 extern Value  gethash(const Array& params, bool fHelp);
 extern Value  getappkeyvalue(const Array& params, bool fHelp);
+extern Value  gencheckpoint(const Array& params, bool fHelp);
+extern Value  setcheckpoint(const Array& params, bool fHelp);
 
 
 extern Object TxToJSON(CBaseTransaction *pTx);
