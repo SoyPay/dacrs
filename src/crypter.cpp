@@ -180,15 +180,20 @@ bool CCryptoKeyStore::AddKeyCombi(const CKeyID & keyId, const CKeyCombi &keyComb
 {
 	 {
 		LOCK(cs_KeyStore);
+
 		if (!IsCrypted())
 			return CBasicKeyStore::AddKeyCombi(keyId, keyCombi);
 
 		if (IsLocked())
 			return false;
 
-		vector<unsigned char> vchCryptedSecret;
 		CKey mainKey;
 		keyCombi.GetCKey(mainKey, false);
+		CKeyCombi newkeyCombi = keyCombi;
+		newkeyCombi.CleanMainKey();
+		CBasicKeyStore::AddKeyCombi(keyId, keyCombi);
+
+		vector<unsigned char> vchCryptedSecret;
 		CKeyingMaterial vchSecret(mainKey.begin(), mainKey.end());
 		CPubKey pubKey;
 		pubKey = mainKey.GetPubKey();

@@ -93,8 +93,15 @@ bool CKeyCombi::GetPubKey(CPubKey& mOutKey, bool IsMine) const {
 }
 
 string CKeyCombi::ToString() const{
-	return strprintf("CPubKey:%s CKey:%s mMinerCkey:%s CreationTime:%d",mMainCkey.GetPubKey().ToString(),
-			mMainCkey.ToString(), mMinerCkey.ToString(), nCreationTime);
+	string str("");
+	if(mMainCkey.IsValid()) {
+		str += strprintf(" MainPKey:%s MainKey:%s", mMainCkey.GetPubKey().ToString(), mMainCkey.ToString());
+	}
+	if(mMinerCkey.IsValid()) {
+		str += strprintf(" MinerPKey:%s MinerKey:%s",mMinerCkey.GetPubKey().ToString(), mMinerCkey.ToString());
+	}
+	 str += strprintf(" CreationTime:%d",  nCreationTime);
+	return str;
 }
 
 bool CKeyCombi::GetCKey(CKey& keyOut, bool IsMine) const {

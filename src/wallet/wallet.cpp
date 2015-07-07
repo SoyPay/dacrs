@@ -853,13 +853,12 @@ bool CWallet::AddKey(const CKey& secret,const CKey& minerKey)
 }
 bool CWallet::AddKey(const CKeyCombi& keyCombi)
 {
-	CCryptoKeyStore::AddKeyCombi(keyCombi.GetCKeyID(), keyCombi);
 	if (!fFileBacked)
-	      return true;
-	if (!IsCrypted()) {
-	     return CWalletDB(strWalletFile).WriteKeyStoreValue(keyCombi.GetCKeyID(), keyCombi, nWalletVersion);
+		return true;
+	if(!CWalletDB(strWalletFile).WriteKeyStoreValue(keyCombi.GetCKeyID(), keyCombi, nWalletVersion)) {
+		return false;
 	}
-	return true;
+	return CCryptoKeyStore::AddKeyCombi(keyCombi.GetCKeyID(), keyCombi);
 }
 
 bool CWallet::AddKey(const CKey& key)
