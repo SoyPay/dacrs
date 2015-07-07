@@ -358,6 +358,8 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 	if (view.GetAccount(prtx->account, account)) {
 		if(!CheckSignScript(pBlock->SignatureHash(), pBlock->vSignature, account.PublicKey)) {
 			if (!CheckSignScript(pBlock->SignatureHash(), pBlock->vSignature, account.MinerPKey)) {
+				cout <<"verify miner key PubKey:"<< account.MinerPKey.ToString()<< endl;
+				cout <<"verify miner hash:"<< pBlock->SignatureHash().ToString()<< endl;
 				return ERRORMSG("Verify miner publickey signature error");
 			}
 		}
