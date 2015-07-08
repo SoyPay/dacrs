@@ -578,7 +578,7 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 			nLastBlockSize = nBlockSize;
 			LogPrint("INFO","CreateNewBlock(): total size %u\n", nBlockSize);
 
-			assert(nFees-nTotalFuel > 0);
+			assert(nFees-nTotalFuel >= 0);
 			((CRewardTransaction*) pblock->vptx[0].get())->rewardValue = nFees - nTotalFuel + POS_REWARD;
 
 			// Fill in header
