@@ -1687,7 +1687,10 @@ bool static DisconnectTip(CValidationState &state) {
 				uiInterface.RemoveTransaction(ptx->GetHash());
 			}else
 				uiInterface.ReleaseTransaction(ptx->GetHash());
+		}else {
+			uiInterface.RemoveTransaction(ptx->GetHash());
 		}
+
 	}
 
 	if(SysCfg().GetArg("-blocklog", 0) !=0 )
@@ -2539,7 +2542,7 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 	LOCK(cs_main);
 	CBlockIndex *pindexOldTip = chainActive.Tip();
 	LogPrint("CHECKPOINT", "Current tip block:\n");
-	pindexOldTip->print();
+	LogPrint("CHECKPOINT", pindexOldTip->ToString().c_str());
 	//Find the active chain dismatch checkpoint
 	if (NULL == chainActive[nHeight] || hash != chainActive[nHeight]->GetBlockHash()) {
 		CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);

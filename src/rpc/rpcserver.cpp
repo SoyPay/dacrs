@@ -248,7 +248,7 @@ static const CRPCCommand vRPCCommands[] =
     { "getblockhash",           &getblockhash,           false,     false,      false },
     { "getdifficulty",          &getdifficulty,          true,      false,      false },
     { "getrawmempool",          &getrawmempool,          true,      false,      false },
-
+    { "listcheckpoint",         &listcheckpoint,         true,      false,      false },
     { "verifychain",            &verifychain,            true,      false,      false },
 
     /* Mining */
@@ -323,7 +323,8 @@ static const CRPCCommand vRPCCommands[] =
     { "printblokdbinfo",        &printblokdbinfo,        true,      false,      false},
     { "getalltxinfo",			&getalltxinfo,			 true,      false,      true },
     { "saveblocktofile",        &saveblocktofile,        true,      false,      true },
-    { "gethash",                &gethash,        true,      false,      true },
+    { "gethash",                &gethash,        		 true,      false,      true },
+
 
 };
 

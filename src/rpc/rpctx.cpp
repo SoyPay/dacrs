@@ -887,6 +887,9 @@ Value disconnectblock(const Array& params, bool fHelp) {
 }
 
 Value resetclient(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 0) {
+			throw runtime_error("resetclient : no params");
+		}
 	Value te = TestDisconnectBlock(chainActive.Tip()->nHeight);
 
 	if (chainActive.Tip()->nHeight == 0) {
@@ -1836,7 +1839,7 @@ Value gencheckpoint(const Array& params, bool fHelp)
 	CDataStream sstream(SER_NETWORK, PROTOCOL_VERSION);
 	point.m_height = nHeight;
 	point.m_hashCheckpoint = block.GetHash();//chainActive[intTemp]->GetBlockHash();
-	LogPrint("CHECKPOINT","send hash = %s",block.GetHash().ToString());
+	LogPrint("CHECKPOINT","send hash = %s\n",block.GetHash().ToString());
 	sstream << point;
 	Object obj;
 	if (data.Sign(key, std::vector<unsigned char>(sstream.begin(), sstream.end()))
@@ -1876,10 +1879,10 @@ Value setcheckpoint(const Array& params, bool fHelp)
     		throw JSONRPCError(RPC_INVALID_PARAMETER, "read msg or sig failed");
     	}
     	data.m_vchMsg = ParseHex(msg.get_str());
-    	data.m_vchSig = ParseHex(msg.get_str());
+    	data.m_vchSig = ParseHex(sig.get_str());
     }
     file.close();
-    if(data.CheckSignature(SysCfg().GetPublicKey())) {
+    if(!data.CheckSignature(SysCfg().GetPublicKey())) {
     	throw JSONRPCError(RPC_INVALID_PARAMETER, "check signature failed");
     }
 	SyncData::CSyncDataDb db;

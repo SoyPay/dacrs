@@ -20,6 +20,9 @@ CSyncData::~CSyncData()
 bool CSyncData::CheckSignature(const std::string& pubKey)
 {
 	CPubKey key(ParseHex(pubKey));
+	LogPrint("CHECKPOINT", "CheckSignature PubKey:%s\n", pubKey.c_str());
+	LogPrint("CHECKPOINT", "CheckSignature Msg:%s\n", HexStr(m_vchMsg).c_str());
+	LogPrint("CHECKPOINT", "CheckSignature Sig:%s\n", HexStr(m_vchSig).c_str());
     if (!key.Verify(Hash(m_vchMsg.begin(), m_vchMsg.end()), m_vchSig))
     {
         return ERRORMSG("CSyncCheckpoint::CheckSignature : verify signature failed");
