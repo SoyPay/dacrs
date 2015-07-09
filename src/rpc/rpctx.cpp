@@ -1233,7 +1233,7 @@ Value saveblocktofile(const Array& params, bool fHelp) {
 //	cout << "block header:" << HexStr(ds) << endl;
 	string file = params[1].get_str();
 	try {
-		FILE* fp = fopen(file.c_str(), "w+");
+		FILE* fp = fopen(file.c_str(), "wb+");
 		CAutoFile fileout = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
 		if (!fileout)
 			throw JSONRPCError(RPC_MISC_ERROR, "open file:" + strblockhash + "failed!");
@@ -1823,13 +1823,12 @@ Value gencheckpoint(const Array& params, bool fHelp)
 	int nHeight(0);
 	CBlock block;
 	try {
-		FILE* fp = fopen(file.c_str(), "r");
+		FILE* fp = fopen(file.c_str(), "rb+");
 		CAutoFile fileout = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
 		if (!fileout)
 			throw JSONRPCError(RPC_MISC_ERROR, "open file:" + file + "failed!");
 		fileout >> nHeight;
 		fileout >> block;
-		fflush(fileout);
 	} catch (std::exception &e) {
 
 		throw JSONRPCError(RPC_MISC_ERROR, strprintf("read block to file error:%s", e.what()).c_str());
