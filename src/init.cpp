@@ -22,7 +22,7 @@
 #include "tx.h"
 #include "./wallet/wallet.h"
 #include "./wallet/walletdb.h"
-
+#include "syncdatadb.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -784,8 +784,14 @@ bool AppInit2(boost::thread_group& threadGroup)
     		cout<< "load wallet failed:"<<  e.what() << endl;
     	}
 
-
-
+    //load checkpoint
+    SyncData::CSyncDataDb db;
+	if (db.InitializeSyncDataDb(GetDataDir() / "syncdata")) {
+		if (!Checkpoints::LoadCheckpoint()) {
+			LogPrint("INFO", "load check point error!\n");
+			return false;
+		}
+	}
 
     bool fLoaded = false;
     while (!fLoaded) {
@@ -935,6 +941,11 @@ bool AppInit2(boost::thread_group& threadGroup)
     CValidationState state;
     if (!ActivateBestChain(state))
         strErrors << "Failed to connect best block";
+
+    // check current chain according to checkpoint
+    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+    if(NULL != pcheckpoint)
+    	CheckActiveChain(pcheckpoint->nHeight, pcheckpoint->GetBlockHash());
 
     vector<boost::filesystem::path> vImportFiles;
     if (SysCfg().IsArgCount("-loadblock"))
