@@ -1831,7 +1831,8 @@ Value gencheckpoint(const Array& params, bool fHelp)
 		fileout >> block;
 		fflush(fileout);
 	} catch (std::exception &e) {
-		throw JSONRPCError(RPC_MISC_ERROR, "save block to file error");
+
+		throw JSONRPCError(RPC_MISC_ERROR, strprintf("read block to file error:%s", e.what()).c_str());
 	}
 
 	SyncData::CSyncData data;

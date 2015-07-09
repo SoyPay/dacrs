@@ -95,7 +95,7 @@ int GetElementForBurn(CBlockIndex* pindex)
 				dTotalFeePerKb += pTemp->dFeePerKb;
 				pTemp = pTemp->pprev;
 			}
-			if(pindex->nChainTx - pTemp->nChainTx < 500) {
+			if(pindex->nChainTx - pTemp->nChainTx < 10*nBlock) {
 				return pindex->nFuelRate;
 			}
 			uint64_t txNum = pTemp->nChainTx;
@@ -106,7 +106,7 @@ int GetElementForBurn(CBlockIndex* pindex)
 				pTemp = pTemp->pprev;
 			}
 			dAverageFeePerKb2  = dTotalFeePerKb / nBlock;
-			if(txNum - pTemp->nChainTx < 500) {
+			if(txNum - pTemp->nChainTx < 10*nBlock) {
 				return pindex->nFuelRate;
 			}
 			if(0.0==dAverageFeePerKb1 || 0.0==dAverageFeePerKb2 )
