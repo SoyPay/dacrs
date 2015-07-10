@@ -104,7 +104,7 @@ bool ShutdownRequested()
     return fRequestShutdown;
 }
 
-CAccountViewDB *pAccountViewDB;
+
 
 void Shutdown()
 {

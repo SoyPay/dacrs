@@ -342,6 +342,8 @@ public:
 	Object ToJosnObj() const;
 	int GetSize();
 	void SetBaseData(CTransactionDBView *pNewBase);
+	const map<uint256, vector<uint256> > &GetCacheMap();
+	void SetCacheMap(const map<uint256, vector<uint256> > &mapCache);
 };
 
 #endif
