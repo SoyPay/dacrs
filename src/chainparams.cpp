@@ -90,7 +90,7 @@ map<string, vector<string> > CBaseParams::m_mapMultiArgs;
 //
 vector<string> intPubKey_mainNet = {
 		"0388a07c89727f9065703100e94c00ce82bda6987215a88abee65db9b37f52f9e0",
-		"037c3d83024fd71305003761a393f1267a3d22f20b07c480886942c9d4fb9af074"
+		"03fdfda984690ff2b10f27ccc38b90634ca101a27621c1a9dcec7a2f33fa0282d6"
 };
 
 vector<string> initPubKey_testNet = { //
@@ -136,7 +136,7 @@ public:
 		pchMessageStart[1] = 0xfe;
 		pchMessageStart[2] = 0x1d;
 		pchMessageStart[3] = 0x20;
-		vAlertPubKey =	ParseHex("022570ffc7887fd8b9451c4082134b3a455969346fa2e98634b86d5f53052e5d8c");
+		vAlertPubKey =	ParseHex("02d99681b6287b3765dfbb930e6caa10d1f8ac19e02b88f52362ce6eb43c0ec71e");
 		nDefaultPort = 8668;
 		nRPCPort = 8669;
 		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 10);        //00 3f ff ff
@@ -170,7 +170,7 @@ public:
 		genesis.nHeight = 0;
 		genesis.vSignature.clear();
 		hashGenesisBlock = genesis.GetHash();
-		publicKey = "022570ffc7887fd8b9451c4082134b3a455969346fa2e98634b86d5f53052e5d8c";
+		publicKey = "02d99681b6287b3765dfbb930e6caa10d1f8ac19e02b88f52362ce6eb43c0ec71e";
 //		{
 //			CBigNum bnTarget;
 //			bnTarget.SetCompact(genesis.nBits);
