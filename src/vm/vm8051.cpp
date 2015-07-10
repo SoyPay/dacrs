@@ -1233,13 +1233,9 @@ static RET_DEFINE GetUserAppAccFoudWithTag(unsigned char * ipara,void * pVmScrip
 
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 	unsigned int Size(0);
-	if (pVmScriptRun->GetComfirHeight() > g_secondForkHeigh) {
-		CAppFundOperate temp;
-		Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
-	} else {
-		CVmOperate temp;
-		Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
-	}
+	CAppFundOperate temp;
+	Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 1
     	|| retdata.at(0).get()->size() !=Size)
     {

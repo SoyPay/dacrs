@@ -868,11 +868,9 @@ bool CAccount::IsMoneyOverflow(uint64_t nAddMoney) {
 bool CAccount::OperateAccount(OperType type, const uint64_t &value, const int nCurHeight) {
 //	LogPrint("op_account", "before operate:%s\n", ToString());
 
-	if(nCurHeight > g_firstForkHeigh) {
-		if (UpDateCoinDay(nCurHeight) < 0) {
-			LogPrint("INFO", "call UpDateCoinDay failed: cur height less than update height\n");
-			return false;
-		}
+	if (UpDateCoinDay(nCurHeight) < 0) {
+		LogPrint("INFO", "call UpDateCoinDay failed: cur height less than update height\n");
+		return false;
 	}
 
 	if (keyID == uint160(0)) {
