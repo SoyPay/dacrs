@@ -239,8 +239,6 @@ Value dumpprivkey(const Array& params, bool fHelp)
     return reply;
 }
 
-
-
 Value dumpwallet(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1)
 		throw runtime_error("dumpwallet \"filename\"\n"
