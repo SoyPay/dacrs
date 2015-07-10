@@ -487,6 +487,7 @@ CBlockIndex *CChain::FindFork(const CBlockLocator &locator) const {
 }
 
 
+CAccountViewDB *pAccountViewDB = NULL;
 CBlockTreeDB *pblocktree = NULL;
 CAccountViewCache *pAccountViewTip = NULL;
 CTransactionDB *pTxCacheDB = NULL;
@@ -2068,16 +2069,22 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 }
 
 bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockIndex, CValidationState& state) {
-//	CAccountViewCache view(*pAccountViewTip, true);
-//	CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
-//	CScriptDBViewCache scriptDBTemp(*pScriptDBTip, true);
 
 	std::shared_ptr<CAccountViewCache> pForkAcctViewCache;
 	std::shared_ptr<CTransactionDBCache> pForkTxCache;
 	std::shared_ptr<CScriptDBViewCache> pForkScriptDBCache;
-	std::shared_ptr<CAccountViewCache> pAcctViewCache = make_shared<CAccountViewCache>(*pAccountViewTip, true);
-	std::shared_ptr<CTransactionDBCache> pTxCache = make_shared<CTransactionDBCache>(*pTxCacheTip, true);
-	std::shared_ptr<CScriptDBViewCache> pScriptDBCache = make_shared<CScriptDBViewCache>(*pScriptDBTip, true);
+
+	std::shared_ptr<CAccountViewCache> pAcctViewCache = make_shared<CAccountViewCache>(*pAccountViewDB, true);
+	pAcctViewCache->cacheAccounts = pAccountViewTip->cacheAccounts;
+	pAcctViewCache->cacheKeyIds = pAccountViewTip->cacheKeyIds;
+	pAcctViewCache->hashBlock = pAccountViewTip->hashBlock;
+
+	std::shared_ptr<CTransactionDBCache> pTxCache = make_shared<CTransactionDBCache>(*pTxCacheDB, true);
+	pTxCache->SetCacheMap(pTxCacheTip->GetCacheMap());
+
+	std::shared_ptr<CScriptDBViewCache> pScriptDBCache = make_shared<CScriptDBViewCache>(*pScriptDB, true);
+	pScriptDBCache->mapDatas = pScriptDBTip->mapDatas;
+
 	uint256 preBlockHash(0);
 	bool bFindForkChainTip(false);
 	vector<CBlock> vPreBlocks;
@@ -2091,7 +2098,6 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 				CBlock block;
 				if (!ReadBlockFromDisk(block, pPreBlockIndex))
 					return state.Abort(_("Failed to read block"));
-				//vPreBlocks.insert(vPreBlocks.begin(), block);
 				vPreBlocks.push_back(block);                   //将支链的block保存起来
 			}
 			pPreBlockIndex = pPreBlockIndex->pprev;
@@ -2124,6 +2130,7 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 			std::tuple<std::shared_ptr<CAccountViewCache>, std::shared_ptr<CTransactionDBCache>,
 					std::shared_ptr<CScriptDBViewCache> > forkCache = std::make_tuple(pAcctViewCache, pTxCache,
 					pScriptDBCache);
+			LogPrint("INFO", "add mapCache Key:%s\n", pPreBlockIndex->GetBlockHash().GetHex());
 			mapCache[pPreBlockIndex->GetBlockHash()] = forkCache;
 		}
 
@@ -2144,6 +2151,8 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 
 		vector<CBlock>::reverse_iterator rIter = vPreBlocks.rbegin();
 		for(; rIter != vPreBlocks.rend(); ++rIter) { //连接支链的block
+			LogPrint("INFO", "CheckBlockProofWorkWithCoinDay() ConnectBlock block nHieght=%d hash=%s\n",
+					rIter->nHeight, rIter->GetHash().GetHex());
 			if (!ConnectBlock(*rIter, state, *pForkAcctViewCache, mapBlockIndex[rIter->GetHash()], *pForkTxCache, *pForkScriptDBCache, false))
 				return ERRORMSG("CheckBlockProofWorkWithCoinDay() : ConnectBlock %s failed", rIter->GetHash().ToString());
 		}
@@ -2154,12 +2163,7 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 					ERRORMSG("CheckBlockProofWorkWithCoinDay() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
 					REJECT_INVALID, "bad-pos-tx");
 		}
-		CAccount acctInfo;
-		CRegID regId("0-14");
-		if(pForkAcctViewCache->GetAccount(regId, acctInfo)) {
-			LogPrint("miner", "CheckBlockProofWorkWithCoinDay connect block hash:%s\n", block.GetHash().GetHex());
-			LogPrint("miner", "CheckBlockProofWorkWithCoinDay accout info:%s\n", acctInfo.ToString());
-		}
+
 		//校验利息是否正常
 		std::shared_ptr<CRewardTransaction> pRewardTx = dynamic_pointer_cast<CRewardTransaction>(block.vptx[0]);
 		uint64_t llValidReward = block.GetFee() - block.nFuel + POS_REWARD;
@@ -2180,8 +2184,8 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 				return state.DoS(100, ERRORMSG("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed\n", item->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
 		}
 
-		vector<CBlock>::iterator iterBlock = vPreBlocks.begin();
-		if(iterBlock != vPreBlocks.end()) {
+		if(!vPreBlocks.empty()) {
+			vector<CBlock>::iterator iterBlock = vPreBlocks.begin();
 			if(bFindForkChainTip) {
 				LogPrint("INFO", "delete mapCache Key:%s\n", preBlockHash.GetHex());
 				mapCache.erase(preBlockHash);
@@ -2191,31 +2195,6 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 			mapCache[iterBlock->GetHash()] = cache;
 		}
 	} else {
-//		uint64_t nInterest = 0;
-//		if (!VerifyPosTx(pPreBlockIndex, view, &block, nInterest, txCacheTemp, scriptDBTemp, false)) {
-//			return state.DoS(100,
-//					ERRORMSG("CheckBlockProofWorkWithCoinDay() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
-//					REJECT_INVALID, "bad-pos-tx");
-//		}
-//		//校验利息是否正常
-//		std::shared_ptr<CRewardTransaction> pRewardTx = dynamic_pointer_cast<CRewardTransaction>(block.vptx[0]);
-//			if(pRewardTx->rewardValue !=  nInterest + block.GetFee())
-//				return state.DoS(100, ERRORMSG("ConnectBlock() : coinbase pays too much (actual=%d vs limit=%d)",
-//											pRewardTx->rewardValue, nInterest + block.GetFee()),
-//									   REJECT_INVALID, "bad-cb-amount");
-//
-//		for(auto & item : block.vptx) {
-//			//校验交易是否在有效高度
-//			if (!item->IsValidHeight(mapBlockIndex[view.GetBestBlock()]->nHeight, SysCfg().GetTxCacheHeight())) {
-//				return state.DoS(100,
-//						ERRORMSG("CheckBlockProofWorkWithCoinDay() : txhash=%s beyond the scope of valid height\n ",
-//								item->GetHash().GetHex()), REJECT_INVALID, "tx-invalid-height");
-//			}
-//			//校验是否有重复确认交易
-//			if(uint256(0) != txCacheTemp.IsContainTx(item->GetHash()))
-//				return state.DoS(100, ERRORMSG("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed\n", item->GetHash().GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
-//
-//		}
 		return true;
 	}
 	return true;

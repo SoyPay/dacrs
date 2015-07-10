@@ -79,43 +79,43 @@ uint64_t nLastBlockSize = 0;
 //base on the last 500 blocks
 int GetElementForBurn(CBlockIndex* pindex)
 {
-	if(NULL == pindex) {
+	if (NULL == pindex) {
 		return INIT_FUEL_RATES;
 	}
-	double dTotalFeePerKb(0.0);
-	double dAverageFeePerKb1(0.0);
-	double dAverageFeePerKb2(0.0);
 	int nBlock = SysCfg().GetArg("-blocksizeforburn", DEFAULT_BURN_BLOCK_SIZE);
-	if (nBlock * 2 >= pindex->nHeight-1) {
+	if (nBlock * 2 >= pindex->nHeight - 1) {
 		return INIT_FUEL_RATES;
 	} else {
+		int64_t nTotalFeePerKb(0);
+		int64_t nAverageFeePerKb1(0);
+		int64_t nAverageFeePerKb2(0);
 		CBlockIndex * pTemp = pindex;
-		if((pindex->nHeight-1) % nBlock == 0) {
+		if ((pindex->nHeight - 1) % nBlock == 0) {
 			for (int ii = 0; ii < nBlock; ii++) {
-				dTotalFeePerKb += pTemp->dFeePerKb;
+				nTotalFeePerKb += int64_t(pTemp->dFeePerKb);
 				pTemp = pTemp->pprev;
 			}
-			if(pindex->nChainTx - pTemp->nChainTx < 10*nBlock) {
+			if (pindex->nChainTx - pTemp->nChainTx < (unsigned int) 10 * nBlock) {
 				return pindex->nFuelRate;
 			}
 			uint64_t txNum = pTemp->nChainTx;
-			dAverageFeePerKb1  = dTotalFeePerKb / nBlock;
-			dTotalFeePerKb = 0.0;
+			nAverageFeePerKb1 = nTotalFeePerKb / nBlock;
+			nTotalFeePerKb = 0;
 			for (int ii = 0; ii < nBlock; ii++) {
-				dTotalFeePerKb += pTemp->dFeePerKb;
+				nTotalFeePerKb += int64_t(pTemp->dFeePerKb);
 				pTemp = pTemp->pprev;
 			}
-			dAverageFeePerKb2  = dTotalFeePerKb / nBlock;
-			if(txNum - pTemp->nChainTx < 10*nBlock) {
+			nAverageFeePerKb2 = nTotalFeePerKb / nBlock;
+			if (txNum - pTemp->nChainTx < (unsigned int) 10 * nBlock) {
 				return pindex->nFuelRate;
 			}
-			if(0.0==dAverageFeePerKb1 || 0.0==dAverageFeePerKb2 )
+			if (0 == nAverageFeePerKb1 || 0 == nAverageFeePerKb2)
 				return pindex->nFuelRate;
-			else{
-				int newFuelRate = int(pindex->nFuelRate * (dAverageFeePerKb2 / dAverageFeePerKb1));
-				if(newFuelRate < MIN_FUEL_RATES)
+			else {
+				int newFuelRate = int(pindex->nFuelRate * (nAverageFeePerKb2 / nAverageFeePerKb1));
+				if (newFuelRate < MIN_FUEL_RATES)
 					newFuelRate = MIN_FUEL_RATES;
-				LogPrint("fuel", "preFuelRate=%d fuelRate=%d, nHeight=%d, dAveragerFeePerKb1=%lf, dAverageFeePerKb2=%lf\n", pindex->nFuelRate, newFuelRate, pindex->nHeight, dAverageFeePerKb1, dAverageFeePerKb2);
+				LogPrint("fuel", "preFuelRate=%d fuelRate=%d, nHeight=%d, nAveragerFeePerKb1=%lf, nAverageFeePerKb2=%lf\n", pindex->nFuelRate, newFuelRate, pindex->nHeight, nAverageFeePerKb1, nAverageFeePerKb2);
 				return newFuelRate;
 			}
 		}else {

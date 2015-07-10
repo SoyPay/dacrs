@@ -1062,19 +1062,22 @@ extern CChain chainMostWork;
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern CBlockTreeDB *pblocktree;
 
-/** account db */
+/** account db cache*/
 extern CAccountViewCache *pAccountViewTip;
 
-/** transaction cache db */
+/** account db */
+extern CAccountViewDB *pAccountViewDB;
+
+/** transaction db cache*/
 extern CTransactionDB *pTxCacheDB;
 
 /** srcipt db */
 extern CScriptDB *pScriptDB;
 
-/** tx cache */
+/** tx db cache */
 extern CTransactionDBCache *pTxCacheTip;
 
-/** contract script data cache */
+/** contract script db cache */
 extern CScriptDBViewCache *pScriptDBTip;
 
 /** nSyncTipHight  */

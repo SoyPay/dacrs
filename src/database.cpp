@@ -1400,29 +1400,23 @@ bool CTransactionDBCache::AddBlockToCache(const CBlock &block) {
 	for (auto &ptx : block.vptx) {
 		vTxHash.push_back(ptx->GetHash());
 	}
-//	if (IsContainBlock(block)) {
-//		LogPrint("INFO", "the block hash:%s is in TxCache\n", block.GetHash().GetHex());
 	mapTxHashByBlockHash[block.GetHash()] = vTxHash;
-//	LogPrint("INFO", "CTransactionDBCache::AddBlockToCache() blockhash=%s height=%d\n", block.GetHash().GetHex(), block.nHeight);
-//	} else {
-//		mapTxHashByBlockHash.insert(make_pair(block.GetHash(), vTxHash));
-//	}
-
-//	LogPrint("block", "mapTxHashByBlockHash size:%d\n", mapTxHashByBlockHash.size());
+//	LogPrint("txcache", "CTransactionDBCache:AddBlockToCache() the block height=%d hash=%s is in TxCache\n", block.nHeight, block.GetHash().GetHex());
+//	LogPrint("txcache", "mapTxHashByBlockHash size:%d\n", mapTxHashByBlockHash.size());
+//	map<int, uint256> mapTxCacheBlockHash;
+//	mapTxCacheBlockHash.clear();
 //	for (auto &item : mapTxHashByBlockHash) {
-//		LogPrint("INFO", "blockhash:%s\n", item.first.GetHex());
-////		for (auto &txHash : item.second)
-////			LogPrint("INFO", "txhash:%s\n", txHash.GetHex());
+//		mapTxCacheBlockHash.insert(make_pair(mapBlockIndex[item.first]->nHeight, item.first));
 //	}
-//	for(auto &item : mapTxHashCacheByPrev) {
-//		LogPrint("INFO", "prehash:%s\n", item.first.GetHex());
-//		for(auto &relayTx : item.second)
-//			LogPrint("INFO", "relay tx hash:%s\n", relayTx.GetHex());
+//	for(auto &item1 : mapTxCacheBlockHash) {
+//		LogPrint("txcache", "block height:%d, hash:%s\n", item1.first, item1.second.GetHex());
+//		for (auto &txHash : mapTxHashByBlockHash[item1.second])
+//			LogPrint("txcache", "txhash:%s\n", txHash.GetHex());
 //	}
 	return true;
 }
 bool CTransactionDBCache::DeleteBlockFromCache(const CBlock &block) {
-//	LogPrint("INFO", "CTransactionDBCache::DeleteBlockFromCache() blockhash=%s height=%d\n", block.GetHash().GetHex(), block.nHeight);
+//	LogPrint("txcache", "CTransactionDBCache::DeleteBlockFromCache() height=%d blockhash=%s \n", block.nHeight, block.GetHash().GetHex());
 	if (IsContainBlock(block)) {
 		vector<uint256> vTxHash;
 		vTxHash.clear();
@@ -1432,7 +1426,6 @@ bool CTransactionDBCache::DeleteBlockFromCache(const CBlock &block) {
 		LogPrint("ERROR", "the block hash:%s isn't in TxCache\n", block.GetHash().GetHex());
 		return false;
 	}
-
 	return true;
 }
 uint256 CTransactionDBCache::IsContainTx(const uint256 & txHash) {
@@ -1533,7 +1526,12 @@ void CTransactionDBCache::SetBaseData(CTransactionDBView *pNewBase){
 	pBase = pNewBase;
 }
 
-
+const map<uint256, vector<uint256> > & CTransactionDBCache::GetCacheMap() {
+	return mapTxHashByBlockHash;
+}
+void CTransactionDBCache::SetCacheMap(const map<uint256, vector<uint256> > &mapCache) {
+	mapTxHashByBlockHash = mapCache;
+}
 bool CScriptDBViewCache::GetScriptAcc(const CRegID& scriptId, const vector<unsigned char> &vAccKey, CAppUserAccout& appAccOut) {
 	vector<unsigned char> scriptKey = {'a','c','c','t'};
 	vector<unsigned char> vRegId = scriptId.GetVec6();
