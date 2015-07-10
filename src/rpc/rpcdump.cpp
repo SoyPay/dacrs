@@ -178,12 +178,12 @@ Value importwallet(const Array& params, bool fHelp)
     	const Value & keyobj = find_value(reply.get_obj(),"key");
     	const Array & keyarry = keyobj.get_array();
     	inmsizeport = keyarry.size();
-//    	for(auto const &te :keyarry)
-//    	{
-//    		CKeyStoreValue tep;
-//    		tep.UnSersailFromJson(te.get_obj());
-//    		pwalletMain->AddKey(tep);
-//    	}
+    	for(auto const &keyItem :keyarry)
+    	{
+    		CKeyCombi keyCombi;
+    		keyCombi.UnSersailFromJson(keyItem.get_obj());
+    		pwalletMain->AddKey(keyCombi);
+    	}
     }
     file.close();
     pwalletMain->ShowProgress("", 100); // hide progress dialog in GUI
