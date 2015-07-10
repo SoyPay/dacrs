@@ -54,8 +54,6 @@ CChain chainActive;
 CChain chainMostWork;
 int g_nSyncTipHeight(0);
 
-int g_firstForkHeigh = 30000;
-int g_secondForkHeigh = 52933;
 map<uint256, std::tuple<std::shared_ptr<CAccountViewCache>, std::shared_ptr<CTransactionDBCache>, std::shared_ptr<CScriptDBViewCache> > > mapCache;
 
 CSignatureCache signatureCache;

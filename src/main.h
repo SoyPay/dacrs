@@ -1082,8 +1082,7 @@ extern CScriptDBViewCache *pScriptDBTip;
 
 /** nSyncTipHight  */
 extern int g_nSyncTipHeight;
-extern int g_firstForkHeigh;
-extern int g_secondForkHeigh;
+
 extern std::tuple<bool, boost::thread*> RunDacrs(int argc, char* argv[]);
 extern bool WriteBlockLog(bool falg, string suffix);
 //extern set<uint256> setTxHashCache;

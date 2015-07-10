@@ -89,7 +89,8 @@ map<string, vector<string> > CBaseParams::m_mapMultiArgs;
 // testnet network
 //
 vector<string> intPubKey_mainNet = {
-		"0388a07c89727f9065703100e94c00ce82bda6987215a88abee65db9b37f52f9e0"
+		"0388a07c89727f9065703100e94c00ce82bda6987215a88abee65db9b37f52f9e0",
+		"037c3d83024fd71305003761a393f1267a3d22f20b07c480886942c9d4fb9af074"
 };
 
 vector<string> initPubKey_testNet = { //
@@ -135,9 +136,7 @@ public:
 		pchMessageStart[1] = 0xfe;
 		pchMessageStart[2] = 0x1d;
 		pchMessageStart[3] = 0x20;
-		vAlertPubKey =
-				ParseHex(
-						"04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
+		vAlertPubKey =	ParseHex("022570ffc7887fd8b9451c4082134b3a455969346fa2e98634b86d5f53052e5d8c");
 		nDefaultPort = 8668;
 		nRPCPort = 8669;
 		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 10);        //00 3f ff ff
@@ -245,11 +244,7 @@ public:
         pchMessageStart[1] = 0x2d;
         pchMessageStart[2] = 0x1c;
         pchMessageStart[3] = 0x0d;
-		vAlertPubKey =
-				ParseHex(
-						"04302390343f91cc401d56d68b123028bf52e5fca1939df127f63c646"
-						"7cdf9c8e2c14b61104cf817d0b780da337893ecc4aaff1309e536162d"
-						"abbdb45200ca2b0a");
+		vAlertPubKey =	ParseHex("036e15523feb9e329b4fdf53c227fc89ea45a1a36342e7e38fad7fe6e3777243af");
 		nDefaultPort = 18668;
 		nRPCPort = 18669;
 		strDataDir = "testnet";
@@ -556,7 +551,7 @@ bool CBaseParams::CreateGenesisRewardTx(vector<std::shared_ptr<CBaseTransaction>
 	for (int i = 0; i < length; ++i) {
 		int64_t money(0);
 		if( i > 0) {
-			money = 10000000 * COIN;
+			money = 1000000000 * COIN;
 		}
 		shared_ptr<CRewardTransaction> pRewardTx = make_shared<CRewardTransaction>(ParseHex(vInitPubKey[i].c_str()), money, 0);
 		if (pRewardTx.get())
