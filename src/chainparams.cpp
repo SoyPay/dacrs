@@ -313,7 +313,7 @@ public:
 //			cout << "regtest hashGenesisBlock:\r\n" << hashGenesisBlock.ToString() << endl;
 //			cout << "regtest hashMerkleRoot:\r\n" << genesis.hashMerkleRoot.ToString() << endl;
 //		}
-		assert(hashGenesisBlock == uint256("0xe6d18c0d01b9448946b45db941407efcdf75cb194bce8407cb4121af1e53b6a4"));
+		assert(hashGenesisBlock == uint256("0x18d876339c5014803507332d0ae509862b4da382253b7696605e58963592723f"));
 
 		vFixedSeeds.clear();
 		vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
