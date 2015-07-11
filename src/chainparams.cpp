@@ -139,6 +139,7 @@ public:
 		vAlertPubKey =	ParseHex("02d99681b6287b3765dfbb930e6caa10d1f8ac19e02b88f52362ce6eb43c0ec71e");
 		nDefaultPort = 8668;
 		nRPCPort = 8669;
+		strDataDir = "main";
 		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 10);        //00 3f ff ff
 		nSubsidyHalvingInterval = 210000;
 
