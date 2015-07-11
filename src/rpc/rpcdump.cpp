@@ -177,7 +177,6 @@ Value importwallet(const Array& params, bool fHelp)
     	json_spirit::read(file,reply);
     	const Value & keyobj = find_value(reply.get_obj(),"key");
     	const Array & keyarry = keyobj.get_array();
-    	inmsizeport = keyarry.size();
     	for(auto const &keyItem :keyarry)
     	{
     		CKeyCombi keyCombi;
@@ -187,8 +186,11 @@ Value importwallet(const Array& params, bool fHelp)
     		string strKeyId = find_value(keyItem.get_obj(), "keyid").get_str();
     		CKeyID keyId(uint160(ParseHex(strKeyId)));
     		keyCombi.UnSersailFromJson(keyItem.get_obj());
-    		if(!pwalletMain->AddKey(keyId, keyCombi))
-    			throw JSONRPCError(RPC_INVALID_PARAMETER, "import wallet dump file failed");;
+    		if(!keyCombi.IsContainMainKey() && !keyCombi.IsContainMinerKey()) {
+    			continue;
+    		}
+    		if(pwalletMain->AddKey(keyId, keyCombi))
+    			inmsizeport++;
     	}
     }
     file.close();
