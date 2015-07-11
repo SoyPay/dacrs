@@ -181,8 +181,11 @@ Value importwallet(const Array& params, bool fHelp)
     	for(auto const &keyItem :keyarry)
     	{
     		CKeyCombi keyCombi;
+    		const Value &obj = find_value(keyItem.get_obj(), "keyid");
+    		if(obj.type() == null_type)
+    			continue;
     		string strKeyId = find_value(keyItem.get_obj(), "keyid").get_str();
-    		CKeyID keyId(strKeyId);
+    		CKeyID keyId(uint160(ParseHex(strKeyId)));
     		keyCombi.UnSersailFromJson(keyItem.get_obj());
     		if(!pwalletMain->AddKey(keyId, keyCombi))
     			throw JSONRPCError(RPC_INVALID_PARAMETER, "import wallet dump file failed");;

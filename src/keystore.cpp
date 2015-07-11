@@ -19,8 +19,8 @@ Object CKeyCombi::ToJsonObj()const {
 		reply.push_back(Pair("mMainPk",mMainCkey.GetPubKey().ToString()));
 	}
 
-	reply.push_back(Pair("mMinerCkey",mMinerCkey.ToString()));
 	if(mMinerCkey.IsValid()){
+		reply.push_back(Pair("mMinerCkey",mMinerCkey.ToString()));
 		reply.push_back(Pair("mMinerCkeyBase58",CDacrsSecret(mMinerCkey).ToString()));
 		reply.push_back(Pair("mMinerPk",mMinerCkey.GetPubKey().ToString()));
 	}
@@ -31,12 +31,20 @@ Object CKeyCombi::ToJsonObj()const {
 bool CKeyCombi::UnSersailFromJson(const Object& obj){
 	try {
 		Object reply;
-		auto const &tem1 = ::ParseHex(find_value(obj, "mCkey").get_str());
-		mMainCkey.Set(tem1.begin(),tem1.end(),true);
-		auto const &tem2=::ParseHex(find_value(obj, "mMinerCkey").get_str());
-		mMinerCkey.Set(tem2.begin(),tem2.end(),true);
-		nCreationTime =find_value(obj, "nCreationTime").get_int64();
-
+		const Value& mCKey = find_value(obj, "mCkey");
+		if(mCKey.type() != json_spirit::null_type) {
+			auto const &tem1 = ::ParseHex(mCKey.get_str());
+			mMainCkey.Set(tem1.begin(),tem1.end(),true);
+		}
+		const Value& mMinerKey = find_value(obj, "mMinerCkey");
+		if(mMinerKey.type() != json_spirit::null_type) {
+			auto const &tem2=::ParseHex(mMinerKey.get_str());
+			mMinerCkey.Set(tem2.begin(),tem2.end(),true);
+		}
+		const Value& nTime = find_value(obj, "nCreationTime").get_int64();
+		if(nTime.type() != json_spirit::null_type) {
+			nCreationTime =find_value(obj, "nCreationTime").get_int64();
+		}
 	} catch (...) {
 		ERRORMSG("UnSersailFromJson Failed !");
 		return false;
