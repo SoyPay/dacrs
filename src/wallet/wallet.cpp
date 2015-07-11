@@ -845,25 +845,35 @@ bool CWallet::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigne
 {
 	return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret);
 }
-bool CWallet::AddKey(const CKey& secret,const CKey& minerKey)
+bool CWallet::AddKey(const CKey& key,const CKey& minerKey)
 {
-	CKeyCombi keyCombi(secret, minerKey, nWalletVersion);
-	return AddKey(keyCombi);
+	if(!key.IsValid())
+		return false;
+	CKeyCombi keyCombi(key, minerKey, nWalletVersion);
+	return AddKey(key.GetPubKey().GetKeyID(), keyCombi);
 }
-bool CWallet::AddKey(const CKeyCombi& keyCombi)
+bool CWallet::AddKey(const CKeyID &KeyId, const CKeyCombi& keyCombi)
 {
 	if (!fFileBacked)
 		return true;
-	if(!CWalletDB(strWalletFile).WriteKeyStoreValue(keyCombi.GetCKeyID(), keyCombi, nWalletVersion)) {
+
+	if(keyCombi.IsContainMainKey()) {
+		if(KeyId != keyCombi.GetCKeyID())
+			return false;
+	}
+
+	if(!CWalletDB(strWalletFile).WriteKeyStoreValue(KeyId, keyCombi, nWalletVersion)) {
 		return false;
 	}
-	return CCryptoKeyStore::AddKeyCombi(keyCombi.GetCKeyID(), keyCombi);
+	return CCryptoKeyStore::AddKeyCombi(KeyId, keyCombi);
 }
 
 bool CWallet::AddKey(const CKey& key)
 {
+	if(!key.IsValid())
+		return false;
 	CKeyCombi keyCombi(key, nWalletVersion);
-	return AddKey(keyCombi);
+	return AddKey(key.GetPubKey().GetKeyID(), keyCombi);
 }
 
 

@@ -181,8 +181,11 @@ Value importwallet(const Array& params, bool fHelp)
     	for(auto const &keyItem :keyarry)
     	{
     		CKeyCombi keyCombi;
+    		string strKeyId = find_value(keyItem.get_obj(), "keyid").get_str();
+    		CKeyID keyId(strKeyId);
     		keyCombi.UnSersailFromJson(keyItem.get_obj());
-    		pwalletMain->AddKey(keyCombi);
+    		if(!pwalletMain->AddKey(keyId, keyCombi))
+    			throw JSONRPCError(RPC_INVALID_PARAMETER, "import wallet dump file failed");;
     	}
     }
     file.close();
@@ -267,7 +270,9 @@ Value dumpwallet(const Array& params, bool fHelp) {
 	{
 		CKeyCombi keyCombi;
 		pwalletMain->GetKeyCombi(keyId, keyCombi);
-		key.push_back(keyCombi.ToJsonObj());
+		Object obj = keyCombi.ToJsonObj();
+		obj.push_back(Pair("keyid", keyId.ToString()));
+		key.push_back(obj);
 	}
 	reply.push_back(Pair("key",key));
 	file <<  write_string(Value(reply), true);

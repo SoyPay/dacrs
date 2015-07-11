@@ -129,7 +129,12 @@ int64_t CKeyCombi::GetBirthDay() const {
 }
 
 CKeyID CKeyCombi::GetCKeyID() const {
-	return (mMainCkey.GetPubKey().GetKeyID());
+	if(mMainCkey.IsValid())
+		return mMainCkey.GetPubKey().GetKeyID();
+	else {
+		CKeyID keyId;
+		return keyId;
+	}
 }
 void CKeyCombi::SetMainKey(CKey& mainKey)
 {

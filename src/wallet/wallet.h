@@ -105,7 +105,7 @@ public:
     bool LoadKeyCombi(const CKeyID & keyId, const CKeyCombi& keycombi) { return CBasicKeyStore::AddKeyCombi(keyId, keycombi);}
     // Adds a key to the store, and saves it to disk.
     bool AddKey(const CKey& secret,const CKey& minerKey);
-    bool AddKey(const CKeyCombi& store);
+    bool AddKey(const CKeyID &keyId, const CKeyCombi& store);
     bool AddKey(const CKey& key);
 //	bool AddPubKey(const CPubKey& pk);
 
