@@ -785,7 +785,7 @@ public:
 	}
 
 	bool IsMiner(int nCurHeight) {
-		if(nCurHeight < SysCfg().GetIntervalPos())
+		if(nCurHeight < 2*SysCfg().GetIntervalPos())
 			return true;
 		return nCoinDay >= llValues * SysCfg().GetIntervalPos();
 
