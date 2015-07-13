@@ -1472,14 +1472,23 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 		if (nTotalFuel != block.nFuel) {
 			return ERRORMSG("fuel value at block header calculate error(actual fuel:%ld vs block fuel:%ld)", nTotalFuel, block.nFuel);
 		}
-	}
+    }
 
 	if (!VerifyPosTx(view, &block, txCache, scriptDBCache, false)) {
 		return state.DoS(100, ERRORMSG("ConnectBlock() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
 				REJECT_INVALID, "bad-pos-tx");
 	}
-	//校验利息是否正常
+
 	std::shared_ptr<CRewardTransaction> pRewardTx = dynamic_pointer_cast<CRewardTransaction>(block.vptx[0]);
+
+	//校验coinday
+	CAccount account;
+	if (view.GetAccount(pRewardTx->account, account)) {
+		if(account.GetAccountPos(pindex->nHeight) <= 0 || !account.IsMiner(pindex->nHeight))
+			return state.DoS(100, ERRORMSG("coindays of account dismatch, can't be miner, account info:%s", account.ToString()), REJECT_INVALID, "bad-coinday-miner");
+	}
+
+	//校验reward
 	uint64_t llValidReward = block.GetFee() - block.nFuel + POS_REWARD;
 	LogPrint("INFO", "block fee:%lld, block fuel:%lld\n", block.GetFee(), block.nFuel);
 	if (pRewardTx->rewardValue != llValidReward)

@@ -354,8 +354,9 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 	if (view.GetAccount(prtx->account, account)) {
 		if(!CheckSignScript(pBlock->SignatureHash(), pBlock->vSignature, account.PublicKey)) {
 			if (!CheckSignScript(pBlock->SignatureHash(), pBlock->vSignature, account.MinerPKey)) {
-//				cout <<"verify miner key PubKey:"<< account.MinerPKey.ToString()<< endl;
-//				cout <<"verify miner hash:"<< pBlock->SignatureHash().ToString()<< endl;
+//				LogPrint("ERROR", "block verify fail\r\n");
+//				LogPrint("ERROR", "block hash:%s\n", pBlock->GetHash().GetHex());
+//				LogPrint("ERROR", "signature block:%s\n", HexStr(pBlock->vSignature.begin(), pBlock->vSignature.end()));
 				return ERRORMSG("Verify miner publickey signature error");
 			}
 		}
@@ -400,19 +401,6 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 //			cout <<"account miner"<< account.ToString()<< endl;
 			if(account.GetAccountPos(pBlock->nHeight) <= 0 || !account.IsMiner(pBlock->nHeight))
 				return ERRORMSG("coindays of account dismatch, can't be miner, account info:%s", account.ToString());
-			if (!account.PublicKey.Verify(pBlock->SignatureHash(), pBlock->vSignature)) {
-				if (!account.MinerPKey.Verify(pBlock->SignatureHash(), pBlock->vSignature)) {
-//					LogPrint("postx", "publickey:%s, keyid:%s\n", secureAcc.PublicKey.GetHash().GetHex(),
-	//						secureAcc.keyID.GetHex());
-//					LogPrint("postx", "block verify fail\r\n");
-//					LogPrint("postx", "block hash:%s\n", pBlock->GetHash().GetHex());
-//					LogPrint("postx", "signature block:%s\n",
-//							HexStr(pBlock->vSignature.begin(), pBlock->vSignature.end()));
-				LogPrint("ERROR", "Verify signature error");
-					return false;
-				}
-			}
-
 		} else {
 			LogPrint("ERROR", "AccountView have no the accountid\r\n");
 			return false;
