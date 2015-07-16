@@ -7,6 +7,14 @@
 
 #include "CIpo_tests.h"
 #include "CycleTestManger.h"
+#include <boost/assign/list_of.hpp>
+#include "json/json_spirit_utils.h"
+#include "json/json_spirit_value.h"
+#include "json/json_spirit_reader.h"
+using namespace std;
+using namespace boost;
+using namespace boost::assign;
+using namespace json_spirit;
 
 typedef struct user{
 	unsigned char address[35];
@@ -30,7 +38,6 @@ typedef struct user{
 	)
 }IPO_USER;
 
-//#define max_user 3
 
 #define max_user 100
 //const static IPO_USER userarray[max_user]=
@@ -46,26 +53,33 @@ CIpoTest::CIpoTest():nNum(0), nStep(0), strTxHash(""), strAppRegId("") {
 }
 
 TEST_STATE CIpoTest::Run(){
-//	switch(nStep){
-//	case 0:
-//	{
-//		if(RegistScript())
-//			nStep = 2;
-//		break;
-//	}
-//	case 1:
-//		CreateIpoTx();
-//		break;
-//	case 2:
-//		if(WaitComfirmed(strTxHash, strAppRegId)) {
-//			nStep = 1;
+
+//	int addrcount = 0;
+//    ifstream file;
+//    string strCurDir ="/home/share/bess/dacrs_test/ipo.txt";
+//	file.open(strCurDir, ios::in | ios::ate);
+//	if (!file.is_open())
+//		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
+//
+//	file.seekg(0, file.beg);
+//	if (file.good()){
+//		Value reply;
+//		json_spirit::read(file,reply);
+//		const Array & keyarry = reply.get_array();
+//		for(auto const &keyItem :keyarry)
+//		{
+//			string addr = find_value(keyItem.get_obj(), "addr").get_str();
+//			memcpy((char*)userarray[addrcount].address,(char*)addr.c_str(),sizeof(userarray[addrcount].address));
+//			userarray[addrcount].money  = find_value(keyItem.get_obj(), "money").get_int64();
+//			userarray[addrcount].freemoney = find_value(keyItem.get_obj(), "freemoney").get_int64();
+//			userarray[addrcount].freeMothmoney = find_value(keyItem.get_obj(), "freeMothmoney").get_int64();
+//			addrcount++;
+//			if(addrcount == (max_user -1))
+//				break;
 //		}
-//		break;
-//	default:
-//		nStep = 1;
-//		break;
 //	}
-//	return next_state;
+//	file.close();
+
 
 	for (int i = 0; i < max_user; i++) {
 		string newaddr;
@@ -76,15 +90,17 @@ TEST_STATE CIpoTest::Run(){
 		userarray[i].freeMothmoney = 22;
 	}
 
-
+    // 注册ipo脚本
 	RegistScript();
 
+	/// 等待ipo脚本被确认到block中
 	while(true)
 	{
 		if(WaitComfirmed(strTxHash, strAppRegId)) {
 					break;
 				}
 	}
+	/// 给每个地址转一定的金额
 	int64_t money = COIN;
 	for(int i=0;i <max_user;i++)
 	{
@@ -92,11 +108,12 @@ TEST_STATE CIpoTest::Run(){
 		basetest.CreateNormalTx(des,money);
 	}
 
+	 cout<<"end mempool"<<endl;
 	while(true)
 	{
 		if(basetest.IsMemoryPoolEmpty())
 			break;
-		sleep(100);
+		MilliSleep(100);
 	}
 
    cout<<"SendIpoTx start"<<endl;
@@ -167,4 +184,75 @@ BOOST_FIXTURE_TEST_CASE(Test,CIpoTest)
 	Run();
 }
 
+typedef struct _IPOCON{
+	unsigned char address[35];
+	int64_t money;
+}IPO_COIN;
+#define max_2ipouser 100
+
+BOOST_FIXTURE_TEST_CASE(get_coin,CIpoTest)
+{
+
+	//// 读json语句
+	IPO_COIN ipouserarray[max_2ipouser];
+	int addrcount = 0;
+    ifstream file;
+    string strCurDir ="/home/share/bess/dacrs_test/ipo.txt";
+	file.open(strCurDir, ios::in | ios::ate);
+	if (!file.is_open())
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
+
+	file.seekg(0, file.beg);
+	if (file.good()){
+		Value reply;
+		json_spirit::read(file,reply);
+		const Array & keyarry = reply.get_array();
+		for(auto const &keyItem :keyarry)
+		{
+			string addr = find_value(keyItem.get_obj(), "addr").get_str();
+			memcpy((char*)ipouserarray[addrcount].address,(char*)addr.c_str(),sizeof(ipouserarray[addrcount].address));
+			int64_t balance = find_value(keyItem.get_obj(), "balance").get_int64();
+			ipouserarray[addrcount].money = balance;
+			addrcount++;
+			if(addrcount == (max_2ipouser -1))
+				break;
+		}
+	}
+	file.close();
+
+
+	//////// 创建转账交易并且保存转账交易的hash
+	int64_t money = COIN;
+	std::map<std::string,std::string> maptx;
+	for(int i=0;i <(addrcount+1);i++)
+	{
+		string des =strprintf("%s", ipouserarray[i].address);
+		Value ret = basetest.CreateNormalTx(des,money);
+		string hash = "";
+		if(basetest.GetHashFromCreatedTx(ret, hash)){
+				maptx[des]= hash;
+			}else{
+				cout<<des.c_str()<<endl;
+			}
+	}
+
+	//////// 确保每个转账交易被确认在block中才退出
+	while(maptx.size() != 0)
+	{
+		std::map<std::string,std::string>::iterator it = maptx.begin();
+		for(;it != maptx.end();){
+			string addr = it->first;
+			string hash = it->second;
+			string regindex = "";
+			if(basetest.GetTxConfirmedRegID(hash,regindex)){
+				it = maptx.erase(it);
+			}else{
+				it++;
+			}
+		}
+
+		MilliSleep(100);
+	}
+}
 BOOST_AUTO_TEST_SUITE_END()
+
