@@ -193,14 +193,20 @@ typedef struct _IPOCON{
 BOOST_FIXTURE_TEST_CASE(get_coin,CIpoTest)
 {
 
+	if(boost::unit_test::framework::master_test_suite().argc != 1){
+		BOOST_ERROR("请传入参数ipo.txt路径");
+	}
+	string strCurDir = boost::unit_test::framework::master_test_suite().argv[1];
+
+
 	//// 读json语句
 	IPO_COIN ipouserarray[max_2ipouser];
 	int addrcount = 0;
     ifstream file;
-    string strCurDir ="/home/share/bess/dacrs_test/ipo.txt";
+   // string strCurDir ="/home/share/bess/dacrs_test/ipo.txt";
 	file.open(strCurDir, ios::in | ios::ate);
 	if (!file.is_open())
-		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot ipo.txt file");
 
 	file.seekg(0, file.beg);
 	if (file.good()){
