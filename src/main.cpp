@@ -234,7 +234,7 @@ bool WriteBlockLog(bool falg, string suffix) {
 
 void RegisterWallet(CWalletInterface* pwalletIn) {
     g_signals.SyncTransaction.connect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3));
-//    g_signals.EraseTransaction.connect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
+    g_signals.EraseTransaction.connect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
     g_signals.UpdatedTransaction.connect(boost::bind(&CWalletInterface::UpdatedTransaction, pwalletIn, _1));
     g_signals.SetBestChain.connect(boost::bind(&CWalletInterface::SetBestChain, pwalletIn, _1));
 //    g_signals.Inventory.connect(boost::bind(&CWalletInterface::Inventory, pwalletIn, _1));
@@ -246,7 +246,7 @@ void UnregisterWallet(CWalletInterface* pwalletIn) {
 //    g_signals.Inventory.disconnect(boost::bind(&CWalletInterface::Inventory, pwalletIn, _1));
     g_signals.SetBestChain.disconnect(boost::bind(&CWalletInterface::SetBestChain, pwalletIn, _1));
     g_signals.UpdatedTransaction.disconnect(boost::bind(&CWalletInterface::UpdatedTransaction, pwalletIn, _1));
-//    g_signals.EraseTransaction.disconnect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
+    g_signals.EraseTransaction.disconnect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
     g_signals.SyncTransaction.disconnect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3));
 }
 
@@ -261,6 +261,10 @@ void UnregisterAllWallets() {
 
 void SyncWithWallets(const uint256 &hash, CBaseTransaction *pBaseTx, const CBlock *pblock) {
     g_signals.SyncTransaction(hash, pBaseTx, pblock);
+}
+
+void EraseTransaction(const uint256 &hash) {
+	g_signals.EraseTransaction(hash);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1693,10 +1697,12 @@ bool static DisconnectTip(CValidationState &state) {
 			if (!AcceptToMemoryPool(mempool, stateDummy, ptx.get(), false, NULL)) {
 				mempool.remove(ptx.get(), removed, true);
 				uiInterface.RemoveTransaction(ptx->GetHash());
+				EraseTransaction(ptx->GetHash());
 			}else
 				uiInterface.ReleaseTransaction(ptx->GetHash());
 		}else {
 			uiInterface.RemoveTransaction(ptx->GetHash());
+			EraseTransaction(ptx->GetHash());
 		}
 
 	}

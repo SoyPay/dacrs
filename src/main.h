@@ -125,7 +125,8 @@ void UnregisterWallet(CWalletInterface* pwalletIn);
 void UnregisterAllWallets();
 /** Push an updated transaction to all registered wallets */
 void SyncWithWallets(const uint256 &hash, CBaseTransaction *pBaseTx, const CBlock* pblock = NULL);
-
+/** Erase Tx from wallets **/
+void EraseTransaction(const uint256 &hash);
 /** Register with a network node to receive its signals */
 void RegisterNodeSignals(CNodeSignals& nodeSignals);
 /** Unregister a network node */
@@ -1133,7 +1134,7 @@ public:
 class CWalletInterface {
 protected:
     virtual void SyncTransaction(const uint256 &hash, CBaseTransaction *pBaseTx, const CBlock *pblock) =0;
-//    virtual void EraseFromWallet(const uint256 &hash) =0;
+    virtual void EraseFromWallet(const uint256 &hash) =0;
     virtual void SetBestChain(const CBlockLocator &locator) =0;
     virtual void UpdatedTransaction(const uint256 &hash) =0;
 //    virtual void Inventory(const uint256 &hash) =0;

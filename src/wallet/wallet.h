@@ -54,7 +54,6 @@ private:
 	CBlockLocator  bestBlock;
 	uint256 GetCheckSum()const;
 public:
-//	map<CKeyID, CKeyStoreValue> mKeyPool;
 	CPubKey vchDefaultKey ;
 
 	bool fFileBacked;
@@ -107,13 +106,7 @@ public:
     bool AddKey(const CKey& secret,const CKey& minerKey);
     bool AddKey(const CKeyID &keyId, const CKeyCombi& store);
     bool AddKey(const CKey& key);
-//	bool AddPubKey(const CPubKey& pk);
 
-//	bool GetPubKey(const CKeyID &address, CPubKey& pubKey,bool IsMiner = false);
-//	bool GetKey(const CKeyID &keyid, CKey& secretKey, bool IsMiner = false) const ;
-//	bool GetKey(const CUserID &userid, CKey& secretKey,bool IsMiner = false) const ;
-
-//	bool GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner = false)const ;
 	bool CleanAll(); //just for unit test
     bool IsReadyForCoolMiner(const CAccountViewCache& view)const;
     bool ClearAllCkeyForCoolMiner();
@@ -126,7 +119,7 @@ public:
 	bool LoadMinVersion(int nVersion);
 
 	void SyncTransaction(const uint256 &hash, CBaseTransaction *pTx, const CBlock* pblock);
-//	void EraseFromWallet(const uint256 &hash);
+	void EraseFromWallet(const uint256 &hash);
 	int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
 //	void ReacceptWalletTransactions();
 	void ResendWalletTransactions();
