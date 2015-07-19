@@ -446,9 +446,9 @@ Value sendtoaddress(const Array& params, bool fHelp)
 	CRegID revreg;
 	CUserID rev;
 
-//	if (!pAccountViewTip->GetRegId(CUserID(sendKeyId), sendreg)) {
-//		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
-//	}
+	if (!pAccountViewTip->GetRegId(CUserID(sendKeyId), sendreg)) {
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+	}
 
 	if (pAccountViewTip->GetRegId(CUserID(RevKeyId), revreg)) {
 		rev = revreg;
