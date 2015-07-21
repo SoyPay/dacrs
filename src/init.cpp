@@ -997,22 +997,14 @@ bool AppInit2(boost::thread_group& threadGroup)
 	if (pwalletMain) {
 		GenerateDacrsBlock(SysCfg().GetBoolArg("-gen", false), pwalletMain, SysCfg().GetArg("-genproclimit", -1));
 		pwalletMain->ResendWalletTransactions();
-		extern void ThreadFlushWalletDB(const string& strFile);
-       threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(pwalletMain->strWalletFile)));
+        threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(pwalletMain->strWalletFile)));
+
+       //resend unconfirmed tx
+       threadGroup.create_thread(boost::bind(&ThreadRelayTx, pwalletMain));
 	}
     // ********************************************************* Step 12: finished
 
     uiInterface.InitMessage("initialize end");
-
-
-//    if (pwalletMain) {
-//        // Add wallet transactions that aren't already in a block to mapTransactions
-//        pwalletMain->ReacceptWalletTransactions();
-//
-//        // Run a thread to flush wallet periodically
-//        threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(pwalletMain->strWalletFile)));
-//    }
-
 
     return !fRequestShutdown;
 }

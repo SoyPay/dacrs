@@ -387,7 +387,7 @@ unsigned int CWalletDB::nWalletDBUpdated = 0;
 void ThreadFlushWalletDB(const string& strFile)
 {
     // Make this thread recognisable as the wallet flushing thread
-    RenameThread("bitcoin-wallet");
+    RenameThread("dacrs-wallet");
     static bool fOneThread;
     if (fOneThread)
         return;
@@ -445,6 +445,21 @@ void ThreadFlushWalletDB(const string& strFile)
     }
 }
 
+void ThreadRelayTx(CWallet* pWallet)
+{
+	   RenameThread("relay-tx");
+	   while(pWallet) {
+		   MilliSleep(60*1000);
+		   map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx =  pWallet->UnConfirmTx.begin();
+			for(; iterTx != pWallet->UnConfirmTx.end(); ++iterTx)
+			{
+				if(mempool.exists(iterTx->first)) {
+					RelayTransaction(iterTx->second.get(), iterTx->first);
+					LogPrint("sendtx", "ThreadRelayTx resend tx hash:%s time:%ld\n", iterTx->first.GetHex(), GetTime());
+				}
+			}
+	   }
+}
 
 bool BackupWallet(const CWallet& wallet, const string& strDest)
 {

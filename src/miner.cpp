@@ -269,7 +269,8 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 
 	if (setAcctInfo.empty()) {
 		setCreateKey.clear();
-		return ERRORMSG("CreatePosTx setSecureAcc empty");
+		LogPrint("INFO", "CreatePosTx setSecureAcc empty");
+		return false;
 	}
 
 	uint64_t maxNonce = SysCfg().GetBlockMaxNonce(); //cacul times

@@ -832,6 +832,7 @@ void ThreadSocketHandler()
         if(vNodes.size() != nPrevNodeCount) {
             nPrevNodeCount = vNodes.size();
             uiInterface.NotifyNumConnectionsChanged(nPrevNodeCount);
+            uiInterface.NotifyMessage(strprintf("connections=%d", nPrevNodeCount));
         }
 
 

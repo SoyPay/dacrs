@@ -38,16 +38,40 @@ typedef struct user{
 	)
 }IPO_USER;
 
+std::string ipo_data2[][2] = {
+	{"1000000000","e1pzvqWNDezm3DNqoTZgVEWZ4avBgWe2c5"},
+	{"1000000000","e1dEuSNrgiURqL61qEUKqtbrh4SS54ow39"},
+	{"1000000000","dmwLekTvkdmjKKNsUJNmUGXq4KzUQvWNhM"},
+	{"1000000000","du39jqpNvbxaUDjFbWNqqydGjtLtZiqByq"},
+	{"1000000000","dhqJ5QXyRwmCSbw1Gj9jCQwSg2xPcrKZQr"},
+	{"1000000000","doSsredaG4Levipfn5uGTVvmy9PeHMtGke"},
+	{"1000000000","dkhz6w3AvD1K1Yxef6LaRFFCx6HcuCC2tj"},
+	{"1000000000","duFcCMuXtELJVYzbqRXZ2RCbN3vBmytFe9"},
+	{"1000000000", "dnyUwCZT1nhmQH3fa8GZig8LRmkBYT48m4"},
+	{"1000000000","dePxY7knqTU21tKXYF5gLBJnmNMb8e9H2r"},
+	{"1000000000", "dtB5EDtydo4Yvmaon5HpwjkBYfsV2tbTN2"},
+	{"1000000000","dfuqbuXmsNWrY5cayKMb4qVKn8EZNMWfrf"},
+	{"1000000000","dzVc4TdXJBdXLF9yTsEg7zVEKYTmQ16u3n"},
+	{"1000000000","drdxMCY7mFyCrKw58VpwGadVC4TiL85jhG"},
+	{"1000000000","df9ryp7TPchvyzKGAi3Nj87KYeUQfnHahc"},
+	{"1000000000", "dq4PhbcFTqijXKc8SF5FpZR7vMTeXHASXG"},
+	{"1000000000","dwygx8bexsat8Pqs8T17pc99khPvMLMJjj"},
+	{"1000000000", "dk2NNjraSvquD9b4SQbysVRQeFikA55HLi"},
+	{"1000000000","do22zke78bz3F49MAGhQk8jFUmXqBfpbip"},
+	{"1000000000", "dg7gANKTD6sCnpopPcbiU51m15WQmihiua"},
+	{"1000000000", "ds31UhuB3a5KmhNcLBFrwtJpvSpKchHsmm"},
+	{"1000000000", "djZU3bKwggaAJYuwJdkfDZjV7y5to22x3z"},
+	{"1000000000", "duqKKByNNGSEzfJTJjP3hv8SEAgBikRLyD"},
+	{"1000000000", "dkqLckzJaTqgT1KJ5hVBRG8ZB1TBPanb49"},
+	{"1000000000", "djW171pyq1e9odLB1pPRJEJEDohRk6LyEn"},
+	{"1000000000", "dkTwTAHEPNPowTvna88ZKoffJH3eR2vzQz"},
+	{"1000000000", "de3qRpoP7jogfPa1WRpFXNESJjNWoMgHHu"}
+};
 
 #define max_user 100
-//const static IPO_USER userarray[max_user]=
-//{
-//		{"ddMuEBkAwhcb5K5QJ83MqQHrgHRn4EbRdh",10000,200,22},
-//		{"duKfNyq6zsuy2CMGMFVrQLuGi95UC7w6DV",10000,200,22},
-//		{"djhuAYvWsfFyjF42qDqTSm88nkfZbDW1BZ",10000,200,22}                   /// 这个没有注册的账户必须先打点钱
-//};
 
- static IPO_USER userarray[max_user];
+
+static IPO_USER userarray[max_user];
 CIpoTest::CIpoTest():nNum(0), nStep(0), strTxHash(""), strAppRegId("") {
 
 }
@@ -193,70 +217,38 @@ typedef struct _IPOCON{
 BOOST_FIXTURE_TEST_CASE(get_coin,CIpoTest)
 {
 
-	if(boost::unit_test::framework::master_test_suite().argc != 1){
-		BOOST_ERROR("请传入参数ipo.txt路径");
-	}
-	string strCurDir = boost::unit_test::framework::master_test_suite().argv[1];
-
-
-	//// 读json语句
-	IPO_COIN ipouserarray[max_2ipouser];
-	int addrcount = 0;
-    ifstream file;
-   // string strCurDir ="/home/share/bess/dacrs_test/ipo.txt";
-	file.open(strCurDir, ios::in | ios::ate);
+	// 创建转账交易并且保存转账交易的hash
+	ofstream file("ipo_failed", ios::out | ios::ate);
 	if (!file.is_open())
-		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot ipo.txt file");
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 
-	file.seekg(0, file.beg);
-	if (file.good()){
-		Value reply;
-		json_spirit::read(file,reply);
-		const Array & keyarry = reply.get_array();
-		for(auto const &keyItem :keyarry)
-		{
-			string addr = find_value(keyItem.get_obj(), "addr").get_str();
-			memcpy((char*)ipouserarray[addrcount].address,(char*)addr.c_str(),sizeof(ipouserarray[addrcount].address));
-			int64_t balance = find_value(keyItem.get_obj(), "balance").get_int64();
-			ipouserarray[addrcount].money = balance;
-			addrcount++;
-			if(addrcount == (max_2ipouser -1))
-				break;
+	map<string, string> mapTxHash;
+	for (size_t i = 0; i < sizeof(ipo_data2) / sizeof(ipo_data2[0]); ++i) {
+		string des = strprintf("%s", ipo_data2[i][1]);
+		int64_t nMoney = atoi64(ipo_data2[i][0]);
+		Value ret = basetest.CreateNormalTx(des, nMoney);
+		string txHash;
+		if(basetest.GetHashFromCreatedTx(ret, txHash)) {
+			mapTxHash[des]= txHash;
+		} else {
+			file << "\""<<ipo_data2[i][1] << "\"" << ", " <<"\""<< ipo_data2[i][2] << "\""<< endl;
 		}
 	}
-	file.close();
 
-
-	//////// 创建转账交易并且保存转账交易的hash
-	int64_t money = COIN;
-	std::map<std::string,std::string> maptx;
-	for(int i=0;i <(addrcount+1);i++)
+	//确保每个转账交易被确认在block中才退出
+	while(mapTxHash.size() != 0)
 	{
-		string des =strprintf("%s", ipouserarray[i].address);
-		Value ret = basetest.CreateNormalTx(des,money);
-		string hash = "";
-		if(basetest.GetHashFromCreatedTx(ret, hash)){
-				maptx[des]= hash;
-			}else{
-				cout<<des.c_str()<<endl;
-			}
-	}
-
-	//////// 确保每个转账交易被确认在block中才退出
-	while(maptx.size() != 0)
-	{
-		std::map<std::string,std::string>::iterator it = maptx.begin();
-		for(;it != maptx.end();){
+		map<string, string>::iterator it = mapTxHash.begin();
+		for(;it != mapTxHash.end();){
 			string addr = it->first;
 			string hash = it->second;
 			string regindex = "";
 			if(basetest.GetTxConfirmedRegID(hash,regindex)){
-				it = maptx.erase(it);
+				it = mapTxHash.erase(it);
 			}else{
 				it++;
 			}
 		}
-
 		MilliSleep(100);
 	}
 }
