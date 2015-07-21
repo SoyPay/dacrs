@@ -218,7 +218,10 @@ BOOST_FIXTURE_TEST_CASE(get_coin,CIpoTest)
 {
 
 	// 创建转账交易并且保存转账交易的hash
-	ofstream file("ipo_failed", ios::out | ios::ate);
+	Object objRet;
+	Array SucceedArray;
+	Array UnSucceedArray;
+	ofstream file("ipo_ret", ios::out | ios::ate);
 	if (!file.is_open())
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 
@@ -228,12 +231,23 @@ BOOST_FIXTURE_TEST_CASE(get_coin,CIpoTest)
 		int64_t nMoney = atoi64(ipo_data2[i][0]);
 		Value ret = basetest.CreateNormalTx(des, nMoney);
 		string txHash;
+		Object obj;
 		if(basetest.GetHashFromCreatedTx(ret, txHash)) {
 			mapTxHash[des]= txHash;
+			obj.push_back(Pair("addr", des));
+			obj.push_back(Pair("amount", nMoney));
+			obj.push_back(Pair("txhash", txHash));
+			SucceedArray.push_back(obj);
 		} else {
-			file << "\""<<ipo_data2[i][1] << "\"" << ", " <<"\""<< ipo_data2[i][2] << "\""<< endl;
+			obj.push_back(Pair("addr", des));
+			obj.push_back(Pair("amount", nMoney));
+			UnSucceedArray.push_back(obj);
 		}
 	}
+	objRet.push_back(Pair("succeed", SucceedArray));
+	objRet.push_back(Pair("unsucceed", UnSucceedArray));
+	file << json_spirit::write_string(Value(objRet), true).c_str();
+	file.close();
 
 	//确保每个转账交易被确认在block中才退出
 	while(mapTxHash.size() != 0)

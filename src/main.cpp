@@ -1696,8 +1696,6 @@ bool static DisconnectTip(CValidationState &state) {
 		if (!ptx->IsCoinBase()) {
 			if (!AcceptToMemoryPool(mempool, stateDummy, ptx.get(), false, NULL)) {
 				mempool.remove(ptx.get(), removed, true);
-				uiInterface.RemoveTransaction(ptx->GetHash());
-				EraseTransaction(ptx->GetHash());
 			}else
 				uiInterface.ReleaseTransaction(ptx->GetHash());
 		}else {
