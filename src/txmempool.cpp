@@ -58,9 +58,6 @@ void CTxMemPool::ReScanMemPoolTx(CAccountViewCache *pAccountViewCacheIn, CScript
 	pScriptDBViewCache.reset(new CScriptDBViewCache(*pScriptDBViewCacheIn, true));
 	{
 		LOCK(cs);
-//		for(auto &pTxItem : block.vptx){
-//			mapTx.erase(pTxItem->GetHash());
-//		}
 		CValidationState state;
 		list<std::shared_ptr<CBaseTransaction> > removed;
 		for(map<uint256, CTxMemPoolEntry >::iterator iterTx = mapTx.begin(); iterTx != mapTx.end(); ) {
@@ -68,6 +65,7 @@ void CTxMemPool::ReScanMemPoolTx(CAccountViewCache *pAccountViewCacheIn, CScript
 				uint256 hash = iterTx->first;
 				iterTx = mapTx.erase(iterTx++);
 				uiInterface.RemoveTransaction(hash);
+				EraseTransaction(hash);
 				continue;
 			}
 			++iterTx;
@@ -99,6 +97,7 @@ void CTxMemPool::remove(CBaseTransaction *pBaseTx, list<std::shared_ptr<CBaseTra
 			removed.push_front(std::shared_ptr<CBaseTransaction>(mapTx[hash].GetTx()));
 			mapTx.erase(hash);
 			uiInterface.RemoveTransaction(hash);
+			EraseTransaction(hash);
 			nTransactionsUpdated++;
 		}
 	}

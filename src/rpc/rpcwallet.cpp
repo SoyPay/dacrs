@@ -401,6 +401,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
 	// Amount
 	int64_t nAmount = 0;
+	CRegID sendreg;
 	//// from address to addreww
 	if (size == 3) {
 
@@ -430,8 +431,10 @@ Value sendtoaddress(const Array& params, bool fHelp)
 		}
 		for (auto &te : sKeyid) {
 			if (pAccountViewTip->GetRawBalance(te) >= nAmount + SysCfg().GetTxFee()) {
-				sendKeyId = te;
-				break;
+				if (pAccountViewTip->GetRegId(CUserID(te), sendreg)) {
+					sendKeyId = te;
+					break;
+				}
 			}
 		}
 
@@ -440,7 +443,6 @@ Value sendtoaddress(const Array& params, bool fHelp)
 		}
 	}
 
-	CRegID sendreg;
 	CRegID revreg;
 	CUserID rev;
 

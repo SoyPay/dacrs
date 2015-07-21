@@ -21,7 +21,6 @@ class CAccountingEntry;
 struct CBlockLocator;
 class CKeyPool;
 class CMasterKey;
-//class CScript;
 class CWallet;
 class uint160;
 class uint256;
@@ -110,4 +109,7 @@ public:
 
 bool BackupWallet(const CWallet& wallet, const string& strDest);
 
+extern void ThreadFlushWalletDB(const string& strFile);
+
+extern void ThreadRelayTx(CWallet* pWallet);
 #endif // DACRS_WALLETDB_H

@@ -335,6 +335,12 @@ public:
 	}
 	CTransaction(const CUserID& in_UserRegId, CUserID in_desUserId, uint64_t Fee, uint64_t Value, int high, vector_unsigned_char& pContract)
 	{
+		if (in_UserRegId.type() == typeid(CRegID)) {
+			assert(!boost::get<CRegID>(in_UserRegId).IsEmpty());
+		}
+		if (in_desUserId.type() == typeid(CRegID)) {
+			assert(!boost::get<CRegID>(in_desUserId).IsEmpty());
+		}
 		nTxType = CONTRACT_TX;
 		srcRegId = in_UserRegId;
 		desUserId = in_desUserId;
@@ -347,6 +353,12 @@ public:
 	CTransaction(const CUserID& in_UserRegId, CUserID in_desUserId, uint64_t Fee, uint64_t Value, int high)
 	{
 		nTxType = COMMON_TX;
+		if (in_UserRegId.type() == typeid(CRegID)) {
+			assert(!boost::get<CRegID>(in_UserRegId).IsEmpty());
+		}
+		if (in_desUserId.type() == typeid(CRegID)) {
+			assert(!boost::get<CRegID>(in_desUserId).IsEmpty());
+		}
 		srcRegId = in_UserRegId;
 		desUserId = in_desUserId;
 		nValidHeight = high;
@@ -785,7 +797,7 @@ public:
 	}
 
 	bool IsMiner(int nCurHeight) {
-		if(nCurHeight < SysCfg().GetIntervalPos())
+		if(nCurHeight < 2*SysCfg().GetIntervalPos())
 			return true;
 		return nCoinDay >= llValues * SysCfg().GetIntervalPos();
 

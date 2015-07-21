@@ -26,16 +26,52 @@ using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
 
+static  bool GetKeyId(string const &addr,CKeyID &KeyId) {
+	if (!CRegID::GetKeyID(addr, KeyId)) {
+		KeyId=CKeyID(addr);
+		if (KeyId.IsEmpty())
+		return false;
+	}
+	return true;
+};
+
 Value getbalance(const Array& params, bool fHelp)
 {
-	if (fHelp || params.size() != 0)
+	int size = params.size();
+	if (fHelp || size > 1)
 		throw runtime_error("getinfo\n"
 				"Returns an object containing various state info.\n"
 				"\nResult:\n"    + HelpExampleCli("getbalance", "")
 	            + HelpExampleRpc("getbalance", ""));
-	 Object obj;
-    obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetRawBalance())));
-    return obj;
+	Object obj;
+	if (size == 0) {
+		obj.push_back(Pair("balance", ValueFromAmount(pwalletMain->GetRawBalance())));
+		 return std::move(obj);
+	} else if(size == 1)  {
+		CKeyID keyid;
+		string addr = params[0].get_str();
+		if (!GetKeyId(addr, keyid)) {
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+		}
+		if (pwalletMain->HaveKey(keyid)) {
+			CAccount account;
+			CAccountViewCache accView(*pAccountViewTip, true);
+			if (accView.GetAccount(CUserID(keyid), account)) {
+				obj.push_back(Pair("balance", ValueFromAmount(account.GetRawBalance())));
+				return std::move(obj);
+			}
+		}
+		else
+		{
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "address not inwallet");
+		}
+	}else
+	{
+		assert(0);
+	}
+
+	throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
+
 }
 Value getinfo(const Array& params, bool fHelp)
 {
@@ -124,14 +160,6 @@ public:
 };
 
 
-static  bool GetKeyId(string const &addr,CKeyID &KeyId) {
-	if (!CRegID::GetKeyID(addr, KeyId)) {
-		KeyId=CKeyID(addr);
-		if (KeyId.IsEmpty())
-		return false;
-	}
-	return true;
-};
 
 Value verifymessage(const Array& params, bool fHelp)
 {

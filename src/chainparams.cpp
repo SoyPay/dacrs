@@ -139,6 +139,7 @@ public:
 		vAlertPubKey =	ParseHex("02d99681b6287b3765dfbb930e6caa10d1f8ac19e02b88f52362ce6eb43c0ec71e");
 		nDefaultPort = 8668;
 		nRPCPort = 8669;
+		strDataDir = "main";
 		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 10);        //00 3f ff ff
 		nSubsidyHalvingInterval = 210000;
 
@@ -163,7 +164,7 @@ public:
 		genesis.hashMerkleRoot = genesis.BuildMerkleTree();
 		genesis.hashPos = 0;
 		genesis.nVersion = 1;
-		genesis.nTime = 1231006505;
+		genesis.nTime = 1436538491;
 		genesis.nBits = 0x1f3fffff;        //00 3f ff
 		genesis.nNonce = 888;
 		genesis.nFuelRate = INIT_FUEL_RATES;
@@ -172,21 +173,15 @@ public:
 		hashGenesisBlock = genesis.GetHash();
 		publicKey = "02d99681b6287b3765dfbb930e6caa10d1f8ac19e02b88f52362ce6eb43c0ec71e";
 //		{
-//			CBigNum bnTarget;
-//			bnTarget.SetCompact(genesis.nBits);
-//			cout << "main bnTarget:" << bnTarget.getuint256().GetHex() << endl;
 //			cout << "main hashGenesisBlock:\r\n" << hashGenesisBlock.ToString() << endl;
 //			cout << "main hashMerkleRoot:\r\n" << genesis.hashMerkleRoot.ToString() << endl;
 //		}
-//        cout << "hashGenesisBlock:" << HexStr(hashGenesisBlock) << endl;
-//        cout << "hashMerkleRoot:" << genesis.hashMerkleRoot.GetHex() << endl;
-//		assert(hashGenesisBlock == uint256("0x0d48e88dca01697d10e0fe8f1981f94db1f5e525d5a0e0acf22919af23daed60"));
-//		assert(genesis.hashMerkleRoot == uint256("04b173fc873505d69f5f2a86aa8d7207abe7e0ffa63d786ff230f4a946f5a8255"));
+		assert(hashGenesisBlock == uint256("0xd9ffedf0475c7734e1ea1a7aa1a05361825e77869371962ee6a3ec515e2e2c3d"));
+		assert(genesis.hashMerkleRoot == uint256("0x362155f5bb005be0523c7247cf1b901bd6f3567d105bd5defca28d221c90d1ef"));
 
 //      vSeeds.push_back(CDNSSeedData("soypay.org.cn", "seed_cn_0.dspay.org"));
 //      vSeeds.push_back(CDNSSeedData("soypay.org.us", "seed_us_0.dspay.org"));
 
-//		base58Prefixes[PUBKEY_ADDRESS] = {0};
         base58Prefixes[PUBKEY_ADDRESS] = {0x1f};
 		base58Prefixes[SCRIPT_ADDRESS] = {5};
 		base58Prefixes[SECRET_KEY] = {128};
@@ -250,7 +245,7 @@ public:
 		strDataDir = "testnet";
 		publicKey = "036e15523feb9e329b4fdf53c227fc89ea45a1a36342e7e38fad7fe6e3777243af";
 		// Modify the testnet genesis block so the timestamp is valid for a later start.
-		genesis.nTime = 1296688602;
+		genesis.nTime = 1436598023;
 		genesis.nNonce = 888;
 		genesis.vptx.clear();
 		assert(CreateGenesisRewardTx(genesis.vptx, initPubKey_testNet));
@@ -259,6 +254,10 @@ public:
 		for(auto & item : vFixedSeeds)
 			item.SetPort(GetDefaultPort());
 
+//		{
+//			cout << "testnet hashGenesisBlock:\r\n" << hashGenesisBlock.ToString() << endl;
+//		}
+		assert(hashGenesisBlock == uint256("0xc6f81a98e9de1ac7da65a8b2bbd937f1d49aaedc7f8f2f0517c13f099df1ed49"));
 //		vSeeds.clear();
 //		vSeeds.push_back(CDNSSeedData("Dacrs.petertodd.org", "testnet-seed.Dacrs.petertodd.org"));
 //		vSeeds.push_back(CDNSSeedData("bluematt.me", "testnet-seed.bluematt.me"));
@@ -314,7 +313,7 @@ public:
 //			cout << "regtest hashGenesisBlock:\r\n" << hashGenesisBlock.ToString() << endl;
 //			cout << "regtest hashMerkleRoot:\r\n" << genesis.hashMerkleRoot.ToString() << endl;
 //		}
-//		assert(hashGenesisBlock == uint256("0x891b4240b4005d26af25c634dcc886e5d3aaefb06da860e2a0ffc0132bd9df5a"));
+		assert(hashGenesisBlock == uint256("0x18d876339c5014803507332d0ae509862b4da382253b7696605e58963592723f"));
 
 		vFixedSeeds.clear();
 		vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.

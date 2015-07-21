@@ -234,7 +234,7 @@ bool WriteBlockLog(bool falg, string suffix) {
 
 void RegisterWallet(CWalletInterface* pwalletIn) {
     g_signals.SyncTransaction.connect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3));
-//    g_signals.EraseTransaction.connect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
+    g_signals.EraseTransaction.connect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
     g_signals.UpdatedTransaction.connect(boost::bind(&CWalletInterface::UpdatedTransaction, pwalletIn, _1));
     g_signals.SetBestChain.connect(boost::bind(&CWalletInterface::SetBestChain, pwalletIn, _1));
 //    g_signals.Inventory.connect(boost::bind(&CWalletInterface::Inventory, pwalletIn, _1));
@@ -246,7 +246,7 @@ void UnregisterWallet(CWalletInterface* pwalletIn) {
 //    g_signals.Inventory.disconnect(boost::bind(&CWalletInterface::Inventory, pwalletIn, _1));
     g_signals.SetBestChain.disconnect(boost::bind(&CWalletInterface::SetBestChain, pwalletIn, _1));
     g_signals.UpdatedTransaction.disconnect(boost::bind(&CWalletInterface::UpdatedTransaction, pwalletIn, _1));
-//    g_signals.EraseTransaction.disconnect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
+    g_signals.EraseTransaction.disconnect(boost::bind(&CWalletInterface::EraseFromWallet, pwalletIn, _1));
     g_signals.SyncTransaction.disconnect(boost::bind(&CWalletInterface::SyncTransaction, pwalletIn, _1, _2, _3));
 }
 
@@ -261,6 +261,10 @@ void UnregisterAllWallets() {
 
 void SyncWithWallets(const uint256 &hash, CBaseTransaction *pBaseTx, const CBlock *pblock) {
     g_signals.SyncTransaction(hash, pBaseTx, pblock);
+}
+
+void EraseTransaction(const uint256 &hash) {
+	g_signals.EraseTransaction(hash);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1472,14 +1476,23 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 		if (nTotalFuel != block.nFuel) {
 			return ERRORMSG("fuel value at block header calculate error(actual fuel:%ld vs block fuel:%ld)", nTotalFuel, block.nFuel);
 		}
-	}
+    }
 
 	if (!VerifyPosTx(view, &block, txCache, scriptDBCache, false)) {
 		return state.DoS(100, ERRORMSG("ConnectBlock() : the block Hash=%s check pos tx error", block.GetHash().GetHex()),
 				REJECT_INVALID, "bad-pos-tx");
 	}
-	//校验利息是否正常
+
 	std::shared_ptr<CRewardTransaction> pRewardTx = dynamic_pointer_cast<CRewardTransaction>(block.vptx[0]);
+
+	//校验coinday
+	CAccount account;
+	if (view.GetAccount(pRewardTx->account, account)) {
+		if(account.GetAccountPos(pindex->nHeight) <= 0 || !account.IsMiner(pindex->nHeight))
+			return state.DoS(100, ERRORMSG("coindays of account dismatch, can't be miner, account info:%s", account.ToString()), REJECT_INVALID, "bad-coinday-miner");
+	}
+
+	//校验reward
 	uint64_t llValidReward = block.GetFee() - block.nFuel + POS_REWARD;
 	LogPrint("INFO", "block fee:%lld, block fuel:%lld\n", block.GetFee(), block.nFuel);
 	if (pRewardTx->rewardValue != llValidReward)
@@ -1684,10 +1697,12 @@ bool static DisconnectTip(CValidationState &state) {
 			if (!AcceptToMemoryPool(mempool, stateDummy, ptx.get(), false, NULL)) {
 				mempool.remove(ptx.get(), removed, true);
 				uiInterface.RemoveTransaction(ptx->GetHash());
+				EraseTransaction(ptx->GetHash());
 			}else
 				uiInterface.ReleaseTransaction(ptx->GetHash());
 		}else {
 			uiInterface.RemoveTransaction(ptx->GetHash());
+			EraseTransaction(ptx->GetHash());
 		}
 
 	}
