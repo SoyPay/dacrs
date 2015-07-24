@@ -43,11 +43,12 @@ typedef struct tagdddd{
 	int64_t nMoney;
 }IPO_DATA;
 
-//const int64_t totalSendMoney = 10825192381120926; 二期IPO第一批发币总额
-const int64_t totalSendMoney =  2711374031363492; //二期IPO第二批发币总额
+//const int64_t totalSendMoney = 10825192381120926; //二期IPO第一批发币总额
+//const int64_t totalSendMoney =  2711374031363492; //二期IPO第二批发币总额
+const int64_t totalSendMoney =  2677621584404177;   //二期IPO第三批发币总额
 IPO_DATA arrayData[]=
 {
-		/*==========二期第一批发币==============================
+		/*=================二期IPO第一批发币==============================
 		{"DiNgnLSgpXriHG3F9ja4uRNy6KqWACRHhm",	629064563190821         },
 		{"DrpuDyNKxW9ZQdEaGQfqqE8FG4JS1NGvXU",	255316412689406         },
 		{"Dd6s3vyjYRWmBHXH3pCt22h5dN8zGiWBEj", 	63588119635711          },
@@ -118,7 +119,7 @@ IPO_DATA arrayData[]=
 		{"DUV1Dz8UvQ9wtwPLynxBzuL8RY9qZ1zuWL",	8211840000000           },
 		{"DWz5DGp2vmt27ZHLVcNFs1ENV8fA1GCEc9",	10002720000000          }
 		*/
-		/*=================二期第二批发币=======================================*/
+		/*=================二期IPO第二批发币==============================
 		{"DqPeihPeRu5pfkQe7Fh7BqiPvNFnAa8kUo",	152441046008020  },
 		{"DneUvGLqNjAtoiMN2ZNaKTgjvS9AqWZW3c",	6426978295234    },
 		{"Dnv9t7LjjTnGaXVKCx5JXaCCWiB5uwwpfe",	69917167495968   },
@@ -137,6 +138,29 @@ IPO_DATA arrayData[]=
 		{"DVxpGL4dUqhLzrJmVwxbRDEFSwCKiBA9bX",	28291032000000   },
 		{"Do611mHxmLmiLJyrQM6NLBPqQsYtxjBUiR",	907200000000000  },
 		{"Dg7iqYXABJu53ymffxKgc1Bk4K9W1UonJ6",  178080000000000  }
+		*/
+		/*=================二期IPO第三批发币==============================*/
+		{"DUf8eyPR6XdNrzryd5J61HbKHvSMsMB6AG",	241805652793523   },
+		{"Dppfoo66R2JnHyGaYHDVAQeEh4VNycv5Jw",	237895142961445   },
+		{"DagEgfLcoBch6QHjBHZwGv3d8a7yNUZvq4",	101203390268344   },
+		{"DeJ7imC7baVdsU3d9uvwGPXTSQ8xKVtXAa",	18856210281645    },
+		{"DkE7fomsnLLZ2ZkvYFjTFhYuYgLQpeWAxH",	32240753705803    },
+		{"Dd8Gf1jN89aUGX4dArUzxircV2b7uszfTn",	31717534410533    },
+		{"DaZpxWaHaeqNGZRyeDomyNrmQ4oZyiiHu9",	156095846904437   },
+		{"DdNwyLCar7cVYjQRgziuEvfrFmbU2JpMNY",	609764184032080   },
+		{"DdqwdjxAL1p6ZfmkUKbwdyTVFSTm5Np8CC",	15609584690444    },
+		{"DW4pTBfyGjmZTGtkcGNtzhxXRHmf7FbYMv",	15490516249954    },
+		{"DsiQo7FfWx7oGchPmARQcKqeTdy1ZRNjc6",	63459923086691    },
+		{"Do5jPqr8G9iG3P8CcqtAZocaV6SwDzNAUu",	153011360252777   },
+		{"DZHn8N2gkDTh3wYSzKjwhbgbyTeYz7KpjN",	55248479022527    },
+		{"DayfBVQ8qD6raMLVKhDCoKJzuRjBRe5ZJj",	494068063432120   },
+		{"DmxSaF392Ud9ZpY52zsgc6NyvaUz8omFf4",	173341686391992   },
+		{"Dp9LVZSX2CTREytdYkUCzP8iZjKRK63ckf",	9435968447862     },
+		{"Di8U4vztuxxFnqwR4RzDZ1HbDV9dqy2oiA", 	23100000000000    },
+		{"DYMaTEBoYtuFXGPsjMtdb7wr5xEVqETzyW",	68037287472000    },
+		{"De6fbY6YhXLdwYxnHtn5UaLz5sv3AnYgAF",	89040000000000    },
+		{"DYU1ACJNFRMiJ8hjmJrTPWPsEmNrmPAYL5",	44520000000000    },
+		{"Dc6ChgzzEHyWWgPYM7WFVfebo33naQL67n",	43680000000000    }
 
 
 		/*测试发币

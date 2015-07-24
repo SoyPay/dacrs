@@ -434,17 +434,19 @@ DBErrors CWallet::LoadWallet(bool fFirstRunRet) {
 }
 
 
-int64_t CWallet::GetRawBalance() const
+int64_t CWallet::GetRawBalance(bool IsConfirmed) const
 {
 	int64_t ret = 0;
-	CAccountViewCache accView(*pAccountViewTip, true);
 	{
 		LOCK2(cs_main, cs_wallet);
 		set<CKeyID> setKeyId;
 		GetKeys(setKeyId);
 		for(auto &keyId :setKeyId)
 		{
-			ret +=accView.GetRawBalance(keyId);
+			if(!IsConfirmed)
+				ret += mempool.pAccountViewCache->GetRawBalance(keyId);
+			else
+				ret += pAccountViewTip->GetRawBalance(keyId);
 		}
 	}
 	return ret;
