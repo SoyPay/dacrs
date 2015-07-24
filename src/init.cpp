@@ -23,6 +23,7 @@
 #include "./wallet/wallet.h"
 #include "./wallet/walletdb.h"
 #include "syncdatadb.h"
+#include "noui.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -459,6 +460,10 @@ bool AppInit2(boost::thread_group& threadGroup)
 #endif
 
     CUIServer::StartServer();
+
+    if(SysCfg().GetBoolArg("-ui", false)) {
+    	threadGroup.create_thread(ThreadSendMessageToUI);
+    }
     // ********************************************************* Step 2: parameter interactions
 
     if (SysCfg().IsArgCount("-bind")) {

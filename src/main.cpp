@@ -2533,11 +2533,15 @@ bool CheckActiveChain(int nHeight, uint256 hash) {
 	CBlockIndex *pindexOldTip = chainActive.Tip();
 	LogPrint("CHECKPOINT", "Current tip block:\n");
 	LogPrint("CHECKPOINT", pindexOldTip->ToString().c_str());
+
 	//Find the active chain dismatch checkpoint
 	if (NULL == chainActive[nHeight] || hash != chainActive[nHeight]->GetBlockHash()) {
 		CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
 		LogPrint("CHECKPOINT", "Get Last check point:\n");
 		if (pcheckpoint) {
+			if(NULL == chainActive[nHeight] && chainActive.Contains(pcheckpoint)) {
+				return true;
+			}
 			pcheckpoint->print();
 			chainMostWork.SetTip(pcheckpoint);
 			bool bInvalidBlock = false;
