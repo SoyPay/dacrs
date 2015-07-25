@@ -38,7 +38,7 @@ static  bool GetKeyId(string const &addr,CKeyID &KeyId) {
 Value getbalance(const Array& params, bool fHelp)
 {
 	int size = params.size();
-	if (fHelp || params.size() != 2) {
+	if (fHelp || params.size() > 2) {
 			string msg = "getbalance ( \"address\" minconf )\n"
 					"\nIf account is not specified, returns the server's total available balance.\n"
 					"If account is specified (DEPRECATED), returns the balance in the account.\n"
@@ -82,7 +82,7 @@ Value getbalance(const Array& params, bool fHelp)
 	}else if(size == 2)
 	{
 		string addr = params[0].get_str();
-		int nConf = params[0].get_int();
+		int nConf = params[1].get_int();
 		if(addr == "*") {
 			if(0 != nConf) {
 				obj.push_back(Pair("balance", ValueFromAmount(pwalletMain->GetRawBalance())));

@@ -27,23 +27,23 @@ deque<string> g_dSendBuffer;
 
 void ThreadSendMessageToUI() {
 	RenameThread("send-message-to-ui");
-	int64_t nCurTime = GetTime();
+//	int64_t nCurTime = GetTime();
 	while(true) {
 		{
 			LOCK(cs_Sendbuffer);
 			if(!g_dSendBuffer.empty()) {
 				if (CUIServer::HasConnection()) {
-					nCurTime = GetTime();
+//					nCurTime = GetTime();
 					string message = g_dSendBuffer.front();
 					g_dSendBuffer.pop_front();
 					CUIServer::Send(message);
 				}
-				else {
-					if(GetTime() - nCurTime > 120) {   //2 minutes no connection exit ThreadSendMessageToUI thread
-						g_dSendBuffer.clear();
-						break;
-					}
-				}
+//				else {
+//					if(GetTime() - nCurTime > 120) {   //2 minutes no connection exit ThreadSendMessageToUI thread
+//						g_dSendBuffer.clear();
+//						break;
+//					}
+//				}
 			}
 		}
 		MilliSleep(10);
@@ -52,9 +52,13 @@ void ThreadSendMessageToUI() {
 
 void AddMessageToDeque(const std::string &strMessage)
 {
-	LOCK(cs_Sendbuffer);
-	g_dSendBuffer.push_back(strMessage);
-	LogPrint("TOUI", "%s\n", strMessage.c_str());
+	if(SysCfg().GetBoolArg("-ui", false)) {
+		LOCK(cs_Sendbuffer);
+		g_dSendBuffer.push_back(strMessage);
+		LogPrint("TOUI", "%s\n", strMessage.c_str());
+	}else {
+		LogPrint("NOUI", "%s\n", strMessage.c_str());
+	}
 }
 
 static bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
