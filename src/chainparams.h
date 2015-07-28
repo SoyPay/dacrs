@@ -52,7 +52,6 @@ protected:
 	mutable int64_t paytxfee;
 	int64_t nTargetSpacing;
 	int64_t nTargetTimespan;
-	int64_t nMaxCoinDay;
 	mutable unsigned int nScriptCheckThreads;
 	mutable int64_t nViewCacheSize;
 	mutable int nTxCacheHeight;
@@ -66,7 +65,7 @@ public:
 		temp.get()->assign(te.begin(), te.end());
 		return temp;
 	}
-	virtual bool InitalConfig() const{
+	virtual bool InitalConfig() {
 		fServer = GetBoolArg("-server", false);
 
 		m_mapMultiArgs["-debug"].push_back("ERROR"); //add froce ERROR to log
@@ -82,6 +81,9 @@ public:
 		if(ParseMoney(GetArg("-paytxfee", ""), nTransactionFee) && nTransactionFee > 0){
 		paytxfee = nTransactionFee;
 		}
+
+	   nIntervalPos = GetArg("-intervalpos", 1440);
+
 		return true;
 	}
 	virtual string ToString() const {
@@ -111,7 +113,6 @@ public:
 		te += strprintf("paytxfee:%d\n",paytxfee);
 		te += strprintf("nTargetSpacing:%d\n",nTargetSpacing);
 		te += strprintf("nTargetTimespan:%d\n",nTargetTimespan);
-		te += strprintf("nMaxCoinDay:%d\n",nMaxCoinDay);
 		te += strprintf("nScriptCheckThreads:%d\n",nScriptCheckThreads);
 		te += strprintf("nViewCacheSize:%d\n",nViewCacheSize);
 		te += strprintf("nTxCacheHeight:%d\n",nTxCacheHeight);
@@ -202,9 +203,7 @@ public:
 	int64_t GetTargetTimespan() const {
 		return nTargetTimespan;
 	}
-	int64_t GetMaxCoinDay() const {
-		return nMaxCoinDay;
-	}
+
 	int64_t GetBestRecvTime() const {
 		return nTimeBestReceived;
 	}
@@ -220,6 +219,11 @@ public:
 	int GetIntervalPos() const {
 		return nIntervalPos;
 	}
+	int GetMaxDay() const
+	{
+	 return GetIntervalPos() * 30;
+	}
+
 	void SetImporting(bool flag)const {
 		fImporting = flag;
 	}
@@ -244,9 +248,6 @@ public:
 	}
 	void SetTxCacheHeight(int nHeight)const {
 		nTxCacheHeight = nHeight;
-	}
-	void SetIntervalPos(int nPos)const {
-		nIntervalPos = nPos;
 	}
 
 public:
@@ -367,7 +368,7 @@ protected:
 	vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
 };
 
-extern const CBaseParams &SysCfg();
+extern CBaseParams &SysCfg();
 
 /**
  * Return the currently selected parameters. This won't change after app startup

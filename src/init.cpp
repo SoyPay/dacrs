@@ -913,7 +913,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         return false;
     }
 
-    SysCfg().SetIntervalPos(SysCfg().GetArg("-intervalpos", 1440));
+
 
     if (SysCfg().IsArgCount("-printblock"))
     {
