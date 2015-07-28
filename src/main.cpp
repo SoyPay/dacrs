@@ -1065,6 +1065,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 
 		if (bnNew > SysCfg().ProofOfWorkLimit() || bnNew < 0) {
 			LogPrint("INFO", "bnNew:%s\n", bnNew.getuint256().GetHex());
+			LogPrint("INFO", "bnNew:%s\n", bnNew.GetHex());
 			bnNew = SysCfg().ProofOfWorkLimit();
 		}
 
@@ -1393,7 +1394,10 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
     if(!fJustCheck) {
 		// verify that the view's current state corresponds to the previous block
 		uint256 hashPrevBlock = pindex->pprev == NULL ? uint256(0) : pindex->pprev->GetBlockHash();
-		assert(hashPrevBlock == view.GetBestBlock());
+		if(hashPrevBlock != view.GetBestBlock()) {
+			LogPrint("INFO", "hashPrevBlock=%s, bestblock=%s\n", hashPrevBlock.GetHex(), view.GetBestBlock().GetHex());
+			assert(hashPrevBlock == view.GetBestBlock());
+		}
     }
 
     // Special case for the genesis block, skipping connection of its transactions
