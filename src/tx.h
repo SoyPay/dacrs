@@ -822,7 +822,7 @@ public:
 		return ss.GetHash();
 	}
 	uint64_t GetMaxCoinDay(int nCurHeight) {
-		return llValues * SysCfg().GetIntervalPos() * 30;
+		return llValues * SysCfg().GetMaxDay();
 	}
 	bool UpDateCoinDay(int nCurHeight);
 	IMPLEMENT_SERIALIZE
