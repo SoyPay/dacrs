@@ -14,7 +14,7 @@
 
 namespace Checkpoints
 {
-    typedef map<int, uint256> MapCheckpoints;
+    typedef map<int, uint256> MapCheckpoints; // the first parameter is  nHeight;
     CCriticalSection cs_checkPoint;
 
     // How many times we expect transactions after the last checkpoint to
