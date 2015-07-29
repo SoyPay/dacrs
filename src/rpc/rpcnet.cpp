@@ -409,8 +409,12 @@ Value getdacrsstate(const Array& params, bool fHelp)
 	int i = 0,nHeight = 0;
 	if (int_type == params[0].type()) {
 		nHeight = params[0].get_int();
-		if (nHeight < 1 || nHeight > chainActive.Height())
+		if(nHeight < 1)
 			throw runtime_error("Block number out of range.");
+	    if(nHeight > chainActive.Height())
+	    {   //防止超过最大高度
+	    	nHeight = chainActive.Height();
+	    }
 	}
 	CBlockIndex * pBlockIndex = chainActive.Tip();
 	CBlock block;
@@ -421,7 +425,6 @@ Value getdacrsstate(const Array& params, bool fHelp)
 	Array blockminer;
 
 	for (i = 0; (i < nHeight) && (pBlockIndex != NULL); i++) {
-		printf("getdacrsstate 1\n");
 		blocktime.push_back(pBlockIndex->GetBlockTime());
 		difficulty.push_back(GetDifficulty(pBlockIndex));
 		transactions.push_back((int)pBlockIndex->nTx);
@@ -429,7 +432,6 @@ Value getdacrsstate(const Array& params, bool fHelp)
 		block.SetNull();
 		if(ReadBlockFromDisk(block, pBlockIndex))
 		{
-			printf("getdacrsstate 2\n");
 			string miner(boost::get<CRegID>(dynamic_pointer_cast<CRewardTransaction>(block.vptx[0])->account).ToString());
 			blockminer.push_back(move(miner));
 		}
@@ -441,6 +443,5 @@ Value getdacrsstate(const Array& params, bool fHelp)
 	obj.push_back(Pair("transactions", transactions));
 	obj.push_back(Pair("fuel", fuel));
 	obj.push_back(Pair("blockminer",blockminer));
-	printf("getdacrsstate end\n");
     return obj;
 }
