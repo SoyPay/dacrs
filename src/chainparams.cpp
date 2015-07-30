@@ -436,7 +436,7 @@ bool CBaseParams::IsArgCount(const string& strArg) {
 	return false;
 }
 
-const CBaseParams &SysCfg() {
+CBaseParams &SysCfg() {
 	static shared_ptr<CBaseParams> pParams;
 
 	if (pParams.get() == NULL) {
@@ -598,7 +598,6 @@ CBaseParams::CBaseParams() {
 	nViewCacheSize = 2000000;
 	nTargetSpacing = 60;
 	nTargetTimespan = 30 * 60;
-	nMaxCoinDay = 30 * 24 * 60 * 60;
 	nSubsidyHalvingInterval = 0;
 	paytxfee = 1000;
 	nDefaultPort = 0;
