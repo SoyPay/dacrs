@@ -1498,11 +1498,12 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 
 	//校验reward
 	uint64_t llValidReward = block.GetFee() - block.nFuel + POS_REWARD;
-	LogPrint("INFO", "block fee:%lld, block fuel:%lld\n", block.GetFee(), block.nFuel);
-	if (pRewardTx->rewardValue != llValidReward)
+	if (pRewardTx->rewardValue != llValidReward) {
+		LogPrint("INFO", "block fee:%lld, block fuel:%lld\n", block.GetFee(), block.nFuel);
 		return state.DoS(100,
 				ERRORMSG("ConnectBlock() : coinbase pays too much (actual=%d vs limit=%d)", pRewardTx->rewardValue,
 						llValidReward), REJECT_INVALID, "bad-cb-amount");
+	}
     //deal reward tx
 	LogPrint("op_account", "tx index:%d tx hash:%s\n", 0, block.vptx[0]->GetHash().GetHex());
     CTxUndo txundo;
@@ -1940,7 +1941,7 @@ bool AddToBlockIndex(CBlock& block, CValidationState& state, const CDiskBlockPos
          pindexNew->nSequenceId = nBlockSequenceId++;
     }
     map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.insert(make_pair(hash, pindexNew)).first;
-    LogPrint("INFO", "in map hash:%s map size:%d\n", hash.GetHex(), mapBlockIndex.size());
+//  LogPrint("INFO", "in map hash:%s map size:%d\n", hash.GetHex(), mapBlockIndex.size());
     pindexNew->phashBlock = &((*mi).first);
     map<uint256, CBlockIndex*>::iterator miPrev = mapBlockIndex.find(block.hashPrevBlock);
     if (miPrev != mapBlockIndex.end())
@@ -1965,7 +1966,7 @@ bool AddToBlockIndex(CBlock& block, CValidationState& state, const CDiskBlockPos
     	LogPrint("INFO", "ActivateBestChain() elapse time:%lld ms\n", GetTimeMillis() - tempTime);
     	return false;
     }
-    LogPrint("INFO", "ActivateBestChain() elapse time:%lld ms\n", GetTimeMillis() - tempTime);
+//    LogPrint("INFO", "ActivateBestChain() elapse time:%lld ms\n", GetTimeMillis() - tempTime);
     LOCK(cs_main);
     if (pindexNew == chainActive.Tip())
     {
@@ -2105,8 +2106,9 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 	vector<CBlock> vPreBlocks;
 	if (pPreBlockIndex->GetBlockHash() != chainActive.Tip()->GetBlockHash()) {
 		while (!chainActive.Contains(pPreBlockIndex)){
-			if(mapCache.count(pPreBlockIndex->GetBlockHash()) > 0) {
+			if(mapCache.count(pPreBlockIndex->GetBlockHash()) > 0 && !bFindForkChainTip) {
 				preBlockHash = pPreBlockIndex->GetBlockHash();
+				LogPrint("INFO", "ForkChainTip hash=%s, height=%d\n", pPreBlockIndex->GetBlockHash().GetHex(), pPreBlockIndex->nHeight);
 				bFindForkChainTip = true;
 			}
 			if(!bFindForkChainTip) {
@@ -2123,6 +2125,7 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 
 		int64_t tempTime = GetTimeMillis();
 		if (mapCache.count(pPreBlockIndex->GetBlockHash()) > 0 ) {
+			LogPrint("INFO", "hash=%s, height=%d\n", pPreBlockIndex->GetBlockHash().GetHex(), pPreBlockIndex->nHeight);
 			pAcctViewCache = std::get<0>(mapCache[pPreBlockIndex->GetBlockHash()]);
 			pTxCache = std::get<1>(mapCache[pPreBlockIndex->GetBlockHash()]);
 			pScriptDBCache = std::get<2>(mapCache[pPreBlockIndex->GetBlockHash()]);
@@ -2145,7 +2148,9 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 			std::tuple<std::shared_ptr<CAccountViewCache>, std::shared_ptr<CTransactionDBCache>,
 					std::shared_ptr<CScriptDBViewCache> > forkCache = std::make_tuple(pAcctViewCache, pTxCache,
 					pScriptDBCache);
-			LogPrint("INFO", "add mapCache Key:%s\n", pPreBlockIndex->GetBlockHash().GetHex());
+			LogPrint("INFO", "add mapCache Key:%s height:%d\n", pPreBlockIndex->GetBlockHash().GetHex(), pPreBlockIndex->nHeight);
+			LogPrint("INFO", "add pAcctViewCache:%x \n", pAcctViewCache.get());
+			LogPrint("INFO", "view best block hash:%s \n", pAcctViewCache->GetBestBlock().GetHex());
 			mapCache[pPreBlockIndex->GetBlockHash()] = forkCache;
 		}
 
@@ -2163,6 +2168,9 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 			pForkTxCache.reset(new CTransactionDBCache(*pTxCache, true));
 			pForkScriptDBCache.reset(new CScriptDBViewCache(*pScriptDBCache, true));
 		}
+
+		LogPrint("INFO", "pForkAcctView:%x\n", pForkAcctViewCache.get());
+		LogPrint("INFO", "view best block hash:%s height:%d\n", pForkAcctViewCache->GetBestBlock().GetHex(), mapBlockIndex[pForkAcctViewCache->GetBestBlock()]->nHeight);
 
 		vector<CBlock>::reverse_iterator rIter = vPreBlocks.rbegin();
 		for(; rIter != vPreBlocks.rend(); ++rIter) { //连接支链的block
@@ -2282,8 +2290,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 	AssertLockHeld(cs_main);
 	// Check for duplicate
 	uint256 hash = block.GetHash();
-	LogPrint("INFO", "AcceptBlcok hash:%s\n", hash.GetHex());
-	LogPrint("acceptblock", "AcceptBlcok hash:%s\n", hash.GetHex());
+	LogPrint("INFO", "AcceptBlcok hash:%s height:%d\n", hash.GetHex(), block.nHeight);
 	if (mapBlockIndex.count(hash))
 		return state.Invalid(ERRORMSG("AcceptBlock() : block already in mapBlockIndex"), 0, "duplicate");
 
@@ -2429,7 +2436,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     	LogPrint("INFO", "CheckBlock() id: %d elapse time:%lld ms\n",chainActive.Height(),GetTimeMillis() - llBeginCheckBlockTime);
         return ERRORMSG("ProcessBlock() :block hash:%s CheckBlock FAILED", pblock->GetHash().GetHex());
     }
-    LogPrint("INFO", "CheckBlock() elapse time:%lld ms\n", GetTimeMillis() - llBeginCheckBlockTime);
+//    LogPrint("INFO", "CheckBlock() elapse time:%lld ms\n", GetTimeMillis() - llBeginCheckBlockTime);
 //    CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
 //    if (pcheckpoint && pblock->hashPrevBlock != (chainActive.Tip() ? chainActive.Tip()->GetBlockHash() : uint256(0)))
 //    {
@@ -2491,7 +2498,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
     	 LogPrint("INFO", "AcceptBlock() elapse time:%lld ms\n", GetTimeMillis() - llAcceptBlockTime);
     	 return ERRORMSG("ProcessBlock() : AcceptBlock FAILED");
     }
-    LogPrint("INFO", "AcceptBlock() elapse time:%lld ms\n", GetTimeMillis() - llAcceptBlockTime);
+//    LogPrint("INFO", "AcceptBlock() elapse time:%lld ms\n", GetTimeMillis() - llAcceptBlockTime);
 
 
     // Recursively process any orphan blocks that depended on this one  递归处理
@@ -2521,8 +2528,8 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
         mapOrphanBlocksByPrev.erase(hashPrev);
     }
 
-    LogPrint("INFO", "ProcessBlock() elapse time:%lld ms\n", GetTimeMillis() - llBeginTime);
-    LogPrint("INFO","ProcessBlock: ACCEPTED\n");
+//  LogPrint("INFO", "ProcessBlock() elapse time:%lld ms\n", GetTimeMillis() - llBeginTime);
+//  LogPrint("INFO","ProcessBlock: ACCEPTED\n");
     return true;
 }
 

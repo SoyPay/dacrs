@@ -338,7 +338,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 }
 
 bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool bNeedRunTx) {
-	LogPrint("INFO", "VerifyPoxTx begin\n");
+//	LogPrint("INFO", "VerifyPoxTx begin\n");
 	uint64_t maxNonce = SysCfg().GetBlockMaxNonce(); //cacul times
 
 	if (pBlock->nNonce > maxNonce) {
