@@ -392,7 +392,7 @@ Value getdacrsstate(const Array& params, bool fHelp)
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "getdacrsstate\n"
-            "\nReturns data about each connected network node as a json array of objects.\n"
+            "\nReturns  an object containing recently block state data.\n"
             "\nResult:\n"
             "{\n"
             "  \"blocktime\": n,   (numeric)get the time of each block\n"

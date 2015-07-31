@@ -66,7 +66,7 @@ CCriticalSection cs_vNodes;
 map<CInv, CDataStream> mapRelay;
 deque<pair<int64_t, CInv> > vRelayExpiration;
 CCriticalSection cs_mapRelay;
-limitedmap<CInv, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
+limitedmap<CInv, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);   //存放发送请求的 MSG_TX ，int64_t是 the earliest time the request can be sent，收到对应交易执行erase
 
 static deque<string> vOneShots;
 CCriticalSection cs_vOneShots;
