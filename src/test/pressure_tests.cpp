@@ -106,8 +106,8 @@ public:
 		}
 		string txHash = result.get_str();
 		vTransactionHash.push_back(txHash);
-		if (mempool.mapTx.count(uint256(txHash)) > 0) {
-			std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(txHash)].GetTx();
+		if (mempool.mapTx.count(uint256(uint256S(txHash))) > 0) {
+			std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(uint256S(txHash))].GetTx();
 			vTransactions.push_back(tx);
 		}
 		vSendFee.push_back(make_pair(txHash, nfee));
@@ -143,8 +143,8 @@ public:
 		BOOST_CHECK(GetHashFromCreatedTx(value, txHash));
 
 		vTransactionHash.push_back(txHash);
-		if (mempool.mapTx.count(uint256(txHash)) > 0) {
-			std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(txHash)].GetTx();
+		if (mempool.mapTx.count(uint256(uint256S(txHash))) > 0) {
+			std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(uint256S(txHash))].GetTx();
 			vTransactions.push_back(tx);
 		}
 		vSendFee.push_back(make_pair(txHash, nfee));
@@ -171,8 +171,8 @@ public:
 		BOOST_CHECK(GetHashFromCreatedTx(value,txHash));
 
 		vTransactionHash.push_back(txHash);
-		if (mempool.mapTx.count(uint256(txHash)) > 0) {
-			std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(txHash)].GetTx();
+		if (mempool.mapTx.count(uint256(uint256S(txHash))) > 0) {
+			std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(uint256S(txHash))].GetTx();
 			vTransactions.push_back(tx);
 		}
 		vSendFee.push_back(make_pair(txHash, nfee));
@@ -190,8 +190,8 @@ public:
 
 		if(fFlag) {
 			vTransactionHash.push_back(hash);
-			if (mempool.mapTx.count(uint256(hash)) > 0) {
-				std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(hash)].GetTx();
+			if (mempool.mapTx.count(uint256(uint256S(hash))) > 0) {
+				std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(uint256S(hash))].GetTx();
 				vTransactions.push_back(tx);
 			}
 			vSendFee.push_back(make_pair(hash, nFee));
@@ -297,7 +297,7 @@ public:
 			dFuel.pop_front();
 		}
 		//检查总账平衡
-		BOOST_CHECK(totalValue + llTotalFee == (30000000 * COIN + uTotalRewardValue));
+		BOOST_CHECK(totalValue + llTotalFee == (3000000000 * COIN + uTotalRewardValue));
 		return true;
 	}
 
@@ -326,7 +326,7 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 			BOOST_CHECK(pwalletMain->UnConfirmTx.size() == iTxCount);
 			//检测钱包未确认交易hash是否正确
 			for(auto &item : vTransactionHash) {
-				BOOST_CHECK(pwalletMain->UnConfirmTx.count(uint256(item)) > 0);
+				BOOST_CHECK(pwalletMain->UnConfirmTx.count(uint256(uint256S(item))) > 0);
 			}
 
 		}

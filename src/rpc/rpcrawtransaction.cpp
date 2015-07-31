@@ -88,7 +88,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
 //    }
     entry.push_back(Pair("vout", vout));
 
-    if (hashBlock != 0)
+    if (!hashBlock.IsNull())
     {
         entry.push_back(Pair("blockhash", hashBlock.GetHex()));
         map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);

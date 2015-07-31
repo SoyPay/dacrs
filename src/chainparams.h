@@ -8,6 +8,7 @@
 #include <memory>
 #include "bignum.h"
 #include "uint256.h"
+#include "arith_uint256.h"
 #include "util.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -285,7 +286,7 @@ public:
 	int GetDefaultPort() const {
 		return nDefaultPort;
 	}
-	const CBigNum& ProofOfWorkLimit() const {
+	const arith_uint256 ProofOfWorkLimit()  {
 		return bnProofOfStakeLimit;
 	}
 	int SubsidyHalvingInterval() const {
@@ -361,7 +362,7 @@ protected:
 	int nDefaultPort;
 	int nRPCPort;
 	string publicKey;
-	CBigNum bnProofOfStakeLimit;
+	arith_uint256 bnProofOfStakeLimit;
 	int nSubsidyHalvingInterval;
 	string strDataDir;
 	vector<CDNSSeedData> vSeeds;

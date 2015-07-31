@@ -100,7 +100,7 @@ public:
 		Value resut =CreateContractTx("010000000100", "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz", param, 10, 10000000);
 		BOOST_CHECK(GetHashFromCreatedTx(resut,TxHash));
 		BOOST_CHECK(GenerateOneBlock());
-		uint256 hash(TxHash.c_str());
+		uint256 hash(uint256S(TxHash.c_str()));
 		param ="02";
 		param += HexStr(hash);
 		string temp;
@@ -237,7 +237,7 @@ public:
 		BOOST_CHECK(SetAddrGenerteBlock("dggsWmQ7jH46dgtA5dEZ9bhFSAK1LASALw"));
 		Value temp1 = GetAccountInfo("010000000100");
 		temp1 = GetAccountInfo("dsGb9GyDGYnnHdjSvRfYbj9ox2zPbtgtpo");
-		BOOST_CHECK_EQUAL(GetValue(temp1,"Balance"),999999899990000);
+		BOOST_CHECK_EQUAL(GetValue(temp1,"Balance"),99999999899990000);
 
 
 		/// 脚本账户给普通账户打钱
@@ -251,7 +251,7 @@ public:
 		temp1 = GetAccountInfo("010000000100");
 		BOOST_CHECK_EQUAL(GetValue(temp1,"Balance"),0);
 		temp1 = GetAccountInfo("dsGb9GyDGYnnHdjSvRfYbj9ox2zPbtgtpo");
-		BOOST_CHECK_EQUAL(GetValue(temp1,"Balance"),999999800000000);
+		BOOST_CHECK_EQUAL(GetValue(temp1,"Balance"),99999999800000000);
 
 		//测试不能从其他脚本打钱到本APP脚本账户中
 		accountid = "020000000100";
@@ -400,7 +400,7 @@ public:
 		while(count > 1)
 		{
 			//// second tx
-				uint256 hash(phash.c_str());
+				uint256 hash(uint256S(phash.c_str()));
 				int param =16;
 				string temp = "";
 				temp += tinyformat::format("%02x%s%02x",param,HexStr(hash),height);

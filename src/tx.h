@@ -726,7 +726,7 @@ public:
 public:
 	bool GetAccountOperLog(const CKeyID &keyId, CAccountLog &accountLog);
 	void Clear() {
-		txHash = 0;
+		txHash = uint256();
 		vAccountLog.clear();
 		vScriptOperLog.clear();
 	}
@@ -764,7 +764,7 @@ public:
 		regID.clean();
 		nCoinDay = 0;
 	}
-	CAccount() :keyID(uint160(0)), llValues(0) {
+	CAccount() :keyID(uint160()), llValues(0) {
 		PublicKey = CPubKey();
 		MinerPKey =  CPubKey();
 		nHeight = 0;
@@ -868,7 +868,7 @@ public:
 		nCoinDay = 0;
 	}
 	CAccountLog() {
-		keyID = uint160(0);
+		keyID = uint160();
 		llValues = 0;
 		nHeight = 0;
 		nCoinDay = 0;

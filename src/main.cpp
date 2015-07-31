@@ -2203,7 +2203,7 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 								item->GetHash().GetHex()), REJECT_INVALID, "tx-invalid-height");
 			}
 			//校验是否有重复确认交易
-			if(uint256(0) != pForkTxCache->IsContainTx(item->GetHash()))
+			if(uint256() != pForkTxCache->IsContainTx(item->GetHash()))
 				return state.DoS(100, ERRORMSG("CheckBlockProofWorkWithCoinDay() : tx hash %s has been confirmed\n", item->GetHash().GetHex()), REJECT_INVALID, "bad-txns-oversize");
 		}
 
@@ -2309,16 +2309,10 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 		pindexPrev = (*mi).second;
 		nHeight = pindexPrev->nHeight + 1;
 
-		// Check proof of work
-		if (block.nBits != GetNextWorkRequired(pindexPrev, &block))
-			return state.DoS(100, ERRORMSG("AcceptBlock() : incorrect proof of work"), REJECT_INVALID, "bad-diffbits");
+		if(block.nHeight != (unsigned int)nHeight)
+			return state.DoS(100, ERRORMSG("AcceptBlock() : height in block claimed dismatched it's actual height"), REJECT_INVALID, "incorrect-height");
 
 		int64_t tempTime = GetTimeMillis();
-		//Check proof of pos tx
-		if (!CheckBlockProofWorkWithCoinDay(block, pindexPrev, state)) {
-			LogPrint("INFO", "CheckBlockProofWorkWithCoinDay() end:%lld ms\n", GetTimeMillis() - tempTime);
-			return state.DoS(100, ERRORMSG("AcceptBlock() : check proof of pos tx"), REJECT_INVALID, "bad-pos-tx");
-		}
 
 		// Check timestamp against prev
 		if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
@@ -2334,6 +2328,16 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 		CBlockIndex* pcheckpoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
 		if (pcheckpoint && nHeight < pcheckpoint->nHeight)
 			return state.DoS(100, ERRORMSG("AcceptBlock() : forked chain older than last checkpoint (height %d)", nHeight));
+
+		// Check proof of work, before height 28000 don't check proofwork, fixed CBigNum adjust difficult bug.
+		if ( nHeight > 28000 && block.nBits != GetNextWorkRequired(pindexPrev, &block))
+			return state.DoS(100, ERRORMSG("AcceptBlock() : incorrect proof of work actual vs need(%d vs %d)", block.nBits, GetNextWorkRequired(pindexPrev, &block)), REJECT_INVALID, "bad-diffbits");
+
+		//Check proof of pos tx
+		if (!CheckBlockProofWorkWithCoinDay(block, pindexPrev, state)) {
+			LogPrint("INFO", "CheckBlockProofWorkWithCoinDay() end:%lld ms\n", GetTimeMillis() - tempTime);
+			return state.DoS(100, ERRORMSG("AcceptBlock() : check proof of pos tx"), REJECT_INVALID, "bad-pos-tx");
+		}
 
 		// Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
 		if (block.nVersion < 2) {
@@ -2461,7 +2465,7 @@ bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBl
 
 
     // If we don't already have its previous block, shunt it off to holding area until we get it
-    if (pblock->hashPrevBlock != 0 && !mapBlockIndex.count(pblock->hashPrevBlock))
+    if (!pblock->hashPrevBlock.IsNull() && !mapBlockIndex.count(pblock->hashPrevBlock))
     {   /* 网络有延迟,会存在*/
 //      LogPrint("INFO","ProcessBlock: ORPHAN BLOCK %lu height=%d hash=%s, prev=%s\n", (unsigned long)mapOrphanBlocks.size(), pblock->nHeight, pblock->GetHash().GetHex(), pblock->hashPrevBlock.ToString());
 
@@ -2745,7 +2749,7 @@ uint256 CPartialMerkleTree::TraverseAndExtract(int height, unsigned int pos, uns
     if (nBitsUsed >= vBits.size()) {
         // overflowed the bits array - failure
         fBad = true;
-        return 0;
+        return uint256();
     }
     bool fParentOfMatch = vBits[nBitsUsed++];
     if (height==0 || !fParentOfMatch) {
@@ -2753,7 +2757,7 @@ uint256 CPartialMerkleTree::TraverseAndExtract(int height, unsigned int pos, uns
         if (nHashUsed >= vHash.size()) {
             // overflowed the hash array - failure
             fBad = true;
-            return 0;
+            return uint256();
         }
         const uint256 &hash = vHash[nHashUsed++];
         if (height==0 && fParentOfMatch) // in case of height 0, we have a matched txid
@@ -2791,16 +2795,16 @@ uint256 CPartialMerkleTree::ExtractMatches(vector<uint256> &vMatch) {
     vMatch.clear();
     // An empty set will not work
     if (nTransactions == 0)
-        return 0;
+        return uint256();
     // check for excessively high numbers of transactions
     if (nTransactions > MAX_BLOCK_SIZE / 60) // 60 is the lower bound for the size of a serialized CTransaction
-        return 0;
+        return uint256();
     // there can never be more hashes provided than one for every txid
     if (vHash.size() > nTransactions)
-        return 0;
+        return uint256();
     // there must be at least one bit per node in the partial tree, and at least one node per hash
     if (vBits.size() < vHash.size())
-        return 0;
+        return uint256();
     // calculate height of tree
     int nHeight = 0;
     while (CalcTreeWidth(nHeight) > 1)
@@ -2810,13 +2814,13 @@ uint256 CPartialMerkleTree::ExtractMatches(vector<uint256> &vMatch) {
     uint256 hashMerkleRoot = TraverseAndExtract(nHeight, 0, nBitsUsed, nHashUsed, vMatch);
     // verify that no problems occured during the tree traversal
     if (fBad)
-        return 0;
+        return uint256();
     // verify that all bits were consumed (except for the padding caused by serializing it as a byte sequence)
     if ((nBitsUsed+7)/8 != (vBits.size()+7)/8)
-        return 0;
+        return uint256();
     // verify that all hashes were consumed
     if (nHashUsed != vHash.size())
-        return 0;
+        return uint256();
     return hashMerkleRoot;
 }
 
@@ -2878,7 +2882,7 @@ FILE* OpenUndoFile(const CDiskBlockPos &pos, bool fReadOnly) {
 
 CBlockIndex * InsertBlockIndex(uint256 hash)
 {
-    if (hash == 0)
+    if (hash.IsNull())
         return NULL;
 
     // Return existing
@@ -2913,7 +2917,7 @@ bool static LoadBlockIndexDB()
     sort(vSortedByHeight.begin(), vSortedByHeight.end());
 	for (const auto& item : vSortedByHeight) {
 		CBlockIndex* pindex = item.second;
-		pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + pindex->GetBlockWork().getuint256();
+		pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + GetBlockProof(*pindex);
 		pindex->nChainTx = (pindex->pprev ? pindex->pprev->nChainTx : 0) + pindex->nTx;
 		if ((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TRANSACTIONS && !(pindex->nStatus & BLOCK_FAILED_MASK))
 			setBlockIndexValid.insert(pindex);
@@ -3402,7 +3406,7 @@ void static ProcessGetData(CNode* pfrom)
                         vector<CInv> vInv;
                         vInv.push_back(CInv(MSG_BLOCK, chainActive.Tip()->GetBlockHash()));
                         pfrom->PushMessage("inv", vInv);
-                        pfrom->hashContinue = 0;
+                        pfrom->hashContinue.SetNull();
                         LogPrint("net", "reset node hashcontinue\n");
                     }
                 }
@@ -3643,10 +3647,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     // Use deterministic randomness to send to the same nodes for 24 hours
                     // at a time so the setAddrKnowns of the chosen nodes prevent repeats
                     static uint256 hashSalt;
-                    if (hashSalt == 0)
+                    if (hashSalt.IsNull())
                         hashSalt = GetRandHash();
                     uint64_t hashAddr = addr.GetHash();
-                    uint256 hashRand = hashSalt ^ (hashAddr<<32) ^ ((GetTime()+hashAddr)/(24*60*60));
+                    uint256 hashRand = ArithToUint256(UintToArith256(hashSalt) ^ (hashAddr<<32) ^ ((GetTime()+hashAddr)/(24*60*60)));
                     hashRand = Hash(BEGIN(hashRand), END(hashRand));
                     multimap<uint256, CNode*> mapMix;
                     for(auto pnode:vNodes)
@@ -3655,7 +3659,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 //                            continue;
                         unsigned int nPointer;
                         memcpy(&nPointer, &pnode, sizeof(nPointer));
-                        uint256 hashKey = hashRand ^ nPointer;
+                        uint256 hashKey = ArithToUint256(UintToArith256(hashRand) ^ nPointer);
                         hashKey = Hash(BEGIN(hashKey), END(hashKey));
                         mapMix.insert(make_pair(hashKey, pnode));
                     }
@@ -3786,7 +3790,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
         //add by frank
         if(!pindex)
-        	pfrom->hashContinue = 0;
+        	pfrom->hashContinue.SetNull();
     }
 
 
@@ -4480,7 +4484,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             g_nSyncTipHeight = pto->nStartingHeight;
             uiInterface.NotifyBlocksChanged(0, chainActive.Tip()->nHeight, chainActive.Tip()->GetBlockHash());
             LogPrint("net", "start block sync lead to getblocks\n");
-            PushGetBlocks(pto, chainActive.Tip(), uint256(0));
+            PushGetBlocks(pto, chainActive.Tip(), uint256());
         }
 
         // Resend wallet transactions that haven't gotten in a block yet
@@ -4510,11 +4514,11 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                 {
                     // 1/4 of tx invs blast to all immediately
                     static uint256 hashSalt;
-                    if (hashSalt == 0)
+                    if (hashSalt.IsNull())
                         hashSalt = GetRandHash();
-                    uint256 hashRand = inv.hash ^ hashSalt;
+                    uint256 hashRand = ArithToUint256(UintToArith256(inv.hash) ^ UintToArith256(hashSalt));
                     hashRand = Hash(BEGIN(hashRand), END(hashRand));
-                    bool fTrickleWait = ((hashRand & 3) != 0);
+                    bool fTrickleWait = ((UintToArith256(hashRand) & 3) != 0);
 
                     if (fTrickleWait)
                     {

@@ -140,29 +140,13 @@ public:
 		nDefaultPort = 8668;
 		nRPCPort = 8669;
 		strDataDir = "main";
-		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 10);        //00 3f ff ff
+		bnProofOfStakeLimit =~arith_uint256(0) >> 10;        //00 3f ff ff
 		nSubsidyHalvingInterval = 210000;
 
-		// Build the genesis block. Note that the output of the genesis coinbase cannot
-		// be spent as it did not originally exist in the database.
-		//
-		// CBlock(hash=000000000019d6, ver=1, hashPrevBlock=00000000000000, hashMerkleRoot=4a5e1e, nTime=1231006505, nBits=1d00ffff, nNonce=2083236893, vtx=1)
-		//   CTransaction(hash=4a5e1e, ver=1, vin.size=1, vout.size=1, nLockTime=0)
-		//     CTxIn(COutPoint(000000, -1), coinbase 04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73)
-		//     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
-		//   vMerkleTree: 4a5e1e
-//		const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
-//        CTransaction txNew;
-//        txNew.vin.resize(1);
-//        txNew.vout.resize(1);
-//        txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-//        txNew.vout[0].nValue = 50 * COIN;
-//        txNew.vout[0].scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
-//        genesis.vtx.push_back(txNew);
 		assert(CreateGenesisRewardTx(genesis.vptx, intPubKey_mainNet));
-		genesis.hashPrevBlock = 0;
+		genesis.hashPrevBlock.SetNull();
 		genesis.hashMerkleRoot = genesis.BuildMerkleTree();
-		genesis.hashPos = 0;
+		genesis.hashPos.SetNull();
 		genesis.nVersion = 1;
 		genesis.nTime = 1436538491;
 		genesis.nBits = 0x1f3fffff;        //00 3f ff
@@ -176,8 +160,8 @@ public:
 //			cout << "main hashGenesisBlock:\r\n" << hashGenesisBlock.ToString() << endl;
 //			cout << "main hashMerkleRoot:\r\n" << genesis.hashMerkleRoot.ToString() << endl;
 //		}
-		assert(hashGenesisBlock == uint256("0xd9ffedf0475c7734e1ea1a7aa1a05361825e77869371962ee6a3ec515e2e2c3d"));
-		assert(genesis.hashMerkleRoot == uint256("0x362155f5bb005be0523c7247cf1b901bd6f3567d105bd5defca28d221c90d1ef"));
+		assert(hashGenesisBlock == uint256S("0xd9ffedf0475c7734e1ea1a7aa1a05361825e77869371962ee6a3ec515e2e2c3d"));
+		assert(genesis.hashMerkleRoot == uint256S("0x362155f5bb005be0523c7247cf1b901bd6f3567d105bd5defca28d221c90d1ef"));
 
 //      vSeeds.push_back(CDNSSeedData("soypay.org.cn", "seed_cn_0.dspay.org"));
 //      vSeeds.push_back(CDNSSeedData("soypay.org.us", "seed_us_0.dspay.org"));
@@ -257,7 +241,7 @@ public:
 //		{
 //			cout << "testnet hashGenesisBlock:\r\n" << hashGenesisBlock.ToString() << endl;
 //		}
-		assert(hashGenesisBlock == uint256("0xc6f81a98e9de1ac7da65a8b2bbd937f1d49aaedc7f8f2f0517c13f099df1ed49"));
+		assert(hashGenesisBlock == uint256S("0xc6f81a98e9de1ac7da65a8b2bbd937f1d49aaedc7f8f2f0517c13f099df1ed49"));
 //		vSeeds.clear();
 //		vSeeds.push_back(CDNSSeedData("Dacrs.petertodd.org", "testnet-seed.Dacrs.petertodd.org"));
 //		vSeeds.push_back(CDNSSeedData("bluematt.me", "testnet-seed.bluematt.me"));
@@ -294,7 +278,7 @@ public:
 		pchMessageStart[2] = 0x2d;
 		pchMessageStart[3] = 0x3d;
 		nSubsidyHalvingInterval = 150;
-		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 6);        //target:00000011 11111111 11111111
+		bnProofOfStakeLimit = ~arith_uint256(0) >> 6;     //target:00000011 11111111 11111111
 		genesis.nTime = 1421808634;
 		genesis.nBits = 0x2003ffff;
 		genesis.nNonce = 888;
@@ -313,7 +297,7 @@ public:
 //			cout << "regtest hashGenesisBlock:\r\n" << hashGenesisBlock.ToString() << endl;
 //			cout << "regtest hashMerkleRoot:\r\n" << genesis.hashMerkleRoot.ToString() << endl;
 //		}
-		assert(hashGenesisBlock == uint256("0x18d876339c5014803507332d0ae509862b4da382253b7696605e58963592723f"));
+		assert(hashGenesisBlock == uint256S("0x18d876339c5014803507332d0ae509862b4da382253b7696605e58963592723f"));
 
 		vFixedSeeds.clear();
 		vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.

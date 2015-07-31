@@ -10,7 +10,7 @@ bool CAccountView::GetAccount(const CKeyID &keyId, CAccount &account) {return fa
 bool CAccountView::SetAccount(const CKeyID &keyId, const CAccount &account) {return false;}
 bool CAccountView::SetAccount(const vector<unsigned char> &accountId, const CAccount &account) {return false;}
 bool CAccountView::HaveAccount(const CKeyID &keyId) {return false;}
-uint256 CAccountView::GetBestBlock() {return false;}
+uint256 CAccountView::GetBestBlock() {return uint256();}
 bool CAccountView::SetBestBlock(const uint256 &hashBlock) {return false;}
 bool CAccountView::BatchWrite(const map<CKeyID, CAccount> &mapAccounts, const map<vector<unsigned char>, CKeyID> &mapKeyIds, const uint256 &hashBlock) {return false;}
 bool CAccountView::BatchWrite(const vector<CAccount> &vAccounts) {return false;}
@@ -73,10 +73,10 @@ bool CAccountViewBacked::SaveAccountInfo(const vector<unsigned char> &accountId,
 }
 
 
-CAccountViewCache::CAccountViewCache(CAccountView &accountView, bool fDummy):CAccountViewBacked(accountView), hashBlock(0) {}
+CAccountViewCache::CAccountViewCache(CAccountView &accountView, bool fDummy):CAccountViewBacked(accountView), hashBlock(uint256()) {}
 bool CAccountViewCache::GetAccount(const CKeyID &keyId, CAccount &account) {
 	if (cacheAccounts.count(keyId)) {
-		if (cacheAccounts[keyId].keyID != uint160(0)) {
+		if (cacheAccounts[keyId].keyID != uint160()) {
 			account = cacheAccounts[keyId];
 			return true;
 		} else
@@ -109,7 +109,7 @@ bool CAccountViewCache::HaveAccount(const CKeyID &keyId) {
 		return pBase->HaveAccount(keyId);
 }
 uint256 CAccountViewCache::GetBestBlock() {
-	if(hashBlock == uint256(0))
+	if(hashBlock == uint256())
 		return pBase->GetBestBlock();
 	return hashBlock;
 }
@@ -119,7 +119,7 @@ bool CAccountViewCache::SetBestBlock(const uint256 &hashBlockIn) {
 }
 bool CAccountViewCache::BatchWrite(const map<CKeyID, CAccount> &mapAccounts, const map<vector<unsigned char>, CKeyID> &mapKeyIds, const uint256 &hashBlockIn) {
 	for (map<CKeyID, CAccount>::const_iterator it = mapAccounts.begin(); it != mapAccounts.end(); ++it) {
-		if (uint160(0) == it->second.keyID) {
+		if (uint160() == it->second.keyID) {
 			pBase->EraseAccount(it->first);
 			cacheAccounts.erase(it->first);
 		} else {
@@ -136,7 +136,7 @@ bool CAccountViewCache::BatchWrite(const vector<CAccount> &vAccounts) {
 	for (vector<CAccount>::const_iterator it = vAccounts.begin(); it != vAccounts.end(); ++it) {
 		if (it->IsEmptyValue() && !it->IsRegister()) {
 			cacheAccounts[it->keyID] = *it;
-			cacheAccounts[it->keyID].keyID = uint160(0);
+			cacheAccounts[it->keyID].keyID = uint160();
 		} else {
 			cacheAccounts[it->keyID] = *it;
 		}
@@ -145,11 +145,11 @@ bool CAccountViewCache::BatchWrite(const vector<CAccount> &vAccounts) {
 }
 bool CAccountViewCache::EraseAccount(const CKeyID &keyId) {
 	if(cacheAccounts.count(keyId))
-		cacheAccounts[keyId].keyID = uint160(0);
+		cacheAccounts[keyId].keyID = uint160();
 	else {
 		CAccount account;
 		if(pBase->GetAccount(keyId, account)) {
-			account.keyID = uint160(0);
+			account.keyID = uint160();
 			cacheAccounts[keyId] = account;
 		}
 	}
@@ -166,7 +166,7 @@ bool CAccountViewCache::GetKeyId(const vector<unsigned char> &accountId, CKeyID 
 		return false;
 	if(cacheKeyIds.count(accountId)){
 		keyId = cacheKeyIds[accountId];
-		if(keyId != uint160(0))
+		if(keyId != uint160())
 		{
 			return true;
 		}
@@ -185,11 +185,11 @@ bool CAccountViewCache::EraseKeyId(const vector<unsigned char> &accountId) {
 	if(accountId.empty())
 		return false;
 	if (cacheKeyIds.count(accountId))
-		cacheKeyIds[accountId] = uint160(0);
+		cacheKeyIds[accountId] = uint160();
 	else {
 		CKeyID keyId;
 		if(pBase->GetKeyId(accountId, keyId)) {
-			cacheKeyIds[accountId] = uint160(0);
+			cacheKeyIds[accountId] = uint160();
 		}
 	}
 	return true;
@@ -200,10 +200,10 @@ bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAcco
 	}
 	if(cacheKeyIds.count(accountId)) {
 		CKeyID keyId(cacheKeyIds[accountId]);
-		if(keyId != uint160(0)) {
+		if(keyId != uint160()) {
 			if(cacheAccounts.count(keyId)){
 				account = cacheAccounts[keyId];
-				if(account.keyID != uint160(0)) {  // 判断此帐户是否被删除了
+				if(account.keyID != uint160()) {  // 判断此帐户是否被删除了
 					return true;
 				}else {
 					return false;   //已删除返回false
@@ -221,7 +221,7 @@ bool CAccountViewCache::GetAccount(const vector<unsigned char> &accountId, CAcco
 			cacheKeyIds[accountId] = keyId;
 			if (cacheAccounts.count(keyId) > 0 ) {
 				account = cacheAccounts[keyId];
-				if (account.keyID != uint160(0)) { // 判断此帐户是否被删除了
+				if (account.keyID != uint160()) { // 判断此帐户是否被删除了
 					return true;
 				} else {
 					return false;   //已删除返回false
@@ -1354,7 +1354,7 @@ string CScriptDBViewCache::ToString(){
 }
 
 
-uint256 CTransactionDBView::IsContainTx(const uint256 & txHash) { return std::move(uint256(0)); }
+uint256 CTransactionDBView::IsContainTx(const uint256 & txHash) { return std::move(uint256()); }
 bool CTransactionDBView::IsContainBlock(const CBlock &block) { return false; }
 bool CTransactionDBView::AddBlockToCache(const CBlock &block) { return false; }
 bool CTransactionDBView::DeleteBlockFromCache(const CBlock &block) { return false; }
@@ -1439,7 +1439,7 @@ uint256 CTransactionDBCache::IsContainTx(const uint256 & txHash) {
 	if(IsInMap(mapTxHashByBlockHash,blockHash)){//mapTxHashByBlockHash[blockHash].empty()) { // [] 运算符防止不小心加入了垃圾数据
 		return std::move(blockHash);
 	}
-	return std::move(uint256(0));
+	return std::move(uint256());
 }
 map<uint256, vector<uint256> > CTransactionDBCache::GetTxHashCache(void) {
 	return mapTxHashByBlockHash;
@@ -1484,7 +1484,7 @@ int CTransactionDBCache::GetSize() {
 	return iCount;
 }
 bool CTransactionDBCache::IsInMap(const map<uint256, vector<uint256> >& mMap, const uint256 &hash) const {
-	if (hash == 0)
+	if (hash == uint256())
 		return false;
 	auto te =mMap.find(hash);
 	if(te != mMap.end()){

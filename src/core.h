@@ -16,13 +16,13 @@
 
 /** No amount larger than this (in satoshi) is valid */
 static const int64_t MAX_MONEY = 1000000000 * COIN;
-static const int64_t MAX_MONEY_TEST_NET = 10000000 * COIN;
+static const int64_t MAX_MONEY_REG_NET = 20 * MAX_MONEY;
 
 
 inline int64_t GetMaxMoney()
 {
-	if(SysCfg().NetworkID() == CBaseParams::TESTNET) {
-		return MAX_MONEY_TEST_NET;
+	if(SysCfg().NetworkID() == CBaseParams::REGTEST) {
+		return MAX_MONEY_REG_NET;
 	}
 	else {
 		return MAX_MONEY;
@@ -79,9 +79,9 @@ public:
     void SetNull()
     {
         nVersion = CBlockHeader::CURRENT_VERSION;
-        hashPrevBlock = 0;
-        hashMerkleRoot = 0;
-        hashPos = 0;
+        hashPrevBlock = uint256();
+        hashMerkleRoot = uint256();
+        hashPos = uint256();
         nTime = 0;
         nBits = 0;
         nNonce = 0;

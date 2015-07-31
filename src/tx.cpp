@@ -384,7 +384,7 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 	CAccountLog srcAcctLog(srcAcct);
 	if (!srcAcct.OperateAccount(MINUS_FREE, minusValue, nHeight))
 		return state.DoS(100, ERRORMSG("ExecuteTx() : CTransaction ExecuteTx, accounts insufficient funds"), UPDATE_ACCOUNT_FAIL,
-				"bad-operate-account");
+				"operate-minus-account-failed");
 	CUserID userId = srcAcct.keyID;
 	if(!view.SetAccount(userId, srcAcct)){
 		return state.DoS(100, ERRORMSG("UpdataAccounts() :CTransaction ExecuteTx, save account%s info error",  boost::get<CRegID>(srcRegId).ToString()),
@@ -406,7 +406,7 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 	}
 	if (!desAcct.OperateAccount(ADD_FREE, addValue, nHeight)) {
 		return state.DoS(100, ERRORMSG("ExecuteTx() : CTransaction ExecuteTx, operate accounts error"), UPDATE_ACCOUNT_FAIL,
-				"bad-operate-account");
+				"operate-add-account-failed");
 	}
 	if (!view.SetAccount(desUserId, desAcct)) {
 		return state.DoS(100, ERRORMSG("ExecuteTx() : CTransaction ExecuteTx, save account error, kyeId=%s", desAcct.keyID.ToString()),
@@ -475,7 +475,7 @@ bool CTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view, CScri
 		std::shared_ptr<CBaseTransaction> pTx = GetNewInstance();
 		uint64_t el = GetFuelRate(scriptDB);
 		CScriptDBViewCache scriptDBView(scriptDB, true);
-		if (uint256(0) == pTxCacheTip->IsContainTx(GetHash())) {
+		if (uint256() == pTxCacheTip->IsContainTx(GetHash())) {
 			CAccountViewCache accountView(view, true);
 			tuple<bool, uint64_t, string> ret = vmRunEvn.run(pTx, accountView, scriptDBView, chainActive.Height() + 1, el,
 					nRunStep);
@@ -859,30 +859,30 @@ string CAccount::ToString() const {
 }
 bool CAccount::IsMoneyOverflow(uint64_t nAddMoney) {
 	if (!MoneyRange(nAddMoney))
-		return false;
-
-	uint64_t nTotalMoney = 0;
-	nTotalMoney = llValues+nAddMoney;
-	return MoneyRange(static_cast<int64_t>(nTotalMoney) );
+		return ERRORMSG("money:%lld too larger than MaxMoney");
+	return true;
 }
 bool CAccount::OperateAccount(OperType type, const uint64_t &value, const int nCurHeight) {
 //	LogPrint("op_account", "before operate:%s\n", ToString());
+
+	if (!IsMoneyOverflow(value))
+		return false;
 
 	if (UpDateCoinDay(nCurHeight) < 0) {
 		LogPrint("INFO", "call UpDateCoinDay failed: cur height less than update height\n");
 		return false;
 	}
 
-	if (keyID == uint160(0)) {
+	if (keyID == uint160()) {
 		assert(0);
 	}
 	if (!value)
 		return true;
 	switch (type) {
 	case ADD_FREE: {
-		if (!IsMoneyOverflow(value))
-			return false;
 		llValues += value;
+		if (!IsMoneyOverflow(llValues))
+			return false;
 		break;
 	}
 	case MINUS_FREE: {
