@@ -73,8 +73,8 @@ public:
 	}
 };
 
-uint64_t nLastBlockTx = 0;
-uint64_t nLastBlockSize = 0;
+uint64_t nLastBlockTx = 0;    // 块中交易的总笔数,不含coinbase
+uint64_t nLastBlockSize = 0;  //被创建的块 尺寸
 
 //base on the last 500 blocks
 int GetElementForBurn(CBlockIndex* pindex)
@@ -234,13 +234,13 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 
 		if((unsigned int)(chainActive.Tip()->nHeight + 1) !=  pBlock->nHeight)
 			return false;
-		pwalletMain->GetKeys(setKeyID, true);
+		pwalletMain->GetKeys(setKeyID, true);                         // first:get keyID from pwalletMain
 		if (setKeyID.empty()) {
 			return ERRORMSG("CreatePosTx setKeyID empty");
 		}
 
 		LogPrint("INFO","CreatePosTx block time:%d\n",  pBlock->nTime);
-		for(const auto &keyid:setKeyID) {
+		for(const auto &keyid:setKeyID) {                             //second:get account by keyID
 			//find CAccount info by keyid
 			if(setCreateKey.size()) {
 				bool bfind = false;
@@ -255,7 +255,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 			}
 			CUserID userId = keyid;
 			CAccount acctInfo;
-			if (view.GetAccount(userId, acctInfo)) {
+			if (view.GetAccount(userId, acctInfo)) {     // check  acctInfo is or not allowed to mining ,
 				//available
 //				LogPrint("miner", "account info:regid=%s keyid=%s ncoinday=%lld isMiner=%d\n", acctInfo.regID.ToString(),
 //						acctInfo.keyID.ToString(), acctInfo.GetAccountPos(pBlock->nHeight), acctInfo.IsMiner(pBlock->nHeight));
@@ -278,7 +278,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 	uint256 prevblockhash = pPrevIndex->GetBlockHash();
 	const uint256 targetHash = CBigNum().SetCompact(pBlock->nBits).getuint256(); //target hash difficult
 	set<CAccount, CAccountComparator>::iterator iterAcct = setAcctInfo.begin();
-	for (;iterAcct!=setAcctInfo.end();++iterAcct) {
+	for (;iterAcct!=setAcctInfo.end();++iterAcct) {                            //third: 根据不同的账户 ,去计算挖矿
 		CAccount  &item = const_cast<CAccount&>(*iterAcct);
 		uint64_t posacc = item.GetAccountPos(pBlock->nHeight);
 		if (0 == posacc) {  //have no pos
@@ -301,7 +301,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 		postxinfo.nFuel = pBlock->nFuel;
 		postxinfo.nFuelRate = pBlock->nFuelRate;
 		postxinfo.nTime = pBlock->nTime; //max(pPrevIndex->GetMedianTimePast() + 1, GetAdjustedTime());
-		for (pBlock->nNonce = 0; pBlock->nNonce < maxNonce; ++pBlock->nNonce) {
+		for (pBlock->nNonce = 0; pBlock->nNonce < maxNonce; ++pBlock->nNonce) {        //循环的 更改随机数，计算curhash看是否满足
 			postxinfo.nNonce = pBlock->nNonce;
 			uint256 curhash = postxinfo.GetHash();
 
@@ -310,7 +310,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 
 				if (pAccountViewTip->GetRegId(item.keyID, regid)) {
 					CRewardTransaction *prtx = (CRewardTransaction *) pBlock->vptx[0].get();
-					prtx->account = regid;
+					prtx->account = regid;                                   //存矿工的 账户ID
 					prtx->nHeight = pPrevIndex->nHeight+1;
 					pBlock->hashMerkleRoot = pBlock->BuildMerkleTree();
 					pBlock->hashPos = curhash;
@@ -338,7 +338,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 }
 
 bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool bNeedRunTx) {
-	LogPrint("INFO", "VerifyPoxTx begin\n");
+//	LogPrint("INFO", "VerifyPoxTx begin\n");
 	uint64_t maxNonce = SysCfg().GetBlockMaxNonce(); //cacul times
 
 	if (pBlock->nNonce > maxNonce) {
@@ -719,11 +719,11 @@ void static DacrsMiner(CWallet *pwallet,int targetConter) {
 			CScriptDBViewCache ScriptDbTemp(*pScriptDBTip, true);
 			int64_t lasttime1 = GetTimeMillis();
 			shared_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock(accview, txCache, ScriptDbTemp));
+			if (!pblocktemplate.get()){
+				throw runtime_error("Create new block fail.");
+			}
 			LogPrint("MINER", "CreateNewBlock tx count:%d used time :%d ms\n", pblocktemplate.get()->block.vptx.size(),
 					GetTimeMillis() - lasttime1);
-			if (!pblocktemplate.get()){
-				throw;
-			}
 			CBlock *pblock = &pblocktemplate.get()->block;
 			MiningBlock(pblock, pwallet, pindexPrev, LastTrsa, accview, txCache, ScriptDbTemp);
 			
