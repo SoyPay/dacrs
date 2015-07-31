@@ -682,7 +682,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
     if (pool.exists(hash))
         return false;
     // is it already confirmed in block
-    if(uint256(0) != pTxCacheTip->IsContainTx(hash))
+    if(uint256() != pTxCacheTip->IsContainTx(hash))
     	return state.Invalid(ERRORMSG("AcceptToMemoryPool() : tx hash %s has been confirmed\n", hash.GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
 
     if (pBaseTx->IsCoinBase())
@@ -759,7 +759,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
 
 int CMerkleTx::GetDepthInMainChainINTERNAL(CBlockIndex* &pindexRet) const
 {
-    if (hashBlock == 0 || nIndex == -1)
+    if (hashBlock.IsNull() || nIndex == -1)
         return 0;
     AssertLockHeld(cs_main);
 
@@ -1019,24 +1019,27 @@ int64_t GetBlockValue(int nHeight, int64_t nFees)
 //
 unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
 {
-	const CBigNum &bnLimit = SysCfg().ProofOfWorkLimit();
+	arith_uint256 bnLimit = SysCfg().ProofOfWorkLimit();
 //	LogPrint("INFO", "bnLimit:%s\n", bnLimit.getuint256().GetHex());
-		CBigNum bnResult;
-		bnResult.SetCompact(nBase);
-		bnResult *= 2;
-		while (nTime > 0 && bnResult < bnLimit) {
-			// Maximum 200% adjustment per day...
-			bnResult *= 2;
-			nTime -= 24 * 60 * 60;
-		}
-		if (bnResult > bnLimit)
-			bnResult = bnLimit;
+	bool fNegative;
+	bool fOverflow;
 
-		return bnResult.GetCompact();
+	arith_uint256 bnResult;
+	bnResult.SetCompact(nBase, &fNegative, &fOverflow);
+	bnResult *= 2;
+	while (nTime > 0 && bnResult < bnLimit) {
+		// Maximum 200% adjustment per day...
+		bnResult *= 2;
+		nTime -= 24 * 60 * 60;
+	}
+	if (fNegative || bnResult == 0 || fOverflow || bnResult > bnLimit)
+		bnResult = bnLimit;
+
+	return bnResult.GetCompact();
 }
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
-	if (pindexLast == NULL) {
+		if (pindexLast == NULL) {
 			return SysCfg().ProofOfWorkLimit().GetCompact(); // genesis block
 		}
 
@@ -1052,10 +1055,9 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 
 		int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
 
-		CBigNum bnNew;
+		arith_uint256 bnNew;
 		bnNew.SetCompact(pindexPrev->nBits);
-//		int64_t nTargetSpacing = 20;//SysCfg().GetTargetSpacing(); //nStakeTargetSpacing;
-//		int64_t nInterval = SysCfg().GetInterval();//SysCfg().GetTargetTimespan() / nTargetSpacing;
+
 
 		int64_t nTargetSpacing = SysCfg().GetTargetSpacing();//nStakeTargetSpacing;
 		int64_t nInterval = SysCfg().GetTargetTimespan() / nTargetSpacing;
@@ -1064,29 +1066,31 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 		bnNew /= ((nInterval + 1) * nTargetSpacing);
 
 		if (bnNew > SysCfg().ProofOfWorkLimit() || bnNew < 0) {
-			LogPrint("INFO", "bnNew:%s\n", bnNew.getuint256().GetHex());
 			LogPrint("INFO", "bnNew:%s\n", bnNew.GetHex());
 			bnNew = SysCfg().ProofOfWorkLimit();
 		}
-
-
 		return bnNew.GetCompact();
 }
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits)
 {
-    CBigNum bnTarget;
-    bnTarget.SetCompact(nBits);
-    return true; // modify for test
-    // Check range
-    if (bnTarget <= 0 || bnTarget > SysCfg().ProofOfWorkLimit())
-        return ERRORMSG("CheckProofOfWork() : nBits below minimum work");
+//	bool fNegative;
+//	bool fOverflow;
+//	arith_uint256 bnTarget;
+//
+//	bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
+//
+//	// Check range
+//	if (fNegative || bnTarget == 0 || fOverflow || bnTarget > SysCfg().ProofOfWorkLimit())
+//		return ERRORMSG("CheckProofOfWork(): nBits below minimum work");
+//
+//	// Check proof of work matches claimed amount
+//	if (UintToArith256(hash) > bnTarget) {
+//		LogPrint("INFO", "ac")
+//		return ERRORMSG("CheckProofOfWork(): hash doesn't match nBits");
+//	}
 
-    // Check proof of work matches claimed amount
-    if (hash > bnTarget.getuint256())
-        return ERRORMSG("CheckProofOfWork() : hash doesn't match nBits");
-
-    return true;
+	return true;
 }
 
 // Return maximum amount of blocks that other nodes claim to have
@@ -1111,6 +1115,21 @@ bool IsInitialBlockDownload()
             chainActive.Tip()->GetBlockTime() < GetTime() - 24 * 60 * 60);
 }
 
+arith_uint256 GetBlockProof(const CBlockIndex& block)
+{
+    arith_uint256 bnTarget;
+    bool fNegative;
+    bool fOverflow;
+    bnTarget.SetCompact(block.nBits, &fNegative, &fOverflow);
+    if (fNegative || fOverflow || bnTarget == 0)
+        return 0;
+    // We need to compute 2**256 / (bnTarget+1), but we can't represent 2**256
+    // as it's too large for a arith_uint256. However, as 2**256 is at least as large
+    // as bnTarget+1, it is equal to ((2**256 - bnTarget - 1) / (bnTarget+1)) + 1,
+    // or ~bnTarget / (nTarget+1) + 1.
+    return (~bnTarget / (bnTarget + 1)) + 1;
+}
+
 bool fLargeWorkForkFound = false;
 bool fLargeWorkInvalidChainFound = false;
 CBlockIndex *pindexBestForkTip = NULL, *pindexBestForkBase = NULL;
@@ -1128,7 +1147,7 @@ void CheckForkWarningConditions()
     if (pindexBestForkTip && chainActive.Height() - pindexBestForkTip->nHeight >= 72)
         pindexBestForkTip = NULL;
 
-    if (pindexBestForkTip || (pindexBestInvalid && pindexBestInvalid->nChainWork > chainActive.Tip()->nChainWork + (chainActive.Tip()->GetBlockWork() * 6).getuint256()))
+    if (pindexBestForkTip || (pindexBestInvalid && pindexBestInvalid->nChainWork > chainActive.Tip()->nChainWork + (GetBlockProof(*chainActive.Tip()) * 6)))
     {
         if (!fLargeWorkForkFound)
         {
@@ -1184,7 +1203,7 @@ void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip)
     // We define it this way because it allows us to only store the highest fork tip (+ base) which meets
     // the 7-block condition and from this always have the most-likely-to-cause-warning fork
     if (pfork && (!pindexBestForkTip || (pindexBestForkTip && pindexNewForkTip->nHeight > pindexBestForkTip->nHeight)) &&
-            pindexNewForkTip->nChainWork - pfork->nChainWork > (pfork->GetBlockWork() * 7).getuint256() &&
+            pindexNewForkTip->nChainWork - pfork->nChainWork > (GetBlockProof(*pfork) * 7) &&
             chainActive.Height() - pindexNewForkTip->nHeight < 72)
     {
         pindexBestForkTip = pindexNewForkTip;
@@ -1220,7 +1239,7 @@ void static InvalidChainFound(CBlockIndex* pindexNew)
 		// The current code doesn't actually read the BestInvalidWork entry in
 		// the block database anymore, as it is derived from the flags in block
 		// index entry. We only write it for backward compatibility.
-		pblocktree->WriteBestInvalidWork(CBigNum(pindexBestInvalid->nChainWork));
+		pblocktree->WriteBestInvalidWork(ArithToUint256(pindexBestInvalid->nChainWork));
 		uiInterface.NotifyBlocksChanged(pindexNew->GetBlockTime(),chainActive.Height(),chainActive.Tip()->GetBlockHash());
 	}
     LogPrint("INFO","InvalidChainFound: invalid block=%s  height=%d  log2_work=%.8g  date=%s\n",
@@ -1393,7 +1412,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 
     if(!fJustCheck) {
 		// verify that the view's current state corresponds to the previous block
-		uint256 hashPrevBlock = pindex->pprev == NULL ? uint256(0) : pindex->pprev->GetBlockHash();
+		uint256 hashPrevBlock = pindex->pprev == NULL ? uint256() : pindex->pprev->GetBlockHash();
 		if(hashPrevBlock != view.GetBestBlock()) {
 			LogPrint("INFO", "hashPrevBlock=%s, bestblock=%s\n", hashPrevBlock.GetHex(), view.GetBestBlock().GetHex());
 			assert(hashPrevBlock == view.GetBestBlock());
@@ -1436,7 +1455,7 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
     if (block.vptx.size() > 1) {
 		for (unsigned int i = 1; i < block.vptx.size(); i++) {
 			std::shared_ptr<CBaseTransaction> pBaseTx = block.vptx[i];
-			if (uint256(0) != txCache.IsContainTx((pBaseTx->GetHash()))) {
+			if (uint256() != txCache.IsContainTx((pBaseTx->GetHash()))) {
 				return state.DoS(100,
 						ERRORMSG("ConnectBlock() : the TxHash %s the confirm duplicate", pBaseTx->GetHash().GetHex()),
 						REJECT_INVALID, "bad-cb-amount");
@@ -1618,7 +1637,7 @@ bool static WriteChainState(CValidationState &state) {
 void static UpdateTip(CBlockIndex *pindexNew, const CBlock &block) {
     chainActive.SetTip(pindexNew);
 
-    SyncWithWallets(0, NULL, &block);
+    SyncWithWallets(uint256(), NULL, &block);
 
     // Update best block in wallet (so we can detect restored wallets)
     bool fIsInitialDownload = IsInitialBlockDownload();
@@ -1950,7 +1969,7 @@ bool AddToBlockIndex(CBlock& block, CValidationState& state, const CDiskBlockPos
         pindexNew->nHeight = pindexNew->pprev->nHeight + 1;
     }
     pindexNew->nTx = block.vptx.size();
-    pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + pindexNew->GetBlockWork().getuint256();
+    pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
     pindexNew->nChainTx = (pindexNew->pprev ? pindexNew->pprev->nChainTx : 0) + pindexNew->nTx;
     pindexNew->nFile = pos.nFile;
     pindexNew->nDataPos = pos.nPos;
@@ -2101,7 +2120,7 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 	std::shared_ptr<CScriptDBViewCache> pScriptDBCache = make_shared<CScriptDBViewCache>(*pScriptDB, true);
 	pScriptDBCache->mapDatas = pScriptDBTip->mapDatas;
 
-	uint256 preBlockHash(0);
+	uint256 preBlockHash;
 	bool bFindForkChainTip(false);
 	vector<CBlock> vPreBlocks;
 	if (pPreBlockIndex->GetBlockHash() != chainActive.Tip()->GetBlockHash()) {
