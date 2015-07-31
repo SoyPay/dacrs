@@ -201,7 +201,7 @@ public:
     deque<CSerializeData> vSendMsg;
     CCriticalSection cs_vSend;
 
-    deque<CInv> vRecvGetData;
+    deque<CInv> vRecvGetData;   // strCommand == "getdata 保存的inv
     deque<CNetMessage> vRecvMsg;
     CCriticalSection cs_vRecvMsg;
     uint64_t nRecvBytes;
@@ -247,24 +247,24 @@ protected:
     void Fuzz(int nChance); // modifies ssSend
 
 public:
-    uint256 hashContinue;
-    CBlockIndex* pindexLastGetBlocksBegin;
-    uint256 hashLastGetBlocksEnd;
-    int nStartingHeight;
+    uint256 hashContinue;                    //getblocks the next batch of inventory下一次 盘点的块
+    CBlockIndex* pindexLastGetBlocksBegin;   //上次开始的块  本地节点有的块chainActive.Tip()
+    uint256 hashLastGetBlocksEnd;            // 本地节点保存的孤儿块的根块 hash GetOrphanRoot(hash)
+    int nStartingHeight;   //  Start block sync,currHegiht
     bool fStartSync;
 
     // flood relay
     vector<CAddress> vAddrToSend;
     mruset<CAddress> setAddrKnown;
     bool fGetAddr;
-    set<uint256> setKnown;
-    std::set<int> setcheckPointKnown;
+    set<uint256> setKnown;             // 存的是 alertHash
+    std::set<int> setcheckPointKnown;  // checkPoint 的height
 
     // inventory based relay
-    mruset<CInv> setInventoryKnown;
-    vector<CInv> vInventoryToSend;
+    mruset<CInv> setInventoryKnown;   //存放已收到的inv
+    vector<CInv> vInventoryToSend;    //待发送的inv
     CCriticalSection cs_inventory;
-    multimap<int64_t, CInv> mapAskFor;
+    multimap<int64_t, CInv> mapAskFor;   //向网络请求交易 的 时间, a priority queue
 
     // Ping time measurement
     uint64_t nPingNonceSent;

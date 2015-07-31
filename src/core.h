@@ -47,7 +47,7 @@ public:
     int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
-    uint256 hashPos;
+    uint256 hashPos;   //nVersion;hashPrevBlock;hashMerkleRoot;nValues(Óà¶î);nTime;nNonce;nHeight;nFuel;nFuelRate; ¼ÆËãµÄhash
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;

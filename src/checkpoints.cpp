@@ -81,7 +81,7 @@ namespace Checkpoints
     }
 
     bool CheckBlock(int nHeight, const uint256& hash)
-    {
+    { //nHeight 找不到或 高度和hash都能找到，则返回true
         if (!fEnabled)
             return true;
 
@@ -125,7 +125,7 @@ namespace Checkpoints
     }
 
     int GetTotalBlocksEstimate()
-    {
+    {    // 获取mapCheckpoints 中保存最后一个checkpoint 的高度
         if (!fEnabled)
             return 0;
 
