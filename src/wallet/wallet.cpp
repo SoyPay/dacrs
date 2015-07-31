@@ -226,7 +226,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 
 	assert(pTx != NULL || pblock != NULL);
 
-	if(hash == 0 && pTx == NULL) //this is block Sync
+	if(hash.IsNull() && pTx == NULL) //this is block Sync
 	{
 		uint256 blockhash = pblock->GetHash();
 		auto GenesisBlockProgress = [&]() {

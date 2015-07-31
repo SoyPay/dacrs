@@ -74,7 +74,7 @@ public:
 			return false;
 		}
 
-		uint256 blockHash(hash);
+		uint256 blockHash(uint256S(hash));
 		auto itAccountTx = pwalletMain->mapInBlockTx.find(blockHash);
 		if (pwalletMain->mapInBlockTx.end() == itAccountTx)
 			return false;
@@ -198,7 +198,7 @@ public:
 
 	bool IsScriptAccCreatedEx(const uint256& txHash,int nConfirmHeight) {
 		int nIndex = 0;
-		if (!GetTxIndexInBlock(uint256(strTxHash), nIndex)) {
+		if (!GetTxIndexInBlock(uint256(uint256S(strTxHash)), nIndex)) {
 			return false;
 		}
 
@@ -242,19 +242,19 @@ BOOST_FIXTURE_TEST_CASE(acct_process,CSystemTest)
 
 		//3:确认脚本账号已经生成
 		int nIndex = 0;
-		BOOST_CHECK(GetTxIndexInBlock(uint256(strTxHash), nIndex));
+		BOOST_CHECK(GetTxIndexInBlock(uint256(uint256S(strTxHash)), nIndex));
 		CRegID regID(nNewBlockHeight, nIndex);
 		BOOST_CHECK(IsScriptAccCreated(HexStr(regID.GetVec6())));
 
 		//4:检查钱包里的已确认交易里是否有此笔交易
-		BOOST_CHECK(IsTxConfirmdInWallet(nNewBlockHeight, uint256(strTxHash)));
+		BOOST_CHECK(IsTxConfirmdInWallet(nNewBlockHeight, uint256(uint256S(strTxHash))));
 
 		//5:通过listregscript 获取相关信息，一一核对，看是否和输入的一致
 		string strPath = SysCfg().GetDefaultTestDataPath() + strFileName;
 		BOOST_CHECK(CheckRegScript(HexStr(regID.GetVec6()), strPath));
 
 		//6:Gettxoperationlog 获取交易log，查看是否正确
-		BOOST_CHECK(GetTxOperateLog(uint256(strTxHash), vLog));
+		BOOST_CHECK(GetTxOperateLog(uint256(uint256S(strTxHash)), vLog));
 //		BOOST_CHECK(1 == vLog.size() && 1 == vLog[0].vOperFund.size() && 1 == vLog[0].vOperFund[0].vFund.size());
 		BOOST_CHECK(strAddr1 == vLog[0].keyID.ToAddress());
 //		BOOST_CHECK(vLog[0].vOperFund[0].operType == MINUS_FREE && vLog[0].vOperFund[0].vFund[0].value == nFee);
@@ -272,7 +272,7 @@ BOOST_FIXTURE_TEST_CASE(acct_process,CSystemTest)
 
 //		int nTxIndex = mapData.begin()->first;
 		string strTxHash = mapData.begin()->second;
-		uint256 txHash(strTxHash);
+		uint256 txHash(uint256S(strTxHash));
 
 		SysTestBase::GetBlockHeight(nOldBlockHeight);
 		nOldMoney = GetBalance(strAddr1);

@@ -296,9 +296,9 @@ public:
         nRefCount = 0;
         nSendSize = 0;
         nSendOffset = 0;
-        hashContinue = 0;
+        hashContinue = uint256();
         pindexLastGetBlocksBegin = 0;
-        hashLastGetBlocksEnd = 0;
+        hashLastGetBlocksEnd = uint256();
         nStartingHeight = -1;
         fStartSync = false;
         fGetAddr = false;

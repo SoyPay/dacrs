@@ -121,7 +121,7 @@ BOOST_FIXTURE_TEST_CASE(register_test,CSysAccountTest)
 
 	//再次检查失败的交易是否在memorypool中
 	for (const auto& item : vFailedTxHash) {
-		uint256 txHash(item);
+		uint256 txHash(uint256S(item));
 		BOOST_CHECK(!IsTxInMemorypool(txHash));
 		BOOST_CHECK(!IsTxUnConfirmdInWallet(txHash));
 	}
@@ -136,21 +136,21 @@ BOOST_FIXTURE_TEST_CASE(register_test,CSysAccountTest)
 
 	string strSpecial;
 	BOOST_CHECK(RegisterAccount(strRegAddr1, nFee, strSpecial,false));
-	BOOST_CHECK(IsTxInMemorypool(uint256(strSpecial)));
-	BOOST_CHECK(IsTxUnConfirmdInWallet(uint256(strSpecial)));
+	BOOST_CHECK(IsTxInMemorypool(uint256(uint256S(strSpecial))));
+	BOOST_CHECK(IsTxUnConfirmdInWallet(uint256(uint256S(strSpecial))));
 
 	//交易已经在memorypool中
 	BOOST_CHECK(!RegisterAccount(strRegAddr1, nFee, strTxHash,false));
-	BOOST_CHECK(!IsTxInMemorypool(uint256(strTxHash)));
-	BOOST_CHECK(!IsTxUnConfirmdInWallet(uint256(strTxHash)));
+	BOOST_CHECK(!IsTxInMemorypool(uint256(uint256S(strTxHash))));
+	BOOST_CHECK(!IsTxUnConfirmdInWallet(uint256(uint256S(strTxHash))));
 
 	BOOST_CHECK(GenerateOneBlock());
 
 	//确认注册成功的交易在tip中
-	BOOST_CHECK(IsTxInTipBlock(uint256(strSpecial)));
+	BOOST_CHECK(IsTxInTipBlock(uint256(uint256S(strSpecial))));
 
 	vector<CAccountLog> vLog;
-	BOOST_CHECK(GetTxOperateLog(uint256(strSpecial),vLog));
+	BOOST_CHECK(GetTxOperateLog(uint256(uint256S(strSpecial)),vLog));
 
 	//检查日志记录是否正确
 //	BOOST_CHECK(1 == vLog.size() && 1 == vLog[0].vOperFund.size() && 1 == vLog[0].vOperFund[0].vFund.size());

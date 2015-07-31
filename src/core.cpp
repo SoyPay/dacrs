@@ -37,7 +37,7 @@ uint256 CBlock::BuildMerkleTree() const
         }
         j += nSize;
     }
-    return (vMerkleTree.empty() ? std::move(uint256(0)) : std::move(vMerkleTree.back()));
+    return (vMerkleTree.empty() ? std::move(uint256()) : std::move(vMerkleTree.back()));
 }
 
 vector<uint256> CBlock::GetMerkleBranch(int nIndex) const
@@ -59,7 +59,7 @@ vector<uint256> CBlock::GetMerkleBranch(int nIndex) const
 uint256 CBlock::CheckMerkleBranch(uint256 hash, const vector<uint256>& vMerkleBranch, int nIndex)
 {
     if (nIndex == -1)
-        return 0;
+        return uint256();
     for(const auto& otherside:vMerkleBranch)
     {
         if (nIndex & 1)

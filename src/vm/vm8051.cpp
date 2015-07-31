@@ -520,7 +520,7 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
     	return RetFalse(string(__FUNCTION__)+"para  err !");
     }
 	CDataStream tep1(*retdata.at(0), SER_DISK, CLIENT_VERSION);
-	uint256 hash1(0);
+	uint256 hash1;
 	tep1 >>hash1;
 //	LogPrint("vm","ExGetTxAccountsFunc:%s",hash1.GetHex().c_str());
 

@@ -18,7 +18,7 @@
 #include "txmempool.h"
 #include "uint256.h"
 #include "database.h"
-
+#include "arith_uint256.h"
 
 #include <algorithm>
 #include <exception>
@@ -399,7 +399,7 @@ public:
 
     void Init()
     {
-        hashBlock = 0;
+        hashBlock = uint256();
         nIndex = -1;
         fMerkleVerified = false;
     }
@@ -666,7 +666,7 @@ public:
     unsigned int nUndoPos;
 
     // (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
-    uint256 nChainWork;
+    arith_uint256 nChainWork;
 
     // Number of transactions in this block.
     // Note: in a potential headers-first mode, this number cannot be relied upon
@@ -713,8 +713,8 @@ public:
         nblockfee = 0; //add the block's fee
 
         nVersion       = 0;
-        hashMerkleRoot = 0;
-        hashPos        = 0;
+        hashMerkleRoot = uint256();
+        hashPos        = uint256();
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
@@ -862,12 +862,10 @@ class CDiskBlockIndex : public CBlockIndex
 public:
     uint256 hashPrev;
 
-    CDiskBlockIndex() {
-        hashPrev = 0;
-    }
+    CDiskBlockIndex() :hashPrev (uint256()) {}
 
     explicit CDiskBlockIndex(CBlockIndex* pindex) : CBlockIndex(*pindex) {
-        hashPrev = (pprev ? pprev->GetBlockHash() : 0);
+        hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
     }
 
     IMPLEMENT_SERIALIZE

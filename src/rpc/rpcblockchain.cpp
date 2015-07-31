@@ -279,7 +279,7 @@ Value getblock(const Array& params, bool fHelp)
    }else{
 	   strHash = params[0].get_str();
    }
-    uint256 hash(strHash);
+    uint256 hash(uint256S(strHash));
 
     bool fVerbose = true;
     if (params.size() > 1)
@@ -379,7 +379,7 @@ Value getscriptid(const Array& params, bool fHelp)
 		throw runtime_error("getscriptid error \n");
 	}
 
-	uint256 txhash(params[0].get_str());
+	uint256 txhash(uint256S(params[0].get_str()));
 
 	int nIndex = 0;
 	int BlockHeight =GetTxComfirmHigh(txhash, *pScriptDBTip) ;

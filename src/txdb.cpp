@@ -30,7 +30,7 @@ bool CBlockTreeDB::EraseBlockIndex(const uint256& blockHash) {
 	return Erase(make_pair('b', blockHash));
 }
 
-bool CBlockTreeDB::WriteBestInvalidWork(const CBigNum& bnBestInvalidWork) {
+bool CBlockTreeDB::WriteBestInvalidWork(const uint256& bnBestInvalidWork) {
 	// Obsolete; only written for backward compatibility.
 	return Write('I', bnBestInvalidWork);
 }
@@ -92,7 +92,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts() {
 	leveldb::Iterator *pcursor = NewIterator();
 
 	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
-	ssKeySet << make_pair('b', uint256(0));
+	ssKeySet << make_pair('b', uint256());
 	pcursor->Seek(ssKeySet.str());
 
 	// Load mapBlockIndex
@@ -176,7 +176,7 @@ bool CAccountViewDB::HaveAccount(const CKeyID &keyId) {
 uint256 CAccountViewDB::GetBestBlock() {
 	uint256 hash;
 	if (!db.Read('B', hash))
-		return uint256(0);
+		return uint256();
 	return hash;
 }
 
@@ -189,7 +189,7 @@ bool CAccountViewDB::BatchWrite(const map<CKeyID, CAccount> &mapAccounts,
 	CLevelDBBatch batch;
 	map<CKeyID, CAccount>::const_iterator iterAccount = mapAccounts.begin();
 	for (; iterAccount != mapAccounts.end(); ++iterAccount) {
-		if (uint160(0) == iterAccount->second.keyID) {
+		if (iterAccount->second.keyID.IsNull()) {
 			batch.Erase(make_pair('k', iterAccount->first));
 		} else {
 			batch.Write(make_pair('k', iterAccount->first), iterAccount->second);
@@ -198,13 +198,13 @@ bool CAccountViewDB::BatchWrite(const map<CKeyID, CAccount> &mapAccounts,
 
 	map<vector<unsigned char>, CKeyID>::const_iterator iterKey = mapKeyIds.begin();
 	for (; iterKey != mapKeyIds.end(); ++iterKey) {
-		if (uint160(0) == iterKey->second) {
+		if (iterKey->second.IsNull()) {
 			batch.Erase(make_pair('a', iterKey->first));
 		} else {
 			batch.Write(make_pair('a', iterKey->first), iterKey->second);
 		}
 	}
-	if (uint256(0) != hashBlock)
+	if (!hashBlock.IsNull())
 		batch.Write('B', hashBlock);
 
 	return db.WriteBatch(batch, true);
@@ -282,7 +282,7 @@ bool CTransactionDB::LoadTransaction(map<uint256, vector<uint256> > &mapTxHashBy
 	leveldb::Iterator *pcursor = db.NewIterator();
 
 	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
-	ssKeySet << make_pair('h', uint256(0));
+	ssKeySet << make_pair('h', uint256());
 	pcursor->Seek(ssKeySet.str());
 
 	// Load mapBlockIndex

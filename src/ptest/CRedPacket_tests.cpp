@@ -218,7 +218,7 @@ bool CRedPacketTest::AcceptRedPacketTx(){
 	ACCEPT_RED_PACKET Acceptredpacket;
 
 	Acceptredpacket.dnType = TX_COMM_ACCEPTREDPACKET;
-	memcpy(Acceptredpacket.redhash, uint256(redHash).begin(), sizeof(Acceptredpacket.redhash));
+	memcpy(Acceptredpacket.redhash, uint256S(redHash).begin(), sizeof(Acceptredpacket.redhash));
 
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << Acceptredpacket;
@@ -282,7 +282,7 @@ bool CRedPacketTest::AcceptSpecailRedPacketTx()
 		ACCEPT_RED_PACKET Acceptredpacket;
 
 		Acceptredpacket.dnType = TX_SPECIAL_ACCEPTREDPACKET;
-		memcpy(Acceptredpacket.redhash, uint256(redHash).begin(), sizeof(Acceptredpacket.redhash));
+		memcpy(Acceptredpacket.redhash, uint256S(redHash).begin(), sizeof(Acceptredpacket.redhash));
 
 		CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 		scriptData << Acceptredpacket;

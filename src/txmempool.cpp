@@ -107,7 +107,7 @@ bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &en
 	CTxUndo txundo;
 	CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
 	// is it already confirmed in block
-	if(uint256(0) != pTxCacheTip->IsContainTx(hash))
+	if(uint256() != pTxCacheTip->IsContainTx(hash))
 		return state.Invalid(ERRORMSG("CheckTxInMemPool() : tx hash %s has been confirmed", hash.GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
 	// is it in valid height
 	if (!entry.GetTx()->IsValidHeight(chainActive.Tip()->nHeight, SysCfg().GetTxCacheHeight())) {
