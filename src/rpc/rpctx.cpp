@@ -262,7 +262,7 @@ Value registaccounttx(const Array& params, bool fHelp) {
 Value createcontracttx(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 5 || params.size() > 6) {
 	   throw runtime_error(
-			"createsecuretx \"userregid\" [\"addr\"] \"appid\" \"amount\" \"contract\" \"fee\" (\"height\")\n"
+			"createsecuretx \"userregid[\"addr\"]\" \"appid\" \"amount\" \"contract\" \"fee\" (\"height\")\n"
 			"\ncreate contract transaction\n"
 			"\nArguments:\n"
 			"1.\"userregid\": (string)\n"
@@ -644,7 +644,7 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 Value listunconfirmedtx(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {
 		 throw runtime_error(
-		            "listunconfirmedtx \"bshowtxdetail\"\n"
+		            "listunconfirmedtx \n"
 					"\nget the list  of unconfirmedtx.\n"
 		            "\nArguments:\n"
 		        	"\nResult a object about the unconfirm transaction\n"
@@ -652,8 +652,7 @@ Value listunconfirmedtx(const Array& params, bool fHelp) {
 		            "\nExamples:\n"
 		            + HelpExampleCli("listunconfirmedtx", "")
 		            + "\nAs json rpc call\n"
-		            + HelpExampleRpc("listunconfirmedtx", "")
-		       );
+		            + HelpExampleRpc("listunconfirmedtx", ""));
 	}
 
 	Object retObj;
@@ -803,10 +802,10 @@ Value gettxoperationlog(const Array& params, bool fHelp) {
 					"\"authorLog\": (string)\n"
 					"\nExamples:\n"
 					+ HelpExampleCli("gettxoperationlog",
-							"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000")
+							"\"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000\"")
 					+ "\nAs json rpc call\n"
 					+ HelpExampleRpc("gettxoperationlog",
-							"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000"));
+							"\"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000\""));
 	}
 	RPCTypeCheck(params, list_of(str_type));
 	uint256 txHash(params[0].get_str());
@@ -1021,9 +1020,9 @@ Value generateblock(const Array& params, bool fHelp) {
 				"\nResult:\n"
 				"\nblockhash\n"
 				"\nExamples:\n" +
-				HelpExampleCli("generateblock", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9")
+				HelpExampleCli("generateblock", "\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"")
 				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("generateblock", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9"));
+				+ HelpExampleRpc("generateblock", "\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\""));
 	}
 	//get keyid
 	CKeyID keyid;
@@ -1139,8 +1138,8 @@ Value getscriptdata(const Array& params, bool fHelp) {
 				"3.\"index\": (int optional)\n"
 				"\nResult:\n"
 				"\nExamples:\n"
-				+ HelpExampleCli("getscriptdata", "123456789012")
-				+ HelpExampleRpc("getscriptdata", "123456789012"));
+				+ HelpExampleCli("getscriptdata", "\"123456789012\"")
+				+ HelpExampleRpc("getscriptdata", "\"123456789012\""));
 	}
 	int height = chainActive.Height();
 //	//RPCTypeCheck(params, list_of(str_type)(int_type)(int_type));
@@ -1203,8 +1202,8 @@ Value getscriptvalidedata(const Array& params, bool fHelp) {
 					"3.\"index\": (int )\n"
 				    "\nResult:\n"
 				    "\nExamples:\n"
-				    + HelpExampleCli("getscriptvalidedata", "123456789012 1  1")
-				    + HelpExampleRpc("getscriptvalidedata", "123456789012 1  1"));
+				    + HelpExampleCli("getscriptvalidedata", "\"123456789012\" \"1\"  \"1\"")
+				    + HelpExampleRpc("getscriptvalidedata", "\"123456789012\" \"1\"  \"1\""));
 	}
 	int height = chainActive.Height();
 	RPCTypeCheck(params, list_of(str_type)(int_type)(int_type));
@@ -1288,8 +1287,8 @@ Value getscriptdbsize(const Array& params, bool fHelp) {
 							"1.\"scriptid\": (string, required)\n"
 							"\nResult:\n"
 							"\nExamples:\n"
-							+ HelpExampleCli("getscriptdbsize", "123456789012")
-							+ HelpExampleRpc("getscriptdbsize","123456789012"));
+							+ HelpExampleCli("getscriptdbsize", "\"123456789012\"")
+							+ HelpExampleRpc("getscriptdbsize","\"123456789012\""));
 	}
 	CRegID regid(params[0].get_str());
 	if (regid.IsEmpty() == true) {
@@ -1319,9 +1318,9 @@ Value registaccounttxraw(const Array& params, bool fHelp) {
 				"\nResult:\n"
 				"\"txhash\": (string)\n"
 				"\nExamples:\n"
-				+ HelpExampleCli("registaccounttxraw", "10 10000 n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgvvvv")
+				+ HelpExampleCli("registaccounttxraw", "\"10\" \"10000\" \"n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj\" \"n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgvvvv\"")
 				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("registaccounttxraw", "10 10000 n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgvvvv"));
+				+ HelpExampleRpc("registaccounttxraw", "\"10\" \"10000\" \"n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj\" \"n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgvvvv\""));
 	}
 	CUserID ukey;
 	CUserID uminerkey = CNullID();
@@ -1363,9 +1362,9 @@ Value submittx(const Array& params, bool fHelp) {
 				"\nArguments:\n"
 				"1.\"transaction\": (string)\n"
 				"\nExamples:\n"
-				+ HelpExampleCli("submittx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj")
+				+ HelpExampleCli("submittx", "\"n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj\"")
 				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("submittx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj"));
+				+ HelpExampleRpc("submittx", "\"n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj\""));
 	}
 	EnsureWalletIsUnlocked();
 	vector<unsigned char> vch(ParseHex(params[0].get_str()));
@@ -1467,10 +1466,10 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 						"\"txhash\": (string)\n"
 						"\nExamples:\n"
 						+ HelpExampleCli("registerscripttxraw",
-								"10 10000 \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" 1 010203040506 ")
+								"\"10\" \"10000\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" \"1\" \"010203040506\" ")
 						+ "\nAs json rpc call\n"
 						+ HelpExampleRpc("registerscripttxraw",
-								"10 10000 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 1 010203040506 "));
+								"\"10\" \"10000\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" \"1\" \"010203040506\" "));
 	}
 
 	RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(bool_type)(str_type));
@@ -1587,9 +1586,9 @@ Value sigstr(const Array& params, bool fHelp) {
 				"1.\"str\": (str) sig str\n"
 				"2.\"addr\": (str)\n"
 				"\nExamples:\n"
-				+ HelpExampleCli("sigstr", "1010000010203040506 \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" ")
+				+ HelpExampleCli("sigstr", "\"1010000010203040506\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" ")
 				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("sigstr", "1010000010203040506 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 010203040506 "));
+				+ HelpExampleRpc("sigstr", "\"1010000010203040506\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 010203040506\" "));
 	}
 	vector<unsigned char> vch(ParseHex(params[0].get_str()));
 	string addr = params[1].get_str();
@@ -1720,9 +1719,9 @@ Value getappaccinfo(const Array& params, bool fHelp) {
 				"1.\"scriptid\": (string) \n"
 				"2.\"address\": (string) \n"
 				"\nExamples:\n"
-				+ HelpExampleCli("getappaccinfo", "000000100000 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG")
+				+ HelpExampleCli("getappaccinfo", "\"000000100000\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"")
 				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("getappaccinfo", "000000100000 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG"));
+				+ HelpExampleRpc("getappaccinfo", "\"000000100000\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\""));
 	}
 
 	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
@@ -1754,9 +1753,9 @@ Value gethash(const Array& params, bool fHelp) {
 					"1.\"str\": (string) \n"
 				    "\nresult an object \n"
 					"\nExamples:\n"
-					+ HelpExampleCli("gethash", "0000001000005zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG")
+					+ HelpExampleCli("gethash", "\"0000001000005zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"")
 					+ "\nAs json rpc call\n"
-					+ HelpExampleRpc("gethash", "0000001000005zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG"));
+					+ HelpExampleRpc("gethash", "\"0000001000005zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\""));
 	}
 
 	string str = params[0].get_str();
@@ -1777,9 +1776,9 @@ Value getappkeyvalue(const Array& params, bool fHelp) {
 						"1.\"scriptid\": (string) \n"
 						"2.\"array\": (string) \n"
 						"\nExamples:\n"
-						+ HelpExampleCli("getappkeyvalue", "000000100000 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG")
+						+ HelpExampleCli("getappkeyvalue", "\"000000100000\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"")
 						+ "\nAs json rpc call\n"
-						+ HelpExampleRpc("getappkeyvalue", "000000100000 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG"));
+						+ HelpExampleRpc("getappkeyvalue", "\"000000100000\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\""));
 	}
 
 	CRegID scriptid(params[0].get_str());

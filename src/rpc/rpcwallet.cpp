@@ -59,7 +59,7 @@ Value getnewaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "getnewaddress  (IsMiner)\n"
+            "getnewaddress  (\"IsMiner\")\n"
             "\nArguments:\n"
         	"1. \"IsMiner\"  (bool)  private key Is used for miner if true will create tow key ,another for miner.\n"
            "\nExamples:\n"
