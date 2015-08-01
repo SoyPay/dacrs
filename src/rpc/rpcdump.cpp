@@ -72,7 +72,14 @@ string DecodeDumpString(const string &str) {
 
 Value dropprivkey(const Array& params, bool fHelp){
 	if (fHelp || params.size() != 0)
-		throw runtime_error("this cmd have no params\n");
+		throw runtime_error("dropprivkey \n"
+			    "\ndrop private key.\n"
+//			    "\nResult:\n"
+//			    "\"key\"                (string) The private key\n"
+			    "\nExamples:\n"
+			    + HelpExampleCli("dropprivkey", "")
+			    + HelpExampleRpc("dropprivkey", "")
+		);
 
 	EnsureWalletIsUnlocked();
 	if (!pwalletMain->IsReadyForCoolMiner(*pAccountViewTip)) {

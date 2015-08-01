@@ -239,7 +239,7 @@ Value getblock(const Array& params, bool fHelp)
             "\nIf verbose is false, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
             "If verbose is true, returns an Object with information about block <hash>.\n"
             "\nArguments:\n"
-            "1. \"hash\"          (string, required) The block hash\n"
+            "1. \"hash or index\"          (string or numeric required) string for The block hash,numeric for the block index\n"
             "2. verbose           (boolean, optional, default=true) true for a json object, false for the hex encoded data\n"
             "\nResult (for verbose = true):\n"
             "{\n"
@@ -315,8 +315,8 @@ Value verifychain(const Array& params, bool fHelp)
             "\nResult:\n"
             "true|false       (boolean) Verified or not\n"
             "\nExamples:\n"
-            + HelpExampleCli("verifychain", "")
-            + HelpExampleRpc("verifychain", "")
+            + HelpExampleCli("verifychain", "( checklevel numblocks )")
+            + HelpExampleRpc("verifychain", "( checklevel numblocks )")
         );
 
     int nCheckLevel = SysCfg().GetArg("-checklevel", 3);
@@ -368,7 +368,13 @@ Value getblockchaininfo(const Array& params, bool fHelp)
 Value listsetblockindexvalid(const Array& params, bool fHelp)
 {
 	if (fHelp || params.size() != 0) {
-		throw runtime_error("listsetblockindexvalid \n");
+		throw runtime_error("listsetblockindexvalid \n"
+							"\ncall ListSetBlockIndexValid function\n"
+							"\nArguments:\n"
+							"\nResult:\n"
+							"\nExamples:\n"
+							+ HelpExampleCli("listsetblockindexvalid", "")
+							+ HelpExampleRpc("listsetblockindexvalid",""));
 	}
 	return ListSetBlockIndexValid();
 }
@@ -376,7 +382,14 @@ Value listsetblockindexvalid(const Array& params, bool fHelp)
 Value getscriptid(const Array& params, bool fHelp)
 {
 	if (fHelp || params.size() != 1) {
-		throw runtime_error("getscriptid error \n");
+		throw runtime_error("getscriptid \n"
+							"\nreturn an object containing regid and script\n"
+							"\nArguments:\n"
+							"1. txhash   (string) the transaction hash.\n"
+							"\nResult:\n"
+							"\nExamples:\n"
+							+ HelpExampleCli("getscriptid", "5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG")
+							+ HelpExampleRpc("getscriptid","5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG"));
 	}
 
 	uint256 txhash(params[0].get_str());
@@ -414,7 +427,16 @@ Value getscriptid(const Array& params, bool fHelp)
 Value listcheckpoint(const Array& params, bool fHelp)
 {
 	if (fHelp || params.size() != 0) {
-			throw runtime_error("listcheckpoint \n");
+			throw runtime_error(
+				"listcheckpoint index\n"
+				"\nget the list of checkpoint.\n"
+			    "\nResult a object  contain checkpoint\n"
+//				"\nResult:\n"
+//				"\"hash\"         (string) The block hash\n"
+				"\nExamples:\n"
+				+ HelpExampleCli("listcheckpoint", "")
+				+ HelpExampleRpc("listcheckpoint", "")
+			);
 		}
 
 	Object result;

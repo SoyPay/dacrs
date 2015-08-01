@@ -59,7 +59,7 @@ Value getnewaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "getnewaddress \n"
+            "getnewaddress  (IsMiner)\n"
             "\nArguments:\n"
         	"1. \"IsMiner\"  (bool)  private key Is used for miner if true will create tow key ,another for miner.\n"
            "\nExamples:\n"
@@ -149,22 +149,25 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 	int size = params.size();
 	if (fHelp || (!(size == 3 || size == 4)))
 		throw runtime_error(
-						"sendtoaddress \"Dacrsaddress\" amount "
+						"sendtoaddresswithfee \"sendaddress\" \"recvaddress\" \"amount\" (fee)\n"
 						"\nSent an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
-						+ HelpRequiringPassphrase() + "\nArguments:\n"
-						"1. \"Dacrsaddress\"  (string, required) The Dacrs address to send to.\n"
+						"\nArguments:\n"
+						"1. \"sendaddress\"  (string, required) The Dacrs address to send to.\n"
+						"2. \"recvaddress\" (string, required) The Dacrs address to receive.\n"
+						"3.\"amount\"   (string) \n"
+						"4.\"fee\"   (string,optional) \n"
 						"\nResult:\n"
 						"\"transactionid\"  (string) The transaction id.\n"
 						"\nExamples:\n"
-						+ HelpExampleCli("sendtoaddressfee", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 10000000 1000")
-						+ HelpExampleCli("sendtoaddressfee",
+						+ HelpExampleCli("sendtoaddresswithfee", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 10000000 1000")
+						+ HelpExampleCli("sendtoaddresswithfee",
 						"\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
-						+ HelpExampleRpc("sendtoaddress",
+						+ HelpExampleRpc("sendtoaddresswithfee",
 						"\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\""
-						+ HelpExampleCli("sendtoaddress", "\"0-6\" 10 ")
-						+ HelpExampleCli("sendtoaddress", "\"00000000000000000005\" 10 ")
-						+ HelpExampleCli("sendtoaddress", "\"0-6\" \"0-5\" 10 ")
-						+ HelpExampleCli("sendtoaddress", "\"00000000000000000005\" \"0-6\"10 ")));
+						+ HelpExampleCli("sendtoaddresswithfee", "\"0-6\" 10 ")
+						+ HelpExampleCli("sendtoaddresswithfee", "\"00000000000000000005\" 10 ")
+						+ HelpExampleCli("sendtoaddresswithfee", "\"0-6\" \"0-5\" 10 ")
+						+ HelpExampleCli("sendtoaddresswithfee", "\"00000000000000000005\" \"0-6\"10 ")));
 
 	EnsureWalletIsUnlocked();
 	CKeyID sendKeyId;
@@ -278,25 +281,26 @@ Value sendtoaddressraw(const Array& params, bool fHelp)
 	int size = params.size();
 	if (fHelp || size != 5 )
 		throw runtime_error(
-						"sendtoaddress \"Dacrsaddress\" amount "
-						"\nSent an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
+						"sendtoaddressraw \"height\" \"fee\" \"amount\" \"srcaddress\" \"recvaddress\"\n"
+						"\n create normal transaction by hegiht,fee,amount,srcaddress, recvaddress.\n"
 						+ HelpRequiringPassphrase() + "\nArguments:\n"
 						"1. \"height\"  (int) \n"
 						"2. \"fee\"  (int)  \n"
-						"3. \"srcaddress\"  (string, required) The Dacrs address to send to.\n"
-						"3. \"dessaddress\"  (string, required) The Dacrs address to send to.\n"
+						"3. \"amount\"  (string)  \n"
+						"4. \"srcaddress\"  (string, required) The Dacrs address to send to.\n"
+						"5. \"recvaddress\"  (string, required) The Dacrs address to receive.\n"
 						"\nResult:\n"
 						"\"transactionid\"  (string) The transaction id.\n"
 						"\nExamples:\n"
-						+ HelpExampleCli("createnormaltx", "100 1000 \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
-						+ HelpExampleCli("createnormaltx",
+						+ HelpExampleCli("sendtoaddressraw", "100 1000 \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
+						+ HelpExampleCli("sendtoaddressraw",
 						"100 1000 \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
-						+ HelpExampleRpc("createnormaltx",
+						+ HelpExampleRpc("sendtoaddressraw",
 						"100 1000 \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\""
-						+ HelpExampleCli("createnormaltx", "\"0-6\" 10 ")
-						+ HelpExampleCli("createnormaltx", "100 1000 \"00000000000000000005\" 10 ")
-						+ HelpExampleCli("createnormaltx", "100 1000 \"0-6\" \"0-5\" 10 ")
-						+ HelpExampleCli("createnormaltx", "100 1000 \"00000000000000000005\" \"0-6\"10 ")));
+						+ HelpExampleCli("sendtoaddressraw", "\"0-6\" 10 ")
+						+ HelpExampleCli("sendtoaddressraw", "100 1000 \"00000000000000000005\" 10 ")
+						+ HelpExampleCli("sendtoaddressraw", "100 1000 \"0-6\" \"0-5\" 10 ")
+						+ HelpExampleCli("sendtoaddressraw", "100 1000 \"00000000000000000005\" \"0-6\"10 ")));
 
 	CKeyID sendKeyId;
 	CKeyID RevKeyId;
@@ -369,10 +373,13 @@ Value sendtoaddress(const Array& params, bool fHelp)
 	int size = params.size();
 	if (fHelp || (!(size == 2 || size == 3)))
 		throw runtime_error(
-						"sendtoaddress \"Dacrsaddress\" amount "
+						"sendtoaddress \"Dacrsaddress\" \"amount\" or\n"
+				        "sendtoaddress \"Dacrsaddress\" \"receive address\" \"amount\"\n"
 						"\nSent an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
 						+ HelpRequiringPassphrase() + "\nArguments:\n"
 						"1. \"Dacrsaddress\"  (string, required) The Dacrs address to send to.\n"
+						"2. receive address or amount   (string) \n"
+						"3.\"amount\"   (string) \n"
 						"\nResult:\n"
 						"\"transactionid\"  (string) The transaction id.\n"
 						"\nExamples:\n"
@@ -626,7 +633,6 @@ Value walletlock(const Array& params, bool fHelp)
     Object retObj;
     retObj.push_back(Pair("walletlock", true));
     return retObj;
-    return Value::null;
 }
 
 Value encryptwallet(const Array& params, bool fHelp)
@@ -696,7 +702,7 @@ Value settxfee(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 1)
         throw runtime_error(
-            "settxfee amount\n"
+            "settxfee \"amount\"\n"
             "\nSet the transaction fee per kB.\n"
             "\nArguments:\n"
             "1. amount         (numeric, required) The transaction fee in BTC/kB rounded to the nearest 0.00000001\n"
@@ -728,9 +734,8 @@ Value getwalletinfo(const Array& params, bool fHelp)
             "{\n"
             "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
             "  \"balance\": xxxxxxx,         (numeric) the total Dacrs balance of the wallet\n"
-            "  \"txcount\": xxxxxxx,         (numeric) the total number of transactions in the wallet\n"
-            "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since GMT epoch) of the oldest pre-generated key in the key pool\n"
-            "  \"keypoolsize\": xxxx,        (numeric) how many new keys are pre-generated\n"
+            "  \"Inblocktx\": xxxxxxx,       (numeric) the size of transactions in the wallet\n"
+            "  \"uncomfirmedtx\": xxxxxx,    (numeric) the size of unconfirmtx transactions in the wallet\n"
             "  \"unlocked_until\": ttt,      (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
             "}\n"
             "\nExamples:\n"
@@ -742,7 +747,7 @@ Value getwalletinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
     obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetRawBalance())));
     obj.push_back(Pair("Inblocktx",       (int)pwalletMain->mapInBlockTx.size()));
-    obj.push_back(Pair("uncomfirmedtx", (int)pwalletMain->UnConfirmTx.size()));
+    obj.push_back(Pair("unconfirmtx", (int)pwalletMain->UnConfirmTx.size()));
     if (pwalletMain->IsCrypted())
         obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     return obj;

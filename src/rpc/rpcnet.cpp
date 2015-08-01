@@ -156,7 +156,8 @@ Value addnode(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. \"node\"     (string, required) The node (see getpeerinfo for nodes)\n"
             "2. \"command\"  (string, required) 'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once\n"
-            "\nExamples:\n"
+			"\nResult:\n"
+        	"\nExamples:\n"
             + HelpExampleCli("addnode", "\"192.168.0.6:8333\" \"onetry\"")
             + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\"")
         );
@@ -338,6 +339,7 @@ Value getnetworkinfo(const Array& params, bool fHelp)
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getnetworkinfo\n"
+			"\nget various information about network.\n"
             "Returns an object containing various state info regarding P2P networking.\n"
             "\nResult:\n"
             "{\n"
@@ -391,8 +393,10 @@ Value getdacrsstate(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "getdacrsstate\n"
-            "\nReturns  an object containing recently block state data.\n"
+            "getdacrsstate \"num\"\n"
+			"\nget state data about the recently blocks.\n"
+            "\nArguments:\n"
+            "1.num   (numeric, > 0) The number of the recently blocks.\n"
             "\nResult:\n"
             "{\n"
             "  \"blocktime\": n,   (numeric)get the time of each block\n"
@@ -402,8 +406,8 @@ Value getdacrsstate(const Array& params, bool fHelp)
             "  \"blockminer\": n, (numeric)get the miner of each block\n"
             "}\n"
             "\nExamples:\n"
-            + HelpExampleCli("getdacrsstate", "")
-            + HelpExampleRpc("getdacrsstate", "")
+            + HelpExampleCli("getdacrsstate", "\"5\"")
+            + HelpExampleRpc("getdacrsstate", "\"5\"")
        );
 
 	int i = 0,nHeight = 0;
