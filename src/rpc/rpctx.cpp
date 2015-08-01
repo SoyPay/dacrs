@@ -159,14 +159,18 @@ Object GetTxDetailJSON(const uint256& txhash) {
 
 Value gettxdetail(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
-		string msg =
-				"gettxdetail \"txhash\"\ngettxdetail\n\nArguments:\n1.\"txhash\":\nResult:\n\"txhash\"\n\nExamples:\n"
-						+ HelpExampleCli("gettxdetail",
-								"c5287324b89793fdf7fa97b6203dfd814b8358cfa31114078ea5981916d7a8ac\n")
-						+ "\nAs json rpc call\n"
-						+ HelpExampleRpc("gettxdetail",
-								"c5287324b89793fdf7fa97b6203dfd814b8358cfa31114078ea5981916d7a8ac\n");
-		throw runtime_error(msg);
+        throw runtime_error(
+            "gettxdetail \"txhash\"\n"
+			"\nget the transaction detail by given transaction hash.\n"
+            "\nArguments:\n"
+            "1.txhash   (string) The hast of transaction.\n"
+        	"\nResult a object about the transaction detail\n"
+            "\nResult:\n"
+        	"\n\"txhash\"\n"
+            "\nExamples:\n"
+            + HelpExampleCli("gettxdetail","c5287324b89793fdf7fa97b6203dfd814b8358cfa31114078ea5981916d7a8ac\n")
+            + "\nAs json rpc call\n"
+            + HelpExampleRpc("gettxdetail","c5287324b89793fdf7fa97b6203dfd814b8358cfa31114078ea5981916d7a8ac\n"));
 	}
 	uint256 txhash(params[0].get_str());
 	return GetTxDetailJSON(txhash);
@@ -175,17 +179,19 @@ Value gettxdetail(const Array& params, bool fHelp) {
 //create a register account tx
 Value registaccounttx(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 2) {
-		string msg = "registaccounttx nrequired \"addr\" fee height\n"
+	       throw runtime_error(
+	            "registaccounttx \"addr\" \"fee\"\n"
 				"\nregister secure account\n"
 				"\nArguments:\n"
-				"1.\"addr\": (string)\n"
+				"1.addr: (string)\n"
 				"2.fee: (numeric) pay to miner\n"
-				"\nResult:\n"
-				"\"txhash\": (string)\n"
-				"\nExamples:\n" + HelpExampleCli("registaccounttx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 true")
-				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("registaccounttx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 false");
-		throw runtime_error(msg);
+	            "\nResult:\n"
+	    		"\"txhash\": (string)\n"
+	    		"\nExamples:\n"
+	            + HelpExampleCli("registaccounttx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 ")
+	            + "\nAs json rpc call\n"
+	            + HelpExampleRpc("registaccounttx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 "));
+
 	}
 
 	string addr = params[0].get_str();
@@ -254,32 +260,32 @@ Value registaccounttx(const Array& params, bool fHelp) {
 
 //create a contract tx
 Value createcontracttx(const Array& params, bool fHelp) {
-	if (fHelp || params.size() > 6) {
-		string msg = "createsecuretx nrequired \"scriptid\" [\"addr\",...] \"fee\" \"contract\" \"height\"\n"
-				"\ncreate contract\n"
-				"\nArguments:\n"
-				"1.\"userregid\": (string)\n"
-				"2.\"appid\":(string)\n"
-				"3.\"amount\":(numeric)\n"
-				"4.\"contract\": (string)\n"
-				"5.\"fee\": (numeric) pay to miner\n"
-				"6.\"height\": (numeric)create height\n"
-				"\nResult:\n"
-				"\"contract tx str\": (string)\n"
-				"\nExamples:\n"
-				+ HelpExampleCli("createcontracttx", "000000000100 [\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"] "
-						"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\","
-						"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"] "
-						"100000 "
-						"01020304 "
-						"1") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("createcontracttx", "000000000100 [\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"] "
-						"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\","
-						"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"] "
-						"100000 "
-						"01020304 "
-						"1");
-		throw runtime_error(msg);
+	if (fHelp || params.size() < 5 || params.size() > 6) {
+	   throw runtime_error(
+			"createsecuretx \"userregid\" [\"addr\"] \"appid\" \"amount\" \"contract\" \"fee\" (\"height\")\n"
+			"\ncreate contract transaction\n"
+			"\nArguments:\n"
+			"1.\"userregid\": (string)\n"
+			"2.\"appid\":(string)\n"
+			"3.\"amount\":(numeric)\n"
+			"4.\"contract\": (string)\n"
+			"5.\"fee\": (numeric) pay to miner\n"
+			"6.\"height\": (numeric optional)create height,If not provide use the tip block hegiht in chainActive\n"
+			"\nResult:\n"
+			"\"contract tx str\": (string)\n"
+			"\nExamples:\n"
+			+ HelpExampleCli("createcontracttx", "000000000100 [\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"] "
+					"\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\""
+					"100000 "
+					"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\" "
+					"01020304 "
+					"1") + "\nAs json rpc call\n"
+			+ HelpExampleRpc("createcontracttx", "000000000100 [\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"] "
+					"\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\""
+					"100000 "
+					"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\" "
+					"01020304 "
+					"1"));
 	}
 
 	RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(str_type)(int_type)(int_type));
@@ -360,23 +366,22 @@ Value createcontracttx(const Array& params, bool fHelp) {
 
 //create a register script tx
 Value registerapptx(const Array& params, bool fHelp) {
-	if (fHelp || params.size() < 3) {
-		string msg = "registerapptx nrequired \"addr\" \"script\" fee height\n"
-				"\nregister script\n"
+	if (fHelp || params.size() < 3 || params.size() > 5) {
+		throw runtime_error("registerapptx \"addr\" \"filepath\"\"fee\" (\"height\") (\"scriptdescription\")\n"
+				"\ncreate a register script transaction\n"
 				"\nArguments:\n"
 				"1.\"addr\": (string required)\n"
-				"2.\"app\": (string required),app's file path\n"
+				"2.\"filepath\": (string required),app's file path\n"
 				"3.\"fee\": (numeric required) pay to miner\n"
-				"4.\"height\": (numeric required)valid height\n"
-				"5.\"script description\":(string optional) new script description\n"
+				"4.\"height\": (numeric optional)valid height,If not provide, use the tip block hegiht in chainActive\n"
+				"5.\"scriptdescription\":(string optional) new script description\n"
 				"\nResult:\n"
 				"\"txhash\": (string)\n"
 				"\nExamples:\n"
 				+ HelpExampleCli("registerapptx",
-						"\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" 010203040506 100000 1") + "\nAs json rpc call\n"
+						"\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" \"run.exe\" \"010203040506\" \"100000\" (\"scriptdescription\")") + "\nAs json rpc call\n"
 				+ HelpExampleRpc("registerapptx",
-						"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 010203040506 100000 1");
-		throw runtime_error(msg);
+						"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG \"run.exe\" \"010203040506\" \"100000\" (\"scriptdescription\")"));
 	}
 
 	RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(int_type)(str_type));
@@ -396,15 +401,23 @@ Value registerapptx(const Array& params, bool fHelp) {
 	// allocate memory to contain the whole file:
 	char *buffer = (char*) malloc(sizeof(char) * lSize);
 	if (buffer == NULL) {
+		fclose(file); //及时关闭
 		throw runtime_error("allocate memory failed");
 	}
 	if (fread(buffer, 1, lSize, file) != (size_t) lSize) {
-		if (buffer)
-			free(buffer);
+		free(buffer);  //及时释放
+		fclose(file);  //及时关闭
 		throw runtime_error("read script file error");
+	}
+	else
+	{
+		fclose(file); //使用完关闭文件
 	}
 
 	vmScript.Rom.insert(vmScript.Rom.end(), buffer, buffer + lSize);
+    if (buffer)
+		free(buffer);
+
 	if (params.size() > 4) {
 		string scriptDesc = params[4].get_str();
 		vmScript.ScriptExplain.insert(vmScript.ScriptExplain.end(), scriptDesc.begin(), scriptDesc.end());
@@ -414,16 +427,10 @@ Value registerapptx(const Array& params, bool fHelp) {
 	ds << vmScript;
 	vscript.assign(ds.begin(), ds.end());
 
-	if (file)
-		fclose(file);
-	if (buffer)
-		free(buffer);
-
 	uint64_t fee = params[2].get_uint64();
 	int height(0);
 	if (params.size() > 3)
 		height = params[3].get_int();
-
 
 	if (fee > 0 && fee < CTransaction::nMinTxFee) {
 		throw runtime_error("in registerapptx :fee is smaller than nMinTxFee\n");
@@ -498,14 +505,15 @@ Value registerapptx(const Array& params, bool fHelp) {
 
 Value listaddr(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {
-		string msg = "listaddr \n"
-				"\nlistaddr\n"
-				"\nArguments:\n"
-				"\nResult:\n"
-				"addr balance register\n"
-				"\nExamples:\n" + HelpExampleCli("listaddr", "") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("listaddr", "");
-		throw runtime_error(msg);
+		throw runtime_error(
+				 "listaddr\n"
+				 "\nget various info by pwalletMain KeyId\n"
+				 "\nArguments:\n"
+				 "\nResult:\n"
+				 "\nExamples:\n"
+				 + HelpExampleCli("listaddr", "")
+				 + "\nAs json rpc call\n"
+                 + HelpExampleRpc("listaddr", ""));
 	}
 	Array retArry;
 	assert(pwalletMain != NULL);
@@ -538,13 +546,14 @@ Value listaddr(const Array& params, bool fHelp) {
 
 Value listtx(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {
-		string msg = "listaddrtx \"addr\" showtxdetail\n"
-				"\nlistaddrtx\n"
-				"\nArguments:\n"
-				"\nResult:\n"
-				"\"txhash\"\n"
-				"\nExamples:\n" + HelpExampleCli("listtx", "") + "\nAs json rpc call\n" + HelpExampleRpc("listtx", "");
-		throw runtime_error(msg);
+		throw runtime_error(
+				 "listtx\n"
+				 "\nget all transactions from pwalletMain.\n"
+				 "\nArguments:\n"
+				 "\nResult:\n"
+				 "\nExamples:\n"
+				 + HelpExampleCli("listtx", "")
+                 + HelpExampleRpc("listtx", ""));
 	}
 
 	Object retObj;
@@ -570,19 +579,18 @@ Value listtx(const Array& params, bool fHelp) {
 
 Value getaccountinfo(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
-		string msg = "getaddramount \"addr\"\n"
-				"\ngetaddramount\n"
+		  throw runtime_error(
+				"getaccountinfo \"addr\"\n"
+				"\nget account information\n"
 				"\nArguments:\n"
 				"1.\"addr\": (string)"
+				"Returns an object containing various account info.\n"
 				"\nResult:\n"
-				"\"mature amount\":\n"
-				"\"free amount\":\n"
-				"\"frozen amount\":\n"
-				"\"Account Info\":\n"
-				"\nExamples:\n" + HelpExampleCli("getaccountinfo", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n")
-				+ HelpExampleCli("getaccountinfo", "000000000500\n") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("getaccountinfo", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n");
-		throw runtime_error(msg);
+				"\nExamples:\n"
+				+ HelpExampleCli("getaccountinfo", "000000000500\n")
+				+ "\nAs json rpc call\n"
+				+ HelpExampleRpc("getaccountinfo", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n")
+		   );
 	}
 	RPCTypeCheck(params, list_of(str_type));
 	CKeyID keyid;
@@ -635,15 +643,17 @@ Value getaccountinfo(const Array& params, bool fHelp) {
 //list unconfirmed transaction of mine
 Value listunconfirmedtx(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {
-		string msg = "listunconfirmedtx  bshowtxdetail\n"
-				"\nlistunconfirmedtx\n"
-				"\nArguments:\n"
-				"1.bshowtxdetail: default false\n"
-				"\nResult:\n"
-				"\"txhash\"\n"
-				"\nExamples:\n" + HelpExampleCli("listunconfirmedtx", "") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("listunconfirmedtx", "");
-		throw runtime_error(msg);
+		 throw runtime_error(
+		            "listunconfirmedtx \"bshowtxdetail\"\n"
+					"\nget the list  of unconfirmedtx.\n"
+		            "\nArguments:\n"
+		        	"\nResult a object about the unconfirm transaction\n"
+		            "\nResult:\n"
+		            "\nExamples:\n"
+		            + HelpExampleCli("listunconfirmedtx", "")
+		            + "\nAs json rpc call\n"
+		            + HelpExampleRpc("listunconfirmedtx", "")
+		       );
 	}
 
 	Object retObj;
@@ -784,9 +794,8 @@ static Value AccountLogToJson(const CAccountLog &accoutLog) {
 
 Value gettxoperationlog(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
-		if (fHelp || params.size() != 2) {
-			string msg = "sign nrequired \"str\"\n"
-					"\nsign \"str\"\n"
+		throw runtime_error("gettxoperationlog \"txhash\"\n"
+					"\nget transaction operation log\n"
 					"\nArguments:\n"
 					"1.\"txhash\": (string required) \n"
 					"\nResult:\n"
@@ -797,9 +806,7 @@ Value gettxoperationlog(const Array& params, bool fHelp) {
 							"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000")
 					+ "\nAs json rpc call\n"
 					+ HelpExampleRpc("gettxoperationlog",
-							"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000");
-			throw runtime_error(msg);
-		}
+							"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000"));
 	}
 	RPCTypeCheck(params, list_of(str_type));
 	uint256 txHash(params[0].get_str());
@@ -872,12 +879,15 @@ static Value TestDisconnectBlock(int number) {
 
 Value disconnectblock(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
-		throw runtime_error("disconnectblock \"block numbers \n"
-				"\ndisconnect block\n" + HelpRequiringPassphrase() + "\nArguments:\n"
-				"1. \"numbers \"  (numeric, required) The Dacrs address.\n"
+		throw runtime_error("disconnectblock \"numbers\" \n"
+				"\ndisconnect block\n"
+				"\nArguments:\n"
+				"1. \"numbers \"  (numeric, required) the block numbers.\n"
 				"\nResult:\n"
 				"\"disconnect result\"  (bool) \n"
-				"\nExamples:\n" + HelpExampleCli("disconnectblock", "\"1\""));
+				"\nExamples:\n"
+				+ HelpExampleCli("disconnectblock", "\"1\"")
+				+ HelpExampleRpc("gettxoperationlog","\"1\""));
 	}
 	int number = params[0].get_int();
 
@@ -888,7 +898,13 @@ Value disconnectblock(const Array& params, bool fHelp) {
 
 Value resetclient(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {
-			throw runtime_error("resetclient : no params");
+		throw runtime_error("resetclient \n"
+						"\nreset client\n"
+						"\nArguments:\n"
+						"\nResult:\n"
+						"\nExamples:\n"
+						+ HelpExampleCli("resetclient", "")
+						+ HelpExampleRpc("resetclient",""));
 		}
 	Value te = TestDisconnectBlock(chainActive.Tip()->nHeight);
 
@@ -926,17 +942,20 @@ Value resetclient(const Array& params, bool fHelp) {
 
 Value listapp(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
-		throw runtime_error("listapp " + HelpRequiringPassphrase() + "\nArguments:\n"
+		throw runtime_error("listapp \"showDetail\" \n"
+				"\nget the list register script\n"
+				"\nArguments:\n"
+	            "1. showDetail  (boolean, required)true to show scriptContent,otherwise to not show it.\n"
+				"\nResult an object contain many script data\n"
 				"\nResult:\n"
-				"\"regscript array\"  (bool) \n"
-				"\nExamples:\n" + HelpExampleCli("listapp", "true"));
+				"\nExamples:\n" + HelpExampleCli("listapp", "true") + HelpExampleRpc("listapp", "true"));
 	}
 	bool showDetail = false;
 	showDetail = params[0].get_bool();
 	Object obj;
 	Array arrayScript;
 
-	CAccountViewCache view(*pAccountViewTip, true);
+//	CAccountViewCache view(*pAccountViewTip, true);
 	if (pScriptDBTip != NULL) {
 		int nCount(0);
 		if (!pScriptDBTip->GetScriptCount(nCount))
@@ -995,16 +1014,16 @@ Value getaddrbalance(const Array& params, bool fHelp) {
 
 Value generateblock(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
-		string msg = "generateblock nrequired (\"addr\")\n"
-				"\ngenerateblock\n"
+		throw runtime_error("generateblock \"addr\"\n"
+				"\ncteate a block with the appointed address\n"
 				"\nArguments:\n"
-				"1.\"addr\": (str)\n"
+				"1.\"addr\": (string)\n"
 				"\nResult:\n"
-				"NULL"
-				"\nExamples:\n" + HelpExampleCli("generateblock", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9")
+				"\nblockhash\n"
+				"\nExamples:\n" +
+				HelpExampleCli("generateblock", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9")
 				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("generateblock", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9");
-		throw runtime_error(msg);
+				+ HelpExampleRpc("generateblock", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9"));
 	}
 	//get keyid
 	CKeyID keyid;
@@ -1024,12 +1043,13 @@ Value generateblock(const Array& params, bool fHelp) {
 
 Value listtxcache(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {
-		throw runtime_error("listtxcache \"address \n" + HelpRequiringPassphrase() + "\nArguments:\n"
+		throw runtime_error("listtxcache\n"
+				"\nget all transactions in cahce\n"
+				"\nArguments:\n"
 				"\nResult:\n"
 				"\"txcache\"  (string) \n"
-				"\nExamples:\n" + HelpExampleCli("listtxcache", ""));
+				"\nExamples:\n" + HelpExampleCli("listtxcache", "")+ HelpExampleRpc("listtxcache", ""));
 	}
-//	const map<uint256, vector<uint256> > &mapTxHashCacheByPrev = pTxCacheTip->GetRelayTx();
 	const map<uint256, vector<uint256> > &mapTxHashByBlockHash = pTxCacheTip->GetTxHashCache();
 
 	Array retTxHashArray;
@@ -1048,9 +1068,13 @@ Value listtxcache(const Array& params, bool fHelp) {
 
 Value reloadtxcache(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {
-		throw runtime_error("reloadtxcache" + HelpRequiringPassphrase() + "\nArguments:\n"
+		throw runtime_error("reloadtxcache \n"
+				"\nreload transactions catch\n"
+				"\nArguments:\n"
 				"\nResult:\n"
-				"\nExamples:\n" + HelpExampleCli("reloadtxcache", ""));
+				"\nExamples:\n"
+				+ HelpExampleCli("reloadtxcache", "")
+				+ HelpExampleRpc("reloadtxcache", ""));
 	}
 	pTxCacheTip->Clear();
 	CBlockIndex *pIndex = chainActive.Tip();
@@ -1071,7 +1095,6 @@ Value reloadtxcache(const Array& params, bool fHelp) {
 	Object obj;
 	obj.push_back(Pair("info", "reload tx cache succeed"));
 	return obj;
-//	return string("reload tx cache succeed");
 }
 
 static int getDataFromSriptData(CScriptDBViewCache &cache, const CRegID &regid, int pagesize, int index,
@@ -1107,15 +1130,17 @@ static int getDataFromSriptData(CScriptDBViewCache &cache, const CRegID &regid, 
 }
 
 Value getscriptdata(const Array& params, bool fHelp) {
-	if (fHelp || params.size() < 2) {
-		string msg = "getscriptdata nrequired \"scriptid\" \"\n"
-				"\ncreate contract\n"
+	if (fHelp || params.size() < 2 || params.size() > 3) {
+		throw runtime_error("getscriptdata \"scriptid\" \"[pagesize or key]\" (\"index\")\n"
+				"\nget the script data by given scriptID\n"
 				"\nArguments:\n"
 				"1.\"scriptid\": (string)\n"
-				"2.[pagesize or key]: (pagesize int)\n"
-				"3.\"index\": (int )\n"
-				"\"contract tx str\": (string)\n";
-		throw runtime_error(msg);
+				"2.[pagesize or key]: (pagesize int),if only two param,it is key,otherwise it is pagesize\n"
+				"3.\"index\": (int optional)\n"
+				"\nResult:\n"
+				"\nExamples:\n"
+				+ HelpExampleCli("getscriptdata", "123456789012")
+				+ HelpExampleRpc("getscriptdata", "123456789012"));
 	}
 	int height = chainActive.Height();
 //	//RPCTypeCheck(params, list_of(str_type)(int_type)(int_type));
@@ -1170,14 +1195,16 @@ Value getscriptdata(const Array& params, bool fHelp) {
 
 Value getscriptvalidedata(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 3) {
-			string msg = "getscriptdata nrequired \"scriptid\" \"\n"
-					"\ncreate contract\n"
+		throw runtime_error("getscriptvalidedata \"scriptid\" \"pagesize\" \"index\"\n"
+					"\nget script valide data\n"
 					"\nArguments:\n"
 					"1.\"scriptid\": (string)\n"
-					"2.[pagesize]: (int)\n"
+					"2.\"pagesize\": (int)\n"
 					"3.\"index\": (int )\n"
-					"\"contract tx str\": (string)\n";
-			throw runtime_error(msg);
+				    "\nResult:\n"
+				    "\nExamples:\n"
+				    + HelpExampleCli("getscriptvalidedata", "123456789012 1  1")
+				    + HelpExampleRpc("getscriptvalidedata", "123456789012 1  1"));
 	}
 	int height = chainActive.Height();
 	RPCTypeCheck(params, list_of(str_type)(int_type)(int_type));
@@ -1215,11 +1242,15 @@ Value getscriptvalidedata(const Array& params, bool fHelp) {
 
 Value saveblocktofile(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 2) {
-		string msg = "saveblocktofile nrequired"
+		throw runtime_error("saveblocktofile \"blockhash\" \"filepath\"\n"
+				"\n save the given block info to the given file\n"
 				"\nArguments:\n"
 				"1.\"blockhash\": (string, required)\n"
-				"2.\"filepath\": (string, required)\n";
-		throw runtime_error(msg);
+				"2.\"filepath\": (string, required)\n"
+				"\nResult:\n"
+		        "\nExamples:\n"
+				+ HelpExampleCli("saveblocktofile", "\"12345678901211111\" \"block.log\"")
+				+ HelpExampleRpc("saveblocktofile", "\"12345678901211111\" \"block.log\""));
 	}
 	string strblockhash = params[0].get_str();
 	uint256 blockHash(params[0].get_str());
@@ -1251,10 +1282,14 @@ Value saveblocktofile(const Array& params, bool fHelp) {
 
 Value getscriptdbsize(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
-		string msg = "getscriptdbsize nrequired"
-				"\nArguments:\n"
-				"1.\"scriptid\": (string, required)\n";
-		throw runtime_error(msg);
+		throw runtime_error("getscriptdbsize \"scriptid\"\n"
+							"\nget script data count\n"
+							"\nArguments:\n"
+							"1.\"scriptid\": (string, required)\n"
+							"\nResult:\n"
+							"\nExamples:\n"
+							+ HelpExampleCli("getscriptdbsize", "123456789012")
+							+ HelpExampleRpc("getscriptdbsize","123456789012"));
 	}
 	CRegID regid(params[0].get_str());
 	if (regid.IsEmpty() == true) {
@@ -1274,20 +1309,19 @@ Value getscriptdbsize(const Array& params, bool fHelp) {
 Value registaccounttxraw(const Array& params, bool fHelp) {
 
 	if (fHelp || !(params.size() == 4 || params.size() == 3)) {
-		string msg = "registaccounttx nrequired \"addr\" fee height\n"
-				"\nregister secure account\n"
+		throw runtime_error("registaccounttx \"height\" \"fee\" \"publickey\" (\"minerpublickey\")\n"
+				"\ncreate a register account transaction\n"
 				"\nArguments:\n"
 				"1.height: (numeric) pay to miner\n"
 				"2.fee: (numeric) pay to miner\n"
-				"3.\"publick\": (string)\n"
-				"4.minerpublickey: (string)create height\n"
+				"3.\"publickey\": (string)\n"
+				"4.minerpublickey: (string,optional)\n"
 				"\nResult:\n"
 				"\"txhash\": (string)\n"
 				"\nExamples:\n"
-				+ HelpExampleCli("registaccounttxraw", "10 10000 n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj true")
+				+ HelpExampleCli("registaccounttxraw", "10 10000 n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgvvvv")
 				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("registaccounttxraw", "10 1000000 n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj false");
-		throw runtime_error(msg);
+				+ HelpExampleRpc("registaccounttxraw", "10 10000 n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgvvvv"));
 	}
 	CUserID ukey;
 	CUserID uminerkey = CNullID();
@@ -1324,12 +1358,14 @@ Value registaccounttxraw(const Array& params, bool fHelp) {
 
 Value submittx(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
-		string msg = "registaccounttx nrequired \"addr\" fee height\n"
-				"\nregister secure account\n"
+		throw runtime_error("submittx \"transaction\" \n"
+				"\nsubmit transaction\n"
 				"\nArguments:\n"
-				"1.\"raw\": (string)\n"
-				"\nExamples:\n" + HelpExampleCli("submittx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj");
-		throw runtime_error(msg);
+				"1.\"transaction\": (string)\n"
+				"\nExamples:\n"
+				+ HelpExampleCli("submittx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj")
+				+ "\nAs json rpc call\n"
+				+ HelpExampleRpc("submittx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj"));
 	}
 	EnsureWalletIsUnlocked();
 	vector<unsigned char> vch(ParseHex(params[0].get_str()));
@@ -1349,13 +1385,13 @@ Value submittx(const Array& params, bool fHelp) {
 
 Value createcontracttxraw(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 5) {
-		string msg = "createcontracttxraw nrequired \"scriptid\" [\"addr\",...] \"fee\" \"contract\" \"height\"\n"
+		throw runtime_error("createcontracttxraw \"height\" \"fee\" \"amount\" \"addr\" \"contract\" \n"
 				"\ncreate contract\n"
 				"\nArguments:\n"
 				"1.\"height\": (numeric)create height\n"
 				"2.\"fee\": (numeric) pay to miner\n"
-				"3.\"scriptid\": (string)\n"
-				"4.[\"addr\",...]: (string list)\n"
+				"3.\"amount\": (numeric)\n"
+				"4.\"addr\": (string )\n"
 				"5.\"contract\": (string)\n"
 				"\nResult:\n"
 				"\"contract tx str\": (string)\n"
@@ -1367,8 +1403,7 @@ Value createcontracttxraw(const Array& params, bool fHelp) {
 				+ HelpExampleRpc("createcontracttxraw",
 						"10 1000 01020304 000000000100 000000000100 [\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"] "
 								"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\","
-								"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"] ");
-		throw runtime_error(msg);
+								"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"] "));
 	}
 
 	RPCTypeCheck(params, list_of(int_type)(real_type)(real_type)(str_type)(str_type)(str_type));
@@ -1414,36 +1449,33 @@ Value createcontracttxraw(const Array& params, bool fHelp) {
 
 Value registerscripttxraw(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 4) {
-		string msg =
-				"registerapptx nrequired \"addr\" \"script\" fee height\n"
+		throw runtime_error("registerscripttxraw \"height\" \"fee\" \"addr\" \"flag\" \"script or scriptid\" \"script description\"\n"
 						"\nregister script\n"
 						"\nArguments:\n"
 						"1.\"height\": (numeric required)valid height\n"
 						"2.\"fee\": (numeric required) pay to miner\n"
-						"3.\"addr\": (string required)\n"
-						"4.\"flag\": (numeric, required)\n"
+						"3.\"addr\": (string required)\nfor send"
+						"4.\"flag\": (numeric, required) 0-1\n"
 						"5.\"script or scriptid\": (string required), if flag=0 is script's file path, else if flag=1 scriptid\n"
 						"6.\"script description\":(string optional) new script description\n"
-						"7.\"nAuthorizeTime\": (numeric, optional)\n"
-						"8.\"nMaxMoneyPerTime\": (numeric, optional)\n"
-						"9.\"nMaxMoneyTotal\": (numeric, optional)\n"
-						"10.\"nMaxMoneyPerDay\": (numeric, optional)\n"
-						"11.\"nUserDefine\": (string, optional)\n"
+//						"7.\"nAuthorizeTime\": (numeric, optional)\n"
+//						"8.\"nMaxMoneyPerTime\": (numeric, optional)\n"
+//						"9.\"nMaxMoneyTotal\": (numeric, optional)\n"
+//						"10.\"nMaxMoneyPerDay\": (numeric, optional)\n"
+//						"11.\"nUserDefine\": (string, optional)\n"
 						"\nResult:\n"
 						"\"txhash\": (string)\n"
 						"\nExamples:\n"
 						+ HelpExampleCli("registerscripttxraw",
-								"10 10000 \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" 010203040506 ")
+								"10 10000 \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" 1 010203040506 ")
 						+ "\nAs json rpc call\n"
 						+ HelpExampleRpc("registerscripttxraw",
-								"10 10000 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 010203040506 ");
-		throw runtime_error(msg);
+								"10 10000 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 1 010203040506 "));
 	}
 
 	RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(bool_type)(str_type));
 
 	uint64_t fee = AmountToRawValue(params[1]);
-	;
 	uint32_t height = params[0].get_int();
 
 	CVmScript vmScript;
@@ -1456,7 +1488,6 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 			throw runtime_error("create registerapptx open script file" + path + "error");
 		}
 		long lSize;
-//		 size_t nSize = 1;
 		fseek(file, 0, SEEK_END);
 		lSize = ftell(file);
 		rewind(file);
@@ -1464,24 +1495,27 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 		// allocate memory to contain the whole file:
 		char *buffer = (char*) malloc(sizeof(char) * lSize);
 		if (buffer == NULL) {
+			fclose(file);//及时关闭
 			throw runtime_error("allocate memory failed");
 		}
 
 		if (fread(buffer, 1, lSize, file) != (size_t) lSize) {
-			if (buffer)
-				free(buffer);
+			free(buffer);
+			fclose(file);//及时关闭
 			throw runtime_error("read script file error");
 		}
+		else
+		{
+			fclose(file);
+		}
 		vmScript.Rom.insert(vmScript.Rom.end(), buffer, buffer + lSize);
+		if (buffer)
+			free(buffer);
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
 		ds << vmScript;
 
 		vscript.assign(ds.begin(), ds.end());
 
-		if (file)
-			fclose(file);
-		if (buffer)
-			free(buffer);
 
 	} else if (1 == flag) {
 		vscript = ParseHex(params[4].get_str());
@@ -1547,17 +1581,15 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 
 Value sigstr(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 2) {
-		string msg = "registerapptx nrequired \"addr\" \"script\" fee height\n"
-				"\nregister script\n"
+		throw runtime_error("sigstr \"str\" \"addr\"\n"
+				"\nsignature transaction\n"
 				"\nArguments:\n"
 				"1.\"str\": (str) sig str\n"
 				"2.\"addr\": (str)\n"
 				"\nExamples:\n"
 				+ HelpExampleCli("sigstr", "1010000010203040506 \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" ")
 				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("sigstr",
-						"1010000010203040506 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 010203040506 ");
-		throw runtime_error(msg);
+				+ HelpExampleRpc("sigstr", "1010000010203040506 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 010203040506 "));
 	}
 	vector<unsigned char> vch(ParseHex(params[0].get_str()));
 	string addr = params[1].get_str();
@@ -1630,14 +1662,12 @@ Value sigstr(const Array& params, bool fHelp) {
 
 Value getalltxinfo(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {
-		string msg = "getalltxinfo \"addr\" showtxdetail\n"
-				"\nlistaddrtx\n"
+		throw runtime_error("getalltxinfo \n"
+				"\nget all transaction info\n"
 				"\nArguments:\n"
 				"\nResult:\n"
-				"\"txhash\"\n"
 				"\nExamples:\n" + HelpExampleCli("getalltxinfo", "") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("getalltxinfo", "");
-		throw runtime_error(msg);
+				+ HelpExampleRpc("getalltxinfo", ""));
 	}
 
 	Object retObj;
@@ -1667,12 +1697,11 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 
 Value printblokdbinfo(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {
-		string msg = "registerapptx nrequired \"addr\" \"script\" fee height\n"
-				"\nregister script\n"
+		throw runtime_error("printblokdbinfo \n"
+				"\nprint block log\n"
 				"\nArguments:\n"
-				"\nExamples:\n" + HelpExampleCli("printblokdbinfo", "") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("printblokdbinfo", "");
-		throw runtime_error(msg);
+				"\nExamples:\n" + HelpExampleCli("printblokdbinfo", "")
+				+ HelpExampleRpc("printblokdbinfo", ""));
 	}
 
 	if (!pAccountViewTip->Flush())
@@ -1685,14 +1714,15 @@ Value printblokdbinfo(const Array& params, bool fHelp) {
 
 Value getappaccinfo(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 2) {
-		string msg = "getappaccinfo nrequired \"scriptid\" \"address\""
-				"\nregister script\n"
-				"\address:\n"
+		throw runtime_error("getappaccinfo  \"scriptid\" \"address\""
+				"\nget appaccount info\n"
+				"\nArguments:\n"
+				"1.\"scriptid\": (string) \n"
+				"2.\"address\": (string) \n"
 				"\nExamples:\n"
 				+ HelpExampleCli("getappaccinfo", "000000100000 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG")
-				+ "\nAs json rpc call\n" + HelpExampleRpc("getappaccinfo", "000000100000 0-7")
-				+ HelpExampleRpc("getappaccinfo", "000000100000 00000008000");
-		throw runtime_error(msg);
+				+ "\nAs json rpc call\n"
+				+ HelpExampleRpc("getappaccinfo", "000000100000 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG"));
 	}
 
 	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
@@ -1718,12 +1748,15 @@ Value getappaccinfo(const Array& params, bool fHelp) {
 
 Value gethash(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
-		//	string msg = "gethash nrequired \"stri""
-		//			"\nregister script\n"
-		//			"\address:\n"
-		//			"\nExamples:\n" + HelpExampleCli("gethash", "5zQgdfghdfghdgfPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG") + "\nAs json rpc call\n"
-		//			+ HelpExampleRpc("gethash", "000000100000 0-7");
-		throw runtime_error("");
+		throw runtime_error("gethash  \"str\"\n"
+					"\nget the hash of given str\n"
+					"\nArguments:\n"
+					"1.\"str\": (string) \n"
+				    "\nresult an object \n"
+					"\nExamples:\n"
+					+ HelpExampleCli("gethash", "0000001000005zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG")
+					+ "\nAs json rpc call\n"
+					+ HelpExampleRpc("gethash", "0000001000005zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG"));
 	}
 
 	string str = params[0].get_str();
@@ -1738,7 +1771,15 @@ Value gethash(const Array& params, bool fHelp) {
 
 Value getappkeyvalue(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 2) {
-		throw runtime_error("");
+		throw runtime_error("getappkeyvalue  \"scriptid\" \"array\""
+						"\nget application key value\n"
+						"\nArguments:\n"
+						"1.\"scriptid\": (string) \n"
+						"2.\"array\": (string) \n"
+						"\nExamples:\n"
+						+ HelpExampleCli("getappkeyvalue", "000000100000 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG")
+						+ "\nAs json rpc call\n"
+						+ HelpExampleRpc("getappkeyvalue", "000000100000 5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG"));
 	}
 
 	CRegID scriptid(params[0].get_str());
@@ -1747,11 +1788,11 @@ Value getappkeyvalue(const Array& params, bool fHelp) {
 	int height = chainActive.Height();
 
 	if (scriptid.IsEmpty() == true) {
-		throw runtime_error("in getscriptdata :vscriptid size is error!\n");
+		throw runtime_error("in getappkeyvalue :vscriptid size is error!\n");
 	}
 
 	if (!pScriptDBTip->HaveScript(scriptid)) {
-		throw runtime_error("in getscriptdata :vscriptid id is exist!\n");
+		throw runtime_error("in getappkeyvalue :vscriptid id is exist!\n");
 	}
 
 	Array retArry;
@@ -1804,13 +1845,17 @@ Value gencheckpoint(const Array& params, bool fHelp)
 	if(fHelp || params.size() != 2)
 	{
 		throw runtime_error(
-				 "sendcheckpoint \n"
+				 "gencheckpoint \"privatekey\" \"filepath\"\n"
+				 "\ngenerate checkpoint by Private key signature block.\n"
 				 "\nArguments:\n"
-				 "1. \"Dacrsprivkey\"  (string, required) the password to get the private key\n"
-				 "2. \"filepath\"  (string, required) check point block path\n");
+				 "1. \"privatekey\"  (string, required) the private key\n"
+				 "2. \"filepath\"  (string, required) check point block path\n"
+				"\nResult:\n"
+				"\nExamples:\n"
+				 + HelpExampleCli("gencheckpoint", "\"privatekey\" \"filepath\"")
+                 + HelpExampleRpc("gencheckpoint", "\"privatekey\" \"filepath\""));
 	}
 	std::string strSecret = params[0].get_str();
-	std::string filePath = params[1].get_str();
 	CDacrsSecret vchSecret;
 	bool fGood = vchSecret.SetString(strSecret);
 
@@ -1856,9 +1901,14 @@ Value setcheckpoint(const Array& params, bool fHelp)
 	if(fHelp || params.size() != 1)
 	{
 		throw runtime_error(
-				 "sendcheckpoint \n"
+				 "setcheckpoint \"filepath\"\n"
+				 "\nadd new checkpoint and send it out.\n"
 				 "\nArguments:\n"
-				 "1. \"filepath\"  (string, required) check point block path\n");
+				 "1. \"filepath\"  (string, required) check point block path\n"
+				 "\nResult:\n"
+				 "\nExamples:\n"
+		         + HelpExampleCli("setcheckpoint", "\"filepath\"")
+		         + HelpExampleRpc("setcheckpoint", "\"filepath\""));
 	}
 	SyncData::CSyncData data;
 	ifstream file;
