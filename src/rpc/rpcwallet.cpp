@@ -60,6 +60,7 @@ Value getnewaddress(const Array& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "getnewaddress  (\"IsMiner\")\n"
+            "\nget a new address\n"
             "\nArguments:\n"
         	"1. \"IsMiner\"  (bool)  private key Is used for miner if true will create tow key ,another for miner.\n"
            "\nExamples:\n"
@@ -150,12 +151,12 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 	if (fHelp || (!(size == 3 || size == 4)))
 		throw runtime_error(
 						"sendtoaddresswithfee \"sendaddress\" \"recvaddress\" \"amount\" (fee)\n"
-						"\nSent an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
+						"\nSend an amount to a given address with fee. The amount is a real and is rounded to the nearest 0.00000001\n"
 						"\nArguments:\n"
-						"1. \"sendaddress\"  (string, required) The Dacrs address to send to.\n"
+						"1. \"sendaddress\"  (string, optional) The Dacrs address to send to.\n"
 						"2. \"recvaddress\" (string, required) The Dacrs address to receive.\n"
 						"3.\"amount\"   (string) \n"
-						"4.\"fee\"   (string,optional) \n"
+						"4.\"fee\"   (string,required) \n"
 						"\nResult:\n"
 						"\"transactionid\"  (string) The transaction id.\n"
 						"\nExamples:\n"
@@ -375,7 +376,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 		throw runtime_error(
 						"sendtoaddress \"Dacrsaddress\" \"amount\" or\n"
 				        "sendtoaddress \"Dacrsaddress\" \"receive address\" \"amount\"\n"
-						"\nSent an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
+						"\nSend an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
 						+ HelpRequiringPassphrase() + "\nArguments:\n"
 						"1. \"Dacrsaddress\"  (string, required) The Dacrs address to send to.\n"
 						"2. receive address or amount   (string) \n"

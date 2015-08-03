@@ -507,7 +507,7 @@ Value listaddr(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {
 		throw runtime_error(
 				 "listaddr\n"
-				 "\nget various info by pwalletMain KeyId\n"
+				 "\nreturn Array containing address,balance,haveminerkey,regid information.\n"
 				 "\nArguments:\n"
 				 "\nResult:\n"
 				 "\nExamples:\n"
@@ -548,7 +548,7 @@ Value listtx(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {
 		throw runtime_error(
 				 "listtx\n"
-				 "\nget all transactions from pwalletMain.\n"
+				 "\nget all confirm transactions and all unconfirm transactions from wallet.\n"
 				 "\nArguments:\n"
 				 "\nResult:\n"
 				 "\nExamples:\n"
