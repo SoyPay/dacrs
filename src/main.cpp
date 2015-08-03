@@ -1037,39 +1037,105 @@ unsigned int ComputeMinWork(unsigned int nBase, int64_t nTime)
 
 	return bnResult.GetCompact();
 }
+
+int64_t GetAverageSpaceTime(const CBlockIndex* pindexLast, int64_t nInterval)
+{
+    int64_t pmedian[nInterval];
+    int64_t* pbegin = &pmedian[nInterval];
+    int64_t* pend = &pmedian[nInterval];
+
+    const CBlockIndex* pindex = pindexLast;
+    const CBlockIndex* pPreIndex = pindexLast->pprev;
+
+    string strSelects;
+    for (int i = 0; i < nInterval && pindex && pPreIndex; i++, pindex = pPreIndex, pPreIndex = pPreIndex->pprev) {
+    	*(--pbegin) = pindex->GetBlockTime() - pPreIndex->GetBlockTime();
+    	strSelects += strprintf(" %lld",  *(pbegin));
+    }
+    LogPrint("INFO", "nheight:%d differtime :%s\n",pindex->nHeight, strSelects.c_str());
+
+    sort(pbegin, pend);
+
+    int64_t threeQuarters  = pbegin[(pend - pbegin)*3/4];
+    int64_t quarter = pbegin[(pend - pbegin)/4];
+    int64_t upBound = threeQuarters + (threeQuarters - quarter) * 1.5;
+    int64_t lowBound = quarter - (threeQuarters-quarter) * 1.5;
+    int64_t* pbeginCopy = pbegin;
+    int nCount=0;
+    int64_t totalSpace = 0;
+	for (; pbeginCopy != pend; ++pbeginCopy) {
+		if(*pbeginCopy <= upBound && *pbeginCopy >=lowBound) {
+			totalSpace += *pbeginCopy;
+			++nCount;
+		}
+	}
+	int64_t nAverageSpacing = totalSpace / nCount;
+	LogPrint("INFO", "upBound=%lld lowBound=%lld nAverageSpacing=%lld Samples=%d\n", upBound, lowBound, nAverageSpacing, nCount);
+	return nAverageSpacing;
+}
+
+double CaculateDifficulty(unsigned int nBits) {
+	int nShift = (nBits >> 24) & 0xff;
+
+	double dDiff = (double) 0x0000ffff / (double) (nBits & 0x00ffffff);
+
+	while (nShift < 29) {
+		dDiff *= 256.0;
+		nShift++;
+	}
+	while (nShift > 29) {
+		dDiff /= 256.0;
+		nShift--;
+	}
+
+	return dDiff;
+}
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock)
 {
-		if (pindexLast == NULL) {
-			return SysCfg().ProofOfWorkLimit().GetCompact(); // genesis block
-		}
+	if (pindexLast == NULL) {
+		return SysCfg().ProofOfWorkLimit().GetCompact(); // genesis block
+	}
 
-		const CBlockIndex* pindexPrev = pindexLast;
-		if (pindexPrev->pprev == NULL) {
-			return SysCfg().ProofOfWorkLimit().GetCompact(); // first block
-		}
+	const CBlockIndex* pindexPrev = pindexLast;
+	if (pindexPrev->pprev == NULL) {
+		return SysCfg().ProofOfWorkLimit().GetCompact(); // first block
+	}
 
-		const CBlockIndex* pindexPrevPrev = pindexPrev->pprev;
-		if (pindexPrevPrev->pprev == NULL) {
-			return SysCfg().ProofOfWorkLimit().GetCompact(); // second block
-		}
+	const CBlockIndex* pindexPrevPrev = pindexPrev->pprev;
+	if (pindexPrevPrev->pprev == NULL) {
+		return SysCfg().ProofOfWorkLimit().GetCompact(); // second block
+	}
 
-		int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
+	int64_t nTargetSpacing = SysCfg().GetTargetSpacing();  //nStakeTargetSpacing;
+	int64_t nInterval = SysCfg().GetTargetTimespan() / nTargetSpacing;
 
+
+	if(pindexLast->nHeight > 35000) {
 		arith_uint256 bnNew;
 		bnNew.SetCompact(pindexPrev->nBits);
-
-
-		int64_t nTargetSpacing = SysCfg().GetTargetSpacing();//nStakeTargetSpacing;
-		int64_t nInterval = SysCfg().GetTargetTimespan() / nTargetSpacing;
-
-		bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
+		int64_t nAverageSpacing = GetAverageSpaceTime(pindexLast, nInterval);
+		bnNew *= ((nInterval - 1) * nTargetSpacing + nAverageSpacing + nAverageSpacing);
 		bnNew /= ((nInterval + 1) * nTargetSpacing);
-
 		if (bnNew > SysCfg().ProofOfWorkLimit() || bnNew < 0) {
 			LogPrint("INFO", "bnNew:%s\n", bnNew.GetHex());
 			bnNew = SysCfg().ProofOfWorkLimit();
 		}
+//		LogPrint("INFO", "bnNew=%s difficulty=%.8lf\n", bnNew.GetHex(), CaculateDifficulty(bnNew.GetCompact()));
 		return bnNew.GetCompact();
+	}else {
+		CBigNum bnNew;
+		bnNew.SetCompact(pindexPrev->nBits);
+		int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
+		bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
+		bnNew /= ((nInterval + 1) * nTargetSpacing);
+		if (UintToArith256(uint256S(bnNew.getuint256().GetHex())) > SysCfg().ProofOfWorkLimit() || bnNew < 0) {
+			LogPrint("INFO", "bnNew:%s\n", bnNew.GetHex());
+			bnNew.setuint256(ArithToUint256(SysCfg().ProofOfWorkLimit()));
+		}
+//		LogPrint("INFO", "bnNew=%s difficulty=%.8lf\n", bnNew.GetHex(), CaculateDifficulty(bnNew.GetCompact()));
+		return bnNew.GetCompact();
+	}
 }
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits)
@@ -2254,13 +2320,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, CAccountViewCache 
         return state.DoS(100, ERRORMSG("CheckBlock() : size limits failed"),
                          REJECT_INVALID, "bad-blk-length");
 
-    // Check proof of work matches claimed amount
-//    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits))
-//        return state.DoS(50, ERRORMSG("CheckBlock() : proof of work failed"),
-//                         REJECT_INVALID, "high-hash");
-
-    // Check timestamp
-    if (block.GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
+    // Check timestamp 12minutes limits
+    if (block.nHeight > 28000 && block.GetBlockTime() > GetAdjustedTime() + 12 * 60)
         return state.Invalid(ERRORMSG("CheckBlock() : block timestamp too far in the future"),
                              REJECT_INVALID, "time-too-new");
 
@@ -2268,9 +2329,6 @@ bool CheckBlock(const CBlock& block, CValidationState& state, CAccountViewCache 
     if (block.vptx.empty() || !block.vptx[0]->IsCoinBase())
         return state.DoS(100, ERRORMSG("CheckBlock() : first tx is not coinbase"),
                          REJECT_INVALID, "bad-cb-missing");
-
-//    if(block.nFuelRate != GetElementForBurn(mapBlockIndex[block.hashPrevBlock]))
-//    	return state.DoS(100, ERRORMSG("CheckBlock() : block nfuelrate dismatched"), REJECT_INVALID, "fuelrate-dismatch");
 
 	// Build the merkle tree already. We need it anyway later, and it makes the
 	// block cache the transaction hashes, which means they don't need to be
@@ -2349,7 +2407,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 			return state.DoS(100, ERRORMSG("AcceptBlock() : forked chain older than last checkpoint (height %d)", nHeight));
 
 		// Check proof of work, before height 28000 don't check proofwork, fixed CBigNum adjust difficult bug.
-		if ( nHeight > 28000 && block.nBits != GetNextWorkRequired(pindexPrev, &block))
+		if(block.nBits != GetNextWorkRequired(pindexPrev, &block))
 			return state.DoS(100, ERRORMSG("AcceptBlock() : incorrect proof of work actual vs need(%d vs %d)", block.nBits, GetNextWorkRequired(pindexPrev, &block)), REJECT_INVALID, "bad-diffbits");
 
 		//Check proof of pos tx

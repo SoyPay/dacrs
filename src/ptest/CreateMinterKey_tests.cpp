@@ -84,7 +84,7 @@ void CCreateMinerkey::CreateAccount() {
 	if(!SelectAccounts())
 		return;
 	std::string TxHash("");
-	const int nNewAddrs = 1440;
+	const int nNewAddrs = 1540;
 	string hash = "";
 	vector<string> vNewAddress;
 //	string strAddress[] = {"0-1","0-2","0-3","0-4","0-5"};

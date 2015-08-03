@@ -639,8 +639,8 @@ bool static MiningBlock(CBlock *pblock,CWallet *pwallet,CBlockIndex* pindexPrev,
 			return (lasttime = max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime()));
 		};
 
-		pblock->nTime = GetNextTimeAndSleep();	// max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
-
+		GetNextTimeAndSleep();	// max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
+		UpdateTime(*pblock, pindexPrev);
 
 		if (pindexPrev != chainActive.Tip())
 			return false;

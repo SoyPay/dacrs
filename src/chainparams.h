@@ -308,6 +308,7 @@ public:
 		return base58Prefixes[type];
 	}
 	virtual const vector<CAddress>& FixedSeeds() const = 0;
+	virtual bool IsInFixedSeeds(CAddress &addr) = 0;
 	int RPCPort() const {
 		return nRPCPort;
 	}
