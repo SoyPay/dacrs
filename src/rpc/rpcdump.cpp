@@ -74,8 +74,7 @@ Value dropprivkey(const Array& params, bool fHelp){
 	if (fHelp || params.size() != 0)
 		throw runtime_error("dropprivkey \n"
 			    "\ndrop private key.\n"
-//			    "\nResult:\n"
-//			    "\"key\"                (string) The private key\n"
+			    "\nResult:\n"
 			    "\nExamples:\n"
 			    + HelpExampleCli("dropprivkey", "")
 			    + HelpExampleRpc("dropprivkey", "")

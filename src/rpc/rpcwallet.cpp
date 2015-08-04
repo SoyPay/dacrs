@@ -62,7 +62,7 @@ Value getnewaddress(const Array& params, bool fHelp)
             "getnewaddress  (\"IsMiner\")\n"
             "\nget a new address\n"
             "\nArguments:\n"
-        	"1. \"IsMiner\"  (bool)  private key Is used for miner if true will create tow key ,another for miner.\n"
+        	"1. \"IsMiner\"  (bool, optional)  private key Is used for miner if true will create tow key ,another for miner.\n"
            "\nExamples:\n"
             + HelpExampleCli("getnewaddress", "")
             + HelpExampleCli("getnewaddress", "true")
@@ -150,13 +150,13 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 	int size = params.size();
 	if (fHelp || (!(size == 3 || size == 4)))
 		throw runtime_error(
-						"sendtoaddresswithfee \"sendaddress\" \"recvaddress\" \"amount\" (fee)\n"
+						"sendtoaddresswithfee (\"sendaddress\") \"recvaddress\" \"amount\" (fee)\n"
 						"\nSend an amount to a given address with fee. The amount is a real and is rounded to the nearest 0.00000001\n"
 						"\nArguments:\n"
 						"1. \"sendaddress\"  (string, optional) The Dacrs address to send to.\n"
 						"2. \"recvaddress\" (string, required) The Dacrs address to receive.\n"
-						"3.\"amount\"   (string) \n"
-						"4.\"fee\"   (string,required) \n"
+						"3.\"amount\"   (string,required) \n"
+						"4.\"fee\"      (string,required) \n"
 						"\nResult:\n"
 						"\"transactionid\"  (string) The transaction id.\n"
 						"\nExamples:\n"
@@ -285,9 +285,9 @@ Value sendtoaddressraw(const Array& params, bool fHelp)
 						"sendtoaddressraw \"height\" \"fee\" \"amount\" \"srcaddress\" \"recvaddress\"\n"
 						"\n create normal transaction by hegiht,fee,amount,srcaddress, recvaddress.\n"
 						+ HelpRequiringPassphrase() + "\nArguments:\n"
-						"1. \"height\"  (int) \n"
-						"2. \"fee\"  (int)  \n"
-						"3. \"amount\"  (string)  \n"
+						"1. \"height\"  (int, required) \n"
+						"2. \"fee\"     (int, required)  \n"
+						"3. \"amount\"  (string, required)  \n"
 						"4. \"srcaddress\"  (string, required) The Dacrs address to send to.\n"
 						"5. \"recvaddress\"  (string, required) The Dacrs address to receive.\n"
 						"\nResult:\n"
@@ -374,13 +374,12 @@ Value sendtoaddress(const Array& params, bool fHelp)
 	int size = params.size();
 	if (fHelp || (!(size == 2 || size == 3)))
 		throw runtime_error(
-						"sendtoaddress \"Dacrsaddress\" \"amount\" or\n"
-				        "sendtoaddress \"Dacrsaddress\" \"receive address\" \"amount\"\n"
+						"sendtoaddress \"Dacrsaddress\" (\"receive address\")\"amount\"\n"
 						"\nSend an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
 						+ HelpRequiringPassphrase() + "\nArguments:\n"
 						"1. \"Dacrsaddress\"  (string, required) The Dacrs address to send to.\n"
-						"2. receive address or amount   (string) \n"
-						"3.\"amount\"   (string) \n"
+						"2. receive address   (string, optional) \n"
+						"3.\"amount\"   (string, required) \n"
 						"\nResult:\n"
 						"\"transactionid\"  (string) The transaction id.\n"
 						"\nExamples:\n"
@@ -487,7 +486,7 @@ Value backupwallet(const Array& params, bool fHelp)
             "backupwallet \"destination\"\n"
             "\nSafely copies wallet.dat to destination, which can be a directory or a path with filename.\n"
             "\nArguments:\n"
-            "1. \"destination\"   (string) The destination directory or file\n"
+            "1. \"destination\"   (string, required) The destination directory or file\n"
             "\nExamples:\n"
             + HelpExampleCli("backupwallet", "\"backup.dat\"")
             + HelpExampleRpc("backupwallet", "\"backup.dat\"")
@@ -569,8 +568,8 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
             "walletpassphrasechange \"oldpassphrase\" \"newpassphrase\"\n"
             "\nChanges the wallet passphrase from 'oldpassphrase' to 'newpassphrase'.\n"
             "\nArguments:\n"
-            "1. \"oldpassphrase\"      (string) The current passphrase\n"
-            "2. \"newpassphrase\"      (string) The new passphrase\n"
+            "1. \"oldpassphrase\"      (string, required) The current passphrase\n"
+            "2. \"newpassphrase\"      (string, required) The new passphrase\n"
             "\nExamples:\n"
             + HelpExampleCli("walletpassphrasechange", "\"old one\" \"new one\"")
             + HelpExampleRpc("walletpassphrasechange", "\"old one\", \"new one\"")
@@ -648,7 +647,7 @@ Value encryptwallet(const Array& params, bool fHelp)
             "If the wallet is already encrypted, use the walletpassphrasechange call.\n"
             "Note that this will shutdown the server.\n"
             "\nArguments:\n"
-            "1. \"passphrase\"    (string) The pass phrase to encrypt the wallet with. It must be at least 1 character, but should be long.\n"
+            "1. \"passphrase\"    (string, required) The pass phrase to encrypt the wallet with. It must be at least 1 character, but should be long.\n"
             "\nExamples:\n"
             "\nEncrypt you wallet\n"
             + HelpExampleCli("encryptwallet", "\"my pass phrase\"") +

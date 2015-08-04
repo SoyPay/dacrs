@@ -396,7 +396,7 @@ Value getdacrsstate(const Array& params, bool fHelp)
             "getdacrsstate \"num\"\n"
 			"\nget state data about the recently blocks.\n"
             "\nArguments:\n"
-            "1.num   (numeric, > 0) The number of the recently blocks.\n"
+            "1.num   (numeric,required, > 0) The number of the recently blocks.\n"
             "\nResult:\n"
             "{\n"
             "  \"blocktime\": n,   (numeric)get the time of each block\n"
