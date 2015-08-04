@@ -1337,7 +1337,7 @@ void ThreadOpenConnections()
             CAddress addr = addrman.Select(10 + min(nOutbound,8)*10);
 
             // if we selected an invalid address, restart
-            if (!addr.IsValid() || setConnected.count(addr.GetGroup()) || IsLocal(addr))
+            if (!addr.IsValid() || (setConnected.count(addr.GetGroup()) && !SysCfg().IsInFixedSeeds(addr))|| IsLocal(addr) )
                 break;
 
             // If we didn't find an appropriate destination after trying 100 addresses fetched from addrman,

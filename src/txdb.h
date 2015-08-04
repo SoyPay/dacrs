@@ -9,7 +9,7 @@
 #include "leveldbwrapper.h"
 #include "main.h"
 #include "database.h"
-
+#include "arith_uint256.h"
 #include <map>
 #include <string>
 #include <utility>
@@ -37,7 +37,7 @@ private:
 public:
     bool WriteBlockIndex(const CDiskBlockIndex& blockindex);
     bool EraseBlockIndex(const uint256 &blockHash);
-    bool WriteBestInvalidWork(const CBigNum& bnBestInvalidWork);
+    bool WriteBestInvalidWork(const uint256& bnBestInvalidWork);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &fileinfo);
     bool WriteBlockFileInfo(int nFile, const CBlockFileInfo &fileinfo);
     bool ReadLastBlockFile(int &nFile);

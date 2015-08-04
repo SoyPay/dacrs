@@ -80,7 +80,7 @@ public:
 				READWRITE(mapMasterKeys);
 				READWRITE(mapInBlockTx);
 				READWRITE(UnConfirmTx);
-				uint256 sun(0);
+				uint256 sun;
 				if(fWrite){
 				 sun = GetCheckSum();
 				}
@@ -320,7 +320,7 @@ public:
 
 	map<uint256, std::shared_ptr<CBaseTransaction> > mapAccountTx;
 public:
-	CAccountTx(CWallet* pwallet = NULL, uint256 hash = uint256(0),int high = 0) {
+	CAccountTx(CWallet* pwallet = NULL, uint256 hash = uint256(),int high = 0) {
 		pWallet = pwallet;
 		blockHash = hash;
 		mapAccountTx.clear();

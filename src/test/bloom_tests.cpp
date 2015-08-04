@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
 
 	CBloomFilter filter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
 	// Match the last transaction
-	filter.insert(uint256("0xfbadf1682488087592fb8f48c2b3cb22a23273409d64bbb3e35469c6e9125da3"));
+	filter.insert(uint256S("0xfbadf1682488087592fb8f48c2b3cb22a23273409d64bbb3e35469c6e9125da3"));
 
 	CMerkleBlock merkleBlock(block, filter);
 	BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
 	BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 1);
 	pair<unsigned int, uint256> pair = merkleBlock.vMatchedTxn[0];
 
-	BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256("0xfbadf1682488087592fb8f48c2b3cb22a23273409d64bbb3e35469c6e9125da3"));
+	BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256S("0xfbadf1682488087592fb8f48c2b3cb22a23273409d64bbb3e35469c6e9125da3"));
 	BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 8);
 
 	vector<uint256> vMatched;
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
 	BOOST_CHECK(vMatched[i] == merkleBlock.vMatchedTxn[i].second);
 
 	// Also match the 8th transaction
-	filter.insert(uint256("0x6cace363f1925b251c6ee4988e8da2ad343d4edd043fa55e0492b393a78ec231"));
+	filter.insert(uint256S("0x6cace363f1925b251c6ee4988e8da2ad343d4edd043fa55e0492b393a78ec231"));
 	merkleBlock = CMerkleBlock(block, filter);
 	BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_1)
 
 	BOOST_CHECK(merkleBlock.vMatchedTxn[1] == pair);
 
-	BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256("0x6cace363f1925b251c6ee4988e8da2ad343d4edd043fa55e0492b393a78ec231"));
+	BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256S("0x6cace363f1925b251c6ee4988e8da2ad343d4edd043fa55e0492b393a78ec231"));
 	BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 7);
 
 	BOOST_CHECK(merkleBlock.txn.ExtractMatches(vMatched) == block.hashMerkleRoot);
@@ -161,14 +161,14 @@ BOOST_AUTO_TEST_CASE(merkle_block_2)
 
 	CBloomFilter filter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
 	// Match the first transaction
-	filter.insert(uint256("0x72c8f56230e5ec5b6f6c849fae05e17cfb8e24c0eaabf478e8f3361d7b0e2381"));
+	filter.insert(uint256S("0x72c8f56230e5ec5b6f6c849fae05e17cfb8e24c0eaabf478e8f3361d7b0e2381"));
 
 	CMerkleBlock merkleBlock(block, filter);
 	BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
 	BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 1);
 
-	BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256("0x72c8f56230e5ec5b6f6c849fae05e17cfb8e24c0eaabf478e8f3361d7b0e2381"));
+	BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256S("0x72c8f56230e5ec5b6f6c849fae05e17cfb8e24c0eaabf478e8f3361d7b0e2381"));
 	BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 0);
 
 	vector<uint256> vMatched;
@@ -188,14 +188,14 @@ BOOST_AUTO_TEST_CASE(merkle_block_2_with_update_none)
 
 	CBloomFilter filter(10, 0.000001, 0, BLOOM_UPDATE_NONE);
 	// Match the first transaction
-	filter.insert(uint256("0x72c8f56230e5ec5b6f6c849fae05e17cfb8e24c0eaabf478e8f3361d7b0e2381"));
+	filter.insert(uint256S("0x72c8f56230e5ec5b6f6c849fae05e17cfb8e24c0eaabf478e8f3361d7b0e2381"));
 
 	CMerkleBlock merkleBlock(block, filter);
 	BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
 	BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 1);
 
-	BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256("0x72c8f56230e5ec5b6f6c849fae05e17cfb8e24c0eaabf478e8f3361d7b0e2381"));
+	BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256S("0x72c8f56230e5ec5b6f6c849fae05e17cfb8e24c0eaabf478e8f3361d7b0e2381"));
 	BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 0);
 
 	vector<uint256> vMatched;
@@ -216,14 +216,14 @@ BOOST_AUTO_TEST_CASE(merkle_block_3_and_serialize)
 
 	CBloomFilter filter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
 	// Match the only transaction
-	filter.insert(uint256("0xa924c0188b4f6c8dea62d4f37fe723b145ee80d9251b98ca411e1dd439bd5bc7"));
+	filter.insert(uint256S("0xa924c0188b4f6c8dea62d4f37fe723b145ee80d9251b98ca411e1dd439bd5bc7"));
 
 	CMerkleBlock merkleBlock(block, filter);
 	BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
 	BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 1);
 
-	BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256("0xa924c0188b4f6c8dea62d4f37fe723b145ee80d9251b98ca411e1dd439bd5bc7"));
+	BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256S("0xa924c0188b4f6c8dea62d4f37fe723b145ee80d9251b98ca411e1dd439bd5bc7"));
 	BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 0);
 
 	vector<uint256> vMatched;
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4)
 
 	CBloomFilter filter(10, 0.000001, 0, BLOOM_UPDATE_ALL);
 	// Match the last transaction
-	filter.insert(uint256("0x8c4bcc8fcca5656e9749586dcc8fb533103855f4d7f09c99c67db1fd3a6075c7"));
+	filter.insert(uint256S("0x8c4bcc8fcca5656e9749586dcc8fb533103855f4d7f09c99c67db1fd3a6075c7"));
 
 	CMerkleBlock merkleBlock(block, filter);
 	BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(merkle_block_4)
 	BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 1);
 	pair<unsigned int, uint256> pair = merkleBlock.vMatchedTxn[0];
 
-	BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256("0x8c4bcc8fcca5656e9749586dcc8fb533103855f4d7f09c99c67db1fd3a6075c7"));
+	BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256S("0x8c4bcc8fcca5656e9749586dcc8fb533103855f4d7f09c99c67db1fd3a6075c7"));
 	BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 6);
 
 	vector<uint256> vMatched;
@@ -274,13 +274,13 @@ BOOST_AUTO_TEST_CASE(merkle_block_4)
 	BOOST_CHECK(vMatched[i] == merkleBlock.vMatchedTxn[i].second);
 
 	// Also match the 4th transaction
-	filter.insert(uint256("0x100d07d91b598a58b6c9900a6467ffaa7ac9fea020f0d51141688a3337262d09"));
+	filter.insert(uint256S("0x100d07d91b598a58b6c9900a6467ffaa7ac9fea020f0d51141688a3337262d09"));
 	merkleBlock = CMerkleBlock(block, filter);
 	BOOST_CHECK(merkleBlock.header.GetHash() == block.GetHash());
 
 	BOOST_CHECK(merkleBlock.vMatchedTxn.size() == 2);
 
-	BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256("0x100d07d91b598a58b6c9900a6467ffaa7ac9fea020f0d51141688a3337262d09"));
+	BOOST_CHECK(merkleBlock.vMatchedTxn[0].second == uint256S("0x100d07d91b598a58b6c9900a6467ffaa7ac9fea020f0d51141688a3337262d09"));
 	BOOST_CHECK(merkleBlock.vMatchedTxn[0].first == 3);
 
 	BOOST_CHECK(merkleBlock.vMatchedTxn[1] == pair);

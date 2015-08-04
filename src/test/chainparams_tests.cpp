@@ -193,14 +193,11 @@ BOOST_AUTO_TEST_CASE(chain_main) {
 	BOOST_CHECK(SysParamsMain().MessageStart()[1] == 0xfe);
 	BOOST_CHECK(SysParamsMain().MessageStart()[2] == 0x1d);
 	BOOST_CHECK(SysParamsMain().MessageStart()[3] == 0x20);
-	BOOST_CHECK(SysParamsMain().AlertKey() == ParseHex("04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda91109"
-			"71b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6"
-			"956e7c5ecbcd68284"));
+	BOOST_CHECK(SysParamsMain().AlertKey() == ParseHex("02d99681b6287b3765dfbb930e6caa10d1f8ac19e02b88f52362ce6eb43c0ec71e"));
 	BOOST_CHECK(SysParamsMain().GetDefaultPort() == 8668);
-	BOOST_CHECK(SysParamsMain().ProofOfWorkLimit() == CBigNum(~uint256(0) >> 10));
-	BOOST_CHECK(SysParamsMain().SubsidyHalvingInterval() == 210000);
+//	BOOST_CHECK(SysParamsMain().ProofOfWorkLimit() == (~arith_uint256(0) >> 10));
 	BOOST_CHECK(SysParamsMain().RequireRPCPassword() == true);
-	BOOST_CHECK(SysParamsMain().DataDir() == "");
+	BOOST_CHECK(SysParamsMain().DataDir() == "main");
 	BOOST_CHECK(SysParamsMain().NetworkID() == CBaseParams::MAIN);
 	BOOST_CHECK(SysParamsMain().RPCPort() == 8669);
 }
@@ -213,12 +210,10 @@ BOOST_AUTO_TEST_CASE(chain_test) {
 	BOOST_CHECK(SysParamsTest().MessageStart()[1] == 0x2d);
 	BOOST_CHECK(SysParamsTest().MessageStart()[2] == 0x1c);
 	BOOST_CHECK(SysParamsTest().MessageStart()[3] == 0x0d);
-	BOOST_CHECK(SysParamsTest().AlertKey() == ParseHex("04302390343f91cc401d56d68b123028bf52e5fca"
-			"1939df127f63c6467cdf9c8e2c14b61104cf817d0b"
-			"780da337893ecc4aaff1309e536162dabbdb45200ca2b0a"));
+	BOOST_CHECK(SysParamsTest().AlertKey() == ParseHex("036e15523feb9e329b4fdf53c227fc89ea45a1a36342e7e38fad7fe6e3777243af"));
 	BOOST_CHECK(SysParamsTest().GetDefaultPort() == 18668);
-//	BOOST_CHECK(SysParamsTest().ProofOfWorkLimit() == CBigNum(~uint256(0) >> 8));
-	BOOST_CHECK(SysParamsTest().SubsidyHalvingInterval() == 210000);
+//	BOOST_CHECK(SysParamsTest().ProofOfWorkLimit() == (~arith_uint256(0) >> 10));
+
 	BOOST_CHECK(SysParamsTest().RequireRPCPassword() == true);
 	BOOST_CHECK(SysParamsTest().DataDir() == "testnet");
 	BOOST_CHECK(SysParamsTest().NetworkID() == CBaseParams::TESTNET);
@@ -233,11 +228,9 @@ BOOST_AUTO_TEST_CASE(chain_regtest) {
 	BOOST_CHECK(SysParamsReg().MessageStart()[1] == 0x1d);
 	BOOST_CHECK(SysParamsReg().MessageStart()[2] == 0x2d);
 	BOOST_CHECK(SysParamsReg().MessageStart()[3] == 0x3d);
-	BOOST_CHECK(SysParamsReg().AlertKey() == ParseHex("04302390343f91cc401d56d68b123028bf52e5fca"
-			"1939df127f63c6467cdf9c8e2c14b61104cf817d0b"
-			"780da337893ecc4aaff1309e536162dabbdb45200ca2b0a"));
+	BOOST_CHECK(SysParamsReg().AlertKey() == ParseHex("036e15523feb9e329b4fdf53c227fc89ea45a1a36342e7e38fad7fe6e3777243af"));
 	BOOST_CHECK(SysParamsReg().GetDefaultPort() == 18666);
-	BOOST_CHECK(SysParamsReg().ProofOfWorkLimit() == CBigNum(~uint256(0) >> 6));
+//	BOOST_CHECK(SysParamsReg().ProofOfWorkLimit() == (~arith_uint256(0) >> 6));
 	BOOST_CHECK(SysParamsReg().SubsidyHalvingInterval() == 150);
 	BOOST_CHECK(SysParamsReg().RequireRPCPassword() == false);
 	BOOST_CHECK(SysParamsReg().DataDir() == "regtest");

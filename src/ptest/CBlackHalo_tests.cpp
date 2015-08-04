@@ -122,7 +122,7 @@ bool CBlackHalo::SendSellerPackage(){
 	NEXT_CONTRACT Seller;
 
 	Seller.dnType = 0x02;
-	memcpy(Seller.hash, uint256(buyerhash).begin(), sizeof(Seller.hash));
+	memcpy(Seller.hash, uint256S(buyerhash).begin(), sizeof(Seller.hash));
 
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << Seller;
@@ -153,7 +153,7 @@ bool CBlackHalo::SendBuyerConfirmedPackage(){
 
 	NEXT_CONTRACT Seller;
 	Seller.dnType = 0x03;
-	memcpy(Seller.hash, uint256(buyerhash).begin(), sizeof(Seller.hash));
+	memcpy(Seller.hash, uint256S(buyerhash).begin(), sizeof(Seller.hash));
 
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << Seller;
@@ -183,7 +183,7 @@ bool CBlackHalo::SendBuyerCancelPackage(){
 
 	NEXT_CONTRACT Seller;
 	Seller.dnType = 0x04;
-	memcpy(Seller.hash, uint256(buyerhash).begin(), sizeof(Seller.hash));
+	memcpy(Seller.hash, uint256S(buyerhash).begin(), sizeof(Seller.hash));
 
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << Seller;

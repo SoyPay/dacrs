@@ -222,7 +222,7 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 			}
 		}
 
-		if (sendKeyId == uint160(0)) {
+		if (sendKeyId.IsNull()) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "not find enough moeny account ");
 		}
 	}
@@ -446,7 +446,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 			}
 		}
 
-		if (sendKeyId == uint160(0)) {
+		if (sendKeyId.IsNull()) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "not find enough moeny account ");
 		}
 	}

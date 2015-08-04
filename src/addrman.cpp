@@ -14,12 +14,12 @@ int CAddrInfo::GetTriedBucket(const vector<unsigned char> &nKey) const
     CDataStream ss1(SER_GETHASH, 0);
     vector<unsigned char> vchKey = GetKey();
     ss1 << nKey << vchKey;
-    uint64_t hash1 = Hash(ss1.begin(), ss1.end()).GetLow64();
+    uint64_t hash1 = Hash(ss1.begin(), ss1.end()).GetCheapHash();
 
     CDataStream ss2(SER_GETHASH, 0);
     vector<unsigned char> vchGroupKey = GetGroup();
     ss2 << nKey << vchGroupKey << (hash1 % ADDRMAN_TRIED_BUCKETS_PER_GROUP);
-    uint64_t hash2 = Hash(ss2.begin(), ss2.end()).GetLow64();
+    uint64_t hash2 = Hash(ss2.begin(), ss2.end()).GetCheapHash();
     return hash2 % ADDRMAN_TRIED_BUCKET_COUNT;
 }
 
@@ -29,11 +29,11 @@ int CAddrInfo::GetNewBucket(const vector<unsigned char> &nKey, const CNetAddr& s
     vector<unsigned char> vchGroupKey = GetGroup();
     vector<unsigned char> vchSourceGroupKey = src.GetGroup();
     ss1 << nKey << vchGroupKey << vchSourceGroupKey;
-    uint64_t hash1 = Hash(ss1.begin(), ss1.end()).GetLow64();
+    uint64_t hash1 = Hash(ss1.begin(), ss1.end()).GetCheapHash();
 
     CDataStream ss2(SER_GETHASH, 0);
     ss2 << nKey << vchSourceGroupKey << (hash1 % ADDRMAN_NEW_BUCKETS_PER_SOURCE_GROUP);
-    uint64_t hash2 = Hash(ss2.begin(), ss2.end()).GetLow64();
+    uint64_t hash2 = Hash(ss2.begin(), ss2.end()).GetCheapHash();
     return hash2 % ADDRMAN_NEW_BUCKET_COUNT;
 }
 

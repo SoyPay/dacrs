@@ -134,7 +134,7 @@ void GetPriorityTx(vector<TxPriority> &vecPriority, int nFuelRate) {
 	for (map<uint256, CTxMemPoolEntry>::iterator mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi) {
 		CBaseTransaction *pBaseTx = mi->second.GetTx().get();
 
-		if (uint256(0) == std::move(pTxCacheTip->IsContainTx(std::move(pBaseTx->GetHash())))) {
+		if (uint256() == std::move(pTxCacheTip->IsContainTx(std::move(pBaseTx->GetHash())))) {
 			unsigned int nTxSize = ::GetSerializeSize(*pBaseTx, SER_NETWORK, PROTOCOL_VERSION);
 			double dFeePerKb = double(pBaseTx->GetFee() - pBaseTx->GetFuel(nFuelRate))/ (double(nTxSize) / 1000.0);
 			dPriority = 1000.0 / double(nTxSize);
@@ -207,8 +207,8 @@ uint256 GetAdjustHash(const uint256 TargetHash, const uint64_t nPos, const int n
 	uint64_t posacc = nPos/COIN;
 	posacc /= SysCfg().GetIntervalPos();
 	posacc = max(posacc, (uint64_t) 1);
-	uint256 adjusthash = TargetHash; //adjust nbits
-	uint256 minhash = SysCfg().ProofOfWorkLimit().getuint256();
+	arith_uint256 adjusthash = UintToArith256(TargetHash); //adjust nbits
+	arith_uint256 minhash = SysCfg().ProofOfWorkLimit();
 
 	while (posacc) {
 		adjusthash = adjusthash << 1;
@@ -219,7 +219,7 @@ uint256 GetAdjustHash(const uint256 TargetHash, const uint64_t nPos, const int n
 		}
 	}
 
-	return std::move(adjusthash);
+	return std::move(ArithToUint256(adjusthash));
 }
 
 bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setCreateKey, CAccountViewCache &view,
@@ -305,7 +305,7 @@ bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setC
 			postxinfo.nNonce = pBlock->nNonce;
 			uint256 curhash = postxinfo.GetHash();
 
-			if (curhash <= adjusthash) {
+			if (UintToArith256(curhash) <= UintToArith256(adjusthash)) {
 				CRegID regid;
 
 				if (pAccountViewTip->GetRegId(item.keyID, regid)) {
@@ -370,7 +370,7 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 		uint64_t nTotalRunStep(0);
 		for (unsigned int i = 1; i < pBlock->vptx.size(); i++) {
 			shared_ptr<CBaseTransaction> pBaseTx = pBlock->vptx[i];
-			if (uint256(0) != txCache.IsContainTx(pBaseTx->GetHash())) {
+			if (uint256() != txCache.IsContainTx(pBaseTx->GetHash())) {
 				return ERRORMSG("VerifyPosTx duplicate tx hash:%s", pBaseTx->GetHash().GetHex());
 			}
 			CTxUndo txundo;
@@ -438,7 +438,7 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 					" computer PoS hash:%s \n"
 					" block PoS hash:%s\n", curhash.GetHex(),  pBlock->hashPos.GetHex());
 	}
-	if (curhash > adjusthash) {
+	if (UintToArith256(curhash) > UintToArith256(adjusthash)) {
 		return ERRORMSG("Account ProofOfWorkLimit error: \n"
 		           "   pos hash:%s \n"
 		           "adjust hash:%s\r\n", curhash.GetHex(), adjusthash.GetHex());
@@ -525,7 +525,7 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 					make_heap(vecPriority.begin(), vecPriority.end(), comparer);
 				}
 
-				if(uint256(0) != std::move(txCache.IsContainTx(std::move(pBaseTx->GetHash())))) {
+				if(uint256() != std::move(txCache.IsContainTx(std::move(pBaseTx->GetHash())))) {
 					LogPrint("INFO","CreatePosTx duplicate tx\n");
 					continue;
 				}
@@ -639,8 +639,8 @@ bool static MiningBlock(CBlock *pblock,CWallet *pwallet,CBlockIndex* pindexPrev,
 			return (lasttime = max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime()));
 		};
 
-		pblock->nTime = GetNextTimeAndSleep();	// max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
-
+		GetNextTimeAndSleep();	// max(pindexPrev->GetMedianTimePast() + 1, GetAdjustedTime());
+		UpdateTime(*pblock, pindexPrev);
 
 		if (pindexPrev != chainActive.Tip())
 			return false;
@@ -752,7 +752,7 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 		CScriptDBViewCache ScriptDbTemp(*pScriptDBTip, true);
 		shared_ptr<CBlockTemplate> pblocktemplate(CreateNewBlock(accview,txCache,ScriptDbTemp));
 		if (!pblocktemplate.get())
-			return false;
+			return uint256();
 		CBlock *pblock = &pblocktemplate.get()->block;
 
 //		int nBlockSize = pblock->GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
@@ -780,7 +780,7 @@ uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID)
 			}
 		}
 	}
-	return uint256(0);
+	return uint256();
 }
 
 void GenerateDacrsBlock(bool fGenerate, CWallet* pwallet, int targetHigh) {

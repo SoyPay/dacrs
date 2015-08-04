@@ -198,7 +198,7 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 		vector_unsigned_char accountid = GetAccountID(it);
 		if(accountid.size() == 6){
 			CRegID regId(accountid);
-			if(regId.IsEmpty() || regId.getKeyID( *m_view) == uint160(0))
+			if(regId.IsEmpty() || regId.getKeyID( *m_view) == uint160())
 				return false;
 			//  app only be allowed minus self money
 			if (!m_ScriptDBTip->HaveScript(regId) && it.opeatortype == MINUS_FREE) {

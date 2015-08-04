@@ -172,7 +172,7 @@ Value gettxdetail(const Array& params, bool fHelp) {
             + "\nAs json rpc call\n"
             + HelpExampleRpc("gettxdetail","c5287324b89793fdf7fa97b6203dfd814b8358cfa31114078ea5981916d7a8ac\n"));
 	}
-	uint256 txhash(params[0].get_str());
+	uint256 txhash(uint256S(params[0].get_str()));
 	return GetTxDetailJSON(txhash);
 }
 
@@ -808,7 +808,7 @@ Value gettxoperationlog(const Array& params, bool fHelp) {
 							"\"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000\""));
 	}
 	RPCTypeCheck(params, list_of(str_type));
-	uint256 txHash(params[0].get_str());
+	uint256 txHash(uint256S(params[0].get_str()));
 	vector<CAccountLog> vLog;
 	Object retobj;
 	retobj.push_back(Pair("hash", txHash.GetHex()));
@@ -930,7 +930,7 @@ Value resetclient(const Array& params, bool fHelp) {
 		assert(pTxCacheTip->GetSize() == 0);
 
 		CBlock firs = SysCfg().GenesisBlock();
-		pwalletMain->SyncTransaction(0, NULL, &firs);
+		pwalletMain->SyncTransaction(uint256(), NULL, &firs);
 		mempool.clear();
 	} else {
 		throw JSONRPCError(RPC_WALLET_ERROR, "restclient Error: Sign failed.");
@@ -1032,7 +1032,7 @@ Value generateblock(const Array& params, bool fHelp) {
 	}
 
 	uint256 hash = CreateBlockWithAppointedAddr(keyid);
-	if (hash == 0) {
+	if (hash.IsNull()) {
 		throw runtime_error("in generateblock :cannot generate block\n");
 	}
 	Object obj;
@@ -1252,7 +1252,7 @@ Value saveblocktofile(const Array& params, bool fHelp) {
 				+ HelpExampleRpc("saveblocktofile", "\"12345678901211111\" \"block.log\""));
 	}
 	string strblockhash = params[0].get_str();
-	uint256 blockHash(params[0].get_str());
+	uint256 blockHash(uint256S(params[0].get_str()));
 	CBlockIndex *pIndex = mapBlockIndex[blockHash];
 	CBlock blockInfo;
 	if (!pIndex || !ReadBlockFromDisk(blockInfo, pIndex))
@@ -1798,7 +1798,7 @@ Value getappkeyvalue(const Array& params, bool fHelp) {
 	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 
 	for (size_t i = 0; i < array.size(); i++) {
-		uint256 txhash(array[i].get_str());
+		uint256 txhash(uint256S(array[i].get_str()));
 		vector<unsigned char> key;	// = ParseHex(array[i].get_str());
 		key.insert(key.begin(), txhash.begin(), txhash.end());
 		vector<unsigned char> value;

@@ -68,7 +68,8 @@ DACRS_CORE_H = \
   util.h \
   version.h \
   wallet/wallet.h \
-  wallet/db.h 
+  wallet/db.h  \
+  arith_uint256.h 
 
 JSON_H = \
   json/json_spirit.h \
@@ -144,6 +145,7 @@ libdacrs_wallet_a_SOURCES = \
 libdacrs_common_a_SOURCES = \
   base58.cpp \
   allocators.cpp \
+  arith_uint256.cpp \
   chainparams.cpp \
   core.cpp \
   hash.cpp \
@@ -157,6 +159,7 @@ libdacrs_common_a_SOURCES = \
   syncdata.cpp \
   syncdatadb.cpp \
   util.cpp \
+  uint256.cpp \
   version.cpp \
   json/json_spirit_reader.cpp \
   json/json_spirit_value.cpp \

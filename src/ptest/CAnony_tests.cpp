@@ -132,12 +132,4 @@ BOOST_FIXTURE_TEST_CASE(Test,CAnonyTest)
 	Initialize();
 }
 
-BOOST_FIXTURE_TEST_CASE(test_num, CAnonyTest) {
-	uint256 unumber("0000000000d4a735ad6b5ad6b5ad6b5ad6b5ad6b5ad6b5ad6b5ad6b5ad6b5ad6");
-	CBigNum number1(unumber);
-	CBigNum  number2 = CBigNum(~uint256(0) >> 10);
-	if(number1 > number2 || number1 < 0) {
-		cout << "failed" << endl;
-	}
-}
 BOOST_AUTO_TEST_SUITE_END()
