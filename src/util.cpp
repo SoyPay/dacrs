@@ -67,7 +67,7 @@
 }
 
 using namespace std;
-
+size_t  nLogmaxsize = 0;  //the max size of log file,(MB)
 bool fDaemon = false;
 string strMiscWarning;
 bool fNoListen = false;
@@ -274,7 +274,37 @@ string GetLogHead(int line, const char* file, const char* category) {
 	}
 	return string("");
 }
-
+/**
+ *  日志文件预处理。写日志文件前被调用，检测文件是否超长。
+ *  当超长则先删除原文件，再创建新的文件。
+ * @param path  文件路径
+ * @param len  写入数据的长度
+ * @param stream  文件的句柄
+ * @return
+ */
+int LogFilePreProcess(const char *path,size_t len, FILE* stream)
+{
+    if((NULL == path) || (len <= 0) || (NULL == stream) )
+    {
+    	return -1;
+    }
+    int lSize = ftell(stream); //当前文件长度
+//    printf("LogFilePreProcess fileSize = %d datalen = %d nLogmaxsize = %d\n",lSize,len,nLogmaxsize);
+    if(lSize + len > nLogmaxsize * 1024 * 1024)
+    {   //文件超长，关闭，删除，再创建
+        FILE *fileout = NULL;
+//        printf("LogFilePreProcess logfile overload\n");
+        fclose(stream);
+        remove(path);
+		fileout = fopen(path, "a");
+		if (fileout) {
+//			lSize = ftell(fileout);//debug
+//		    printf("LogFilePreProcess lSize = %d \n",lSize);//debug
+			stream = fileout;
+		}
+    }
+    return 1;
+}
 int LogPrintStr(const char* category, const string &str) {
 
 	if (!SysCfg().IsDebug())
@@ -308,15 +338,23 @@ int LogPrintStr(const char* category, const string &str) {
 	if (SysCfg().IsPrintToFile()) {
 		DebugLogFile& log = it->second;
 		boost::mutex::scoped_lock scoped_lock(*log.m_mutexDebugLog);
+
+		boost::filesystem::path pathDebug;
+		string file = it->first + ".log";  //  it->first.c_str() = "INFO"
+		pathDebug = GetDataDir() / file;   // /home/share/bille/dacrs_test/regtest/INFO.log
 		// Debug print useful for profiling
 		if (SysCfg().IsLogTimestamps() && log.m_newLine) {
-			ret += fprintf(log.m_fileout, "%s ", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
+            string  timeFormat = DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime());
+     		LogFilePreProcess(pathDebug.string().c_str(),timeFormat.length() + 1, log.m_fileout);
+			ret += fprintf(log.m_fileout, "%s ", timeFormat.c_str());
+//			ret += fprintf(log.m_fileout, "%s ", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
 		}
 		if (!str.empty() && str[str.size() - 1] == '\n') {
 			log.m_newLine = true;
 		} else {
 			log.m_newLine = false;
 		}
+		LogFilePreProcess(pathDebug.string().c_str(),str.size(), log.m_fileout);
 		ret = fwrite(str.data(), 1, str.size(), log.m_fileout);
 	}
 	return ret;

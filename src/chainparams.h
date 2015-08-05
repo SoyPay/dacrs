@@ -84,7 +84,7 @@ public:
 		}
 
 	   nIntervalPos = GetArg("-intervalpos", 1440);
-
+	   nLogmaxsize = GetArg("-logmaxsize", 100); //MB
 		return true;
 	}
 	virtual string ToString() const {
