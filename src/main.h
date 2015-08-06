@@ -180,6 +180,9 @@ bool ActivateBestChain(CValidationState &state);
 int64_t GetBlockValue(int nHeight, int64_t nFees);
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
 
+/*calutate difficulty */
+double CaculateDifficulty(unsigned int nBits);
+
 /** receive checkpoint check make active chain accord to the checkpoint **/
 bool CheckActiveChain(int nHeight,  uint256 hash);
 

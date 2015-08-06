@@ -112,7 +112,11 @@ int GetElementForBurn(CBlockIndex* pindex)
 			if (0 == nAverageFeePerKb1 || 0 == nAverageFeePerKb2)
 				return pindex->nFuelRate;
 			else {
+				static int preNewFuelRate1(pindex->nFuelRate);
 				int newFuelRate = int(pindex->nFuelRate * (nAverageFeePerKb2 / nAverageFeePerKb1));
+				int newFuelRate1 = int(preNewFuelRate1 *double((double(nAverageFeePerKb1) / (double)nAverageFeePerKb2)));
+				preNewFuelRate1 = newFuelRate1;
+				LogPrint("newfuel", "preFuelRate1=%d newFuelRate1=%d, nHeight=%d, nAveragerFeePerKb1=%lf, nAverageFeePerKb2=%lf\n", preNewFuelRate1, newFuelRate1, pindex->nHeight, nAverageFeePerKb1, nAverageFeePerKb2);
 				if (newFuelRate < MIN_FUEL_RATES)
 					newFuelRate = MIN_FUEL_RATES;
 				LogPrint("fuel", "preFuelRate=%d fuelRate=%d, nHeight=%d, nAveragerFeePerKb1=%lf, nAverageFeePerKb2=%lf\n", pindex->nFuelRate, newFuelRate, pindex->nHeight, nAverageFeePerKb1, nAverageFeePerKb2);
