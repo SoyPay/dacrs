@@ -61,7 +61,7 @@ void CTxMemPool::ReScanMemPoolTx(CAccountViewCache *pAccountViewCacheIn, CScript
 		CValidationState state;
 		list<std::shared_ptr<CBaseTransaction> > removed;
 		for(map<uint256, CTxMemPoolEntry >::iterator iterTx = mapTx.begin(); iterTx != mapTx.end(); ) {
-			if (!CheckTxInMemPool(iterTx->first, iterTx->second, state, false)) {
+			if (!CheckTxInMemPool(iterTx->first, iterTx->second, state, true)) {
 				uint256 hash = iterTx->first;
 				iterTx = mapTx.erase(iterTx++);
 				uiInterface.RemoveTransaction(hash);
