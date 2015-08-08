@@ -42,10 +42,10 @@ class CVmRunEvn {
 	unsigned int RunTimeHeight;
 	CScriptDBViewCache *m_ScriptDBTip;
 	CAccountViewCache *m_view;
-	vector<CVmOperate> m_output;
+	vector<CVmOperate> m_output;   //保存操作结果
 
 
-	map<vector<unsigned char >,vector<CAppFundOperate> > MapAppOperate;
+	map<vector<unsigned char >,vector<CAppFundOperate> > MapAppOperate;  //vector<unsigned char > 存的是accountId
 	shared_ptr<vector<CScriptDBOperLog> > m_dblog;
 
 
@@ -89,7 +89,7 @@ private:
 	 * @return:Return account id
 	 */
 	vector_unsigned_char GetAccountID(CVmOperate value);
-	bool IsSignatureAccount(CRegID account);
+//	bool IsSignatureAccount(CRegID account);
 	bool OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFundOperate> > opMap, CScriptDBViewCache& view) ;
 public:
 	/**
@@ -149,7 +149,7 @@ enum ACCOUNT_TYPE {
  */
 class CVmOperate{
 public:
-	unsigned char nacctype;
+	unsigned char nacctype;      	//regid or base58addr
 	unsigned char accountid[34];	//!< accountid
 	unsigned char opeatortype;		//!OperType
 	unsigned int  outheight;		//!< the transacion Timeout height

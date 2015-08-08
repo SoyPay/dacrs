@@ -65,7 +65,6 @@ public:
 	}
 	virtual ~CUPReg() {
 	}
-	;
 	virtual T2& GetRegRe(void);
 	void SetAddr(INT8U Addr) {
 		m_Addr = Addr;
@@ -91,7 +90,6 @@ public:
 	}
 	virtual ~CUPSfr() {
 	}
-	;
 
 	virtual INT8U& GetRegRe();
 
@@ -108,7 +106,6 @@ public:
 	}
 	virtual ~CUPReg_a() {
 	}
-	;
 	void Updataflag();
 	virtual INT8U& GetRegRe();
 
@@ -234,10 +231,10 @@ class CVm8051 {
 	static const int MAX_ROM = 0xFFFF;
 	static const int MAX_EX_RAM = 0xFFFF;
 	static const int MAX_IN_RAM = 0xff;
-	static const int VM_SHARE_ADDR = 0xEFFF;
-	static const int VM_FUN_CALL_ADDR = 0xEFFD;
+	static const int VM_SHARE_ADDR = 0xEFFF;    //存放API需要传给系统的参数的缓冲区
+	static const int VM_FUN_CALL_ADDR = 0xEFFD; //存放API接口函数的编码 2个字节
 public:
-	static const int MAX_SHARE_RAM = 4*1024;
+	static const int MAX_SHARE_RAM = 4*1024;   //缓冲区大小0xEFFF-OxFFFF
 public:
 	void InitalReg();
 	CVm8051(const vector<unsigned char> & vRom,const vector<unsigned char> &InputData);
@@ -256,14 +253,14 @@ public:
 	INT8U& GetRamRef(INT8U addr);
 	INT8U& GetBitRamRef(INT8U addr) {
 		if (addr <= 0x7F) {
-			return m_ChipRam[(addr / 8) + 0x20];
+			return m_ChipRam[(addr / 8) + 0x20];   //片内RAM位寻址区0x20-0x2F
 		} else {
-			return m_ChipSfr[addr - ((addr - 0x80) % 8)];
+			return m_ChipSfr[addr - ((addr - 0x80) % 8)];//片外 位寻址区80,8f,..f8
 		}
 
 	}
 	INT16U GetLcallAddr(void);
-	void SubstitutionLcall(INT16U);
+//	void SubstitutionLcall(INT16U);
 
 	INT16U GetDebugOpcode(void) const;
 	bool GetDebugPC(INT16U pc) const;
@@ -278,10 +275,10 @@ private:
 
 	DebugRges d_Rges;
 	DebugSys d_Sys;
-	INT8U m_ChipRam[256];
-	INT8U m_ChipSfr[256];
-	INT8U m_ExRam[65536];
-	INT8U m_ExeFile[65536];
+	INT8U m_ChipRam[256];  //前128字节的内部RAM DATA区 00-7F
+	INT8U m_ChipSfr[256];  //特殊功能寄存器  80-FF
+	INT8U m_ExRam[65536];  //外部数据区	 XDATA	 64K
+	INT8U m_ExeFile[65536];//可执行文件
 //	INT8U m_ChipRamoper[256];
 
 	template<class T> friend class CUPReg;

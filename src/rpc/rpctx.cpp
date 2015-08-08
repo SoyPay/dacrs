@@ -262,7 +262,7 @@ Value registaccounttx(const Array& params, bool fHelp) {
 Value createcontracttx(const Array& params, bool fHelp) {
 	if (fHelp || params.size() < 5 || params.size() > 6) {
 	   throw runtime_error(
-			"createsecuretx \"userregid[\"addr\"]\" \"appid\" \"amount\" \"contract\" \"fee\" (\"height\")\n"
+			"createcontracttx \"userregid[\"addr\"]\" \"appid\" \"amount\" \"contract\" \"fee\" (\"height\")\n"
 			"\ncreate contract transaction\n"
 			"\nArguments:\n"
 			"1.\"userregid\": (string, required)\n"

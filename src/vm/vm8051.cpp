@@ -52,7 +52,7 @@ void CVm8051::InitalReg() {
 }
 
 CVm8051::CVm8051(const vector<unsigned char> & vRom, const vector<unsigned char> &InputData) :
-		Sys(this), Rges(this) {
+		Sys(this), Rges(this) { /*vRom 输入的是script,InputData 输入的是contract*/
 
 	InitalReg();
 	//INT16U addr = 0xFC00;
@@ -68,7 +68,7 @@ CVm8051::~CVm8051() {
 
 }
 
-typedef tuple<bool,int64_t,std::shared_ptr < std::vector< vector<unsigned char> > > > RET_DEFINE;
+typedef tuple<bool,int64_t,std::shared_ptr < std::vector< vector<unsigned char> > > > RET_DEFINE;   //int64_t 表示执行步骤step
 typedef tuple<bool,int64_t,std::shared_ptr < std::vector< vector<unsigned char> > > > (*pFun)(unsigned char *,void *);
 
 struct __MapExterFun {
@@ -936,7 +936,7 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmEvn)
 }
 /**
  *bool WriteOutput( const VM_OPERATE* data, const unsigned short conter)
- * 中间层传了一个参数
+ * 中间层传了一个参数 ,写 CVmOperate操作结果
  * 1.第一个是输出指令
  */
 static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmEvn)
@@ -1010,6 +1010,12 @@ static RET_DEFINE ExGetScriptDataFunc(unsigned char * ipara,void * pVmEvn)
 	return std::make_tuple (flag,0, tem);
 
 }
+/**
+ * 取目的账户ID
+ * @param ipara
+ * @param pVmEvn
+ * @return
+ */
 static RET_DEFINE ExGetScriptIDFunc(unsigned char * ipara,void * pVmEvn)
 {
 	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
@@ -1263,6 +1269,12 @@ static RET_DEFINE GetUserAppAccFoudWithTag(unsigned char * ipara,void * pVmScrip
 	return std::make_tuple (true,0, tem);
 
 }
+/**
+ *   写 应用操作输出到 pVmRunEvn->MapAppOperate[0]
+ * @param ipara
+ * @param pVmEvn
+ * @return
+ */
 static RET_DEFINE ExWriteOutAppOperateFunc(unsigned char * ipara,void * pVmEvn)
 {
 	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
@@ -1343,7 +1355,7 @@ enum CALL_API_FUN {
 	WRITEOUTPUT_FUNC,     //!<WRITEOUTPUT_FUNC
 	GETSCRIPTDATA_FUNC,		  //!<GETSCRIPTDATA_FUNC
 	GETSCRIPTID_FUNC,		  //!<GETSCRIPTID_FUNC
-	GETCURTXACCOUNT_FUNC,		  //!<GETSCRIPTID_FUNC
+	GETCURTXACCOUNT_FUNC,		  //!<GETCURTXACCOUNT_FUNC
 	GETCURTXCONTACT_FUNC,		 //!<GETCURTXCONTACT_FUNC
 	GETCURDECOMPRESSCONTACR_FUNC,   //!<GETCURDECOMPRESSCONTACR_FUNC
 	GETDECOMPRESSCONTACR_FUNC,   	//!<GETDECOMPRESSCONTACR_FUNC
@@ -1406,6 +1418,10 @@ int64_t CVm8051::run(uint64_t maxstep, CVmRunEvn *pVmEvn) {
 	INT8U code = 0;
 	uint64_t step = 0;
 
+	if(maxstep == 0){
+		return -1;
+	}
+
 	while (1) {
 		code = GetOpcode();
 		StepRun(code);
@@ -1435,14 +1451,14 @@ int64_t CVm8051::run(uint64_t maxstep, CVmRunEvn *pVmEvn) {
 					}
 				}
 			}
-		} else if (Sys.PC == 0x0008) {
+		} else if (Sys.PC == 0x0008) {   //要求退出
 			INT8U result = GetExRam(0xEFFD);
 			if (result == 0x01) {
 				return step;
 			}
 			return 0;
 		}
-		if (maxstep != 0 && (step >= MAX_BLOCK_RUN_STEP|| step >= maxstep)){//(step > maxstep || step >= MAX_BLOCK_RUN_STEP)) {
+		if (step >= MAX_BLOCK_RUN_STEP || step >= maxstep){//(step > maxstep || step >= MAX_BLOCK_RUN_STEP)) {
 			LogPrint("CONTRACT_TX", "failed step:%ld\n", step);
 			return -1;		//force return
 		}
@@ -1487,16 +1503,13 @@ bool CVm8051::run() {
 				}
 
 			}
-		}
-		if (Sys.PC == 0x0008) {
+		}else if (Sys.PC == 0x0008) {
+			INT8U result=GetExRam(0xEFFD);
+			if(result == 0x01)
 			{
-				INT8U result=GetExRam(0xEFFD);
-				if(result == 0x01)
-				{
-					return 1;
-				}
-				return 0;
+				return 1;
 			}
+			return 0;
 		}
 	}
 
@@ -2547,7 +2560,7 @@ bool CVm8051::GetBitFlag(INT8U addr) {
 void CVm8051::SetBitFlag(INT8U addr) {
 
 	GetBitRamRef(addr) |= (BIT0 << (addr % 8));
-	if (addr >= 0xe0 && addr <= 0xe7) { //this opcode A
+	if (addr >= 0xe0 && addr <= 0xe7) { // 操作的是 累加器A
 		Updata_A_P_Flag();
 	}
 }
@@ -2555,7 +2568,7 @@ void CVm8051::SetBitFlag(INT8U addr) {
 void CVm8051::ClrBitFlag(INT8U addr) {
 
 	GetBitRamRef(addr) &= (~(BIT0 << (addr % 8)));
-	if (addr >= 0xe0 && addr <= 0xe7) //this opcode A
+	if (addr >= 0xe0 && addr <= 0xe7) // 操作的是 累加器A
 			{
 		Updata_A_P_Flag();
 	}

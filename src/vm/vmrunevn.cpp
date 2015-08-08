@@ -87,7 +87,6 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 		maxstep = MAX_BLOCK_RUN_STEP;
 	}
 	LogPrint("vm", "tx hash:%s fees=%lld fuelrate=%lld maxstep:%d\n", Tx->GetHash().GetHex(), tx->llFees, nBurnFactor, maxstep);
-	tuple<bool, uint64_t, string> mytuple;
 	if (!intial(Tx, view, nHeight)) {
 		return std::make_tuple (false, 0, string("VmScript inital Failed\n"));
 	}
@@ -97,7 +96,6 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 		return std::make_tuple(false, 0, string("VmScript run Failed\n"));
 	} else if (-1 == step) {
 		return std::make_tuple(false, 0, string("execure tx contranct run step exceed the max step limit\n"));
-		//uRunStep = maxstep;
 	}else{
 		uRunStep = step;
 	}
@@ -289,7 +287,7 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 }
 
 const CRegID& CVmRunEvn::GetScriptRegID()
-{
+{   //获取目的账户ID
 	CTransaction* tx = static_cast<CTransaction*>(listTx.get());
 	return boost::get<CRegID>(tx->desUserId);
 }
@@ -346,6 +344,12 @@ shared_ptr<vector<CScriptDBOperLog> > CVmRunEvn::GetDbLog()
 	return m_dblog;
 }
 
+/**
+ * 从脚本数据库中，取指定账户的 应用账户信息,同时解冻冻结金额到自由金额
+ * @param vAppUserId   账户地址或regId
+ * @param sptrAcc
+ * @return
+ */
 bool CVmRunEvn::GetAppUserAccout(const vector<unsigned char> &vAppUserId, shared_ptr<CAppUserAccout> &sptrAcc) {
 	assert(m_ScriptDBTip != NULL);
 	shared_ptr<CAppUserAccout> tem = make_shared<CAppUserAccout>();
