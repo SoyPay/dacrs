@@ -241,6 +241,8 @@ Array RPCConvertValues(const string &strMethod, const vector<string> &strParams)
     if (strMethod == "registerscripttxraw"          && n > 7) ConvertTo<uint64_t>(params[7]);
     if (strMethod == "registerscripttxraw"          && n > 8) ConvertTo<uint64_t>(params[8]);
     if (strMethod == "registerscripttxraw"          && n > 9) ConvertTo<uint64_t>(params[9]);
+    if (strMethod == "getappaccinfo"          		&& n > 2) ConvertTo<int>(params[2]);
+    if (strMethod == "getscriptvalidedata"          && n > 3) ConvertTo<int>(params[3]);
     return params;
 }
 
