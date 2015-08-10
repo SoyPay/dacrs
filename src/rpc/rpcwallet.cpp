@@ -337,7 +337,9 @@ Value sendtoaddressraw(const Array& params, bool fHelp)
 	if(!GetUserID(params[3].get_str(),send)){
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid send address");
 	}
-
+	if(!pAccountViewTip->GetKeyId(send, sendKeyId)) {
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Get CKeyID failed from CUserID");
+	}
 	if(send.type() == typeid(CKeyID)){
 		CRegID regId;
 		if(!pAccountViewTip->GetRegId(send,regId)){
@@ -352,14 +354,17 @@ Value sendtoaddressraw(const Array& params, bool fHelp)
 
 	if(rev.type() == typeid(CKeyID)){
 		CRegID regId;
-		if(!pAccountViewTip->GetRegId(rev,regId)){
-			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "CKeyID is not registed ");
+		if(pAccountViewTip->GetRegId(rev,regId)){
+			rev = regId;
 		}
-		rev = regId;
 	}
 
 
 	std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(send,rev,Fee, nAmount,hight);
+	if (!pwalletMain->Sign(sendKeyId, tx->SignatureHash(), tx->signature)) {
+				throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
+	}
+
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 	ds << pBaseTx;

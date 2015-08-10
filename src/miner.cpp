@@ -76,7 +76,7 @@ public:
 uint64_t nLastBlockTx = 0;    // 块中交易的总笔数,不含coinbase
 uint64_t nLastBlockSize = 0;  //被创建的块 尺寸
 
-//base on the last 500 blocks
+//base on the last 50 blocks
 int GetElementForBurn(CBlockIndex* pindex)
 {
 	if (NULL == pindex) {
@@ -89,42 +89,62 @@ int GetElementForBurn(CBlockIndex* pindex)
 		int64_t nTotalFeePerKb(0);
 		int64_t nAverageFeePerKb1(0);
 		int64_t nAverageFeePerKb2(0);
+		int64_t nTotalStep(0);
+		int64_t nAverateStep(0);
 		CBlockIndex * pTemp = pindex;
-		if ((pindex->nHeight - 1) % nBlock == 0) {
-			for (int ii = 0; ii < nBlock; ii++) {
-				nTotalFeePerKb += int64_t(pTemp->dFeePerKb);
-				pTemp = pTemp->pprev;
-			}
-			if (pindex->nChainTx - pTemp->nChainTx < (unsigned int) 10 * nBlock) {
+		if(pindex->nHeight<=45000) {
+			if ((pindex->nHeight - 1) % nBlock == 0) {
+				for (int ii = 0; ii < nBlock; ii++) {
+					nTotalFeePerKb += int64_t(pTemp->dFeePerKb);
+					pTemp = pTemp->pprev;
+				}
+				if (pindex->nChainTx - pTemp->nChainTx < (unsigned int) 10 * nBlock) {
+					return pindex->nFuelRate;
+				}
+				uint64_t txNum = pTemp->nChainTx;
+				nAverageFeePerKb1 = nTotalFeePerKb / nBlock;
+				nTotalFeePerKb = 0;
+				for (int ii = 0; ii < nBlock; ii++) {
+					nTotalFeePerKb += int64_t(pTemp->dFeePerKb);
+					pTemp = pTemp->pprev;
+				}
+				nAverageFeePerKb2 = nTotalFeePerKb / nBlock;
+				if (txNum - pTemp->nChainTx < (unsigned int) 10 * nBlock) {
+					return pindex->nFuelRate;
+				}
+				if (0 == nAverageFeePerKb1 || 0 == nAverageFeePerKb2)
+					return pindex->nFuelRate;
+				else {
+					int newFuelRate = int(pindex->nFuelRate * (nAverageFeePerKb2 / nAverageFeePerKb1));
+					if (newFuelRate < MIN_FUEL_RATES)
+						newFuelRate = MIN_FUEL_RATES;
+					LogPrint("fuel", "preFuelRate=%d fuelRate=%d, nHeight=%d, nAveragerFeePerKb1=%lf, nAverageFeePerKb2=%lf\n", pindex->nFuelRate, newFuelRate, pindex->nHeight, nAverageFeePerKb1, nAverageFeePerKb2);
+					return newFuelRate;
+				}
+			}else {
 				return pindex->nFuelRate;
 			}
-			uint64_t txNum = pTemp->nChainTx;
-			nAverageFeePerKb1 = nTotalFeePerKb / nBlock;
-			nTotalFeePerKb = 0;
-			for (int ii = 0; ii < nBlock; ii++) {
-				nTotalFeePerKb += int64_t(pTemp->dFeePerKb);
-				pTemp = pTemp->pprev;
-			}
-			nAverageFeePerKb2 = nTotalFeePerKb / nBlock;
-			if (txNum - pTemp->nChainTx < (unsigned int) 10 * nBlock) {
-				return pindex->nFuelRate;
-			}
-			if (0 == nAverageFeePerKb1 || 0 == nAverageFeePerKb2)
-				return pindex->nFuelRate;
-			else {
-				static int preNewFuelRate1(pindex->nFuelRate);
-				int newFuelRate = int(pindex->nFuelRate * (nAverageFeePerKb2 / nAverageFeePerKb1));
-				int newFuelRate1 = int(preNewFuelRate1 *double((double(nAverageFeePerKb1) / (double)nAverageFeePerKb2)));
-				preNewFuelRate1 = newFuelRate1;
-				LogPrint("newfuel", "preFuelRate1=%d newFuelRate1=%d, nHeight=%d, nAveragerFeePerKb1=%lf, nAverageFeePerKb2=%lf\n", preNewFuelRate1, newFuelRate1, pindex->nHeight, nAverageFeePerKb1, nAverageFeePerKb2);
-				if (newFuelRate < MIN_FUEL_RATES)
-					newFuelRate = MIN_FUEL_RATES;
-				LogPrint("fuel", "preFuelRate=%d fuelRate=%d, nHeight=%d, nAveragerFeePerKb1=%lf, nAverageFeePerKb2=%lf\n", pindex->nFuelRate, newFuelRate, pindex->nHeight, nAverageFeePerKb1, nAverageFeePerKb2);
-				return newFuelRate;
-			}
-		}else {
-			return pindex->nFuelRate;
 		}
+		else {
+			for (int ii = 0; ii < nBlock; ii++) {
+				nTotalStep += pTemp->nFuel / pTemp->nFuelRate * 100;
+				pTemp = pTemp->pprev;
+			}
+			nAverateStep = nTotalStep / nBlock;
+			int newFuelRate(0);
+			if (nAverateStep < MAX_BLOCK_RUN_STEP * 0.75) {
+				newFuelRate = pindex->nFuelRate * 0.9;
+			} else if (nAverateStep > MAX_BLOCK_RUN_STEP * 0.85) {
+				newFuelRate = pindex->nFuelRate * 1.1;
+			} else {
+				newFuelRate = pindex->nFuelRate;
+			}
+			if (newFuelRate < MIN_FUEL_RATES)
+				newFuelRate = MIN_FUEL_RATES;
+			LogPrint("fuel", "preFuelRate=%d fuelRate=%d, nHeight=%d\n", pindex->nFuelRate, newFuelRate, pindex->nHeight);
+			return newFuelRate;
+		}
+
 	}
 }
 

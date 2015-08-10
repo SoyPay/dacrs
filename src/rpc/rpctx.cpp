@@ -52,7 +52,7 @@ static bool GetKeyId(string const &addr, CKeyID &KeyId) {
 	}
 	return true;
 }
-;
+
 
 Object TxToJSON(CBaseTransaction *pTx) {
 
@@ -1193,17 +1193,24 @@ Value getscriptdata(const Array& params, bool fHelp) {
 }
 
 Value getscriptvalidedata(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 3) {
+	if (fHelp || (params.size() != 3 && params.size() !=4)) {
 		throw runtime_error("getscriptvalidedata \"scriptid\" \"pagesize\" \"index\"\n"
 					"\nget script valide data\n"
 					"\nArguments:\n"
 					"1.\"scriptid\": (string, required)\n"
 					"2.\"pagesize\": (int, required)\n"
 					"3.\"index\": (int, required )\n"
+					"4.\"minconf\":  (numeric, optional, default=1) Only include contract transactions confirmed \n"
 				    "\nResult:\n"
 				    "\nExamples:\n"
 				    + HelpExampleCli("getscriptvalidedata", "\"123456789012\" \"1\"  \"1\"")
 				    + HelpExampleRpc("getscriptvalidedata", "\"123456789012\" \"1\"  \"1\""));
+	}
+	std::shared_ptr<CScriptDBViewCache> pAccountViewCache;
+	if(4 == params.size() && 0==params[3].get_int()) {
+		pAccountViewCache.reset(new CScriptDBViewCache(*mempool.pScriptDBViewCache, true));
+	}else {
+		pAccountViewCache.reset(new CScriptDBViewCache(*pScriptDBTip, true));
 	}
 	int height = chainActive.Height();
 	RPCTypeCheck(params, list_of(str_type)(int_type)(int_type));
@@ -1212,11 +1219,10 @@ Value getscriptvalidedata(const Array& params, bool fHelp) {
 		throw runtime_error("in getscriptdata :vscriptid size is error!\n");
 	}
 
-	if (!pScriptDBTip->HaveScript(regid)) {
+	if (!pAccountViewCache->HaveScript(regid)) {
 		throw runtime_error("in getscriptdata :vscriptid id is exist!\n");
 	}
 	Object obj;
-	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 	int pagesize = params[1].get_int();
 	int nIndex = params[2].get_int();
 
@@ -1227,7 +1233,7 @@ Value getscriptvalidedata(const Array& params, bool fHelp) {
 	std::vector<unsigned char> vValue;
 	Array retArray;
 	int nReadCount = 0;
-	while (contractScriptTemp.GetScriptData(height, regid, 1, vScriptKey, vValue)) {
+	while (pAccountViewCache->GetScriptData(height, regid, 1, vScriptKey, vValue)) {
 		Object item;
 		++nReadCount;
 		if (nReadCount > pagesize * (nIndex - 1)) {
@@ -1707,19 +1713,20 @@ Value printblokdbinfo(const Array& params, bool fHelp) {
 }
 
 Value getappaccinfo(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 2) {
+	if (fHelp || (params.size() != 2 && params.size() != 3)) {
 		throw runtime_error("getappaccinfo  \"scriptid\" \"address\""
 				"\nget appaccount info\n"
 				"\nArguments:\n"
-				"1.\"scriptid\": (string, required) \n"
+				"1.\"scriptid\":(string, required) \n"
 				"2.\"address\": (string, required) \n"
+				"3.\"minconf\"  (numeric, optional, default=1) Only include contract transactions confirmed \n"
 				"\nExamples:\n"
 				+ HelpExampleCli("getappaccinfo", "\"000000100000\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"")
 				+ "\nAs json rpc call\n"
 				+ HelpExampleRpc("getappaccinfo", "\"000000100000\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\""));
 	}
 
-	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+
 	CRegID script(params[0].get_str());
 	vector<unsigned char> key;
 
@@ -1730,12 +1737,21 @@ Value getappaccinfo(const Array& params, bool fHelp) {
 		string addr = params[1].get_str();
 		key.assign(addr.c_str(), addr.c_str() + addr.length());
 	}
-
-
 	std::shared_ptr<CAppUserAccout> tem = make_shared<CAppUserAccout>();
-	if (!contractScriptTemp.GetScriptAcc(script, key, *tem.get())) {
+	if(params.size() == 3 && 0 == params[2].get_int())
+	{
+
+		CScriptDBViewCache contractScriptTemp(*mempool.pScriptDBViewCache, true);
+		if (!contractScriptTemp.GetScriptAcc(script, key, *tem.get())) {
 			tem = make_shared<CAppUserAccout>(key);
+		}
+	}else {
+		CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+		if (!contractScriptTemp.GetScriptAcc(script, key, *tem.get())) {
+			tem = make_shared<CAppUserAccout>(key);
+		}
 	}
+
 	tem.get()->AutoMergeFreezeToFree(chainActive.Tip()->nHeight);
 	return Value(tem.get()->toJSON());
 }
