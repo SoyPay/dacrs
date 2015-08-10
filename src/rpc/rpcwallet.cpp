@@ -374,11 +374,11 @@ Value sendtoaddress(const Array& params, bool fHelp)
 	int size = params.size();
 	if (fHelp || (!(size == 2 || size == 3)))
 		throw runtime_error(
-						"sendtoaddress \"Dacrsaddress\" (\"receive address\")\"amount\"\n"
+						"sendtoaddress (\"Dacrsaddress\") \"receive address\" \"amount\"\n"
 						"\nSend an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
 						+ HelpRequiringPassphrase() + "\nArguments:\n"
-						"1. \"Dacrsaddress\"  (string, required) The Dacrs address to send to.\n"
-						"2. receive address   (string, optional) \n"
+						"1. \"Dacrsaddress\"  (string, optional) The Dacrs address to send to.\n"
+						"2. receive address   (string, required) The Dacrs address to receive\n"
 						"3.\"amount\"   (string, required) \n"
 						"\nResult:\n"
 						"\"transactionid\"  (string) The transaction id.\n"
