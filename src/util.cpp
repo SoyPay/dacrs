@@ -275,32 +275,42 @@ string GetLogHead(int line, const char* file, const char* category) {
 	return string("");
 }
 /**
- *  日志文件预处理。写日志文件前被调用，检测文件是否超长。
- *  当超长则先删除原文件，再创建新的文件。
+ *  日志文件预处理。写日志文件前被调用，检测文件A是否超长。
+ *  当超长则先将原文件A重命名为Abak，再打开并创建A文件，删除重命名文件Abak，返回。
  * @param path  文件路径
  * @param len  写入数据的长度
  * @param stream  文件的句柄
  * @return
  */
-int LogFilePreProcess(const char *path,size_t len, FILE* stream)
+int LogFilePreProcess(const char *path,size_t len, FILE** stream)
 {
-    if((NULL == path) || (len <= 0) || (NULL == stream) )
+    if((NULL == path) || (len <= 0) || (NULL == *stream) )
     {
+    	assert(0);
     	return -1;
     }
-    int lSize = ftell(stream); //当前文件长度
-//    printf("LogFilePreProcess fileSize = %d datalen = %d nLogmaxsize = %d\n",lSize,len,nLogmaxsize);
+    int lSize = ftell(*stream); //当前文件长度
     if(lSize + len > nLogmaxsize * 1024 * 1024)
     {   //文件超长，关闭，删除，再创建
         FILE *fileout = NULL;
-//        printf("LogFilePreProcess logfile overload\n");
-        fclose(stream);
-        remove(path);
-		fileout = fopen(path, "a");
+        cout<<"file name:" << path <<"free point:"<< static_cast<const void*>(*stream)<< "lSize: "<< lSize << "len: " << len<<endl;
+        fclose(*stream);
+
+        string bkFile = strprintf("%sbak", path);
+        rename(path, bkFile.c_str());  //原文件重命名
+		fileout = fopen(path, "a+");   //重新打开， 类似于删除文件.
 		if (fileout) {
-//			lSize = ftell(fileout);//debug
-//		    printf("LogFilePreProcess lSize = %d \n",lSize);//debug
-			stream = fileout;
+			cout << "file new:" <<static_cast<const void*>(fileout) << endl;
+			*stream = fileout;
+			 if(remove(bkFile.c_str()) != 0)   //删除重命名文件
+			 {
+				 assert(0);
+				 return -1;
+			 }
+		}
+		else{
+           cout<<"LogFilePreProcess create new file err"<<endl;
+           return -1;
 		}
     }
     return 1;
@@ -345,7 +355,7 @@ int LogPrintStr(const char* category, const string &str) {
 		// Debug print useful for profiling
 		if (SysCfg().IsLogTimestamps() && log.m_newLine) {
             string  timeFormat = DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime());
-     		LogFilePreProcess(pathDebug.string().c_str(),timeFormat.length() + 1, log.m_fileout);
+     		LogFilePreProcess(pathDebug.string().c_str(),timeFormat.length() + 1, &log.m_fileout);
 			ret += fprintf(log.m_fileout, "%s ", timeFormat.c_str());
 //			ret += fprintf(log.m_fileout, "%s ", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
 		}
@@ -354,7 +364,7 @@ int LogPrintStr(const char* category, const string &str) {
 		} else {
 			log.m_newLine = false;
 		}
-		LogFilePreProcess(pathDebug.string().c_str(),str.size(), log.m_fileout);
+		LogFilePreProcess(pathDebug.string().c_str(),str.size(), &log.m_fileout);
 		ret = fwrite(str.data(), 1, str.size(), log.m_fileout);
 	}
 	return ret;
