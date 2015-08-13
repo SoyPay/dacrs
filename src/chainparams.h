@@ -51,12 +51,13 @@ protected:
 	mutable bool fTxIndex;
 	mutable int64_t nTimeBestReceived;
 	mutable int64_t paytxfee;
-	int64_t nTargetSpacing;
+	int64_t nTargetSpacing;   //用于限制一个块产生的时间
 	int64_t nTargetTimespan;
 	mutable unsigned int nScriptCheckThreads;
 	mutable int64_t nViewCacheSize;
 	mutable int nTxCacheHeight;
-	mutable int nIntervalPos;
+	mutable int nIntervalPos; //用于限制矿工 挖矿的 块间隔
+	int nLogmaxsize; // byte  用于限制日志文件的最大长度
 
 public:
 
@@ -84,7 +85,7 @@ public:
 		}
 
 	   nIntervalPos = GetArg("-intervalpos", 1440);
-	   nLogmaxsize = GetArg("-logmaxsize", 100); //MB
+	   nLogmaxsize = GetArg("-logmaxsize", 100) * 1024 * 1024;
 		return true;
 	}
 	virtual string ToString() const {
@@ -118,6 +119,7 @@ public:
 		te += strprintf("nViewCacheSize:%d\n",nViewCacheSize);
 		te += strprintf("nTxCacheHeight:%d\n",nTxCacheHeight);
 		te += strprintf("nIntervalPos:%d\n",nIntervalPos);
+		te += strprintf("nLogmaxsize:%d\n",nLogmaxsize);
 
 		return te;
 	}
@@ -219,6 +221,10 @@ public:
 	}
 	int GetIntervalPos() const {
 		return nIntervalPos;
+	}
+	int GetLogMaxSize() const
+	{
+		return nLogmaxsize;
 	}
 	int GetMaxDay() const
 	{

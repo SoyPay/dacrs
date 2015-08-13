@@ -67,7 +67,7 @@
 }
 
 using namespace std;
-size_t  nLogmaxsize = 0;  //the max size of log file,(MB)
+
 bool fDaemon = false;
 string strMiscWarning;
 bool fNoListen = false;
@@ -290,7 +290,7 @@ int LogFilePreProcess(const char *path,size_t len, FILE** stream)
     	return -1;
     }
     int lSize = ftell(*stream); //当前文件长度
-    if(lSize + len > nLogmaxsize * 1024 * 1024)
+    if(lSize + len > (size_t)SysCfg().GetLogMaxSize())
     {   //文件超长，关闭，删除，再创建
         FILE *fileout = NULL;
         cout<<"file name:" << path <<"free point:"<< static_cast<const void*>(*stream)<< "lSize: "<< lSize << "len: " << len<<endl;

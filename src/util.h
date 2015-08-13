@@ -88,8 +88,8 @@ inline void MilliSleep(int64_t n) {
 #error missing boost sleep implementation
 #endif
 }
-extern size_t  nLogmaxsize;
-extern bool fServer;
+
+
 extern string strMiscWarning;
 extern bool fNoListen;
 extern volatile bool fReopenDebugLog;
