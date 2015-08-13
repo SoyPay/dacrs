@@ -48,6 +48,35 @@ typedef struct tagdddd{
 const int64_t totalSendMoney =  2677621584404177;   //二期IPO第三批发币总额
 IPO_DATA arrayData[]=
 {
+		/*=================一期IPO测试发币==============================*/
+		{"dyjC8fuSoVGpepRGi8F2SridVX4VjykLG4",	10000000}, //
+		{"dfLo3CHErzWPrxRtthMiitcoGkrR6DskiF",	11000000},
+		{"dwpwbNeGEP9bZzFfNnn4gK96LKNA83R93D",	12000000},
+		{"e1eHyMk4D9oeUnKsiDjS8KLkpGVRAbPfW6",	13000000},
+		{"diANoyDdGjvdsYxjrSpcVW4kFSkdEj21PD",	14000000},
+		{"dq6uutNhgA4y7eUQzZ6kg7NQ4NjzCqnBxa",	15000000},
+		{"dq4Y9XAMDH8tGKZ5vVeYBgMgRS82yuz9qK",	16000000},
+		{"dqvbTqp5jhLbdHKUERRdzwdnNJSv43boSq",	17000000}, //
+		{"diNzPQ7z9UDcrWXngsB8eGFJCa58rsb37N",	18000000},
+		{"diMKZ6cBrcxqnSiXsDEgdPawQPbTdWBEdj",	19000000},
+
+		{"dfraKJQTwBSHNhLSQqtdfNAf5xdwK5PBK5",	20000000},
+		{"dgVST4WVoovPv9QFJAQXbK2c6EiGG4Xctd",	21000000},
+		{"dp2KppVD9zs1kjv3NFp3U5kJEfH6ySE1nQ",	22000000},
+		{"doPQqPTnGxVBsagnrVV2KnFdquRA6tgdRQ",	23000000},
+		{"dsJbNVc2zWw9ufvPyyefbAExkZZdEoQxBS",	24000000},
+		{"ddQGMYmLjQyP5SQMxgrKTxCWNExBYmR4uL",	25000000}, //
+		{"dmuN4nEUzYpU88HbdcE6D92e3vW3KRvzWR",	26000000},
+		{"dyyHw8BtjPNGMF1E4kzJpvacNcLsbHh93x",	27000000},
+		{"e22z8yqDnoxsrp5YSkdHFzERv9G3ZnVo2u",	28000000},
+		{"djxpDZTnLfpfY6qj2LPidrEf7EHoYR3TYP",	29000000},
+
+		{"e1nu3RPuipEgsoJGRxHjT9Gzj57o9DcoPY",	30000000},
+		{"dn5qSRmqE3uaRoNEkZ28oek1pvA8Nk61j4",	31000000},
+		{"dw5CpSdvPYsXta7gysmtMmUjE4XwdSdcx5",	32000000},
+		{"dyCEnBvsZNfwRNFoM4TrYQAr1yKxWGFqP1",	33000000},//
+		{"dyY64JRvdtGTpu8KiJqfpPvLc6AShpkTiY",	34000000},
+
 		/*=================二期IPO第一批发币==============================
 		{"DiNgnLSgpXriHG3F9ja4uRNy6KqWACRHhm",	629064563190821         },
 		{"DrpuDyNKxW9ZQdEaGQfqqE8FG4JS1NGvXU",	255316412689406         },
@@ -140,7 +169,7 @@ IPO_DATA arrayData[]=
 		{"Dg7iqYXABJu53ymffxKgc1Bk4K9W1UonJ6",  178080000000000  }
 		*/
 		/*=================二期IPO第三批发币==============================*/
-		{"DUf8eyPR6XdNrzryd5J61HbKHvSMsMB6AG",	241805652793523   },
+/*		{"DUf8eyPR6XdNrzryd5J61HbKHvSMsMB6AG",	241805652793523   },
 		{"Dppfoo66R2JnHyGaYHDVAQeEh4VNycv5Jw",	237895142961445   },
 		{"DagEgfLcoBch6QHjBHZwGv3d8a7yNUZvq4",	101203390268344   },
 		{"DeJ7imC7baVdsU3d9uvwGPXTSQ8xKVtXAa",	18856210281645    },
@@ -161,7 +190,7 @@ IPO_DATA arrayData[]=
 		{"De6fbY6YhXLdwYxnHtn5UaLz5sv3AnYgAF",	89040000000000    },
 		{"DYU1ACJNFRMiJ8hjmJrTPWPsEmNrmPAYL5",	44520000000000    },
 		{"Dc6ChgzzEHyWWgPYM7WFVfebo33naQL67n",	43680000000000    }
-
+*/
 
 		/*测试发币
 		{"e1pzvqWNDezm3DNqoTZgVEWZ4avBgWe2c5",	629064563190821         },
@@ -237,7 +266,7 @@ IPO_DATA arrayData[]=
 
 
 
-#define max_user 100
+#define max_user 25   // 100
 
 
 static IPO_USER userarray[max_user];
@@ -273,7 +302,7 @@ TEST_STATE CIpoTest::Run(){
 //	}
 //	file.close();
 
-
+#if 0
 	for (int i = 0; i < max_user; i++) {
 		string newaddr;
 		BOOST_CHECK(basetest.GetNewAddr(newaddr, true));
@@ -282,7 +311,21 @@ TEST_STATE CIpoTest::Run(){
 		userarray[i].freemoney = 200;
 		userarray[i].freeMothmoney = 22;
 	}
+#else
+	for (int i = 0; i < max_user; i++) {
+		memcpy((char*)userarray[i].address,(char*)arrayData[i].pAddress,sizeof(userarray[i].address));
+		userarray[i].money = arrayData[i].nMoney;
+		userarray[i].freeMothmoney = arrayData[i].nMoney / 12;
+		userarray[i].freemoney = userarray[i].money - userarray[i].freeMothmoney * (12 - 1);
+//		cout<<"newaddr"<<i<<"address="<<userarray[i].address<<endl;
+//		cout<<"newaddr"<<i<<"money="<<userarray[i].money<<endl;
+//		cout<<"newaddr"<<i<<"freemoney="<<userarray[i].freemoney<<endl;
+//		cout<<"newaddr"<<i<<"freeMothmoney="<<userarray[i].freeMothmoney<<endl;
+	}
+#endif
 
+
+#if 0
     // 注册ipo脚本
 	RegistScript();
 
@@ -293,6 +336,11 @@ TEST_STATE CIpoTest::Run(){
 					break;
 				}
 	}
+#else
+	strAppRegId = "2-1";
+#endif
+
+#if 0
 	/// 给每个地址转一定的金额
 	int64_t money = COIN;
 	for(int i=0;i <max_user;i++)
@@ -308,10 +356,11 @@ TEST_STATE CIpoTest::Run(){
 			break;
 		MilliSleep(100);
 	}
-
+#endif
    cout<<"SendIpoTx start"<<endl;
 	SendIpoTx();
 	 cout<<"SendIpoTx end"<<endl;
+	return end_state;
 }
 
 bool CIpoTest::RegistScript(){
