@@ -434,7 +434,7 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 				GetHash().GetHex());
 		set<CKeyID> vAddress;
 		vector<std::shared_ptr<CAccount> > &vAccount = vmRunEvn.GetNewAccont();
-		for (auto & itemAccount : vAccount) {
+		for (auto & itemAccount : vAccount) {  //更新对应的合约交易的账户信息
 			vAddress.insert(itemAccount->keyID);
 			userId = itemAccount->keyID;
 			CAccount oldAcct;

@@ -277,8 +277,8 @@ private:
 	DebugSys d_Sys;
 	INT8U m_ChipRam[256];  //前128字节的内部RAM DATA区 00-7F
 	INT8U m_ChipSfr[256];  //特殊功能寄存器  80-FF
-	INT8U m_ExRam[65536];  //外部数据区	 XDATA	 64K
-	INT8U m_ExeFile[65536];//可执行文件
+	INT8U m_ExRam[65536];  //外部数据区	 XDATA	 64K    VM_SHARE_ADDR(0xEFFF)存放的是合约交易的contact内容
+	INT8U m_ExeFile[65536];//可执行文件 IpboApp.bin
 //	INT8U m_ChipRamoper[256];
 
 	template<class T> friend class CUPReg;
