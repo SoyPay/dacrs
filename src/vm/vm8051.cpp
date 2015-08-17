@@ -1092,7 +1092,6 @@ static bool Decompress(vector<unsigned char>& format,vector<unsigned char> &cont
 					break;
 				}
 				case NO_TYPE:
-				default:
 				{
 					unsigned char temp = 0;
 					item++;
@@ -1102,6 +1101,10 @@ static bool Decompress(vector<unsigned char>& format,vector<unsigned char> &cont
 						retdata<<temp;
 					}
 					break;
+				}
+				default:
+				{
+				   return ERRORMSG("%s\r\n",__FUNCTION__);
 				}
 			}
 		}
