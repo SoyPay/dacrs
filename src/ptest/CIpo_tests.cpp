@@ -45,12 +45,38 @@ typedef struct tagdddd{
 
 //const int64_t totalSendMoney = 10825192381120926; //二期IPO第一批发币总额
 //const int64_t totalSendMoney =  2711374031363492; //二期IPO第二批发币总额
-const int64_t totalSendMoney =  2677621584404177;   //二期IPO第三批发币总额
+//const int64_t totalSendMoney =  2677621584404177; //二期IPO第三批发币总额
+const int64_t totalSendMoney = 19164400000000000;   //一期IPO分发总额
+
 IPO_DATA arrayData[]=
 {
-		/*=================一期IPO测试发币==============================*/
-		{"e25yeCu7cnXoDvmFQKD7EBtzPwqnfTLxeZ",10000},
-		{"e25tVamqF543WUF9RZKfCpXkpSYoxqsiCM",15000},
+		/*=================一期IPO发币地址==============================*/
+		  { "Do9W61KiBCrtJpQZDELtbrJYVbcuuYhXDv",       305000000000000	},
+		  { "DrumFsuGwFzmhDRGgYrzPh4i7sHiSp3iJE",      1260000000000000 },
+		  { "DnKUZMvwXfprFCKhnsWRsbJTNnRZg88T2F",      1260000000000000 },
+		  { "DmznNupXTsmr96w5PTwjx4rGkfXq5u9Gs7",       61000000000000	},
+		  { "DftLSeJrMjJJ3UPeehNgArhcoAuDN5422E",      4250000000000000 },
+		  { "DZKGAkCpT7rofuz7gWgYS1McNnqajUZJqv",       366000000000000	},
+		  { "DYy8MCFATjamvwEUrfun572entvE7hkrGy",      1686000000000000 },
+		  { "Dg2dq98hcm84po3RX354SzVyE6DLpxq3QR",      2730000000000000 },
+		  { "DrdA3g2edBY6iLR2FxN2nKoPPhgKD9gYgs",       122000000000000	},
+		  { "DnGm7rGyeWchyVJS3VF1mgNyQRjgutphDN",       244000000000000	},
+		  { "DXL9ZKSGf3KzJh75gqzb6svbzcyiXb9VNA",       122000000000000	},
+		  { "Dpjs5pvXmZbVt3uDEfBrMNbCsWjJzjm8XA",       134200000000000	},
+		  { "DZYDEn8CZuwgJ6YS6Zm7VvKaFc6E6tGstz",       134200000000000	},
+		  { "DrFEC23FSRYVLKUKCzDh5i5BLcWD1FPtUy",       854000000000000	},
+		  { "DVmVcFtVMRBKuv1JDJVbKQLt1TH8kEtFtW",       239880000000000	},
+		  { "DrFEC23FSRYVLKUKCzDh5i5BLcWD1FPtUy",       600000000000000	},
+		  { "DhhGix9J3n8dDvN3zcDi8DTJBSqi1nEe7Z",       600000000000000	},
+		  { "DghcznoUhcP8dfZoqT7xoBXw7cbcC72bVw",       720000000000000	},
+		  { "DVtwoZaHtcsyxuphPiG3saazLo9sr7QCeK",       240000000000000	},
+		  { "DcyumTafQsSh4hJo4V6DaS23Dd2QnpMXKH",      1940000000000000 },
+		  { "DgvRvQHLuPtbPtEcR8Am7RicmsqhRpZ8xt",       240000000000000	},
+		  { "DhFhqaH8wcb5TSsA4DYEYv4SiKTA4smn1T",       480000000000000	},
+		  { "Dfkhj8sFCEr4FGPHwj7Qyf3aTQqmxJNW2q",       120000000000000	},
+		  { "DhgrzBsyhWaLj4TAvdddsqmyg5W8ABcdM5",       385080000000000	},
+		  { "Dg7iqYXABJu53ymffxKgc1Bk4K9W1UonJ6",       71040000000000	}
+
 #if 0
 		{"dyjC8fuSoVGpepRGi8F2SridVX4VjykLG4",	10000000}, //
 		{"dfLo3CHErzWPrxRtthMiitcoGkrR6DskiF",	11000000},
