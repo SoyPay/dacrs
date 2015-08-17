@@ -245,6 +245,8 @@ public:
 	bool PrintLog();
 
 	bool IsMemoryPoolEmpty();
+
+	Value GetAppAccountInfo(const string& scriptId,const string& strAddr);
 protected:
 	static boost::thread* pThreadShutdown ;
 	std::map<string, AccState> mapAccState;

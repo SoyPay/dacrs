@@ -49,6 +49,9 @@ const int64_t totalSendMoney =  2677621584404177;   //二期IPO第三批发币总额
 IPO_DATA arrayData[]=
 {
 		/*=================一期IPO测试发币==============================*/
+		{"e25yeCu7cnXoDvmFQKD7EBtzPwqnfTLxeZ",10000},
+		{"e25tVamqF543WUF9RZKfCpXkpSYoxqsiCM",15000},
+#if 0
 		{"dyjC8fuSoVGpepRGi8F2SridVX4VjykLG4",	10000000}, //
 		{"dfLo3CHErzWPrxRtthMiitcoGkrR6DskiF",	11000000},
 		{"dwpwbNeGEP9bZzFfNnn4gK96LKNA83R93D",	12000000},
@@ -76,7 +79,7 @@ IPO_DATA arrayData[]=
 		{"dw5CpSdvPYsXta7gysmtMmUjE4XwdSdcx5",	32000000},
 		{"dyCEnBvsZNfwRNFoM4TrYQAr1yKxWGFqP1",	33000000},//
 		{"dyY64JRvdtGTpu8KiJqfpPvLc6AShpkTiY",	34000000},
-
+#endif
 		/*=================二期IPO第一批发币==============================
 		{"DiNgnLSgpXriHG3F9ja4uRNy6KqWACRHhm",	629064563190821         },
 		{"DrpuDyNKxW9ZQdEaGQfqqE8FG4JS1NGvXU",	255316412689406         },
@@ -266,7 +269,7 @@ IPO_DATA arrayData[]=
 
 
 
-#define max_user 25   // 100
+#define max_user   300 //100
 
 
 static IPO_USER userarray[max_user];
@@ -275,55 +278,23 @@ CIpoTest::CIpoTest():nNum(0), nStep(0), strTxHash(""), strAppRegId("") {
 }
 
 TEST_STATE CIpoTest::Run(){
-
-//	int addrcount = 0;
-//    ifstream file;
-//    string strCurDir ="/home/share/bess/dacrs_test/ipo.txt";
-//	file.open(strCurDir, ios::in | ios::ate);
-//	if (!file.is_open())
-//		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
-//
-//	file.seekg(0, file.beg);
-//	if (file.good()){
-//		Value reply;
-//		json_spirit::read(file,reply);
-//		const Array & keyarry = reply.get_array();
-//		for(auto const &keyItem :keyarry)
-//		{
-//			string addr = find_value(keyItem.get_obj(), "addr").get_str();
-//			memcpy((char*)userarray[addrcount].address,(char*)addr.c_str(),sizeof(userarray[addrcount].address));
-//			userarray[addrcount].money  = find_value(keyItem.get_obj(), "money").get_int64();
-//			userarray[addrcount].freemoney = find_value(keyItem.get_obj(), "freemoney").get_int64();
-//			userarray[addrcount].freeMothmoney = find_value(keyItem.get_obj(), "freeMothmoney").get_int64();
-//			addrcount++;
-//			if(addrcount == (max_user -1))
-//				break;
-//		}
-//	}
-//	file.close();
-
-#if 0
-	for (int i = 0; i < max_user; i++) {
-		string newaddr;
-		BOOST_CHECK(basetest.GetNewAddr(newaddr, true));
-		memcpy((char*)userarray[i].address,(char*)newaddr.c_str(),sizeof(userarray[i].address));
-		userarray[i].money = 10000;
-		userarray[i].freemoney = 200;
-		userarray[i].freeMothmoney = 22;
-	}
-#else
-	for (int i = 0; i < max_user; i++) {
+	int64_t nMoneySend(0);
+	size_t t_num = sizeof(arrayData) / sizeof(arrayData[0]);
+	BOOST_CHECK(t_num <= max_user);         //防止越界
+	//初始化地址表
+	for (size_t i = 0; i < t_num; i++) {
 		memcpy((char*)userarray[i].address,(char*)arrayData[i].pAddress,sizeof(userarray[i].address));
 		userarray[i].money = arrayData[i].nMoney;
 		userarray[i].freeMothmoney = arrayData[i].nMoney / 12;
 		userarray[i].freemoney = userarray[i].money - userarray[i].freeMothmoney * (12 - 1);
+		nMoneySend += userarray[i].money;  //统计总金额
+
 //		cout<<"newaddr"<<i<<"address="<<userarray[i].address<<endl;
 //		cout<<"newaddr"<<i<<"money="<<userarray[i].money<<endl;
 //		cout<<"newaddr"<<i<<"freemoney="<<userarray[i].freemoney<<endl;
 //		cout<<"newaddr"<<i<<"freeMothmoney="<<userarray[i].freeMothmoney<<endl;
 	}
-#endif
-
+	BOOST_CHECK(nMoneySend == totalSendMoney);
 
 #if 0
     // 注册ipo脚本
@@ -337,13 +308,15 @@ TEST_STATE CIpoTest::Run(){
 				}
 	}
 #else
-	strAppRegId = "2-1";
+	strAppRegId = "50660-1";  //"2-1"
 #endif
 
 #if 0
 	/// 给每个地址转一定的金额
 	int64_t money = COIN;
-	for(int i=0;i <max_user;i++)
+	size_t t_num = sizeof(arrayData) / sizeof(arrayData[0]);
+	BOOST_CHECK(t_num <= max_user);         //防止越界
+	for(int i=0;i <t_num;i++)
 	{
 		string des =strprintf("%s", userarray[i].address);
 		basetest.CreateNormalTx(des,money);
@@ -399,12 +372,86 @@ bool CIpoTest::CreateIpoTx(string contact,int64_t llSendTotal){
 }
 bool CIpoTest::SendIpoTx()
 {
-	for(int i =0;i <max_user;i++)
+	// 创建转账交易并且保存转账交易的hash
+	Object objRet;
+	Array SucceedArray;
+	Array UnSucceedArray;
+	ofstream file("ipo1_ret", ios::out | ios::ate);
+	if (!file.is_open())
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
+
+	map<string, string> mapTxHash;
+	size_t t_num = sizeof(arrayData) / sizeof(arrayData[0]);
+	BOOST_CHECK(t_num <= max_user);         //防止越界
+	for(size_t i =0;i <t_num;i++)
 	{
+		string des = strprintf("%s", userarray[i].address);
+		int64_t nMoney = userarray[i].money;   //领币的总金额
+		Object obj;
+
 		CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 		scriptData << userarray[i];
 		string sendcontract = HexStr(scriptData);
-		CreateIpoTx(sendcontract,userarray[i].money);
+		if(CreateIpoTx(sendcontract,userarray[i].money)){
+			mapTxHash[des]= strTxHash;
+			obj.push_back(Pair("addr", des));
+			obj.push_back(Pair("amount", nMoney));
+			obj.push_back(Pair("txhash", strTxHash));
+			SucceedArray.push_back(obj);
+			cout<<"after SendIpoTx strTxHash="<<strTxHash<<endl;
+		} else {
+			obj.push_back(Pair("addr", des));
+			obj.push_back(Pair("amount", nMoney));
+			UnSucceedArray.push_back(obj);
+			cout<<"after SendIpoTx strTxHash err"<<endl;
+		}
+	}
+	objRet.push_back(Pair("succeed", SucceedArray));
+	objRet.push_back(Pair("unsucceed", UnSucceedArray));
+	file << json_spirit::write_string(Value(objRet), true).c_str();
+	file.close();
+
+	 cout<<"SendIpoTx wait tx is confirmed"<<endl;
+	//确保每个转账交易被确认在block中才退出
+	while(mapTxHash.size() != 0)
+	{
+		map<string, string>::iterator it = mapTxHash.begin();
+		for(;it != mapTxHash.end();){
+			string addr = it->first;
+			string hash = it->second;
+			string regindex = "";
+			if(basetest.GetTxConfirmedRegID(hash,regindex)){
+				it = mapTxHash.erase(it);
+			}else{
+				it++;
+			}
+		}
+		MilliSleep(100);
+	}
+
+	cout<<"after SendIpoTx,check the balance of every address "<<endl;
+	//校验发币后，各个地址的账户金额和冻结金额
+	for (size_t i = 0; i < t_num; ++i) {
+
+		uint64_t acctValue = basetest.GetBalance(arrayData[i].pAddress);
+		cout<<"SendIpoTx addr:"<< arrayData[i].pAddress<<" balance="<<acctValue<<" freemoney="<<userarray[i].freemoney<<endl;
+		BOOST_CHECK(acctValue >= (uint64_t)userarray[i].freemoney);
+
+		// 校验每个月的冻结金额
+		Value  retValue = basetest.GetAppAccountInfo(strAppRegId,arrayData[i].pAddress);
+		Value  result = find_value(retValue.get_obj(), "vFreezedFund");
+		Array array = result.get_array();
+//		int64_t nMoneySend(0);
+		size_t j = 0;
+		cout<<"SendIpoTx freeMonthNum="<<array.size()<<endl;
+        for(j = 0;j < array.size();j++)
+        {
+        	int64_t freedmoney = find_value(array[j].get_obj(), "value").get_int64();
+        	cout<<"after SendIpoTx src="<<userarray[i].freeMothmoney <<" dest="<<freedmoney<<endl;
+        	BOOST_CHECK(freedmoney == userarray[i].freeMothmoney);
+//        	nMoneySend += freedmoney;
+        }
+        BOOST_CHECK(j == (12 - 1)); //11个冻结金额
 	}
 	return true;
 }
