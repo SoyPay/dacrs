@@ -54,73 +54,6 @@ static bool GetKeyId(string const &addr, CKeyID &KeyId) {
 }
 
 
-Object TxToJSON(CBaseTransaction *pTx) {
-
-	auto getregidstring = [&](CUserID const &userId) {
-		if(userId.type() == typeid(CRegID))
-			return boost::get<CRegID>(userId).ToString();
-		return string(" ");
-	};
-
-	Object result;
-	result.push_back(Pair("hash", pTx->GetHash().GetHex()));
-	switch (pTx->nTxType) {
-	case REG_ACCT_TX: {
-		CRegisterAccountTx *prtx = (CRegisterAccountTx *) pTx;
-		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
-		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("addr", boost::get<CPubKey>(prtx->userId).GetKeyID().ToAddress()));
-		CID id(prtx->userId);
-		CID minerId(prtx->minerId);
-		result.push_back(Pair("pubkey", HexStr(id.GetID())));
-		result.push_back(Pair("miner_pubkey", HexStr(minerId.GetID())));
-		result.push_back(Pair("fees", prtx->llFees));
-		result.push_back(Pair("height", prtx->nValidHeight));
-		break;
-	}
-	case COMMON_TX:
-	case CONTRACT_TX: {
-		CTransaction *prtx = (CTransaction *) pTx;
-		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
-		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("regid", getregidstring(prtx->srcRegId)));
-		result.push_back(Pair("addr", RegIDToAddress(prtx->srcRegId)));
-		result.push_back(Pair("desregid", getregidstring(prtx->desUserId)));
-		result.push_back(Pair("desaddr", RegIDToAddress(prtx->desUserId)));
-		result.push_back(Pair("money", prtx->llValues));
-		result.push_back(Pair("fees", prtx->llFees));
-		result.push_back(Pair("height", prtx->nValidHeight));
-		result.push_back(Pair("Contract", HexStr(prtx->vContract)));
-		break;
-	}
-	case REWARD_TX: {
-		CRewardTransaction *prtx = (CRewardTransaction *) pTx;
-		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
-		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("regid", getregidstring(prtx->account)));
-		result.push_back(Pair("addr", RegIDToAddress(prtx->account)));
-		result.push_back(Pair("money", prtx->rewardValue));
-		result.push_back(Pair("height", prtx->nHeight));
-		break;
-	}
-	case REG_APP_TX: {
-		CRegisterAppTx *prtx = (CRegisterAppTx *) pTx;
-		result.push_back(Pair("txtype", txTypeArray[pTx->nTxType]));
-		result.push_back(Pair("ver", prtx->nVersion));
-		result.push_back(Pair("regid", getregidstring(prtx->regAcctId)));
-		result.push_back(Pair("addr", RegIDToAddress(prtx->regAcctId)));
-		result.push_back(Pair("script", "script_content"));
-		result.push_back(Pair("fees", prtx->llFees));
-		result.push_back(Pair("height", prtx->nValidHeight));
-		break;
-	}
-	default:
-		assert(0);
-		break;
-	}
-	return result;
-}
-
 Object GetTxDetailJSON(const uint256& txhash) {
 	Object obj;
 	std::shared_ptr<CBaseTransaction> pBaseTx;
@@ -135,7 +68,7 @@ Object GetTxDetailJSON(const uint256& txhash) {
 					file >> header;
 					fseek(file, postx.nTxOffset, SEEK_CUR);
 					file >> pBaseTx;
-					obj = TxToJSON(pBaseTx.get());
+					obj = pBaseTx->ToJSON(*pAccountViewTip);
 					obj.push_back(Pair("blockhash", header.GetHash().GetHex()));
 					obj.push_back(Pair("confirmHeight", (int) header.nHeight));
 					obj.push_back(Pair("confirmedtime", (int) header.nTime));
@@ -148,7 +81,7 @@ Object GetTxDetailJSON(const uint256& txhash) {
 		{
 			pBaseTx = mempool.lookup(txhash);
 			if (pBaseTx.get()) {
-				obj = TxToJSON(pBaseTx.get());
+				obj = pBaseTx->ToJSON(*pAccountViewTip);
 				return obj;
 			}
 		}

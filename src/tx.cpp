@@ -14,8 +14,6 @@
 #include "json/json_spirit_writer_template.h"
 using namespace json_spirit;
 
-string txTypeArray[] = { "NULL_TXTYPE", "REWARD_TX", "REG_ACCT_TX", "COMMON_TX", "CONTRACT_TX", "REG_APP_TX"};
-
 
 bool CID::Set(const CRegID &id) {
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
@@ -248,6 +246,7 @@ uint64_t CBaseTransaction::GetFuel(int nfuelRate) {
 	}
 	return llFuel;
 }
+string CBaseTransaction::txTypeArray[6] = { "NULL_TXTYPE", "REWARD_TX", "REG_ACCT_TX", "COMMON_TX", "CONTRACT_TX", "REG_APP_TX"};
 
 int CBaseTransaction::GetFuelRate(CScriptDBViewCache &scriptDB) {
 	if(0 == nFuelRate) {
@@ -350,6 +349,21 @@ string CRegisterAccountTx::ToString(CAccountViewCache &view) const {
 	str += strprintf("txType=%s, hash=%s, ver=%d, pubkey=%s, llFees=%ld, keyid=%s, nValidHeight=%d\n",
 	txTypeArray[nTxType],GetHash().ToString().c_str(), nVersion, boost::get<CPubKey>(userId).ToString(), llFees, boost::get<CPubKey>(userId).GetKeyID().ToAddress(), nValidHeight);
 	return str;
+}
+Object CRegisterAccountTx::ToJSON(const CAccountViewCache &AccountView) const{
+	Object result;
+
+	result.push_back(Pair("hash", GetHash().GetHex()));
+	result.push_back(Pair("txtype", txTypeArray[nTxType]));
+	result.push_back(Pair("ver", nVersion));
+	result.push_back(Pair("addr", boost::get<CPubKey>(userId).GetKeyID().ToAddress()));
+	CID id(userId);
+	CID minerIdTemp(minerId);
+	result.push_back(Pair("pubkey", HexStr(id.GetID())));
+	result.push_back(Pair("miner_pubkey", HexStr(minerIdTemp.GetID())));
+	result.push_back(Pair("fees", llFees));
+	result.push_back(Pair("height", nValidHeight));
+   return result;
 }
 bool CRegisterAccountTx::CheckTransction(CValidationState &state, CAccountViewCache &view, CScriptDBViewCache &scriptDB) {
 	//check pubKey valid
@@ -508,6 +522,33 @@ string CTransaction::ToString(CAccountViewCache &view) const {
 	txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, boost::get<CRegID>(srcRegId).ToString(), desId.c_str(), llFees, HexStr(vContract).c_str());
 	return str;
 }
+
+Object CTransaction::ToJSON(const CAccountViewCache &AccountView) const{
+	Object result;
+	CAccountViewCache view(AccountView);
+    CKeyID keyid;
+
+	auto getregidstring = [&](CUserID const &userId) {
+		if(userId.type() == typeid(CRegID))
+			return boost::get<CRegID>(userId).ToString();
+		return string(" ");
+	};
+
+	result.push_back(Pair("hash", GetHash().GetHex()));
+	result.push_back(Pair("txtype", txTypeArray[nTxType]));
+	result.push_back(Pair("ver", nVersion));
+	result.push_back(Pair("regid",  getregidstring(srcRegId)));
+	view.GetKeyId(srcRegId, keyid);
+	result.push_back(Pair("addr",  keyid.ToAddress()));
+	result.push_back(Pair("desregid", getregidstring(desUserId)));
+	view.GetKeyId(desUserId, keyid);
+	result.push_back(Pair("desaddr", keyid.ToAddress()));
+	result.push_back(Pair("money", llValues));
+	result.push_back(Pair("fees", llFees));
+	result.push_back(Pair("height", nValidHeight));
+	result.push_back(Pair("Contract", HexStr(vContract)));
+    return result;
+}
 bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &view, CScriptDBViewCache &scriptDB) {
 	if (!MoneyRange(llFees)) {
 		return state.DoS(100, ERRORMSG("CheckTransaction() : CTransaction CheckTransction, appeal tx fee out of range"), REJECT_INVALID,
@@ -601,6 +642,22 @@ string CRewardTransaction::ToString(CAccountViewCache &view) const {
 	str += strprintf("txType=%s, hash=%s, ver=%d, account=%s, keyid=%s, rewardValue=%ld\n", txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, regId.ToString(), keyId.GetHex(), rewardValue);
 	return str;
 }
+
+Object CRewardTransaction::ToJSON(const CAccountViewCache &AccountView) const{
+	Object result;
+	CAccountViewCache view(AccountView);
+    CKeyID keyid;
+	result.push_back(Pair("hash", GetHash().GetHex()));
+	result.push_back(Pair("txtype", txTypeArray[nTxType]));
+	result.push_back(Pair("ver", nVersion));
+	result.push_back(Pair("regid", boost::get<CRegID>(account).ToString()));
+	view.GetKeyId(account, keyid);
+	result.push_back(Pair("addr", keyid.ToAddress()));
+	result.push_back(Pair("money", rewardValue));
+	result.push_back(Pair("height", nHeight));
+	return std::move(result);
+}
+
 bool CRewardTransaction::CheckTransction(CValidationState &state, CAccountViewCache &view, CScriptDBViewCache &scriptDB) {
 	return true;
 }
@@ -731,6 +788,22 @@ string CRegisterAppTx::ToString(CAccountViewCache &view) const {
 	str += strprintf("txType=%s, hash=%s, ver=%d, accountId=%s, keyid=%s, llFees=%ld, nValidHeight=%d\n",
 	txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion,boost::get<CRegID>(regAcctId).ToString(), keyId.GetHex(), llFees, nValidHeight);
 	return str;
+}
+
+Object CRegisterAppTx::ToJSON(const CAccountViewCache &AccountView) const{
+	Object result;
+	CAccountViewCache view(AccountView);
+    CKeyID keyid;
+	result.push_back(Pair("hash", GetHash().GetHex()));
+	result.push_back(Pair("txtype", txTypeArray[nTxType]));
+	result.push_back(Pair("ver", nVersion));
+	result.push_back(Pair("regid",  boost::get<CRegID>(regAcctId).ToString()));
+	view.GetKeyId(regAcctId, keyid);
+	result.push_back(Pair("addr", keyid.ToAddress()));
+	result.push_back(Pair("script", "script_content"));
+	result.push_back(Pair("fees", llFees));
+	result.push_back(Pair("height", nValidHeight));
+	return result;
 }
 bool CRegisterAppTx::CheckTransction(CValidationState &state, CAccountViewCache &view, CScriptDBViewCache &scriptDB) {
 	if (!MoneyRange(llFees)) {
