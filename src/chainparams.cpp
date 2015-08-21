@@ -123,7 +123,7 @@ vector<string> initPubkey_regTest = {
 		"03ae28a4100145a4c354338c727a54800dc540069fa2f5fd5d4a1c80b4a35a1762"
 };
 unsigned int pnSeed[] = //
-		{0xa78a2879, 0xb5af0bc6, 0x2f4f4a70, 0x30e65cb6, 0x73ad0bc6, 0x680ec48b};
+		{0xa78a2879, 0xb5af0bc6, 0x2f4f4a70, 0x30e65cb6, 0x7ae82879, 0x680ec48b};
 
 class CMainParams: public CBaseParams {
 public:

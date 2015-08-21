@@ -498,40 +498,6 @@ CScriptDB *pScriptDB = NULL;
 CScriptDBViewCache *pScriptDBTip = NULL;
 
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// mapOrphanTransactions
-//
-
-bool AddOrphanTx(CBaseTransaction *ptx)
-{
-    uint256 hash = ptx->GetHash();
-    if (mapOrphanTransactions.count(hash))
-        return false;
-
-    // Ignore big transactions, to avoid a
-    // send-big-orphans memory exhaustion attack. If a peer has a legitimate
-    // large transaction with a missing parent then we assume
-    // it will rebroadcast it later, after the parent transaction(s)
-    // have been mined or received.
-    // 10,000 orphans, each of which is at most 5,000 bytes big is
-    // at most 500 megabytes of orphans:
-    unsigned int sz = ::GetSerializeSize(ptx->GetNewInstance(), SER_NETWORK, CTransaction::CURRENT_VERSION);
-    if (sz > 5000)
-    {
-        LogPrint("mempool", "ignoring large orphan tx (size: %u, hash: %s)\n", sz, hash.ToString());
-        return false;
-    }
-
-    mapOrphanTransactions[hash] = ptx->GetNewInstance();
-
-    LogPrint("mempool", "stored orphan tx %s (mapsz %u)\n", hash.ToString(),
-        mapOrphanTransactions.size());
-    return true;
-}
-
-
-
 unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
 {
     unsigned int nEvicted = 0;
@@ -671,11 +637,9 @@ int64_t GetMinFee(const CBaseTransaction *pBaseTx, unsigned int nBytes, bool fAl
 }
 
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransaction *pBaseTx,
-		  bool fLimitFree, bool *pfMissingRefer, bool fRejectInsaneFee)
+		  bool fLimitFree, bool fRejectInsaneFee)
 {
     AssertLockHeld(cs_main);
-    if(pfMissingRefer)
-		*pfMissingRefer = false;
 
     // is it already in the memory pool?
     uint256 hash = pBaseTx->GetHash();
@@ -3924,10 +3888,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 		pfrom->AddInventoryKnown(inv);
 
 		LOCK(cs_main);
-
-		bool fMissingInputs = false;
 		CValidationState state;
-		if (AcceptToMemoryPool(mempool, state, pBaseTx.get(), true, &fMissingInputs))
+		if (AcceptToMemoryPool(mempool, state, pBaseTx.get(), true))
 		{
 			RelayTransaction(pBaseTx.get(), inv.hash);
 			mapAlreadyAskedFor.erase(inv);
@@ -3940,47 +3902,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 			pBaseTx->GetHash().ToString(),
 			mempool.mapTx.size());
 
-			// Recursively process any orphan transactions that depended on this one
-			for (unsigned int i = 0; i < vWorkQueue.size(); i++)
-			{
-				uint256 hashPrev = vWorkQueue[i];
-				for (set<uint256>::iterator mi = mapOrphanTransactionsByPrev[hashPrev].begin();
-					 mi != mapOrphanTransactionsByPrev[hashPrev].end();
-					 ++mi)
-				{
-					const uint256& orphanHash = *mi;
-					CBaseTransaction *pOrphanTx = mapOrphanTransactions[orphanHash].get();
-					bool fMissingInputs2 = false;
-					// Use a dummy CValidationState so someone can't setup nodes to counter-DoS based on orphan
-					// resolution (that is, feeding people an invalid transaction based on LegitTxX in order to get
-					// anyone relaying LegitTxX banned)
-					CValidationState stateDummy;
-					if (AcceptToMemoryPool(mempool, stateDummy, pOrphanTx, true, &fMissingInputs2))
-					{
-						LogPrint("INFO", "   accepted orphan tx %s\n", orphanHash.ToString());
-						RelayTransaction(pOrphanTx, orphanHash);
-						mapAlreadyAskedFor.erase(CInv(MSG_TX, orphanHash));
-						vWorkQueue.push_back(orphanHash);
-						vEraseQueue.push_back(orphanHash);
-					}
-					else if (!fMissingInputs2)
-					{
-						// invalid or too-little-fee orphan
-						vEraseQueue.push_back(orphanHash);
-						LogPrint("INFO", "   removed orphan tx %s\n", orphanHash.ToString());
-					}
-					mapOrphanTransactions.erase(orphanHash);
-				}
-			}
-		}
-		else if (fMissingInputs)
-		{
-			AddOrphanTx(pBaseTx.get());
-
-			// DoS prevention: do not allow mapOrphanTransactions to grow unbounded
-			unsigned int nEvicted = LimitOrphanTxSize(MAX_ORPHAN_TRANSACTIONS);
-			if (nEvicted > 0)
-				LogPrint("INFO", "mapOrphan overflow, removed %u tx\n", nEvicted);
 		}
 		int nDoS = 0;
 		if (state.IsInvalid(nDoS))
@@ -3994,8 +3915,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 //				Misbehaving(pfrom->GetId(), nDoS);
 //			}
 		}
-
-		mapOrphanTransactionsByPrev.erase(pBaseTx->GetHash());
 	}
 
 

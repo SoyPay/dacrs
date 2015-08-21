@@ -402,7 +402,9 @@ void CWallet::ResendWalletTransactions() {
 	}
 	for (auto const & tee : erase) {
 		CWalletDB(strWalletFile).EraseUnComFirmedTx(tee);
+		uiInterface.RemoveTransaction(tee);
 		UnConfirmTx.erase(tee);
+
 	}
 }
 

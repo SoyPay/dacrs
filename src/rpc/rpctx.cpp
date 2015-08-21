@@ -1241,6 +1241,9 @@ Value getscriptvalidedata(const Array& params, bool fHelp) {
 			item.push_back(Pair("value", HexStr(vValue)));
 			retArray.push_back(item);
 		}
+		if(nReadCount >= pagesize * nIndex) {
+			break;
+		}
 	}
 	return retArray;
 }

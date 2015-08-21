@@ -202,7 +202,7 @@ bool CheckSignScript(const uint256 & sigHash, const std::vector<unsigned char> s
 
 /** (try to) add transaction to memory pool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransaction *pBaseTx,
-		  bool fLimitFree,bool *pfMissingRefer, bool fRejectInsaneFee=false);
+		  bool fLimitFree, bool fRejectInsaneFee=false);
 
 /** get transaction relate keyid **/
 

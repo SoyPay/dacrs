@@ -381,7 +381,7 @@ public:
 //			const uint256& txid = item.first;
 			CValidationState state;
 			if (item.second->nTxType != REWARD_TX) {
-				if (!::AcceptToMemoryPool(mempool, state, const_cast<CBaseTransaction*>(item.second.get()), false, NULL,
+				if (!::AcceptToMemoryPool(mempool, state, const_cast<CBaseTransaction*>(item.second.get()), false,
 						false)) {
 					vhash.push_back(item.first);
 				}

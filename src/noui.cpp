@@ -56,9 +56,9 @@ void AddMessageToDeque(const std::string &strMessage)
 	if(SysCfg().GetBoolArg("-ui", false)) {
 		LOCK(cs_Sendbuffer);
 		g_dSendBuffer.push_back(strMessage);
-		LogPrint("TOUI", "%s\n", strMessage.c_str());
+		LogPrint("msgdeque", "AddMessageToDeque %s\n", strMessage.c_str());
 	}else {
-		LogPrint("NOUI", "%s\n", strMessage.c_str());
+		LogPrint("msgdeque", "AddMessageToDeque %s\n", strMessage.c_str());
 	}
 }
 
@@ -95,6 +95,41 @@ static bool noui_ThreadSafeMessageBox(const std::string& message, const std::str
 static bool noui_SyncTx()
 {
 	Array arrayObj;
+	int nTipHeight = chainActive.Tip()->nHeight;
+	int nSyncTxDeep = SysCfg().GetArg("-synctxdeep", 100);
+	if(nSyncTxDeep >= nTipHeight) {
+		nSyncTxDeep = nTipHeight;
+	}
+	CBlockIndex *pStartBlockIndex = chainActive[nTipHeight-nSyncTxDeep];
+
+	Object objStartHeight;
+	objStartHeight.push_back(Pair("syncheight", pStartBlockIndex->nHeight));
+	Object objMsg;
+	objMsg.push_back(Pair("type",     "SyncTxHight"));
+	objMsg.push_back(Pair("msg",  objStartHeight));
+	AddMessageToDeque(write_string(Value(std::move(objMsg)),true));
+
+	while(pStartBlockIndex != chainActive.Tip()) {
+		if((pwalletMain->mapInBlockTx).count(pStartBlockIndex->GetBlockHash()) > 0)
+		{
+
+			Object objTx;
+			CAccountTx acctTx= pwalletMain->mapInBlockTx[pStartBlockIndex->GetBlockHash()];
+			map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx = acctTx.mapAccountTx.begin();
+			for(;iterTx != acctTx.mapAccountTx.end(); ++iterTx) {
+				objTx = TxToJSON(iterTx->second.get());
+				objTx.push_back(Pair("blockhash", iterTx->first.GetHex()));
+				objTx.push_back(Pair("confirmHeight", pStartBlockIndex->nHeight));
+				objTx.push_back(Pair("confirmedtime", (int)pStartBlockIndex->nTime));
+				Object obj;
+				obj.push_back(Pair("type",     "SyncTx"));
+				obj.push_back(Pair("msg",  objTx));
+				AddMessageToDeque(write_string(Value(std::move(obj)),true));
+			}
+		}
+		pStartBlockIndex = chainActive.Next(pStartBlockIndex);
+	}
+	/*
 	map<uint256, CAccountTx>::iterator iterAccountTx = pwalletMain->mapInBlockTx.begin();
 	for(; iterAccountTx != pwalletMain->mapInBlockTx.end(); ++iterAccountTx)
 	{
@@ -117,6 +152,8 @@ static bool noui_SyncTx()
 			AddMessageToDeque(write_string(Value(std::move(obj)),true));
 		}
 	}
+	*/
+	/*
 	map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx =  pwalletMain->UnConfirmTx.begin();
 	for(; iterTx != pwalletMain->UnConfirmTx.end(); ++iterTx)
 	{
@@ -127,7 +164,7 @@ static bool noui_SyncTx()
 		obj.push_back(Pair("type",     "SyncTx"));
 		obj.push_back(Pair("msg",   objTx));
 		AddMessageToDeque(write_string(Value(std::move(obj)),true));
-	}
+	}*/
 	return true;
 }
 
