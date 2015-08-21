@@ -633,7 +633,11 @@ string CPubKey::ToString() const {
 }
 
 string CKeyID::ToAddress() const {
+	if (IsNull()) {
+		return "";
+	} else{
 	return CDacrsAddress(*this).ToString();
+	}
 }
 
 CKeyID::CKeyID(const string& strAddress) :

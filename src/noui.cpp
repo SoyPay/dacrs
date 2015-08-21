@@ -136,7 +136,7 @@ static bool noui_SyncTx()
 		Object objTx;
 		map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx = iterAccountTx->second.mapAccountTx.begin();
 		for(;iterTx != iterAccountTx->second.mapAccountTx.end(); ++iterTx) {
-			objTx = TxToJSON(iterTx->second.get());
+			objTx = iterTx->second.get()->ToJSON(*pAccountViewTip);
 			objTx.push_back(Pair("blockhash", iterAccountTx->first.GetHex()));
 			if(mapBlockIndex.count(iterAccountTx->first) && chainActive.Contains(mapBlockIndex[iterAccountTx->first])) {
 				objTx.push_back(Pair("confirmHeight", mapBlockIndex[iterAccountTx->first]->nHeight));
@@ -157,7 +157,7 @@ static bool noui_SyncTx()
 	map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx =  pwalletMain->UnConfirmTx.begin();
 	for(; iterTx != pwalletMain->UnConfirmTx.end(); ++iterTx)
 	{
-		Object objTx = TxToJSON(iterTx->second.get());
+		Object objTx = iterTx->second.get()->ToJSON(*pAccountViewTip);
 		arrayObj.push_back(objTx);
 
 		Object obj;
@@ -210,7 +210,7 @@ static bool noui_RevTransaction(const uint256 &hash){
 static bool noui_RevAppTransaction(const CBlock *pBlock ,int nIndex){
 	Object obj;
 	obj.push_back(Pair("type",     "rev_app_transaction"));
-	Object objTx = TxToJSON(pBlock->vptx[nIndex].get());
+	Object objTx = pBlock->vptx[nIndex].get()->ToJSON(*pAccountViewTip);
 	objTx.push_back(Pair("blockhash", pBlock->GetHash().GetHex()));
 	objTx.push_back(Pair("confirmHeight", (int) pBlock->nHeight));
 	objTx.push_back(Pair("confirmedtime", (int) pBlock->nTime));

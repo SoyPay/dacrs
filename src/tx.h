@@ -165,6 +165,8 @@ public:
 };
 
 class CBaseTransaction {
+protected:
+	static string txTypeArray[6];
 public:
 	static uint64_t nMinTxFee;
 	static int64_t nMinRelayTxFee;
@@ -213,6 +215,8 @@ public:
 	virtual std::shared_ptr<CBaseTransaction> GetNewInstance() = 0;
 
 	virtual string ToString(CAccountViewCache &view) const = 0;
+
+	virtual Object ToJSON(const CAccountViewCache &AccountView) const = 0;
 
 	virtual bool GetAddress(std::set<CKeyID> &vAddr, CAccountViewCache &view, CScriptDBViewCache &scriptDB) = 0;
 
@@ -309,6 +313,8 @@ public:
 	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view, CScriptDBViewCache &scriptDB);
 
 	string ToString(CAccountViewCache &view) const;
+
+	Object ToJSON(const CAccountViewCache &AccountView) const;
 
 	bool ExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
 			CTransactionDBCache &txCache, CScriptDBViewCache &scriptDB);
@@ -418,6 +424,8 @@ public:
 
 	string ToString(CAccountViewCache &view) const;
 
+	Object ToJSON(const CAccountViewCache &AccountView) const;
+
 	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view, CScriptDBViewCache &scriptDB);
 
 	const vector_unsigned_char& GetvContract() {
@@ -501,6 +509,8 @@ public:
 
 	string ToString(CAccountViewCache &view) const;
 
+	Object ToJSON(const CAccountViewCache &AccountView) const;
+
 	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view, CScriptDBViewCache &scriptDB);
 
 	bool ExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
@@ -570,6 +580,8 @@ public:
 	}
 
 	string ToString(CAccountViewCache &view) const;
+
+	Object ToJSON(const CAccountViewCache &AccountView) const;
 
 	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view, CScriptDBViewCache &scriptDB);
 
