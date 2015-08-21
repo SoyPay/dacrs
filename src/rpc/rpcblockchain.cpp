@@ -47,8 +47,6 @@ double GetDifficulty(const CBlockIndex* blockindex)
     return dDiff;
 }
 
-extern Object TxToJSON(CBaseTransaction *pTx);
-
 Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
 {
     Object result;

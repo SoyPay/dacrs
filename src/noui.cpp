@@ -117,7 +117,7 @@ static bool noui_SyncTx()
 			CAccountTx acctTx= pwalletMain->mapInBlockTx[pStartBlockIndex->GetBlockHash()];
 			map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx = acctTx.mapAccountTx.begin();
 			for(;iterTx != acctTx.mapAccountTx.end(); ++iterTx) {
-				objTx = TxToJSON(iterTx->second.get());
+				objTx = iterTx->second->ToJSON(*pAccountViewTip);
 				objTx.push_back(Pair("blockhash", iterTx->first.GetHex()));
 				objTx.push_back(Pair("confirmHeight", pStartBlockIndex->nHeight));
 				objTx.push_back(Pair("confirmedtime", (int)pStartBlockIndex->nTime));
