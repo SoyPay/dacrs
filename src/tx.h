@@ -70,7 +70,7 @@ public:
 };
 
 typedef boost::variant<CNullID, CRegID, CKeyID, CPubKey> CUserID;
-
+/*CRegID 是地址激活后，分配的账户ID*/
 class CRegID {
 private:
 	uint32_t nHeight;
@@ -117,7 +117,7 @@ public:
 	)
 
 };
-
+/*CID是一个vector 存放CRegID,CKeyID,CPubKey*/
 class CID {
 private:
 	vector_unsigned_char vchData;
@@ -954,6 +954,5 @@ void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, i
 
 
 
-extern string txTypeArray[];
 
 #endif

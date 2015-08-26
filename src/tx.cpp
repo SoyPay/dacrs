@@ -407,7 +407,7 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 
 	uint64_t addValue = llValues;
 	if(!view.GetAccount(desUserId, desAcct)) {
-		if(COMMON_TX == nTxType && desUserId.type() == typeid(CKeyID)) {
+		if((COMMON_TX == nTxType) && (desUserId.type() == typeid(CKeyID))) {  //目的地址账户不存在
 			desAcct.keyID = boost::get<CKeyID>(desUserId);
 			desAcctLog.keyID = desAcct.keyID;
 		}
@@ -890,26 +890,27 @@ uint64_t CAccount::GetAccountPos(int nCurHeight){
 	return nCoinDay;
 }
 bool CAccount::UpDateCoinDay(int nCurHeight) {
-	if(nCurHeight < nHeight)
+	if(nCurHeight < nHeight){
 		return false;
-	if(nCurHeight == nHeight)
-		return true;
-	nCoinDay += llValues * ((int64_t)nCurHeight-(int64_t)nHeight);
-	nHeight = nCurHeight;
-	if(nCoinDay > GetMaxCoinDay(nCurHeight)) {
-		nCoinDay = GetMaxCoinDay(nCurHeight);
 	}
-	return true;
+	else if(nCurHeight == nHeight){
+		return true;
+	}
+	else{
+		nCoinDay += llValues * ((int64_t)nCurHeight-(int64_t)nHeight);
+		nHeight = nCurHeight;
+		if(nCoinDay > GetMaxCoinDay(nCurHeight)) {
+			nCoinDay = GetMaxCoinDay(nCurHeight);
+		}
+		return true;
+	}
 }
 uint64_t CAccount::GetRawBalance() {
 	return llValues;
 }
 Object CAccount::ToJosnObj() const
 {
-	using namespace json_spirit;
 	Object obj;
-	static const string fundTypeArray[] = { "NULL_FUNDTYPE", "FREEDOM", "REWARD_FUND", "FREEDOM_FUND"};
-//	obj.push_back(Pair("height", chainActive.Height()));
 	obj.push_back(Pair("Address",     keyID.ToAddress()));
 	obj.push_back(Pair("KeyID",     keyID.ToString()));
 	obj.push_back(Pair("RegID",     regID.ToString()));
@@ -928,7 +929,6 @@ string CAccount::ToString() const {
 	str += strprintf("regID=%s, keyID=%s, publicKey=%s, minerpubkey=%s, values=%ld updateHeight=%d coinDay=%lld\n",
 	regID.ToString(), keyID.GetHex().c_str(), PublicKey.ToString().c_str(), MinerPKey.ToString().c_str(), llValues, nHeight, nCoinDay);
 	return str;
-	//return  write_string(Value(ToJosnObj()),true);
 }
 bool CAccount::IsMoneyOverflow(uint64_t nAddMoney) {
 	if (!MoneyRange(nAddMoney))
