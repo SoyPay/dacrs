@@ -355,7 +355,7 @@ int LogPrintStr(const char* category, const string &str) {
 		// Debug print useful for profiling
 		if (SysCfg().IsLogTimestamps() && log.m_newLine) {
             string  timeFormat = DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime());
-     		LogFilePreProcess(pathDebug.string().c_str(),timeFormat.length() + 1, &log.m_fileout);
+     		LogFilePreProcess(pathDebug.string().c_str(),timeFormat.length() + 1 + str.size(), &log.m_fileout);
 			ret += fprintf(log.m_fileout, "%s ", timeFormat.c_str());
 //			ret += fprintf(log.m_fileout, "%s ", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
 		}

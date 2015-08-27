@@ -109,10 +109,10 @@ bool CTestBetTx::ASendP2PBet() {
 		senddata.money = GetRandomBetAmount();
 		betamount = senddata.money;
 		memcpy(senddata.dhash, Hash(nSdata, nSdata + sizeof(nSdata)).begin(), sizeof(senddata.dhash));
-		vector<unsigned char>temp;
-		temp.assign(nSdata,nSdata + sizeof(nSdata));
-		vector<unsigned char>temp2;
-		temp2.assign(senddata.dhash,senddata.dhash + sizeof(senddata.dhash));
+//		vector<unsigned char>temp;
+//		temp.assign(nSdata,nSdata + sizeof(nSdata));
+//		vector<unsigned char>temp2;
+//		temp2.assign(senddata.dhash,senddata.dhash + sizeof(senddata.dhash));
 
 		CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 		scriptData << senddata;

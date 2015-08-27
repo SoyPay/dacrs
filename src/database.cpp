@@ -1151,6 +1151,11 @@ bool CScriptDBViewCache::SetScriptCount(const int nCount) {
 		ds << nCount;
 		vValue.insert(vValue.end(), ds.begin(), ds.end());
 	}
+	else if (nCount < 0)
+	{
+		assert(0);
+		return false;
+	}
 	if(!SetData(scriptKey, vValue))
 		return false;
 	return true;
@@ -1186,6 +1191,11 @@ bool CScriptDBViewCache::SetScriptDataCount(const vector<unsigned char> &vScript
 		CDataStream ds(SER_DISK, CLIENT_VERSION);
 		ds << nCount;
 		vValue.insert(vValue.end(), ds.begin(), ds.end());
+	}
+	else if (nCount < 0)
+	{
+		assert(0);
+		return false;
 	}
 	if(!SetData(scriptKey, vValue))
 		return false;
