@@ -8,14 +8,11 @@
 #include <list>
 #include <map>
 
-//#include "coins.h"
 #include "core.h"
 #include "sync.h"
 #include <memory>
 
 using namespace std;
-/** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
-static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
 
 class CAccountViewCache;
 class CScriptDBViewCache;
@@ -77,7 +74,6 @@ public:
 
     void remove(CBaseTransaction *pBaseTx, list<std::shared_ptr<CBaseTransaction> >& removed, bool fRecursive = false);
 
-    void removeConflicts(CBaseTransaction *pBaseTx, list<std::shared_ptr<CBaseTransaction> >& removed);
     void clear();
     void queryHashes(vector<uint256>& vtxid);
     unsigned int GetTransactionsUpdated() const;

@@ -1016,7 +1016,7 @@ int64_t GetAverageSpaceTime(const CBlockIndex* pindexLast, int64_t nInterval)
     	*(--pbegin) = pindex->GetBlockTime() - pPreIndex->GetBlockTime();
     	strSelects += strprintf(" %lld",  *(pbegin));
     }
-    LogPrint("INFO", "nheight:%d differtime :%s\n",pindex->nHeight, strSelects.c_str());
+//  LogPrint("INFO", "nheight:%d differtime :%s\n",pindex->nHeight, strSelects.c_str());
 
     sort(pbegin, pend);
 
@@ -1034,7 +1034,7 @@ int64_t GetAverageSpaceTime(const CBlockIndex* pindexLast, int64_t nInterval)
 		}
 	}
 	int64_t nAverageSpacing = totalSpace / nCount;
-	LogPrint("INFO", "upBound=%lld lowBound=%lld nAverageSpacing=%lld Samples=%d\n", upBound, lowBound, nAverageSpacing, nCount);
+//	LogPrint("INFO", "upBound=%lld lowBound=%lld nAverageSpacing=%lld Samples=%d\n", upBound, lowBound, nAverageSpacing, nCount);
 	return nAverageSpacing;
 }
 
