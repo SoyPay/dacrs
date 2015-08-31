@@ -293,14 +293,14 @@ int LogFilePreProcess(const char *path,size_t len, FILE** stream)
     if(lSize + len > (size_t)SysCfg().GetLogMaxSize())
     {   //文件超长，关闭，删除，再创建
         FILE *fileout = NULL;
-        cout<<"file name:" << path <<"free point:"<< static_cast<const void*>(*stream)<< "lSize: "<< lSize << "len: " << len<<endl;
+//      cout<<"file name:" << path <<"free point:"<< static_cast<const void*>(*stream)<< "lSize: "<< lSize << "len: " << len<<endl;
         fclose(*stream);
 
         string bkFile = strprintf("%sbak", path);
         rename(path, bkFile.c_str());  //原文件重命名
 		fileout = fopen(path, "a+");   //重新打开， 类似于删除文件.
 		if (fileout) {
-			cout << "file new:" <<static_cast<const void*>(fileout) << endl;
+//		    cout << "file new:" <<static_cast<const void*>(fileout) << endl;
 			*stream = fileout;
 			 if(remove(bkFile.c_str()) != 0)   //删除重命名文件
 			 {
@@ -309,7 +309,7 @@ int LogFilePreProcess(const char *path,size_t len, FILE** stream)
 			 }
 		}
 		else{
-           cout<<"LogFilePreProcess create new file err"<<endl;
+//         cout<<"LogFilePreProcess create new file err"<<endl;
            return -1;
 		}
     }
