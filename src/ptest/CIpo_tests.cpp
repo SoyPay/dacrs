@@ -47,14 +47,14 @@ typedef struct tagdddd{
 //const int64_t totalSendMoney =  2711374031363492; //二期IPO第二批发币总额
 //const int64_t totalSendMoney =  2677621584404177; //二期IPO第三批发币总额
 //const int64_t totalSendMoney = 19164400000000000;   //一期IPO第一批总额
-const int64_t totalSendMoney =    4913960000000000;   //一期IPO第二批总额
-
+//const int64_t totalSendMoney =    4913960000000000;   //一期IPO第二批总额
+const int64_t totalSendMoney =    17567366666666608;     /// 一期IPO11个月冻结金额的钱
 IPO_DATA arrayData[]=
 {
 
-
+#if 0
 		/*=================一期IPO发币地址一批==============================*/
-/*      { "Do9W61KiBCrtJpQZDELtbrJYVbcuuYhXDv",       305000000000000	},
+        { "Do9W61KiBCrtJpQZDELtbrJYVbcuuYhXDv",       305000000000000	},
 		{ "DrumFsuGwFzmhDRGgYrzPh4i7sHiSp3iJE",      1260000000000000 },
 		{ "DnKUZMvwXfprFCKhnsWRsbJTNnRZg88T2F",      1260000000000000 },
 		{ "DftLSeJrMjJJ3UPeehNgArhcoAuDN5422E",      4250000000000000 },
@@ -68,9 +68,9 @@ IPO_DATA arrayData[]=
 		{ "DcyumTafQsSh4hJo4V6DaS23Dd2QnpMXKH",      1940000000000000 },
 		{ "DhFhqaH8wcb5TSsA4DYEYv4SiKTA4smn1T",       480000000000000	},
 		{ "Dg7iqYXABJu53ymffxKgc1Bk4K9W1UonJ6",       71040000000000	}
-*/
+
 		/*=================一期IPO发币地址二批==============================*/
-		  { "DmznNupXTsmr96w5PTwjx4rGkfXq5u9Gs7",       61000000000000	},
+		 { "DmznNupXTsmr96w5PTwjx4rGkfXq5u9Gs7",       61000000000000	},
 		  { "DZKGAkCpT7rofuz7gWgYS1McNnqajUZJqv",       366000000000000	},
 		  { "DYy8MCFATjamvwEUrfun572entvE7hkrGy",      1686000000000000 },
 		  { "DrdA3g2edBY6iLR2FxN2nKoPPhgKD9gYgs",       122000000000000	},
@@ -80,36 +80,62 @@ IPO_DATA arrayData[]=
 		  { "DgvRvQHLuPtbPtEcR8Am7RicmsqhRpZ8xt",       240000000000000	},
 		  { "Dfkhj8sFCEr4FGPHwj7Qyf3aTQqmxJNW2q",       120000000000000	},
 		  { "DhgrzBsyhWaLj4TAvdddsqmyg5W8ABcdM5",       385080000000000	}
+#endif
 
+		{ "Do9W61KiBCrtJpQZDELtbrJYVbcuuYhXDv",       25416666666666	},
+		{ "DrumFsuGwFzmhDRGgYrzPh4i7sHiSp3iJE",      105000000000000 },
+		{ "DnKUZMvwXfprFCKhnsWRsbJTNnRZg88T2F",      105000000000000 },
+		{ "DftLSeJrMjJJ3UPeehNgArhcoAuDN5422E",      354166666666666 },
+		{ "Dg2dq98hcm84po3RX354SzVyE6DLpxq3QR",      227500000000000 },
+		{ "DnGm7rGyeWchyVJS3VF1mgNyQRjgutphDN",       20333333333333	},
+		{ "DXL9ZKSGf3KzJh75gqzb6svbzcyiXb9VNA",       10166666666666	},
+		{ "Dpjs5pvXmZbVt3uDEfBrMNbCsWjJzjm8XA",       11183333333333	},
+		{ "DZYDEn8CZuwgJ6YS6Zm7VvKaFc6E6tGstz",       11183333333333	},
+		{ "DhhGix9J3n8dDvN3zcDi8DTJBSqi1nEe7Z",       50000000000000	},
+		{ "DghcznoUhcP8dfZoqT7xoBXw7cbcC72bVw",       60000000000000	},
+		{ "DcyumTafQsSh4hJo4V6DaS23Dd2QnpMXKH",      161666666666666 },
+		{ "DhFhqaH8wcb5TSsA4DYEYv4SiKTA4smn1T",       40000000000000	},
+		{ "Dg7iqYXABJu53ymffxKgc1Bk4K9W1UonJ6",       5920000000000	},
+
+	  { "DmznNupXTsmr96w5PTwjx4rGkfXq5u9Gs7",       5083333333333	},
+	  { "DZKGAkCpT7rofuz7gWgYS1McNnqajUZJqv",       30500000000000	},
+	  { "DYy8MCFATjamvwEUrfun572entvE7hkrGy",      140500000000000 },
+	  { "DrdA3g2edBY6iLR2FxN2nKoPPhgKD9gYgs",       10166666666666	},
+	  { "DrFEC23FSRYVLKUKCzDh5i5BLcWD1FPtUy",       121166666666666},
+	  { "DVmVcFtVMRBKuv1JDJVbKQLt1TH8kEtFtW",       19990000000000	},
+	  { "DVtwoZaHtcsyxuphPiG3saazLo9sr7QCeK",       20000000000000	},
+	  { "DgvRvQHLuPtbPtEcR8Am7RicmsqhRpZ8xt",       20000000000000	},
+	  { "Dfkhj8sFCEr4FGPHwj7Qyf3aTQqmxJNW2q",       10000000000000	},
+	  { "DhgrzBsyhWaLj4TAvdddsqmyg5W8ABcdM5",       32090000000000	}
 
 #if 0
-		{"dyjC8fuSoVGpepRGi8F2SridVX4VjykLG4",	10000000}, //
-		{"dfLo3CHErzWPrxRtthMiitcoGkrR6DskiF",	11000000},
-		{"dwpwbNeGEP9bZzFfNnn4gK96LKNA83R93D",	12000000},
-		{"e1eHyMk4D9oeUnKsiDjS8KLkpGVRAbPfW6",	13000000},
-		{"diANoyDdGjvdsYxjrSpcVW4kFSkdEj21PD",	14000000},
-		{"dq6uutNhgA4y7eUQzZ6kg7NQ4NjzCqnBxa",	15000000},
-		{"dq4Y9XAMDH8tGKZ5vVeYBgMgRS82yuz9qK",	16000000},
-		{"dqvbTqp5jhLbdHKUERRdzwdnNJSv43boSq",	17000000}, //
-		{"diNzPQ7z9UDcrWXngsB8eGFJCa58rsb37N",	18000000},
-		{"diMKZ6cBrcxqnSiXsDEgdPawQPbTdWBEdj",	19000000},
+		{"dyjC8fuSoVGpepRGi8F2SridVX4VjykLG4",	25416666666666}, //
+		{"dfLo3CHErzWPrxRtthMiitcoGkrR6DskiF",	105000000000000},
+		{"dwpwbNeGEP9bZzFfNnn4gK96LKNA83R93D",	105000000000000},
+		{"e1eHyMk4D9oeUnKsiDjS8KLkpGVRAbPfW6",	354166666666666},
+		{"diANoyDdGjvdsYxjrSpcVW4kFSkdEj21PD",	227500000000000},
+		{"dq6uutNhgA4y7eUQzZ6kg7NQ4NjzCqnBxa",	20333333333333},
+		{"dq4Y9XAMDH8tGKZ5vVeYBgMgRS82yuz9qK",	10166666666666},
+		{"dqvbTqp5jhLbdHKUERRdzwdnNJSv43boSq",	11183333333333}, //
+		{"diNzPQ7z9UDcrWXngsB8eGFJCa58rsb37N",	11183333333333},
+		{"diMKZ6cBrcxqnSiXsDEgdPawQPbTdWBEdj",	50000000000000},
 
-		{"dfraKJQTwBSHNhLSQqtdfNAf5xdwK5PBK5",	20000000},
-		{"dgVST4WVoovPv9QFJAQXbK2c6EiGG4Xctd",	21000000},
-		{"dp2KppVD9zs1kjv3NFp3U5kJEfH6ySE1nQ",	22000000},
-		{"doPQqPTnGxVBsagnrVV2KnFdquRA6tgdRQ",	23000000},
-		{"dsJbNVc2zWw9ufvPyyefbAExkZZdEoQxBS",	24000000},
-		{"ddQGMYmLjQyP5SQMxgrKTxCWNExBYmR4uL",	25000000}, //
-		{"dmuN4nEUzYpU88HbdcE6D92e3vW3KRvzWR",	26000000},
-		{"dyyHw8BtjPNGMF1E4kzJpvacNcLsbHh93x",	27000000},
-		{"e22z8yqDnoxsrp5YSkdHFzERv9G3ZnVo2u",	28000000},
-		{"djxpDZTnLfpfY6qj2LPidrEf7EHoYR3TYP",	29000000},
+		{"dfraKJQTwBSHNhLSQqtdfNAf5xdwK5PBK5",	60000000000000},
+		{"dgVST4WVoovPv9QFJAQXbK2c6EiGG4Xctd",	161666666666666},
+		{"dp2KppVD9zs1kjv3NFp3U5kJEfH6ySE1nQ",	40000000000000},
+		{"doPQqPTnGxVBsagnrVV2KnFdquRA6tgdRQ",	5920000000000},
+		{"dsJbNVc2zWw9ufvPyyefbAExkZZdEoQxBS",	5083333333333},
+		{"ddQGMYmLjQyP5SQMxgrKTxCWNExBYmR4uL",	30500000000000}, //
+		{"dmuN4nEUzYpU88HbdcE6D92e3vW3KRvzWR",	140500000000000},
+		{"dyyHw8BtjPNGMF1E4kzJpvacNcLsbHh93x",	10166666666666},
+		{"e22z8yqDnoxsrp5YSkdHFzERv9G3ZnVo2u",	121166666666666},
+		{"djxpDZTnLfpfY6qj2LPidrEf7EHoYR3TYP",	19990000000000},
 
-		{"e1nu3RPuipEgsoJGRxHjT9Gzj57o9DcoPY",	30000000},
-		{"dn5qSRmqE3uaRoNEkZ28oek1pvA8Nk61j4",	31000000},
-		{"dw5CpSdvPYsXta7gysmtMmUjE4XwdSdcx5",	32000000},
-		{"dyCEnBvsZNfwRNFoM4TrYQAr1yKxWGFqP1",	33000000},//
-		{"dyY64JRvdtGTpu8KiJqfpPvLc6AShpkTiY",	34000000},
+		{"e1nu3RPuipEgsoJGRxHjT9Gzj57o9DcoPY",	20000000000000},
+		{"dn5qSRmqE3uaRoNEkZ28oek1pvA8Nk61j4",	20000000000000},
+		{"dw5CpSdvPYsXta7gysmtMmUjE4XwdSdcx5",	10000000000000},
+		{"dyCEnBvsZNfwRNFoM4TrYQAr1yKxWGFqP1",	32090000000000}//
+		//{"dyY64JRvdtGTpu8KiJqfpPvLc6AShpkTiY",	34000000},
 #endif
 		/*=================二期IPO第一批发币==============================
 		{"DiNgnLSgpXriHG3F9ja4uRNy6KqWACRHhm",	629064563190821         },
@@ -361,10 +387,51 @@ TEST_STATE CIpoTest::Run(){
 		MilliSleep(100);
 	}
 #endif
+	cout<<"SendIpoTx start"<<endl;
+	SendIpoTx();
+	cout<<"SendIpoTx end"<<endl;
+	return end_state;
+}
+
+void CIpoTest::RunIpo(){
+	int64_t nMoneySend(0);
+	size_t t_num = sizeof(arrayData) / sizeof(arrayData[0]);
+	BOOST_CHECK(t_num <= max_user);         //防止越界
+	//初始化地址表
+	for (size_t i = 0; i < t_num; i++) {
+		memcpy((char*)userarray[i].address,(char*)arrayData[i].pAddress,sizeof(userarray[i].address));
+		userarray[i].freeMothmoney = arrayData[i].nMoney;
+		userarray[i].money = arrayData[i].nMoney*11;
+		nMoneySend += userarray[i].money;  //统计总金额
+
+	}
+	BOOST_CHECK(nMoneySend == totalSendMoney);
+
+//	//// main网络不用
+//	/// 给每个地址转一定的金额
+//	int64_t money = COIN;
+//	t_num = sizeof(arrayData) / sizeof(arrayData[0]);
+//	BOOST_CHECK(t_num <= max_user);         //防止越界
+//	for(int i=0;i <t_num;i++)
+//	{
+//		string des =strprintf("%s", userarray[i].address);
+//		basetest.CreateNormalTx(des,money);
+//	}
+//
+//	 cout<<"end mempool"<<endl;
+//	while(true)
+//	{
+//		if(basetest.IsMemoryPoolEmpty())
+//			break;
+//		MilliSleep(100);
+//	}
+
+
+	strAppRegId = "1-1";  //"2-1"
+
    cout<<"SendIpoTx start"<<endl;
 	SendIpoTx();
-	 cout<<"SendIpoTx end"<<endl;
-	return end_state;
+   cout<<"SendIpoTx end"<<endl;
 }
 
 bool CIpoTest::RegistScript(){
@@ -395,7 +462,7 @@ bool CIpoTest::CreateIpoTx(string contact,int64_t llSendTotal){
 
 	buffer += contact;
 
-	Value  retValue = basetest.CreateContractTx(strAppRegId, SEND_A, buffer, 0, 10*COIN, llSendTotal);
+	Value  retValue = basetest.CreateContractTx(strAppRegId, SEND_A, buffer, 0, COIN, llSendTotal);
 	if(basetest.GetHashFromCreatedTx(retValue, strTxHash)){
 			return true;
 	}
@@ -486,22 +553,34 @@ bool CIpoTest::SendIpoTx()
 	}
 	return true;
 }
+
+void CIpoTest::SendErrorIopTx()
+{
+	strAppRegId = "50725-1";
+	IPO_USER useripo;
+	char *dess = "DhxrQ9hsvo3fVVSy6By8bePt8cmPtts88R";
+	memcpy((char*)useripo.address,dess,sizeof(useripo.address));
+	useripo.money =1;
+	useripo.freemoney = totalSendMoney+1;
+	useripo.freeMothmoney = 0;
+	Object obj;
+
+	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
+	scriptData << useripo;
+	string sendcontract = HexStr(scriptData);
+	if(CreateIpoTx(sendcontract,useripo.money))
+	{	cout<<"after SendIpoTx strTxHash="<<strTxHash<<endl;
+	} else {
+		cout<<"after SendIpoTx strTxHash err"<<endl;
+	}
+}
 BOOST_FIXTURE_TEST_SUITE(CreateIpoTxTest,CIpoTest)
 
 BOOST_FIXTURE_TEST_CASE(Test,CIpoTest)
 {
-//	while(true)
-//	{
-//		string newaddr;
-//		BOOST_CHECK(basetest.GetNewAddr(newaddr, true));
-//		cout<<"len:"<<newaddr.length()<<endl;
-//		if(newaddr.length() != 34)
-//		{
-//			cout<<"address:"<<newaddr.c_str()<<endl;
-//			break;
-//		}
-//	}
-	Run();
+	//Run();
+	RunIpo();
+	//SendErrorIopTx();
 }
 
 typedef struct _IPOCON{
