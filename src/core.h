@@ -114,7 +114,7 @@ public:
     vector<std::shared_ptr<CBaseTransaction> > vptx;
 
     // memory only
-    mutable vector<uint256> vMerkleTree;
+    mutable vector<uint256> vMerkleTree;  //块中所有交易的交易hash集合
 
     CBlock()
     {

@@ -56,8 +56,8 @@ private:
 public:
 	CPubKey vchDefaultKey ;
 
-	bool fFileBacked;
-	string strWalletFile;
+	bool fFileBacked;         //初始化钱包文件名，为true
+	string strWalletFile;     //钱包文件名
 
 	map<uint256, CAccountTx> mapInBlockTx;
 	map<uint256, std::shared_ptr<CBaseTransaction> > UnConfirmTx;
@@ -68,7 +68,7 @@ public:
 	MasterKeyMap mapMasterKeys;
 	unsigned int nMasterKeyMaxID;
 
-	static string defaultFilename;
+	static string defaultFilename;    //默认钱包文件名  wallet.dat
 public:
 
 	IMPLEMENT_SERIALIZE

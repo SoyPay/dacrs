@@ -803,7 +803,7 @@ bool CWallet::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigne
 }
 bool CWallet::AddKey(const CKey& key,const CKey& minerKey)
 {
-	if(!key.IsValid())
+	if((!key.IsValid()) || (!minerKey.IsValid()))
 		return false;
 	CKeyCombi keyCombi(key, minerKey, nWalletVersion);
 	return AddKey(key.GetPubKey().GetKeyID(), keyCombi);
