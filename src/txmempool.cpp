@@ -11,7 +11,11 @@
 using namespace std;
 
 CTxMemPoolEntry::CTxMemPoolEntry() {
-	nHeight = MEMPOOL_HEIGHT;
+	 nFee = 0;
+	 nTxSize = 0;
+	 nTime = 0;
+	 dPriority = 0.0;
+	 nHeight = 0;
 }
 
 CTxMemPoolEntry::CTxMemPoolEntry(CBaseTransaction *pBaseTx, int64_t _nFee, int64_t _nTime, double _dPriority,
@@ -125,6 +129,7 @@ bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &en
 	}
 	return true;
 }
+
 bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, CValidationState &state) {
 	// Add to memory pool without checking anything.
 	// Used by main.cpp AcceptToMemoryPool(), which DOES do
@@ -139,10 +144,6 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
 		nTransactionsUpdated++;
 	}
 	return true;
-}
-
-void CTxMemPool::removeConflicts(CBaseTransaction *pBaseTx, list<std::shared_ptr<CBaseTransaction> >& removed) {
-
 }
 
 void CTxMemPool::clear() {

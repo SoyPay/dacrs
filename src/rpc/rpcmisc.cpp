@@ -55,13 +55,12 @@ Value getbalance(const Array& params, bool fHelp)
 	if (size == 0) {
 		obj.push_back(Pair("balance", ValueFromAmount(pwalletMain->GetRawBalance())));
 		return std::move(obj);
-	} else if(size == 1)  {
+	} else if (size == 1) {
 		string addr = params[0].get_str();
-		if(addr == "*") {
+		if (addr == "*") {
 			obj.push_back(Pair("balance", ValueFromAmount(pwalletMain->GetRawBalance())));
 			return std::move(obj);
-		}
-		else {
+		} else {
 			CKeyID keyid;
 			if (!GetKeyId(addr, keyid)) {
 				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
@@ -73,42 +72,78 @@ Value getbalance(const Array& params, bool fHelp)
 					obj.push_back(Pair("balance", ValueFromAmount(account.GetRawBalance())));
 					return std::move(obj);
 				}
-			}
-			else
-			{
+			} else {
 				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "address not inwallet");
 			}
 		}
-	}else if(size == 2)
-	{
+	} else if (size == 2) {
 		string addr = params[0].get_str();
 		int nConf = params[1].get_int();
-		if(addr == "*") {
-			if(0 != nConf) {
-				obj.push_back(Pair("balance", ValueFromAmount(pwalletMain->GetRawBalance())));
+		int nMaxConf = SysCfg().GetArg("-maxconf", 30);
+		if(nConf > nMaxConf) {
+			throw JSONRPCError(RPC_INVALID_PARAMETER, "parameter minconf exceed maxconfed");
+		}
+		if (addr == "*") {
+			if (0 != nConf) {
+				CBlockIndex *pBlockIndex = chainActive.Tip();
+				int64_t nValue(0);
+				while (nConf) {
+					if (pwalletMain->mapInBlockTx.count(pBlockIndex->GetBlockHash()) > 0) {
+						map<uint256, std::shared_ptr<CBaseTransaction> > mapTx = pwalletMain->mapInBlockTx[pBlockIndex->GetBlockHash()].mapAccountTx;
+						for (auto &item : mapTx) {
+							if (COMMON_TX == item.second->nTxType) {
+								CTransaction *pTx = (CTransaction *) item.second.get();
+								CKeyID srcKeyId, desKeyId;
+								pAccountViewTip->GetKeyId(pTx->srcRegId, srcKeyId);
+								pAccountViewTip->GetKeyId(pTx->desUserId, desKeyId);
+								if (!pwalletMain->HaveKey(srcKeyId) && pwalletMain->HaveKey(desKeyId)) {
+									nValue = pTx->llValues;
+								}
+							}
+						}
+					}
+					pBlockIndex = pBlockIndex->pprev;
+					--nConf;
+				}
+				obj.push_back(Pair("balance", ValueFromAmount(pwalletMain->GetRawBalance() - nValue)));
 				return std::move(obj);
-			}
-			else {
+			} else {
 				obj.push_back(Pair("balance", ValueFromAmount(pwalletMain->GetRawBalance(false))));
 				return std::move(obj);
 			}
-		}else {
+		} else {
 			CKeyID keyid;
 			if (!GetKeyId(addr, keyid)) {
 				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 			}
 			if (pwalletMain->HaveKey(keyid)) {
-				if(0 != nConf) {
-					obj.push_back(Pair("balance", ValueFromAmount(pAccountViewTip->GetRawBalance(keyid))));
+				if (0 != nConf) {
+					CBlockIndex *pBlockIndex = chainActive.Tip();
+					int64_t nValue(0);
+					while (nConf) {
+						if (pwalletMain->mapInBlockTx.count(pBlockIndex->GetBlockHash()) > 0) {
+							map<uint256, std::shared_ptr<CBaseTransaction> > mapTx = pwalletMain->mapInBlockTx[pBlockIndex->GetBlockHash()].mapAccountTx;
+							for (auto &item : mapTx) {
+								if (COMMON_TX == item.second->nTxType) {
+									CTransaction *pTx = (CTransaction *) item.second.get();
+									CKeyID srcKeyId, desKeyId;
+									pAccountViewTip->GetKeyId(pTx->desUserId, desKeyId);
+									if (keyid == desKeyId) {
+										nValue = pTx->llValues;
+									}
+								}
+							}
+						}
+						pBlockIndex = pBlockIndex->pprev;
+						--nConf;
+					}
+					obj.push_back(Pair("balance", ValueFromAmount(pAccountViewTip->GetRawBalance(keyid) - nValue)));
 					return std::move(obj);
-				}
-				else {
+				} else {
 					obj.push_back(Pair("balance", ValueFromAmount(mempool.pAccountViewCache->GetRawBalance(keyid))));
 					return std::move(obj);
 				}
-			}
-			else
-			{
+			} else {
 				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "address not inwallet");
 			}
 		}

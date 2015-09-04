@@ -436,6 +436,12 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 	const uint256 targetHash = CBigNum().SetCompact(pBlock->nBits).getuint256(); //target hash difficult
 
 	uint64_t posacc = account.GetAccountPos(pBlock->nHeight);
+/*
+	arith_uint256 bnNew;
+	bnNew.SetCompact(pBlock->nBits);
+	string  timeFormat = DateTimeStrFormat("%Y-%m-%d %H:%M:%S", pBlock->nTime);
+	LogPrint("coinday","height:%.10d, account:%-10s, coinday:%.10ld, difficulty=%.8lf,  time=%-20s, interval=%d\n", pBlock->nHeight, account.regID.ToString(), posacc/COIN/SysCfg().GetIntervalPos(), CaculateDifficulty(bnNew.GetCompact()), timeFormat,  pBlock->nTime-chainActive[pBlock->nHeight-1]->nTime);
+*/
 	if (posacc == 0) {
 		return ERRORMSG("Account have no pos");
 	}

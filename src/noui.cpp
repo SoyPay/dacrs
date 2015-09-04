@@ -153,7 +153,6 @@ static bool noui_SyncTx()
 		}
 	}
 	*/
-	/*
 	map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx =  pwalletMain->UnConfirmTx.begin();
 	for(; iterTx != pwalletMain->UnConfirmTx.end(); ++iterTx)
 	{
@@ -164,7 +163,7 @@ static bool noui_SyncTx()
 		obj.push_back(Pair("type",     "SyncTx"));
 		obj.push_back(Pair("msg",   objTx));
 		AddMessageToDeque(write_string(Value(std::move(obj)),true));
-	}*/
+	}
 	return true;
 }
 

@@ -1016,7 +1016,7 @@ int64_t GetAverageSpaceTime(const CBlockIndex* pindexLast, int64_t nInterval)
     	*(--pbegin) = pindex->GetBlockTime() - pPreIndex->GetBlockTime();
     	strSelects += strprintf(" %lld",  *(pbegin));
     }
-    LogPrint("INFO", "nheight:%d differtime :%s\n",pindex->nHeight, strSelects.c_str());
+//  LogPrint("INFO", "nheight:%d differtime :%s\n",pindex->nHeight, strSelects.c_str());
 
     sort(pbegin, pend);
 
@@ -1034,7 +1034,7 @@ int64_t GetAverageSpaceTime(const CBlockIndex* pindexLast, int64_t nInterval)
 		}
 	}
 	int64_t nAverageSpacing = totalSpace / nCount;
-	LogPrint("INFO", "upBound=%lld lowBound=%lld nAverageSpacing=%lld Samples=%d\n", upBound, lowBound, nAverageSpacing, nCount);
+//	LogPrint("INFO", "upBound=%lld lowBound=%lld nAverageSpacing=%lld Samples=%d\n", upBound, lowBound, nAverageSpacing, nCount);
 	return nAverageSpacing;
 }
 
@@ -2167,9 +2167,12 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 				vPreBlocks.push_back(block);                   //将支链的block保存起来
 			}
 			pPreBlockIndex = pPreBlockIndex->pprev;
+			if(chainActive.Tip()->nHeight - pPreBlockIndex->nHeight > SysCfg().GetIntervalPos()) {
+				return state.DoS(100, ERRORMSG("CheckBlockProofWorkWithCoinDay() : block at fork chain too earlier than tip block hash=%s block height=%d\n", block.GetHash().GetHex(), block.nHeight));
+			}
 			map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(pPreBlockIndex->GetBlockHash());
 			if (mi == mapBlockIndex.end())
-				return state.DoS(10, ERRORMSG("AcceptBlock() : prev block not found"), 0, "bad-prevblk");
+				return state.DoS(10, ERRORMSG("CheckBlockProofWorkWithCoinDay() : prev block not found"), 0, "bad-prevblk");
 		}//如果进来的preblock hash不为tip的hash,找到主链中分叉处
 
 		int64_t tempTime = GetTimeMillis();
