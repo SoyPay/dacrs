@@ -1075,7 +1075,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 	int64_t nInterval = SysCfg().GetTargetTimespan() / nTargetSpacing;
 
 
-	if(pindexLast->nHeight > 35000) {
+	if(pindexLast->nHeight < 78000 && pindexLast->nHeight > 35000) {
 		arith_uint256 bnNew;
 		bnNew.SetCompact(pindexPrev->nBits);
 		int64_t nAverageSpacing = GetAverageSpaceTime(pindexLast, nInterval);
@@ -1095,7 +1095,11 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 		bnNew /= ((nInterval + 1) * nTargetSpacing);
 		if (UintToArith256(uint256S(bnNew.getuint256().GetHex())) > SysCfg().ProofOfWorkLimit() || bnNew < 0) {
 			LogPrint("INFO", "bnNew:%s\n", bnNew.GetHex());
-			bnNew.setuint256(ArithToUint256(SysCfg().ProofOfWorkLimit()));
+			if(pindexLast->nHeight < 35000) {
+				bnNew.SetCompact(pindexPrev->nBits);
+			}else {
+				bnNew.setuint256(ArithToUint256(SysCfg().ProofOfWorkLimit()));
+			}
 		}
 //		LogPrint("INFO", "bnNew=%s difficulty=%.8lf\n", bnNew.GetHex(), CaculateDifficulty(bnNew.GetCompact()));
 		return bnNew.GetCompact();
