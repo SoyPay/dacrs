@@ -1597,19 +1597,22 @@ Value sigstr(const Array& params, bool fHelp) {
 }
 
 Value getalltxinfo(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 0) {
+	if (fHelp || (params.size() != 0 && params.size() != 1)) {
 		throw runtime_error("getalltxinfo \n"
 				"\nget all transaction info\n"
 				"\nArguments:\n"
+				"1.\"nlimitCount\": (numeric, optional, default=0) 0 return all tx, else return number of nlimitCount txs \n"
 				"\nResult:\n"
 				"\nExamples:\n" + HelpExampleCli("getalltxinfo", "") + "\nAs json rpc call\n"
 				+ HelpExampleRpc("getalltxinfo", ""));
 	}
 
 	Object retObj;
-
+	int nLimitCount(0);
+	if(params.size() == 1)
+		nLimitCount = params[0].get_int();
 	assert(pwalletMain != NULL);
-	{
+	if(nLimitCount <=0 ) {
 		Array ComfirmTx;
 		for (auto const &wtx : pwalletMain->mapInBlockTx) {
 			for (auto const & item : wtx.second.mapAccountTx) {
@@ -1626,6 +1629,23 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 			UnComfirmTx.push_back(objtx);
 		}
 		retObj.push_back(Pair("UnConfirmed", UnComfirmTx));
+	}else {
+		Array ComfirmTx;
+		multimap<int, Object, std::greater<int> > mapTx;
+		for (auto const &wtx : pwalletMain->mapInBlockTx) {
+			for (auto const & item : wtx.second.mapAccountTx) {
+				Object objtx = GetTxDetailJSON(item.first);
+				ComfirmTx.push_back(objtx);
+				int nConfHeight = find_value(objtx, "confirmHeight").get_int();
+				mapTx.insert(pair<int, Object>(nConfHeight, objtx));
+			}
+		}
+		int nSize(0);
+		for(auto & txItem : mapTx) {
+			if(++nSize > nLimitCount)
+				break;
+			retObj.push_back(Pair("Confirmed", txItem.second));
+		}
 	}
 
 	return retObj;
@@ -1902,3 +1922,29 @@ Value setcheckpoint(const Array& params, bool fHelp)
 	return tfm::format("sendcheckpoint :%d\n", point.m_height);
 }
 
+Value isvalideaddress(const Array& params, bool fHelp)
+{
+	if(fHelp || params.size() != 1)
+		{
+			throw runtime_error(
+					 "isvalideaddess \"dacrs address\"\n"
+					 "\ncheck address is valide\n"
+					 "\nArguments:\n"
+					 "1. \"dacrs address\"  (string, required) dacrs address\n"
+					 "\nResult:\n"
+					 "\nExamples:\n"
+			         + HelpExampleCli("isvalideaddress", "\"De5nZAbhMikMPGHzxvSGqHTgEuf3eNUiZ7\"")
+			         + HelpExampleRpc("isvalideaddress", "\"De5nZAbhMikMPGHzxvSGqHTgEuf3eNUiZ7\""));
+		}
+	{
+		Object obj;
+		CKeyID keyid;
+		string addr = params[0].get_str();
+		if (!GetKeyId(addr, keyid)) {
+			obj.push_back(Pair("ret" , false));
+		}else {
+			obj.push_back(Pair("ret" , true));
+		}
+		return obj;
+	}
+}

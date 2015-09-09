@@ -1222,7 +1222,7 @@ string FormatSubVersion(const string& name, int nClientVersion, const vector<str
 	ss << "/";
 	ss << name << ":" << FormatVersion(nClientVersion);
 	if (!comments.empty())
-		ss << "(" << boost::algorithm::join(comments, "; ") << ")";
+		ss << ":" << "(" << boost::algorithm::join(comments, "; ") << ")";
 	ss << "/";
 	return ss.str();
 }
