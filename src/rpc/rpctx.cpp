@@ -1922,7 +1922,7 @@ Value setcheckpoint(const Array& params, bool fHelp)
 	return tfm::format("sendcheckpoint :%d\n", point.m_height);
 }
 
-Value isvalideaddress(const Array& params, bool fHelp)
+Value validateaddress(const Array& params, bool fHelp)
 {
 	if(fHelp || params.size() != 1)
 		{

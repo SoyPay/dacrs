@@ -57,7 +57,6 @@ extern Value  gethash(const Array& params, bool fHelp);
 extern Value  getappkeyvalue(const Array& params, bool fHelp);
 extern Value  gencheckpoint(const Array& params, bool fHelp);
 extern Value  setcheckpoint(const Array& params, bool fHelp);
-extern Value isvalideaddress(const Array& params, bool fHelp);
-
+extern Value validateaddress(const Array& params, bool fHelp);
 extern Object TxToJSON(CBaseTransaction *pTx);
 #endif /* RPCTX_H_ */
