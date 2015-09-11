@@ -246,6 +246,7 @@ uint64_t CBaseTransaction::GetFuel(int nfuelRate) {
 	}
 	return llFuel;
 }
+
 string CBaseTransaction::txTypeArray[6] = { "NULL_TXTYPE", "REWARD_TX", "REG_ACCT_TX", "COMMON_TX", "CONTRACT_TX", "REG_APP_TX"};
 
 int CBaseTransaction::GetFuelRate(CScriptDBViewCache &scriptDB) {
