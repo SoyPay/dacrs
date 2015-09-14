@@ -1635,7 +1635,6 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 		for (auto const &wtx : pwalletMain->mapInBlockTx) {
 			for (auto const & item : wtx.second.mapAccountTx) {
 				Object objtx = GetTxDetailJSON(item.first);
-				ComfirmTx.push_back(objtx);
 				int nConfHeight = find_value(objtx, "confirmHeight").get_int();
 				mapTx.insert(pair<int, Object>(nConfHeight, objtx));
 			}
@@ -1644,8 +1643,9 @@ Value getalltxinfo(const Array& params, bool fHelp) {
 		for(auto & txItem : mapTx) {
 			if(++nSize > nLimitCount)
 				break;
-			retObj.push_back(Pair("Confirmed", txItem.second));
+			ComfirmTx.push_back(txItem.second);
 		}
+		retObj.push_back(Pair("Confirmed", ComfirmTx));
 	}
 
 	return retObj;
