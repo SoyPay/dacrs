@@ -555,7 +555,7 @@ bool CIpoTest::SendIpoTx()
 }
 
 void CIpoTest::SendErrorIopTx()
-{
+{   /*利用一个地址给自己账户充值，从脚本账户 50725-1 把钱取出来*/
 	strAppRegId = "50725-1";
 	IPO_USER useripo;
 	char *dess = "DhxrQ9hsvo3fVVSy6By8bePt8cmPtts88R";

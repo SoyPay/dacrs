@@ -1281,6 +1281,10 @@ static RET_DEFINE ExWriteOutAppOperateFunc(unsigned char * ipara,void * pVmEvn)
 	while(count--)
 	{
 		ss >> temp;
+		if(temp.mMoney < 0) //不能小于0,防止 上层传错金额小于20150904
+		{
+			return RetFalse("para err");
+		}
 		pVmRunEvn->InsertOutAPPOperte(temp.GetAppUserV(),temp);
 		step +=Size;
 	}
