@@ -11,9 +11,14 @@
 // target servers or GUI users specifically.
 const std::string CLIENT_NAME("dacrs");
 
+#ifdef WIN32
 // Client version number
-#define CLIENT_VERSION_SUFFIX   "-release"
+#define CLIENT_VERSION_SUFFIX   "-release-window"
+#endif
 
+#ifndef WIN32
+#define CLIENT_VERSION_SUFFIX   "-release-linux"
+#endif
 
 // The following part of the code determines the CLIENT_BUILD variable.
 // Several mechanisms are used for this:

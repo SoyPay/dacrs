@@ -674,6 +674,16 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
         CTxMemPoolEntry entry(pBaseTx, nFees, GetTime(), dPriority, chainActive.Height());
         unsigned int nSize = entry.GetTxSize();
 
+        if(pBaseTx->nTxType == COMMON_TX)
+        {
+			CTransaction *pTx = (CTransaction *) pBaseTx;
+			if (pTx->llValues < CBaseTransaction::nMinTxFee) {
+				return state.DoS(0,
+						ERRORMSG("AcceptToMemoryPool : tx %d transfer amount(%d) very small, you must send a min (%d)",
+								hash.ToString(), pTx->llValues, CBaseTransaction::nMinTxFee), REJECT_DUST, "dust amount");
+			}
+        }
+
         // Don't accept it if it can't get into a block
         int64_t txMinFee = GetMinFee(pBaseTx, nSize, true, GMF_RELAY);
         if (fLimitFree && nFees < txMinFee)
@@ -1074,8 +1084,23 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 	int64_t nTargetSpacing = SysCfg().GetTargetSpacing();  //nStakeTargetSpacing;
 	int64_t nInterval = SysCfg().GetTargetTimespan() / nTargetSpacing;
 
-
-	if(pindexLast->nHeight > 35000) {
+	if(pindexLast->nHeight > 85000) {
+		arith_uint256 bnNew;
+		bnNew.SetCompact(pindexPrev->nBits);
+		int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
+		int64_t nTotalSpacing = ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
+		if(nTotalSpacing < 0) {
+			return bnNew.GetCompact();
+		}
+		bnNew *= nTotalSpacing;
+		bnNew /= ((nInterval + 1) * nTargetSpacing);
+		if (bnNew > SysCfg().ProofOfWorkLimit()) {
+			LogPrint("INFO", "bnNew:%s\n", bnNew.GetHex());
+			bnNew = SysCfg().ProofOfWorkLimit();
+		}
+		LogPrint("INFO", "bnNew=%s difficulty=%.8lf\n", bnNew.GetHex(), CaculateDifficulty(bnNew.GetCompact()));
+		return bnNew.GetCompact();
+	}else {
 		arith_uint256 bnNew;
 		bnNew.SetCompact(pindexPrev->nBits);
 		int64_t nAverageSpacing = GetAverageSpaceTime(pindexLast, nInterval);
@@ -1085,19 +1110,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 			LogPrint("INFO", "bnNew:%s\n", bnNew.GetHex());
 			bnNew = SysCfg().ProofOfWorkLimit();
 		}
-//		LogPrint("INFO", "bnNew=%s difficulty=%.8lf\n", bnNew.GetHex(), CaculateDifficulty(bnNew.GetCompact()));
-		return bnNew.GetCompact();
-	}else {
-		CBigNum bnNew;
-		bnNew.SetCompact(pindexPrev->nBits);
-		int64_t nActualSpacing = pindexPrev->GetBlockTime() - pindexPrevPrev->GetBlockTime();
-		bnNew *= ((nInterval - 1) * nTargetSpacing + nActualSpacing + nActualSpacing);
-		bnNew /= ((nInterval + 1) * nTargetSpacing);
-		if (UintToArith256(uint256S(bnNew.getuint256().GetHex())) > SysCfg().ProofOfWorkLimit() || bnNew < 0) {
-			LogPrint("INFO", "bnNew:%s\n", bnNew.GetHex());
-			bnNew.setuint256(ArithToUint256(SysCfg().ProofOfWorkLimit()));
-		}
-//		LogPrint("INFO", "bnNew=%s difficulty=%.8lf\n", bnNew.GetHex(), CaculateDifficulty(bnNew.GetCompact()));
+		LogPrint("INFO", "bnNew=%s difficulty=%.8lf\n", bnNew.GetHex(), CaculateDifficulty(bnNew.GetCompact()));
 		return bnNew.GetCompact();
 	}
 }
@@ -2373,8 +2386,8 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 		if (pcheckpoint && nHeight < pcheckpoint->nHeight)
 			return state.DoS(100, ERRORMSG("AcceptBlock() : forked chain older than last checkpoint (height %d)", nHeight));
 
-		// Check proof of work, before height 28000 don't check proofwork, fixed CBigNum adjust difficult bug.
-		if(block.nBits != GetNextWorkRequired(pindexPrev, &block))
+		// Check proof of work, before height 35001 don't check proofwork, fixed CBigNum adjust difficult bug.
+		if(block.nHeight > 35001 && block.nBits != GetNextWorkRequired(pindexPrev, &block))
 			return state.DoS(100, ERRORMSG("AcceptBlock() : incorrect proof of work actual vs need(%d vs %d)", block.nBits, GetNextWorkRequired(pindexPrev, &block)), REJECT_INVALID, "bad-diffbits");
 
 		//Check proof of pos tx

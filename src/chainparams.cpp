@@ -588,7 +588,7 @@ CBaseParams::CBaseParams() {
 	nTargetSpacing = 60;
 	nTargetTimespan = 30 * 60;
 	nSubsidyHalvingInterval = 0;
-	paytxfee = 1000;
+	paytxfee = 10000;
 	nDefaultPort = 0;
 	fPrintToConsole= 0;
 	fPrintToToFile = 0;
