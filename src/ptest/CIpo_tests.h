@@ -30,9 +30,10 @@ public:
 	virtual TEST_STATE Run() ;
 	bool RegistScript();
 	bool CreateIpoTx(string contact,int64_t llSendTotal);
-	bool SendIpoTx();
-	void RunIpo();
+	bool SendIpoTx(unsigned char type);
+	void RunIpo(unsigned char type);
 	void SendErrorIopTx();
+
 };
 
 #endif /* CANONY_TESTS_H */

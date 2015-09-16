@@ -48,7 +48,8 @@ typedef struct tagdddd{
 //const int64_t totalSendMoney =  2677621584404177; //二期IPO第三批发币总额
 //const int64_t totalSendMoney = 19164400000000000;   //一期IPO第一批总额
 //const int64_t totalSendMoney =    4913960000000000;   //一期IPO第二批总额
-const int64_t totalSendMoney =    17567366666666608;     /// 一期IPO11个月冻结金额的钱
+//const int64_t totalSendMoney =    17567366666666608;     /// 一期IPO11个月冻结金额的钱
+const int64_t totalSendMoney =    200000001;     /// 一期IPO1个月冻结金额的钱
 IPO_DATA arrayData[]=
 {
 
@@ -81,7 +82,7 @@ IPO_DATA arrayData[]=
 		  { "Dfkhj8sFCEr4FGPHwj7Qyf3aTQqmxJNW2q",       120000000000000	},
 		  { "DhgrzBsyhWaLj4TAvdddsqmyg5W8ABcdM5",       385080000000000	}
 #endif
-
+#if 0
 		{ "Do9W61KiBCrtJpQZDELtbrJYVbcuuYhXDv",       25416666666666	},
 		{ "DrumFsuGwFzmhDRGgYrzPh4i7sHiSp3iJE",      105000000000000 },
 		{ "DnKUZMvwXfprFCKhnsWRsbJTNnRZg88T2F",      105000000000000 },
@@ -107,10 +108,14 @@ IPO_DATA arrayData[]=
 	  { "DgvRvQHLuPtbPtEcR8Am7RicmsqhRpZ8xt",       20000000000000	},
 	  { "Dfkhj8sFCEr4FGPHwj7Qyf3aTQqmxJNW2q",       10000000000000	},
 	  { "DhgrzBsyhWaLj4TAvdddsqmyg5W8ABcdM5",       32090000000000	}
+#endif
 
-#if 0
-		{"dyjC8fuSoVGpepRGi8F2SridVX4VjykLG4",	25416666666666}, //
-		{"dfLo3CHErzWPrxRtthMiitcoGkrR6DskiF",	105000000000000},
+		{"dyjC8fuSoVGpepRGi8F2SridVX4VjykLG4",	100000000}, //
+		{"dfLo3CHErzWPrxRtthMiitcoGkrR6DskiF",	100000001},
+
+#if 0  //测试网络 25个测试地址 不要删了
+		{"dyjC8fuSoVGpepRGi8F2SridVX4VjykLG4",	100000000}, //
+		{"dfLo3CHErzWPrxRtthMiitcoGkrR6DskiF",	100000001},
 		{"dwpwbNeGEP9bZzFfNnn4gK96LKNA83R93D",	105000000000000},
 		{"e1eHyMk4D9oeUnKsiDjS8KLkpGVRAbPfW6",	354166666666666},
 		{"diANoyDdGjvdsYxjrSpcVW4kFSkdEj21PD",	227500000000000},
@@ -388,12 +393,12 @@ TEST_STATE CIpoTest::Run(){
 	}
 #endif
 	cout<<"SendIpoTx start"<<endl;
-	SendIpoTx();
+	SendIpoTx(0);
 	cout<<"SendIpoTx end"<<endl;
 	return end_state;
 }
 
-void CIpoTest::RunIpo(){
+void CIpoTest::RunIpo(unsigned char type){
 	int64_t nMoneySend(0);
 	size_t t_num = sizeof(arrayData) / sizeof(arrayData[0]);
 	BOOST_CHECK(t_num <= max_user);         //防止越界
@@ -401,7 +406,12 @@ void CIpoTest::RunIpo(){
 	for (size_t i = 0; i < t_num; i++) {
 		memcpy((char*)userarray[i].address,(char*)arrayData[i].pAddress,sizeof(userarray[i].address));
 		userarray[i].freeMothmoney = arrayData[i].nMoney;
-		userarray[i].money = arrayData[i].nMoney*11;
+		if(type == 1)
+		{  //冻结1次
+			userarray[i].money = arrayData[i].nMoney;
+		}else{ // 冻结11次
+			userarray[i].money = arrayData[i].nMoney*11;
+		}
 		nMoneySend += userarray[i].money;  //统计总金额
 
 	}
@@ -427,10 +437,10 @@ void CIpoTest::RunIpo(){
 //	}
 
 
-	strAppRegId = "76685-1";  //"2-1"
+	strAppRegId = "47046-1";  //"2-1"
 
    cout<<"SendIpoTx start"<<endl;
-	SendIpoTx();
+	SendIpoTx(type);
    cout<<"SendIpoTx end"<<endl;
 }
 
@@ -448,7 +458,7 @@ bool CIpoTest::RegistScript(){
 	string regAddr="dk2NNjraSvquD9b4SQbysVRQeFikA55HLi";
 
 	//reg anony app
-	Value regscript = basetest.RegisterAppTx(regAddr, strFileName, nCurHight, nFee+20*COIN);
+	Value regscript = basetest.RegisterAppTx(regAddr, strFileName, nCurHight, nFee+1*COIN);//20
 	if(basetest.GetHashFromCreatedTx(regscript, strTxHash)){
 		return true;
 	}
@@ -468,7 +478,7 @@ bool CIpoTest::CreateIpoTx(string contact,int64_t llSendTotal){
 	}
 	return false;
 }
-bool CIpoTest::SendIpoTx()
+bool CIpoTest::SendIpoTx(unsigned char type)
 {
 	// 创建转账交易并且保存转账交易的hash
 	Object objRet;
@@ -549,8 +559,14 @@ bool CIpoTest::SendIpoTx()
         	BOOST_CHECK(freedmoney == userarray[i].freeMothmoney);
 //        	nMoneySend += freedmoney;
         }
-        BOOST_CHECK(j == (12 - 1)); //11个冻结金额
+		if(type == 1)
+		{  //冻结1次
+
+		}else{
+            BOOST_CHECK(j == (12 - 1)); //11个冻结金额
+		}
 	}
+
 	return true;
 }
 
@@ -578,8 +594,9 @@ BOOST_FIXTURE_TEST_SUITE(CreateIpoTxTest,CIpoTest)
 
 BOOST_FIXTURE_TEST_CASE(Test,CIpoTest)
 {
-	//Run();
-	RunIpo();
+//	Run();
+//	RunIpo(0); //冻结11次
+	RunIpo(1); //冻结1次
 	//SendErrorIopTx();
 }
 
