@@ -1,0 +1,157 @@
+/*
+ * CBlackHalo_tests.h
+ *
+ *  Created on: 2015-04-24
+ *      Author: frank.shi
+ */
+
+#ifndef CANONY_TESTS_H
+#define CANONY_TESTS_H
+
+#include "CycleTestBase.h"
+#include "../test/systestbase.h"
+#include "../rpc/rpcclient.h"
+#include "tx.h"
+
+using namespace std;
+using namespace boost;
+using namespace json_spirit;
+
+
+#define	TX_REGISTER   0x01   //注册仲裁账户
+#define TX_MODIFYREGISTER  0x02 // 修改仲裁者注册信息
+#define	TX_UNREGISTER  0x03 //注销仲裁账户
+#define	TX_SEND  0x04 //挂单
+#define	TX_CANCEL  0x05 //取消挂单
+#define	TX_ACCEPT  0x06 //接单
+#define	TX_BUYERCONFIRM  0x07 //买家确认收货
+#define	TX_ARBITRATION  0x08 //申请仲裁
+#define	TX_FINALRESULT  0x09 //裁决结果
+
+
+
+#define	SEND_TYPE_BUY   0x00   //!<挂单 买
+#define	SEND_TYPE_SELL  0x01  //!<挂单 卖
+
+
+typedef struct {
+	unsigned char type;            //!<交易类型
+	uint64_t arbiterMoneyX;             //!<仲裁费用X
+	uint64_t overtimeMoneyYmax;  //!<超时未判决的最大赔偿费用Y
+	uint64_t configMoneyZ;              //!<无争议裁决费用Z
+	unsigned int  overtimeheightT;  //!<判决期限时间T
+	unsigned char  ucLen;           //!<备注说明长度
+	char  comment[128];             //!<备注说明
+	IMPLEMENT_SERIALIZE
+	(
+			READWRITE(type);
+			READWRITE(arbiterMoneyX);
+			READWRITE(overtimeMoneyYmax);
+			READWRITE(configMoneyZ);
+			READWRITE(overtimeheightT);
+			READWRITE(ucLen);
+			for(int i = 0; i < 128; i++)
+			{
+				READWRITE(comment[i]);
+			}
+	)
+
+}TX_REGISTER_CONTRACT;  //!<注册仲裁账户
+
+typedef struct {
+	unsigned char type;            //!<交易类型
+	unsigned char sendType;         //!<挂单类型:0 买  1卖
+	char arbitationID[6];        //!<仲裁者ID（采用6字节的账户ID）
+	uint64_t moneyM;                   //!<交易金额
+	unsigned int height;           //!<每个交易环节的超时高度
+
+	unsigned char ucLen;            //!<备注说明长度
+	char  comment[128];             //!<备注说明
+	IMPLEMENT_SERIALIZE
+	(
+			READWRITE(type);
+			READWRITE(sendType);
+			for(int i = 0; i < 6; i++)
+			{
+				READWRITE(arbitationID[i]);
+			}
+			READWRITE(moneyM);
+			READWRITE(height);
+			READWRITE(ucLen);
+			for(int i = 0; i < 128; i++)
+			{
+				READWRITE(comment[i]);
+			}
+	)
+}TX_SNED_CONTRACT;                  //!<挂单
+
+typedef struct {
+	unsigned char type;            //!<交易类型
+	unsigned char txhash[32];       //!<挂单的交易hash
+	IMPLEMENT_SERIALIZE
+	(
+			READWRITE(type);
+			for(int i = 0; i < 32; i++)
+			{
+				READWRITE(txhash[i]);
+			}
+	)
+} TX_CONTRACT;
+
+
+typedef struct {
+	unsigned char type;            //!<交易类型
+	unsigned char sendhash[32];       //!<挂单的交易hash
+	unsigned char accepthash[32];    //!<接单的交易hash
+	char 	winner[6];      	//!<赢家ID（采用6字节的账户ID）
+	uint64_t winnerMoney;            //!<最终获得的金额
+//	char  loser[6];       //!<输家ID（采用6字节的账户ID）
+//	uint64_t loserMoney;            //!<最终获得的金额
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(type);
+		for(int i = 0; i < 32; i++)
+		{
+			READWRITE(sendhash[i]);
+		}
+		for(int i = 0; i < 32; i++)
+		{
+			READWRITE(accepthash[i]);
+		}
+		for(int i = 0; i < 6; i++)
+		{
+			READWRITE(winner[i]);
+		}
+		READWRITE(winnerMoney);
+//		for(int i = 0; i < 6; i++)
+//		{
+//			READWRITE(loser[i]);
+//		}
+//		READWRITE(loserMoney);
+	)
+}TX_FINALRESULT_CONTRACT;        //!<最终裁决
+
+
+class CGuaranteeTest: public CycleTestBase {
+	int nNum;
+	int nStep;
+	string strTxHash;
+	string strAppRegId;//注册应用后的Id
+public:
+	CGuaranteeTest();
+	~CGuaranteeTest(){};
+	virtual TEST_STATE Run() ;
+	bool RegistScript();
+
+	bool Register(void);
+	bool UnRegister(void);
+	bool SendStartTrade(void);
+	bool SendCancelTrade(void);
+	bool AcceptTrade(void);
+	bool BuyerConfirm(void);
+    bool Arbitration(void);
+    bool RunFinalResult(void);
+
+};
+
+#endif /* CANONY_TESTS_H */
