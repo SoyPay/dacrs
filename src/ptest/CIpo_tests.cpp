@@ -49,7 +49,7 @@ typedef struct tagdddd{
 //const int64_t totalSendMoney = 19164400000000000;   //一期IPO第一批总额
 //const int64_t totalSendMoney =    4913960000000000;   //一期IPO第二批总额
 //const int64_t totalSendMoney =    17567366666666608;     /// 一期IPO11个月冻结金额的钱
-const int64_t totalSendMoney =    200000001;     /// 一期IPO1个月冻结金额的钱
+const int64_t totalSendMoney =    20000000000000000;     /// 官方冻结金额总额
 IPO_DATA arrayData[]=
 {
 
@@ -110,8 +110,8 @@ IPO_DATA arrayData[]=
 	  { "DhgrzBsyhWaLj4TAvdddsqmyg5W8ABcdM5",       32090000000000	}
 #endif
 
-		{"dyjC8fuSoVGpepRGi8F2SridVX4VjykLG4",	100000000}, //
-		{"dfLo3CHErzWPrxRtthMiitcoGkrR6DskiF",	100000001},
+		{"DpqbJLPkBrevxYKpZYAbQp6DJSHzHFiruf",	10000000000000000}, //
+		{"DsSyKYzYBSgyEggq8o6SVD4DnPzETVbaUe",	10000000000000000},
 
 #if 0  //测试网络 25个测试地址 不要删了
 		{"dyjC8fuSoVGpepRGi8F2SridVX4VjykLG4",	100000000}, //
@@ -437,7 +437,7 @@ void CIpoTest::RunIpo(unsigned char type){
 //	}
 
 
-	strAppRegId = "47046-1";  //"2-1"
+	strAppRegId = "86570-1";  //"2-1"
 
    cout<<"SendIpoTx start"<<endl;
 	SendIpoTx(type);

@@ -109,7 +109,7 @@ static bool noui_SyncTx()
 	objMsg.push_back(Pair("msg",  objStartHeight));
 	AddMessageToDeque(write_string(Value(std::move(objMsg)),true));
 
-	while(pStartBlockIndex != chainActive.Tip()) {
+	while(pStartBlockIndex != NULL) {
 		if((pwalletMain->mapInBlockTx).count(pStartBlockIndex->GetBlockHash()) > 0)
 		{
 

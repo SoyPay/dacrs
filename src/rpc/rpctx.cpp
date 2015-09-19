@@ -72,6 +72,9 @@ Object GetTxDetailJSON(const uint256& txhash) {
 					obj.push_back(Pair("blockhash", header.GetHash().GetHex()));
 					obj.push_back(Pair("confirmHeight", (int) header.nHeight));
 					obj.push_back(Pair("confirmedtime", (int) header.nTime));
+					CDataStream ds(SER_DISK, CLIENT_VERSION);
+					ds << pBaseTx;
+					obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
 				} catch (std::exception &e) {
 					throw runtime_error(tfm::format("%s : Deserialize or I/O error - %s", __func__, e.what()).c_str());
 				}
@@ -82,6 +85,9 @@ Object GetTxDetailJSON(const uint256& txhash) {
 			pBaseTx = mempool.lookup(txhash);
 			if (pBaseTx.get()) {
 				obj = pBaseTx->ToJSON(*pAccountViewTip);
+				CDataStream ds(SER_DISK, CLIENT_VERSION);
+				ds << pBaseTx;
+				obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
 				return obj;
 			}
 		}
