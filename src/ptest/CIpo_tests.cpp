@@ -414,17 +414,17 @@ void CIpoTest::RunIpo(unsigned char type){
 			!strcmp((char *)userarray[i].address, "Dpjs5pvXmZbVt3uDEfBrMNbCsWjJzjm8XA") ||
 			!strcmp((char *)userarray[i].address, "DZYDEn8CZuwgJ6YS6Zm7VvKaFc6E6tGstz") ||
 			!strcmp((char *)userarray[i].address, "DcyumTafQsSh4hJo4V6DaS23Dd2QnpMXKH")) {
-			userarray[i].freemoney = 0;
+			userarray[i].freemoney = 0;  //自由金额已领
 		}
 		else {
-			userarray[i].freemoney = userarray[i].money;
+			userarray[i].freemoney = arrayData[i].nMoney;
 		}
 		 //16696666666666610
-		userarray[i].freeMothmoney = userarray[i].money;
+		userarray[i].freeMothmoney = arrayData[i].nMoney;
 		if(type == 1)
 		{  //冻结1次
-			userarray[i].money = 1;
-		}else{ // 冻结11次
+			userarray[i].money = arrayData[i].nMoney;
+		}else{ // 冻结11次 改为冻结10次
 			userarray[i].money = userarray[i].freeMothmoney * 10 + userarray[i].freemoney;
 		}
 		nMoneySend += userarray[i].money;  //统计总金额
@@ -578,7 +578,8 @@ bool CIpoTest::SendIpoTx(unsigned char type)
 		{  //冻结1次
 
 		}else{
-            BOOST_CHECK(j == (12 - 1)); //11个冻结金额
+//            BOOST_CHECK(j == (12 - 1)); //11个冻结金额
+			  BOOST_CHECK(j == (11 - 1)); //10个冻结金额
 		}
 	}
 
@@ -610,8 +611,8 @@ BOOST_FIXTURE_TEST_SUITE(CreateIpoTxTest,CIpoTest)
 BOOST_FIXTURE_TEST_CASE(Test,CIpoTest)
 {
 //	Run();
-//	RunIpo(0); //冻结11次
-	RunIpo(1); //冻结1次
+	RunIpo(0); //冻结11次
+//	RunIpo(1); //冻结1次
 	//SendErrorIopTx();
 }
 
