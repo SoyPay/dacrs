@@ -280,16 +280,16 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 Value sendtoaddressraw(const Array& params, bool fHelp)
 {
 	int size = params.size();
-	if (fHelp || size != 5 )
+	if (fHelp || size < 4 || size > 5 )
 		throw runtime_error(
 						"sendtoaddressraw \"height\" \"fee\" \"amount\" \"srcaddress\" \"recvaddress\"\n"
 						"\n create normal transaction by hegiht,fee,amount,srcaddress, recvaddress.\n"
 						+ HelpRequiringPassphrase() + "\nArguments:\n"
-						"1. \"height\"  (int, required) \n"
-						"2. \"fee\"     (int, required)  \n"
-						"3. \"amount\"  (string, required)  \n"
-						"4. \"srcaddress\"  (string, required) The Dacrs address to send to.\n"
-						"5. \"recvaddress\"  (string, required) The Dacrs address to receive.\n"
+						"1. \"fee\"     (int, required)  \n"
+						"2. \"amount\"  (string, required)  \n"
+						"3. \"srcaddress\"  (string, required) The Dacrs address to send to.\n"
+						"4. \"recvaddress\"  (string, required) The Dacrs address to receive.\n"
+						"5. \"height\"  (int, optional) \n"
 						"\nResult:\n"
 						"\"transactionid\"  (string) The transaction id.\n"
 						"\nExamples:\n"
@@ -320,21 +320,19 @@ Value sendtoaddressraw(const Array& params, bool fHelp)
 		return false;
 	};
 
-	int hight = params[0].get_int();
-
-	int64_t Fee = AmountToRawValue(params[1]);
+	int64_t Fee = AmountToRawValue(params[0]);
 
 
 	int64_t nAmount = 0;
 
-    nAmount = AmountToRawValue(params[2]);
+    nAmount = AmountToRawValue(params[1]);
 	if(nAmount == 0){
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid nAmount == 0");
 	}
 
 	CUserID  send;
 	CUserID  rev;
-	if(!GetUserID(params[3].get_str(),send)){
+	if(!GetUserID(params[2].get_str(),send)){
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid send address");
 	}
 	if(!pAccountViewTip->GetKeyId(send, sendKeyId)) {
@@ -348,7 +346,7 @@ Value sendtoaddressraw(const Array& params, bool fHelp)
 		send = regId;
 	}
 
-	if(!GetUserID(params[4].get_str(),rev)){
+	if(!GetUserID(params[3].get_str(),rev)){
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid rev address");
 	}
 
@@ -359,12 +357,15 @@ Value sendtoaddressraw(const Array& params, bool fHelp)
 		}
 	}
 
-
-	std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(send,rev,Fee, nAmount,hight);
-	if (!pwalletMain->Sign(sendKeyId, tx->SignatureHash(), tx->signature)) {
-				throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
+	int hight = chainActive.Tip()->nHeight;
+	if(params.size() > 4) {
+		hight = params[4].get_int();
 	}
 
+	std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(send,rev,Fee, nAmount,hight);
+//	if (!pwalletMain->Sign(sendKeyId, tx->SignatureHash(), tx->signature)) {
+//				throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
+//	}
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 	ds << pBaseTx;

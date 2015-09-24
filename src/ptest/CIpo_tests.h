@@ -17,7 +17,7 @@ using namespace std;
 using namespace boost;
 using namespace json_spirit;
 
-#define SEND_A    "DmtzzT99HYUGAV6ejkWTWXF8pcYXtkpU4g"  // 0-20
+#define SEND_A    "DmtzzT99HYUGAV6ejkWTWXF8pcYXtkpU4g"
 
 class CIpoTest: public CycleTestBase {
 	int nNum;

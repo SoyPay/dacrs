@@ -9,10 +9,18 @@
 #include "vm/vmrunevn.h"
 #include "core.h"
 #include "miner.h"
+#include <boost/assign/list_of.hpp>
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"
 #include "json/json_spirit_writer_template.h"
 using namespace json_spirit;
+
+ map<string, string> mapBlackAccount =
+		 boost::assign::map_list_of
+		        ("ff72aa76a5597071e4a9ab43ebc668a59907b3b7", "DsmPCQdnyTvJ5koJaxViG2CBtuzuc6oZQ8" )
+				("fe465151eca40e0adda60c83df85879852fe51f4", "DsfBPrAAKvMnnmkyAAonK7zHFiiH3pmT4Q" )
+				("02d0c7e97fbcd750481862082fea54c0d744ccfb", "DUjaz6tiMFzYHENLRznKu2dsT3pfFmABdZ" )
+				("c0af5e552283b295fa0c4d7902b00eca62b3ea0b", "Dn3XM1o88q94dxavqNRr4bZArZvK5U4ByX" );
 
 
 bool CID::Set(const CRegID &id) {
@@ -936,8 +944,16 @@ bool CAccount::IsMoneyOverflow(uint64_t nAddMoney) {
 		return ERRORMSG("money:%lld too larger than MaxMoney");
 	return true;
 }
+bool CAccount::IsBlackAccount() const{
+	return 	mapBlackAccount.count(keyID.ToString()) > 0;
+}
+
 bool CAccount::OperateAccount(OperType type, const uint64_t &value, const int nCurHeight) {
 //	LogPrint("op_account", "before operate:%s\n", ToString());
+	if(nCurHeight > nFreezeBlackAcctHeight && IsBlackAccount()) {
+		ERRORMSG("operate black account error!\n");
+		return false;
+	}
 
 	if (!IsMoneyOverflow(value))
 		return false;
@@ -960,7 +976,6 @@ bool CAccount::OperateAccount(OperType type, const uint64_t &value, const int nC
 		break;
 	}
 	case MINUS_FREE: {
-		LogPrint("op_account", "before operate:%s\n", ToString());
 		if (value > llValues)
 			return false;
 		uint64_t remainCoinDay = nCoinDay - value / llValues * nCoinDay;
@@ -970,13 +985,11 @@ bool CAccount::OperateAccount(OperType type, const uint64_t &value, const int nC
 		}
 		nCoinDay = remainCoinDay;
 		llValues -= value;
-		LogPrint("op_account", "after operate:%s\n", ToString());
 		break;
 	}
 	default:
 		assert(0);
 	}
 //	LogPrint("op_account", "after operate:%s\n", ToString());
-//	LogPrint("account", "oper log list:%s\n", accountOperLog.ToString());
 	return true;
 }

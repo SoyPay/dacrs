@@ -49,7 +49,8 @@ typedef struct tagdddd{
 //const int64_t totalSendMoney = 19164400000000000;   //一期IPO第一批总额
 //const int64_t totalSendMoney =    4913960000000000;   //一期IPO第二批总额
 //const int64_t totalSendMoney =    17567366666666608;     /// 一期IPO11个月冻结金额的钱
-const int64_t totalSendMoney =    200000001;     /// 一期IPO1个月冻结金额的钱
+//const int64_t totalSendMoney =    20000000000000000;     /// 官方冻结金额总额
+const int64_t totalSendMoney = 16696666666666610;   //一期IPO10个月冻结金额的钱
 IPO_DATA arrayData[]=
 {
 
@@ -82,7 +83,8 @@ IPO_DATA arrayData[]=
 		  { "Dfkhj8sFCEr4FGPHwj7Qyf3aTQqmxJNW2q",       120000000000000	},
 		  { "DhgrzBsyhWaLj4TAvdddsqmyg5W8ABcdM5",       385080000000000	}
 #endif
-#if 0
+#if 1
+	   /*===================一期IPO月冻结金额=============================*/
 		{ "Do9W61KiBCrtJpQZDELtbrJYVbcuuYhXDv",       25416666666666	},
 		{ "DrumFsuGwFzmhDRGgYrzPh4i7sHiSp3iJE",      105000000000000 },
 		{ "DnKUZMvwXfprFCKhnsWRsbJTNnRZg88T2F",      105000000000000 },
@@ -110,8 +112,9 @@ IPO_DATA arrayData[]=
 	  { "DhgrzBsyhWaLj4TAvdddsqmyg5W8ABcdM5",       32090000000000	}
 #endif
 
-		{"dyjC8fuSoVGpepRGi8F2SridVX4VjykLG4",	100000000}, //
-		{"dfLo3CHErzWPrxRtthMiitcoGkrR6DskiF",	100000001},
+//		{"DpqbJLPkBrevxYKpZYAbQp6DJSHzHFiruf",	10000000000000000}, //
+//		{"DsSyKYzYBSgyEggq8o6SVD4DnPzETVbaUe",	10000000000000000},
+//		{"DmtzzT99HYUGAV6ejkWTWXF8pcYXtkpU4g", -1517878787878782}
 
 #if 0  //测试网络 25个测试地址 不要删了
 		{"dyjC8fuSoVGpepRGi8F2SridVX4VjykLG4",	100000000}, //
@@ -405,12 +408,24 @@ void CIpoTest::RunIpo(unsigned char type){
 	//初始化地址表
 	for (size_t i = 0; i < t_num; i++) {
 		memcpy((char*)userarray[i].address,(char*)arrayData[i].pAddress,sizeof(userarray[i].address));
-		userarray[i].freeMothmoney = arrayData[i].nMoney;
+		if(!strcmp((char *)userarray[i].address,"DnKUZMvwXfprFCKhnsWRsbJTNnRZg88T2F") ||
+			!strcmp((char *)userarray[i].address, "DftLSeJrMjJJ3UPeehNgArhcoAuDN5422E") ||
+			!strcmp((char *)userarray[i].address, "Dg2dq98hcm84po3RX354SzVyE6DLpxq3QR") ||
+			!strcmp((char *)userarray[i].address, "Dpjs5pvXmZbVt3uDEfBrMNbCsWjJzjm8XA") ||
+			!strcmp((char *)userarray[i].address, "DZYDEn8CZuwgJ6YS6Zm7VvKaFc6E6tGstz") ||
+			!strcmp((char *)userarray[i].address, "DcyumTafQsSh4hJo4V6DaS23Dd2QnpMXKH")) {
+			userarray[i].freemoney = 0;
+		}
+		else {
+			userarray[i].freemoney = userarray[i].money;
+		}
+		 //16696666666666610
+		userarray[i].freeMothmoney = userarray[i].money;
 		if(type == 1)
 		{  //冻结1次
-			userarray[i].money = arrayData[i].nMoney;
+			userarray[i].money = 1;
 		}else{ // 冻结11次
-			userarray[i].money = arrayData[i].nMoney*11;
+			userarray[i].money = userarray[i].freeMothmoney * 10 + userarray[i].freemoney;
 		}
 		nMoneySend += userarray[i].money;  //统计总金额
 
@@ -437,7 +452,7 @@ void CIpoTest::RunIpo(unsigned char type){
 //	}
 
 
-	strAppRegId = "47046-1";  //"2-1"
+	strAppRegId = "76685-1";  //"2-1"
 
    cout<<"SendIpoTx start"<<endl;
 	SendIpoTx(type);
@@ -677,6 +692,28 @@ BOOST_FIXTURE_TEST_CASE(check_coin,CIpoTest)
 		string errorMsg = strprintf("acctValue = %lld, realValue= %lld, address=%s \n",acctValue,  arrayData[i].nMoney, arrayData[i].pAddress);
 		BOOST_CHECK_MESSAGE(acctValue >= (uint64_t )arrayData[i].nMoney, errorMsg);
 	}
+}
+
+BOOST_FIXTURE_TEST_CASE(check_money,CIpoTest) {
+	int64_t data1(0);
+	int64_t total(0);
+	size_t t_num = sizeof(arrayData) / sizeof(arrayData[0]);
+	BOOST_CHECK(t_num <= max_user);         //防止越界
+	//初始化地址表
+	for (size_t i = 0; i < t_num; i++) {
+		if(!strcmp((char *)arrayData[i].pAddress,"DnKUZMvwXfprFCKhnsWRsbJTNnRZg88T2F") ||
+					!strcmp((char *)arrayData[i].pAddress, "DftLSeJrMjJJ3UPeehNgArhcoAuDN5422E") ||
+					!strcmp((char *)arrayData[i].pAddress, "Dg2dq98hcm84po3RX354SzVyE6DLpxq3QR") ||
+					!strcmp((char *)arrayData[i].pAddress, "Dpjs5pvXmZbVt3uDEfBrMNbCsWjJzjm8XA") ||
+					!strcmp((char *)arrayData[i].pAddress, "DZYDEn8CZuwgJ6YS6Zm7VvKaFc6E6tGstz") ||
+					!strcmp((char *)arrayData[i].pAddress, "DcyumTafQsSh4hJo4V6DaS23Dd2QnpMXKH")) {
+					data1 += arrayData[i].nMoney;
+				}
+		total += arrayData[i].nMoney;
+	}
+	total = total * 11;
+	total -= data1;
+	cout <<"total amount:" << total <<endl;
 }
 BOOST_AUTO_TEST_SUITE_END()
 
