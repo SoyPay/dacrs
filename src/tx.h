@@ -11,6 +11,7 @@
 #include <boost/variant.hpp>
 #include "tx.h"
 #include "chainparams.h"
+
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"
 using namespace json_spirit;
@@ -827,6 +828,7 @@ public:
 	bool IsEmptyValue() const {
 		return !(llValues > 0);
 	}
+	bool IsBlackAccount() const;
 	uint256 GetHash(){
 		CHashWriter ss(SER_GETHASH, 0);
 		ss << regID << keyID << PublicKey << MinerPKey << VARINT(llValues)
@@ -836,6 +838,7 @@ public:
 	uint64_t GetMaxCoinDay(int nCurHeight) {
 		return llValues * SysCfg().GetMaxDay();
 	}
+
 	bool UpDateCoinDay(int nCurHeight);
 	IMPLEMENT_SERIALIZE
 	(
@@ -851,6 +854,7 @@ public:
 private:
 	bool IsMoneyOverflow(uint64_t nAddMoney);
 };
+
 
 class CAccountLog {
 public:

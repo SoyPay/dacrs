@@ -1255,42 +1255,45 @@ Value getscriptdbsize(const Array& params, bool fHelp) {
 
 Value registaccounttxraw(const Array& params, bool fHelp) {
 
-	if (fHelp || !(params.size() == 4 || params.size() == 3)) {
-		throw runtime_error("registaccounttx \"height\" \"fee\" \"publickey\" (\"minerpublickey\")\n"
+	if (fHelp || !(params.size() < 2  || params.size() > 4)) {
+		throw runtime_error("registaccounttx \"fee\" \"publickey\" (\"minerpublickey\") (\"height\")\n"
 				"\ncreate a register account transaction\n"
 				"\nArguments:\n"
-				"1.height: (numeric, required) pay to miner\n"
-				"2.fee: (numeric, required) pay to miner\n"
-				"3.\"publickey\": (string, required)\n"
-				"4.minerpublickey: (string,optional)\n"
+				"1.fee: (numeric, required) pay to miner\n"
+				"2.publickey: (string, required)\n"
+				"3.minerpublickey: (string,optional)\n"
+				"4.height: (numeric, optional) pay to miner\n"
 				"\nResult:\n"
 				"\"txhash\": (string)\n"
 				"\nExamples:\n"
-				+ HelpExampleCli("registaccounttxraw", "\"10\" \"10000\" \"n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj\" \"n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgvvvv\"")
+				+ HelpExampleCli("registaccounttxraw",  "10000 \"038f679e8b63d6f9935e8ca6b7ce1de5257373ac5461874fc794004a8a00a370ae\" \"026bc0668c767ab38a937cb33151bcf76eeb4034bcb75e1632fd1249d1d0b32aa9\" 10 ")
 				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("registaccounttxraw", "\"10\" \"10000\" \"n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj\" \"n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgvvvv\""));
+				+ HelpExampleRpc("registaccounttxraw", " 10000 \"038f679e8b63d6f9935e8ca6b7ce1de5257373ac5461874fc794004a8a00a370ae\" \"026bc0668c767ab38a937cb33151bcf76eeb4034bcb75e1632fd1249d1d0b32aa9\" 10"));
 	}
 	CUserID ukey;
 	CUserID uminerkey = CNullID();
 
-	int hight = params[0].get_int();
-
-	int64_t Fee = AmountToRawValue(params[1]);
+	int64_t Fee = AmountToRawValue(params[0]);
 
 	CKeyID dummy;
-	CPubKey pubk = CPubKey(ParseHex(params[2].get_str()));
+	CPubKey pubk = CPubKey(ParseHex(params[1].get_str()));
 	if (!pubk.IsCompressed() || !pubk.IsFullyValid()) {
 		throw JSONRPCError(RPC_INVALID_PARAMS, "CPubKey err");
 	}
 	ukey = pubk;
 	dummy = pubk.GetKeyID();
 
-	if (params.size() == 4) {
-		CPubKey pubk = CPubKey(ParseHex(params[3].get_str()));
+	if (params.size() > 2) {
+		CPubKey pubk = CPubKey(ParseHex(params[2].get_str()));
 		if (!pubk.IsCompressed() || !pubk.IsFullyValid()) {
 			throw JSONRPCError(RPC_INVALID_PARAMS, "CPubKey err");
 		}
 		uminerkey = pubk;
+	}
+
+	int hight = chainActive.Tip()->nHeight;
+	if (params.size() > 3) {
+		hight = params[3].get_int();
 	}
 
 	std::shared_ptr<CRegisterAccountTx> tx = make_shared<CRegisterAccountTx>(ukey, uminerkey, Fee, hight);
@@ -1331,35 +1334,36 @@ Value submittx(const Array& params, bool fHelp) {
 }
 
 Value createcontracttxraw(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 5) {
+	if (fHelp || params.size() < 5 || params.size() > 6) {
 		throw runtime_error("createcontracttxraw \"height\" \"fee\" \"amount\" \"addr\" \"contract\" \n"
 				"\ncreate contract\n"
 				"\nArguments:\n"
-				"1.\"height\": (numeric, required)create height\n"
-				"2.\"fee\": (numeric, required) pay to miner\n"
-				"3.\"amount\": (numeric, required)\n"
-				"4.\"addr\": (string, required)\n"
+				"1.\"fee\": (numeric, required) pay to miner\n"
+				"2.\"amount\": (numeric, required)\n"
+				"3.\"addr\": (string, required)\n"
+				"4.\"appid\": (string required)"
 				"5.\"contract\": (string, required)\n"
+				"6.\"height\": (numeric, optional)create height\n"
 				"\nResult:\n"
 				"\"contract tx str\": (string)\n"
 				"\nExamples:\n"
 				+ HelpExampleCli("createcontracttxraw",
-						"10 1000 01020304 000000000100 [\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"] "
+						"1000 01020304 000000000100 [\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"] "
 								"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\","
-								"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"] ") + "\nAs json rpc call\n"
+								"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"] 10") + "\nAs json rpc call\n"
 				+ HelpExampleRpc("createcontracttxraw",
-						"10 1000 01020304 000000000100 000000000100 [\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"] "
+						"1000 01020304 000000000100 000000000100 [\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"] "
 								"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\","
-								"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"] "));
+								"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"] 10"));
 	}
 
 	RPCTypeCheck(params, list_of(int_type)(real_type)(real_type)(str_type)(str_type)(str_type));
 
-	int hight = params[0].get_int();
-	uint64_t fee = AmountToRawValue(params[1]);
-	uint64_t amount = AmountToRawValue(params[2]);
-	CRegID userid(params[3].get_str());
-	CRegID appid(params[4].get_str());
+
+	uint64_t fee = AmountToRawValue(params[0]);
+	uint64_t amount = AmountToRawValue(params[1]);
+	CRegID userid(params[2].get_str());
+	CRegID appid(params[3].get_str());
 
 	vector<unsigned char> vcontract = ParseHex(params[4].get_str());
 
@@ -1384,7 +1388,13 @@ Value createcontracttxraw(const Array& params, bool fHelp) {
 		LogPrint("INFO", "vaccountid:%s have no key id\r\n", HexStr(id.GetID()).c_str());
 		assert(0);
 	}
-	std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(userid, appid, fee, amount, hight, vcontract);
+
+	int height = chainActive.Tip()->nHeight;
+	if (params.size() > 3) {
+		height = params[3].get_int();
+	}
+
+	std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(userid, appid, fee, amount, height, vcontract);
 
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
@@ -1954,3 +1964,4 @@ Value validateaddress(const Array& params, bool fHelp)
 		return obj;
 	}
 }
+

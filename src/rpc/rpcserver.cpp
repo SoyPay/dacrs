@@ -250,6 +250,7 @@ static const CRPCCommand vRPCCommands[] =
     { "getrawmempool",          &getrawmempool,          true,      false,      false },
     { "listcheckpoint",         &listcheckpoint,         true,      false,      false },
     { "verifychain",            &verifychain,            true,      false,      false },
+    { "verifymessage",          &verifymessage,          false,     false,      false },
 
     /* Mining */
     { "getmininginfo",          &getmininginfo,          true,      false,      false },
@@ -258,18 +259,12 @@ static const CRPCCommand vRPCCommands[] =
 
 
     /* Raw transactions */
- //   { "createrawtransaction",   &createrawtransaction,   false,     false,      false },
- //   { "decoderawtransaction",   &decoderawtransaction,   false,     false,      false },
- //   { "decodescript",           &decodescript,           false,     false,      false },
- //   { "getrawtransaction",      &getrawtransaction,      false,     false,      false },
- //   { "sendrawtransaction",     &sendrawtransaction,     false,     false,      false },
- //   { "signrawtransaction",     &signrawtransaction,     false,     false,      false }, /* uses wallet if enabled */
+    { "sendtoaddressraw",       &sendtoaddressraw,       false,     false,      false },
+    { "registaccounttxraw",     &registaccounttxraw,     false,     false,      false },
+    { "createcontracttxraw",    &createcontracttxraw,    true,      false,      false },
+    { "registerscripttxraw",    &registerscripttxraw,    true,      false,      false },
 
-
-    { "verifymessage",          &verifymessage,          false,     false,      false },
-
-    /* Wallet */
-    //vaild rpc cmd
+    /* uses wallet if enabled */
     { "backupwallet",           &backupwallet,           true,      false,      true },
     { "dumpprivkey",            &dumpprivkey,            true,      false,      true },
     { "dumpwallet",             &dumpwallet,             true,      false,      true },
@@ -302,11 +297,9 @@ static const CRPCCommand vRPCCommands[] =
 	{ "sendtoaddress",          &sendtoaddress,          false,     false,      true },
 	{ "sendtoaddresswithfee",   &sendtoaddresswithfee,   false,     false,      true },
     { "getbalance",             &getbalance,             false,     false,      true },
-    { "sendtoaddressraw",       &sendtoaddressraw,       false,     false,      true },
-    { "registaccounttxraw",     &registaccounttxraw,     true,      false,      true },
+
     { "submittx",      			&submittx,       	 	 true,      false,      false},
-    { "createcontracttxraw",    &createcontracttxraw,    true,      false,      true },
-    { "registerscripttxraw",    &registerscripttxraw,    true,      false,      true },
+
     { "sigstr",    				&sigstr,    			 true,      false,      true },
     { "getappaccinfo",    		&getappaccinfo,    		 true,      false,      true },
     { "getappkeyvalue",    		&getappkeyvalue,    	 true,      false,      true },
