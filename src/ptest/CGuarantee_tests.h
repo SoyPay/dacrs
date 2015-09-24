@@ -35,13 +35,34 @@ using namespace json_spirit;
 
 
 typedef struct {
+	unsigned char systype;               //0xff
+	unsigned char type;            // 0x01 提?现?  02 充?值μ  03 提?现?一?定¨的?金e额?
+	unsigned char typeaddr;            // 0x01 regid 0x02 base58
+	uint64_t     money;
+
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(systype);
+		READWRITE(type);
+		READWRITE(typeaddr);
+		READWRITE(money);
+	)
+} APPACC;
+
+enum GETDAWEL{
+	TX_REGID = 0x01,
+	TX_BASE58 = 0x02,
+};
+
+
+
+typedef struct {
 	unsigned char type;            //!<交易类型
 	uint64_t arbiterMoneyX;             //!<仲裁费用X
 	uint64_t overtimeMoneyYmax;  //!<超时未判决的最大赔偿费用Y
 	uint64_t configMoneyZ;              //!<无争议裁决费用Z
 	unsigned int  overtimeheightT;  //!<判决期限时间T
-	unsigned char  ucLen;           //!<备注说明长度
-	char  comment[128];             //!<备注说明
+	char  comment[220];             //!<备注说明 字符串以\0结束，长度不足后补0
 	IMPLEMENT_SERIALIZE
 	(
 			READWRITE(type);
@@ -49,8 +70,7 @@ typedef struct {
 			READWRITE(overtimeMoneyYmax);
 			READWRITE(configMoneyZ);
 			READWRITE(overtimeheightT);
-			READWRITE(ucLen);
-			for(int i = 0; i < 128; i++)
+			for(int i = 0; i < 220; i++)
 			{
 				READWRITE(comment[i]);
 			}
@@ -65,8 +85,8 @@ typedef struct {
 	uint64_t moneyM;                   //!<交易金额
 	unsigned int height;           //!<每个交易环节的超时高度
 
-	unsigned char ucLen;            //!<备注说明长度
-	char  comment[128];             //!<备注说明
+	char goods[20];               //!<商品信息  字符串以\0结束，长度不足后补0
+	char  comment[200];             //!<备注说明 字符串以\0结束，长度不足后补0
 	IMPLEMENT_SERIALIZE
 	(
 			READWRITE(type);
@@ -77,8 +97,11 @@ typedef struct {
 			}
 			READWRITE(moneyM);
 			READWRITE(height);
-			READWRITE(ucLen);
-			for(int i = 0; i < 128; i++)
+			for(int i = 0; i < 20; i++)
+			{
+				READWRITE(goods[i]);
+			}
+			for(int i = 0; i < 200; i++)
 			{
 				READWRITE(comment[i]);
 			}
@@ -105,8 +128,8 @@ typedef struct {
 	unsigned char accepthash[32];    //!<接单的交易hash
 	char 	winner[6];      	//!<赢家ID（采用6字节的账户ID）
 	uint64_t winnerMoney;            //!<最终获得的金额
-//	char  loser[6];       //!<输家ID（采用6字节的账户ID）
-//	uint64_t loserMoney;            //!<最终获得的金额
+	char  loser[6];       //!<输家ID（采用6字节的账户ID）
+	uint64_t loserMoney;            //!<最终获得的金额
 	IMPLEMENT_SERIALIZE
 	(
 		READWRITE(type);
@@ -123,11 +146,11 @@ typedef struct {
 			READWRITE(winner[i]);
 		}
 		READWRITE(winnerMoney);
-//		for(int i = 0; i < 6; i++)
-//		{
-//			READWRITE(loser[i]);
-//		}
-//		READWRITE(loserMoney);
+		for(int i = 0; i < 6; i++)
+		{
+			READWRITE(loser[i]);
+		}
+		READWRITE(loserMoney);
 	)
 }TX_FINALRESULT_CONTRACT;        //!<最终裁决
 
@@ -143,7 +166,10 @@ public:
 	virtual TEST_STATE Run() ;
 	bool RegistScript();
 
-	bool Register(void);
+	bool Recharge(void);
+	bool Withdraw(void);
+
+	bool Register(unsigned char type);
 	bool UnRegister(void);
 	bool SendStartTrade(void);
 	bool SendCancelTrade(void);
