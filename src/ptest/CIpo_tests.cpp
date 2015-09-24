@@ -452,7 +452,7 @@ void CIpoTest::RunIpo(unsigned char type){
 //	}
 
 
-	strAppRegId = "76685-1";  //"2-1"
+	strAppRegId = "97792-1";  //"2-1"
 
    cout<<"SendIpoTx start"<<endl;
 	SendIpoTx(type);
