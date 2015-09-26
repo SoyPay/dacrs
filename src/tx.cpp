@@ -729,7 +729,7 @@ bool CRegisterAppTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidationSt
 		return state.DoS(100, ERRORMSG("ExecuteTx() : CRegisterAppTx ExecuteTx, save account info error"), UPDATE_ACCOUNT_FAIL,
 				"bad-save-accountdb");
 
-	if(nHeight > nFreezeBlackAcctHeight && acctInfo.keyID != "bf12b3bd0092b52014d073defc142d6775b52c75") {
+	if(nHeight > nFreezeBlackAcctHeight && acctInfo.keyID.ToString() != "bf12b3bd0092b52014d073defc142d6775b52c75") {
 		return false;
 	}
 
