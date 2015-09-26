@@ -59,4 +59,5 @@ extern Value  gencheckpoint(const Array& params, bool fHelp);
 extern Value  setcheckpoint(const Array& params, bool fHelp);
 extern Value validateaddress(const Array& params, bool fHelp);
 extern Object TxToJSON(CBaseTransaction *pTx);
+extern Value gettotalcoin(const Array& params, bool fHelp);
 #endif /* RPCTX_H_ */

@@ -83,7 +83,7 @@ IPO_DATA arrayData[]=
 		  { "Dfkhj8sFCEr4FGPHwj7Qyf3aTQqmxJNW2q",       120000000000000	},
 		  { "DhgrzBsyhWaLj4TAvdddsqmyg5W8ABcdM5",       385080000000000	}
 #endif
-#if 1
+#if 0
 	   /*===================一期IPO月冻结金额=============================*/
 		{ "Do9W61KiBCrtJpQZDELtbrJYVbcuuYhXDv",       25416666666666	},
 		{ "DrumFsuGwFzmhDRGgYrzPh4i7sHiSp3iJE",      105000000000000 },
@@ -115,6 +115,7 @@ IPO_DATA arrayData[]=
 //		{"DpqbJLPkBrevxYKpZYAbQp6DJSHzHFiruf",	10000000000000000}, //
 //		{"DsSyKYzYBSgyEggq8o6SVD4DnPzETVbaUe",	10000000000000000},
 //		{"DmtzzT99HYUGAV6ejkWTWXF8pcYXtkpU4g", -1517878787878782}
+		{"DpqbJLPkBrevxYKpZYAbQp6DJSHzHFiruf", 10000}
 
 #if 0  //测试网络 25个测试地址 不要删了
 		{"dyjC8fuSoVGpepRGi8F2SridVX4VjykLG4",	100000000}, //
@@ -452,7 +453,7 @@ void CIpoTest::RunIpo(unsigned char type){
 //	}
 
 
-	strAppRegId = "97792-1";  //"2-1"
+//	strAppRegId = "97792-1";  //"2-1"
 
    cout<<"SendIpoTx start"<<endl;
 	SendIpoTx(type);
@@ -495,6 +496,8 @@ bool CIpoTest::CreateIpoTx(string contact,int64_t llSendTotal){
 }
 bool CIpoTest::SendIpoTx(unsigned char type)
 {
+	strAppRegId = "97792-1";
+
 	// 创建转账交易并且保存转账交易的hash
 	Object objRet;
 	Array SucceedArray;
@@ -715,6 +718,24 @@ BOOST_FIXTURE_TEST_CASE(check_money,CIpoTest) {
 	total = total * 11;
 	total -= data1;
 	cout <<"total amount:" << total <<endl;
+}
+BOOST_FIXTURE_TEST_CASE(check_recharge,CIpoTest) {
+
+	int64_t nMoneySend(0);
+	size_t t_num = sizeof(arrayData) / sizeof(arrayData[0]);
+	BOOST_CHECK(t_num <= max_user);         //防止越界
+	//初始化地址表
+	for (size_t i = 0; i < 1; i++) {
+		memcpy((char*)userarray[i].address,(char*)arrayData[i].pAddress,sizeof(userarray[i].address));
+		userarray[i].freemoney = arrayData[i].nMoney;
+		userarray[i].freeMothmoney = arrayData[i].nMoney;
+		userarray[i].money = userarray[i].freeMothmoney * 10 + userarray[i].freemoney;
+	}
+	//"app regid"
+
+    cout<<"SendIpoTx start"<<endl;
+	SendIpoTx(0);
+    cout<<"SendIpoTx end"<<endl;
 }
 BOOST_AUTO_TEST_SUITE_END()
 

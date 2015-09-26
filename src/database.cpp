@@ -26,6 +26,7 @@ Object CAccountView::ToJosnObj(char Prefix){
 	Object obj;
 	return obj;
 }
+uint64_t CAccountView::TraverseAccount(){return 0;}
 
 CAccountViewBacked::CAccountViewBacked(CAccountView &accountView):pBase(&accountView) {}
 bool CAccountViewBacked::GetAccount(const CKeyID &keyId, CAccount &account) {
@@ -71,7 +72,7 @@ bool CAccountViewBacked::SaveAccountInfo(const vector<unsigned char> &accountId,
 		const CAccount &account) {
 	return pBase->SaveAccountInfo(accountId, keyId, account);
 }
-
+uint64_t CAccountViewBacked::TraverseAccount(){return pBase->TraverseAccount();}
 
 CAccountViewCache::CAccountViewCache(CAccountView &accountView, bool fDummy):CAccountViewBacked(accountView), hashBlock(uint256()) {}
 bool CAccountViewCache::GetAccount(const CKeyID &keyId, CAccount &account) {
@@ -241,6 +242,11 @@ bool CAccountViewCache::SaveAccountInfo(const CRegID &regid, const CKeyID &keyId
 	cacheAccounts[keyId] = account;
 	return true;
 }
+
+uint64_t CAccountViewCache::TraverseAccount() {
+	return pBase->TraverseAccount();
+}
+
 bool CAccountViewCache::GetAccount(const CUserID &userId, CAccount &account) {
 	bool ret = false;
 	if (userId.type() == typeid(CRegID)) {

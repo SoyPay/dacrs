@@ -130,7 +130,7 @@ public:
 	CAccountViewCache * GetCatchView();
 	int GetComfirHeight();
 	uint256 GetCurTxHash();
-	void InsertOutputData(const vector<CVmOperate> &source);
+	bool InsertOutputData(const vector<CVmOperate> &source);
 	void InsertOutAPPOperte(const vector<unsigned char>& userId,const CAppFundOperate &source);
 	shared_ptr<vector<CScriptDBOperLog> > GetDbLog();
 

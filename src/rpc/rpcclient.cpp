@@ -219,31 +219,20 @@ Array RPCConvertValues(const string &strMethod, const vector<string> &strParams)
     if (strMethod == "listapp"          && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "getblock"          && n > 0){ if(params[0].get_str().size()<32) ConvertTo<int>(params[0]);}
 
-    if (strMethod == "sendtoaddressraw"          && n > 0)ConvertTo<int>(params[0]);
+    if (strMethod == "sendtoaddressraw"          && n > 0)ConvertTo<double>(params[0]);
     if (strMethod == "sendtoaddressraw"          && n>1)ConvertTo<double>(params[1]);
-    if (strMethod == "sendtoaddressraw"          && n >2)ConvertTo<double>(params[2]);
+    if (strMethod == "sendtoaddressraw"          && n >4)ConvertTo<int>(params[4]);
 
-    if (strMethod == "registaccounttxraw"          && n >0)ConvertTo<int>(params[0]);
-    if (strMethod == "registaccounttxraw"          && n >1)ConvertTo<double>(params[1]);
+    if (strMethod == "registaccounttxraw"          && n >0)ConvertTo<double>(params[0]);
+    if (strMethod == "registaccounttxraw"          && n >3)ConvertTo<int>(params[1]);
 
-    if (strMethod == "createcontracttxraw"          && n >0)ConvertTo<int>(params[0]);
+    if (strMethod == "createcontracttxraw"          && n >0)ConvertTo<double>(params[0]);
     if (strMethod == "createcontracttxraw"          && n >1)ConvertTo<double>(params[1]);
-    if (strMethod == "createcontracttxraw"          && n >3) ConvertTo<Array>(params[3]);
+    if (strMethod == "createcontracttxraw"          && n >5) ConvertTo<int>(params[5]);
 
-    if (strMethod == "createfreezetxraw"          && n > 0)ConvertTo<int>(params[0]);
-    if (strMethod == "createfreezetxraw"          && n>1)ConvertTo<double>(params[1]);
-    if (strMethod == "createfreezetxraw"          && n > 3)ConvertTo<int64_t>(params[3]);
-    if (strMethod == "createfreezetxraw"          && n>4)ConvertTo<int>(params[4]);
-
-    if (strMethod == "registerscripttxraw"          && n > 0)ConvertTo<int>(params[0]);
-    if (strMethod == "registerscripttxraw"          && n>1)ConvertTo<double>(params[1]);
-    if (strMethod == "registerscripttxraw"          && n>3)ConvertTo<bool>(params[3]);
-    if (strMethod == "registerscripttxraw"          && n > 6) ConvertTo<uint64_t>(params[6]);
-    if (strMethod == "registerscripttxraw"          && n > 7) ConvertTo<uint64_t>(params[7]);
-    if (strMethod == "registerscripttxraw"          && n > 8) ConvertTo<uint64_t>(params[8]);
-    if (strMethod == "registerscripttxraw"          && n > 9) ConvertTo<uint64_t>(params[9]);
-    if (strMethod == "getappaccinfo"          		&& n > 2) ConvertTo<int>(params[2]);
-    if (strMethod == "getscriptvalidedata"          && n > 3) ConvertTo<int>(params[3]);
+    if (strMethod == "registerscripttxraw"          && n > 0)ConvertTo<double>(params[0]);
+    if (strMethod == "registerscripttxraw"          && n > 2)ConvertTo<bool>(params[2]);
+    if (strMethod == "registerscripttxraw"          && n > 4) ConvertTo<int>(params[4]);
     return params;
 }
 

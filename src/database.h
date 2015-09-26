@@ -30,6 +30,7 @@ public:
 	virtual bool EraseKeyId(const vector<unsigned char> &accountId);
 	virtual bool GetAccount(const vector<unsigned char> &accountId, CAccount &account);
 	virtual bool SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &account);
+	virtual uint64_t TraverseAccount();
 	virtual Object ToJosnObj(char Prefix);
 	virtual ~CAccountView(){};
 };
@@ -54,6 +55,7 @@ public:
 	bool EraseKeyId(const vector<unsigned char> &accountId);
 	bool GetAccount(const vector<unsigned char> &accountId, CAccount &account);
 	bool SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &account);
+	uint64_t TraverseAccount();
 };
 
 class CAccountViewCache : public CAccountViewBacked
@@ -96,6 +98,7 @@ public:
 	bool HaveAccount(const CUserID &userId);
 	int64_t GetRawBalance(const CUserID &userId)const;
 	bool SaveAccountInfo(const CRegID &accountId, const CKeyID &keyId, const CAccount &account);
+	uint64_t TraverseAccount();
 	bool Flush();
 	unsigned int GetCacheSize();
 	Object ToJosnObj()const;

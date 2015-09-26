@@ -955,7 +955,9 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmEvn)
 		ss >> temp;
       source.push_back(temp);
 	}
-	pVmRunEvn->InsertOutputData(source);
+	if(!pVmRunEvn->InsertOutputData(source)) {
+		 return RetFalse("InsertOutput err");
+	}
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	return std::make_tuple (true ,0, tem);
 }
@@ -1355,6 +1357,45 @@ enum CALL_API_FUN {
 	GET_DACRS_ADDRESS_FUN,
 };
 
+const static string API_METOHD[] =
+{
+	"COMP_FUNC",
+	"MULL_MONEY",
+	"ADD_MONEY",
+	"SUB_MONEY",
+	"DIV_MONEY",
+	"SHA256_FUNC",
+	"DES_FUNC",
+	"VERFIY_SIGNATURE_FUNC",
+	"SIGNATURE_FUNC",
+	"PRINT_FUNC",
+	"GETTX_CONTRACT_FUNC",
+	"GETTX_ACCOUNT_FUNC",
+	"GETACCPUB_FUNC",
+	"QUEYACCBALANCE_FUNC",
+	"GETTXCONFIRH_FUNC",
+	"GETBLOCKHASH_FUNC",
+	"GETCTXCONFIRMH_FUNC",
+	"WRITEDB_FUNC",
+	"DELETEDB_FUNC",
+	"READDB_FUNC",
+	"GETDBSIZE_FUNC",
+	"GETDBVALUE_FUNC",
+	"GetCURTXHASH_FUNC",
+	"MODIFYDBVALUE_FUNC",
+	"WRITEOUTPUT_FUNC",
+	"GETSCRIPTDATA_FUNC",
+	"GETSCRIPTID_FUNC",
+	"GETCURTXACCOUNT_FUNC",
+	"GETCURTXCONTACT_FUNC",
+	"GETCURDECOMPRESSCONTACR_FUNC",
+	"GETDECOMPRESSCONTACR_FUNC",
+	"GETCURPAYMONEY_FUN",
+	"GET_APP_USER_ACC_VALUE_FUN",
+	"GET_APP_USER_ACC_FUND_WITH_TAG_FUN",
+	"GET_WIRITE_OUT_APP_OPERATE_FUN",
+	"GET_DACRS_ADDRESS_FUN" };
+
 const static struct __MapExterFun FunMap[] = { //
 		{ COMP_FUNC, ExInt64CompFunc },			//
 		{ MULL_MONEY, ExInt64MullFunc },			//
@@ -1439,6 +1480,10 @@ int64_t CVm8051::run(uint64_t maxstep, CVmRunEvn *pVmEvn) {
 						pos += size + 2;
 					}
 				}
+			}
+			else {
+				LogPrint("CONTRACT_TX", "call method id:%d methodName:%s\n", methodID, API_METOHD[methodID]);
+				return -1;
 			}
 		} else if (Sys.PC == 0x0008) {   //ÒªÇóÍË³ö
 			INT8U result = GetExRam(0xEFFD);

@@ -251,6 +251,7 @@ static const CRPCCommand vRPCCommands[] =
     { "listcheckpoint",         &listcheckpoint,         true,      false,      false },
     { "verifychain",            &verifychain,            true,      false,      false },
     { "verifymessage",          &verifymessage,          false,     false,      false },
+    { "gettotalcoin",           &gettotalcoin,           false,     false,      false },
 
     /* Mining */
     { "getmininginfo",          &getmininginfo,          true,      false,      false },
@@ -355,10 +356,11 @@ bool HTTPAuthorized(map<string, string>& mapHeaders)
 void ErrorReply(ostream& stream, const Object& objError, const Value& id)
 {
     // Send error reply from json-rpc error object
-    int nStatus = HTTP_INTERNAL_SERVER_ERROR;
-    int code = find_value(objError, "code").get_int();
-    if (code == RPC_INVALID_REQUEST) nStatus = HTTP_BAD_REQUEST;
-    else if (code == RPC_METHOD_NOT_FOUND) nStatus = HTTP_NOT_FOUND;
+	int nStatus = HTTP_OK;
+//    int nStatus = HTTP_INTERNAL_SERVER_ERROR;
+//    int code = find_value(objError, "code").get_int();
+//    if (code == RPC_INVALID_REQUEST) nStatus = HTTP_BAD_REQUEST;
+//    else if (code == RPC_METHOD_NOT_FOUND) nStatus = HTTP_NOT_FOUND;
     string strReply = JSONRPCReply(Value::null, objError, id);
     stream << HTTPReply(nStatus, strReply, false) << flush;
 }

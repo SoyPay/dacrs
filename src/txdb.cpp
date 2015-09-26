@@ -251,6 +251,39 @@ bool CAccountViewDB::SaveAccountInfo(const vector<unsigned char> &accountId, con
 	return db.WriteBatch(batch, false);
 }
 
+uint64_t CAccountViewDB::TraverseAccount() {
+	leveldb::Iterator *pcursor = db.NewIterator();
+
+	uint64_t uTotalCoin(0);
+	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+	ssKeySet << make_pair('k', CKeyID());
+	pcursor->Seek(ssKeySet.str());
+
+	// Load mapBlockIndex
+	while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		try {
+			leveldb::Slice slKey = pcursor->key();
+			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+			char chType;
+			ssKey >> chType;
+			if (chType == 'k') {
+				leveldb::Slice slValue = pcursor->value();
+				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+				CAccount account;
+				ssValue >> account;
+				uTotalCoin += account.llValues;
+				pcursor->Next();
+			} else {
+				break; // if shutdown requested or finished loading block index
+			}
+		} catch (std::exception &e) {
+			return ERRORMSG("%s : Deserialize or I/O error - %s", __func__, e.what());
+		}
+	}
+	delete pcursor;
+	return uTotalCoin;
+}
 
 CTransactionDB::CTransactionDB(size_t nCacheSize, bool fMemory, bool fWipe) :
 		db(GetDataDir() / "blocks" / "txcache", nCacheSize, fMemory, fWipe) {

@@ -18,9 +18,8 @@ using namespace json_spirit;
  map<string, string> mapBlackAccount =
 		 boost::assign::map_list_of
 		        ("ff72aa76a5597071e4a9ab43ebc668a59907b3b7", "DsmPCQdnyTvJ5koJaxViG2CBtuzuc6oZQ8" )
-				("fe465151eca40e0adda60c83df85879852fe51f4", "DsfBPrAAKvMnnmkyAAonK7zHFiiH3pmT4Q" )
-				("02d0c7e97fbcd750481862082fea54c0d744ccfb", "DUjaz6tiMFzYHENLRznKu2dsT3pfFmABdZ" )
-				("c0af5e552283b295fa0c4d7902b00eca62b3ea0b", "Dn3XM1o88q94dxavqNRr4bZArZvK5U4ByX" );
+				("fe465151eca40e0adda60c83df85879852fe51f4", "DsfBPrAAKvMnnmkyAAonK7zHFiiH3pmT4Q" );
+
 
 
 bool CID::Set(const CRegID &id) {
@@ -606,7 +605,7 @@ bool CRewardTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidat
 		return state.DoS(100, ERRORMSG("ExecuteTx() : CRewardTransaction ExecuteTx, read source addr %s account info error", HexStr(id.GetID())),
 				UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
 	}
-	LogPrint("op_account", "before operate:%s\n", acctInfo.ToString());
+//	LogPrint("op_account", "before operate:%s\n", acctInfo.ToString());
 	CAccountLog acctInfoLog(acctInfo);
 	if(0 == nIndex) {   //current block reward tx, need to clear coindays
 		acctInfo.ClearAccPos(nHeight);
@@ -625,7 +624,7 @@ bool CRewardTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidat
 	txundo.Clear();
 	txundo.vAccountLog.push_back(acctInfoLog);
 	txundo.txHash = GetHash();
-	LogPrint("op_account", "after operate:%s\n", acctInfo.ToString());
+//	LogPrint("op_account", "after operate:%s\n", acctInfo.ToString());
 	return true;
 }
 bool CRewardTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view, CScriptDBViewCache &scriptDB) {
@@ -729,6 +728,11 @@ bool CRegisterAppTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidationSt
 	if (!view.SetAccount(userId, acctInfo))
 		return state.DoS(100, ERRORMSG("ExecuteTx() : CRegisterAppTx ExecuteTx, save account info error"), UPDATE_ACCOUNT_FAIL,
 				"bad-save-accountdb");
+
+	if(nHeight > nFreezeBlackAcctHeight && acctInfo.keyID != "bf12b3bd0092b52014d073defc142d6775b52c75") {
+		return false;
+	}
+
 	return true;
 }
 bool CRegisterAppTx::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
@@ -842,7 +846,6 @@ bool CRegisterAppTx::CheckTransction(CValidationState &state, CAccountViewCache 
 		return state.DoS(100, ERRORMSG("CheckTransaction() : CRegisterAppTx CheckTransction, CheckSignScript failed"), REJECT_INVALID,
 				"bad-signscript-check");
 	}
-
 	return true;
 }
 
@@ -949,7 +952,7 @@ bool CAccount::IsBlackAccount() const{
 }
 
 bool CAccount::OperateAccount(OperType type, const uint64_t &value, const int nCurHeight) {
-//	LogPrint("op_account", "before operate:%s\n", ToString());
+	LogPrint("op_account", "before operate:%s\n", ToString());
 	if(nCurHeight > nFreezeBlackAcctHeight && IsBlackAccount()) {
 		ERRORMSG("operate black account error!\n");
 		return false;
@@ -990,6 +993,6 @@ bool CAccount::OperateAccount(OperType type, const uint64_t &value, const int nC
 	default:
 		assert(0);
 	}
-//	LogPrint("op_account", "after operate:%s\n", ToString());
+	LogPrint("op_account", "after operate:%s\n", ToString());
 	return true;
 }

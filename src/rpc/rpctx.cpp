@@ -1343,7 +1343,7 @@ Value createcontracttxraw(const Array& params, bool fHelp) {
 				"3.\"addr\": (string, required)\n"
 				"4.\"appid\": (string required)"
 				"5.\"contract\": (string, required)\n"
-				"6.\"height\": (numeric, optional)create height\n"
+				"6.\"height\": (int, optional)create height\n"
 				"\nResult:\n"
 				"\"contract tx str\": (string)\n"
 				"\nExamples:\n"
@@ -1390,8 +1390,8 @@ Value createcontracttxraw(const Array& params, bool fHelp) {
 	}
 
 	int height = chainActive.Tip()->nHeight;
-	if (params.size() > 3) {
-		height = params[3].get_int();
+	if (params.size() > 5) {
+		height = params[5].get_int();
 	}
 
 	std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(userid, appid, fee, amount, height, vcontract);
@@ -1409,11 +1409,11 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 		throw runtime_error("registerscripttxraw \"height\" \"fee\" \"addr\" \"flag\" \"script or scriptid\" (\"script description\")\n"
 						"\nregister script\n"
 						"\nArguments:\n"
-						"1.\"height\": (numeric required)valid height\n"
-						"2.\"fee\": (numeric required) pay to miner\n"
-						"3.\"addr\": (string required)\nfor send"
-						"4.\"flag\": (numeric, required) 0-1\n"
-						"5.\"script or scriptid\": (string required), if flag=0 is script's file path, else if flag=1 scriptid\n"
+						"1.\"fee\": (numeric required) pay to miner\n"
+						"2.\"addr\": (string required)\nfor send"
+						"3.\"flag\": (bool, required) 0-1\n"
+						"4.\"script or scriptid\": (string required), if flag=0 is script's file path, else if flag=1 scriptid\n"
+						"5.\"height\": (int required)valid height\n"
 						"6.\"script description\":(string optional) new script description\n"
 						"\nResult:\n"
 						"\"txhash\": (string)\n"
@@ -1425,16 +1425,15 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 								"\"10\" \"10000\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" \"1\" \"010203040506\" "));
 	}
 
-	RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(bool_type)(str_type));
+	RPCTypeCheck(params, list_of(real_type)(str_type)(int_type)(str_type)(int_type)(str_type));
 
-	uint64_t fee = AmountToRawValue(params[1]);
-	uint32_t height = params[0].get_int();
+	uint64_t fee = AmountToRawValue(params[0]);
 
 	CVmScript vmScript;
 	vector<unsigned char> vscript;
-	int flag = params[3].get_bool();
+	int flag = params[2].get_bool();
 	if (0 == flag) {
-		string path = params[4].get_str();
+		string path = params[3].get_str();
 		FILE* file = fopen(path.c_str(), "rb+");
 		if (!file) {
 			throw runtime_error("create registerapptx open script file" + path + "error");
@@ -1470,11 +1469,10 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 
 
 	} else if (1 == flag) {
-		vscript = ParseHex(params[4].get_str());
+		vscript = ParseHex(params[3].get_str());
 	}
 
 	if (params.size() > 5) {
-		RPCTypeCheck(params, list_of(int_type)(real_type)(str_type)(bool_type)(str_type)(str_type));
 		string scriptDesc = params[5].get_str();
 		vmScript.ScriptExplain.insert(vmScript.ScriptExplain.end(), scriptDesc.begin(), scriptDesc.end());
 	}
@@ -1521,7 +1519,13 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 	tx.get()->regAcctId = GetUserId(keyid);
 	tx.get()->script = vscript;
 	tx.get()->llFees = fee;
+
+	uint32_t height = chainActive.Tip()->nHeight;
+	if (params.size() > 4) {
+		height =  params[4].get_int();
+	}
 	tx.get()->nValidHeight = height;
+
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 	ds << pBaseTx;
@@ -1965,3 +1969,23 @@ Value validateaddress(const Array& params, bool fHelp)
 	}
 }
 
+Value gettotalcoin(const Array& params, bool fHelp) {
+	if(fHelp || params.size() != 0)
+	{
+		throw runtime_error(
+				 "gettotalcoin \n"
+				 "\nget all coin amount\n"
+				 "\nArguments:\n"
+				 "\nResult:\n"
+				 "\nExamples:\n"
+				 + HelpExampleCli("gettotalcoin", "")
+				 + HelpExampleRpc("gettotalcoin", ""));
+	}
+		Object obj;
+		{
+			CAccountViewCache view(*pAccountViewTip, true);
+			uint64_t totalcoin = view.TraverseAccount();
+			obj.push_back(Pair("TotalCoin", totalcoin));
+		}
+		return obj;
+}

@@ -9,6 +9,8 @@
 #include "util.h"
 #include<algorithm>
 #include <boost/foreach.hpp>
+
+#define MAX_OUTPUT_COUNT 100
 CVmRunEvn::CVmRunEvn() {
 	RawAccont.clear();
 	NewAccont.clear();
@@ -104,8 +106,8 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 
 	if (!CheckOperate(m_output)) {
 		return std::make_tuple (false, 0, string("VmScript CheckOperate Failed \n"));
-
 	}
+
 	if (!OpeatorAccount(m_output, view, nHeight)) {
 		return std::make_tuple (false, 0, string("VmScript OpeatorAccount Failed\n"));
 	}
@@ -164,15 +166,20 @@ vector_unsigned_char CVmRunEvn::GetAccountID(CVmOperate value) {
 bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 	// judge contract rulue
 	uint64_t addmoey = 0, miusmoney = 0;
-	uint64_t temp = 0;
+	uint64_t operValue = 0;
 	for (auto& it : listoperate) {
 
 		if(it.nacctype != regid && it.nacctype != base58addr)
 			return false;
 
 		if (it.opeatortype == ADD_FREE ) {
-			memcpy(&temp,it.money,sizeof(it.money));
-			addmoey += temp;
+			memcpy(&operValue,it.money,sizeof(it.money));
+			uint64_t temp = addmoey;
+			temp += operValue;
+			if(temp < operValue || temp<addmoey) {
+				return false;
+			}
+			addmoey = temp;
 		}
 
 		if (it.opeatortype == MINUS_FREE) {
@@ -189,8 +196,13 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 				return false;
 			}
 
-			memcpy(&temp,it.money,sizeof(it.money));
-			miusmoney += temp;
+			memcpy(&operValue,it.money,sizeof(it.money));
+			uint64_t temp = miusmoney;
+			temp += operValue;
+			if(temp < operValue || temp < miusmoney) {
+				return false;
+			}
+			miusmoney = temp;
 		}
 		//vector<unsigned char> accountid(it.accountid, it.accountid + sizeof(it.accountid));
 		vector_unsigned_char accountid = GetAccountID(it);
@@ -335,9 +347,12 @@ void CVmRunEvn::InsertOutAPPOperte(const vector<unsigned char>& userId,const CAp
 	}
 
 }
-void CVmRunEvn::InsertOutputData(const vector<CVmOperate>& source)
+bool CVmRunEvn::InsertOutputData(const vector<CVmOperate>& source)
 {
 	m_output.insert(m_output.end(),source.begin(),source.end());
+	if(m_output.size() < MAX_OUTPUT_COUNT)
+		return true;
+	return false;
 }
 shared_ptr<vector<CScriptDBOperLog> > CVmRunEvn::GetDbLog()
 {

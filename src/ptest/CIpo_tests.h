@@ -17,6 +17,7 @@ using namespace std;
 using namespace boost;
 using namespace json_spirit;
 
+//#define SEND_A    "DmtzzT99HYUGAV6ejkWTWXF8pcYXtkpU4g"
 #define SEND_A    "DmtzzT99HYUGAV6ejkWTWXF8pcYXtkpU4g"
 //#define SEND_A    "dtKsuK9HUvLLHtBQL8Psk5fUnTLTFC83GS"  // 0-20
 
