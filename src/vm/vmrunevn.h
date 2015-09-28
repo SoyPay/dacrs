@@ -13,6 +13,10 @@
 #include "main.h"
 #include "txdb.h"
 #include <memory>
+#include "json/json_spirit_utils.h"
+#include "json/json_spirit_value.h"
+#include "json/json_spirit_writer_template.h"
+
 using namespace std;
 class CVmOperate;
 class CVmRunEvn {
@@ -164,6 +168,8 @@ public:
 			for(int i = 0;i < 8;i++)
 			READWRITE(money[i]);
 	)
+	Object ToJson();
+
 };
 
 #endif /* SCRIPTCHECK_H_ */

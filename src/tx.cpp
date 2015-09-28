@@ -658,7 +658,12 @@ Object CRewardTransaction::ToJSON(const CAccountViewCache &AccountView) const{
 	result.push_back(Pair("hash", GetHash().GetHex()));
 	result.push_back(Pair("txtype", txTypeArray[nTxType]));
 	result.push_back(Pair("ver", nVersion));
-	result.push_back(Pair("regid", boost::get<CRegID>(account).ToString()));
+	if(account.type() == typeid(CRegID)) {
+		result.push_back(Pair("regid", boost::get<CRegID>(account).ToString()));
+	}
+	if(account.type() == typeid(CPubKey)) {
+		result.push_back(Pair("pubkey", boost::get<CPubKey>(account).ToString()));
+	}
 	view.GetKeyId(account, keyid);
 	result.push_back(Pair("addr", keyid.ToAddress()));
 	result.push_back(Pair("money", rewardValue));
