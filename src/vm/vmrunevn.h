@@ -168,6 +168,13 @@ public:
 			for(int i = 0;i < 8;i++)
 			READWRITE(money[i]);
 	)
+	CVmOperate() {
+		nacctype = regid;
+		memset(accountid, 0, 34);
+		opeatortype = ADD_FREE;
+		outheight = 0;
+		memset(money, 0, 8);
+	}
 	Object ToJson();
 
 };

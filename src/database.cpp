@@ -682,9 +682,8 @@ bool CScriptDBViewCache::ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &v
 	CDataStream ds1(SER_DISK, CLIENT_VERSION);
 	ds1 << txid;
 	vKey.insert(vKey.end(), ds1.begin(), ds1.end());
-
 	vector<unsigned char> vValue;
-	if(GetData(vKey, vValue))
+	if(!GetData(vKey, vValue))
 		return false;
 	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
 	ds >> vOutput;

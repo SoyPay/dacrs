@@ -117,7 +117,7 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 		return std::make_tuple (false, 0, string("OpeatorApp Account Failed\n"));
 	}
 
-	if(SysCfg().GetOutPutLog()) {
+	if(SysCfg().GetOutPutLog() && m_output.size() > 0) {
 		CScriptDBOperLog operlog;
 		uint256 txhash = GetCurTxHash();
 		if(!m_ScriptDBTip->WriteTxOutPut(txhash, m_output, operlog))
@@ -440,7 +440,8 @@ Object CVmOperate::ToJson() {
 	}else if(opeatortype == MINUS_FREE) {
 		obj.push_back(Pair("opertype", "minus"));
 	}
-	obj.push_back(Pair("freezeheight", (int) outheight));
+	if(outheight > 0)
+		obj.push_back(Pair("freezeheight", (int) outheight));
 	uint64_t amount;
 	memcpy(&amount, money, sizeof(money));
 	obj.push_back(Pair("amount", amount));
