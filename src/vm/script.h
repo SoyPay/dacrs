@@ -32,9 +32,28 @@ public:
 			return false;
 		if(Rom[0] != 0x02)
 			return false;
+		//!<校验SDK版本，账户平衡开关
+		if(!memcmp(&Rom[0x0004],"\x00\x02\x02",3)){
+           if(!((Rom[0x0014] == 0x00) || (Rom[0x0014] == 0x01))){
+        	   cout<<"IsValid ROM0004 err"<<endl;
+        	   return false;
+           }
+           cout<<"IsValid ROM0004 ok"<<endl;
+		}
 		return true;
 	}
 
+	bool IsCheckAccount(void){
+		if(IsValid())
+		{
+	        if(Rom[0x0014] == 0x01){
+	        	cout<<"IsCheckAccount true"<<endl;
+	        	return true;
+	        }
+		}
+		cout<<"IsCheckAccount false"<<endl;
+        return false;
+	}
 	CVmScript();
 
 	 IMPLEMENT_SERIALIZE
