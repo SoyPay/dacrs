@@ -20,6 +20,7 @@
 #include "miner.h"
 #include "main.h"
 #include "vm/script.h"
+#include "vm/vmrunevn.h"
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
@@ -59,6 +60,23 @@ Object GetTxDetailJSON(const uint256& txhash) {
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 	{
 		LOCK(cs_main);
+		CBlock genesisblock;
+		CBlockIndex* pgenesisblockindex = mapBlockIndex[SysCfg().HashGenesisBlock()];
+		ReadBlockFromDisk(genesisblock, pgenesisblockindex);
+		assert(genesisblock.hashMerkleRoot == genesisblock.BuildMerkleTree());
+		for(unsigned int i=0; i<genesisblock.vptx.size(); ++i) {
+			if(txhash == genesisblock.GetTxHash(i)) {
+				obj = genesisblock.vptx[i]->ToJSON(*pAccountViewTip);
+				obj.push_back(Pair("blockhash", SysCfg().HashGenesisBlock().GetHex()));
+				obj.push_back(Pair("confirmHeight", (int) 0));
+				obj.push_back(Pair("confirmedtime", (int) genesisblock.nTime));
+				CDataStream ds(SER_DISK, CLIENT_VERSION);
+				ds << genesisblock.vptx[i];
+				obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
+				return obj;
+			}
+		}
+
 		if (SysCfg().IsTxIndex()) {
 			CDiskTxPos postx;
 			if (pScriptDBTip->ReadTxIndex(txhash, postx)) {
@@ -72,6 +90,15 @@ Object GetTxDetailJSON(const uint256& txhash) {
 					obj.push_back(Pair("blockhash", header.GetHash().GetHex()));
 					obj.push_back(Pair("confirmHeight", (int) header.nHeight));
 					obj.push_back(Pair("confirmedtime", (int) header.nTime));
+					if(pBaseTx->nTxType == CONTRACT_TX) {
+						vector<CVmOperate> vOutput;
+						pScriptDBTip->ReadTxOutPut(pBaseTx->GetHash(), vOutput);
+						Array outputArray;
+						for(auto & item : vOutput) {
+							outputArray.push_back(item.ToJson());
+						}
+						obj.push_back(Pair("listOutput", outputArray));
+					}
 					CDataStream ds(SER_DISK, CLIENT_VERSION);
 					ds << pBaseTx;
 					obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
@@ -1985,7 +2012,7 @@ Value gettotalcoin(const Array& params, bool fHelp) {
 		{
 			CAccountViewCache view(*pAccountViewTip, true);
 			uint64_t totalcoin = view.TraverseAccount();
-			obj.push_back(Pair("TotalCoin", totalcoin));
+			obj.push_back(Pair("TotalCoin", ValueFromAmount(totalcoin)));
 		}
 		return obj;
 }

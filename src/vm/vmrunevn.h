@@ -13,6 +13,10 @@
 #include "main.h"
 #include "txdb.h"
 #include <memory>
+#include "json/json_spirit_utils.h"
+#include "json/json_spirit_value.h"
+#include "json/json_spirit_writer_template.h"
+
 using namespace std;
 class CVmOperate;
 class CVmRunEvn {
@@ -164,6 +168,15 @@ public:
 			for(int i = 0;i < 8;i++)
 			READWRITE(money[i]);
 	)
+	CVmOperate() {
+		nacctype = regid;
+		memset(accountid, 0, 34);
+		opeatortype = ADD_FREE;
+		outheight = 0;
+		memset(money, 0, 8);
+	}
+	Object ToJson();
+
 };
 
 #endif /* SCRIPTCHECK_H_ */

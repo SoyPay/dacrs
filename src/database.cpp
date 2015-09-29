@@ -4,6 +4,7 @@
 #include "core.h"
 #include "main.h"
 #include "chainparams.h"
+#include "vm/vmrunevn.h"
 #include <algorithm>
 
 bool CAccountView::GetAccount(const CKeyID &keyId, CAccount &account) {return false;}
@@ -407,7 +408,9 @@ bool CScriptDBView::GetScriptData(const int nCurBlockHeight, const vector<unsign
 	return false;
 }
 bool CScriptDBView::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos){return false;}
-bool CScriptDBView::WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB){return false;}
+bool CScriptDBView::WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB) {return false;}
+bool CScriptDBView::WriteTxOutPut(const uint256 &txid, const vector<CVmOperate> &vOutput, CScriptDBOperLog &operLog) {return false;}
+bool CScriptDBView::ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput) {return false;}
 Object CScriptDBView:: ToJosnObj(string Prefix){
 	Object obj;
 	return obj;
@@ -425,7 +428,8 @@ bool CScriptDBViewBacked::GetScriptData(const int nCurBlockHeight, const vector<
 }
 bool CScriptDBViewBacked::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos){return pBase->ReadTxIndex(txid, pos);}
 bool CScriptDBViewBacked::WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB){return pBase->WriteTxIndex(list, vTxIndexOperDB);}
-
+bool CScriptDBViewBacked::WriteTxOutPut(const uint256 &txid, const vector<CVmOperate> &vOutput, CScriptDBOperLog &operLog) {return pBase->WriteTxOutPut(txid, vOutput, operLog);}
+bool CScriptDBViewBacked::ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput) {return pBase->ReadTxOutPut(txid, vOutput);}
 
 
 CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScriptDBViewBacked(base) {
@@ -653,6 +657,37 @@ bool CScriptDBViewCache::Flush() {
 }
 unsigned int CScriptDBViewCache::GetCacheSize() {
 	return ::GetSerializeSize(mapDatas, SER_DISK, CLIENT_VERSION);
+}
+
+bool CScriptDBViewCache::WriteTxOutPut(const uint256 &txid, const vector<CVmOperate> &vOutput, CScriptDBOperLog &operLog) {
+	vector<unsigned char> vKey = {'o','u','t','p','u','t'};
+	CDataStream ds1(SER_DISK, CLIENT_VERSION);
+	ds1 << txid;
+	vKey.insert(vKey.end(), ds1.begin(), ds1.end());
+
+	vector<unsigned char> vValue;
+	CDataStream ds(SER_DISK, CLIENT_VERSION);
+	ds << vOutput;
+	vValue.assign(ds.begin(), ds.end());
+
+	vector<unsigned char> oldValue;
+	oldValue.clear();
+	GetData(vKey, oldValue);
+	operLog = CScriptDBOperLog(vKey, oldValue);
+	return SetData(vKey, vValue);
+}
+
+bool CScriptDBViewCache::ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput) {
+	vector<unsigned char> vKey = {'o','u','t','p','u','t'};
+	CDataStream ds1(SER_DISK, CLIENT_VERSION);
+	ds1 << txid;
+	vKey.insert(vKey.end(), ds1.begin(), ds1.end());
+	vector<unsigned char> vValue;
+	if(!GetData(vKey, vValue))
+		return false;
+	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
+	ds >> vOutput;
+	return true;
 }
 
 bool CScriptDBViewCache::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos){
@@ -1283,8 +1318,7 @@ bool CScriptDBViewCache::GetScriptDataCount(const CRegID &scriptId, int &nCount)
 	return  GetScriptDataCount(scriptId.GetVec6(), nCount);
 }
 bool CScriptDBViewCache::EraseScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey, CScriptDBOperLog &operLog) {
-	bool  temp = EraseScriptData(scriptId.GetVec6(), vScriptKey, operLog);
-	return temp;
+	return EraseScriptData(scriptId.GetVec6(), vScriptKey, operLog);
 }
 bool CScriptDBViewCache::HaveScriptData(const CRegID &scriptId, const vector<unsigned char > &vScriptKey) {
 	return HaveScriptData(scriptId.GetVec6(), vScriptKey);
@@ -1299,8 +1333,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const CRegID &
 }
 bool CScriptDBViewCache::SetScriptData(const CRegID &scriptId, const vector<unsigned char> &vScriptKey,
 			const vector<unsigned char> &vScriptData, CScriptDBOperLog &operLog) {
-	bool  temp =SetScriptData(scriptId.GetVec6(), vScriptKey, vScriptData, operLog);
-	return temp;
+	return 	SetScriptData(scriptId.GetVec6(), vScriptKey, vScriptData, operLog);
 }
 bool CScriptDBViewCache::SetTxRelAccout(const uint256 &txHash, const set<CKeyID> &relAccount) {
 	vector<unsigned char> vKey = {'t','x'};

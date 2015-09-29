@@ -117,6 +117,14 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 		return std::make_tuple (false, 0, string("OpeatorApp Account Failed\n"));
 	}
 
+	if(SysCfg().GetOutPutLog() && m_output.size() > 0) {
+		CScriptDBOperLog operlog;
+		uint256 txhash = GetCurTxHash();
+		if(!m_ScriptDBTip->WriteTxOutPut(txhash, m_output, operlog))
+			return std::make_tuple (false, 0, string("write tx out put Failed \n"));
+		m_dblog->push_back(operlog);
+	}
+
 	uint64_t spend = uRunStep * nBurnFactor;
 	return std::make_tuple (true, spend, string("VmScript Sucess\n"));
 
@@ -417,3 +425,25 @@ bool CVmRunEvn::OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFu
 }
 
 
+Object CVmOperate::ToJson() {
+	Object obj;
+	if(nacctype == regid) {
+		vector<unsigned char> vRegId(accountid, accountid+6);
+		CRegID regId(vRegId);
+		obj.push_back(Pair("regid", regId.ToString()));
+	}else if(nacctype == base58addr) {
+		string addr(accountid,accountid+sizeof(accountid));
+		obj.push_back(Pair("addr", addr));
+	}
+	if(opeatortype == ADD_FREE) {
+		obj.push_back(Pair("opertype", "add"));
+	}else if(opeatortype == MINUS_FREE) {
+		obj.push_back(Pair("opertype", "minus"));
+	}
+	if(outheight > 0)
+		obj.push_back(Pair("freezeheight", (int) outheight));
+	uint64_t amount;
+	memcpy(&amount, money, sizeof(money));
+	obj.push_back(Pair("amount", amount));
+	return obj;
+}

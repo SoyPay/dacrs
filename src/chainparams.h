@@ -58,6 +58,7 @@ protected:
 	mutable int nTxCacheHeight;
 	mutable int nIntervalPos; //用于限制矿工 挖矿的 块间隔
 	int nLogmaxsize; // byte  用于限制日志文件的最大长度
+	bool bOutPut;    //是否保存合约脚本操作账户日志
 
 public:
 
@@ -86,6 +87,7 @@ public:
 
 	   nIntervalPos = GetArg("-intervalpos", 1440);
 	   nLogmaxsize = GetArg("-logmaxsize", 100) * 1024 * 1024;
+	   bOutPut = GetBoolArg("-output", false);
 		return true;
 	}
 	virtual string ToString() const {
@@ -256,7 +258,9 @@ public:
 	void SetTxCacheHeight(int nHeight)const {
 		nTxCacheHeight = nHeight;
 	}
-
+	bool GetOutPutLog() const {
+		return bOutPut;
+	}
 public:
 	/**
 	 *

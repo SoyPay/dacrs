@@ -12,6 +12,7 @@ class CAccount;
 class CKeyID;
 class uint256;
 class CDiskTxPos;
+class CVmOperate;
 
 class CAccountView
 {
@@ -121,6 +122,8 @@ public:
 	virtual Object ToJosnObj(string Prefix);
 	virtual bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);
 	virtual	bool WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB);
+	virtual bool WriteTxOutPut(const uint256 &txid, const vector<CVmOperate> &vOutput, CScriptDBOperLog &operLog);
+	virtual bool ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput);
 	virtual ~CScriptDBView(){};
 };
 
@@ -139,6 +142,8 @@ public:
 			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData);
 	bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);
 	bool WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB);
+	bool WriteTxOutPut(const uint256 &txid, const vector<CVmOperate> &vOutput, CScriptDBOperLog &operLog);
+	bool ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput);
 };
 
 class CScriptDBViewCache : public CScriptDBViewBacked {
@@ -197,6 +202,8 @@ public:
 	bool WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB);
 	void SetBaseData(CScriptDBView * pBase);
 	string ToString();
+	bool WriteTxOutPut(const uint256 &txid, const vector<CVmOperate> &vOutput, CScriptDBOperLog &operLog);
+	bool ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput);
 private:
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
 	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
