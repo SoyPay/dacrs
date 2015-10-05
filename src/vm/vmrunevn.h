@@ -47,7 +47,7 @@ class CVmRunEvn {
 	CScriptDBViewCache *m_ScriptDBTip;
 	CAccountViewCache *m_view;
 	vector<CVmOperate> m_output;   //保存操作结果
-
+    bool  isCheckAccount;  //校验账户平衡开关
 
 	map<vector<unsigned char >,vector<CAppFundOperate> > MapAppOperate;  //vector<unsigned char > 存的是accountId
 	shared_ptr<vector<CScriptDBOperLog> > m_dblog;

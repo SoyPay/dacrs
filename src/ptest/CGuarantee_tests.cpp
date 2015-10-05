@@ -57,66 +57,43 @@ using namespace json_spirit;
     "CurCoinDays" : 1691,
     "postion" : "inblock"
 }
-
-///////////////
-{
-    "Address" : "dyjC8fuSoVGpepRGi8F2SridVX4VjykLG4",
-    "KeyID" : "e608718ca7792a5643b438b4151aa6b6ad1629c8",
-    "RegID" : "5-25",
-    "PublicKey" : "02efb33f0170ca5ae6b1b4339b575ccc58f6bf4989443974f71a3a55fea4dce83a",
-    "MinerPKey" : "025d772a54fb2ab801de4516cd8c82ebce74716bb83664baac5858fa93201e2d7e",
-    "Balance" : 101592591,
-    "CoinDays" : 3,
-    "UpdateHeight" : 47047,
-    "CurCoinDays" : 3,
-    "postion" : "inblock"
-}
-{
-    "Address" : "dfLo3CHErzWPrxRtthMiitcoGkrR6DskiF",
-    "KeyID" : "1c59c0024ff40c31535540cb78ba6c514115f608",
-    "RegID" : "5-21",
-    "PublicKey" : "0354eedd2cbc5c73672a5e5b2be8c7547703f4e524dec7cadd9b44e10f8b3abcd8",
-    "MinerPKey" : "0345a99e4b489dd9c8d3fa2d106bbb340b6bd78d9d1aa0e1417d0811367c89fd57",
-    "Balance" : 100906674,
-    "CoinDays" : 30,
-    "UpdateHeight" : 47047,
-    "CurCoinDays" : 30,
-    "postion" : "inblock"
-}
-{
-    "Address" : "dtKsuK9HUvLLHtBQL8Psk5fUnTLTFC83GS",
-    "KeyID" : "aac70794f014df5e757685b3489d63f377906de9",
-    "RegID" : "0-2",
-    "PublicKey" : "0221b571330617821e8c508416b90988e81e8dc8623576b8f6e942797e9f381111",
-    "MinerPKey" : "",
-    "Balance" : 100001391601814999,
-    "CoinDays" : 24458480,
-    "UpdateHeight" : 47047,
-    "CurCoinDays" : 24458360,
-    "postion" : "inblock"
-}
-
 #endif
 
+//!<开发者账户，接收担保押金
+//string regAddr="dk2NNjraSvquD9b4SQbysVRQeFikA55HLi";   //RegID = "0-20"
+
 #define ADDR_SEND_A        "dcmCbKbAfKrofNz35MSFupxrx4Uwn3vgjL"  //挂单者A  220700009d05 买家
+// 1826-1437
 
 #define ADDR_ACCEPT_B      "dcmWdcfxEjRXUHk8LpygtgDHTpixoo3kbd"  //接单者B  220700000505 卖家
+// 1826-1285
 
 #define ADDR_ARBITRATION_C "dcnGLkGud6c5bZJSUghzxvCqV45SJEwRcH"  //仲裁者C   220700003904
+// 1826-1081
 
-#define ID_strAppRegId  "47064-1"    //脚本应用ID 待填
+#define ID_strAppRegId  "47161-1"    //脚本应用ID 待填
 //#define HASH_sendhash     "7de1faafc2c9f14be5294f5f2b1082eaf92c7d66da5d42be1016e0988143318d"  //挂单交易hash 待填
 static const unsigned char HASH_sendhash[] ={
-		0x96,0xeb,0x96,0xf0,0xa6,0xab,0x3a,0x4d,
-		0x90,0x0b,0x3e,0x97,0x58,0x4e,0x7f,0xfc,
-		0x46,0xb5,0xfe,0x2a,0x7c,0xf0,0x2b,0x1f,
-		0x2c,0x0e,0xa8,0x27,0x5a,0x86,0x5d,0xed
+//		0x77,0xf2,0xce,0xaa,0xcc,0xc5,0x49,0xd9,
+//		0x9d,0x6c,0xad,0x1e,0x20,0x4b,0x7c,0xed,
+//		0x0f,0x00,0x50,0x77,0xce,0xc8,0xb3,0x4d,
+//		0x6c,0xe3,0x7f,0x40,0x4d,0xa4,0x3b,0x6e
+
+//		0x4f,0xe5,0xcd,0xc0,0xc4,0x23,0x1e,0x5f,
+//		0xa5,0x27,0x22,0x88,0x94,0xfe,0x45,0x47,
+//		0x29,0xf0,0xbd,0x5a,0x54,0x98,0xe2,0x72,
+//		0x10,0x81,0xc6,0xd9,0x17,0x94,0x5c,0x1a
+
+		0x5f,0xc8,0xd8,0xd3,0xe7,0x4f,0xf5,0xc7,
+		0xa4,0xdf,0x66,0x82,0x5c,0x04,0x58,0xf7,
+		0x74,0x9e,0x5c,0x63,0xac,0x62,0xd0,0x22,
+		0x6d,0x92,0xb9,0xa9,0x8f,0x43,0x71,0x95
 };
 static const unsigned char HASH_accepthash[] ={//接单交易hash 待填
-		0x7a,0xac,0x9e,0x30,0xa3,0xbf,0xe4,0xa3,
-		0x65,0x8e,0x7d,0xa8,0x09,0x2a,0xfb,0x7a,
-		0xb1,0x9b,0xd0,0x25,0xf2,0x2c,0x13,0xbc,
-		0xed,0x2d,0x25,0xba,0x40,0xa8,0xdb,0x68
+		0x4f,0xe5,0xcd,0xc0,0xc4,0x23,0x1e,0x5f,
+		0xa5,0x27,0x22,0x88,0x94,0xfe,0x45,0x47,
+		0x29,0xf0,0xbd,0x5a,0x54,0x98,0xe2,0x72,
+		0x10,0x81,0xc6,0xd9,0x17,0x94,0x5c,0x1a
 };
 
 
@@ -180,7 +157,7 @@ TEST_STATE CGuaranteeTest::Run(){
 #endif
 
 //	Recharge();
-//	Withdraw();
+	Withdraw();
 
 //	Register(TX_REGISTER);
 //	Register(TX_MODIFYREGISTER);
@@ -189,7 +166,7 @@ TEST_STATE CGuaranteeTest::Run(){
 //	SendCancelTrade();
 //	AcceptTrade();
 //	BuyerConfirm();
-	Arbitration();
+//	Arbitration();
 //	RunFinalResult();
 	cout<<"CGuaranteeTest run end"<<endl;
 	return end_state;
@@ -231,8 +208,10 @@ bool CGuaranteeTest::Recharge()
 	string sendcontract = HexStr(scriptData);
 	uint64_t nTempSend = 1 * COIN;
     cout<<"Recharge data:"<<sendcontract<<endl;
-	Value  retValue= basetest.CreateContractTx(strAppRegId,ADDR_SEND_A,sendcontract,0,0,nTempSend);
-
+	Value  retValue= basetest.CreateContractTx(strAppRegId,ADDR_ARBITRATION_C,sendcontract,0,0,nTempSend);
+//   ADDR_SEND_A   //	Id = "1826-1437";
+//   ADDR_ACCEPT_B   //	Id = "1826-1285";
+//	ADDR_ARBITRATION_C  Id = "1826-1081"
 	if (basetest.GetHashFromCreatedTx(retValue, strTxHash)) {
 		nStep++;
 	    cout<<"Recharge success end"<<endl;
@@ -495,7 +474,7 @@ bool CGuaranteeTest::Arbitration()
 	string sendcontract = HexStr(scriptData);
 	uint64_t nTempSend = 0;
 	cout<<"Arbitration data:"<<sendcontract.c_str()<<endl;
-	Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_SEND_A,sendcontract,0,0,nTempSend);// 待填写
+	Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_SEND_A,sendcontract,0,0,nTempSend);// 待填写 ADDR_ARBITRATION_C
 
 	if (basetest.GetHashFromCreatedTx(sendret, strTxHash)) {
 		nStep++;
@@ -515,14 +494,17 @@ bool CGuaranteeTest::RunFinalResult()
 	memcpy(senddata.sendhash, HASH_sendhash, sizeof(senddata.sendhash)); //待填交易HASH
 	memcpy(senddata.accepthash, HASH_accepthash, sizeof(senddata.accepthash)); //待填交易HASH
 
-	unsigned int height = 47045;   //待填   赢家 ID
-	unsigned short index = 1;
+//	string buyId = "1826-1437";
+	unsigned int height = 1826;   //待填   赢家 ID 买家 赢
+	unsigned short index = 1437;  //1437
+
     memcpy(&senddata.winner[0],&height,4);
     memcpy(&senddata.winner[4],&index,2);
 	senddata.winnerMoney = ARBITER_winnerMoney;
 
-	height = 47046;  //待填   输家ID
-	index = 1;
+//	string sellerId = "1826-1285";
+	height = 1826;  //待填   输家ID
+	index = 1285;  //1285
     memcpy(&senddata.loser[0],&height,4);
     memcpy(&senddata.loser[4],&index,2);
 	senddata.loserMoney = SEND_moneyM - ARBITER_winnerMoney;  //  交易金额M - 赢家分配的钱  待填写
@@ -532,7 +514,7 @@ bool CGuaranteeTest::RunFinalResult()
 	string sendcontract = HexStr(scriptData);
 	uint64_t nTempSend = 0;
 	cout<<"RunFinalResult data:"<<sendcontract.c_str()<<endl;
-	Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_ARBITRATION_C,sendcontract,0,0,nTempSend);// 待填写
+	Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_ARBITRATION_C,sendcontract,0,0,nTempSend);
 
 	if (basetest.GetHashFromCreatedTx(sendret, strTxHash)) {
 		nStep++;

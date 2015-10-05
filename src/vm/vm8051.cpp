@@ -84,6 +84,8 @@ static bool GetKeyId(const CAccountViewCache &view, vector<unsigned char> &ret,
 	} else if (ret.size() == 34) {
 		string addr(ret.begin(), ret.end());
 		KeyId = CKeyID(addr);
+	}else{
+		return false;
 	}
 	if (KeyId.IsEmpty())
 		return false;
@@ -1448,7 +1450,7 @@ int64_t CVm8051::run(uint64_t maxstep, CVmRunEvn *pVmEvn) {
 	INT8U code = 0;
 	int64_t step = 0;  //uint64_t
 
-	if(maxstep == 0){
+	if((maxstep == 0) || (NULL == pVmEvn)){
 		return -1;
 	}
 
