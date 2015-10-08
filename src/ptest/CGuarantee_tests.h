@@ -120,7 +120,23 @@ typedef struct {
 			}
 	)
 } TX_CONTRACT;
-
+typedef struct {
+	unsigned char type;            //!<交易类型
+	unsigned char txhash[32];       //!<挂单的交易hash
+	char  arbitationID[6];       //!<仲裁者ID（采用6字节的账户ID）
+	IMPLEMENT_SERIALIZE
+	(
+			READWRITE(type);
+			for(int i = 0; i < 32; i++)
+			{
+				READWRITE(txhash[i]);
+			}
+			for(int i = 0; i < 6; i++)
+			{
+				READWRITE(arbitationID[i]);
+			}
+	)
+} TX_Arbitration;  //!<申请仲裁
 
 typedef struct {
 	unsigned char type;            //!<交易类型

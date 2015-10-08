@@ -1282,8 +1282,8 @@ Value getscriptdbsize(const Array& params, bool fHelp) {
 
 Value registaccounttxraw(const Array& params, bool fHelp) {
 
-	if (fHelp || !(params.size() < 2  || params.size() > 4)) {
-		throw runtime_error("registaccounttx \"fee\" \"publickey\" (\"minerpublickey\") (\"height\")\n"
+	if (fHelp || (params.size() < 2  || params.size() > 4)) {
+		throw runtime_error("registaccounttxraw \"fee\" \"publickey\" (\"minerpublickey\") (\"height\")\n"
 				"\ncreate a register account transaction\n"
 				"\nArguments:\n"
 				"1.fee: (numeric, required) pay to miner\n"

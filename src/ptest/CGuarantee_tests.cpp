@@ -71,7 +71,7 @@ using namespace json_spirit;
 #define ADDR_ARBITRATION_C "dcnGLkGud6c5bZJSUghzxvCqV45SJEwRcH"  //仲裁者C   220700003904
 // 1826-1081
 
-#define ID_strAppRegId  "47161-1"    //脚本应用ID 待填
+#define ID_strAppRegId  "47172-1"    //脚本应用ID 待填
 //#define HASH_sendhash     "7de1faafc2c9f14be5294f5f2b1082eaf92c7d66da5d42be1016e0988143318d"  //挂单交易hash 待填
 static const unsigned char HASH_sendhash[] ={
 //		0x77,0xf2,0xce,0xaa,0xcc,0xc5,0x49,0xd9,
@@ -157,9 +157,9 @@ TEST_STATE CGuaranteeTest::Run(){
 #endif
 
 //	Recharge();
-	Withdraw();
+//	Withdraw();
 
-//	Register(TX_REGISTER);
+	Register(TX_REGISTER);
 //	Register(TX_MODIFYREGISTER);
 //	UnRegister();
 //	SendStartTrade();
@@ -460,14 +460,22 @@ bool CGuaranteeTest::BuyerConfirm()
 	return true;
 }
 
+
 bool CGuaranteeTest::Arbitration()
 {
    cout<<"Arbitration start"<<endl;
 
-	TX_CONTRACT senddata;
+   TX_Arbitration senddata;
 	memset(&senddata,0,sizeof(senddata));
 	senddata.type = TX_ARBITRATION;
 	memcpy(senddata.txhash,HASH_sendhash, sizeof(senddata.txhash)); //待填交易HASH
+//	string arbitationID = "47046-1";
+	unsigned int height = 1826;   //待填   仲裁者ID arbiterAddr_C
+	unsigned short index = 1081;
+
+	memcpy(&senddata.arbitationID[0],&height,4);
+	memcpy(&senddata.arbitationID[4],&index,2);
+
 
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << senddata;

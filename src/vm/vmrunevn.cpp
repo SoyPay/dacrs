@@ -18,6 +18,7 @@ CVmRunEvn::CVmRunEvn() {
 	m_ScriptDBTip = NULL;
 	m_view = NULL;
 	m_dblog = std::make_shared<std::vector<CScriptDBOperLog> >();
+	isCheckAccount = false;
 }
 vector<shared_ptr<CAccount> > &CVmRunEvn::GetRawAccont() {
 	return RawAccont;
@@ -58,6 +59,7 @@ bool CVmRunEvn::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& vie
 		LogPrint("ERROR", "%s\r\n", "CVmScriptRun::intial() vmScript.IsValid error");
 		return false;
 	}
+	isCheckAccount = vmScript.IsCheckAccount();
 	if(secure->vContract.size() >=4*1024 ){
 		LogPrint("ERROR", "%s\r\n", "CVmScriptRun::intial() vContract context size lager 4096");
 		return false;
@@ -126,6 +128,9 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 	}
 
 	uint64_t spend = uRunStep * nBurnFactor;
+		if((spend < uRunStep) || (spend < nBurnFactor)){
+		return std::make_tuple (false, 0, string("mul error\n"));
+	}
 	return std::make_tuple (true, spend, string("VmScript Sucess\n"));
 
 }
@@ -188,9 +193,7 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 				return false;
 			}
 			addmoey = temp;
-		}
-
-		if (it.opeatortype == MINUS_FREE) {
+		}else if (it.opeatortype == MINUS_FREE) {
 
 			//vector<unsigned char > accountid(it.accountid,it.accountid+sizeof(it.accountid));
 			vector_unsigned_char accountid = GetAccountID(it);
@@ -212,6 +215,11 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 			}
 			miusmoney = temp;
 		}
+		else{
+			Assert(0);
+			return false; //  ‰»Î ˝æ›¥Ì
+		}
+
 		//vector<unsigned char> accountid(it.accountid, it.accountid + sizeof(it.accountid));
 		vector_unsigned_char accountid = GetAccountID(it);
 		if(accountid.size() == 6){
@@ -383,7 +391,7 @@ bool CVmRunEvn::GetAppUserAccout(const vector<unsigned char> &vAppUserId, shared
 	}
 	if (!tem.get()->AutoMergeFreezeToFree(RunTimeHeight)) {
 		return false;
-	};
+	}
 	sptrAcc = tem;
 	return true;
 }
