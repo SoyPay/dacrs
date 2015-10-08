@@ -115,6 +115,7 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 	}
 
 	if(isCheckAccount) {
+		LogPrint("CONTRACT_TX","isCheckAccount");
 		if(!CheckAppAcctOperate(tx,  MapAppOperate))
 			return std::make_tuple (false, 0, string("VmScript CheckAppAcct Failed\n"));
 	}
@@ -294,9 +295,10 @@ bool CVmRunEvn::CheckAppAcctOperate(CTransaction* tx, const map<vector<unsigned 
 		return false;
 	}
 
-	if(sumValue != sysAcctSum)
+	if(sumValue != sysAcctSum){
+		LogPrint("CONTRACT_TX", "addValue=%lld, minusValue=%lld, txValue=%lld, sysContractAcct=%lld sumValue=%lld, sysAcctSum=%lld\n", addValue, minusValue, tx->llValues, sysContractAcct,sumValue, sysAcctSum);
 		return false;
-
+	}
 	return true;
 }
 
