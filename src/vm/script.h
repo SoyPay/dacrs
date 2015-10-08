@@ -28,12 +28,13 @@ public:
 	bool IsValid()
 	{
 		///Binary code'size less 64k
-		if(Rom.size() > 64*1024 || Rom.size()<=0)
+		if((Rom.size() > 64*1024) || (Rom.size() <= 0))
 			return false;
 		if(Rom[0] != 0x02)
 			return false;
-		//!<校验SDK版本，账户平衡开关
-		if(!memcmp(&Rom[0x0004],"\x00\x02\x02",3)){
+
+		//!<指定版本的SDK以上，才去校验 账户平衡开关的取值
+		if(memcmp(&Rom[0x0004],"\x00\x02\x02",3) >= 0){
            if(!((Rom[0x0014] == 0x00) || (Rom[0x0014] == 0x01))){
         	   cout<<"IsValid ROM0004 err"<<endl;
         	   return false;
@@ -44,7 +45,8 @@ public:
 	}
 
 	bool IsCheckAccount(void){
-		if(IsValid())
+		//!<指定版本的SDK以上，才去读取 账户平衡开关的取值
+		if(memcmp(&Rom[0x0004],"\x00\x02\x02",3) >= 0)
 		{
 	        if(Rom[0x0014] == 0x01){
 	        	cout<<"IsCheckAccount true"<<endl;

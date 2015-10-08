@@ -18,6 +18,7 @@ CVmRunEvn::CVmRunEvn() {
 	m_ScriptDBTip = NULL;
 	m_view = NULL;
 	m_dblog = std::make_shared<std::vector<CScriptDBOperLog> >();
+	isCheckAccount = false;
 }
 vector<shared_ptr<CAccount> > &CVmRunEvn::GetRawAccont() {
 	return RawAccont;
