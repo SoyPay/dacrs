@@ -94,7 +94,8 @@ private:
 	 */
 	vector_unsigned_char GetAccountID(CVmOperate value);
 //	bool IsSignatureAccount(CRegID account);
-	bool OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFundOperate> > opMap, CScriptDBViewCache& view) ;
+	bool OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFundOperate> > opMap, CScriptDBViewCache& view);
+	bool CheckAppAcctOperate(CTransaction* tx, const map<vector<unsigned char >,vector<CAppFundOperate> > opMap);
 public:
 	/**
 	 * A constructor.
@@ -139,7 +140,6 @@ public:
 	shared_ptr<vector<CScriptDBOperLog> > GetDbLog();
 
 	bool GetAppUserAccout(const vector<unsigned char> &id,shared_ptr<CAppUserAccout> &sptrAcc);
-
 	virtual ~CVmRunEvn();
 };
 

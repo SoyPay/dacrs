@@ -113,6 +113,11 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 		return std::make_tuple (false, 0, string("VmScript OpeatorAccount Failed\n"));
 	}
 
+	if(isCheckAccount) {
+		if(!CheckAppAcctOperate(tx,  MapAppOperate))
+			return std::make_tuple (false, 0, string("VmScript CheckAppAcct Failed\n"));
+	}
+
 	if(!OpeatorAppAccount(MapAppOperate, *m_ScriptDBTip))
 	{
 		return std::make_tuple (false, 0, string("OpeatorApp Account Failed\n"));
@@ -236,6 +241,61 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 	{
 		return false;
 	}
+	return true;
+}
+
+bool CVmRunEvn::CheckAppAcctOperate(CTransaction* tx, const map<vector<unsigned char >,vector<CAppFundOperate> > opMap) {
+	int64_t addValue(0), minusValue(0), sumValue(0);
+	for(auto  vOpItem : opMap) {
+		for(auto appFund : vOpItem.second) {
+			if(ADD_FREE_OP == appFund.opeatortype || ADD_TAG_OP == appFund.opeatortype) {
+				int64_t temp = appFund.mMoney;
+				temp += addValue;
+				if(temp < addValue || temp<appFund.mMoney) {
+					return false;
+				}
+				addValue = temp;
+			}
+			else if(SUB_FREE_OP == appFund.opeatortype || SUB_TAG_OP == appFund.opeatortype) {
+				int64_t temp = appFund.mMoney;
+				temp += minusValue;
+				if(temp < minusValue || temp<appFund.mMoney) {
+					return false;
+				}
+				minusValue = temp;
+			}
+		}
+	}
+	sumValue = addValue - minusValue;
+	if(sumValue > addValue) {
+		return false;
+	}
+
+	int64_t sysContractAcct(0);
+	for(auto item : m_output) {
+		vector_unsigned_char vAccountId = GetAccountID(item);
+		if(vAccountId == boost::get<CRegID>(tx->desUserId).GetVec6()) {
+			uint64_t value;
+			memcpy(&value, item.money, sizeof(item.money));
+			int64_t temp = value;
+			if(temp < 0) {
+				return false;
+			}
+			temp += sysContractAcct;
+			if(temp < sysContractAcct || temp < (int64_t)value)
+				return false;
+			sysContractAcct = temp;
+		}
+	}
+
+	int64_t sysAcctSum = tx->llValues - sysContractAcct;
+	if(sysAcctSum > (int64_t)tx->llValues) {
+		return false;
+	}
+
+	if(sumValue != sysAcctSum)
+		return false;
+
 	return true;
 }
 
