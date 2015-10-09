@@ -117,7 +117,7 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 	LogPrint("vm", "isCheckAccount:%d\n", isCheckAccount);
 	if(isCheckAccount) {
 		LogPrint("vm","isCheckAccount is true\n");
-		if(!CheckAppAcctOperate(tx,  MapAppOperate))
+		if(!CheckAppAcctOperate(tx))
 			return std::make_tuple (false, 0, string("VmScript CheckAppAcct Failed\n"));
 	}
 
