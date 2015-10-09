@@ -115,7 +115,7 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 	}
 
 	if(isCheckAccount) {
-		if(!CheckAppAcctOperate(tx,  MapAppOperate))
+		if(!CheckAppAcctOperate(tx))
 			return std::make_tuple (false, 0, string("VmScript CheckAppAcct Failed\n"));
 	}
 
@@ -205,9 +205,9 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 			if(accountid.size() != 6)
 				return false;
 			CRegID regId(accountid);
-			CTransaction* secure = static_cast<CTransaction*>(listTx.get());
+			CTransaction* tx = static_cast<CTransaction*>(listTx.get());
 			/// current tx's script cant't mius other script's regid
-			if(m_ScriptDBTip->HaveScript(regId) && regId != boost::get<CRegID>(secure->desUserId))
+			if(m_ScriptDBTip->HaveScript(regId) && regId != boost::get<CRegID>(tx->desUserId))
 			{
 				return false;
 			}
@@ -245,9 +245,9 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 	return true;
 }
 
-bool CVmRunEvn::CheckAppAcctOperate(CTransaction* tx, const map<vector<unsigned char >,vector<CAppFundOperate> > opMap) {
+bool CVmRunEvn::CheckAppAcctOperate(CTransaction* tx) {
 	int64_t addValue(0), minusValue(0), sumValue(0);
-	for(auto  vOpItem : opMap) {
+	for(auto  vOpItem : MapAppOperate) {
 		for(auto appFund : vOpItem.second) {
 			if(ADD_FREE_OP == appFund.opeatortype || ADD_TAG_OP == appFund.opeatortype) {
 				int64_t temp = appFund.mMoney;
@@ -275,7 +275,7 @@ bool CVmRunEvn::CheckAppAcctOperate(CTransaction* tx, const map<vector<unsigned 
 	int64_t sysContractAcct(0);
 	for(auto item : m_output) {
 		vector_unsigned_char vAccountId = GetAccountID(item);
-		if(vAccountId == boost::get<CRegID>(tx->desUserId).GetVec6()) {
+		if(vAccountId == boost::get<CRegID>(tx->desUserId).GetVec6() && item.opeatortype == MINUS_FREE) {
 			uint64_t value;
 			memcpy(&value, item.money, sizeof(item.money));
 			int64_t temp = value;
