@@ -36,10 +36,8 @@ public:
 		//!<指定版本的SDK以上，才去校验 账户平衡开关的取值
 		if(memcmp(&Rom[0x0004],"\x00\x02\x02",3) >= 0){
            if(!((Rom[0x0014] == 0x00) || (Rom[0x0014] == 0x01))){
-        	   cout<<"IsValid ROM0004 err"<<endl;
         	   return false;
            }
-           cout<<"IsValid ROM0004 ok"<<endl;
 		}
 		return true;
 	}
@@ -49,11 +47,9 @@ public:
 		if(memcmp(&Rom[0x0004],"\x00\x02\x02",3) >= 0)
 		{
 	        if(Rom[0x0014] == 0x01){
-	        	cout<<"IsCheckAccount true"<<endl;
 	        	return true;
 	        }
 		}
-		cout<<"IsCheckAccount false"<<endl;
         return false;
 	}
 	CVmScript();
