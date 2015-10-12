@@ -71,7 +71,7 @@ using namespace json_spirit;
 #define ADDR_ARBITRATION_C "dcnGLkGud6c5bZJSUghzxvCqV45SJEwRcH"  //仲裁者C   220700003904
 // 1826-1081
 
-#define ID_strAppRegId  "47172-1"    //脚本应用ID 待填
+#define ID_strAppRegId  "47180-1"    //脚本应用ID 待填
 //#define HASH_sendhash     "7de1faafc2c9f14be5294f5f2b1082eaf92c7d66da5d42be1016e0988143318d"  //挂单交易hash 待填
 static const unsigned char HASH_sendhash[] ={
 //		0x77,0xf2,0xce,0xaa,0xcc,0xc5,0x49,0xd9,
@@ -119,7 +119,10 @@ TEST_STATE CGuaranteeTest::Run(){
 	cout<<"CGuaranteeTest run start"<<endl;
 #if 0
     // 注册ipo脚本
-	RegistScript();
+	if(!RegistScript()){
+		cout<<"CGuaranteeTest RegistScript err"<<endl;
+		return end_state;
+	}
 
 	/// 等待ipo脚本被确认到block中
 	while(true)
@@ -189,6 +192,7 @@ bool CGuaranteeTest::RegistScript(){
 	//reg anony app
 	Value regscript = basetest.RegisterAppTx(regAddr, strFileName, nCurHight, nFee + 1 *COIN);// + 20 *COIN
 	if(basetest.GetHashFromCreatedTx(regscript, strTxHash)){
+
 		return true;
 	}
 	return false;

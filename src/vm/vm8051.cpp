@@ -67,9 +67,11 @@ CVm8051::CVm8051(const vector<unsigned char> & vRom, const vector<unsigned char>
 CVm8051::~CVm8051() {
 
 }
-
-typedef tuple<bool,int64_t,std::shared_ptr < std::vector< vector<unsigned char> > > > RET_DEFINE;   //int64_t 表示执行步骤step
-typedef tuple<bool,int64_t,std::shared_ptr < std::vector< vector<unsigned char> > > > (*pFun)(unsigned char *,void *);
+//!<第一个参数int 表示SDK接口函数返回状态  0(false)：执行失败 ,1(true):成功并返回结果, -1:表示异常SDK直接退出，不运行脚本
+//!<第二个参数int64_t 表示执行步骤step
+//!<第三个参数vector 保存的返回给应用的执行结果
+typedef tuple<int,int64_t,std::shared_ptr < std::vector< vector<unsigned char> > > > RET_DEFINE;
+typedef tuple<int,int64_t,std::shared_ptr < std::vector< vector<unsigned char> > > > (*pFun)(unsigned char *,void *);
 
 struct __MapExterFun {
 	INT16U method;
@@ -957,10 +959,12 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmEvn)
 		ss >> temp;
       source.push_back(temp);
 	}
-	if(!pVmRunEvn->InsertOutputData(source)) {
-		 return RetFalse("InsertOutput err");
-	}
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+	if(!pVmRunEvn->InsertOutputData(source)) {
+//		 return RetFalse("InsertOutput err");
+		return std::make_tuple (-1 ,0, tem);
+	}
+
 	return std::make_tuple (true ,0, tem);
 }
 
@@ -1466,7 +1470,8 @@ int64_t CVm8051::run(uint64_t maxstep, CVmRunEvn *pVmEvn) {
 			RET_DEFINE retdata = CallExternalFunc(methodID, ipara, pVmEvn);
 			memset(ipara, 0, MAX_SHARE_RAM);
 			step += std::get<1>(retdata) - 1;
-			if (std::get<0>(retdata)) {
+			if (std::get<0>(retdata) == 1) {
+				//!<往应用层写执行结果
 				auto tem = std::get<2>(retdata);
 				int pos = 0;
 				int totalsize = 0;
@@ -1483,9 +1488,14 @@ int64_t CVm8051::run(uint64_t maxstep, CVmRunEvn *pVmEvn) {
 					}
 				}
 			}
-			else {
+			else if(std::get<0>(retdata) == -1){
+                //!<SDK 层直接退出
 				LogPrint("CONTRACT_TX", "call method id:%d methodName:%s\n", methodID, API_METOHD[methodID]);
 				return -1;
+			}
+			else
+			{
+                //!<不往应用层写结果, 应用层根据输出结果长度为0，判断函数执行失败。
 			}
 		} else if (Sys.PC == 0x0008) {   //要求退出
 			INT8U result = GetExRam(0xEFFD);
