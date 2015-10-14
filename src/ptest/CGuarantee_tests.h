@@ -47,6 +47,21 @@ typedef struct {
 		READWRITE(typeaddr);
 		READWRITE(money);
 	)
+} APPACC_money;
+
+typedef struct {
+	unsigned char systype;               //0xff
+	unsigned char type;            // 0x01 提?现?  02 充?值μ  03 提?现?一?定¨的?金e额?
+	unsigned char typeaddr;            // 0x01 regid 0x02 base58
+//	uint64_t     money;
+
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(systype);
+		READWRITE(type);
+		READWRITE(typeaddr);
+//		READWRITE(money);
+	)
 } APPACC;
 
 enum GETDAWEL{
@@ -140,8 +155,7 @@ typedef struct {
 
 typedef struct {
 	unsigned char type;            //!<交易类型
-	unsigned char sendhash[32];       //!<挂单的交易hash
-	unsigned char accepthash[32];    //!<接单的交易hash
+	unsigned char arbitHash[32];      //!<申请仲裁的交易hash
 	char 	winner[6];      	//!<赢家ID（采用6字节的账户ID）
 	uint64_t winnerMoney;            //!<最终获得的金额
 	char  loser[6];       //!<输家ID（采用6字节的账户ID）
@@ -151,11 +165,7 @@ typedef struct {
 		READWRITE(type);
 		for(int i = 0; i < 32; i++)
 		{
-			READWRITE(sendhash[i]);
-		}
-		for(int i = 0; i < 32; i++)
-		{
-			READWRITE(accepthash[i]);
+			READWRITE(arbitHash[i]);
 		}
 		for(int i = 0; i < 6; i++)
 		{
@@ -184,6 +194,7 @@ public:
 
 	bool Recharge(void);
 	bool Withdraw(void);
+	bool WithdrawSomemoney(void);
 
 	bool Register(unsigned char type);
 	bool UnRegister(void);

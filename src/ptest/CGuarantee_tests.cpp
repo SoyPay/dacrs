@@ -59,8 +59,7 @@ using namespace json_spirit;
 }
 #endif
 
-//!<开发者账户，接收担保押金
-//string regAddr="dk2NNjraSvquD9b4SQbysVRQeFikA55HLi";   //RegID = "0-20"
+
 
 #define ADDR_SEND_A        "dcmCbKbAfKrofNz35MSFupxrx4Uwn3vgjL"  //挂单者A  220700009d05 买家
 // 1826-1437
@@ -71,25 +70,19 @@ using namespace json_spirit;
 #define ADDR_ARBITRATION_C "dcnGLkGud6c5bZJSUghzxvCqV45SJEwRcH"  //仲裁者C   220700003904
 // 1826-1081
 
-#define ID_strAppRegId  "47180-1"    //脚本应用ID 待填
+//const static char DeveloperAccount[6]="\x00\x00\x00\x00\x14\x00";//!<开发者地址ID
+#define ADDR_DeveloperAccount   "dk2NNjraSvquD9b4SQbysVRQeFikA55HLi"   //RegID = "0-20"
+
+#define ID_strAppRegId  "47244-1"    //脚本应用ID 待填
 //#define HASH_sendhash     "7de1faafc2c9f14be5294f5f2b1082eaf92c7d66da5d42be1016e0988143318d"  //挂单交易hash 待填
 static const unsigned char HASH_sendhash[] ={
-//		0x77,0xf2,0xce,0xaa,0xcc,0xc5,0x49,0xd9,
-//		0x9d,0x6c,0xad,0x1e,0x20,0x4b,0x7c,0xed,
-//		0x0f,0x00,0x50,0x77,0xce,0xc8,0xb3,0x4d,
-//		0x6c,0xe3,0x7f,0x40,0x4d,0xa4,0x3b,0x6e
+		0xf7,0xc9,0xea,0x3e,0xc3,0xd3,0x73,0x58,
+		0x58,0xae,0xdc,0x02,0x5e,0xa7,0xb5,0x93,
+		0xb7,0xd4,0x4c,0xa6,0x15,0xb6,0xfa,0xd9,
+		0x47,0x03,0x59,0x44,0xa2,0xcd,0x8e,0xa9
 
-//		0x4f,0xe5,0xcd,0xc0,0xc4,0x23,0x1e,0x5f,
-//		0xa5,0x27,0x22,0x88,0x94,0xfe,0x45,0x47,
-//		0x29,0xf0,0xbd,0x5a,0x54,0x98,0xe2,0x72,
-//		0x10,0x81,0xc6,0xd9,0x17,0x94,0x5c,0x1a
-
-		0x5f,0xc8,0xd8,0xd3,0xe7,0x4f,0xf5,0xc7,
-		0xa4,0xdf,0x66,0x82,0x5c,0x04,0x58,0xf7,
-		0x74,0x9e,0x5c,0x63,0xac,0x62,0xd0,0x22,
-		0x6d,0x92,0xb9,0xa9,0x8f,0x43,0x71,0x95
 };
-static const unsigned char HASH_accepthash[] ={//接单交易hash 待填
+static const unsigned char HASH_accepthash[] ={
 		0x4f,0xe5,0xcd,0xc0,0xc4,0x23,0x1e,0x5f,
 		0xa5,0x27,0x22,0x88,0x94,0xfe,0x45,0x47,
 		0x29,0xf0,0xbd,0x5a,0x54,0x98,0xe2,0x72,
@@ -104,10 +97,10 @@ static const unsigned char HASH_accepthash[] ={//接单交易hash 待填
 #define ARBITER_overtimeheightT    (1 * 1440)  //!<判决期限时间T
 
 //!<挂单者的配置信息
-#define SEND_moneyM     (2 * 1000000)    //!<交易金额
+#define SEND_moneyM     (2 * 100000000)    //!<交易金额
 #define SEND_height     (2 * 1440)       //!<每个交易环节的超时高度
 
-#define  ARBITER_winnerMoney  (1 * 1000000) //!<裁决后，赢家分配金额
+#define  ARBITER_winnerMoney  (1 * 100000000) //!<裁决后，赢家分配金额
 
 CGuaranteeTest::CGuaranteeTest():nNum(0), nStep(0), strTxHash(""), strAppRegId(ID_strAppRegId) {
 
@@ -161,8 +154,9 @@ TEST_STATE CGuaranteeTest::Run(){
 
 //	Recharge();
 //	Withdraw();
+//	WithdrawSomemoney();
 
-	Register(TX_REGISTER);
+//	Register(TX_REGISTER);
 //	Register(TX_MODIFYREGISTER);
 //	UnRegister();
 //	SendStartTrade();
@@ -170,7 +164,7 @@ TEST_STATE CGuaranteeTest::Run(){
 //	AcceptTrade();
 //	BuyerConfirm();
 //	Arbitration();
-//	RunFinalResult();
+	RunFinalResult();
 	cout<<"CGuaranteeTest run end"<<endl;
 	return end_state;
 }
@@ -198,6 +192,7 @@ bool CGuaranteeTest::RegistScript(){
 	return false;
 }
 
+
 bool CGuaranteeTest::Recharge()
 {
    cout<<"Recharge start"<<endl;
@@ -210,18 +205,32 @@ bool CGuaranteeTest::Recharge()
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << senddata;
 	string sendcontract = HexStr(scriptData);
-	uint64_t nTempSend = 1 * COIN;
+	uint64_t nTempSend = 20 * COIN;
+//	uint64_t nTempSend = (10000 + 5) * COIN;
+
     cout<<"Recharge data:"<<sendcontract<<endl;
-	Value  retValue= basetest.CreateContractTx(strAppRegId,ADDR_ARBITRATION_C,sendcontract,0,0,nTempSend);
+	Value  retValue= basetest.CreateContractTx(strAppRegId,ADDR_ACCEPT_B,sendcontract,0,0,nTempSend);
+//   ADDR_DeveloperAccount  //RegID = "0-20"
 //   ADDR_SEND_A   //	Id = "1826-1437";
 //   ADDR_ACCEPT_B   //	Id = "1826-1285";
 //	ADDR_ARBITRATION_C  Id = "1826-1081"
 	if (basetest.GetHashFromCreatedTx(retValue, strTxHash)) {
 		nStep++;
-	    cout<<"Recharge success end"<<endl;
-		return true;
+	}else{
+		cout<<"Recharge err end"<<endl;
+		return false;
 	}
-	cout<<"Recharge fail end"<<endl;
+
+#if 1
+	/// 等待交易被确认到block中
+	while(true)
+	{
+		if(WaitComfirmed(strTxHash, strAppRegId)) {
+					break;
+				}
+	}
+#endif
+    cout<<"Recharge success end"<<endl;
 	return false;
 }
 
@@ -232,23 +241,75 @@ bool CGuaranteeTest::Withdraw()
    APPACC senddata;
 	memset(&senddata,0,sizeof(senddata));
 	senddata.systype = 0xff;
-	senddata.type = 0x03;
-	senddata.typeaddr = TX_BASE58;
-	senddata.money = 1 * COIN;
+	senddata.type = 0x01;
+	senddata.typeaddr = TX_REGID;
 
 	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 	scriptData << senddata;
 	string sendcontract = HexStr(scriptData);
 	uint64_t nTempSend = 0;
     cout<<"Withdraw data:"<<sendcontract<<endl;
-	Value  retValue= basetest.CreateContractTx(strAppRegId,ADDR_SEND_A,sendcontract,0,0,nTempSend);
-
+	Value  retValue= basetest.CreateContractTx(strAppRegId,ADDR_DeveloperAccount,sendcontract,0,0,nTempSend);
+           //ADDR_DeveloperAccount  ADDR_ARBITRATION_C
 	if (basetest.GetHashFromCreatedTx(retValue, strTxHash)) {
 		nStep++;
-	    cout<<"Withdraw success end"<<endl;
-		return true;
+
+	}else{
+	    cout<<"Withdraw err end"<<endl;
+	    return false;
+    }
+
+#if 1
+/// 等待交易被确认到block中
+while(true)
+{
+	if(WaitComfirmed(strTxHash, strAppRegId)) {
+				break;
+			}
+}
+#endif
+
+	 cout<<"Withdraw success end"<<endl;
+	return false;
+}
+
+bool CGuaranteeTest::WithdrawSomemoney()
+{
+   cout<<"WithdrawwSomemoney start"<<endl;
+
+   APPACC_money senddata;
+	memset(&senddata,0,sizeof(senddata));
+	senddata.systype = 0xff;
+	senddata.type = 0x03;
+	senddata.typeaddr = TX_REGID;
+	senddata.money = 10000 * COIN;
+//	senddata.money = COIN;
+
+	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
+	scriptData << senddata;
+	string sendcontract = HexStr(scriptData);
+	uint64_t nTempSend = 0;
+    cout<<"WithdrawwSomemoney data:"<<sendcontract<<endl;
+	Value  retValue= basetest.CreateContractTx(strAppRegId,ADDR_DeveloperAccount,sendcontract,0,0,nTempSend);
+           //ADDR_DeveloperAccount  ADDR_ARBITRATION_C
+	if (basetest.GetHashFromCreatedTx(retValue, strTxHash)) {
+		nStep++;
+
+	}else{
+	    cout<<"WithdrawwSomemoney err end"<<endl;
+	    return false;
+    }
+
+#if 1
+	/// 等待交易被确认到block中
+	while(true)
+	{
+		if(WaitComfirmed(strTxHash, strAppRegId)) {
+				break;
+			}
 	}
-	cout<<"Withdraw fail end"<<endl;
+#endif
+	 cout<<"WithdrawwSomemoney success end"<<endl;
 	return false;
 }
 
@@ -285,13 +346,13 @@ bool CGuaranteeTest::Register(unsigned char type)
 
 	if (basetest.GetHashFromCreatedTx(retValue, strTxHash)) {
 		nStep++;
-	    cout<<"Register success"<<endl;
+
 	}else
 	{
 	    cout<<"Register fail"<<endl;
 	    return false;
 	}
-#if 0
+#if 1
 	/// 等待交易被确认到block中
 	while(true)
 	{
@@ -300,7 +361,7 @@ bool CGuaranteeTest::Register(unsigned char type)
 				}
 	}
 #endif
-	cout<<"Register success stop"<<endl;
+	 cout<<"Register success"<<endl;
 	return true;
 }
 
@@ -319,10 +380,13 @@ bool CGuaranteeTest::UnRegister()
 
 	if (basetest.GetHashFromCreatedTx(retValue, strTxHash)) {
 		nStep++;
-		cout<<"UnRegister success end"<<endl;
-		return true;
+
 	}
-#if 0
+	else{
+	    cout<<"UnRegister fail"<<endl;
+	    return false;
+	}
+#if 1
 	/// 等待交易被确认到block中
 	while(true)
 	{
@@ -332,7 +396,7 @@ bool CGuaranteeTest::UnRegister()
 	}
 #endif
 
-	cout<<"UnRegister fail end"<<endl;
+	cout<<"UnRegister success end"<<endl;
 	return false;
 }
 
@@ -343,8 +407,8 @@ bool CGuaranteeTest::SendStartTrade()
 	TX_SNED_CONTRACT senddata;
 	memset(&senddata,0,sizeof(senddata));
 	senddata.type = TX_SEND;
-	senddata.sendType = SEND_TYPE_BUY;   //待修改 挂单类型
-//	senddata.sendType = SEND_TYPE_SELL;   //待修改 挂单类型
+//	senddata.sendType = SEND_TYPE_BUY;   //待修改 挂单类型
+	senddata.sendType = SEND_TYPE_SELL;   //待修改 挂单类型
 
 //	string arbitationID = "47046-1";
 	unsigned int height = 1826;   //待填   仲裁者ID arbiterAddr_C
@@ -372,8 +436,13 @@ bool CGuaranteeTest::SendStartTrade()
 
 	if (basetest.GetHashFromCreatedTx(sendret, strTxHash)) {
 		nStep++;
-		cout<<"SendStartTrade success end"<<endl;
-#if 0
+
+	}
+	else{
+		cout<<"SendStartTrade err end"<<endl;
+		return false;
+	}
+#if 1
 		/// 等待交易被确认到block中
 		while(true)
 		{
@@ -382,9 +451,7 @@ bool CGuaranteeTest::SendStartTrade()
 					}
 		}
 #endif
-		return true;
-	}
-	cout<<"SendStartTrade fail end"<<endl;
+		cout<<"SendStartTrade success end"<<endl;
 	return true;
 }
 
@@ -407,10 +474,21 @@ bool CGuaranteeTest::SendCancelTrade()
 //    Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_ACCEPT_B,sendcontract,0,0,nTempSend); //取消挂卖单
 	if (basetest.GetHashFromCreatedTx(sendret, strTxHash)) {
 		nStep++;
-		cout<<"SendCancelTrade success end"<<endl;
-		return true;
 	}
-	cout<<"SendCancelTrade fail end"<<endl;
+	else{
+		cout<<"SendCancelTrade err end"<<endl;
+		return false;
+	}
+#if 1
+		/// 等待交易被确认到block中
+		while(true)
+		{
+			if(WaitComfirmed(strTxHash, strAppRegId)) {
+						break;
+					}
+		}
+#endif
+	cout<<"SendCancelTrade success end"<<endl;
 	return true;
 }
 
@@ -428,15 +506,26 @@ bool CGuaranteeTest::AcceptTrade()
 	string sendcontract = HexStr(scriptData);
 	uint64_t nTempSend = 0;
 	cout<<"AcceptTrade data:"<<sendcontract.c_str()<<endl;
-	Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_ACCEPT_B,sendcontract,0,0,nTempSend);//卖家接单
-//	Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_SEND_A,sendcontract,0,0,nTempSend);//买家接单
+//	Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_ACCEPT_B,sendcontract,0,0,nTempSend);//卖家接单
+	Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_SEND_A,sendcontract,0,0,nTempSend);//买家接单
 
 	if (basetest.GetHashFromCreatedTx(sendret, strTxHash)) {
 		nStep++;
-		cout<<"AcceptTrade success end"<<endl;
-		return true;
 	}
-	cout<<"AcceptTrade fail end"<<endl;
+	else{
+		cout<<"AcceptTrade err end"<<endl;
+		return false;
+	}
+#if 1
+		/// 等待交易被确认到block中
+		while(true)
+		{
+			if(WaitComfirmed(strTxHash, strAppRegId)) {
+						break;
+					}
+		}
+#endif
+	cout<<"AcceptTrade success end"<<endl;
 	return true;
 }
 bool CGuaranteeTest::BuyerConfirm()
@@ -457,10 +546,21 @@ bool CGuaranteeTest::BuyerConfirm()
 
 	if (basetest.GetHashFromCreatedTx(sendret, strTxHash)) {
 		nStep++;
-		cout<<"BuyerConfirm success end"<<endl;
-		return true;
 	}
-	cout<<"BuyerConfirm fail end"<<endl;
+	else{
+		cout<<"BuyerConfirm err end"<<endl;
+		return false;
+	}
+#if 1
+		/// 等待交易被确认到block中
+		while(true)
+		{
+			if(WaitComfirmed(strTxHash, strAppRegId)) {
+						break;
+					}
+		}
+#endif
+	cout<<"BuyerConfirm success end"<<endl;
 	return true;
 }
 
@@ -490,10 +590,22 @@ bool CGuaranteeTest::Arbitration()
 
 	if (basetest.GetHashFromCreatedTx(sendret, strTxHash)) {
 		nStep++;
-		cout<<"Arbitration success end"<<endl;
-		return true;
+
 	}
-	cout<<"Arbitration fail end"<<endl;
+	else{
+		cout<<"Arbitration err end"<<endl;
+		return false;
+	}
+#if 1
+		/// 等待交易被确认到block中
+		while(true)
+		{
+			if(WaitComfirmed(strTxHash, strAppRegId)) {
+						break;
+					}
+		}
+#endif
+	cout<<"Arbitration success end"<<endl;
 	return true;
 }
 bool CGuaranteeTest::RunFinalResult()
@@ -503,12 +615,12 @@ bool CGuaranteeTest::RunFinalResult()
 	TX_FINALRESULT_CONTRACT senddata;
 	memset(&senddata,0,sizeof(senddata));
 	senddata.type = TX_FINALRESULT;
-	memcpy(senddata.sendhash, HASH_sendhash, sizeof(senddata.sendhash)); //待填交易HASH
-	memcpy(senddata.accepthash, HASH_accepthash, sizeof(senddata.accepthash)); //待填交易HASH
+	memcpy(senddata.arbitHash, HASH_sendhash, sizeof(senddata.arbitHash)); //待填交易HASH
+//	memcpy(senddata.accepthash, HASH_accepthash, sizeof(senddata.accepthash)); //待填交易HASH
 
 //	string buyId = "1826-1437";
 	unsigned int height = 1826;   //待填   赢家 ID 买家 赢
-	unsigned short index = 1437;  //1437
+	unsigned short index = 1285;  //1437
 
     memcpy(&senddata.winner[0],&height,4);
     memcpy(&senddata.winner[4],&index,2);
@@ -516,7 +628,7 @@ bool CGuaranteeTest::RunFinalResult()
 
 //	string sellerId = "1826-1285";
 	height = 1826;  //待填   输家ID
-	index = 1285;  //1285
+	index = 1437;  //1285
     memcpy(&senddata.loser[0],&height,4);
     memcpy(&senddata.loser[4],&index,2);
 	senddata.loserMoney = SEND_moneyM - ARBITER_winnerMoney;  //  交易金额M - 赢家分配的钱  待填写
@@ -530,10 +642,22 @@ bool CGuaranteeTest::RunFinalResult()
 
 	if (basetest.GetHashFromCreatedTx(sendret, strTxHash)) {
 		nStep++;
-		cout<<"RunFinalResult success end"<<endl;
-		return true;
+
 	}
-	cout<<"RunFinalResult fail end"<<endl;
+	else{
+		cout<<"RunFinalResult err end"<<endl;
+		return false;
+	}
+#if 1
+		/// 等待交易被确认到block中
+		while(true)
+		{
+			if(WaitComfirmed(strTxHash, strAppRegId)) {
+						break;
+					}
+		}
+#endif
+	cout<<"RunFinalResult success end"<<endl;
 	return true;
 }
 

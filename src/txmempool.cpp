@@ -110,6 +110,9 @@ void CTxMemPool::remove(CBaseTransaction *pBaseTx, list<std::shared_ptr<CBaseTra
 bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &entry, CValidationState &state, bool bExcute) {
 	CTxUndo txundo;
 	CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
+	CAccountViewCache acctViewTemp(*pAccountViewCache, true);
+	CScriptDBViewCache scriptDBViewTemp(*pScriptDBViewCache, true);
+
 	// is it already confirmed in block
 	if(uint256() != pTxCacheTip->IsContainTx(hash))
 		return state.Invalid(ERRORMSG("CheckTxInMemPool() : tx hash %s has been confirmed", hash.GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
@@ -122,11 +125,12 @@ bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &en
 		LogPrint("vm", "tx hash=%s CheckTxInMemPool run contract\n", entry.GetTx()->GetHash().GetHex());
 	}
 	if(bExcute) {
-		if (!entry.GetTx()->ExecuteTx(0, *pAccountViewCache, state, txundo, chainActive.Tip()->nHeight + 1,
-				txCacheTemp, *pScriptDBViewCache)) {
+		if (!entry.GetTx()->ExecuteTx(0, acctViewTemp, state, txundo, chainActive.Tip()->nHeight + 1,
+				txCacheTemp, scriptDBViewTemp)) {
 			return false;
 		}
 	}
+	assert(acctViewTemp.Flush() && scriptDBViewTemp.Flush());
 	return true;
 }
 
