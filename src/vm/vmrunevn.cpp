@@ -187,6 +187,10 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 	// judge contract rulue
 	uint64_t addmoey = 0, miusmoney = 0;
 	uint64_t operValue = 0;
+	if(listoperate.size() > MAX_OUTPUT_COUNT) {
+		return false;
+	}
+
 	for (auto& it : listoperate) {
 
 		if(it.nacctype != regid && it.nacctype != base58addr)
