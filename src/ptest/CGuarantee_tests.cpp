@@ -76,10 +76,10 @@ using namespace json_spirit;
 #define ID_strAppRegId  "47244-1"    //脚本应用ID 待填
 //#define HASH_sendhash     "7de1faafc2c9f14be5294f5f2b1082eaf92c7d66da5d42be1016e0988143318d"  //挂单交易hash 待填
 static const unsigned char HASH_sendhash[] ={
-		0xf7,0xc9,0xea,0x3e,0xc3,0xd3,0x73,0x58,
-		0x58,0xae,0xdc,0x02,0x5e,0xa7,0xb5,0x93,
-		0xb7,0xd4,0x4c,0xa6,0x15,0xb6,0xfa,0xd9,
-		0x47,0x03,0x59,0x44,0xa2,0xcd,0x8e,0xa9
+		0x2e,0xd9,0x28,0xc5,0x84,0xde,0x82,0x88,
+		0xa2,0x05,0x4a,0xb4,0xcc,0xd6,0x89,0x5f,
+		0xc8,0xfd,0x57,0xfe,0x71,0xba,0xbf,0x44,
+		0x84,0x03,0x09,0x37,0x9e,0x50,0x1f,0x71
 
 };
 static const unsigned char HASH_accepthash[] ={
@@ -100,7 +100,8 @@ static const unsigned char HASH_accepthash[] ={
 #define SEND_moneyM     (2 * 100000000)    //!<交易金额
 #define SEND_height     (2 * 1440)       //!<每个交易环节的超时高度
 
-#define  ARBITER_winnerMoney  (1 * 100000000) //!<裁决后，赢家分配金额
+//#define  ARBITER_winnerMoney  (1 * 100000000) //!<裁决后，赢家分配金额
+#define  ARBITER_winnerMoney  (198000000) //!<裁决后，赢家分配金额
 
 CGuaranteeTest::CGuaranteeTest():nNum(0), nStep(0), strTxHash(""), strAppRegId(ID_strAppRegId) {
 
@@ -470,8 +471,8 @@ bool CGuaranteeTest::SendCancelTrade()
 	string sendcontract = HexStr(scriptData);
 	uint64_t nTempSend = 0;
 	cout<<"SendCancelTrade data:"<<sendcontract.c_str()<<endl;
-	Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_SEND_A,sendcontract,0,0,nTempSend); // 取消挂买单
-//    Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_ACCEPT_B,sendcontract,0,0,nTempSend); //取消挂卖单
+//	Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_SEND_A,sendcontract,0,0,nTempSend); // 取消挂买单
+    Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_ACCEPT_B,sendcontract,0,0,nTempSend); //取消挂卖单
 	if (basetest.GetHashFromCreatedTx(sendret, strTxHash)) {
 		nStep++;
 	}
@@ -586,7 +587,7 @@ bool CGuaranteeTest::Arbitration()
 	string sendcontract = HexStr(scriptData);
 	uint64_t nTempSend = 0;
 	cout<<"Arbitration data:"<<sendcontract.c_str()<<endl;
-	Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_SEND_A,sendcontract,0,0,nTempSend);// 待填写 ADDR_ARBITRATION_C
+	Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_ACCEPT_B,sendcontract,0,0,nTempSend);// 待填写 ADDR_ARBITRATION_C
 
 	if (basetest.GetHashFromCreatedTx(sendret, strTxHash)) {
 		nStep++;
@@ -638,7 +639,7 @@ bool CGuaranteeTest::RunFinalResult()
 	string sendcontract = HexStr(scriptData);
 	uint64_t nTempSend = 0;
 	cout<<"RunFinalResult data:"<<sendcontract.c_str()<<endl;
-	Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_ARBITRATION_C,sendcontract,0,0,nTempSend);
+	Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_ARBITRATION_C,sendcontract,0,0,nTempSend);//ADDR_ARBITRATION_C
 
 	if (basetest.GetHashFromCreatedTx(sendret, strTxHash)) {
 		nStep++;
