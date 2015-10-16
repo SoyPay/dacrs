@@ -310,7 +310,8 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		if (!view.GetKeyId(userId, keyid)) {
 			CID id(userId);
 			LogPrint("INFO", "vaccountid:%s have no key id\r\n", HexStr(id.GetID()).c_str());
-			assert(0);
+//			assert(0);
+			throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: have no key id.");
 		}
 
 		vector<unsigned char> signature;
@@ -1413,7 +1414,8 @@ Value createcontracttxraw(const Array& params, bool fHelp) {
 	if (!view.GetKeyId(userid, keyid)) {
 		CID id(userid);
 		LogPrint("INFO", "vaccountid:%s have no key id\r\n", HexStr(id.GetID()).c_str());
-		assert(0);
+//		assert(0);
+		throw runtime_error(tinyformat::format("createcontracttx :vaccountid:%s have no key id\r\n", HexStr(id.GetID()).c_str()));
 	}
 
 	int height = chainActive.Tip()->nHeight;
@@ -1637,7 +1639,7 @@ Value sigstr(const Array& params, bool fHelp) {
 	}
 		break;
 	default:
-		assert(0);
+//		assert(0);
 		break;
 	}
 	return obj;
