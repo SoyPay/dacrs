@@ -190,6 +190,7 @@ static void noui_BlockChanged(int64_t time,int64_t high,const uint256 &hash) {
 	obj.push_back(Pair("type",     "blockchanged"));
 	obj.push_back(Pair("tips",     g_nSyncTipHeight));
 	obj.push_back(Pair("high",     (int)high));
+	obj.push_back(Pair("time",     (int)time));
 	obj.push_back(Pair("hash",     hash.ToString()));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
     obj.push_back(Pair("fuelrate", GetElementForBurn(chainActive.Tip())));
