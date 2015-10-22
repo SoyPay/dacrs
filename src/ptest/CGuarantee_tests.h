@@ -27,6 +27,10 @@ using namespace json_spirit;
 #define	TX_BUYERCONFIRM  0x07 //买家确认收货
 #define	TX_ARBITRATION  0x08 //申请仲裁
 #define	TX_FINALRESULT  0x09 //裁决结果
+#define TX_ARBIT_ON     0x0a //仲裁开启
+#define TX_ARBIT_OFF    0x0b //仲裁暂停
+
+
 
 
 
@@ -126,6 +130,7 @@ typedef struct {
 typedef struct {
 	unsigned char type;            //!<交易类型
 	unsigned char txhash[32];       //!<挂单的交易hash
+	unsigned int height;          //!<每个交易环节的超时高度
 	IMPLEMENT_SERIALIZE
 	(
 			READWRITE(type);
@@ -133,11 +138,13 @@ typedef struct {
 			{
 				READWRITE(txhash[i]);
 			}
+			READWRITE(height);
 	)
 } TX_CONTRACT;
 typedef struct {
 	unsigned char type;            //!<交易类型
 	unsigned char txhash[32];       //!<挂单的交易hash
+	unsigned int height;          //!<每个交易环节的超时高度
 	char  arbitationID[6];       //!<仲裁者ID（采用6字节的账户ID）
 	IMPLEMENT_SERIALIZE
 	(
@@ -146,6 +153,7 @@ typedef struct {
 			{
 				READWRITE(txhash[i]);
 			}
+			READWRITE(height);
 			for(int i = 0; i < 6; i++)
 			{
 				READWRITE(arbitationID[i]);
@@ -156,6 +164,7 @@ typedef struct {
 typedef struct {
 	unsigned char type;            //!<交易类型
 	unsigned char arbitHash[32];      //!<申请仲裁的交易hash
+	unsigned int overtimeheightT;//!<判决期限时间T
 	char 	winner[6];      	//!<赢家ID（采用6字节的账户ID）
 	uint64_t winnerMoney;            //!<最终获得的金额
 	char  loser[6];       //!<输家ID（采用6字节的账户ID）
@@ -167,6 +176,7 @@ typedef struct {
 		{
 			READWRITE(arbitHash[i]);
 		}
+		READWRITE(overtimeheightT);
 		for(int i = 0; i < 6; i++)
 		{
 			READWRITE(winner[i]);
@@ -197,6 +207,7 @@ public:
 	bool WithdrawSomemoney(void);
 
 	bool Register(unsigned char type);
+	bool ArbitONOrOFF(unsigned char type);
 	bool UnRegister(void);
 	bool SendStartTrade(void);
 	bool SendCancelTrade(void);
