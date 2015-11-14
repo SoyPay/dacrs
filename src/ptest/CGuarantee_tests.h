@@ -18,17 +18,21 @@ using namespace boost;
 using namespace json_spirit;
 
 
+
+
 #define	TX_REGISTER   0x01   //注册仲裁账户
 #define TX_MODIFYREGISTER  0x02 // 修改仲裁者注册信息
-#define	TX_UNREGISTER  0x03 //注销仲裁账户
-#define	TX_SEND  0x04 //挂单
-#define	TX_CANCEL  0x05 //取消挂单
-#define	TX_ACCEPT  0x06 //接单
-#define	TX_BUYERCONFIRM  0x07 //买家确认收货
-#define	TX_ARBITRATION  0x08 //申请仲裁
-#define	TX_FINALRESULT  0x09 //裁决结果
-#define TX_ARBIT_ON     0x0a //仲裁开启
-#define TX_ARBIT_OFF    0x0b //仲裁暂停
+#define TX_ARBIT_ON     0x03 //仲裁开启
+#define TX_ARBIT_OFF    0x04 //仲裁暂停
+#define	TX_UNREGISTER  0x05 //注销仲裁账户
+#define	TX_SEND  0x06 //挂单
+#define	TX_CANCEL  0x07 //取消挂单
+#define	TX_ACCEPT  0x08 //接单
+#define TX_DELIVERY 0x09//发货
+#define	TX_BUYERCONFIRM  0x0a //买家确认收货
+#define	TX_ARBITRATION  0x0b //申请仲裁
+#define	TX_FINALRESULT  0x0c //裁决结果
+
 
 
 
@@ -212,6 +216,7 @@ public:
 	bool SendStartTrade(void);
 	bool SendCancelTrade(void);
 	bool AcceptTrade(void);
+	bool DeliveryTrade(void);
 	bool BuyerConfirm(void);
     bool Arbitration(void);
     bool RunFinalResult(void);
