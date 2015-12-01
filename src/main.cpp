@@ -2244,6 +2244,9 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 					rIter->nHeight, rIter->GetHash().GetHex());
 			if (!ConnectBlock(*rIter, state, *pForkAcctViewCache, mapBlockIndex[rIter->GetHash()], *pForkTxCache, *pForkScriptDBCache, false))
 				return ERRORMSG("CheckBlockProofWorkWithCoinDay() : ConnectBlock %s failed", rIter->GetHash().ToString());
+			CBlockIndex *pConnBlockIndex = mapBlockIndex[rIter->GetHash()];
+			if(pConnBlockIndex->nStatus | BLOCK_FAILED_MASK )
+				pConnBlockIndex->nStatus = BLOCK_VALID_TRANSACTIONS | BLOCK_HAVE_DATA;
 		}
 
 		//校验pos交易
