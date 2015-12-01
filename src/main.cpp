@@ -1098,7 +1098,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 			LogPrint("INFO", "bnNew:%s\n", bnNew.GetHex());
 			bnNew = SysCfg().ProofOfWorkLimit();
 		}
-		LogPrint("INFO", "bnNew=%s difficulty=%.8lf\n", bnNew.GetHex(), CaculateDifficulty(bnNew.GetCompact()));
+//		LogPrint("INFO", "bnNew=%s difficulty=%.8lf\n", bnNew.GetHex(), CaculateDifficulty(bnNew.GetCompact()));
 		return bnNew.GetCompact();
 	}else {
 		arith_uint256 bnNew;
@@ -1110,7 +1110,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 			LogPrint("INFO", "bnNew:%s\n", bnNew.GetHex());
 			bnNew = SysCfg().ProofOfWorkLimit();
 		}
-		LogPrint("INFO", "bnNew=%s difficulty=%.8lf\n", bnNew.GetHex(), CaculateDifficulty(bnNew.GetCompact()));
+//		LogPrint("INFO", "bnNew=%s difficulty=%.8lf\n", bnNew.GetHex(), CaculateDifficulty(bnNew.GetCompact()));
 		return bnNew.GetCompact();
 	}
 }
@@ -1870,6 +1870,7 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew) {
 			WriteBlockLog(true, "ConnectTip");
 		}
 	}
+
 	for(auto &pTxItem : block.vptx){
 		mempool.mapTx.erase(pTxItem->GetHash());
 	}
@@ -2180,9 +2181,9 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 				vPreBlocks.push_back(block);                   //将支链的block保存起来
 			}
 			pPreBlockIndex = pPreBlockIndex->pprev;
-			if(chainActive.Tip()->nHeight - pPreBlockIndex->nHeight > SysCfg().GetIntervalPos()) {
-				return state.DoS(100, ERRORMSG("CheckBlockProofWorkWithCoinDay() : block at fork chain too earlier than tip block hash=%s block height=%d\n", block.GetHash().GetHex(), block.nHeight));
-			}
+//			if(chainActive.Tip()->nHeight - pPreBlockIndex->nHeight > SysCfg().GetIntervalPos()) {
+//				return state.DoS(100, ERRORMSG("CheckBlockProofWorkWithCoinDay() : block at fork chain too earlier than tip block hash=%s block height=%d\n", block.GetHash().GetHex(), block.nHeight));
+//			}
 			map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(pPreBlockIndex->GetBlockHash());
 			if (mi == mapBlockIndex.end())
 				return state.DoS(10, ERRORMSG("CheckBlockProofWorkWithCoinDay() : prev block not found"), 0, "bad-prevblk");
@@ -4708,7 +4709,12 @@ Value ListSetBlockIndexValid() {
 	std::set<CBlockIndex*, CBlockIndexWorkComparator>::reverse_iterator it = setBlockIndexValid.rbegin();
 	for (; it != setBlockIndexValid.rend(); ++it) {
 		CBlockIndex *pIndex = *it;
-		result.push_back(Pair(tfm::format("%d",pIndex->nHeight).c_str(), pIndex->GetBlockHash().GetHex()));
+		result.push_back(Pair(tfm::format("height=%d status=%b",pIndex->nHeight, pIndex->nStatus).c_str(), pIndex->GetBlockHash().GetHex()));
+	}
+	uint256 hash = uint256S("0x6dccf719d146184b9a26e37d62be193fd51d0d49b2f8aa15f84656d790e1d46c");
+	CBlockIndex *blockIndex = mapBlockIndex[hash];
+	for(;blockIndex != NULL && blockIndex->nHeight>157332; blockIndex = blockIndex->pprev) {
+		result.push_back(Pair(tfm::format("height=%d status=%b",blockIndex->nHeight, blockIndex->nStatus).c_str(), blockIndex->GetBlockHash().GetHex()));
 	}
 	return result;
 }

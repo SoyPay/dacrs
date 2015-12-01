@@ -2010,11 +2010,63 @@ Value gettotalcoin(const Array& params, bool fHelp) {
 				 + HelpExampleCli("gettotalcoin", "")
 				 + HelpExampleRpc("gettotalcoin", ""));
 	}
-		Object obj;
-		{
-			CAccountViewCache view(*pAccountViewTip, true);
-			uint64_t totalcoin = view.TraverseAccount();
-			obj.push_back(Pair("TotalCoin", ValueFromAmount(totalcoin)));
+	Object obj;
+	{
+		CAccountViewCache view(*pAccountViewTip, true);
+		uint64_t totalcoin = view.TraverseAccount();
+		obj.push_back(Pair("TotalCoin", ValueFromAmount(totalcoin)));
+	}
+	return obj;
+}
+
+Value gettxhashbyaddress(const Array& params, bool fHelp) {
+	if(fHelp || params.size() != 2)
+	{
+		throw runtime_error(
+				 "gettxbyaddress \n"
+				 "\nget all tx hash by addresss\n"
+				 "\nArguments:\n"
+				"\nArguments:\n"
+				"1.\"address\": (string, required) \n"
+				"2.\"height\": (numeric, required) \n"
+				 "\nResult: tx relate tx hash as array\n"
+				"\nExamples:\n"
+				+ HelpExampleCli("gettxhashbyaddress", "\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" \"10023\"")
+				+ "\nAs json rpc call\n"
+				+ HelpExampleRpc("gettxhashbyaddress", "\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" \"10023\""));
+	}
+	string address = params[0].get_str();
+	int height = params[1].get_int();
+
+	Object obj;
+	{
+		CScriptDBViewCache scriptDbView(*pScriptDBTip, true);
+		map<vector<unsigned char>, vector<unsigned char> > mapTxHash;
+		vector<string> vTxArray;
+		CKeyID keyId;
+		if(!GetKeyId(address, keyId)) {
+			 throw runtime_error("gettxhashbyaddress : input params address is invalide!\n");
 		}
-		return obj;
+		if(!scriptDbView.GetTxHashByAddress(keyId, height, mapTxHash))
+		{
+			 throw runtime_error("call GetTxHashByAddress failed!\n");;
+		}
+		obj.push_back(Pair("address", address));
+		obj.push_back(Pair("height", height));
+		Array arrayObj;
+		for(auto item : mapTxHash) {
+//			CKeyID keyId;
+//			int nHeight(0);
+//			int nIndex(0);
+//			CDataStream ds(item.first, SER_DISK, CLIENT_VERSION);
+//			ds = ds.ignore(4);
+//			ds >> keyId;
+//			ds >> nHeight;
+//			ds >> nIndex;
+//			cout << "item.first:" <<"KeyId="<<keyId.ToAddress() << " Height="<< nHeight << " Index="<< nIndex << endl;
+			arrayObj.push_back(string(item.second.begin(), item.second.end()));
+		}
+		obj.push_back(Pair("txarray",arrayObj));
+	}
+	return obj;
 }

@@ -493,6 +493,42 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 		return false;
 	return true;
 }
+
+bool CScriptDB::GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<unsigned char>, vector<unsigned char> > &mapTxHash)
+{
+	leveldb::Iterator* pcursor = db.NewIterator();
+	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+
+	string strPrefixTemp("ADDR");
+	ssKeySet.insert(ssKeySet.end(), &strPrefixTemp[0], &strPrefixTemp[4]);
+	ssKeySet << keyId;
+	ssKeySet << nHeight;
+	pcursor->Seek(ssKeySet.str());
+
+	while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		try {
+			leveldb::Slice slKey = pcursor->key();
+			leveldb::Slice slValue = pcursor->value();
+			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+			if (0 == memcmp((char *)&ssKey[0], (char *)&ssKeySet[0], 24)) {
+				vector<unsigned char> vValue;
+				vector<unsigned char> vKey;
+				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+				ssValue >> vValue;
+				vKey.insert(vKey.end(), slKey.data(), slKey.data() + slKey.size());
+				mapTxHash.insert(make_pair(vKey, vValue));
+				pcursor->Next();
+			} else {
+				break;
+			}
+		} catch (std::exception &e) {
+			return ERRORMSG("%s : Deserialize or I/O error - %s\n", __func__, e.what());
+		}
+	}
+	delete pcursor;
+	return true;
+}
 Object CScriptDB::ToJosnObj(string Prefix) {
 
 	Object obj;

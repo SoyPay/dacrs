@@ -311,6 +311,16 @@ bool CRegisterAccountTx::ExecuteTx(int nIndex, CAccountViewCache &view, CValidat
 	}
 	txundo.vAccountLog.push_back(acctLog);
 	txundo.txHash = GetHash();
+	if(SysCfg().GetAddressToTxFlag()) {
+		CScriptDBOperLog operAddressToTxLog;
+		CKeyID sendKeyId;
+		if(!view.GetKeyId(userId, sendKeyId)) {
+			return ERRORMSG("ExecuteTx() : CRegisterAccountTx ExecuteTx, get keyid by userId error!");
+		}
+		if(!scriptDB.SetTxHashByAddress(sendKeyId, nHeight, nIndex+1, txundo.txHash.GetHex(), operAddressToTxLog))
+			return false;
+		txundo.vScriptOperLog.push_back(operAddressToTxLog);
+	}
 	return true;
 }
 bool CRegisterAccountTx::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state,
@@ -478,6 +488,25 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 
 	}
 	txundo.txHash = GetHash();
+
+	if(SysCfg().GetAddressToTxFlag()) {
+		CScriptDBOperLog operAddressToTxLog;
+		CKeyID sendKeyId;
+		CKeyID revKeyId;
+		if(!view.GetKeyId(srcRegId, sendKeyId)) {
+			return ERRORMSG("ExecuteTx() : ContractTransaction ExecuteTx, get keyid by srcRegId error!");
+		}
+		if(!view.GetKeyId(desUserId, revKeyId)) {
+			return ERRORMSG("ExecuteTx() : ContractTransaction ExecuteTx, get keyid by desUserId error!");
+		}
+		if(!scriptDB.SetTxHashByAddress(sendKeyId, nHeight, nIndex+1, txundo.txHash.GetHex(), operAddressToTxLog))
+			return false;
+		txundo.vScriptOperLog.push_back(operAddressToTxLog);
+		if(!scriptDB.SetTxHashByAddress(revKeyId, nHeight, nIndex+1, txundo.txHash.GetHex(), operAddressToTxLog))
+			return false;
+		txundo.vScriptOperLog.push_back(operAddressToTxLog);
+	}
+
 	return true;
 }
 bool CTransaction::GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view, CScriptDBViewCache &scriptDB) {
@@ -572,7 +601,6 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 				"bad-no-pubkey");
 	}
 
-	//check signature script
 	uint256 sighash = SignatureHash();
 	if (!CheckSignScript(sighash, signature, acctInfo.PublicKey)) {
 		return state.DoS(100, ERRORMSG("CheckTransaction() : CTransaction CheckTransction, CheckSignScript failed"), REJECT_INVALID,
@@ -624,6 +652,16 @@ bool CRewardTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidat
 	txundo.Clear();
 	txundo.vAccountLog.push_back(acctInfoLog);
 	txundo.txHash = GetHash();
+	if(SysCfg().GetAddressToTxFlag() && 0 == nIndex) {
+		CScriptDBOperLog operAddressToTxLog;
+		CKeyID sendKeyId;
+		if(!view.GetKeyId(account, sendKeyId)) {
+			return ERRORMSG("ExecuteTx() : CRewardTransaction ExecuteTx, get keyid by account error!");
+		}
+		if(!scriptDB.SetTxHashByAddress(sendKeyId, nHeight, nIndex+1, txundo.txHash.GetHex(), operAddressToTxLog))
+			return false;
+		txundo.vScriptOperLog.push_back(operAddressToTxLog);
+	}
 //	LogPrint("op_account", "after operate:%s\n", acctInfo.ToString());
 	return true;
 }
@@ -734,6 +772,16 @@ bool CRegisterAppTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidationSt
 		return state.DoS(100, ERRORMSG("ExecuteTx() : CRegisterAppTx ExecuteTx, save account info error"), UPDATE_ACCOUNT_FAIL,
 				"bad-save-accountdb");
 
+	if(SysCfg().GetAddressToTxFlag()) {
+		CScriptDBOperLog operAddressToTxLog;
+		CKeyID sendKeyId;
+		if(!view.GetKeyId(regAcctId, sendKeyId)) {
+			return ERRORMSG("ExecuteTx() : CRewardTransaction ExecuteTx, get regAcctId by account error!");
+		}
+		if(!scriptDB.SetTxHashByAddress(sendKeyId, nHeight, nIndex+1, txundo.txHash.GetHex(), operAddressToTxLog))
+			return false;
+		txundo.vScriptOperLog.push_back(operAddressToTxLog);
+	}
 	return true;
 }
 bool CRegisterAppTx::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,

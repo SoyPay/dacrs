@@ -127,6 +127,7 @@ public:
 	{
 		return db.GetDbCount();
 	}
+	bool GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<unsigned char>, vector<unsigned char> > &mapTxHash);
 	Object ToJosnObj(string Prefix);
 };
 #endif // DACRS_TXDB_LEVELDB_H

@@ -411,6 +411,9 @@ bool CScriptDBView::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos){return fal
 bool CScriptDBView::WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB) {return false;}
 bool CScriptDBView::WriteTxOutPut(const uint256 &txid, const vector<CVmOperate> &vOutput, CScriptDBOperLog &operLog) {return false;}
 bool CScriptDBView::ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput) {return false;}
+bool CScriptDBView::GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<unsigned char>, vector<unsigned char> > &vTxHash) { return false;}
+bool CScriptDBView::SetTxHashByAddress(const CKeyID &keyId, int nHeight, int nIndex, const string & strTxHash, CScriptDBOperLog &operLog){return false;}
+
 Object CScriptDBView:: ToJosnObj(string Prefix){
 	Object obj;
 	return obj;
@@ -430,6 +433,8 @@ bool CScriptDBViewBacked::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos){retu
 bool CScriptDBViewBacked::WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB){return pBase->WriteTxIndex(list, vTxIndexOperDB);}
 bool CScriptDBViewBacked::WriteTxOutPut(const uint256 &txid, const vector<CVmOperate> &vOutput, CScriptDBOperLog &operLog) {return pBase->WriteTxOutPut(txid, vOutput, operLog);}
 bool CScriptDBViewBacked::ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput) {return pBase->ReadTxOutPut(txid, vOutput);}
+bool CScriptDBViewBacked::GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<unsigned char>, vector<unsigned char> > &vTxHash) { return pBase->GetTxHashByAddress(keyId, nHeight, vTxHash);}
+bool CScriptDBViewBacked::SetTxHashByAddress(const CKeyID &keyId, int nHeight, int nIndex, const string & strTxHash, CScriptDBOperLog &operLog){return pBase->SetTxHashByAddress(keyId, nHeight, nIndex, strTxHash, operLog);}
 
 
 CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScriptDBViewBacked(base) {
@@ -676,6 +681,52 @@ bool CScriptDBViewCache::WriteTxOutPut(const uint256 &txid, const vector<CVmOper
 	operLog = CScriptDBOperLog(vKey, oldValue);
 	return SetData(vKey, vValue);
 }
+
+bool CScriptDBViewCache::SetTxHashByAddress(const CKeyID &keyId, int nHeight, int nIndex, const string & strTxHash, CScriptDBOperLog &operLog)
+{
+	vector<unsigned char> vKey = {'A','D','D','R'};
+	vector<unsigned char> oldValue;
+	oldValue.clear();
+	GetData(vKey, oldValue);
+	operLog = CScriptDBOperLog(vKey, oldValue);
+
+	CDataStream ds1(SER_DISK, CLIENT_VERSION);
+	ds1 << keyId;
+	ds1 << nHeight;
+	ds1 << nIndex;
+	vKey.insert(vKey.end(), ds1.begin(), ds1.end());
+	vector<unsigned char> vValue(strTxHash.begin(), strTxHash.end());
+	return SetData(vKey, vValue);
+}
+
+bool CScriptDBViewCache::GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<unsigned char>, vector<unsigned char> > &vTxHash)
+{
+
+	pBase->GetTxHashByAddress(keyId, nHeight, vTxHash);
+
+	vector<unsigned char> vPreKey = {'A','D','D','R'};
+	CDataStream ds1(SER_DISK, CLIENT_VERSION);
+	ds1 << keyId;
+	ds1 << nHeight;
+	vPreKey.insert(vPreKey.end(), ds1.begin(), ds1.end());
+
+	map<vector<unsigned char>, vector<unsigned char> >::iterator iterFindKey = mapDatas.upper_bound(vPreKey);
+	while (iterFindKey != mapDatas.end()) {
+		if (0 == memcmp((char *)&iterFindKey->first[0], (char *)&vPreKey[0], 24)) {
+			if(iterFindKey->second.empty())
+				vTxHash.erase(iterFindKey->first);
+			else {
+				vTxHash.insert(make_pair(iterFindKey->first, iterFindKey->second));
+			}
+			++iterFindKey;
+		}
+		else {
+			break;
+		}
+	}
+	return true;
+}
+
 
 bool CScriptDBViewCache::ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput) {
 	vector<unsigned char> vKey = {'o','u','t','p','u','t'};

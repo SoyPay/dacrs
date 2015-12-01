@@ -229,6 +229,7 @@ static const CRPCCommand vRPCCommands[] =
     { "gencheckpoint",          &gencheckpoint,          true,      true,       false },
     { "setcheckpoint",          &setcheckpoint,          true,      true,       false },
     { "validateaddress",        &validateaddress,        true,      true,       false },
+    { "gettxhashbyaddress",     &gettxhashbyaddress,     true,      true,       false },
 
     /* P2P networking */
     { "getnetworkinfo",         &getnetworkinfo,         true,      false,      false },
