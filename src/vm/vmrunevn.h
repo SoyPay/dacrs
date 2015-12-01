@@ -8,6 +8,7 @@
 #ifndef SCRIPTCHECK_H_
 #define SCRIPTCHECK_H_
 #include "vm8051.h"
+//#include "vmlua.h"
 #include "serialize.h"
 #include "script.h"
 #include "main.h"
@@ -24,6 +25,7 @@ class CVmRunEvn {
 	 * Run the script object
 	 */
 	shared_ptr<CVm8051> pMcu;
+//	shared_ptr<CVmlua> pMcu;
 	/**
 	 * vm before the account state
 	 */
@@ -180,4 +182,5 @@ public:
 
 };
 
+//extern CVmRunEvn *pVmRunEvn; //提供给lmylib.cpp库使用
 #endif /* SCRIPTCHECK_H_ */

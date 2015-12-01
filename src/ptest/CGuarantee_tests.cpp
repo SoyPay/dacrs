@@ -71,23 +71,22 @@ using namespace json_spirit;
 // 1826-1081
 
 //const static char DeveloperAccount[6]="\x00\x00\x00\x00\x14\x00";//!<开发者地址ID
-#define ADDR_DeveloperAccount   "dk2NNjraSvquD9b4SQbysVRQeFikA55HLi"   //RegID = "0-20"
+//#define ADDR_DeveloperAccount   "dk2NNjraSvquD9b4SQbysVRQeFikA55HLi"   //RegID = "0-20"
+#define ADDR_DeveloperAccount   "DsSyKYzYBSgyEggq8o6SVD4DnPzETVbaUe"   //RegID = "86720-1"
 
-#define ID_strAppRegId  "47275-1"    //脚本应用ID 待填
+
+//#define ID_strAppRegId  "47301-1"    //脚本应用ID 待填
+//#define ID_strAppRegId  "47322-1"    //脚本应用ID 待填  47323
+//#define ID_strAppRegId  "47323-1"    //脚本应用ID 待填  47323
+#define ID_strAppRegId  "47018-1"    //
 //#define HASH_sendhash     "7de1faafc2c9f14be5294f5f2b1082eaf92c7d66da5d42be1016e0988143318d"  //挂单交易hash 待填
 static const unsigned char HASH_sendhash[] ={
-		0x7d,0xbd,0xb5,0x38,0xea,0x19,0x55,0xee,
-		0xc5,0x1c,0x12,0x7b,0xb4,0x66,0xa5,0x95,
-		0x94,0xf8,0x67,0x03,0xe7,0x1c,0xc7,0x6d,
-		0x37,0x65,0x3d,0x48,0x33,0x5c,0x77,0x15
+		0x14,0x96,0xb5,0xc0,0x3e,0xa9,0xa2,0x09,
+		0xf3,0x97,0x05,0x3a,0x4d,0x32,0xdc,0x4a,
+		0xe6,0x31,0x98,0x5e,0x14,0x8f,0x81,0x01,
+		0xbb,0xf0,0x53,0xf7,0x4b,0x00,0x06,0x41
+};
 
-};
-static const unsigned char HASH_accepthash[] ={
-		0x4f,0xe5,0xcd,0xc0,0xc4,0x23,0x1e,0x5f,
-		0xa5,0x27,0x22,0x88,0x94,0xfe,0x45,0x47,
-		0x29,0xf0,0xbd,0x5a,0x54,0x98,0xe2,0x72,
-		0x10,0x81,0xc6,0xd9,0x17,0x94,0x5c,0x1a
-};
 
 
 //!<仲裁者C的配置信息
@@ -129,7 +128,7 @@ TEST_STATE CGuaranteeTest::Run(){
 
 
 //	Recharge();
-//	Withdraw();
+	Withdraw();
 //	WithdrawSomemoney();
 
 //	Register(TX_REGISTER);
@@ -140,6 +139,7 @@ TEST_STATE CGuaranteeTest::Run(){
 //	SendStartTrade();
 //	SendCancelTrade();
 //	AcceptTrade();
+//    DeliveryTrade();
 //	BuyerConfirm();
 //	Arbitration();
 //	RunFinalResult();
@@ -156,6 +156,7 @@ bool CGuaranteeTest::RegistScript(){
 	basetest.ImportWalletKey(pKey, nCount);
 
 	string strFileName("guarantee.bin");
+//	string strFileName("guarantee.lua");
 	int nFee = basetest.GetRandomFee();
 	int nCurHight;
 	basetest.GetBlockHeight(nCurHight);
@@ -188,7 +189,7 @@ bool CGuaranteeTest::Recharge()
 
     cout<<"Recharge data:"<<sendcontract<<endl;
     cout<<"Recharge strAppRegId:"<<strAppRegId<<endl;
-	Value  retValue= basetest.CreateContractTx(strAppRegId,ADDR_DeveloperAccount,sendcontract,0,0,nTempSend);
+	Value  retValue= basetest.CreateContractTx(strAppRegId,ADDR_SEND_A,sendcontract,0,0,nTempSend);
 //   ADDR_DeveloperAccount  //RegID = "0-20"
 //   ADDR_SEND_A   //	Id = "1826-1437";
 //   ADDR_ACCEPT_B   //	Id = "1826-1285";
@@ -228,7 +229,7 @@ bool CGuaranteeTest::Withdraw()
 	string sendcontract = HexStr(scriptData);
 	uint64_t nTempSend = 0;
     cout<<"Withdraw data:"<<sendcontract<<endl;
-	Value  retValue= basetest.CreateContractTx(strAppRegId,ADDR_ACCEPT_B,sendcontract,0,0,nTempSend);
+	Value  retValue= basetest.CreateContractTx(strAppRegId,ADDR_SEND_A,sendcontract,0,0,nTempSend);
            //ADDR_DeveloperAccount  ADDR_ARBITRATION_C
 	if (basetest.GetHashFromCreatedTx(retValue, strTxHash)) {
 		nStep++;
@@ -321,7 +322,8 @@ bool CGuaranteeTest::Register(unsigned char type)
 	uint64_t nTempSend = 0;
     cout<<"Register data:"<<sendcontract<<endl;
     cout<<"Register strAppRegId:"<<strAppRegId.c_str()<<endl;
-	Value  retValue= basetest.CreateContractTx(strAppRegId,ADDR_ARBITRATION_C,sendcontract,0,0,nTempSend);
+	Value  retValue= basetest.CreateContractTx(strAppRegId,ADDR_DeveloperAccount,sendcontract,0,0,nTempSend);
+	//ADDR_DeveloperAccount  ADDR_ARBITRATION_C
 
 	if (basetest.GetHashFromCreatedTx(retValue, strTxHash)) {
 		nStep++;
@@ -547,6 +549,43 @@ bool CGuaranteeTest::AcceptTrade()
 	cout<<"AcceptTrade success end"<<endl;
 	return true;
 }
+bool  CGuaranteeTest::DeliveryTrade(){
+
+	   cout<<"DeliveryTrade start"<<endl;
+
+		TX_CONTRACT senddata;
+		memset(&senddata,0,sizeof(senddata));
+		senddata.type = TX_DELIVERY;
+		memcpy(senddata.txhash,HASH_sendhash, sizeof(senddata.txhash)); //待填交易HASH
+		senddata.height = SEND_height;
+
+		CDataStream scriptData(SER_DISK, CLIENT_VERSION);
+		scriptData << senddata;
+		string sendcontract = HexStr(scriptData);
+		uint64_t nTempSend = 0;
+		cout<<"DeliveryTrade data:"<<sendcontract.c_str()<<endl;
+		Value  sendret= basetest.CreateContractTx(strAppRegId,ADDR_ACCEPT_B,sendcontract,0,0,nTempSend);//卖家发货
+
+		if (basetest.GetHashFromCreatedTx(sendret, strTxHash)) {
+			nStep++;
+		}
+		else{
+			cout<<"DeliveryTrade err end"<<endl;
+			return false;
+		}
+	#if 1
+			/// 等待交易被确认到block中
+			while(true)
+			{
+				if(WaitComfirmed(strTxHash, strAppRegId)) {
+							break;
+						}
+			}
+	#endif
+		cout<<"DeliveryTrade success end"<<endl;
+		return true;
+
+}
 bool CGuaranteeTest::BuyerConfirm()
 {
    cout<<"BuyerConfirm start"<<endl;
@@ -638,7 +677,6 @@ bool CGuaranteeTest::RunFinalResult()
 	senddata.type = TX_FINALRESULT;
 	memcpy(senddata.arbitHash, HASH_sendhash, sizeof(senddata.arbitHash)); //待填交易HASH
 	senddata.overtimeheightT = ARBITER_overtimeheightT;
-//	memcpy(senddata.accepthash, HASH_accepthash, sizeof(senddata.accepthash)); //待填交易HASH
 
 //	string buyId = "1826-1437";
 	unsigned int height = 1826;   //待填   赢家 ID 买家 赢

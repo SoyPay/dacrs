@@ -10,6 +10,8 @@
 #include<algorithm>
 #include <boost/foreach.hpp>
 
+// CVmRunEvn *pVmRunEvn = NULL;
+
 #define MAX_OUTPUT_COUNT 100
 CVmRunEvn::CVmRunEvn() {
 	RawAccont.clear();
@@ -65,6 +67,8 @@ bool CVmRunEvn::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& vie
 		return false;
 	}
 	pMcu = make_shared<CVm8051>(vmScript.Rom, secure->vContract);
+//	pVmRunEvn = this; //传CVmRunEvn对象指针给lmylib.cpp库使用
+//	pMcu = make_shared<CVmlua>(vmScript.Rom, secure->vContract);
 	return true;
 }
 
