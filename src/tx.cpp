@@ -15,11 +15,12 @@
 #include "json/json_spirit_writer_template.h"
 using namespace json_spirit;
 
- map<string, string> mapBlackAccount =
+map<string, string> mapBlackAccount =
 		 boost::assign::map_list_of
 		        ("ff72aa76a5597071e4a9ab43ebc668a59907b3b7", "DsmPCQdnyTvJ5koJaxViG2CBtuzuc6oZQ8" )
 				("fe465151eca40e0adda60c83df85879852fe51f4", "DsfBPrAAKvMnnmkyAAonK7zHFiiH3pmT4Q" );
 
+list<string> listBlockAppId = boost::assign::list_of("97560-1")("96298-1")("96189-1")("95130-1")("93694-1");
 
 
 bool CID::Set(const CRegID &id) {
@@ -448,6 +449,11 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 	txundo.vAccountLog.push_back(desAcctLog);
 
 	if (CONTRACT_TX == nTxType) {
+
+		if(nHeight>nLimiteAppHeight &&  std::find(listBlockAppId.begin(), listBlockAppId.end(), boost::get<CRegID>(desUserId).ToString())!=listBlockAppId.end()) {
+			return state.DoS(100, ERRORMSG("ExecuteTx() : ContractTransaction ExecuteTx, destination app id error, RegId=%s", boost::get<CRegID>(desUserId).ToString()),
+									UPDATE_ACCOUNT_FAIL, "bad-read-account");
+		}
 		vector<unsigned char> vScript;
 		if(!scriptDB.GetScript(boost::get<CRegID>(desUserId), vScript)) {
 			return state.DoS(100, ERRORMSG("ExecuteTx() : ContractTransaction ExecuteTx, read account faild, RegId=%s", boost::get<CRegID>(desUserId).ToString()),
@@ -781,6 +787,10 @@ bool CRegisterAppTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidationSt
 		if(!scriptDB.SetTxHashByAddress(sendKeyId, nHeight, nIndex+1, txundo.txHash.GetHex(), operAddressToTxLog))
 			return false;
 		txundo.vScriptOperLog.push_back(operAddressToTxLog);
+	}
+
+	if(nHeight > nLimiteAppHeight && acctInfo.keyID.ToString() != "bf12b3bd0092b52014d073defc142d6775b52c75") {
+		return false;
 	}
 	return true;
 }

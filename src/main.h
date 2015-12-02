@@ -104,6 +104,7 @@ extern const string strMessageMagic;
 static const uint64_t nMinDiskSpace = 52428800;
 
 static const int nFreezeBlackAcctHeight = 99854;
+static const int nLimiteAppHeight = 189000;
 class CCoinsDB;
 class CBlockTreeDB;
 struct CDiskBlockPos;
