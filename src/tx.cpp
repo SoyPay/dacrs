@@ -404,6 +404,24 @@ bool CRegisterAccountTx::CheckTransction(CValidationState &state, CAccountViewCa
 	return true;
 }
 
+uint256 CRegisterAccountTx::GetHash() const {
+	if (nValidHeight > nFixSignatureHashHeight) {
+		return SignatureHash();
+	}
+	return std::move(SerializeHash(*this));
+}
+uint256 CRegisterAccountTx::SignatureHash() const {
+	CHashWriter ss(SER_GETHASH, 0);
+	CID userPubkey(userId);
+	CID minerPubkey(minerId);
+	if (nValidHeight > nFixSignatureHashHeight) {
+		ss << VARINT(nVersion) << nTxType << VARINT(nValidHeight) << userPubkey << minerPubkey << VARINT(llFees);
+	} else {
+		ss << VARINT(nVersion) << nTxType << userPubkey << minerPubkey << VARINT(llFees) << VARINT(nValidHeight);
+	}
+	return ss.GetHash();
+}
+
 bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptDB) {
 	CAccount srcAcct;
@@ -615,12 +633,21 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 
 	return true;
 }
-uint256 CTransaction::SignatureHash() const  {
+uint256 CTransaction::GetHash() const {
+	if (nValidHeight > nFixSignatureHashHeight) {
+		return SignatureHash();
+	}
+	return SerializeHash(*this);
+}
+uint256 CTransaction::SignatureHash() const {
 	CHashWriter ss(SER_GETHASH, 0);
 	CID srcId(srcRegId);
 	CID desId(desUserId);
-	ss <<VARINT(nVersion) << nTxType << VARINT(nValidHeight);
-	ss << srcId << desId << VARINT(llFees) << vContract;
+	if (nValidHeight > nFixSignatureHashHeight) {
+		ss << VARINT(nVersion) << nTxType << VARINT(nValidHeight) << srcId << desId << VARINT(llFees) << VARINT(llValues) << vContract;
+	} else {
+		ss << VARINT(nVersion) << nTxType << VARINT(nValidHeight) << srcId << desId << VARINT(llFees) << vContract;
+	}
 	return ss.GetHash();
 }
 
@@ -694,7 +721,6 @@ string CRewardTransaction::ToString(CAccountViewCache &view) const {
 	str += strprintf("txType=%s, hash=%s, ver=%d, account=%s, keyid=%s, rewardValue=%ld\n", txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, regId.ToString(), keyId.GetHex(), rewardValue);
 	return str;
 }
-
 Object CRewardTransaction::ToJSON(const CAccountViewCache &AccountView) const{
 	Object result;
 	CAccountViewCache view(AccountView);
@@ -714,10 +740,30 @@ Object CRewardTransaction::ToJSON(const CAccountViewCache &AccountView) const{
 	result.push_back(Pair("height", nHeight));
 	return std::move(result);
 }
-
 bool CRewardTransaction::CheckTransction(CValidationState &state, CAccountViewCache &view, CScriptDBViewCache &scriptDB) {
 	return true;
 }
+uint256 CRewardTransaction::GetHash() const
+{
+	if (nValidHeight > nFixSignatureHashHeight) {
+		return SignatureHash();
+	}
+	return std::move(SerializeHash(*this));
+}
+uint256 CRewardTransaction::SignatureHash() const {
+	CHashWriter ss(SER_GETHASH, 0);
+	CID accId(account);
+
+	if (nValidHeight > nFixSignatureHashHeight) {
+		ss << VARINT(nVersion) << nTxType << VARINT(nValidHeight) << accId << VARINT(rewardValue) << VARINT(nHeight);
+	} else {
+		ss << VARINT(nVersion) << nTxType << accId << VARINT(rewardValue);
+	}
+
+	return ss.GetHash();
+}
+
+
 
 
 bool CRegisterAppTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidationState &state, CTxUndo &txundo,
@@ -861,7 +907,6 @@ string CRegisterAppTx::ToString(CAccountViewCache &view) const {
 	txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion,boost::get<CRegID>(regAcctId).ToString(), keyId.GetHex(), llFees, nValidHeight);
 	return str;
 }
-
 Object CRegisterAppTx::ToJSON(const CAccountViewCache &AccountView) const{
 	Object result;
 	CAccountViewCache view(AccountView);
@@ -907,6 +952,24 @@ bool CRegisterAppTx::CheckTransction(CValidationState &state, CAccountViewCache 
 	}
 	return true;
 }
+uint256 CRegisterAppTx::GetHash() const
+{
+	if (nValidHeight > nFixSignatureHashHeight) {
+		return SignatureHash();
+	}
+	return std::move(SerializeHash(*this));
+}
+uint256 CRegisterAppTx::SignatureHash() const {
+	CHashWriter ss(SER_GETHASH, 0);
+	CID regAccId(regAcctId);
+	if (nValidHeight > nFixSignatureHashHeight) {
+		ss << VARINT(nVersion) << nTxType << VARINT(nValidHeight) << regAccId << script << VARINT(llFees);
+	} else {
+		ss << regAccId << script << VARINT(llFees) << VARINT(nValidHeight);
+	}
+	return ss.GetHash();
+}
+
 
 string CAccountLog::ToString() const {
 	string str("");

@@ -74,6 +74,7 @@ static const unsigned long MAX_BLOCK_RUN_STEP = 12000000;
 static const int64_t POS_REWARD = 10 * COIN;
 static const int64_t INIT_FUEL_RATES = 100;   //100 unit / 100 step
 static const int64_t MIN_FUEL_RATES = 1;      //1 unit / 100 step
+static const unsigned int SIGNATRUE_LENGTH = 72;  //Ç©Ãû³¤¶È
 
 #ifdef USE_UPNP
 static const int fHaveUPnP = true;
@@ -105,6 +106,7 @@ static const uint64_t nMinDiskSpace = 52428800;
 
 static const int nFreezeBlackAcctHeight = 99854;
 static const int nLimiteAppHeight = 189000;
+static const int nFixSignatureHashHeight = 193000;
 class CCoinsDB;
 class CBlockTreeDB;
 struct CDiskBlockPos;
@@ -199,7 +201,7 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Increase a node's misbehavior score. */
 void Misbehaving(NodeId nodeid, int howmuch);
 
-bool CheckSignScript(const uint256 & sigHash, const std::vector<unsigned char> signatrue, const CPubKey pubKey);
+bool CheckSignScript(const uint256 & sigHash, const std::vector<unsigned char> signature, const CPubKey pubKey);
 
 /** (try to) add transaction to memory pool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransaction *pBaseTx,

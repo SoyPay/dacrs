@@ -9,9 +9,7 @@
 #include <vector>
 #include <string>
 #include <boost/variant.hpp>
-#include "tx.h"
 #include "chainparams.h"
-
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"
 using namespace json_spirit;
@@ -291,21 +289,13 @@ public:
 		return llFees;
 	}
 
-	uint256 GetHash() const {
-		return std::move(SerializeHash(*this));
-	}
+	uint256 GetHash() const;
 
 	double GetPriority() const {
 		return llFees / GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
 	}
 
-	uint256 SignatureHash() const {
-		CHashWriter ss(SER_GETHASH, 0);
-		CID id(userId);
-		CID id2(minerId);
-		ss << VARINT(nVersion) << nTxType << id << id2 << VARINT(llFees) << VARINT(nValidHeight);
-		return ss.GetHash();
-	}
+	uint256 SignatureHash() const;
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
 		return make_shared<CRegisterAccountTx>(this);
@@ -405,9 +395,7 @@ public:
 			}
 	)
 
-	uint256 GetHash() const {
-		return SerializeHash(*this);
-	}
+	uint256 GetHash() const;
 
 	uint64_t GetFee() const {
 		return llFees;
@@ -485,20 +473,13 @@ public:
 		READWRITE(VARINT(nHeight));
 	)
 
-	uint256 GetHash() const {
-		return std::move(SerializeHash(*this));
-	}
+	uint256 GetHash() const;
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
 		return make_shared<CRewardTransaction>(this);
 	}
 
-	uint256 SignatureHash() const {
-		CHashWriter ss(SER_GETHASH, 0);
-		CID accId(account);
-		ss <<VARINT(nVersion) << nTxType<< accId << VARINT(rewardValue);
-		return ss.GetHash();
-	}
+	uint256 SignatureHash() const;
 
 	uint64_t GetFee() const {
 		return 0;
@@ -557,20 +538,13 @@ public:
 		READWRITE(signature);
 	)
 
-	uint256 GetHash() const {
-		return std::move(SerializeHash(*this));
-	}
+	uint256 GetHash() const;
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
 		return make_shared<CRegisterAppTx>(this);
 	}
 
-	uint256 SignatureHash() const {
-		CHashWriter ss(SER_GETHASH, 0);
-		CID regAccId(regAcctId);
-		ss << regAccId << script << VARINT(llFees) << VARINT(nValidHeight);
-		return ss.GetHash();
-	}
+	uint256 SignatureHash() const;
 
 	uint64_t GetFee() const {
 		return llFees;

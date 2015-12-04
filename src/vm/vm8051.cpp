@@ -26,7 +26,7 @@ void CVm8051::InitalReg() {
 	memset(m_ChipRam, 0, sizeof(m_ChipRam));
 	memset(m_ChipSfr, 0, sizeof(m_ChipSfr));
 	memset(m_ExRam, 0, sizeof(m_ExRam));
-//	memset(m_ChipRamoper, 0, sizeof(m_ChipRamoper));
+	memset(m_ExeFile, 0, sizeof(m_ExeFile));
 
 	Sys.a.SetAddr(a_addr);
 	Sys.b.SetAddr(b_addr);

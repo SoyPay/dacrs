@@ -577,13 +577,13 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
     return chainActive.Height() - pindex->nHeight + 1;
 }
 
-bool CheckSignScript(const uint256 & sigHash, const std::vector<unsigned char> signatrue, const CPubKey pubKey) {
-	if (signatureCache.Get(sigHash, signatrue, pubKey))
+bool CheckSignScript(const uint256 & sigHash, const std::vector<unsigned char> signature, const CPubKey pubKey) {
+	if (signatureCache.Get(sigHash, signature, pubKey))
 		return true;
-	if (!pubKey.Verify(sigHash, signatrue))
+	if (!pubKey.Verify(sigHash, signature))
 		return false;
 		//return ERRORMSG("CheckSignScript() : tx signature error");
-	signatureCache.Set(sigHash, signatrue, pubKey);
+	signatureCache.Set(sigHash, signature, pubKey);
 	return true;
 }
 
