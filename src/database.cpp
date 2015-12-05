@@ -259,8 +259,9 @@ bool CAccountViewCache::GetAccount(const CUserID &userId, CAccount &account) {
 	} else if (userId.type() == typeid(CPubKey)) {
 		ret = GetAccount(boost::get<CPubKey>(userId).GetKeyID(), account);
 		if(ret) assert((boost::get<CPubKey>(userId)).GetKeyID() == account.keyID);
-	} else {
-		assert(0);
+	} else if (userId.type() == typeid(CNullID)){
+		ERRORMSG("GetAccount input userid is CNullID type");
+		return ret;
 	}
 	return ret;
 }
@@ -273,9 +274,10 @@ bool CAccountViewCache::GetKeyId(const CUserID &userId, CKeyID &keyId) {
 	} else if (userId.type() == typeid(CKeyID)) {
 		keyId = boost::get<CKeyID>(userId);
 		return true;
-	} else
+	} else if(userId.type() == typeid(CNullID))
 	{
-		assert(0);
+		ERRORMSG("GetAccount input userid is CNullID type");
+		return false;
 	}
 	return false;
 }

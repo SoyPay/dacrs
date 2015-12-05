@@ -63,7 +63,7 @@ CUserID CID::GetUserId() {
 	}
 	else {
 		LogPrint("ERROR", "vchData:%s, len:%d\n", HexStr(vchData).c_str(), vchData.size());
-		assert(0);
+		throw ios_base::failure("GetUserId error from CID");
 	}
 	return CNullID();
 }
@@ -385,6 +385,7 @@ Object CRegisterAccountTx::ToJSON(const CAccountViewCache &AccountView) const{
    return result;
 }
 bool CRegisterAccountTx::CheckTransction(CValidationState &state, CAccountViewCache &view, CScriptDBViewCache &scriptDB) {
+
 	//check pubKey valid
 	if (!boost::get<CPubKey>(userId).IsFullyValid()) {
 		return state.DoS(100, ERRORMSG("CheckTransaction() : CRegisterAccountTx CheckTransction, register tx public key is invalid"), REJECT_INVALID,
@@ -405,7 +406,7 @@ bool CRegisterAccountTx::CheckTransction(CValidationState &state, CAccountViewCa
 }
 
 uint256 CRegisterAccountTx::GetHash() const {
-	if (nValidHeight > nFixSignatureHashHeight) {
+	if (nTxVersion2 == nVersion) {
 		return SignatureHash();
 	}
 	return std::move(SerializeHash(*this));
@@ -414,7 +415,7 @@ uint256 CRegisterAccountTx::SignatureHash() const {
 	CHashWriter ss(SER_GETHASH, 0);
 	CID userPubkey(userId);
 	CID minerPubkey(minerId);
-	if (nValidHeight > nFixSignatureHashHeight) {
+	if (nTxVersion2 == nVersion) {
 		ss << VARINT(nVersion) << nTxType << VARINT(nValidHeight) << userPubkey << minerPubkey << VARINT(llFees);
 	} else {
 		ss << VARINT(nVersion) << nTxType << userPubkey << minerPubkey << VARINT(llFees) << VARINT(nValidHeight);
@@ -611,6 +612,7 @@ Object CTransaction::ToJSON(const CAccountViewCache &AccountView) const{
     return result;
 }
 bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &view, CScriptDBViewCache &scriptDB) {
+
 	if (!MoneyRange(llFees)) {
 		return state.DoS(100, ERRORMSG("CheckTransaction() : CTransaction CheckTransction, appeal tx fee out of range"), REJECT_INVALID,
 				"bad-appeal-fee-toolarge");
@@ -634,7 +636,7 @@ bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &v
 	return true;
 }
 uint256 CTransaction::GetHash() const {
-	if (nValidHeight > nFixSignatureHashHeight) {
+	if (nTxVersion2 == nVersion) {
 		return SignatureHash();
 	}
 	return SerializeHash(*this);
@@ -643,7 +645,7 @@ uint256 CTransaction::SignatureHash() const {
 	CHashWriter ss(SER_GETHASH, 0);
 	CID srcId(srcRegId);
 	CID desId(desUserId);
-	if (nValidHeight > nFixSignatureHashHeight) {
+	if (nTxVersion2 == nVersion) {
 		ss << VARINT(nVersion) << nTxType << VARINT(nValidHeight) << srcId << desId << VARINT(llFees) << VARINT(llValues) << vContract;
 	} else {
 		ss << VARINT(nVersion) << nTxType << VARINT(nValidHeight) << srcId << desId << VARINT(llFees) << vContract;
@@ -745,7 +747,7 @@ bool CRewardTransaction::CheckTransction(CValidationState &state, CAccountViewCa
 }
 uint256 CRewardTransaction::GetHash() const
 {
-	if (nValidHeight > nFixSignatureHashHeight) {
+	if (nTxVersion2 == nVersion) {
 		return SignatureHash();
 	}
 	return std::move(SerializeHash(*this));
@@ -754,8 +756,8 @@ uint256 CRewardTransaction::SignatureHash() const {
 	CHashWriter ss(SER_GETHASH, 0);
 	CID accId(account);
 
-	if (nValidHeight > nFixSignatureHashHeight) {
-		ss << VARINT(nVersion) << nTxType << VARINT(nValidHeight) << accId << VARINT(rewardValue) << VARINT(nHeight);
+	if (nTxVersion2 == nVersion) {
+		ss << VARINT(nVersion) << nTxType << accId << VARINT(rewardValue) << VARINT(nHeight);
 	} else {
 		ss << VARINT(nVersion) << nTxType << accId << VARINT(rewardValue);
 	}
@@ -923,6 +925,7 @@ Object CRegisterAppTx::ToJSON(const CAccountViewCache &AccountView) const{
 	return result;
 }
 bool CRegisterAppTx::CheckTransction(CValidationState &state, CAccountViewCache &view, CScriptDBViewCache &scriptDB) {
+
 	if (!MoneyRange(llFees)) {
 			return state.DoS(100, ERRORMSG("CheckTransaction() : CRegisterAppTx CheckTransction, tx fee out of range"), REJECT_INVALID,
 					"fee-too-large");
@@ -954,7 +957,7 @@ bool CRegisterAppTx::CheckTransction(CValidationState &state, CAccountViewCache 
 }
 uint256 CRegisterAppTx::GetHash() const
 {
-	if (nValidHeight > nFixSignatureHashHeight) {
+	if (nTxVersion2 == nVersion) {
 		return SignatureHash();
 	}
 	return std::move(SerializeHash(*this));
@@ -962,7 +965,7 @@ uint256 CRegisterAppTx::GetHash() const
 uint256 CRegisterAppTx::SignatureHash() const {
 	CHashWriter ss(SER_GETHASH, 0);
 	CID regAccId(regAcctId);
-	if (nValidHeight > nFixSignatureHashHeight) {
+	if (nTxVersion2 == nVersion ) {
 		ss << VARINT(nVersion) << nTxType << VARINT(nValidHeight) << regAccId << script << VARINT(llFees);
 	} else {
 		ss << regAccId << script << VARINT(llFees) << VARINT(nValidHeight);

@@ -592,6 +592,15 @@ bool CheckTransaction(CBaseTransaction *ptx, CValidationState &state, CAccountVi
 	if( REWARD_TX == ptx->nTxType)
 		return true;
 
+	// check version
+	if (ptx->nValidHeight > nUpdateTxVersion2Height) {
+		if (ptx->nVersion != nTxVersion2) {
+			return state.DoS(100,
+					ERRORMSG("CheckTransaction() : CheckTransction,tx version is not equal current version, (tx version %d: vs current %d)",
+							ptx->nVersion, nTxVersion2));
+		}
+	}
+
 	// Size limits
 	if (::GetSerializeSize(ptx->GetNewInstance(), SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
 		return state.DoS(100, ERRORMSG("CheckTransaction() : size limits failed"), REJECT_INVALID, "bad-txns-oversize");

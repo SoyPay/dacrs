@@ -392,6 +392,14 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 		return ERRORMSG("AccountView have no the accountid");
 	}
 
+	//校验reward_tx 版本是否正确
+	if (pBlock->nHeight > nUpdateTxVersion2Height) {
+		if (prtx->nVersion != nTxVersion2) {
+			return ERRORMSG("CTransaction CheckTransction,tx version is not equal current version, (tx version %d: vs current %d)",
+					prtx->nVersion, nTxVersion2);
+		}
+	}
+
 	if (bNeedRunTx) {
 		int64_t nTotalFuel(0);
 		uint64_t nTotalRunStep(0);
@@ -737,7 +745,7 @@ void static DacrsMiner(CWallet *pwallet,int targetConter) {
 			if (SysCfg().NetworkID() != CBaseParams::REGTEST) {
 				// Busy-wait for the network to come online so we don't waste time mining
 				// on an obsolete chain. In regtest mode we expect to fly solo.
-				while (vNodes.empty() /*|| (chainActive.Tip() && chainActive.Tip()->nHeight>1 && GetAdjustedTime()-chainActive.Tip()->nTime > 60*60)*/)
+				while (vNodes.empty() || (chainActive.Tip() && chainActive.Tip()->nHeight>1 && GetAdjustedTime()-chainActive.Tip()->nTime > 60*60))
 					MilliSleep(1000);
 			}
 

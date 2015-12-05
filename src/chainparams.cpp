@@ -541,6 +541,7 @@ bool CBaseParams::CreateGenesisRewardTx(vector<std::shared_ptr<CBaseTransaction>
 			money = 1000000000 * COIN;
 		}
 		shared_ptr<CRewardTransaction> pRewardTx = make_shared<CRewardTransaction>(ParseHex(vInitPubKey[i].c_str()), money, 0);
+		pRewardTx->nVersion = nTxVersion1;
 		if (pRewardTx.get())
 			vRewardTx.push_back(pRewardTx);
 		else

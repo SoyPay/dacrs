@@ -106,7 +106,8 @@ static const uint64_t nMinDiskSpace = 52428800;
 
 static const int nFreezeBlackAcctHeight = 99854;
 static const int nLimiteAppHeight = 189000;
-static const int nFixSignatureHashHeight = 193000;
+static const int nUpdateTxVersion2Height = 193000;  //主链在此高度后不再接受交易版本为nTxVersion1的交易
+
 class CCoinsDB;
 class CBlockTreeDB;
 struct CDiskBlockPos;

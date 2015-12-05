@@ -27,6 +27,8 @@ class CRegID;
 class CID;
 class CAccountLog;
 
+static const int nTxVersion1 = 1;    //交易初始版本。
+static const int nTxVersion2 = 2;    //交易版本升级后，其签名hash和交易hash算法升级为新的算法。
 
 typedef vector<unsigned char> vector_unsigned_char;
 
@@ -169,7 +171,7 @@ protected:
 public:
 	static uint64_t nMinTxFee;
 	static int64_t nMinRelayTxFee;
-	static const int CURRENT_VERSION = 1;
+	static const int CURRENT_VERSION = nTxVersion2;
 
 	unsigned char nTxType;
 	int nVersion;
