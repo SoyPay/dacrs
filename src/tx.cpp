@@ -386,6 +386,16 @@ Object CRegisterAccountTx::ToJSON(const CAccountViewCache &AccountView) const{
 }
 bool CRegisterAccountTx::CheckTransction(CValidationState &state, CAccountViewCache &view, CScriptDBViewCache &scriptDB) {
 
+	if (userId.type() != typeid(CPubKey)) {
+		return state.DoS(100, ERRORMSG("CheckTransaction() : CRegisterAppTx userId must be CPubKey"), REJECT_INVALID,
+				"userid-type-error");
+	}
+
+	if ((minerId.type() != typeid(CPubKey)) && (minerId.type() != typeid(CNullID))) {
+		return state.DoS(100, ERRORMSG("CheckTransaction() : CRegisterAppTx minerId must be CPubKey or CNullID"), REJECT_INVALID,
+				"minerid-type-error");
+	}
+
 	//check pubKey valid
 	if (!boost::get<CPubKey>(userId).IsFullyValid()) {
 		return state.DoS(100, ERRORMSG("CheckTransaction() : CRegisterAccountTx CheckTransction, register tx public key is invalid"), REJECT_INVALID,
@@ -613,6 +623,14 @@ Object CTransaction::ToJSON(const CAccountViewCache &AccountView) const{
 }
 bool CTransaction::CheckTransction(CValidationState &state, CAccountViewCache &view, CScriptDBViewCache &scriptDB) {
 
+	if(srcRegId.type() != typeid(CRegID)) {
+		return state.DoS(100, ERRORMSG("CheckTransaction() : CTransaction srcRegId must be CRegID"), REJECT_INVALID, "srcaddr-type-error");
+	}
+
+	if((desUserId.type() != typeid(CRegID)) && (desUserId.type() != typeid(CKeyID))) {
+		return state.DoS(100, ERRORMSG("CheckTransaction() : CTransaction desUserId must be CRegID or CKeyID"), REJECT_INVALID, "desaddr-type-error");
+	}
+
 	if (!MoneyRange(llFees)) {
 		return state.DoS(100, ERRORMSG("CheckTransaction() : CTransaction CheckTransction, appeal tx fee out of range"), REJECT_INVALID,
 				"bad-appeal-fee-toolarge");
@@ -658,9 +676,9 @@ bool CRewardTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidat
 		int nHeight, CTransactionDBCache &txCache, CScriptDBViewCache &scriptDB) {
 
 	CID id(account);
-	if (account.type() != typeid(CRegID) && account.type() != typeid(CPubKey)) {
+	if (account.type() != typeid(CRegID)) {
 		return state.DoS(100,
-				ERRORMSG("ExecuteTx() : CRewardTransaction ExecuteTx, account %s error, data type must be either accountId, or pubkey", HexStr(id.GetID())),
+				ERRORMSG("ExecuteTx() : CRewardTransaction ExecuteTx, account %s error, data type must be either CRegID", HexStr(id.GetID())),
 				UPDATE_ACCOUNT_FAIL, "bad-account");
 	}
 	CAccount acctInfo;
@@ -926,10 +944,16 @@ Object CRegisterAppTx::ToJSON(const CAccountViewCache &AccountView) const{
 }
 bool CRegisterAppTx::CheckTransction(CValidationState &state, CAccountViewCache &view, CScriptDBViewCache &scriptDB) {
 
+	if (regAcctId.type() != typeid(CRegID)) {
+		return state.DoS(100, ERRORMSG("CheckTransaction() : CRegisterAppTx regAcctId must be CRegID"), REJECT_INVALID,
+				"regacctid-type-error");
+	}
+
 	if (!MoneyRange(llFees)) {
 			return state.DoS(100, ERRORMSG("CheckTransaction() : CRegisterAppTx CheckTransction, tx fee out of range"), REJECT_INVALID,
 					"fee-too-large");
 	}
+
 	uint64_t llFuel = ceil(script.size()/100) * GetFuelRate(scriptDB);
 	if (llFuel < 1 * COIN) {
 		llFuel = 1 * COIN;

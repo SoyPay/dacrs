@@ -469,7 +469,6 @@ Value sendtoaddress(const Array& params, bool fHelp)
 		rev = RevKeyId;
 	}
 
-
 	CTransaction tx(sendreg, rev, SysCfg().GetTxFee(), nAmount, chainActive.Height());
 
 	if (!pwalletMain->Sign(sendKeyId, tx.SignatureHash(), tx.signature)) {

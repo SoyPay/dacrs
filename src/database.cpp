@@ -252,16 +252,15 @@ bool CAccountViewCache::GetAccount(const CUserID &userId, CAccount &account) {
 	bool ret = false;
 	if (userId.type() == typeid(CRegID)) {
 		ret = GetAccount(boost::get<CRegID>(userId).GetVec6(), account);
-		if(ret) assert(boost::get<CRegID>(userId) == account.regID);
+//		if(ret) assert(boost::get<CRegID>(userId) == account.regID);
 	} else if (userId.type() == typeid(CKeyID)) {
 		ret = GetAccount(boost::get<CKeyID>(userId), account);
-		if(ret) assert(boost::get<CKeyID>(userId) == account.keyID);
+//		if(ret) assert(boost::get<CKeyID>(userId) == account.keyID);
 	} else if (userId.type() == typeid(CPubKey)) {
 		ret = GetAccount(boost::get<CPubKey>(userId).GetKeyID(), account);
-		if(ret) assert((boost::get<CPubKey>(userId)).GetKeyID() == account.keyID);
+//		if(ret) assert((boost::get<CPubKey>(userId)).GetKeyID() == account.keyID);
 	} else if (userId.type() == typeid(CNullID)){
-		ERRORMSG("GetAccount input userid is CNullID type");
-		return ret;
+		return ERRORMSG("GetAccount input userid can't be CNullID type");
 	}
 	return ret;
 }
@@ -274,22 +273,22 @@ bool CAccountViewCache::GetKeyId(const CUserID &userId, CKeyID &keyId) {
 	} else if (userId.type() == typeid(CKeyID)) {
 		keyId = boost::get<CKeyID>(userId);
 		return true;
-	} else if(userId.type() == typeid(CNullID))
-	{
-		ERRORMSG("GetAccount input userid is CNullID type");
-		return false;
+	} else if (userId.type() == typeid(CNullID)) {
+		return ERRORMSG("GetKeyId input userid can't be CNullID type");
 	}
-	return false;
+	return ERRORMSG("GetKeyId input userid is unknow type");
 }
 bool CAccountViewCache::SetAccount(const CUserID &userId, const CAccount &account) {
 	if (userId.type() == typeid(CRegID)) {
 		return SetAccount(boost::get<CRegID>(userId).GetVec6(), account);
 	} else if (userId.type() == typeid(CKeyID)) {
 		return SetAccount(boost::get<CKeyID>(userId), account);
-	} else {
-		assert(0);
+	} else if (userId.type() == typeid(CPubKey)) {
+		return SetAccount(boost::get<CPubKey>(userId).GetKeyID(), account);
+	} else if (userId.type() == typeid(CNullID)) {
+		return ERRORMSG("SetAccount input userid can't be CNullID type");
 	}
-	return false;
+	return ERRORMSG("SetAccount input userid is unknow type");
 }
 bool CAccountViewCache::SetKeyId(const CUserID &userId, const CKeyID &keyId) {
 	if (userId.type() == typeid(CRegID)) {
