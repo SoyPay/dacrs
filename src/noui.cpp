@@ -212,8 +212,8 @@ static bool noui_RevAppTransaction(const CBlock *pBlock ,int nIndex){
 	obj.push_back(Pair("type",     "rev_app_transaction"));
 	Object objTx = pBlock->vptx[nIndex].get()->ToJSON(*pAccountViewTip);
 	objTx.push_back(Pair("blockhash", pBlock->GetHash().GetHex()));
-	objTx.push_back(Pair("confirmHeight", (int) pBlock->nHeight));
-	objTx.push_back(Pair("confirmedtime", (int) pBlock->nTime));
+	objTx.push_back(Pair("confirmHeight", (int) pBlock->GetHeight()));
+	objTx.push_back(Pair("confirmedtime", (int) pBlock->GetTime()));
 	obj.push_back(Pair("transation",     objTx));
 	AddMessageToDeque(write_string(Value(std::move(obj)),true));
 	return true;

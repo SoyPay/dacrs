@@ -56,8 +56,8 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
     result.push_back(Pair("confirmations", (int)txGen.GetDepthInMainChain()));
     result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION)));
     result.push_back(Pair("height", blockindex->nHeight));
-    result.push_back(Pair("version", block.nVersion));
-    result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
+    result.push_back(Pair("version", block.GetVersion()));
+    result.push_back(Pair("merkleroot", block.GetHashMerkleRoot().GetHex()));
     result.push_back(Pair("txnumber", (int)block.vptx.size()));
     Array txs;
     for (const auto& ptx : block.vptx)
@@ -65,8 +65,8 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
         txs.push_back(ptx->GetHash().GetHex());
     result.push_back(Pair("tx", txs));
     result.push_back(Pair("time", block.GetBlockTime()));
-    result.push_back(Pair("nonce", (uint64_t)block.nNonce));
-    result.push_back(Pair("bits", HexBits(block.nBits)));
+    result.push_back(Pair("nonce", (uint64_t)block.GetNonce()));
+    result.push_back(Pair("bits", HexBits(block.GetBits())));
     result.push_back(Pair("difficulty", GetDifficulty(blockindex)));
     result.push_back(Pair("chainwork", blockindex->nChainWork.GetHex()));
     result.push_back(Pair("fuel", blockindex->nFuel));

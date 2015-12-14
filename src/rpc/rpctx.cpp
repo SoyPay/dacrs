@@ -63,13 +63,13 @@ Object GetTxDetailJSON(const uint256& txhash) {
 		CBlock genesisblock;
 		CBlockIndex* pgenesisblockindex = mapBlockIndex[SysCfg().HashGenesisBlock()];
 		ReadBlockFromDisk(genesisblock, pgenesisblockindex);
-		assert(genesisblock.hashMerkleRoot == genesisblock.BuildMerkleTree());
+		assert(genesisblock.GetHashMerkleRoot() == genesisblock.BuildMerkleTree());
 		for(unsigned int i=0; i<genesisblock.vptx.size(); ++i) {
 			if(txhash == genesisblock.GetTxHash(i)) {
 				obj = genesisblock.vptx[i]->ToJSON(*pAccountViewTip);
 				obj.push_back(Pair("blockhash", SysCfg().HashGenesisBlock().GetHex()));
 				obj.push_back(Pair("confirmHeight", (int) 0));
-				obj.push_back(Pair("confirmedtime", (int) genesisblock.nTime));
+				obj.push_back(Pair("confirmedtime", (int) genesisblock.GetTime()));
 				CDataStream ds(SER_DISK, CLIENT_VERSION);
 				ds << genesisblock.vptx[i];
 				obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
@@ -88,8 +88,8 @@ Object GetTxDetailJSON(const uint256& txhash) {
 					file >> pBaseTx;
 					obj = pBaseTx->ToJSON(*pAccountViewTip);
 					obj.push_back(Pair("blockhash", header.GetHash().GetHex()));
-					obj.push_back(Pair("confirmHeight", (int) header.nHeight));
-					obj.push_back(Pair("confirmedtime", (int) header.nTime));
+					obj.push_back(Pair("confirmHeight", (int) header.GetHeight()));
+					obj.push_back(Pair("confirmedtime", (int) header.GetTime()));
 					if(pBaseTx->nTxType == CONTRACT_TX) {
 						vector<CVmOperate> vOutput;
 						pScriptDBTip->ReadTxOutPut(pBaseTx->GetHash(), vOutput);
@@ -1839,8 +1839,8 @@ Value getappkeyvalue(const Array& params, bool fHelp) {
 					file >> header;
 					fseek(file, postx.nTxOffset, SEEK_CUR);
 					file >> pBaseTx;
-					height = header.nHeight;
-					time = header.nTime;
+					height = header.GetHeight();
+					time = header.GetTime();
 				} catch (std::exception &e) {
 					throw runtime_error(tfm::format("%s : Deserialize or I/O error - %s", __func__, e.what()).c_str());
 				}

@@ -18,6 +18,8 @@
 static const int64_t MAX_MONEY = 1000000000 * COIN;
 static const int64_t MAX_MONEY_REG_NET = 20 * MAX_MONEY;
 
+static const int g_BlockVersion2 = 2;
+static const int g_BlockVersion3 = 3;
 
 inline int64_t GetMaxMoney()
 {
@@ -43,7 +45,8 @@ class CBlockHeader
 {
 public:
     // header
-    static const int CURRENT_VERSION=2;
+    static const int CURRENT_VERSION=g_BlockVersion3;
+protected:
     int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
@@ -55,6 +58,8 @@ public:
     int64_t    nFuel;
     int nFuelRate;
     vector<unsigned char> vSignature;
+
+public:
     CBlockHeader()
     {
         SetNull();
@@ -104,6 +109,75 @@ public:
     {
         return (int64_t)nTime;
     }
+
+    int GetVersion() const  {
+    	return  nVersion;
+    }
+    void SetVersion(int nVersion) {
+    	this->nVersion = nVersion;
+    }
+    uint256 GetHashPrevBlock() const  {
+    	return hashPrevBlock;
+    }
+    void SetHashPrevBlock(uint256 prevBlockHash) {
+    	this->hashPrevBlock = prevBlockHash;
+    }
+    uint256 GetHashMerkleRoot() const{
+    	return hashMerkleRoot;
+    }
+    void SetHashMerkleRoot(uint256 merkleRootHash) {
+    	this->hashMerkleRoot = merkleRootHash;
+    }
+    uint256 GetHashPos() const{
+    	return hashPos;
+    }
+    void SetHashPos(uint256 posHash) {
+    	this->hashPos = posHash;
+    }
+    unsigned int GetTime() const{
+    	return nTime;
+    }
+    void SetTime(unsigned int time) {
+    	this->nTime = time;
+    }
+    unsigned int GetBits() const{
+    	return nBits;
+    }
+    void SetBits(unsigned int bits) {
+    	this->nBits = bits;
+    }
+    unsigned int GetNonce() const{
+    	return nNonce;
+    }
+    void SetNonce(unsigned int nonce) {
+    	this->nNonce = nonce;
+    }
+    unsigned int GetHeight() const{
+    	return nHeight;
+    }
+    void SetHeight(unsigned int height);
+
+    unsigned int GetFuel() const{
+    	return nFuel;
+    }
+    void SetFuel(int64_t fuel) {
+    	this->nFuel = fuel;
+    }
+    int GetFuelRate() const{
+    	return nFuelRate;
+    }
+    void SetFuelRate(int fuelRalte) {
+    	this->nFuelRate = fuelRalte;
+    }
+    const vector<unsigned char> &GetSignature() const{
+    	return vSignature;
+    }
+    void SetSignature(const vector<unsigned char> &signature) {
+    	this->vSignature = signature;
+    }
+    void ClearSignature() {
+    	this->vSignature.clear();
+    }
 };
 
 
@@ -143,17 +217,17 @@ public:
     CBlockHeader GetBlockHeader() const
     {
         CBlockHeader block;
-        block.nVersion       = nVersion;
-        block.hashPrevBlock  = hashPrevBlock;
-        block.hashMerkleRoot = hashMerkleRoot;
-        block.hashPos        = hashPos;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
-        block.nHeight        = nHeight;
-        block.nFuel          = nFuel;
-        block.nFuelRate      = nFuelRate;
-        block.vSignature     = vSignature;
+        block.SetVersion(nVersion);
+        block.SetHashPrevBlock(hashPrevBlock);
+        block.SetHashMerkleRoot(hashMerkleRoot);
+        block.SetHashPos(hashPos);
+        block.SetTime(nTime);
+        block.SetBits(nBits);
+        block.SetNonce(nNonce);
+        block.SetHeight(nHeight);
+        block.SetFuel(nFuel);
+        block.SetFuelRate(nFuelRate);
+        block.SetSignature(vSignature);
         return block;
     }
 

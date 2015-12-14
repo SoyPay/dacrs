@@ -144,16 +144,16 @@ public:
 		nSubsidyHalvingInterval = 210000;
 
 		assert(CreateGenesisRewardTx(genesis.vptx, intPubKey_mainNet));
-		genesis.hashPrevBlock.SetNull();
-		genesis.hashMerkleRoot = genesis.BuildMerkleTree();
-		genesis.hashPos.SetNull();
-		genesis.nVersion = 1;
-		genesis.nTime = 1436538491;
-		genesis.nBits = 0x1f3fffff;        //00 3f ff
-		genesis.nNonce = 888;
-		genesis.nFuelRate = INIT_FUEL_RATES;
-		genesis.nHeight = 0;
-		genesis.vSignature.clear();
+		genesis.SetHashPrevBlock(uint256());
+		genesis.SetHashMerkleRoot(genesis.BuildMerkleTree());
+		genesis.SetHashPos(uint256());
+		genesis.SetVersion(1);
+		genesis.SetTime(1436538491);
+		genesis.SetBits(0x1f3fffff);        //00 3f ff
+		genesis.SetNonce(888);
+		genesis.SetFuelRate(INIT_FUEL_RATES);
+		genesis.SetHeight(0);
+		genesis.ClearSignature();
 		hashGenesisBlock = genesis.GetHash();
 		publicKey = "02d99681b6287b3765dfbb930e6caa10d1f8ac19e02b88f52362ce6eb43c0ec71e";
 //		{
@@ -161,7 +161,7 @@ public:
 //			cout << "main hashMerkleRoot:\r\n" << genesis.hashMerkleRoot.ToString() << endl;
 //		}
 		assert(hashGenesisBlock == uint256S("0xd9ffedf0475c7734e1ea1a7aa1a05361825e77869371962ee6a3ec515e2e2c3d"));
-		assert(genesis.hashMerkleRoot == uint256S("0x362155f5bb005be0523c7247cf1b901bd6f3567d105bd5defca28d221c90d1ef"));
+		assert(genesis.GetHashMerkleRoot() == uint256S("0x362155f5bb005be0523c7247cf1b901bd6f3567d105bd5defca28d221c90d1ef"));
 
 //      vSeeds.push_back(CDNSSeedData("soypay.org.cn", "seed_cn_0.dspay.org"));
 //      vSeeds.push_back(CDNSSeedData("soypay.org.us", "seed_us_0.dspay.org"));
@@ -233,11 +233,11 @@ public:
 		strDataDir = "testnet";
 		publicKey = "036e15523feb9e329b4fdf53c227fc89ea45a1a36342e7e38fad7fe6e3777243af";
 		// Modify the testnet genesis block so the timestamp is valid for a later start.
-		genesis.nTime = 1436598023;
-		genesis.nNonce = 888;
+		genesis.SetTime(1436598023);
+		genesis.SetNonce(888);
 		genesis.vptx.clear();
 		assert(CreateGenesisRewardTx(genesis.vptx, initPubKey_testNet));
-		genesis.hashMerkleRoot = genesis.BuildMerkleTree();
+		genesis.SetHashMerkleRoot(genesis.BuildMerkleTree());
 		hashGenesisBlock = genesis.GetHash();
 		for(auto & item : vFixedSeeds)
 			item.SetPort(GetDefaultPort());
@@ -283,12 +283,12 @@ public:
 		pchMessageStart[3] = 0x3d;
 		nSubsidyHalvingInterval = 150;
 		bnProofOfStakeLimit = ~arith_uint256(0) >> 6;     //target:00000011 11111111 11111111
-		genesis.nTime = 1421808634;
-		genesis.nBits = 0x2003ffff;
-		genesis.nNonce = 888;
+		genesis.SetTime(1421808634);
+		genesis.SetBits(0x2003ffff);
+		genesis.SetNonce(888);
 		genesis.vptx.clear();
 		assert(CreateGenesisRewardTx(genesis.vptx, initPubkey_regTest));
-		genesis.hashMerkleRoot = genesis.BuildMerkleTree();
+		genesis.SetHashMerkleRoot(genesis.BuildMerkleTree());
 		hashGenesisBlock = genesis.GetHash();
 		nDefaultPort = 18666;
 		nTargetSpacing = 20;

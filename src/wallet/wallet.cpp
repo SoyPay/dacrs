@@ -244,7 +244,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 		};
 
 		auto ConnectBlockProgress = [&]() {
-			CAccountTx newtx(this, blockhash,pblock->nHeight);
+			CAccountTx newtx(this, blockhash,pblock->GetHeight());
 			int i=0;
 			for (const auto &sptx : pblock->vptx) {
 				uint256 hashtx = sptx->GetHash();
@@ -284,7 +284,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 		};
 		auto DisConnectBlockProgress = [&]() {
 			int i = 0 ;
-			int index = pblock->nHeight;
+			int index = pblock->GetHeight();
 			for (const auto &sptx : pblock->vptx) {
 				if(sptx->IsCoinBase()){
 					continue;

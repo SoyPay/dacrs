@@ -107,6 +107,7 @@ static const uint64_t nMinDiskSpace = 52428800;
 static const int nFreezeBlackAcctHeight = 99854;
 static const int nLimiteAppHeight = 189000;
 static const int nUpdateTxVersion2Height = 196000;  //主链在此高度后不再接受交易版本为nTxVersion1的交易
+static const int nUpdateBlockVersionHeight = 206000;   //主链在此高度后，block版本升级
 
 class CCoinsDB;
 class CBlockTreeDB;
@@ -750,17 +751,17 @@ public:
         	nTxSize += pTx->GetSerializeSize(SER_DISK, PROTOCOL_VERSION);
         }
 
-		dFeePerKb = double((nblockfee - block.nFuel)) / (double(nTxSize / 1000.0));
+		dFeePerKb = double((nblockfee - block.GetFuel())) / (double(nTxSize / 1000.0));
 
-        nVersion       = block.nVersion;
-        hashMerkleRoot = block.hashMerkleRoot;
-        hashPos        = block.hashPos;
-        nTime          = block.nTime;
-        nBits          = block.nBits;
-        nNonce         = block.nNonce;
-        nFuel          = block.nFuel;
-        nFuelRate      = block.nFuelRate;
-        vSignature     = block.vSignature;
+        nVersion       = block.GetVersion();
+        hashMerkleRoot = block.GetHashMerkleRoot();
+        hashPos        = block.GetHashPos();
+        nTime          = block.GetTime();
+        nBits          = block.GetBits();
+        nNonce         = block.GetNonce();
+        nFuel          = block.GetFuel();
+        nFuelRate      = block.GetFuelRate();
+        vSignature     = block.GetSignature();
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -784,22 +785,22 @@ public:
     CBlockHeader GetBlockHeader() const
     {
         CBlockHeader block;
-        block.nVersion       = nVersion;
+        block.SetVersion(nVersion);
         if (pprev)
-            block.hashPrevBlock = pprev->GetBlockHash();
-        block.hashMerkleRoot = hashMerkleRoot;
-        block.hashPos        = hashPos;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
-        block.nHeight        = nHeight;
-        block.vSignature     = vSignature;
+        	block.SetHashPrevBlock(pprev->GetBlockHash());
+        block.SetHashMerkleRoot(hashMerkleRoot);
+        block.SetHashPos(hashPos);
+        block.SetTime(nTime);
+        block.SetBits(nBits);
+        block.SetNonce(nNonce);
+        block.SetHeight(nHeight);
+        block.SetSignature(vSignature);
         return block;
     }
 
     int64_t GetBlockFee() const {
-    		return nblockfee;
-    	}
+    	return nblockfee;
+    }
 
     uint256 GetBlockHash() const
     {
@@ -908,17 +909,17 @@ public:
     uint256 GetBlockHash() const
     {
         CBlockHeader block;
-        block.nVersion        = nVersion;
-        block.hashPrevBlock   = hashPrev;
-        block.hashMerkleRoot  = hashMerkleRoot;
-        block.hashPos         = hashPos;
-        block.nTime           = nTime;
-        block.nBits           = nBits;
-        block.nNonce          = nNonce;
-        block.nHeight         = nHeight;
-        block.nFuel           = nFuel;
-        block.nFuelRate       = nFuelRate;
-        block.vSignature      = vSignature;
+        block.SetVersion(nVersion);
+        block.SetHashPrevBlock(hashPrev);
+        block.SetHashMerkleRoot(hashMerkleRoot);
+        block.SetHashPos(hashPos);
+        block.SetTime(nTime);
+        block.SetBits(nBits);
+        block.SetNonce(nNonce);
+        block.SetHeight(nHeight);
+        block.SetFuel(nFuel);
+        block.SetFuelRate(nFuelRate);
+        block.SetSignature(vSignature);
         return block.GetHash();
     }
 

@@ -268,7 +268,7 @@ int CBaseTransaction::GetFuelRate(CScriptDBViewCache &scriptDB) {
 			} catch (std::exception &e) {
 				return ERRORMSG("%s : Deserialize or I/O error - %s", __func__, e.what());
 			}
-			nFuelRate = header.nFuelRate;
+			nFuelRate = header.GetFuelRate();
 		}
 		else {
 			nFuelRate = GetElementForBurn(chainActive.Tip());
