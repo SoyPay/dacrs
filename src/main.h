@@ -74,7 +74,6 @@ static const unsigned long MAX_BLOCK_RUN_STEP = 12000000;
 static const int64_t POS_REWARD = 10 * COIN;
 static const int64_t INIT_FUEL_RATES = 100;   //100 unit / 100 step
 static const int64_t MIN_FUEL_RATES = 1;      //1 unit / 100 step
-static const unsigned int SIGNATRUE_LENGTH = 72;  //签名长度
 
 #ifdef USE_UPNP
 static const int fHaveUPnP = true;
@@ -104,11 +103,13 @@ extern const string strMessageMagic;
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;
 
+static const int nBurnRateForkHeight = 45000;    //修改燃烧费率算法
+static const int nTwelveForwardLimits = 28000;   //修改限制block时间不能超过本地时间12分钟
+static const int nNextWorkRequired = 85000;      //修改难度校验算法
 static const int nFreezeBlackAcctHeight = 99854;
 static const int nLimiteAppHeight = 189000;
 static const int nUpdateTxVersion2Height = 196000;  //主链在此高度后不再接受交易版本为nTxVersion1的交易
-static const int nUpdateBlockVersionHeight = 206000;   //主链在此高度后，block版本升级
-
+static const int nUpdateBlockVersionHeight = 209000;   //主链在此高度后，block版本升级
 class CCoinsDB;
 class CBlockTreeDB;
 struct CDiskBlockPos;

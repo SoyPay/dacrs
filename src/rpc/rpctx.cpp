@@ -933,6 +933,12 @@ Value listapp(const Array& params, bool fHelp) {
 			throw JSONRPCError(RPC_DATABASE_ERROR, "get script error: cannot get registered script.");
 		script.push_back(Pair("scriptId", regId.ToString()));
 		script.push_back(Pair("scriptId2", HexStr(regId.GetVec6())));
+		CDataStream ds(vScript, SER_DISK, CLIENT_VERSION);
+		CVmScript vmScript;
+		ds >> vmScript;
+		string strDes(vmScript.ScriptExplain.begin(), vmScript.ScriptExplain.end());
+		script.push_back(Pair("description", HexStr(vmScript.ScriptExplain)));
+
 		if (showDetail)
 			script.push_back(Pair("scriptContent", HexStr(vScript.begin(), vScript.end())));
 		arrayScript.push_back(script);
@@ -940,6 +946,11 @@ Value listapp(const Array& params, bool fHelp) {
 			Object obj;
 			obj.push_back(Pair("scriptId", regId.ToString()));
 			obj.push_back(Pair("scriptId2", HexStr(regId.GetVec6())));
+			CDataStream ds(vScript, SER_DISK, CLIENT_VERSION);
+			CVmScript vmScript;
+			ds >> vmScript;
+			string strDes(vmScript.ScriptExplain.begin(), vmScript.ScriptExplain.end());
+			script.push_back(Pair("description", HexStr(vmScript.ScriptExplain)));
 			if (showDetail)
 				obj.push_back(Pair("scriptContent", string(vScript.begin(), vScript.end())));
 			arrayScript.push_back(obj);

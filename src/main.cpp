@@ -445,6 +445,7 @@ CBlockIndex *CChain::SetTip(CBlockIndex *pindex) {
     while (pindex && vChain[pindex->nHeight] != pindex) {
         vChain[pindex->nHeight] = pindex;
         pindex = pindex->pprev;
+
     }
     return pindex;
 }
@@ -2312,8 +2313,13 @@ bool CheckBlock(const CBlock& block, CValidationState& state, CAccountViewCache 
         return state.DoS(100, ERRORMSG("CheckBlock() : size limits failed"),
                          REJECT_INVALID, "bad-blk-length");
 
+    if((block.GetHeight() >= nUpdateBlockVersionHeight) && (block.GetVersion() != CBlockHeader::CURRENT_VERSION)) {
+    	return state.Invalid(ERRORMSG("CheckBlock() : block version must be set 3"),
+    	                             REJECT_INVALID, "block-version-error");
+    }
+
     // Check timestamp 12minutes limits
-    if (block.GetHeight() > 28000 && block.GetBlockTime() > GetAdjustedTime() + 12 * 60)
+    if (block.GetHeight() > nTwelveForwardLimits && block.GetBlockTime() > GetAdjustedTime() + 12 * 60)
         return state.Invalid(ERRORMSG("CheckBlock() : block timestamp too far in the future"),
                              REJECT_INVALID, "time-too-new");
 
@@ -3016,6 +3022,7 @@ bool static LoadBlockIndexDB()
 
     // Load pointer to end of best chain
     map<uint256, CBlockIndex*>::iterator it = mapBlockIndex.find(pAccountViewTip->GetBestBlock());
+
 //    for(auto &item : mapBlockIndex)
 //    	LogPrint("INFO", "block hash:%s\n", item.first.GetHex());
     LogPrint("INFO", "best block hash:%s\n",pAccountViewTip->GetBestBlock().GetHex());

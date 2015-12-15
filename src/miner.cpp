@@ -92,7 +92,7 @@ int GetElementForBurn(CBlockIndex* pindex)
 		int64_t nTotalStep(0);
 		int64_t nAverateStep(0);
 		CBlockIndex * pTemp = pindex;
-		if(pindex->nHeight<=45000) {
+		if(pindex->nHeight<=nBurnRateForkHeight) {
 			if ((pindex->nHeight - 1) % nBlock == 0) {
 				for (int ii = 0; ii < nBlock; ii++) {
 					nTotalFeePerKb += int64_t(pTemp->dFeePerKb);

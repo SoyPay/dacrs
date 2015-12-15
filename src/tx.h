@@ -176,7 +176,7 @@ public:
 	unsigned char nTxType;
 	int nVersion;
 	int nValidHeight;
-	uint64_t nRunStep;
+	uint64_t nRunStep;  //only in memory
 	int nFuelRate;      //only in memory
 public:
 
