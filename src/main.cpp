@@ -2405,7 +2405,7 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 			return state.DoS(100, ERRORMSG("AcceptBlock() : forked chain older than last checkpoint (height %d)", nHeight));
 
 		// Check proof of work, before height 35001 don't check proofwork, fixed CBigNum adjust difficult bug.
-		if(block.GetHeight() > 35001 && block.GetBits() != GetNextWorkRequired(pindexPrev, &block))
+		if(block.GetHeight() > nFixedDifficulty && block.GetBits() != GetNextWorkRequired(pindexPrev, &block))
 			return state.DoS(100, ERRORMSG("AcceptBlock() : incorrect proof of work actual vs need(%d vs %d)", block.GetBits(), GetNextWorkRequired(pindexPrev, &block)), REJECT_INVALID, "bad-diffbits");
 
 		//Check proof of pos tx
