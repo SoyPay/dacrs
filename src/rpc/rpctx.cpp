@@ -1240,6 +1240,9 @@ Value saveblocktofile(const Array& params, bool fHelp) {
 	}
 	string strblockhash = params[0].get_str();
 	uint256 blockHash(uint256S(params[0].get_str()));
+	if(0 == mapBlockIndex.count(blockHash)) {
+		throw JSONRPCError(RPC_MISC_ERROR, "block hash is not exist!");
+	}
 	CBlockIndex *pIndex = mapBlockIndex[blockHash];
 	CBlock blockInfo;
 	if (!pIndex || !ReadBlockFromDisk(blockInfo, pIndex))

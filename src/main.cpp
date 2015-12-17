@@ -3833,8 +3833,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         // Find the last block the caller has in the main chain
         CBlockIndex* pindex = chainActive.FindFork(locator);
-        CBlockIndex* pContinueIndex = mapBlockIndex[pfrom->hashContinue];
-        CBlockIndex* pStopIndex = mapBlockIndex[hashStop];
+        CBlockIndex* pContinueIndex = NULL;
+        CBlockIndex* pStopIndex = NULL;
+        if(mapBlockIndex.count(pfrom->hashContinue) > 0) {
+        	pContinueIndex = mapBlockIndex[pfrom->hashContinue];
+        }
+        if(mapBlockIndex.count(hashStop) > 0) {
+        	pStopIndex = mapBlockIndex[hashStop];
+        }
         if(NULL != pContinueIndex && (pContinueIndex->nHeight > pindex->nHeight) /*&& (uint256(0) == hashStop)*/) {
         	if(NULL == pStopIndex || pStopIndex->nHeight > pContinueIndex->nHeight)
         		pindex = pContinueIndex;
