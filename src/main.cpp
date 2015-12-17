@@ -482,7 +482,7 @@ CBlockIndex *CChain::FindFork(const CBlockLocator &locator) const {
 		map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
 		if (mi != mapBlockIndex.end()) {
 			CBlockIndex* pindex = (*mi).second;
-			if (Contains(pindex))
+			if (pindex && Contains(pindex))
 				return pindex;
 		}
 	}
