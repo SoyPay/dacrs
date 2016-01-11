@@ -590,8 +590,8 @@ string CTransaction::ToString(CAccountViewCache &view) const {
 	} else if (desUserId.type() == typeid(CRegID)) {
 		desId = boost::get<CRegID>(desUserId).ToString();
 	}
-	str += strprintf("txType=%s, hash=%s, ver=%d, srcId=%s desId=%s, llFees=%ld, vContract=%s\n",
-	txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, boost::get<CRegID>(srcRegId).ToString(), desId.c_str(), llFees, HexStr(vContract).c_str());
+	str += strprintf("txType=%s, hash=%s, ver=%d, srcId=%s desId=%s, llFees=%ld, vContract=%s, nValidHeight=%d\n",
+	txTypeArray[nTxType], GetHash().ToString().c_str(), nVersion, boost::get<CRegID>(srcRegId).ToString(), desId.c_str(), llFees, HexStr(vContract).c_str(), nValidHeight);
 	return str;
 }
 

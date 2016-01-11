@@ -363,9 +363,9 @@ Value sendtoaddressraw(const Array& params, bool fHelp)
 	}
 
 	std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(send,rev,Fee, nAmount,hight);
-//	if (!pwalletMain->Sign(sendKeyId, tx->SignatureHash(), tx->signature)) {
-//				throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
-//	}
+	if (!pwalletMain->Sign(sendKeyId, tx->SignatureHash(), tx->signature)) {
+				throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
+	}
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 	ds << pBaseTx;
