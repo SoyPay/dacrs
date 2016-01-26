@@ -949,7 +949,7 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmEvn)
 	int count = datadsize/Size;
 	if(datadsize%Size != 0)
 	{
-	  assert(0);
+//	  assert(0);
 	 return RetFalse("para err");
 	}
 	CDataStream ss(*retdata.at(0),SER_DISK, CLIENT_VERSION);
@@ -2594,7 +2594,7 @@ void CVm8051::StepRun(INT8U code) {
 		break;
 	}
 	default:
-		assert(0);
+//		assert(0);
 		break;
 	}
 }
@@ -2879,7 +2879,7 @@ void CVm8051::MD_ADDC(INT8U data) {
 	INT8U flagAC = Sys.psw().cy;
 
 	if (flagAC > 1) {
-		assert(0);
+//		assert(0);
 		flagAC = 1;
 	}
 

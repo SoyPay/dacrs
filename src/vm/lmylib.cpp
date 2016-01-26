@@ -1036,7 +1036,7 @@ static int ExWriteOutputFunc(lua_State *L)
 	int count = datadsize/Size;
 	if(datadsize%Size != 0)
 	{
-	  assert(0);
+//	  assert(0);
 	 return RetFalse("para err");
 	}
 	CDataStream ss(*retdata.at(0),SER_DISK, CLIENT_VERSION);

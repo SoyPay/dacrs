@@ -42,7 +42,7 @@ using namespace boost;
 #include "CreateMinterKey_tests.h"
 
 
-const uint64_t sendMoney = 1000 * COIN;
+const uint64_t sendMoney = 10000 * COIN;
 bool CCreateMinerkey::SelectAccounts() {
 	const char *argv[] = { "rpctest", "listaddr"};
 	int argc = sizeof(argv) / sizeof(char*);

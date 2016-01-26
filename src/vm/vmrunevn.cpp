@@ -39,7 +39,7 @@ bool CVmRunEvn::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& vie
 
 	if (Tx.get()->nTxType != CONTRACT_TX) {
 		LogPrint("ERROR", "%s\r\n", "err param");
-		assert(0);
+//		assert(0);
 		return false;
 	}
 
@@ -80,7 +80,7 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 
 	if(nBurnFactor == 0)
 	{
-		assert(0);
+//		assert(0);
 		return std::make_tuple (false, 0, string("VmScript nBurnFactor == 0 \n"));
 	}
 	m_ScriptDBTip = &VmDB;
@@ -231,7 +231,7 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 			miusmoney = temp;
 		}
 		else{
-			Assert(0);
+//			Assert(0);
 			return false; //  ‰»Î ˝æ›¥Ì
 		}
 

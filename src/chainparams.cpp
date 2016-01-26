@@ -432,7 +432,7 @@ CBaseParams &SysCfg() {
 		bool fTestNet = CBaseParams::GetBoolArg("-testnet", false);
 		if (fTestNet && fRegTest) {
 			fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
-			assert(0);
+//			assert(0);
 		}
 
 		if (fRegTest) {

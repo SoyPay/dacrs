@@ -255,7 +255,7 @@ CTxDestination CDacrsAddress::Get() const {
 	}
 	else
 	{
-		assert(0);
+//		assert(0);
 		return CNoDestination();
 	}
 }

@@ -294,7 +294,7 @@ bool CAccountViewCache::SetKeyId(const CUserID &userId, const CKeyID &keyId) {
 	if (userId.type() == typeid(CRegID)) {
 		return SetKeyId(boost::get<CRegID>(userId).GetVec6(), keyId);
 	} else {
-		assert(0);
+//		assert(0);
 	}
 
 	return false;
@@ -307,7 +307,8 @@ bool CAccountViewCache::EraseAccount(const CUserID &userId) {
 		return EraseAccount(boost::get<CPubKey>(userId).GetKeyID());
 	}
 	else {
-		assert(0);
+		return ERRORMSG("EraseAccount account type error!");
+//		assert(0);
 	}
 	return false;
 }
@@ -315,7 +316,7 @@ bool CAccountViewCache::HaveAccount(const CUserID &userId) {
 	if (userId.type() == typeid(CKeyID)) {
 		return HaveAccount(boost::get<CKeyID>(userId));
 	} else {
-		assert(0);
+//		assert(0);
 	}
 	return false;
 }
@@ -323,7 +324,7 @@ bool CAccountViewCache::EraseId(const CUserID &userId) {
 	if (userId.type() == typeid(CRegID)) {
 		return EraseKeyId(boost::get<CRegID>(userId).GetVec6());
 	} else {
-		assert(0);
+//		assert(0);
 	}
 	return false;
 }
@@ -637,7 +638,7 @@ bool CScriptDBViewCache::GetScript(const int nIndex, vector<unsigned char> &vScr
 		}
 
 	} else {
-		assert(0);
+//		assert(0);
 	}
 	return true;
 }
@@ -1046,7 +1047,8 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 		}
 	}
 	else {
-		assert(0);
+//		assert(0);
+		return ERRORMSG("GetScriptData error");
 	}
 //	vector<unsigned char> vKey = { 'd', 'a', 't', 'a' };
 //	vKey.insert(vKey.end(), vScriptId.begin(), vScriptId.end());
@@ -1246,7 +1248,7 @@ bool CScriptDBViewCache::SetScriptCount(const int nCount) {
 	}
 	else if (nCount < 0)
 	{
-		assert(0);
+//		assert(0);
 		return false;
 	}
 	if(!SetData(scriptKey, vValue))
@@ -1287,7 +1289,7 @@ bool CScriptDBViewCache::SetScriptDataCount(const vector<unsigned char> &vScript
 	}
 	else if (nCount < 0)
 	{
-		assert(0);
+//		assert(0);
 		return false;
 	}
 	if(!SetData(scriptKey, vValue))
@@ -1328,7 +1330,8 @@ bool CScriptDBViewCache::EraseScriptData(const vector<unsigned char> &vScriptId,
 
 bool CScriptDBViewCache::EraseScriptData(const vector<unsigned char> &vKey) {
 	if(vKey.size() < 12) {
-		assert(0);
+		return ERRORMSG("EraseScriptData delete script data key value error!");
+//		assert(0);
 	}
 	vector<unsigned char> vScriptId(vKey.begin()+4, vKey.begin()+10);
 	vector<unsigned char> vScriptKey(vKey.begin()+11, vKey.end());

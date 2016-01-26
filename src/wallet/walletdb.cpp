@@ -98,7 +98,7 @@ bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,str
 				ssValue >> pwallet->vchDefaultKey;
 		} else if (strType != "version" && "minversion" != strType) {
 			ERRORMSG("load wallet error! read invalid key type:%s\n", strType);
-			assert(0);
+//			assert(0);
 		}
 	} catch (...) {
 		return false;

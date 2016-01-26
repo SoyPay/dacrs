@@ -4676,9 +4676,10 @@ std::shared_ptr<CBaseTransaction> CreateNewEmptyTransaction(unsigned char uType)
 	case REG_APP_TX:
 		return make_shared<CRegisterAppTx>();
 	default:
-		assert(0);
+		ERRORMSG("CreateNewEmptyTransaction type error");
 		break;
 	}
+	return NULL;
 }
 
 string CBlockUndo::ToString() const {

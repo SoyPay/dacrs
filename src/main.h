@@ -801,8 +801,8 @@ public:
     }
 
     int64_t GetBlockFee() const {
-    	return nblockfee;
-    }
+    		return nblockfee;
+    	}
 
     uint256 GetBlockHash() const
     {

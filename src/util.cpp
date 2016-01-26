@@ -286,7 +286,7 @@ int LogFilePreProcess(const char *path,size_t len, FILE** stream)
 {
     if((NULL == path) || (len <= 0) || (NULL == *stream) )
     {
-    	assert(0);
+//    	assert(0);
     	return -1;
     }
     int lSize = ftell(*stream); //当前文件长度
@@ -304,7 +304,7 @@ int LogFilePreProcess(const char *path,size_t len, FILE** stream)
 			*stream = fileout;
 			 if(remove(bkFile.c_str()) != 0)   //删除重命名文件
 			 {
-				 assert(0);
+//				 assert(0);
 				 return -1;
 			 }
 		}

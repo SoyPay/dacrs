@@ -201,7 +201,8 @@ public:
 			Invalidate();
 		}
 		else{
-	        assert(0); //never come here
+			ERRORMSG("Unserialize......");
+//	        assert(0); //never come here
 		}
 	}
 

@@ -194,7 +194,8 @@ bool CAppUserAccout::Operate(const CAppFundOperate& Op) {
 		CAppCFund tep(Op);
 		return MinusAppCFund(tep);
 	} else {
-		assert(0);
+		return ERRORMSG("CAppUserAccout operate type error!");
+//		assert(0);
 	}
 	return false;
 }

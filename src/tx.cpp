@@ -695,7 +695,8 @@ bool CRewardTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidat
 		acctInfo.llValues += rewardValue;
 	}
 	else {  //never go into this step
-		assert(0);
+		return ERRORMSG("nIndex type error!");
+//		assert(0);
 	}
 
 	CUserID userId = acctInfo.keyID;
@@ -1116,7 +1117,8 @@ bool CAccount::OperateAccount(OperType type, const uint64_t &value, const int nC
 	}
 
 	if (keyID == uint160()) {
-		assert(0);
+		return ERRORMSG("operate account's keyId is 0 error");
+//		assert(0);
 	}
 	if (!value)
 		return true;
@@ -1140,7 +1142,8 @@ bool CAccount::OperateAccount(OperType type, const uint64_t &value, const int nC
 		break;
 	}
 	default:
-		assert(0);
+		return ERRORMSG("operate account type error!");
+//		assert(0);
 	}
 	LogPrint("op_account", "after operate:%s\n", ToString());
 	return true;

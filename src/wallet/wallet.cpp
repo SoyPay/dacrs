@@ -686,7 +686,7 @@ CWallet* CWallet::getinstance() {
 	{
 		return new CWallet(strWalletFile);
 	}
-	assert(0);
+//	assert(0);
 	return NULL;
 
 }

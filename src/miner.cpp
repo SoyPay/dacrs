@@ -579,7 +579,8 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 				CTxUndo txundo;
 				CValidationState state;
 				if(pBaseTx->IsCoinBase()){
-					assert(0); //never come here
+					ERRORMSG("TX type is coin base tx error......");
+			//		assert(0); //never come here
 				}
 				if (CONTRACT_TX == pBaseTx->nTxType) {
 					LogPrint("vm", "tx hash=%s CreateNewBlock run contract\n", pBaseTx->GetHash().GetHex());
@@ -841,7 +842,8 @@ void GenerateDacrsBlock(bool fGenerate, CWallet* pwallet, int targetHigh) {
 
 	if(targetHigh <= 0 && fGenerate == true)
 	{
-		assert(0);
+//		assert(0);
+		ERRORMSG("targetHigh, fGenerate value error");
 		return ;
 	}
 	if (!fGenerate)

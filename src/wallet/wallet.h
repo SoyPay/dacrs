@@ -354,7 +354,7 @@ public:
 			mapAccountTx[hash] = make_shared<CRegisterAppTx>(pTx);
 			break;
 		default:
-			assert(0);
+//			assert(0);
 			return false;
 			break;
 		}
