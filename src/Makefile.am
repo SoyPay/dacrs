@@ -83,68 +83,7 @@ JSON_H = \
   json/json_spirit_writer_template.h
   
 # VmScript #
-#VMLUA_H = \
-#	vm/lua/lapi.h \
-#	vm/lua/lauxlib.h \
-#	vm/lua/lcode.h \
-#	vm/lua/lctype.h \
-#	vm/lua/ldebug.h \
-#	vm/lua/ldo.h \
-#	vm/lua/lfunc.h \
-#	vm/lua/lgc.h \
-#    vm/lua/llex.h \
-#	vm/lua/llimits.h \
-#	vm/lua/lmem.h \
-#	vm/lua/lobject.h \
-#	vm/lua/lopcodes.h \
-#	vm/lua/lparser.h \
-#	vm/lua/lprefix.h \
-#	vm/lua/lstate.h \
-#	vm/lua/lstring.h \
-#	vm/lua/ltable.h \
-#	vm/lua/ltm.h \
-#	vm/lua/lua.h \
-#	vm/lua/lua.hpp \
-#	vm/lua/luaconf.h \
-#	vm/lua/lualib.h \
-#	vm/lua/lundump.h \
-#	vm/lua/lvm.h \
-#	vm/lua/lzio.h 		
-
-#VMLUA_C = \
-#	vm/lua/lapi.c \
-#	vm/lua/lauxlib.c \
-#	vm/lua/lbaselib.c \
-#	vm/lua/lbitlib.c \
-#	vm/lua/lcode.c \
-#	vm/lua/lcorolib.c \ 	
-#	vm/lua/lctype.c \
-#	vm/lua/ldblib.c \
-#	vm/lua/ldebug.c \
-#	vm/lua/ldo.c \
-#	vm/lua/ldump.c \
-#	vm/lua/lfunc.c \ 
-#	vm/lua/lgc.c \
-#	vm/lua/linit.c \
-#	vm/lua/liolib.c \
-#	vm/lua/llex.c \
-#	vm/lua/lmathlib.c \
-#	vm/lua/lmem.c \ 
-#	vm/lua/loadlib.c \
-#	vm/lua/lobject.c \
-#	vm/lua/lopcodes.c \
-#	vm/lua/loslib.c \
-#	vm/lua/lparser.c \
-#	vm/lua/lstate.c \ 
-#	vm/lua/lstring.c \
-#	vm/lua/lstrlib.c \
-#	vm/lua/ltable.c \
-#	vm/lua/ltablib.c \
-#	vm/lua/ltm.c \
-#	vm/lua/lundump.c \ 
-#	vm/lua/lutf8lib.c \
-#	vm/lua/lvm.c \
-#	vm/lua/lzio.c 
+		
 	
 VM_H = \
 	vm/vm8051.h \
@@ -152,7 +91,7 @@ VM_H = \
 	vm/script.h \
 	vm/testmcu.h \
 	vm/appaccount.h
-#	vm/vmlua.h  
+
 	
 
 VM_CPP = \
@@ -161,8 +100,7 @@ VM_CPP = \
 	vm/script.cpp \
 	vm/testmcu.cpp \
 	vm/appaccount.cpp
-#	vm/lmylib.cpp \
-#	vm/vmlua.cpp 
+
 	
 	
   
