@@ -162,13 +162,13 @@ void CTxMemPool::queryHashes(vector<uint256>& vtxid) {
 
 	LOCK(cs);
 	vtxid.reserve(mapTx.size());
-	for (typename map<uint256, CTxMemPoolEntry>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
+	for (map<uint256, CTxMemPoolEntry>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
 		vtxid.push_back((*mi).first);
 }
 
 std::shared_ptr<CBaseTransaction> CTxMemPool::lookup(uint256 hash) const {
 	LOCK(cs);
-	typename map<uint256, CTxMemPoolEntry>::const_iterator i = mapTx.find(hash);
+	map<uint256, CTxMemPoolEntry>::const_iterator i = mapTx.find(hash);
 	if (i == mapTx.end())
 		return std::shared_ptr<CBaseTransaction>();
 	return i->second.GetTx();
