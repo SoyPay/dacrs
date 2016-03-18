@@ -61,7 +61,7 @@ public:
                 return;
             }
         // Shouldn't ever get here
-        assert(0); //TODO remove me
+//      assert(0); //TODO remove me
         map.erase(itTarget);
     }
     void update(const_iterator itIn, const mapped_type& v)
@@ -80,7 +80,7 @@ public:
                 return;
             }
         // Shouldn't ever get here
-        assert(0); //TODO remove me
+//      assert(0); //TODO remove me
         itTarget->second = v;
         rmap.insert(make_pair(v, itTarget));
     }

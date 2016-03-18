@@ -109,10 +109,10 @@ bool CTestBetTx::ASendP2PBet() {
 		senddata.money = GetRandomBetAmount();
 		betamount = senddata.money;
 		memcpy(senddata.dhash, Hash(nSdata, nSdata + sizeof(nSdata)).begin(), sizeof(senddata.dhash));
-		vector<unsigned char>temp;
-		temp.assign(nSdata,nSdata + sizeof(nSdata));
-		vector<unsigned char>temp2;
-		temp2.assign(senddata.dhash,senddata.dhash + sizeof(senddata.dhash));
+//		vector<unsigned char>temp;
+//		temp.assign(nSdata,nSdata + sizeof(nSdata));
+//		vector<unsigned char>temp2;
+//		temp2.assign(senddata.dhash,senddata.dhash + sizeof(senddata.dhash));
 
 		CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 		scriptData << senddata;
@@ -150,7 +150,7 @@ bool CTestBetTx::BAcceptP2PBet(void) {
 		acceptdata.noperateType = GetRanOpType();
 		acceptdata.money = betamount;
 		acceptdata.data=gussnum;
-		memcpy(acceptdata.txhash, uint256(strAsendHash).begin(), sizeof(acceptdata.txhash));
+		memcpy(acceptdata.txhash, uint256S(strAsendHash).begin(), sizeof(acceptdata.txhash));
 
 		CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 		scriptData << acceptdata;
@@ -201,7 +201,7 @@ bool CTestBetTx::AOpenP2PBet(void) {
 		OPEN_DATA openA;
 		openA.noperateType = GetRanOpType();
 		openA.type = 3;
-		memcpy(openA.txhash, uint256(strAsendHash).begin(), sizeof(openA.txhash));
+		memcpy(openA.txhash, uint256S(strAsendHash).begin(), sizeof(openA.txhash));
 		memcpy(openA.dhash, nSdata, sizeof(nSdata));
 		CDataStream scriptData(SER_DISK, CLIENT_VERSION);
 		scriptData << openA;

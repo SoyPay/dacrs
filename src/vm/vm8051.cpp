@@ -26,7 +26,7 @@ void CVm8051::InitalReg() {
 	memset(m_ChipRam, 0, sizeof(m_ChipRam));
 	memset(m_ChipSfr, 0, sizeof(m_ChipSfr));
 	memset(m_ExRam, 0, sizeof(m_ExRam));
-//	memset(m_ChipRamoper, 0, sizeof(m_ChipRamoper));
+	memset(m_ExeFile, 0, sizeof(m_ExeFile));
 
 	Sys.a.SetAddr(a_addr);
 	Sys.b.SetAddr(b_addr);
@@ -52,7 +52,7 @@ void CVm8051::InitalReg() {
 }
 
 CVm8051::CVm8051(const vector<unsigned char> & vRom, const vector<unsigned char> &InputData) :
-		Sys(this), Rges(this) {
+		Sys(this), Rges(this) { /*vRom 输入的是script,InputData 输入的是contract*/
 
 	InitalReg();
 	//INT16U addr = 0xFC00;
@@ -67,9 +67,11 @@ CVm8051::CVm8051(const vector<unsigned char> & vRom, const vector<unsigned char>
 CVm8051::~CVm8051() {
 
 }
-
-typedef tuple<bool,int64_t,std::shared_ptr < std::vector< vector<unsigned char> > > > RET_DEFINE;
-typedef tuple<bool,int64_t,std::shared_ptr < std::vector< vector<unsigned char> > > > (*pFun)(unsigned char *,void *);
+//!<第一个参数int 表示SDK接口函数返回状态  0(false)：执行失败 ,1(true):成功并返回结果, -1:表示异常SDK直接退出，不运行脚本
+//!<第二个参数int64_t 表示执行步骤step
+//!<第三个参数vector 保存的返回给应用的执行结果
+typedef tuple<int,int64_t,std::shared_ptr < std::vector< vector<unsigned char> > > > RET_DEFINE;
+typedef tuple<int,int64_t,std::shared_ptr < std::vector< vector<unsigned char> > > > (*pFun)(unsigned char *,void *);
 
 struct __MapExterFun {
 	INT16U method;
@@ -84,6 +86,8 @@ static bool GetKeyId(const CAccountViewCache &view, vector<unsigned char> &ret,
 	} else if (ret.size() == 34) {
 		string addr(ret.begin(), ret.end());
 		KeyId = CKeyID(addr);
+	}else{
+		return false;
 	}
 	if (KeyId.IsEmpty())
 		return false;
@@ -121,11 +125,11 @@ static bool GetData(unsigned char * ipara, vector<std::shared_ptr < std::vector<
 
 	while (totallen > 0) {
 		unsigned short length = GetParaLen(ipara);
-		totallen -= (length + 2);
-//		assert(totallen >= 0);
-		if (length <=0) {
+		if ((length <= 0) || (length + 2 > totallen)) {
+           LogPrint("vm","%s\r\n","data over flaw");
 			return false;
 		}
+		totallen -= (length + 2);
 		ret.insert(ret.end(),std::make_shared<vector<unsigned char>>(ipara, ipara + length));
 		ipara += length;
 
@@ -427,19 +431,21 @@ static RET_DEFINE ExVerifySignatureFunc(unsigned char *ipara,void * pVmScriptRun
     	return RetFalse(string(__FUNCTION__)+"para  err !");
     }
 
-	CPubKey pk(retdata.at(1).get()->begin(),retdata.at(1).get()->end());
+	CPubKey pk(retdata.at(1).get()->begin(), retdata.at(1).get()->end());
 	uint256 hash(*retdata.at(2).get());
+	auto tem = make_shared<std::vector<vector<unsigned char> > >();
 
 	bool rlt = CheckSignScript(hash, *retdata.at(0), pk);
-	if(!rlt)
+	if (!rlt) {
 		LogPrint("INFO", "ExVerifySignatureFunc call CheckSignScript verify signature failed!\n");
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
-    tep << rlt;
-    vector<unsigned char> tep1(tep.begin(),tep.end());
-    (*tem.get()).push_back(tep1);
+		return std::make_tuple(false, 0, tem);
+	}
+	CDataStream tep(SER_DISK, CLIENT_VERSION);
+	tep << rlt;
+	vector<unsigned char> tep1(tep.begin(), tep.end());
+	(*tem.get()).push_back(tep1);
 
-	return std::make_tuple (true,0, tem);
+	return std::make_tuple(true, 0, tem);
 }
 
 static RET_DEFINE ExSignatureFunc(unsigned char *ipara,void * pVmScriptRun) {
@@ -496,7 +502,7 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
 	uint256 hash1(*retdata.at(0));
 //	LogPrint("vm","ExGetTxContractsFunc1:%s\n",hash1.GetHex().c_str());
 
-
+    bool flag = false;
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
@@ -504,8 +510,9 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
 	if (GetTransaction(pBaseTx, hash1, *pVmScript->GetScriptDB(), false)) {
 		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
 		 (*tem.get()).push_back(tx->vContract);
+		 flag = true;
 	}
-	return std::make_tuple (true, 0,tem);
+	return std::make_tuple (flag, 0,tem);
 }
 /**
  *unsigned short GetAccounts(const unsigned char *txhash,void* const paccoutn,unsigned short maxlen)
@@ -520,10 +527,10 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
     	return RetFalse(string(__FUNCTION__)+"para  err !");
     }
 	CDataStream tep1(*retdata.at(0), SER_DISK, CLIENT_VERSION);
-	uint256 hash1(0);
+	uint256 hash1;
 	tep1 >>hash1;
 //	LogPrint("vm","ExGetTxAccountsFunc:%s",hash1.GetHex().c_str());
-
+	bool flag = false;
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 
 	auto tem = make_shared<std::vector<vector<unsigned char> > >();
@@ -532,8 +539,9 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
 		vector<unsigned char> item = boost::get<CRegID>(tx->srcRegId).GetVec6();
 		(*tem.get()).push_back(item);
+		flag = true;
 	}
-	return std::make_tuple(true,0, tem);
+	return std::make_tuple(flag,0, tem);
 }
 /**
  *unsigned short GetAccountPublickey(const void* const accounid,void * const pubkey,const unsigned short maxlength)
@@ -585,32 +593,33 @@ static RET_DEFINE ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScri
     {
     	return RetFalse(string(__FUNCTION__)+"para  err !");
     }
-	bool flag = true;
+    bool flag = true;
 
 	 CKeyID addrKeyId;
 	 if (!GetKeyId(*pVmScript->GetCatchView(),*retdata.at(0).get(), addrKeyId)) {
-	     auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	    	return RetFalse(string(__FUNCTION__)+"para  err !");
 	 }
 
 	 CUserID userid(addrKeyId);
 	 CAccount aAccount;
+	 auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	if (!pVmScript->GetCatchView()->GetAccount(userid, aAccount)) {
 		flag = false;
 	}
-	uint64_t nbalance = aAccount.GetRawBalance();
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
-    tep << nbalance;
-    vector<unsigned char> tep1(tep.begin(),tep.end());
-    (*tem.get()).push_back(tep1);
-
+	else
+	{
+		uint64_t nbalance = aAccount.GetRawBalance();
+		CDataStream tep(SER_DISK, CLIENT_VERSION);
+		tep << nbalance;
+		vector<unsigned char> tep1(tep.begin(),tep.end());
+		(*tem.get()).push_back(tep1);
+	}
 	return std::make_tuple (flag ,0, tem);
 }
 /**
  *unsigned long GetTxConFirmHeight(const void * const txhash)
  * 这个函数式从中间层传了一个参数过来:
- * 1.第一个是 hash,六个字节
+ * 1.第一个入参: hash,32个字节
  */
 static RET_DEFINE ExGetTxConFirmHeightFunc(unsigned char * ipara,void * pVmScriptRun) {
 	CVmRunEvn *pVmScript = (CVmRunEvn *)pVmScriptRun;
@@ -623,14 +632,11 @@ static RET_DEFINE ExGetTxConFirmHeightFunc(unsigned char * ipara,void * pVmScrip
 	uint256 hash1(*retdata.at(0));
 //	LogPrint("vm","ExGetTxContractsFunc1:%s",hash1.GetHex().c_str());
 
-
-	std::shared_ptr<CBaseTransaction> pBaseTx;
-
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	int nHeight = GetTxComfirmHigh(hash1, *pVmScript->GetScriptDB());
 	if(-1 == nHeight)
 	{
-		std::make_tuple (false, tem);
+		return std::make_tuple (false,0, tem);
 	}
 
    CDataStream tep(SER_DISK, CLIENT_VERSION);
@@ -695,7 +701,6 @@ static RET_DEFINE ExGetCurRunEnvHeightFunc(unsigned char * ipara,void * pVmEvn) 
  * 这个函数式从中间层传了三个个参数过来:
  * 1.第一个是 key值
  * 2.第二个是value值
- * 3.第三个是超时高度
  */
 static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmEvn) {
 	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
@@ -748,7 +753,7 @@ static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmEvn) {
 	int64_t nstep = 0;
 	vector<unsigned char> vValue;
 	if(scriptDB->GetScriptData(pVmRunEvn->GetComfirHeight(),scriptid, *retdata.at(0), vValue)){
-		nstep = nstep - (int64_t)(vValue.size()+1);
+		nstep = nstep - (int64_t)(vValue.size()+1);//删除数据奖励step
 	}
 	if (!scriptDB->EraseScriptData(scriptid, *retdata.at(0), operlog)) {
 		LogPrint("vm", "ExDeleteDataDBFunc error key:%s!\n",HexStr(*retdata.at(0)));
@@ -785,19 +790,15 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmEvn) {
 	bool flag =true;
 
 //	LogPrint("INFO", "script run read data:%s\n", HexStr(*retdata.at(0)));
-	CScriptDBOperLog operLog;
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	if(!scriptDB->GetScriptData(pVmRunEvn->GetComfirHeight(),scriptid, *retdata.at(0), vValue))
 	{
-		if(!operLog.vKey.empty()) {
-			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmRunEvn->GetDbLog();
-			m_dblog.get()->push_back(operLog);
-		}
 		flag = false;
 	}
-
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    (*tem.get()).push_back(vValue);
-
+	else
+	{
+		(*tem.get()).push_back(vValue);
+	}
 	return std::make_tuple (flag,0, tem);
 }
 
@@ -805,20 +806,21 @@ static RET_DEFINE ExReadDataValueDBFunc(unsigned char * ipara,void * pVmEvn) {
 static RET_DEFINE ExGetDBSizeFunc(unsigned char * ipara,void * pVmEvn) {
 	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 	CRegID scriptid = pVmRunEvn->GetScriptRegID();
-	vector<unsigned char> vScriptKey;
 	int count = 0;
 	bool flag = true;
 	CScriptDBViewCache* scriptDB = pVmRunEvn->GetScriptDB();
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	if(!scriptDB->GetScriptDataCount(scriptid,count))
 	{
 		flag = false;
 	}
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
-    tep << count;
-    vector<unsigned char> tep1(tep.begin(),tep.end());
-    (*tem.get()).push_back(tep1);
-
+	else
+	{
+		CDataStream tep(SER_DISK, CLIENT_VERSION);
+		tep << count;
+		vector<unsigned char> tep1(tep.begin(),tep.end());
+		(*tem.get()).push_back(tep1);
+	}
 	return std::make_tuple (flag,0, tem);
 }
 /**
@@ -844,10 +846,12 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmEvn) {
     }
 	int index = 0;
 	bool flag = true;
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	memcpy(&index,&retdata.at(0).get()->at(0),sizeof(int));
 	if(!(index == 0 ||(index == 1 && retdata.size() == 2)))
 	{
 		flag =  false;
+	    return std::make_tuple (flag,0, tem);
 	}
 	CRegID scriptid = pVmRunEvn->GetScriptRegID();
 
@@ -859,22 +863,13 @@ static RET_DEFINE ExGetDBValueFunc(unsigned char * ipara,void * pVmEvn) {
 	}
 
 	CScriptDBViewCache* scriptDB = pVmRunEvn->GetScriptDB();
-	set<CScriptDBOperLog> setOperLog;
 	flag = scriptDB->GetScriptData(pVmRunEvn->GetComfirHeight(),scriptid,index,vScriptKey,vValue);
 
 	if(flag){
 		LogPrint("vm", "Read key:%s,value:%s!\n",HexStr(vScriptKey),HexStr(vValue));
+		(*tem.get()).push_back(vScriptKey);
+		(*tem.get()).push_back(vValue);
 	}
-	if (!setOperLog.empty()) {
-		shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmRunEvn->GetDbLog();
-		for(auto &item : setOperLog)
-			m_dblog.get()->push_back(item);
-	}
-
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-
-    (*tem.get()).push_back(vScriptKey);
-	(*tem.get()).push_back(vValue);
 
 	return std::make_tuple (flag,0, tem);
 }
@@ -910,7 +905,6 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmEvn)
 	CRegID scriptid = pVmRunEvn->GetScriptRegID();
 	vector_unsigned_char vValue;
 	bool flag = false;
-	bool ret = true;
 	CScriptDBViewCache* scriptDB = pVmRunEvn->GetScriptDB();
 
 	int64_t step = 0;
@@ -932,11 +926,11 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmEvn)
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
 
-	return std::make_tuple (ret ,step, tem);
+	return std::make_tuple (flag ,step, tem);
 }
 /**
  *bool WriteOutput( const VM_OPERATE* data, const unsigned short conter)
- * 中间层传了一个参数
+ * 中间层传了一个参数 ,写 CVmOperate操作结果
  * 1.第一个是输出指令
  */
 static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmEvn)
@@ -955,7 +949,7 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmEvn)
 	int count = datadsize/Size;
 	if(datadsize%Size != 0)
 	{
-	  assert(0);
+//	  assert(0);
 	 return RetFalse("para err");
 	}
 	CDataStream ss(*retdata.at(0),SER_DISK, CLIENT_VERSION);
@@ -965,8 +959,12 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmEvn)
 		ss >> temp;
       source.push_back(temp);
 	}
-	pVmRunEvn->InsertOutputData(source);
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+	if(!pVmRunEvn->InsertOutputData(source)) {
+//		 return RetFalse("InsertOutput err");
+		return std::make_tuple (-1 ,0, tem);
+	}
+
 	return std::make_tuple (true ,0, tem);
 }
 
@@ -994,22 +992,25 @@ static RET_DEFINE ExGetScriptDataFunc(unsigned char * ipara,void * pVmEvn)
 	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 	CScriptDBViewCache* scriptDB = pVmRunEvn->GetScriptDB();
 	CRegID scriptid(*retdata.at(0));
-	CScriptDBOperLog operLog;
+	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	if(!scriptDB->GetScriptData(pVmRunEvn->GetComfirHeight(), scriptid, *retdata.at(1), vValue))
 	{
-		if (!operLog.vKey.empty()) {
-			shared_ptr<vector<CScriptDBOperLog> > m_dblog = pVmRunEvn->GetDbLog();
-			m_dblog.get()->push_back(operLog);
-		}
 		flag = false;
 	}
-
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    (*tem.get()).push_back(vValue);
+	else
+	{
+		(*tem.get()).push_back(vValue);
+	}
 
 	return std::make_tuple (flag,0, tem);
 
 }
+/**
+ * 取目的账户ID
+ * @param ipara
+ * @param pVmEvn
+ * @return
+ */
 static RET_DEFINE ExGetScriptIDFunc(unsigned char * ipara,void * pVmEvn)
 {
 	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
@@ -1026,7 +1027,6 @@ static RET_DEFINE ExGetCurTxAccountFunc(unsigned char * ipara,void * pVmEvn)
 	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 	vector_unsigned_char vUserId =pVmRunEvn->GetTxAccount().GetVec6();
 
-	vector<unsigned char> item;
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 
 	(*tem.get()).push_back(vUserId);
@@ -1037,14 +1037,10 @@ static RET_DEFINE ExGetCurTxContactFunc(unsigned char * ipara, void *pVmEvn)
 	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 	vector<unsigned char> contact =pVmRunEvn->GetTxContact();
 
-	vector<unsigned char> item;
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 
 	(*tem.get()).push_back(contact);
 	return std::make_tuple (true,0, tem);
-}
-static RET_DEFINE ExDefaultFunc(unsigned char * ipara,void * pVmEvn) {
-	return RetFalse(string(__FUNCTION__)+"para  err !");
 }
 enum COMPRESS_TYPE {
 	U16_TYPE = 0,					// U16_TYPE
@@ -1114,6 +1110,10 @@ static bool Decompress(vector<unsigned char>& format,vector<unsigned char> &cont
 					}
 					break;
 				}
+				default:
+				{
+				   return ERRORMSG("%s\r\n",__FUNCTION__);
+				}
 			}
 		}
 		ret.insert(ret.begin(),retdata.begin(),retdata.end());
@@ -1141,7 +1141,6 @@ static RET_DEFINE ExCurDeCompressContactFunc(unsigned char *ipara,void *pVmEvn){
 		return RetFalse(string(__FUNCTION__)+"para  err !");
 	 }
 
-	vector<unsigned char> item;
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	(*tem.get()).push_back(outContact);
 	return std::make_tuple (true,0, tem);
@@ -1156,7 +1155,7 @@ static RET_DEFINE ExDeCompressContactFunc(unsigned char *ipara,void *pVmEvn){
     }
 	uint256 hash1(*retdata.at(1));
 //	LogPrint("vm","ExGetTxContractsFunc1:%s\n",hash1.GetHex().c_str());
-
+    bool flag = false;
 	std::shared_ptr<CBaseTransaction> pBaseTx;
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	if (GetTransaction(pBaseTx, hash1, *pVmScript->GetScriptDB(), false)) {
@@ -1166,16 +1165,16 @@ static RET_DEFINE ExDeCompressContactFunc(unsigned char *ipara,void *pVmEvn){
 			return RetFalse(string(__FUNCTION__) + "para  err !");
 		}
 		 (*tem.get()).push_back(outContact);
+		 flag = true;
 	}
 
-	return std::make_tuple (true,0, tem);
+	return std::make_tuple (flag,0, tem);
 }
 
 static RET_DEFINE GetCurTxPayAmountFunc(unsigned char *ipara,void *pVmEvn){
 	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 	uint64_t lvalue =pVmRunEvn->GetValue();
 
-	vector<unsigned char> item;
 	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, CLIENT_VERSION);
 
@@ -1210,21 +1209,22 @@ static RET_DEFINE GetUserAppAccValue(unsigned char * ipara,void * pVmScript){
     S_APP_ID accid;
     memcpy(&accid, &retdata.at(0).get()->at(0), sizeof(S_APP_ID));
 
+    bool flag = false;
    	shared_ptr<CAppUserAccout> sptrAcc;
    	uint64_t value = 0 ;
-	if(pVmScriptRun->GetAppUserAccout(accid.GetIdV(),sptrAcc))
+   	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+   	if(pVmScriptRun->GetAppUserAccout(accid.GetIdV(),sptrAcc))
 	{
 		value = sptrAcc->getllValues();
 //	 	cout<<"read:"<<endl;
 //	 	cout<<sptrAcc->toString()<<endl;
+		CDataStream tep(SER_DISK, CLIENT_VERSION);
+		tep << value;
+		vector<unsigned char> tep1(tep.begin(),tep.end());
+		(*tem.get()).push_back(tep1);
+		flag = true;
 	}
-
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
-    tep << value;
-    vector<unsigned char> tep1(tep.begin(),tep.end());
-	(*tem.get()).push_back(tep1);
-	return std::make_tuple (true,0, tem);
+	return std::make_tuple (flag,0, tem);
 }
 
 
@@ -1233,13 +1233,9 @@ static RET_DEFINE GetUserAppAccFoudWithTag(unsigned char * ipara,void * pVmScrip
 
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 	unsigned int Size(0);
-	if (pVmScriptRun->GetComfirHeight() > g_secondForkHeigh) {
-		CAppFundOperate temp;
-		Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
-	} else {
-		CVmOperate temp;
-		Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
-	}
+	CAppFundOperate temp;
+	Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
+
     if(!GetData(ipara,retdata) ||retdata.size() != 1
     	|| retdata.at(0).get()->size() !=Size)
     {
@@ -1251,22 +1247,28 @@ static RET_DEFINE GetUserAppAccFoudWithTag(unsigned char * ipara,void * pVmScrip
     ss>>userfund;
 
    	shared_ptr<CAppUserAccout> sptrAcc;
-
-   	CAppCFund fund;
+    bool flag = false;
+    auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+    CAppCFund fund;
 	if(pVmScriptRun->GetAppUserAccout(userfund.GetAppUserV(),sptrAcc))
 	{
 		if(!sptrAcc->GetAppCFund(fund,userfund.GetFundTagV(),userfund.outheight))	{
 			return RetFalse(string(__FUNCTION__)+"tag err !");
 		}
+		CDataStream tep(SER_DISK, CLIENT_VERSION);
+		tep << fund.getvalue() ;
+		vector<unsigned char> tep1(tep.begin(),tep.end());
+		(*tem.get()).push_back(tep1);
+		flag = true;
 	}
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
-    tep << fund.getvalue() ;
-    vector<unsigned char> tep1(tep.begin(),tep.end());
-	(*tem.get()).push_back(tep1);
-	return std::make_tuple (true,0, tem);
-
+	return std::make_tuple (flag,0, tem);
 }
+/**
+ *   写 应用操作输出到 pVmRunEvn->MapAppOperate[0]
+ * @param ipara
+ * @param pVmEvn
+ * @return
+ */
 static RET_DEFINE ExWriteOutAppOperateFunc(unsigned char * ipara,void * pVmEvn)
 {
 	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
@@ -1287,6 +1289,10 @@ static RET_DEFINE ExWriteOutAppOperateFunc(unsigned char * ipara,void * pVmEvn)
 	while(count--)
 	{
 		ss >> temp;
+		if(pVmRunEvn->GetComfirHeight() > nFreezeBlackAcctHeight && temp.mMoney < 0) //不能小于0,防止 上层传错金额小于20150904
+		{
+			return RetFalse("para err");
+		}
 		pVmRunEvn->InsertOutAPPOperte(temp.GetAppUserV(),temp);
 		step +=Size;
 	}
@@ -1305,7 +1311,6 @@ static RET_DEFINE ExGetBase58AddrFunc(unsigned char * ipara,void * pVmEvn){
 
 	 CKeyID addrKeyId;
 	 if (!GetKeyId(*pVmRunEvn->GetCatchView(),*retdata.at(0).get(), addrKeyId)) {
-	     auto tem =  make_shared<std::vector< vector<unsigned char> > >();
 	    	return RetFalse(string(__FUNCTION__)+"para  err !");
 	 }
 	 string dacrsaddr = addrKeyId.ToAddress();
@@ -1347,7 +1352,7 @@ enum CALL_API_FUN {
 	WRITEOUTPUT_FUNC,     //!<WRITEOUTPUT_FUNC
 	GETSCRIPTDATA_FUNC,		  //!<GETSCRIPTDATA_FUNC
 	GETSCRIPTID_FUNC,		  //!<GETSCRIPTID_FUNC
-	GETCURTXACCOUNT_FUNC,		  //!<GETSCRIPTID_FUNC
+	GETCURTXACCOUNT_FUNC,		  //!<GETCURTXACCOUNT_FUNC
 	GETCURTXCONTACT_FUNC,		 //!<GETCURTXCONTACT_FUNC
 	GETCURDECOMPRESSCONTACR_FUNC,   //!<GETCURDECOMPRESSCONTACR_FUNC
 	GETDECOMPRESSCONTACR_FUNC,   	//!<GETDECOMPRESSCONTACR_FUNC
@@ -1357,6 +1362,45 @@ enum CALL_API_FUN {
 	GET_WIRITE_OUT_APP_OPERATE_FUN,             //!<GET_WIRITE_OUT_APP_OPERATE_FUN
 	GET_DACRS_ADDRESS_FUN,
 };
+
+const static string API_METOHD[] =
+{
+	"COMP_FUNC",
+	"MULL_MONEY",
+	"ADD_MONEY",
+	"SUB_MONEY",
+	"DIV_MONEY",
+	"SHA256_FUNC",
+	"DES_FUNC",
+	"VERFIY_SIGNATURE_FUNC",
+	"SIGNATURE_FUNC",
+	"PRINT_FUNC",
+	"GETTX_CONTRACT_FUNC",
+	"GETTX_ACCOUNT_FUNC",
+	"GETACCPUB_FUNC",
+	"QUEYACCBALANCE_FUNC",
+	"GETTXCONFIRH_FUNC",
+	"GETBLOCKHASH_FUNC",
+	"GETCTXCONFIRMH_FUNC",
+	"WRITEDB_FUNC",
+	"DELETEDB_FUNC",
+	"READDB_FUNC",
+	"GETDBSIZE_FUNC",
+	"GETDBVALUE_FUNC",
+	"GetCURTXHASH_FUNC",
+	"MODIFYDBVALUE_FUNC",
+	"WRITEOUTPUT_FUNC",
+	"GETSCRIPTDATA_FUNC",
+	"GETSCRIPTID_FUNC",
+	"GETCURTXACCOUNT_FUNC",
+	"GETCURTXCONTACT_FUNC",
+	"GETCURDECOMPRESSCONTACR_FUNC",
+	"GETDECOMPRESSCONTACR_FUNC",
+	"GETCURPAYMONEY_FUN",
+	"GET_APP_USER_ACC_VALUE_FUN",
+	"GET_APP_USER_ACC_FUND_WITH_TAG_FUN",
+	"GET_WIRITE_OUT_APP_OPERATE_FUN",
+	"GET_DACRS_ADDRESS_FUN" };
 
 const static struct __MapExterFun FunMap[] = { //
 		{ COMP_FUNC, ExInt64CompFunc },			//
@@ -1408,7 +1452,11 @@ RET_DEFINE CallExternalFunc(INT16U method, unsigned char *ipara,CVmRunEvn *pVmEv
 
 int64_t CVm8051::run(uint64_t maxstep, CVmRunEvn *pVmEvn) {
 	INT8U code = 0;
-	uint64_t step = 0;
+	int64_t step = 0;  //uint64_t
+
+	if((maxstep == 0) || (NULL == pVmEvn)){
+		return -1;
+	}
 
 	while (1) {
 		code = GetOpcode();
@@ -1422,7 +1470,8 @@ int64_t CVm8051::run(uint64_t maxstep, CVmRunEvn *pVmEvn) {
 			RET_DEFINE retdata = CallExternalFunc(methodID, ipara, pVmEvn);
 			memset(ipara, 0, MAX_SHARE_RAM);
 			step += std::get<1>(retdata) - 1;
-			if (std::get<0>(retdata)) {
+			if (std::get<0>(retdata) == 1) {
+				//!<往应用层写执行结果
 				auto tem = std::get<2>(retdata);
 				int pos = 0;
 				int totalsize = 0;
@@ -1439,14 +1488,23 @@ int64_t CVm8051::run(uint64_t maxstep, CVmRunEvn *pVmEvn) {
 					}
 				}
 			}
-		} else if (Sys.PC == 0x0008) {
+			else if(std::get<0>(retdata) == -1){
+                //!<SDK 层直接退出
+				LogPrint("CONTRACT_TX", "call method id:%d methodName:%s\n", methodID, API_METOHD[methodID]);
+				return -1;
+			}
+			else
+			{
+                //!<不往应用层写结果, 应用层根据输出结果长度为0，判断函数执行失败。
+			}
+		} else if (Sys.PC == 0x0008) {   //要求退出
 			INT8U result = GetExRam(0xEFFD);
 			if (result == 0x01) {
 				return step;
 			}
 			return 0;
 		}
-		if (maxstep != 0 && (step >= MAX_BLOCK_RUN_STEP|| step >= maxstep)){//(step > maxstep || step >= MAX_BLOCK_RUN_STEP)) {
+		if (step >= (int64_t)MAX_BLOCK_RUN_STEP || step >= (int64_t)maxstep){
 			LogPrint("CONTRACT_TX", "failed step:%ld\n", step);
 			return -1;		//force return
 		}
@@ -1491,16 +1549,13 @@ bool CVm8051::run() {
 				}
 
 			}
-		}
-		if (Sys.PC == 0x0008) {
+		}else if (Sys.PC == 0x0008) {
+			INT8U result=GetExRam(0xEFFD);
+			if(result == 0x01)
 			{
-				INT8U result=GetExRam(0xEFFD);
-				if(result == 0x01)
-				{
-					return 1;
-				}
-				return 0;
+				return 1;
 			}
+			return 0;
 		}
 	}
 
@@ -2539,7 +2594,7 @@ void CVm8051::StepRun(INT8U code) {
 		break;
 	}
 	default:
-		assert(0);
+//		assert(0);
 		break;
 	}
 }
@@ -2551,7 +2606,7 @@ bool CVm8051::GetBitFlag(INT8U addr) {
 void CVm8051::SetBitFlag(INT8U addr) {
 
 	GetBitRamRef(addr) |= (BIT0 << (addr % 8));
-	if (addr >= 0xe0 && addr <= 0xe7) { //this opcode A
+	if (addr >= 0xe0 && addr <= 0xe7) { // 操作的是 累加器A
 		Updata_A_P_Flag();
 	}
 }
@@ -2559,7 +2614,7 @@ void CVm8051::SetBitFlag(INT8U addr) {
 void CVm8051::ClrBitFlag(INT8U addr) {
 
 	GetBitRamRef(addr) &= (~(BIT0 << (addr % 8)));
-	if (addr >= 0xe0 && addr <= 0xe7) //this opcode A
+	if (addr >= 0xe0 && addr <= 0xe7) // 操作的是 累加器A
 			{
 		Updata_A_P_Flag();
 	}
@@ -2824,7 +2879,7 @@ void CVm8051::MD_ADDC(INT8U data) {
 	INT8U flagAC = Sys.psw().cy;
 
 	if (flagAC > 1) {
-		assert(0);
+//		assert(0);
 		flagAC = 1;
 	}
 

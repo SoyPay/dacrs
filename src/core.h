@@ -16,13 +16,15 @@
 
 /** No amount larger than this (in satoshi) is valid */
 static const int64_t MAX_MONEY = 1000000000 * COIN;
-static const int64_t MAX_MONEY_TEST_NET = 10000000 * COIN;
+static const int64_t MAX_MONEY_REG_NET = 20 * MAX_MONEY;
 
+static const int g_BlockVersion2 = 2;
+static const int g_BlockVersion3 = 3;
 
 inline int64_t GetMaxMoney()
 {
-	if(SysCfg().NetworkID() == CBaseParams::TESTNET) {
-		return MAX_MONEY_TEST_NET;
+	if(SysCfg().NetworkID() == CBaseParams::REGTEST) {
+		return MAX_MONEY_REG_NET;
 	}
 	else {
 		return MAX_MONEY;
@@ -43,11 +45,12 @@ class CBlockHeader
 {
 public:
     // header
-    static const int CURRENT_VERSION=2;
+    static const int CURRENT_VERSION=g_BlockVersion3;
+protected:
     int nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
-    uint256 hashPos;
+    uint256 hashPos;   //nVersion;hashPrevBlock;hashMerkleRoot;nValues(余额);nTime;nNonce;nHeight;nFuel;nFuelRate; 计算的hash
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
@@ -55,6 +58,8 @@ public:
     int64_t    nFuel;
     int nFuelRate;
     vector<unsigned char> vSignature;
+
+public:
     CBlockHeader()
     {
         SetNull();
@@ -79,9 +84,9 @@ public:
     void SetNull()
     {
         nVersion = CBlockHeader::CURRENT_VERSION;
-        hashPrevBlock = 0;
-        hashMerkleRoot = 0;
-        hashPos = 0;
+        hashPrevBlock = uint256();
+        hashMerkleRoot = uint256();
+        hashPos = uint256();
         nTime = 0;
         nBits = 0;
         nNonce = 0;
@@ -104,6 +109,75 @@ public:
     {
         return (int64_t)nTime;
     }
+
+    int GetVersion() const  {
+    	return  nVersion;
+    }
+    void SetVersion(int nVersion) {
+    	this->nVersion = nVersion;
+    }
+    uint256 GetHashPrevBlock() const  {
+    	return hashPrevBlock;
+    }
+    void SetHashPrevBlock(uint256 prevBlockHash) {
+    	this->hashPrevBlock = prevBlockHash;
+    }
+    uint256 GetHashMerkleRoot() const{
+    	return hashMerkleRoot;
+    }
+    void SetHashMerkleRoot(uint256 merkleRootHash) {
+    	this->hashMerkleRoot = merkleRootHash;
+    }
+    uint256 GetHashPos() const{
+    	return hashPos;
+    }
+    void SetHashPos(uint256 posHash) {
+    	this->hashPos = posHash;
+    }
+    unsigned int GetTime() const{
+    	return nTime;
+    }
+    void SetTime(unsigned int time) {
+    	this->nTime = time;
+    }
+    unsigned int GetBits() const{
+    	return nBits;
+    }
+    void SetBits(unsigned int bits) {
+    	this->nBits = bits;
+    }
+    unsigned int GetNonce() const{
+    	return nNonce;
+    }
+    void SetNonce(unsigned int nonce) {
+    	this->nNonce = nonce;
+    }
+    unsigned int GetHeight() const{
+    	return nHeight;
+    }
+    void SetHeight(unsigned int height);
+
+    unsigned int GetFuel() const{
+    	return nFuel;
+    }
+    void SetFuel(int64_t fuel) {
+    	this->nFuel = fuel;
+    }
+    int GetFuelRate() const{
+    	return nFuelRate;
+    }
+    void SetFuelRate(int fuelRalte) {
+    	this->nFuelRate = fuelRalte;
+    }
+    const vector<unsigned char> &GetSignature() const{
+    	return vSignature;
+    }
+    void SetSignature(const vector<unsigned char> &signature) {
+    	this->vSignature = signature;
+    }
+    void ClearSignature() {
+    	this->vSignature.clear();
+    }
 };
 
 
@@ -114,7 +188,7 @@ public:
     vector<std::shared_ptr<CBaseTransaction> > vptx;
 
     // memory only
-    mutable vector<uint256> vMerkleTree;
+    mutable vector<uint256> vMerkleTree;  //块中所有交易的交易hash集合
 
     CBlock()
     {
@@ -143,17 +217,17 @@ public:
     CBlockHeader GetBlockHeader() const
     {
         CBlockHeader block;
-        block.nVersion       = nVersion;
-        block.hashPrevBlock  = hashPrevBlock;
-        block.hashMerkleRoot = hashMerkleRoot;
-        block.hashPos        = hashPos;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
-        block.nHeight        = nHeight;
-        block.nFuel          = nFuel;
-        block.nFuelRate      = nFuelRate;
-        block.vSignature     = vSignature;
+        block.SetVersion(nVersion);
+        block.SetHashPrevBlock(hashPrevBlock);
+        block.SetHashMerkleRoot(hashMerkleRoot);
+        block.SetHashPos(hashPos);
+        block.SetTime(nTime);
+        block.SetBits(nBits);
+        block.SetNonce(nNonce);
+        block.SetHeight(nHeight);
+        block.SetFuel(nFuel);
+        block.SetFuelRate(nFuelRate);
+        block.SetSignature(vSignature);
         return block;
     }
 

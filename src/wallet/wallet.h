@@ -54,11 +54,10 @@ private:
 	CBlockLocator  bestBlock;
 	uint256 GetCheckSum()const;
 public:
-//	map<CKeyID, CKeyStoreValue> mKeyPool;
 	CPubKey vchDefaultKey ;
 
-	bool fFileBacked;
-	string strWalletFile;
+	bool fFileBacked;         //初始化钱包文件名，为true
+	string strWalletFile;     //钱包文件名
 
 	map<uint256, CAccountTx> mapInBlockTx;
 	map<uint256, std::shared_ptr<CBaseTransaction> > UnConfirmTx;
@@ -69,7 +68,7 @@ public:
 	MasterKeyMap mapMasterKeys;
 	unsigned int nMasterKeyMaxID;
 
-	static string defaultFilename;
+	static string defaultFilename;    //默认钱包文件名  wallet.dat
 public:
 
 	IMPLEMENT_SERIALIZE
@@ -81,7 +80,7 @@ public:
 				READWRITE(mapMasterKeys);
 				READWRITE(mapInBlockTx);
 				READWRITE(UnConfirmTx);
-				uint256 sun(0);
+				uint256 sun;
 				if(fWrite){
 				 sun = GetCheckSum();
 				}
@@ -94,7 +93,7 @@ public:
 			}
 	)
 	virtual ~CWallet(){};
-	int64_t GetRawBalance()const;
+	int64_t GetRawBalance(bool IsConfirmed=true)const;
 
     bool Sign(const CKeyID &keyID,const uint256 &hash,vector<unsigned char> &signature,bool IsMiner=false) const;
     //! Adds an encrypted key to the store, and saves it to disk.
@@ -105,15 +104,9 @@ public:
     bool LoadKeyCombi(const CKeyID & keyId, const CKeyCombi& keycombi) { return CBasicKeyStore::AddKeyCombi(keyId, keycombi);}
     // Adds a key to the store, and saves it to disk.
     bool AddKey(const CKey& secret,const CKey& minerKey);
-    bool AddKey(const CKeyCombi& store);
+    bool AddKey(const CKeyID &keyId, const CKeyCombi& store);
     bool AddKey(const CKey& key);
-//	bool AddPubKey(const CPubKey& pk);
 
-//	bool GetPubKey(const CKeyID &address, CPubKey& pubKey,bool IsMiner = false);
-//	bool GetKey(const CKeyID &keyid, CKey& secretKey, bool IsMiner = false) const ;
-//	bool GetKey(const CUserID &userid, CKey& secretKey,bool IsMiner = false) const ;
-
-//	bool GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner = false)const ;
 	bool CleanAll(); //just for unit test
     bool IsReadyForCoolMiner(const CAccountViewCache& view)const;
     bool ClearAllCkeyForCoolMiner();
@@ -126,7 +119,7 @@ public:
 	bool LoadMinVersion(int nVersion);
 
 	void SyncTransaction(const uint256 &hash, CBaseTransaction *pTx, const CBlock* pblock);
-//	void EraseFromWallet(const uint256 &hash);
+	void EraseFromWallet(const uint256 &hash);
 	int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
 //	void ReacceptWalletTransactions();
 	void ResendWalletTransactions();
@@ -327,7 +320,7 @@ public:
 
 	map<uint256, std::shared_ptr<CBaseTransaction> > mapAccountTx;
 public:
-	CAccountTx(CWallet* pwallet = NULL, uint256 hash = uint256(0),int high = 0) {
+	CAccountTx(CWallet* pwallet = NULL, uint256 hash = uint256(),int high = 0) {
 		pWallet = pwallet;
 		blockHash = hash;
 		mapAccountTx.clear();
@@ -361,7 +354,7 @@ public:
 			mapAccountTx[hash] = make_shared<CRegisterAppTx>(pTx);
 			break;
 		default:
-			assert(0);
+//			assert(0);
 			return false;
 			break;
 		}
@@ -388,7 +381,7 @@ public:
 //			const uint256& txid = item.first;
 			CValidationState state;
 			if (item.second->nTxType != REWARD_TX) {
-				if (!::AcceptToMemoryPool(mempool, state, const_cast<CBaseTransaction*>(item.second.get()), false, NULL,
+				if (!::AcceptToMemoryPool(mempool, state, const_cast<CBaseTransaction*>(item.second.get()), false,
 						false)) {
 					vhash.push_back(item.first);
 				}

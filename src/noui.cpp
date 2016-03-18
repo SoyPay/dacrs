@@ -17,9 +17,51 @@
 #include "wallet/wallet.h"
 #include "init.h"
 #include "util.h"
+#include "miner.h"
 using namespace json_spirit;
 #include "cuiserver.h"
 #include "net.h"
+
+CCriticalSection cs_Sendbuffer;
+deque<string> g_dSendBuffer;
+
+
+void ThreadSendMessageToUI() {
+	RenameThread("send-message-to-ui");
+//	int64_t nCurTime = GetTime();
+	while(true) {
+		{
+			LOCK(cs_Sendbuffer);
+			if(!g_dSendBuffer.empty()) {
+				if (CUIServer::HasConnection()) {
+//					nCurTime = GetTime();
+					string message = g_dSendBuffer.front();
+					g_dSendBuffer.pop_front();
+					CUIServer::Send(message);
+				}
+//				else {
+//					if(GetTime() - nCurTime > 120) {   //2 minutes no connection exit ThreadSendMessageToUI thread
+//						g_dSendBuffer.clear();
+//						break;
+//					}
+//				}
+			}
+		}
+		MilliSleep(10);
+	}
+}
+
+void AddMessageToDeque(const std::string &strMessage)
+{
+	if(SysCfg().GetBoolArg("-ui", false)) {
+		LOCK(cs_Sendbuffer);
+		g_dSendBuffer.push_back(strMessage);
+		LogPrint("msgdeque", "AddMessageToDeque %s\n", strMessage.c_str());
+	}else {
+		LogPrint("msgdeque", "AddMessageToDeque %s\n", strMessage.c_str());
+	}
+}
+
 static bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
 {
 
@@ -44,27 +86,57 @@ static bool noui_ThreadSafeMessageBox(const std::string& message, const std::str
 //        strCaption += caption; // Use supplied caption (can be empty)
     }
 
-	if (CUIServer::HasConnection()) {
-		CUIServer::Send(write_string(Value(std::move(obj)),true));
-	} else {
-		LogPrint("NOUI", "%s\n", write_string(Value(std::move(obj)),true));
-	}
+    AddMessageToDeque(write_string(Value(std::move(obj)),true));
 
     fprintf(stderr, "%s: %s\n", strCaption.c_str(), message.c_str());
     return false;
 }
 
-
 static bool noui_SyncTx()
 {
 	Array arrayObj;
+	int nTipHeight = chainActive.Tip()->nHeight;
+	int nSyncTxDeep = SysCfg().GetArg("-synctxdeep", 100);
+	if(nSyncTxDeep >= nTipHeight) {
+		nSyncTxDeep = nTipHeight;
+	}
+	CBlockIndex *pStartBlockIndex = chainActive[nTipHeight-nSyncTxDeep];
+
+	Object objStartHeight;
+	objStartHeight.push_back(Pair("syncheight", pStartBlockIndex->nHeight));
+	Object objMsg;
+	objMsg.push_back(Pair("type",     "SyncTxHight"));
+	objMsg.push_back(Pair("msg",  objStartHeight));
+	AddMessageToDeque(write_string(Value(std::move(objMsg)),true));
+
+	while(pStartBlockIndex != NULL) {
+		if((pwalletMain->mapInBlockTx).count(pStartBlockIndex->GetBlockHash()) > 0)
+		{
+
+			Object objTx;
+			CAccountTx acctTx= pwalletMain->mapInBlockTx[pStartBlockIndex->GetBlockHash()];
+			map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx = acctTx.mapAccountTx.begin();
+			for(;iterTx != acctTx.mapAccountTx.end(); ++iterTx) {
+				objTx = iterTx->second->ToJSON(*pAccountViewTip);
+				objTx.push_back(Pair("blockhash", iterTx->first.GetHex()));
+				objTx.push_back(Pair("confirmHeight", pStartBlockIndex->nHeight));
+				objTx.push_back(Pair("confirmedtime", (int)pStartBlockIndex->nTime));
+				Object obj;
+				obj.push_back(Pair("type",     "SyncTx"));
+				obj.push_back(Pair("msg",  objTx));
+				AddMessageToDeque(write_string(Value(std::move(obj)),true));
+			}
+		}
+		pStartBlockIndex = chainActive.Next(pStartBlockIndex);
+	}
+	/*
 	map<uint256, CAccountTx>::iterator iterAccountTx = pwalletMain->mapInBlockTx.begin();
 	for(; iterAccountTx != pwalletMain->mapInBlockTx.end(); ++iterAccountTx)
 	{
 		Object objTx;
 		map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx = iterAccountTx->second.mapAccountTx.begin();
 		for(;iterTx != iterAccountTx->second.mapAccountTx.end(); ++iterTx) {
-			objTx = TxToJSON(iterTx->second.get());
+			objTx = iterTx->second.get()->ToJSON(*pAccountViewTip);
 			objTx.push_back(Pair("blockhash", iterAccountTx->first.GetHex()));
 			if(mapBlockIndex.count(iterAccountTx->first) && chainActive.Contains(mapBlockIndex[iterAccountTx->first])) {
 				objTx.push_back(Pair("confirmHeight", mapBlockIndex[iterAccountTx->first]->nHeight));
@@ -77,34 +149,24 @@ static bool noui_SyncTx()
 			Object obj;
 			obj.push_back(Pair("type",     "SyncTx"));
 			obj.push_back(Pair("msg",  objTx));// write_string(Value(arrayObj),true)));
-			if(CUIServer::HasConnection()){
-				CUIServer::Send(write_string(Value(std::move(obj)),true));
-				MilliSleep(10);
-			}
-			else
-			{
-				LogPrint("NOUI","init message: %s\n", write_string(Value(std::move(obj)),true));
-			}
+			AddMessageToDeque(write_string(Value(std::move(obj)),true));
 		}
 	}
+	*/
 	map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx =  pwalletMain->UnConfirmTx.begin();
 	for(; iterTx != pwalletMain->UnConfirmTx.end(); ++iterTx)
 	{
-		Object objTx = TxToJSON(iterTx->second.get());
+		Object objTx = iterTx->second.get()->ToJSON(*pAccountViewTip);
 		arrayObj.push_back(objTx);
 
 		Object obj;
 		obj.push_back(Pair("type",     "SyncTx"));
 		obj.push_back(Pair("msg",   objTx));
-		if(CUIServer::HasConnection()){
-			CUIServer::Send(write_string(Value(std::move(obj)),true));
-			MilliSleep(10);
-		}else{
-			LogPrint("NOUI","init message: %s\n", write_string(Value(std::move(obj)),true));
-		}
+		AddMessageToDeque(write_string(Value(std::move(obj)),true));
 	}
 	return true;
 }
+
 static void noui_InitMessage(const std::string &message)
 {
 	if(message =="initialize end")
@@ -119,11 +181,7 @@ static void noui_InitMessage(const std::string &message)
 	Object obj;
 	obj.push_back(Pair("type",     "init"));
 	obj.push_back(Pair("msg",     message));
-	if(CUIServer::HasConnection()){
-		CUIServer::Send(write_string(Value(std::move(obj)),true));
-	}else{
-		LogPrint("NOUI","init message: %s\n", write_string(Value(std::move(obj)),true));
-	}
+	AddMessageToDeque(write_string(Value(std::move(obj)),true));
 }
 
 static void noui_BlockChanged(int64_t time,int64_t high,const uint256 &hash) {
@@ -132,15 +190,11 @@ static void noui_BlockChanged(int64_t time,int64_t high,const uint256 &hash) {
 	obj.push_back(Pair("type",     "blockchanged"));
 	obj.push_back(Pair("tips",     g_nSyncTipHeight));
 	obj.push_back(Pair("high",     (int)high));
+	obj.push_back(Pair("time",     (int)time));
 	obj.push_back(Pair("hash",     hash.ToString()));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
-
-	if (CUIServer::HasConnection()) {
-		CUIServer::Send(write_string(Value(std::move(obj)),true));
-	}else
-	 {
-			LogPrint("NOUI", "%s\n", write_string(Value(std::move(obj)),true));
-	}
+    obj.push_back(Pair("fuelrate", GetElementForBurn(chainActive.Tip())));
+    AddMessageToDeque(write_string(Value(std::move(obj)),true));
 }
 
 extern Object GetTxDetailJSON(const uint256& txhash);
@@ -149,29 +203,19 @@ static bool noui_RevTransaction(const uint256 &hash){
 	Object obj;
 	obj.push_back(Pair("type",     "revtransaction"));
 	obj.push_back(Pair("transation",     GetTxDetailJSON(hash)));
-
-	if (CUIServer::HasConnection()) {
-		CUIServer::Send(write_string(Value(std::move(obj)),true));
-	} else {
-		LogPrint("NOUI", "%s\n", write_string(Value(std::move(obj)),true));
-	}
+	AddMessageToDeque(write_string(Value(std::move(obj)),true));
 	return true;
 }
 
 static bool noui_RevAppTransaction(const CBlock *pBlock ,int nIndex){
 	Object obj;
 	obj.push_back(Pair("type",     "rev_app_transaction"));
-	Object objTx = TxToJSON(pBlock->vptx[nIndex].get());
+	Object objTx = pBlock->vptx[nIndex].get()->ToJSON(*pAccountViewTip);
 	objTx.push_back(Pair("blockhash", pBlock->GetHash().GetHex()));
-	objTx.push_back(Pair("confirmHeight", (int) pBlock->nHeight));
-	objTx.push_back(Pair("confirmedtime", (int) pBlock->nTime));
+	objTx.push_back(Pair("confirmHeight", (int) pBlock->GetHeight()));
+	objTx.push_back(Pair("confirmedtime", (int) pBlock->GetTime()));
 	obj.push_back(Pair("transation",     objTx));
-
-	if (CUIServer::HasConnection()) {
-		CUIServer::Send(write_string(Value(std::move(obj)),true));
-	} else {
-		LogPrint("NOUI", "%s\n", write_string(Value(std::move(obj)),true));
-	}
+	AddMessageToDeque(write_string(Value(std::move(obj)),true));
 	return true;
 }
 
@@ -180,23 +224,14 @@ static void noui_NotifyMessage(const std::string &message)
 	Object obj;
 	obj.push_back(Pair("type","notify"));
 	obj.push_back(Pair("msg",message));
-	if(CUIServer::HasConnection()){
-		CUIServer::Send(write_string(Value(std::move(obj)),true));
-	}else{
-		LogPrint("NOUI","init message: %s\n", write_string(Value(std::move(obj)),true));
-	}
+	AddMessageToDeque(write_string(Value(std::move(obj)),true));
 }
 
 static bool noui_ReleaseTransaction(const uint256 &hash){
 	Object obj;
 	obj.push_back(Pair("type",     "releasetx"));
 	obj.push_back(Pair("hash",   hash.ToString()));
-
-	if (CUIServer::HasConnection()) {
-		CUIServer::Send(write_string(Value(std::move(obj)),true));
-	} else {
-		LogPrint("NOUI", "%s\n", write_string(Value(std::move(obj)),true));
-	}
+	AddMessageToDeque(write_string(Value(std::move(obj)),true));
 	return true;
 }
 
@@ -204,12 +239,7 @@ static bool noui_RemoveTransaction(const uint256 &hash) {
 	Object obj;
 	obj.push_back(Pair("type",     "rmtx"));
 	obj.push_back(Pair("hash",   hash.ToString()));
-
-	if (CUIServer::HasConnection()) {
-		CUIServer::Send(write_string(Value(std::move(obj)),true));
-	} else {
-		LogPrint("NOUI", "%s\n", write_string(Value(std::move(obj)),true));
-	}
+	AddMessageToDeque(write_string(Value(std::move(obj)),true));
 	return true;
 }
 

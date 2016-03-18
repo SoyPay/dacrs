@@ -1,7 +1,5 @@
 build_config.mk
 *.a
-!libleveldb.a
-!libmemenv.a
 *.o
 *.dylib*
 *.so

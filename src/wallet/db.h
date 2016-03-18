@@ -114,7 +114,7 @@ private:
 
 protected:
     template <typename K, typename T>
-    bool Read(const K& key, T& value)
+    bool Read(const K& key, T& value, int nVersion = CLIENT_VERSION)
     {
         if (!pdb)
             return false;
@@ -135,7 +135,7 @@ protected:
 
         // Unserialize value
         try {
-            CDataStream ssValue((char*)datValue.get_data(), (char*)datValue.get_data() + datValue.get_size(), SER_DISK, CLIENT_VERSION);
+            CDataStream ssValue((char*)datValue.get_data(), (char*)datValue.get_data() + datValue.get_size(), SER_DISK, nVersion);
             ssValue >> value;
         } catch (const std::exception&) {
             return false;

@@ -47,7 +47,6 @@ double GetDifficulty(const CBlockIndex* blockindex)
     return dDiff;
 }
 
-extern Object TxToJSON(CBaseTransaction *pTx);
 Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
 {
     Object result;
@@ -57,8 +56,8 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
     result.push_back(Pair("confirmations", (int)txGen.GetDepthInMainChain()));
     result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION)));
     result.push_back(Pair("height", blockindex->nHeight));
-    result.push_back(Pair("version", block.nVersion));
-    result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
+    result.push_back(Pair("version", block.GetVersion()));
+    result.push_back(Pair("merkleroot", block.GetHashMerkleRoot().GetHex()));
     result.push_back(Pair("txnumber", (int)block.vptx.size()));
     Array txs;
     for (const auto& ptx : block.vptx)
@@ -66,8 +65,8 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
         txs.push_back(ptx->GetHash().GetHex());
     result.push_back(Pair("tx", txs));
     result.push_back(Pair("time", block.GetBlockTime()));
-    result.push_back(Pair("nonce", (uint64_t)block.nNonce));
-    result.push_back(Pair("bits", HexBits(block.nBits)));
+    result.push_back(Pair("nonce", (uint64_t)block.GetNonce()));
+    result.push_back(Pair("bits", HexBits(block.GetBits())));
     result.push_back(Pair("difficulty", GetDifficulty(blockindex)));
     result.push_back(Pair("chainwork", blockindex->nChainWork.GetHex()));
     result.push_back(Pair("fuel", blockindex->nFuel));
@@ -79,7 +78,6 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex)
         result.push_back(Pair("nextblockhash", pnext->GetBlockHash().GetHex()));
     return result;
 }
-
 
 Value getblockcount(const Array& params, bool fHelp)
 {
@@ -128,7 +126,6 @@ Value getdifficulty(const Array& params, bool fHelp)
 
     return GetDifficulty();
 }
-
 
 Value getrawmempool(const Array& params, bool fHelp)
 {
@@ -214,7 +211,7 @@ Value getblockhash(const Array& params, bool fHelp)
             "getblockhash index\n"
             "\nReturns hash of block in best-block-chain at index provided.\n"
             "\nArguments:\n"
-            "1. index         (numeric, required) The block index\n"
+            "1. height         (numeric, required) The block height\n"
             "\nResult:\n"
             "\"hash\"         (string) The block hash\n"
             "\nExamples:\n"
@@ -240,7 +237,7 @@ Value getblock(const Array& params, bool fHelp)
             "\nIf verbose is false, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
             "If verbose is true, returns an Object with information about block <hash>.\n"
             "\nArguments:\n"
-            "1. \"hash\"          (string, required) The block hash\n"
+            "1. \"hash or height\"(string or numeric,required) string for The block hash,numeric for the block height\n"
             "2. verbose           (boolean, optional, default=true) true for a json object, false for the hex encoded data\n"
             "\nResult (for verbose = true):\n"
             "{\n"
@@ -280,7 +277,7 @@ Value getblock(const Array& params, bool fHelp)
    }else{
 	   strHash = params[0].get_str();
    }
-    uint256 hash(strHash);
+    uint256 hash(uint256S(strHash));
 
     bool fVerbose = true;
     if (params.size() > 1)
@@ -304,9 +301,6 @@ Value getblock(const Array& params, bool fHelp)
     return blockToJSON(block, pblockindex);
 }
 
-
-
-
 Value verifychain(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
@@ -319,8 +313,8 @@ Value verifychain(const Array& params, bool fHelp)
             "\nResult:\n"
             "true|false       (boolean) Verified or not\n"
             "\nExamples:\n"
-            + HelpExampleCli("verifychain", "")
-            + HelpExampleRpc("verifychain", "")
+            + HelpExampleCli("verifychain", "( checklevel numblocks )")
+            + HelpExampleRpc("verifychain", "( checklevel numblocks )")
         );
 
     int nCheckLevel = SysCfg().GetArg("-checklevel", 3);
@@ -372,17 +366,31 @@ Value getblockchaininfo(const Array& params, bool fHelp)
 Value listsetblockindexvalid(const Array& params, bool fHelp)
 {
 	if (fHelp || params.size() != 0) {
-		throw runtime_error("listsetblockindexvalid \n");
+		throw runtime_error("listsetblockindexvalid \n"
+							"\ncall ListSetBlockIndexValid function\n"
+							"\nArguments:\n"
+							"\nResult:\n"
+							"\nExamples:\n"
+							+ HelpExampleCli("listsetblockindexvalid", "")
+							+ HelpExampleRpc("listsetblockindexvalid",""));
 	}
 	return ListSetBlockIndexValid();
 }
+
 Value getscriptid(const Array& params, bool fHelp)
 {
 	if (fHelp || params.size() != 1) {
-		throw runtime_error("getscriptid error \n");
+		throw runtime_error("getscriptid \n"
+							"\nreturn an object containing regid and script\n"
+							"\nArguments:\n"
+							"1. txhash   (string, required) the transaction hash.\n"
+							"\nResult:\n"
+							"\nExamples:\n"
+							+ HelpExampleCli("getscriptid", "5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG")
+							+ HelpExampleRpc("getscriptid","5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG"));
 	}
 
-	uint256 txhash(params[0].get_str());
+	uint256 txhash(uint256S(params[0].get_str()));
 
 	int nIndex = 0;
 	int BlockHeight =GetTxComfirmHigh(txhash, *pScriptDBTip) ;
@@ -411,5 +419,29 @@ Value getscriptid(const Array& params, bool fHelp)
 	Object result;
 	result.push_back(Pair("regid:", striptID.ToString()));
 	result.push_back(Pair("script", HexStr(striptID.GetVec6())));
+	return result;
+}
+
+Value listcheckpoint(const Array& params, bool fHelp)
+{
+	if (fHelp || params.size() != 0) {
+			throw runtime_error(
+				"listcheckpoint index\n"
+				"\nget the list of checkpoint.\n"
+			    "\nResult a object  contain checkpoint\n"
+//				"\nResult:\n"
+//				"\"hash\"         (string) The block hash\n"
+				"\nExamples:\n"
+				+ HelpExampleCli("listcheckpoint", "")
+				+ HelpExampleRpc("listcheckpoint", "")
+			);
+		}
+
+	Object result;
+	std::map<int, uint256> checkpointMap;
+	Checkpoints::GetCheckpointMap(checkpointMap);
+	for(std::map<int, uint256>::iterator iterCheck = checkpointMap.begin(); iterCheck != checkpointMap.end(); ++iterCheck){
+		result.push_back(Pair(tfm::format("%d", iterCheck->first).c_str(), iterCheck->second.GetHex()));
+	}
 	return result;
 }

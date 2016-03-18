@@ -12,6 +12,7 @@ class CAccount;
 class CKeyID;
 class uint256;
 class CDiskTxPos;
+class CVmOperate;
 
 class CAccountView
 {
@@ -30,6 +31,7 @@ public:
 	virtual bool EraseKeyId(const vector<unsigned char> &accountId);
 	virtual bool GetAccount(const vector<unsigned char> &accountId, CAccount &account);
 	virtual bool SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &account);
+	virtual uint64_t TraverseAccount();
 	virtual Object ToJosnObj(char Prefix);
 	virtual ~CAccountView(){};
 };
@@ -54,6 +56,7 @@ public:
 	bool EraseKeyId(const vector<unsigned char> &accountId);
 	bool GetAccount(const vector<unsigned char> &accountId, CAccount &account);
 	bool SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &account);
+	uint64_t TraverseAccount();
 };
 
 class CAccountViewCache : public CAccountViewBacked
@@ -61,7 +64,7 @@ class CAccountViewCache : public CAccountViewBacked
 public:
 	uint256 hashBlock;
     map<CKeyID, CAccount> cacheAccounts;
-	map<vector<unsigned char>, CKeyID> cacheKeyIds;
+	map<vector<unsigned char>, CKeyID> cacheKeyIds; // vector 存的 是accountId
 
 private:
 	bool GetAccount(const CKeyID &keyId, CAccount &account);
@@ -96,6 +99,7 @@ public:
 	bool HaveAccount(const CUserID &userId);
 	int64_t GetRawBalance(const CUserID &userId)const;
 	bool SaveAccountInfo(const CRegID &accountId, const CKeyID &keyId, const CAccount &account);
+	uint64_t TraverseAccount();
 	bool Flush();
 	unsigned int GetCacheSize();
 	Object ToJosnObj()const;
@@ -118,6 +122,10 @@ public:
 	virtual Object ToJosnObj(string Prefix);
 	virtual bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);
 	virtual	bool WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB);
+	virtual bool WriteTxOutPut(const uint256 &txid, const vector<CVmOperate> &vOutput, CScriptDBOperLog &operLog);
+	virtual bool ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput);
+	virtual bool GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<unsigned char>, vector<unsigned char> > &mapTxHash);
+	virtual bool SetTxHashByAddress(const CKeyID &keyId, int nHeight, int nIndex, const string & strTxHash, CScriptDBOperLog &operLog);
 	virtual ~CScriptDBView(){};
 };
 
@@ -136,12 +144,22 @@ public:
 			vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData);
 	bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);
 	bool WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB);
+	bool WriteTxOutPut(const uint256 &txid, const vector<CVmOperate> &vOutput, CScriptDBOperLog &operLog);
+	bool ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput);
+	bool GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<unsigned char>, vector<unsigned char> > &mapTxHash);
+	bool SetTxHashByAddress(const CKeyID &keyId, int nHeight, int nIndex, const string & strTxHash, CScriptDBOperLog &operLog);
 };
 
 class CScriptDBViewCache : public CScriptDBViewBacked {
 public:
 	map<vector<unsigned char>, vector<unsigned char> > mapDatas;
-
+    /*取脚本 时 第一个vector 是scriptKey = "def" + "scriptid";
+      取应用账户时第一个vector是scriptKey = "acct" + "scriptid"+"_" + "accUserId";
+      取脚本总条数时第一个vector是scriptKey ="snum",
+      取脚本数据总条数时第一个vector是scriptKey ="sdnum";
+      取脚本数据时第一个vector是scriptKey ="data" + "vScriptId" + "_" + "vScriptKey"
+      取交易关联账户时第一个vector是scriptKey ="tx" + "txHash"
+     * */
 public:
 	CScriptDBViewCache(CScriptDBView &base, bool fDummy = false);
 	bool GetScript(const CRegID &scriptId, vector<unsigned char> &vValue);
@@ -188,6 +206,10 @@ public:
 	bool WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB);
 	void SetBaseData(CScriptDBView * pBase);
 	string ToString();
+	bool WriteTxOutPut(const uint256 &txid, const vector<CVmOperate> &vOutput, CScriptDBOperLog &operLog);
+	bool ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput);
+	bool GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<unsigned char>, vector<unsigned char> > &mapTxHash);
+	bool SetTxHashByAddress(const CKeyID &keyId, int nHeight, int nIndex, const string & strTxHash, CScriptDBOperLog &operLog);
 private:
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
 	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
@@ -342,6 +364,8 @@ public:
 	Object ToJosnObj() const;
 	int GetSize();
 	void SetBaseData(CTransactionDBView *pNewBase);
+	const map<uint256, vector<uint256> > &GetCacheMap();
+	void SetCacheMap(const map<uint256, vector<uint256> > &mapCache);
 };
 
 #endif

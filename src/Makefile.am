@@ -68,7 +68,8 @@ DACRS_CORE_H = \
   util.h \
   version.h \
   wallet/wallet.h \
-  wallet/db.h 
+  wallet/db.h  \
+  arith_uint256.h 
 
 JSON_H = \
   json/json_spirit.h \
@@ -82,6 +83,8 @@ JSON_H = \
   json/json_spirit_writer_template.h
   
 # VmScript #
+		
+	
 VM_H = \
 	vm/vm8051.h \
 	vm/vmrunevn.h \
@@ -89,12 +92,17 @@ VM_H = \
 	vm/testmcu.h \
 	vm/appaccount.h
 
+	
+
 VM_CPP = \
 	vm/vm8051.cpp \
 	vm/vmrunevn.cpp \
 	vm/script.cpp \
 	vm/testmcu.cpp \
 	vm/appaccount.cpp
+
+	
+	
   
 
 obj/build.h: FORCE
@@ -144,6 +152,7 @@ libdacrs_wallet_a_SOURCES = \
 libdacrs_common_a_SOURCES = \
   base58.cpp \
   allocators.cpp \
+  arith_uint256.cpp \
   chainparams.cpp \
   core.cpp \
   hash.cpp \
@@ -157,6 +166,7 @@ libdacrs_common_a_SOURCES = \
   syncdata.cpp \
   syncdatadb.cpp \
   util.cpp \
+  uint256.cpp \
   version.cpp \
   json/json_spirit_reader.cpp \
   json/json_spirit_value.cpp \

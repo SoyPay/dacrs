@@ -89,7 +89,7 @@ inline void MilliSleep(int64_t n) {
 #endif
 }
 
-extern bool fServer;
+
 extern string strMiscWarning;
 extern bool fNoListen;
 extern volatile bool fReopenDebugLog;

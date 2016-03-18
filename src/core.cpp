@@ -10,7 +10,18 @@
 
 uint256 CBlockHeader::GetHash() const
 {
-	return SerializeHash(*this, SER_GETHASH, CLIENT_VERSION);
+	if (nVersion >= g_BlockVersion3) {
+		return SignatureHash();
+	} else {
+		return SerializeHash(*this, SER_GETHASH, CLIENT_VERSION);
+	}
+}
+
+void CBlockHeader::SetHeight(unsigned int height) {
+	if (height < nUpdateBlockVersionHeight && height > 0) {
+		SetVersion(g_BlockVersion2);
+	}
+	this->nHeight = height;
 }
 
 uint256 CBlockHeader::SignatureHash() const
@@ -37,7 +48,7 @@ uint256 CBlock::BuildMerkleTree() const
         }
         j += nSize;
     }
-    return (vMerkleTree.empty() ? std::move(uint256(0)) : std::move(vMerkleTree.back()));
+    return (vMerkleTree.empty() ? std::move(uint256()) : std::move(vMerkleTree.back()));
 }
 
 vector<uint256> CBlock::GetMerkleBranch(int nIndex) const
@@ -59,7 +70,7 @@ vector<uint256> CBlock::GetMerkleBranch(int nIndex) const
 uint256 CBlock::CheckMerkleBranch(uint256 hash, const vector<uint256>& vMerkleBranch, int nIndex)
 {
     if (nIndex == -1)
-        return 0;
+        return uint256();
     for(const auto& otherside:vMerkleBranch)
     {
         if (nIndex & 1)

@@ -84,8 +84,6 @@ void RPCTypeCheck(const Object& o,
 int64_t AmountToRawValue(const Value& value)
 {
     double dAmount = value.get_real();
-    if (dAmount <= 0.0 || dAmount > 210000000.0 * COIN)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
     int64_t nAmount = roundint64(dAmount);
     if (!MoneyRange(nAmount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
@@ -228,6 +226,10 @@ static const CRPCCommand vRPCCommands[] =
     { "getinfo",                &getinfo,                true,      false,      false }, /* uses wallet if enabled */
     { "help",                   &help,                   true,      true,       false },
     { "stop",                   &stop,                   true,      true,       false },
+    { "gencheckpoint",          &gencheckpoint,          true,      true,       false },
+    { "setcheckpoint",          &setcheckpoint,          true,      true,       false },
+    { "validateaddress",        &validateaddress,        true,      true,       false },
+    { "gettxhashbyaddress",     &gettxhashbyaddress,     true,      true,       false },
 
     /* P2P networking */
     { "getnetworkinfo",         &getnetworkinfo,         true,      false,      false },
@@ -237,6 +239,7 @@ static const CRPCCommand vRPCCommands[] =
     { "getnettotals",           &getnettotals,           true,      true,       false },
     { "getpeerinfo",            &getpeerinfo,            true,      false,      false },
     { "ping",                   &ping,                   true,      false,      false },
+    { "getdacrsstate",          &getdacrsstate,          false,      false,      false }, //true
 
     /* Block chain and UTXO */
     { "getblockchaininfo",      &getblockchaininfo,      true,      false,      false },
@@ -246,8 +249,10 @@ static const CRPCCommand vRPCCommands[] =
     { "getblockhash",           &getblockhash,           false,     false,      false },
     { "getdifficulty",          &getdifficulty,          true,      false,      false },
     { "getrawmempool",          &getrawmempool,          true,      false,      false },
-
+    { "listcheckpoint",         &listcheckpoint,         true,      false,      false },
     { "verifychain",            &verifychain,            true,      false,      false },
+    { "verifymessage",          &verifymessage,          false,     false,      false },
+    { "gettotalcoin",           &gettotalcoin,           false,     false,      false },
 
     /* Mining */
     { "getmininginfo",          &getmininginfo,          true,      false,      false },
@@ -256,18 +261,12 @@ static const CRPCCommand vRPCCommands[] =
 
 
     /* Raw transactions */
- //   { "createrawtransaction",   &createrawtransaction,   false,     false,      false },
- //   { "decoderawtransaction",   &decoderawtransaction,   false,     false,      false },
- //   { "decodescript",           &decodescript,           false,     false,      false },
- //   { "getrawtransaction",      &getrawtransaction,      false,     false,      false },
- //   { "sendrawtransaction",     &sendrawtransaction,     false,     false,      false },
- //   { "signrawtransaction",     &signrawtransaction,     false,     false,      false }, /* uses wallet if enabled */
+    { "sendtoaddressraw",       &sendtoaddressraw,       false,     false,      false },
+    { "registaccounttxraw",     &registaccounttxraw,     false,     false,      false },
+    { "createcontracttxraw",    &createcontracttxraw,    true,      false,      false },
+    { "registerscripttxraw",    &registerscripttxraw,    true,      false,      false },
 
-
-    { "verifymessage",          &verifymessage,          false,     false,      false },
-
-    /* Wallet */
-    //vaild rpc cmd
+    /* uses wallet if enabled */
     { "backupwallet",           &backupwallet,           true,      false,      true },
     { "dumpprivkey",            &dumpprivkey,            true,      false,      true },
     { "dumpwallet",             &dumpwallet,             true,      false,      true },
@@ -300,11 +299,9 @@ static const CRPCCommand vRPCCommands[] =
 	{ "sendtoaddress",          &sendtoaddress,          false,     false,      true },
 	{ "sendtoaddresswithfee",   &sendtoaddresswithfee,   false,     false,      true },
     { "getbalance",             &getbalance,             false,     false,      true },
-    { "sendtoaddressraw",       &sendtoaddressraw,       false,     false,      true },
-    { "registaccounttxraw",     &registaccounttxraw,     true,      false,      true },
+
     { "submittx",      			&submittx,       	 	 true,      false,      false},
-    { "createcontracttxraw",    &createcontracttxraw,    true,      false,      true },
-    { "registerscripttxraw",    &registerscripttxraw,    true,      false,      true },
+
     { "sigstr",    				&sigstr,    			 true,      false,      true },
     { "getappaccinfo",    		&getappaccinfo,    		 true,      false,      true },
     { "getappkeyvalue",    		&getappkeyvalue,    	 true,      false,      true },
@@ -321,7 +318,9 @@ static const CRPCCommand vRPCCommands[] =
     { "printblokdbinfo",        &printblokdbinfo,        true,      false,      false},
     { "getalltxinfo",			&getalltxinfo,			 true,      false,      true },
     { "saveblocktofile",        &saveblocktofile,        true,      false,      true },
-    { "gethash",                &gethash,        true,      false,      true },
+    { "gethash",                &gethash,        		 true,      false,      true },
+    { "getrawtx",               &getrawtx,        		 true,      false,      true },
+
 
 };
 
@@ -359,10 +358,11 @@ bool HTTPAuthorized(map<string, string>& mapHeaders)
 void ErrorReply(ostream& stream, const Object& objError, const Value& id)
 {
     // Send error reply from json-rpc error object
-    int nStatus = HTTP_INTERNAL_SERVER_ERROR;
-    int code = find_value(objError, "code").get_int();
-    if (code == RPC_INVALID_REQUEST) nStatus = HTTP_BAD_REQUEST;
-    else if (code == RPC_METHOD_NOT_FOUND) nStatus = HTTP_NOT_FOUND;
+	int nStatus = HTTP_OK;
+//    int nStatus = HTTP_INTERNAL_SERVER_ERROR;
+//    int code = find_value(objError, "code").get_int();
+//    if (code == RPC_INVALID_REQUEST) nStatus = HTTP_BAD_REQUEST;
+//    else if (code == RPC_METHOD_NOT_FOUND) nStatus = HTTP_NOT_FOUND;
     string strReply = JSONRPCReply(Value::null, objError, id);
     stream << HTTPReply(nStatus, strReply, false) << flush;
 }

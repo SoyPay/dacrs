@@ -15,11 +15,11 @@
 #pragma pack(1)
 
 typedef struct {
-	unsigned char type;
-	unsigned char noperateType;
+	unsigned char type;  /*TX_SENDBET = 0x01,TX_ACCEPTBET = 0x02,TX_OPENBET = 0x03*/
+	unsigned char noperateType;   //竞猜类型值0 -1
 	uint64_t money;
-	unsigned short hight;
-	unsigned char dhash[32];IMPLEMENT_SERIALIZE
+	unsigned short hight;  //超时高度 20
+	unsigned char dhash[32];   	IMPLEMENT_SERIALIZE
 	(
 			READWRITE(type);
 			READWRITE(noperateType);
@@ -122,7 +122,7 @@ public:
 		return gussnum;
 	}
 private:
-	unsigned char nSdata[33];
+	unsigned char nSdata[33];  //前32字节的随机数,后1个字节的1-6之间的数
 	int mCurStep;
 	string strRegScriptHash;
 	string strAsendHash;

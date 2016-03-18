@@ -21,16 +21,12 @@
 /** A reference to a CKey: the Hash160 of its serialized public key */
 class CKeyID: public uint160 {
 public:
-	CKeyID() :
-			uint160(0) {
-	}
-	CKeyID(const uint160 &in) :
-			uint160(in) {
-	}
+	CKeyID() : uint160() {}
+	CKeyID(const uint160 &in) : uint160(in) {}
 	CKeyID(const string &strAddress);
 	bool IsEmpty()const
 	{
-		return  *this== 0;
+		return IsNull();
 	}
 
 	string ToString() const
@@ -44,9 +40,7 @@ public:
 /** A reference to a CScript: the Hash160 of its serialization (see script.h) */
 class CScriptID: public uint160 {
 public:
-	CScriptID() :
-			uint160(0) {
-	}
+	CScriptID() : uint160() {}
 	CScriptID(const uint160 &in) :
 			uint160(in) {
 	}
@@ -207,7 +201,8 @@ public:
 			Invalidate();
 		}
 		else{
-	        assert(0); //never come here
+			ERRORMSG("Unserialize......");
+//	        assert(0); //never come here
 		}
 	}
 

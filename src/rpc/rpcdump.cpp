@@ -72,7 +72,13 @@ string DecodeDumpString(const string &str) {
 
 Value dropprivkey(const Array& params, bool fHelp){
 	if (fHelp || params.size() != 0)
-		throw runtime_error("this cmd have no params\n");
+		throw runtime_error("dropprivkey \n"
+			    "\ndrop private key.\n"
+			    "\nResult:\n"
+			    "\nExamples:\n"
+			    + HelpExampleCli("dropprivkey", "")
+			    + HelpExampleRpc("dropprivkey", "")
+		);
 
 	EnsureWalletIsUnlocked();
 	if (!pwalletMain->IsReadyForCoolMiner(*pAccountViewTip)) {
@@ -177,13 +183,21 @@ Value importwallet(const Array& params, bool fHelp)
     	json_spirit::read(file,reply);
     	const Value & keyobj = find_value(reply.get_obj(),"key");
     	const Array & keyarry = keyobj.get_array();
-    	inmsizeport = keyarry.size();
-//    	for(auto const &te :keyarry)
-//    	{
-//    		CKeyStoreValue tep;
-//    		tep.UnSersailFromJson(te.get_obj());
-//    		pwalletMain->AddKey(tep);
-//    	}
+    	for(auto const &keyItem :keyarry)
+    	{
+    		CKeyCombi keyCombi;
+    		const Value &obj = find_value(keyItem.get_obj(), "keyid");
+    		if(obj.type() == null_type)
+    			continue;
+    		string strKeyId = find_value(keyItem.get_obj(), "keyid").get_str();
+    		CKeyID keyId(uint160(ParseHex(strKeyId)));
+    		keyCombi.UnSersailFromJson(keyItem.get_obj());
+    		if(!keyCombi.IsContainMainKey() && !keyCombi.IsContainMinerKey()) {
+    			continue;
+    		}
+    		if(pwalletMain->AddKey(keyId, keyCombi))
+    			inmsizeport++;
+    	}
     }
     file.close();
     pwalletMain->ShowProgress("", 100); // hide progress dialog in GUI
@@ -239,8 +253,6 @@ Value dumpprivkey(const Array& params, bool fHelp)
     return reply;
 }
 
-
-
 Value dumpwallet(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1)
 		throw runtime_error("dumpwallet \"filename\"\n"
@@ -269,7 +281,9 @@ Value dumpwallet(const Array& params, bool fHelp) {
 	{
 		CKeyCombi keyCombi;
 		pwalletMain->GetKeyCombi(keyId, keyCombi);
-		key.push_back(keyCombi.ToJsonObj());
+		Object obj = keyCombi.ToJsonObj();
+		obj.push_back(Pair("keyid", keyId.ToString()));
+		key.push_back(obj);
 	}
 	reply.push_back(Pair("key",key));
 	file <<  write_string(Value(reply), true);

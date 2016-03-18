@@ -61,7 +61,7 @@ struct CTxTest :public SysTestBase{
 		ResetEnv();
 
 
-		accOperate.keyID = uint160(1);
+		accOperate.keyID.SetNull();
 		accBeforOperate = accOperate;
 		Init();
 	}

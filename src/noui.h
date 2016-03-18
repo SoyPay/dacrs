@@ -6,5 +6,5 @@
 #define DACRS_NOUI_H
 
 extern void noui_connect();
-
+extern void ThreadSendMessageToUI();
 #endif

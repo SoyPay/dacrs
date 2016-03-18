@@ -11,7 +11,11 @@
 using namespace std;
 
 CTxMemPoolEntry::CTxMemPoolEntry() {
-	nHeight = MEMPOOL_HEIGHT;
+	 nFee = 0;
+	 nTxSize = 0;
+	 nTime = 0;
+	 dPriority = 0.0;
+	 nHeight = 0;
 }
 
 CTxMemPoolEntry::CTxMemPoolEntry(CBaseTransaction *pBaseTx, int64_t _nFee, int64_t _nTime, double _dPriority,
@@ -58,16 +62,14 @@ void CTxMemPool::ReScanMemPoolTx(CAccountViewCache *pAccountViewCacheIn, CScript
 	pScriptDBViewCache.reset(new CScriptDBViewCache(*pScriptDBViewCacheIn, true));
 	{
 		LOCK(cs);
-//		for(auto &pTxItem : block.vptx){
-//			mapTx.erase(pTxItem->GetHash());
-//		}
 		CValidationState state;
 		list<std::shared_ptr<CBaseTransaction> > removed;
 		for(map<uint256, CTxMemPoolEntry >::iterator iterTx = mapTx.begin(); iterTx != mapTx.end(); ) {
-			if (!CheckTxInMemPool(iterTx->first, iterTx->second, state, false)) {
+			if (!CheckTxInMemPool(iterTx->first, iterTx->second, state, true)) {
 				uint256 hash = iterTx->first;
 				iterTx = mapTx.erase(iterTx++);
 				uiInterface.RemoveTransaction(hash);
+				EraseTransaction(hash);
 				continue;
 			}
 			++iterTx;
@@ -99,6 +101,7 @@ void CTxMemPool::remove(CBaseTransaction *pBaseTx, list<std::shared_ptr<CBaseTra
 			removed.push_front(std::shared_ptr<CBaseTransaction>(mapTx[hash].GetTx()));
 			mapTx.erase(hash);
 			uiInterface.RemoveTransaction(hash);
+			EraseTransaction(hash);
 			nTransactionsUpdated++;
 		}
 	}
@@ -107,8 +110,11 @@ void CTxMemPool::remove(CBaseTransaction *pBaseTx, list<std::shared_ptr<CBaseTra
 bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &entry, CValidationState &state, bool bExcute) {
 	CTxUndo txundo;
 	CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
+	CAccountViewCache acctViewTemp(*pAccountViewCache, true);
+	CScriptDBViewCache scriptDBViewTemp(*pScriptDBViewCache, true);
+
 	// is it already confirmed in block
-	if(uint256(0) != pTxCacheTip->IsContainTx(hash))
+	if(uint256() != pTxCacheTip->IsContainTx(hash))
 		return state.Invalid(ERRORMSG("CheckTxInMemPool() : tx hash %s has been confirmed", hash.GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
 	// is it in valid height
 	if (!entry.GetTx()->IsValidHeight(chainActive.Tip()->nHeight, SysCfg().GetTxCacheHeight())) {
@@ -119,13 +125,15 @@ bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &en
 		LogPrint("vm", "tx hash=%s CheckTxInMemPool run contract\n", entry.GetTx()->GetHash().GetHex());
 	}
 	if(bExcute) {
-		if (!entry.GetTx()->ExecuteTx(0, *pAccountViewCache, state, txundo, chainActive.Tip()->nHeight + 1,
-				txCacheTemp, *pScriptDBViewCache)) {
+		if (!entry.GetTx()->ExecuteTx(0, acctViewTemp, state, txundo, chainActive.Tip()->nHeight + 1,
+				txCacheTemp, scriptDBViewTemp)) {
 			return false;
 		}
 	}
+	assert(acctViewTemp.Flush() && scriptDBViewTemp.Flush());
 	return true;
 }
+
 bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, CValidationState &state) {
 	// Add to memory pool without checking anything.
 	// Used by main.cpp AcceptToMemoryPool(), which DOES do
@@ -140,10 +148,6 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
 		nTransactionsUpdated++;
 	}
 	return true;
-}
-
-void CTxMemPool::removeConflicts(CBaseTransaction *pBaseTx, list<std::shared_ptr<CBaseTransaction> >& removed) {
-
 }
 
 void CTxMemPool::clear() {

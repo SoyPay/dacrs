@@ -98,7 +98,7 @@ bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,str
 				ssValue >> pwallet->vchDefaultKey;
 		} else if (strType != "version" && "minversion" != strType) {
 			ERRORMSG("load wallet error! read invalid key type:%s\n", strType);
-			assert(0);
+//			assert(0);
 		}
 	} catch (...) {
 		return false;
@@ -329,7 +329,9 @@ bool CWalletDB::WriteCryptedKey(const CPubKey& pubkey, const std::vector<unsigne
 	        return false;
 	 CKeyCombi keyCombi;
 	 CKeyID keyId = pubkey.GetKeyID();
-	 if(Read(make_pair(string("keystore"), keyId), keyCombi))
+	 int nVersion(0);
+	 Read(string("minversion"), nVersion);
+	 if(Read(make_pair(string("keystore"), keyId), keyCombi, nVersion))
 	 {
 		 keyCombi.CleanMainKey();
 		 if(!Write(make_pair(string("keystore"), keyId), keyCombi, true)) {
@@ -385,7 +387,7 @@ unsigned int CWalletDB::nWalletDBUpdated = 0;
 void ThreadFlushWalletDB(const string& strFile)
 {
     // Make this thread recognisable as the wallet flushing thread
-    RenameThread("bitcoin-wallet");
+    RenameThread("dacrs-wallet");
     static bool fOneThread;
     if (fOneThread)
         return;
@@ -443,6 +445,21 @@ void ThreadFlushWalletDB(const string& strFile)
     }
 }
 
+void ThreadRelayTx(CWallet* pWallet)
+{
+	   RenameThread("relay-tx");
+	   while(pWallet) {
+		   MilliSleep(60*1000);
+		   map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx =  pWallet->UnConfirmTx.begin();
+			for(; iterTx != pWallet->UnConfirmTx.end(); ++iterTx)
+			{
+				if(mempool.exists(iterTx->first)) {
+					RelayTransaction(iterTx->second.get(), iterTx->first);
+					LogPrint("sendtx", "ThreadRelayTx resend tx hash:%s time:%ld\n", iterTx->first.GetHex(), GetTime());
+				}
+			}
+	   }
+}
 
 bool BackupWallet(const CWallet& wallet, const string& strDest)
 {

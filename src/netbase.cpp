@@ -364,7 +364,7 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
             }
             if (nRet == SOCKET_ERROR)
             {
-                LogPrint("INFO","select() for %s failed: %s\n", addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
+                LogPrint("net","select() for %s failed: %s\n", addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
                 closesocket(hSocket);
                 return false;
             }
@@ -375,13 +375,13 @@ bool static ConnectSocketDirectly(const CService &addrConnect, SOCKET& hSocketRe
             if (getsockopt(hSocket, SOL_SOCKET, SO_ERROR, &nRet, &nRetSize) == SOCKET_ERROR)
 #endif
             {
-                LogPrint("INFO","getsockopt() for %s failed: %s\n", addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
+                LogPrint("net","getsockopt() for %s failed: %s\n", addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
                 closesocket(hSocket);
                 return false;
             }
             if (nRet != 0)
             {
-                LogPrint("INFO","connect() to %s failed after select(): %s\n", addrConnect.ToString(), NetworkErrorString(nRet));
+                LogPrint("net","connect() to %s failed after select(): %s\n", addrConnect.ToString(), NetworkErrorString(nRet));
                 closesocket(hSocket);
                 return false;
             }

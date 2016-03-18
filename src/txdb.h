@@ -9,7 +9,7 @@
 #include "leveldbwrapper.h"
 #include "main.h"
 #include "database.h"
-
+#include "arith_uint256.h"
 #include <map>
 #include <string>
 #include <utility>
@@ -37,7 +37,7 @@ private:
 public:
     bool WriteBlockIndex(const CDiskBlockIndex& blockindex);
     bool EraseBlockIndex(const uint256 &blockHash);
-    bool WriteBestInvalidWork(const CBigNum& bnBestInvalidWork);
+    bool WriteBestInvalidWork(const uint256& bnBestInvalidWork);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &fileinfo);
     bool WriteBlockFileInfo(int nFile, const CBlockFileInfo &fileinfo);
     bool ReadLastBlockFile(int &nFile);
@@ -77,6 +77,7 @@ public:
 	bool EraseKeyId(const vector<unsigned char> &accountId);
 	bool GetAccount(const vector<unsigned char> &accountId, CAccount &secureAccount);
 	bool SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &secureAccount);
+	uint64_t TraverseAccount();
 	int64_t GetDbCount()
 	{
 		return db.GetDbCount();
@@ -126,6 +127,7 @@ public:
 	{
 		return db.GetDbCount();
 	}
+	bool GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<unsigned char>, vector<unsigned char> > &mapTxHash);
 	Object ToJosnObj(string Prefix);
 };
 #endif // DACRS_TXDB_LEVELDB_H

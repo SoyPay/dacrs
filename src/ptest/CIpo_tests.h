@@ -17,20 +17,25 @@ using namespace std;
 using namespace boost;
 using namespace json_spirit;
 
-#define SEND_A    "dk2NNjraSvquD9b4SQbysVRQeFikA55HLi"  // 0-20
+//#define SEND_A    "DmtzzT99HYUGAV6ejkWTWXF8pcYXtkpU4g"
+#define SEND_A    "DmtzzT99HYUGAV6ejkWTWXF8pcYXtkpU4g"
+//#define SEND_A    "dtKsuK9HUvLLHtBQL8Psk5fUnTLTFC83GS"  // 0-20
 
 class CIpoTest: public CycleTestBase {
 	int nNum;
 	int nStep;
 	string strTxHash;
-	string strAppRegId;
+	string strAppRegId;//注册应用后的Id
 public:
 	CIpoTest();
 	~CIpoTest(){};
 	virtual TEST_STATE Run() ;
 	bool RegistScript();
 	bool CreateIpoTx(string contact,int64_t llSendTotal);
-	bool SendIpoTx();
+	bool SendIpoTx(unsigned char type);
+	void RunIpo(unsigned char type);
+	void SendErrorIopTx();
+
 };
 
 #endif /* CANONY_TESTS_H */

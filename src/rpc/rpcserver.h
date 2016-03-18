@@ -115,6 +115,7 @@ extern json_spirit::Value ping(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value addnode(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getaddednodeinfo(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getnettotals(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value getdacrsstate(const json_spirit::Array& params, bool fHelp);
 
 extern json_spirit::Value dumpprivkey(const json_spirit::Array& params, bool fHelp); // in rpcdump.cpp
 extern json_spirit::Value importprivkey(const json_spirit::Array& params, bool fHelp);
@@ -143,7 +144,6 @@ extern json_spirit::Value walletpassphrase(const json_spirit::Array& params, boo
 extern json_spirit::Value walletpassphrasechange(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value walletlock(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value encryptwallet(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value validateaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getinfo(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getwalletinfo(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getblockchaininfo(const json_spirit::Array& params, bool fHelp);
@@ -178,4 +178,5 @@ extern json_spirit::Value gettxoutsetinfo(const json_spirit::Array& params, bool
 extern json_spirit::Value verifychain(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value listsetblockindexvalid(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getscriptid(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value listcheckpoint(const json_spirit::Array& params, bool fHelp);
 #endif

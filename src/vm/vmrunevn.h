@@ -8,11 +8,16 @@
 #ifndef SCRIPTCHECK_H_
 #define SCRIPTCHECK_H_
 #include "vm8051.h"
+//#include "vmlua.h"
 #include "serialize.h"
 #include "script.h"
 #include "main.h"
 #include "txdb.h"
 #include <memory>
+#include "json/json_spirit_utils.h"
+#include "json/json_spirit_value.h"
+#include "json/json_spirit_writer_template.h"
+
 using namespace std;
 class CVmOperate;
 class CVmRunEvn {
@@ -20,6 +25,7 @@ class CVmRunEvn {
 	 * Run the script object
 	 */
 	shared_ptr<CVm8051> pMcu;
+//	shared_ptr<CVmlua> pMcu;
 	/**
 	 * vm before the account state
 	 */
@@ -42,10 +48,10 @@ class CVmRunEvn {
 	unsigned int RunTimeHeight;
 	CScriptDBViewCache *m_ScriptDBTip;
 	CAccountViewCache *m_view;
-	vector<CVmOperate> m_output;
+	vector<CVmOperate> m_output;   //保存操作结果
+    bool  isCheckAccount;  //校验账户平衡开关
 
-
-	map<vector<unsigned char >,vector<CAppFundOperate> > MapAppOperate;
+	map<vector<unsigned char >,vector<CAppFundOperate> > MapAppOperate;  //vector<unsigned char > 存的是accountId
 	shared_ptr<vector<CScriptDBOperLog> > m_dblog;
 
 
@@ -89,8 +95,9 @@ private:
 	 * @return:Return account id
 	 */
 	vector_unsigned_char GetAccountID(CVmOperate value);
-	bool IsSignatureAccount(CRegID account);
-	bool OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFundOperate> > opMap, CScriptDBViewCache& view) ;
+//	bool IsSignatureAccount(CRegID account);
+	bool OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFundOperate> > opMap, CScriptDBViewCache& view);
+
 public:
 	/**
 	 * A constructor.
@@ -130,12 +137,12 @@ public:
 	CAccountViewCache * GetCatchView();
 	int GetComfirHeight();
 	uint256 GetCurTxHash();
-	void InsertOutputData(const vector<CVmOperate> &source);
+	bool InsertOutputData(const vector<CVmOperate> &source);
 	void InsertOutAPPOperte(const vector<unsigned char>& userId,const CAppFundOperate &source);
 	shared_ptr<vector<CScriptDBOperLog> > GetDbLog();
 
 	bool GetAppUserAccout(const vector<unsigned char> &id,shared_ptr<CAppUserAccout> &sptrAcc);
-
+	bool CheckAppAcctOperate(CTransaction* tx);
 	virtual ~CVmRunEvn();
 };
 
@@ -149,7 +156,7 @@ enum ACCOUNT_TYPE {
  */
 class CVmOperate{
 public:
-	unsigned char nacctype;
+	unsigned char nacctype;      	//regid or base58addr
 	unsigned char accountid[34];	//!< accountid
 	unsigned char opeatortype;		//!OperType
 	unsigned int  outheight;		//!< the transacion Timeout height
@@ -164,6 +171,16 @@ public:
 			for(int i = 0;i < 8;i++)
 			READWRITE(money[i]);
 	)
+	CVmOperate() {
+		nacctype = regid;
+		memset(accountid, 0, 34);
+		opeatortype = ADD_FREE;
+		outheight = 0;
+		memset(money, 0, 8);
+	}
+	Object ToJson();
+
 };
 
+//extern CVmRunEvn *pVmRunEvn; //提供给lmylib.cpp库使用
 #endif /* SCRIPTCHECK_H_ */

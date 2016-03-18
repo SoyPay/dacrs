@@ -30,7 +30,7 @@ bool CBlockTreeDB::EraseBlockIndex(const uint256& blockHash) {
 	return Erase(make_pair('b', blockHash));
 }
 
-bool CBlockTreeDB::WriteBestInvalidWork(const CBigNum& bnBestInvalidWork) {
+bool CBlockTreeDB::WriteBestInvalidWork(const uint256& bnBestInvalidWork) {
 	// Obsolete; only written for backward compatibility.
 	return Write('I', bnBestInvalidWork);
 }
@@ -92,7 +92,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts() {
 	leveldb::Iterator *pcursor = NewIterator();
 
 	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
-	ssKeySet << make_pair('b', uint256(0));
+	ssKeySet << make_pair('b', uint256());
 	pcursor->Seek(ssKeySet.str());
 
 	// Load mapBlockIndex
@@ -176,7 +176,7 @@ bool CAccountViewDB::HaveAccount(const CKeyID &keyId) {
 uint256 CAccountViewDB::GetBestBlock() {
 	uint256 hash;
 	if (!db.Read('B', hash))
-		return uint256(0);
+		return uint256();
 	return hash;
 }
 
@@ -189,7 +189,7 @@ bool CAccountViewDB::BatchWrite(const map<CKeyID, CAccount> &mapAccounts,
 	CLevelDBBatch batch;
 	map<CKeyID, CAccount>::const_iterator iterAccount = mapAccounts.begin();
 	for (; iterAccount != mapAccounts.end(); ++iterAccount) {
-		if (uint160(0) == iterAccount->second.keyID) {
+		if (iterAccount->second.keyID.IsNull()) {
 			batch.Erase(make_pair('k', iterAccount->first));
 		} else {
 			batch.Write(make_pair('k', iterAccount->first), iterAccount->second);
@@ -198,13 +198,13 @@ bool CAccountViewDB::BatchWrite(const map<CKeyID, CAccount> &mapAccounts,
 
 	map<vector<unsigned char>, CKeyID>::const_iterator iterKey = mapKeyIds.begin();
 	for (; iterKey != mapKeyIds.end(); ++iterKey) {
-		if (uint160(0) == iterKey->second) {
+		if (iterKey->second.IsNull()) {
 			batch.Erase(make_pair('a', iterKey->first));
 		} else {
 			batch.Write(make_pair('a', iterKey->first), iterKey->second);
 		}
 	}
-	if (uint256(0) != hashBlock)
+	if (!hashBlock.IsNull())
 		batch.Write('B', hashBlock);
 
 	return db.WriteBatch(batch, true);
@@ -251,6 +251,39 @@ bool CAccountViewDB::SaveAccountInfo(const vector<unsigned char> &accountId, con
 	return db.WriteBatch(batch, false);
 }
 
+uint64_t CAccountViewDB::TraverseAccount() {
+	leveldb::Iterator *pcursor = db.NewIterator();
+
+	uint64_t uTotalCoin(0);
+	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+	ssKeySet << make_pair('k', CKeyID());
+	pcursor->Seek(ssKeySet.str());
+
+	// Load mapBlockIndex
+	while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		try {
+			leveldb::Slice slKey = pcursor->key();
+			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+			char chType;
+			ssKey >> chType;
+			if (chType == 'k') {
+				leveldb::Slice slValue = pcursor->value();
+				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+				CAccount account;
+				ssValue >> account;
+				uTotalCoin += account.llValues;
+				pcursor->Next();
+			} else {
+				break; // if shutdown requested or finished loading block index
+			}
+		} catch (std::exception &e) {
+			return ERRORMSG("%s : Deserialize or I/O error - %s", __func__, e.what());
+		}
+	}
+	delete pcursor;
+	return uTotalCoin;
+}
 
 CTransactionDB::CTransactionDB(size_t nCacheSize, bool fMemory, bool fWipe) :
 		db(GetDataDir() / "blocks" / "txcache", nCacheSize, fMemory, fWipe) {
@@ -282,7 +315,7 @@ bool CTransactionDB::LoadTransaction(map<uint256, vector<uint256> > &mapTxHashBy
 	leveldb::Iterator *pcursor = db.NewIterator();
 
 	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
-	ssKeySet << make_pair('h', uint256(0));
+	ssKeySet << make_pair('h', uint256());
 	pcursor->Seek(ssKeySet.str());
 
 	// Load mapBlockIndex
@@ -458,6 +491,42 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 	delete pcursor;
 	if(i >= 0)
 		return false;
+	return true;
+}
+
+bool CScriptDB::GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<unsigned char>, vector<unsigned char> > &mapTxHash)
+{
+	leveldb::Iterator* pcursor = db.NewIterator();
+	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+
+	string strPrefixTemp("ADDR");
+	ssKeySet.insert(ssKeySet.end(), &strPrefixTemp[0], &strPrefixTemp[4]);
+	ssKeySet << keyId;
+	ssKeySet << nHeight;
+	pcursor->Seek(ssKeySet.str());
+
+	while (pcursor->Valid()) {
+		boost::this_thread::interruption_point();
+		try {
+			leveldb::Slice slKey = pcursor->key();
+			leveldb::Slice slValue = pcursor->value();
+			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+			if (0 == memcmp((char *)&ssKey[0], (char *)&ssKeySet[0], 24)) {
+				vector<unsigned char> vValue;
+				vector<unsigned char> vKey;
+				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+				ssValue >> vValue;
+				vKey.insert(vKey.end(), slKey.data(), slKey.data() + slKey.size());
+				mapTxHash.insert(make_pair(vKey, vValue));
+				pcursor->Next();
+			} else {
+				break;
+			}
+		} catch (std::exception &e) {
+			return ERRORMSG("%s : Deserialize or I/O error - %s\n", __func__, e.what());
+		}
+	}
+	delete pcursor;
 	return true;
 }
 Object CScriptDB::ToJosnObj(string Prefix) {

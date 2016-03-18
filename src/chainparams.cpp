@@ -89,7 +89,8 @@ map<string, vector<string> > CBaseParams::m_mapMultiArgs;
 // testnet network
 //
 vector<string> intPubKey_mainNet = {
-		"0388a07c89727f9065703100e94c00ce82bda6987215a88abee65db9b37f52f9e0"
+		"0388a07c89727f9065703100e94c00ce82bda6987215a88abee65db9b37f52f9e0",
+		"03fdfda984690ff2b10f27ccc38b90634ca101a27621c1a9dcec7a2f33fa0282d6"
 };
 
 vector<string> initPubKey_testNet = { //
@@ -122,7 +123,7 @@ vector<string> initPubkey_regTest = {
 		"03ae28a4100145a4c354338c727a54800dc540069fa2f5fd5d4a1c80b4a35a1762"
 };
 unsigned int pnSeed[] = //
-		{0xa78a2879, 0x4af99536, 0x85a21c73, 0x2f4f4a70, 0x30e65cb6};
+		{0xa78a2879, 0xb5af0bc6, 0x2f4f4a70, 0x30e65cb6, 0x7ae82879, 0x680ec48b,  0x7F1E4A70, 0x8868D772, 0xCD382879, 0xD239397B, 0x51C41978, 0x73B4C48B, 0x73EF1A78};
 
 class CMainParams: public CBaseParams {
 public:
@@ -135,59 +136,36 @@ public:
 		pchMessageStart[1] = 0xfe;
 		pchMessageStart[2] = 0x1d;
 		pchMessageStart[3] = 0x20;
-		vAlertPubKey =
-				ParseHex(
-						"04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
+		vAlertPubKey =	ParseHex("02d99681b6287b3765dfbb930e6caa10d1f8ac19e02b88f52362ce6eb43c0ec71e");
 		nDefaultPort = 8668;
 		nRPCPort = 8669;
-		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 10);        //00 3f ff ff
+		strDataDir = "main";
+		bnProofOfStakeLimit =~arith_uint256(0) >> 10;        //00 3f ff ff
 		nSubsidyHalvingInterval = 210000;
 
-		// Build the genesis block. Note that the output of the genesis coinbase cannot
-		// be spent as it did not originally exist in the database.
-		//
-		// CBlock(hash=000000000019d6, ver=1, hashPrevBlock=00000000000000, hashMerkleRoot=4a5e1e, nTime=1231006505, nBits=1d00ffff, nNonce=2083236893, vtx=1)
-		//   CTransaction(hash=4a5e1e, ver=1, vin.size=1, vout.size=1, nLockTime=0)
-		//     CTxIn(COutPoint(000000, -1), coinbase 04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73)
-		//     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
-		//   vMerkleTree: 4a5e1e
-//		const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
-//        CTransaction txNew;
-//        txNew.vin.resize(1);
-//        txNew.vout.resize(1);
-//        txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-//        txNew.vout[0].nValue = 50 * COIN;
-//        txNew.vout[0].scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
-//        genesis.vtx.push_back(txNew);
 		assert(CreateGenesisRewardTx(genesis.vptx, intPubKey_mainNet));
-		genesis.hashPrevBlock = 0;
-		genesis.hashMerkleRoot = genesis.BuildMerkleTree();
-		genesis.hashPos = 0;
-		genesis.nVersion = 1;
-		genesis.nTime = 1231006505;
-		genesis.nBits = 0x1f3fffff;        //00 3f ff
-		genesis.nNonce = 888;
-		genesis.nFuelRate = INIT_FUEL_RATES;
-		genesis.nHeight = 0;
-		genesis.vSignature.clear();
+		genesis.SetHashPrevBlock(uint256());
+		genesis.SetHashMerkleRoot(genesis.BuildMerkleTree());
+		genesis.SetHashPos(uint256());
+		genesis.SetVersion(1);
+		genesis.SetTime(1436538491);
+		genesis.SetBits(0x1f3fffff);        //00 3f ff
+		genesis.SetNonce(888);
+		genesis.SetFuelRate(INIT_FUEL_RATES);
+		genesis.SetHeight(0);
+		genesis.ClearSignature();
 		hashGenesisBlock = genesis.GetHash();
-		publicKey = "022570ffc7887fd8b9451c4082134b3a455969346fa2e98634b86d5f53052e5d8c";
+		publicKey = "02d99681b6287b3765dfbb930e6caa10d1f8ac19e02b88f52362ce6eb43c0ec71e";
 //		{
-//			CBigNum bnTarget;
-//			bnTarget.SetCompact(genesis.nBits);
-//			cout << "main bnTarget:" << bnTarget.getuint256().GetHex() << endl;
 //			cout << "main hashGenesisBlock:\r\n" << hashGenesisBlock.ToString() << endl;
 //			cout << "main hashMerkleRoot:\r\n" << genesis.hashMerkleRoot.ToString() << endl;
 //		}
-//        cout << "hashGenesisBlock:" << HexStr(hashGenesisBlock) << endl;
-//        cout << "hashMerkleRoot:" << genesis.hashMerkleRoot.GetHex() << endl;
-//		assert(hashGenesisBlock == uint256("0x0d48e88dca01697d10e0fe8f1981f94db1f5e525d5a0e0acf22919af23daed60"));
-//		assert(genesis.hashMerkleRoot == uint256("04b173fc873505d69f5f2a86aa8d7207abe7e0ffa63d786ff230f4a946f5a8255"));
+		assert(hashGenesisBlock == uint256S("0xd9ffedf0475c7734e1ea1a7aa1a05361825e77869371962ee6a3ec515e2e2c3d"));
+		assert(genesis.GetHashMerkleRoot() == uint256S("0x362155f5bb005be0523c7247cf1b901bd6f3567d105bd5defca28d221c90d1ef"));
 
 //      vSeeds.push_back(CDNSSeedData("soypay.org.cn", "seed_cn_0.dspay.org"));
 //      vSeeds.push_back(CDNSSeedData("soypay.org.us", "seed_us_0.dspay.org"));
 
-//		base58Prefixes[PUBKEY_ADDRESS] = {0};
         base58Prefixes[PUBKEY_ADDRESS] = {0x1f};
 		base58Prefixes[SCRIPT_ADDRESS] = {5};
 		base58Prefixes[SECRET_KEY] = {128};
@@ -225,6 +203,10 @@ public:
 	virtual const vector<CAddress>& FixedSeeds() const {
 		return vFixedSeeds;
 	}
+	virtual bool IsInFixedSeeds(CAddress &addr) {
+		vector<CAddress>::iterator iterAddr = find(vFixedSeeds.begin(), vFixedSeeds.end(), addr);
+		return iterAddr != vFixedSeeds.end();
+	}
 
 protected:
 	CBlock genesis;
@@ -245,25 +227,25 @@ public:
         pchMessageStart[1] = 0x2d;
         pchMessageStart[2] = 0x1c;
         pchMessageStart[3] = 0x0d;
-		vAlertPubKey =
-				ParseHex(
-						"04302390343f91cc401d56d68b123028bf52e5fca1939df127f63c646"
-						"7cdf9c8e2c14b61104cf817d0b780da337893ecc4aaff1309e536162d"
-						"abbdb45200ca2b0a");
+		vAlertPubKey =	ParseHex("036e15523feb9e329b4fdf53c227fc89ea45a1a36342e7e38fad7fe6e3777243af");
 		nDefaultPort = 18668;
 		nRPCPort = 18669;
 		strDataDir = "testnet";
 		publicKey = "036e15523feb9e329b4fdf53c227fc89ea45a1a36342e7e38fad7fe6e3777243af";
 		// Modify the testnet genesis block so the timestamp is valid for a later start.
-		genesis.nTime = 1296688602;
-		genesis.nNonce = 888;
+		genesis.SetTime(1436598023);
+		genesis.SetNonce(888);
 		genesis.vptx.clear();
 		assert(CreateGenesisRewardTx(genesis.vptx, initPubKey_testNet));
-		genesis.hashMerkleRoot = genesis.BuildMerkleTree();
+		genesis.SetHashMerkleRoot(genesis.BuildMerkleTree());
 		hashGenesisBlock = genesis.GetHash();
 		for(auto & item : vFixedSeeds)
 			item.SetPort(GetDefaultPort());
 
+//		{
+//			cout << "testnet hashGenesisBlock:\r\n" << hashGenesisBlock.ToString() << endl;
+//		}
+		assert(hashGenesisBlock == uint256S("0xc6f81a98e9de1ac7da65a8b2bbd937f1d49aaedc7f8f2f0517c13f099df1ed49"));
 //		vSeeds.clear();
 //		vSeeds.push_back(CDNSSeedData("Dacrs.petertodd.org", "testnet-seed.Dacrs.petertodd.org"));
 //		vSeeds.push_back(CDNSSeedData("bluematt.me", "testnet-seed.bluematt.me"));
@@ -300,13 +282,13 @@ public:
 		pchMessageStart[2] = 0x2d;
 		pchMessageStart[3] = 0x3d;
 		nSubsidyHalvingInterval = 150;
-		bnProofOfStakeLimit = CBigNum(~uint256(0) >> 6);        //target:00000011 11111111 11111111
-		genesis.nTime = 1421808634;
-		genesis.nBits = 0x2003ffff;
-		genesis.nNonce = 888;
+		bnProofOfStakeLimit = ~arith_uint256(0) >> 6;     //target:00000011 11111111 11111111
+		genesis.SetTime(1421808634);
+		genesis.SetBits(0x2003ffff);
+		genesis.SetNonce(888);
 		genesis.vptx.clear();
 		assert(CreateGenesisRewardTx(genesis.vptx, initPubkey_regTest));
-		genesis.hashMerkleRoot = genesis.BuildMerkleTree();
+		genesis.SetHashMerkleRoot(genesis.BuildMerkleTree());
 		hashGenesisBlock = genesis.GetHash();
 		nDefaultPort = 18666;
 		nTargetSpacing = 20;
@@ -319,7 +301,7 @@ public:
 //			cout << "regtest hashGenesisBlock:\r\n" << hashGenesisBlock.ToString() << endl;
 //			cout << "regtest hashMerkleRoot:\r\n" << genesis.hashMerkleRoot.ToString() << endl;
 //		}
-//		assert(hashGenesisBlock == uint256("0x891b4240b4005d26af25c634dcc886e5d3aaefb06da860e2a0ffc0132bd9df5a"));
+		assert(hashGenesisBlock == uint256S("0x18d876339c5014803507332d0ae509862b4da382253b7696605e58963592723f"));
 
 		vFixedSeeds.clear();
 		vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
@@ -442,7 +424,7 @@ bool CBaseParams::IsArgCount(const string& strArg) {
 	return false;
 }
 
-const CBaseParams &SysCfg() {
+CBaseParams &SysCfg() {
 	static shared_ptr<CBaseParams> pParams;
 
 	if (pParams.get() == NULL) {
@@ -450,7 +432,7 @@ const CBaseParams &SysCfg() {
 		bool fTestNet = CBaseParams::GetBoolArg("-testnet", false);
 		if (fTestNet && fRegTest) {
 			fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
-			assert(0);
+//			assert(0);
 		}
 
 		if (fRegTest) {
@@ -556,9 +538,10 @@ bool CBaseParams::CreateGenesisRewardTx(vector<std::shared_ptr<CBaseTransaction>
 	for (int i = 0; i < length; ++i) {
 		int64_t money(0);
 		if( i > 0) {
-			money = 10000000 * COIN;
+			money = 1000000000 * COIN;
 		}
 		shared_ptr<CRewardTransaction> pRewardTx = make_shared<CRewardTransaction>(ParseHex(vInitPubKey[i].c_str()), money, 0);
+		pRewardTx->nVersion = nTxVersion1;
 		if (pRewardTx.get())
 			vRewardTx.push_back(pRewardTx);
 		else
@@ -598,15 +581,15 @@ CBaseParams::CBaseParams() {
 	fBenchmark = false;
 	fTxIndex = false;
 	nIntervalPos = 1;
+	nLogmaxsize = 100 * 1024 * 1024;//100M
 	nTxCacheHeight = 500;
 	nTimeBestReceived = 0;
 	nScriptCheckThreads = 0;
 	nViewCacheSize = 2000000;
 	nTargetSpacing = 60;
 	nTargetTimespan = 30 * 60;
-	nMaxCoinDay = 30 * 24 * 60 * 60;
 	nSubsidyHalvingInterval = 0;
-	paytxfee = 1000;
+	paytxfee = 10000;
 	nDefaultPort = 0;
 	fPrintToConsole= 0;
 	fPrintToToFile = 0;
@@ -617,6 +600,7 @@ CBaseParams::CBaseParams() {
 	fServer = 0 ;
 	fServer = 0;
 	nRPCPort = 0;
+	bOutPut = false;
 
 
 }

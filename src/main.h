@@ -18,7 +18,7 @@
 #include "txmempool.h"
 #include "uint256.h"
 #include "database.h"
-
+#include "arith_uint256.h"
 
 #include <algorithm>
 #include <exception>
@@ -103,7 +103,14 @@ extern const string strMessageMagic;
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;
 
-
+static const int nBurnRateForkHeight = 45000;    //修改燃烧费率算法
+static const int nTwelveForwardLimits = 28000;   //修改限制block时间不能超过本地时间12分钟
+static const int nFixedDifficulty = 35001;    //此高度前的block不检查难度，通过checkpoint保证
+static const int nNextWorkRequired = 85000;      //修改难度校验算法
+static const int nFreezeBlackAcctHeight = 99854;
+static const int nLimiteAppHeight = 189000;
+static const int nUpdateTxVersion2Height = 196000;  //主链在此高度后不再接受交易版本为nTxVersion1的交易
+static const int nUpdateBlockVersionHeight = 209000;   //主链在此高度后，block版本升级
 class CCoinsDB;
 class CBlockTreeDB;
 struct CDiskBlockPos;
@@ -125,7 +132,8 @@ void UnregisterWallet(CWalletInterface* pwalletIn);
 void UnregisterAllWallets();
 /** Push an updated transaction to all registered wallets */
 void SyncWithWallets(const uint256 &hash, CBaseTransaction *pBaseTx, const CBlock* pblock = NULL);
-
+/** Erase Tx from wallets **/
+void EraseTransaction(const uint256 &hash);
 /** Register with a network node to receive its signals */
 void RegisterNodeSignals(CNodeSignals& nodeSignals);
 /** Unregister a network node */
@@ -179,6 +187,9 @@ bool ActivateBestChain(CValidationState &state);
 int64_t GetBlockValue(int nHeight, int64_t nFees);
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
 
+/*calutate difficulty */
+double CaculateDifficulty(unsigned int nBits);
+
 /** receive checkpoint check make active chain accord to the checkpoint **/
 bool CheckActiveChain(int nHeight,  uint256 hash);
 
@@ -194,11 +205,11 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
 /** Increase a node's misbehavior score. */
 void Misbehaving(NodeId nodeid, int howmuch);
 
-bool CheckSignScript(const uint256 & sigHash, const std::vector<unsigned char> signatrue, const CPubKey pubKey);
+bool CheckSignScript(const uint256 & sigHash, const std::vector<unsigned char> signature, const CPubKey pubKey);
 
 /** (try to) add transaction to memory pool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransaction *pBaseTx,
-		  bool fLimitFree,bool *pfMissingRefer, bool fRejectInsaneFee=false);
+		  bool fLimitFree, bool fRejectInsaneFee=false);
 
 /** get transaction relate keyid **/
 
@@ -398,7 +409,7 @@ public:
 
     void Init()
     {
-        hashBlock = 0;
+        hashBlock = uint256();
         nIndex = -1;
         fMerkleVerified = false;
     }
@@ -626,16 +637,16 @@ enum BlockStatus {
     BLOCK_VALID_TREE         =    2, // parent found, difficulty matches, timestamp >= median previous, checkpoint
     BLOCK_VALID_TRANSACTIONS =    3, // only first tx is coinbase, 2 <= coinbase input script length <= 100, transactions valid, no duplicate txids, sigops, size, merkle root
     BLOCK_VALID_CHAIN        =    4, // outputs do not overspend inputs, no double spends, coinbase output ok, immature coinbase spends, BIP30
-    BLOCK_VALID_SCRIPTS      =    5, // scripts/signatures ok
-    BLOCK_VALID_MASK         =    7,
+    BLOCK_VALID_SCRIPTS      =    5, // scripts/signatures ok                      0000 0101
+    BLOCK_VALID_MASK         =    7, //                                            0000 0111
 
-    BLOCK_HAVE_DATA          =    8, // full block available in blk*.dat
-    BLOCK_HAVE_UNDO          =   16, // undo data available in rev*.dat
-    BLOCK_HAVE_MASK          =   24,
+    BLOCK_HAVE_DATA          =    8, // full block available in blk*.dat           0000 1000
+    BLOCK_HAVE_UNDO          =   16, // undo data available in rev*.dat            0001 0000
+    BLOCK_HAVE_MASK          =   24, //                                            0001 1000
 
-    BLOCK_FAILED_VALID       =   32, // stage after last reached validness failed
-    BLOCK_FAILED_CHILD       =   64, // descends from failed block
-    BLOCK_FAILED_MASK        =   96
+    BLOCK_FAILED_VALID       =   32, // stage after last reached validness failed  0010 0000
+    BLOCK_FAILED_CHILD       =   64, // descends from failed block                 0100 0000
+    BLOCK_FAILED_MASK        =   96  //                                            0110 0000
 };
 
 /** The block chain is a tree shaped structure starting with the
@@ -665,7 +676,7 @@ public:
     unsigned int nUndoPos;
 
     // (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
-    uint256 nChainWork;
+    arith_uint256 nChainWork;
 
     // Number of transactions in this block.
     // Note: in a potential headers-first mode, this number cannot be relied upon
@@ -712,8 +723,8 @@ public:
         nblockfee = 0; //add the block's fee
 
         nVersion       = 0;
-        hashMerkleRoot = 0;
-        hashPos        = 0;
+        hashMerkleRoot = uint256();
+        hashPos        = uint256();
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
@@ -742,17 +753,17 @@ public:
         	nTxSize += pTx->GetSerializeSize(SER_DISK, PROTOCOL_VERSION);
         }
 
-		dFeePerKb = double((nblockfee - block.nFuel)) / (double(nTxSize / 1000.0));
+		dFeePerKb = double((nblockfee - block.GetFuel())) / (double(nTxSize / 1000.0));
 
-        nVersion       = block.nVersion;
-        hashMerkleRoot = block.hashMerkleRoot;
-        hashPos        = block.hashPos;
-        nTime          = block.nTime;
-        nBits          = block.nBits;
-        nNonce         = block.nNonce;
-        nFuel          = block.nFuel;
-        nFuelRate      = block.nFuelRate;
-        vSignature     = block.vSignature;
+        nVersion       = block.GetVersion();
+        hashMerkleRoot = block.GetHashMerkleRoot();
+        hashPos        = block.GetHashPos();
+        nTime          = block.GetTime();
+        nBits          = block.GetBits();
+        nNonce         = block.GetNonce();
+        nFuel          = block.GetFuel();
+        nFuelRate      = block.GetFuelRate();
+        vSignature     = block.GetSignature();
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -776,16 +787,16 @@ public:
     CBlockHeader GetBlockHeader() const
     {
         CBlockHeader block;
-        block.nVersion       = nVersion;
+        block.SetVersion(nVersion);
         if (pprev)
-            block.hashPrevBlock = pprev->GetBlockHash();
-        block.hashMerkleRoot = hashMerkleRoot;
-        block.hashPos        = hashPos;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
-        block.nHeight        = nHeight;
-        block.vSignature     = vSignature;
+        	block.SetHashPrevBlock(pprev->GetBlockHash());
+        block.SetHashMerkleRoot(hashMerkleRoot);
+        block.SetHashPos(hashPos);
+        block.SetTime(nTime);
+        block.SetBits(nBits);
+        block.SetNonce(nNonce);
+        block.SetHeight(nHeight);
+        block.SetSignature(vSignature);
         return block;
     }
 
@@ -861,12 +872,10 @@ class CDiskBlockIndex : public CBlockIndex
 public:
     uint256 hashPrev;
 
-    CDiskBlockIndex() {
-        hashPrev = 0;
-    }
+    CDiskBlockIndex() :hashPrev (uint256()) {}
 
     explicit CDiskBlockIndex(CBlockIndex* pindex) : CBlockIndex(*pindex) {
-        hashPrev = (pprev ? pprev->GetBlockHash() : 0);
+        hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
     }
 
     IMPLEMENT_SERIALIZE
@@ -902,17 +911,17 @@ public:
     uint256 GetBlockHash() const
     {
         CBlockHeader block;
-        block.nVersion        = nVersion;
-        block.hashPrevBlock   = hashPrev;
-        block.hashMerkleRoot  = hashMerkleRoot;
-        block.hashPos         = hashPos;
-        block.nTime           = nTime;
-        block.nBits           = nBits;
-        block.nNonce          = nNonce;
-        block.nHeight         = nHeight;
-        block.nFuel           = nFuel;
-        block.nFuelRate       = nFuelRate;
-        block.vSignature      = vSignature;
+        block.SetVersion(nVersion);
+        block.SetHashPrevBlock(hashPrev);
+        block.SetHashMerkleRoot(hashMerkleRoot);
+        block.SetHashPos(hashPos);
+        block.SetTime(nTime);
+        block.SetBits(nBits);
+        block.SetNonce(nNonce);
+        block.SetHeight(nHeight);
+        block.SetFuel(nFuel);
+        block.SetFuelRate(nFuelRate);
+        block.SetSignature(vSignature);
         return block.GetHash();
     }
 
@@ -1062,25 +1071,27 @@ extern CChain chainMostWork;
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern CBlockTreeDB *pblocktree;
 
-/** account db */
+/** account db cache*/
 extern CAccountViewCache *pAccountViewTip;
 
-/** transaction cache db */
+/** account db */
+extern CAccountViewDB *pAccountViewDB;
+
+/** transaction db cache*/
 extern CTransactionDB *pTxCacheDB;
 
 /** srcipt db */
 extern CScriptDB *pScriptDB;
 
-/** tx cache */
+/** tx db cache */
 extern CTransactionDBCache *pTxCacheTip;
 
-/** contract script data cache */
+/** contract script db cache */
 extern CScriptDBViewCache *pScriptDBTip;
 
 /** nSyncTipHight  */
 extern int g_nSyncTipHeight;
-extern int g_firstForkHeigh;
-extern int g_secondForkHeigh;
+
 extern std::tuple<bool, boost::thread*> RunDacrs(int argc, char* argv[]);
 extern bool WriteBlockLog(bool falg, string suffix);
 //extern set<uint256> setTxHashCache;
@@ -1131,7 +1142,7 @@ public:
 class CWalletInterface {
 protected:
     virtual void SyncTransaction(const uint256 &hash, CBaseTransaction *pBaseTx, const CBlock *pblock) =0;
-//    virtual void EraseFromWallet(const uint256 &hash) =0;
+    virtual void EraseFromWallet(const uint256 &hash) =0;
     virtual void SetBestChain(const CBlockLocator &locator) =0;
     virtual void UpdatedTransaction(const uint256 &hash) =0;
 //    virtual void Inventory(const uint256 &hash) =0;

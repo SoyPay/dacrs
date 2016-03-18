@@ -215,7 +215,6 @@ void CWallet::SetBestChain(const CBlockLocator& loc) {
 
 }
 
-
 void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const CBlock* pblock) {
 	static std::shared_ptr<vector<string> > monitoring_appid = NULL;
 	if(monitoring_appid == NULL)
@@ -227,7 +226,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 
 	assert(pTx != NULL || pblock != NULL);
 
-	if(hash == 0 && pTx == NULL) //this is block Sync
+	if(hash.IsNull() && pTx == NULL) //this is block Sync
 	{
 		uint256 blockhash = pblock->GetHash();
 		auto GenesisBlockProgress = [&]() {
@@ -245,7 +244,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 		};
 
 		auto ConnectBlockProgress = [&]() {
-			CAccountTx newtx(this, blockhash,pblock->nHeight);
+			CAccountTx newtx(this, blockhash,pblock->GetHeight());
 			int i=0;
 			for (const auto &sptx : pblock->vptx) {
 				uint256 hashtx = sptx->GetHash();
@@ -284,9 +283,8 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 			}
 		};
 		auto DisConnectBlockProgress = [&]() {
-//			CAccountTx Oldtx(this, blockhash);
 			int i = 0 ;
-			int index = pblock->nHeight;
+			int index = pblock->GetHeight();
 			for (const auto &sptx : pblock->vptx) {
 				if(sptx->IsCoinBase()){
 					continue;
@@ -325,16 +323,18 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 
 }
 
-//void CWallet::EraseFromWallet(const uint256 &hash) {
-//	if (!fFileBacked)
-//		return;
-//	{
-//		LOCK(cs_wallet);
-//		if (mapWalletTx.erase(hash))
-//			db.EraseAccountTx(hash);
-//	}
-//	return;
-//}
+void CWallet::EraseFromWallet(const uint256 &hash) {
+	if (!fFileBacked)
+		return;
+	{
+		LOCK(cs_wallet);
+		if(UnConfirmTx.count(hash)) {
+			UnConfirmTx.erase(hash);
+			CWalletDB(strWalletFile).EraseUnComFirmedTx(hash);
+		}
+	}
+	return;
+}
 // Scan the block chain (starting in pindexStart) for transactions
 // from or to us. If fUpdate is true, found transactions that already
 // exist in the wallet will be updated.
@@ -402,7 +402,9 @@ void CWallet::ResendWalletTransactions() {
 	}
 	for (auto const & tee : erase) {
 		CWalletDB(strWalletFile).EraseUnComFirmedTx(tee);
+		uiInterface.RemoveTransaction(tee);
 		UnConfirmTx.erase(tee);
+
 	}
 }
 
@@ -434,17 +436,19 @@ DBErrors CWallet::LoadWallet(bool fFirstRunRet) {
 }
 
 
-int64_t CWallet::GetRawBalance() const
+int64_t CWallet::GetRawBalance(bool IsConfirmed) const
 {
 	int64_t ret = 0;
-	CAccountViewCache accView(*pAccountViewTip, true);
 	{
 		LOCK2(cs_main, cs_wallet);
 		set<CKeyID> setKeyId;
 		GetKeys(setKeyId);
 		for(auto &keyId :setKeyId)
 		{
-			ret +=accView.GetRawBalance(keyId);
+			if(!IsConfirmed)
+				ret += mempool.pAccountViewCache->GetRawBalance(keyId);
+			else
+				ret += pAccountViewTip->GetRawBalance(keyId);
 		}
 	}
 	return ret;
@@ -682,7 +686,7 @@ CWallet* CWallet::getinstance() {
 	{
 		return new CWallet(strWalletFile);
 	}
-	assert(0);
+//	assert(0);
 	return NULL;
 
 }
@@ -721,39 +725,6 @@ uint256 CWallet::GetCheckSum() const {
 	return ss.GetHash();
 }
 
-//bool CWallet::GetKey(const CUserID& userid, CKey& keyOut,bool IsMiner) const{
-//	AssertLockHeld(cs_wallet);
-//	CAccountViewCache dumy(*pAccountViewTip,true);
-//	CKeyID keyid;
-//	if (dumy.GetKeyId(userid, keyid)) {
-//		if (mKeyPool.count(keyid)) {
-//			auto tep = mKeyPool.find(keyid);
-//			if (tep != mKeyPool.end())
-//				return tep->second.getCKey(keyOut, IsMiner);
-//		}
-//	}
-//	return false;
-//}
-
-//bool CWallet::GetKey(const CKeyID& keyid, CKey& secretKey, bool IsMiner) const {
-//	AssertLockHeld(cs_wallet);
-//	if (mKeyPool.count(keyid)) {
-//		auto tep = mKeyPool.find(keyid);
-//		if(tep != mKeyPool.end())
-//		return tep->second.getCKey(secretKey,IsMiner);
-//	}
-//	return false;
-//}
-
-//bool CWallet::GetPubKey(const CKeyID& keyid, CPubKey& secretKey, bool IsMiner) {
-//	AssertLockHeld(cs_wallet);
-//	if (mKeyPool.count(keyid)) {
-//		return mKeyPool[keyid].GetPubKey(secretKey,IsMiner);
-//	}
-//	return false;
-//
-//}
-
 bool CWallet::IsMine(CBaseTransaction* pTx) const{
 
 	set<CKeyID> vaddr;
@@ -769,21 +740,6 @@ bool CWallet::IsMine(CBaseTransaction* pTx) const{
 	}
 	return false;
 }
-
-//bool CWallet::GetKeyIds(set<CKeyID>& setKeyID,bool IsMiner) const {
-//	AssertLockHeld(cs_wallet);
-//	setKeyID.clear();
-//	CRegID dummy;
-//	for (auto const & tem : mKeyPool) {
-//		if (IsMiner == false) {
-//			setKeyID.insert(tem.first);
-//		} else if (pAccountViewTip->GetRegId(CUserID(tem.first),dummy)) {			//only the reged key is useful fo miner
-//			if(tem.second.IsContainMinerKey()||tem.second.IsContainMainKey())
-//			setKeyID.insert(tem.first);
-//		}
-//	}
-//	return setKeyID.size() > 0;
-//}
 
 bool CWallet::CleanAll() {
 
@@ -815,12 +771,11 @@ bool CWallet::CleanAll() {
 bool CWallet::Sign(const CKeyID& keyId, const uint256& hash, vector<unsigned char> &signature,bool IsMiner)const {
 	CKey key;
 	if(GetKey(keyId, key, IsMiner)){
-//		if(IsMiner == true)
-//		{
-//			cout <<"Sign miner key PubKey"<< key.GetPubKey().ToString()<< endl;
-//			cout <<"Sign miner hash"<< hash.ToString()<< endl;
-//			cout <<"Sign user Id" << boost::get<CKeyID>(Userid).ToString() << endl;
-//		}
+		if(IsMiner == true)
+		{
+//			cout <<"Sign miner key PubKey:"<< key.GetPubKey().ToString()<< endl;
+//			cout <<"Sign miner hash:"<< hash.ToString()<< endl;
+		}
 		return(key.Sign(hash, signature));
 	}
 	return false;
@@ -846,26 +801,35 @@ bool CWallet::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigne
 {
 	return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret);
 }
-bool CWallet::AddKey(const CKey& secret,const CKey& minerKey)
+bool CWallet::AddKey(const CKey& key,const CKey& minerKey)
 {
-	CKeyCombi keyCombi(secret, minerKey, nWalletVersion);
-	return AddKey(keyCombi);
+	if((!key.IsValid()) || (!minerKey.IsValid()))
+		return false;
+	CKeyCombi keyCombi(key, minerKey, nWalletVersion);
+	return AddKey(key.GetPubKey().GetKeyID(), keyCombi);
 }
-bool CWallet::AddKey(const CKeyCombi& keyCombi)
+bool CWallet::AddKey(const CKeyID &KeyId, const CKeyCombi& keyCombi)
 {
-	CCryptoKeyStore::AddKeyCombi(keyCombi.GetCKeyID(), keyCombi);
 	if (!fFileBacked)
-	      return true;
-	if (!IsCrypted()) {
-	     return CWalletDB(strWalletFile).WriteKeyStoreValue(keyCombi.GetCKeyID(), keyCombi, nWalletVersion);
+		return true;
+
+	if(keyCombi.IsContainMainKey()) {
+		if(KeyId != keyCombi.GetCKeyID())
+			return false;
 	}
-	return true;
+
+	if(!CWalletDB(strWalletFile).WriteKeyStoreValue(KeyId, keyCombi, nWalletVersion)) {
+		return false;
+	}
+	return CCryptoKeyStore::AddKeyCombi(KeyId, keyCombi);
 }
 
 bool CWallet::AddKey(const CKey& key)
 {
+	if(!key.IsValid())
+		return false;
 	CKeyCombi keyCombi(key, nWalletVersion);
-	return AddKey(keyCombi);
+	return AddKey(key.GetPubKey().GetKeyID(), keyCombi);
 }
 
 

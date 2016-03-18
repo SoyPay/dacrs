@@ -9,7 +9,6 @@
 #include <vector>
 #include <string>
 #include <boost/variant.hpp>
-#include "tx.h"
 #include "chainparams.h"
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_value.h"
@@ -28,6 +27,8 @@ class CRegID;
 class CID;
 class CAccountLog;
 
+static const int nTxVersion1 = 1;    //交易初始版本。
+static const int nTxVersion2 = 2;    //交易版本升级后，其签名hash和交易hash算法升级为新的算法。
 
 typedef vector<unsigned char> vector_unsigned_char;
 
@@ -70,7 +71,7 @@ public:
 };
 
 typedef boost::variant<CNullID, CRegID, CKeyID, CPubKey> CUserID;
-
+/*CRegID 是地址激活后，分配的账户ID*/
 class CRegID {
 private:
 	uint32_t nHeight;
@@ -117,7 +118,7 @@ public:
 	)
 
 };
-
+/*CID是一个vector 存放CRegID,CKeyID,CPubKey*/
 class CID {
 private:
 	vector_unsigned_char vchData;
@@ -165,15 +166,17 @@ public:
 };
 
 class CBaseTransaction {
+protected:
+	static string txTypeArray[6];
 public:
 	static uint64_t nMinTxFee;
 	static int64_t nMinRelayTxFee;
-	static const int CURRENT_VERSION = 1;
+	static const int CURRENT_VERSION = nTxVersion2;
 
 	unsigned char nTxType;
 	int nVersion;
 	int nValidHeight;
-	uint64_t nRunStep;
+	uint64_t nRunStep;  //only in memory
 	int nFuelRate;      //only in memory
 public:
 
@@ -213,6 +216,8 @@ public:
 	virtual std::shared_ptr<CBaseTransaction> GetNewInstance() = 0;
 
 	virtual string ToString(CAccountViewCache &view) const = 0;
+
+	virtual Object ToJSON(const CAccountViewCache &AccountView) const = 0;
 
 	virtual bool GetAddress(std::set<CKeyID> &vAddr, CAccountViewCache &view, CScriptDBViewCache &scriptDB) = 0;
 
@@ -286,21 +291,13 @@ public:
 		return llFees;
 	}
 
-	uint256 GetHash() const {
-		return std::move(SerializeHash(*this));
-	}
+	uint256 GetHash() const;
 
 	double GetPriority() const {
 		return llFees / GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
 	}
 
-	uint256 SignatureHash() const {
-		CHashWriter ss(SER_GETHASH, 0);
-		CID id(userId);
-		CID id2(minerId);
-		ss << VARINT(nVersion) << nTxType << id << id2 << VARINT(llFees) << VARINT(nValidHeight);
-		return ss.GetHash();
-	}
+	uint256 SignatureHash() const;
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
 		return make_shared<CRegisterAccountTx>(this);
@@ -309,6 +306,8 @@ public:
 	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view, CScriptDBViewCache &scriptDB);
 
 	string ToString(CAccountViewCache &view) const;
+
+	Object ToJSON(const CAccountViewCache &AccountView) const;
 
 	bool ExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
 			CTransactionDBCache &txCache, CScriptDBViewCache &scriptDB);
@@ -335,6 +334,12 @@ public:
 	}
 	CTransaction(const CUserID& in_UserRegId, CUserID in_desUserId, uint64_t Fee, uint64_t Value, int high, vector_unsigned_char& pContract)
 	{
+		if (in_UserRegId.type() == typeid(CRegID)) {
+			assert(!boost::get<CRegID>(in_UserRegId).IsEmpty());
+		}
+		if (in_desUserId.type() == typeid(CRegID)) {
+			assert(!boost::get<CRegID>(in_desUserId).IsEmpty());
+		}
 		nTxType = CONTRACT_TX;
 		srcRegId = in_UserRegId;
 		desUserId = in_desUserId;
@@ -347,6 +352,12 @@ public:
 	CTransaction(const CUserID& in_UserRegId, CUserID in_desUserId, uint64_t Fee, uint64_t Value, int high)
 	{
 		nTxType = COMMON_TX;
+		if (in_UserRegId.type() == typeid(CRegID)) {
+			assert(!boost::get<CRegID>(in_UserRegId).IsEmpty());
+		}
+		if (in_desUserId.type() == typeid(CRegID)) {
+			assert(!boost::get<CRegID>(in_desUserId).IsEmpty());
+		}
 		srcRegId = in_UserRegId;
 		desUserId = in_desUserId;
 		nValidHeight = high;
@@ -386,9 +397,7 @@ public:
 			}
 	)
 
-	uint256 GetHash() const {
-		return SerializeHash(*this);
-	}
+	uint256 GetHash() const;
 
 	uint64_t GetFee() const {
 		return llFees;
@@ -405,6 +414,8 @@ public:
 	}
 
 	string ToString(CAccountViewCache &view) const;
+
+	Object ToJSON(const CAccountViewCache &AccountView) const;
 
 	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view, CScriptDBViewCache &scriptDB);
 
@@ -464,20 +475,13 @@ public:
 		READWRITE(VARINT(nHeight));
 	)
 
-	uint256 GetHash() const {
-		return std::move(SerializeHash(*this));
-	}
+	uint256 GetHash() const;
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
 		return make_shared<CRewardTransaction>(this);
 	}
 
-	uint256 SignatureHash() const {
-		CHashWriter ss(SER_GETHASH, 0);
-		CID accId(account);
-		ss <<VARINT(nVersion) << nTxType<< accId << VARINT(rewardValue);
-		return ss.GetHash();
-	}
+	uint256 SignatureHash() const;
 
 	uint64_t GetFee() const {
 		return 0;
@@ -488,6 +492,8 @@ public:
 	}
 
 	string ToString(CAccountViewCache &view) const;
+
+	Object ToJSON(const CAccountViewCache &AccountView) const;
 
 	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view, CScriptDBViewCache &scriptDB);
 
@@ -534,20 +540,13 @@ public:
 		READWRITE(signature);
 	)
 
-	uint256 GetHash() const {
-		return std::move(SerializeHash(*this));
-	}
+	uint256 GetHash() const;
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
 		return make_shared<CRegisterAppTx>(this);
 	}
 
-	uint256 SignatureHash() const {
-		CHashWriter ss(SER_GETHASH, 0);
-		CID regAccId(regAcctId);
-		ss << regAccId << script << VARINT(llFees) << VARINT(nValidHeight);
-		return ss.GetHash();
-	}
+	uint256 SignatureHash() const;
 
 	uint64_t GetFee() const {
 		return llFees;
@@ -558,6 +557,8 @@ public:
 	}
 
 	string ToString(CAccountViewCache &view) const;
+
+	Object ToJSON(const CAccountViewCache &AccountView) const;
 
 	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view, CScriptDBViewCache &scriptDB);
 
@@ -714,7 +715,7 @@ public:
 public:
 	bool GetAccountOperLog(const CKeyID &keyId, CAccountLog &accountLog);
 	void Clear() {
-		txHash = 0;
+		txHash = uint256();
 		vAccountLog.clear();
 		vScriptOperLog.clear();
 	}
@@ -752,7 +753,7 @@ public:
 		regID.clean();
 		nCoinDay = 0;
 	}
-	CAccount() :keyID(uint160(0)), llValues(0) {
+	CAccount() :keyID(uint160()), llValues(0) {
 		PublicKey = CPubKey();
 		MinerPKey =  CPubKey();
 		nHeight = 0;
@@ -785,7 +786,7 @@ public:
 	}
 
 	bool IsMiner(int nCurHeight) {
-		if(nCurHeight < SysCfg().GetIntervalPos())
+		if(nCurHeight < 2*SysCfg().GetIntervalPos())
 			return true;
 		return nCoinDay >= llValues * SysCfg().GetIntervalPos();
 
@@ -803,6 +804,7 @@ public:
 	bool IsEmptyValue() const {
 		return !(llValues > 0);
 	}
+	bool IsBlackAccount() const;
 	uint256 GetHash(){
 		CHashWriter ss(SER_GETHASH, 0);
 		ss << regID << keyID << PublicKey << MinerPKey << VARINT(llValues)
@@ -810,8 +812,9 @@ public:
 		return ss.GetHash();
 	}
 	uint64_t GetMaxCoinDay(int nCurHeight) {
-		return llValues * SysCfg().GetIntervalPos() * 30;
+		return llValues * SysCfg().GetMaxDay();
 	}
+
 	bool UpDateCoinDay(int nCurHeight);
 	IMPLEMENT_SERIALIZE
 	(
@@ -827,6 +830,7 @@ public:
 private:
 	bool IsMoneyOverflow(uint64_t nAddMoney);
 };
+
 
 class CAccountLog {
 public:
@@ -856,7 +860,7 @@ public:
 		nCoinDay = 0;
 	}
 	CAccountLog() {
-		keyID = uint160(0);
+		keyID = uint160();
 		llValues = 0;
 		nHeight = 0;
 		nCoinDay = 0;
@@ -930,6 +934,5 @@ void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, i
 
 
 
-extern string txTypeArray[];
 
 #endif

@@ -23,11 +23,9 @@ public:
 	Object toJSON()const;
 	string toString()const;
 
-
 	const vector<unsigned char> GetTag() const {
 		return vTag;
 	}
-
 
 	int getheight() const {
 		return nHeight;
@@ -45,9 +43,9 @@ public:
 		this->value = value;
 	}
 
-	const vector<unsigned char>& gettag() const {
-		return vTag;
-	}
+//	const vector<unsigned char>& gettag() const {
+//		return vTag;
+//	}
 
 	void setTag(const vector<unsigned char>& tag) {
 		vTag = tag;
@@ -60,8 +58,6 @@ public:
 		READWRITE(VARINT(nHeight));
 		READWRITE(vTag);
 	)
-
-
 
 private:
 	uint64_t value;					//!< amount of money
@@ -81,8 +77,6 @@ class CAppFundOperate {
 public:
 	CAppFundOperate();
 
-
-
 	unsigned char opeatortype;		//!OperType
 	unsigned int outheight;		    //!< the transacion Timeout height
 	int64_t mMoney;			        //!<The transfer amount
@@ -101,11 +95,9 @@ public:
 		memcpy(&vFundTag[0],&FundTag[0],FundTag.size());
 		mMoney = money;
 		outheight = timeout;
+		assert((opType >= ADD_FREE_OP) && (opType <= SUB_TAG_OP));
 		opeatortype = opType;
 	}
-
-
-
 
 	IMPLEMENT_SERIALIZE
 	(
@@ -119,13 +111,8 @@ public:
 		for(unsigned int i = 0;i < sizeof(vFundTag);++i)
 		READWRITE(vFundTag[i]);
 	)
-
-
-
-
 	Object toJSON()const;
 	string toString()const;
-
 
 	uint64_t GetUint64Value() const {
 		return mMoney;
@@ -142,17 +129,20 @@ public:
 		return (tag);
 	}
 
-
-
-
-
-
 	unsigned char getopeatortype() const {
 		return opeatortype;
 	}
 
-	void setOpeatortype(unsigned char opeatortype) {
-		this->opeatortype = opeatortype;
+	bool setOpeatortype(unsigned char opeatortype) {
+		if((opeatortype >= ADD_FREE_OP) && (opeatortype <= SUB_TAG_OP))
+		{
+			this->opeatortype = opeatortype;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	unsigned int getoutheight() const {
@@ -200,26 +190,16 @@ public:
 		READWRITE(vFreezedFund);
 	)
 
-
 private:
-
-
 	bool MinusAppCFund(const vector<unsigned char> &vtag,uint64_t val,int nhight);
 	bool AddAppCFund(const vector<unsigned char>& vtag, uint64_t val, int nhight);
 	bool MinusAppCFund(const CAppCFund &inFound);
 	bool AddAppCFund(const CAppCFund &inFound);
 	bool ChangeAppCFund(const CAppCFund &inFound);
-
-
 	bool Operate(const CAppFundOperate &Op);
-
-
-	uint64_t llValues;
+	uint64_t llValues;       //втси╫П╤Н
 	vector<unsigned char>  mAccUserID;
 	vector<CAppCFund> vFreezedFund;
-
-
-
 };
 
 

@@ -8,6 +8,7 @@
 #include <memory>
 #include "bignum.h"
 #include "uint256.h"
+#include "arith_uint256.h"
 #include "util.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -50,13 +51,15 @@ protected:
 	mutable bool fTxIndex;
 	mutable int64_t nTimeBestReceived;
 	mutable int64_t paytxfee;
-	int64_t nTargetSpacing;
+	int64_t nTargetSpacing;   //用于限制一个块产生的时间
 	int64_t nTargetTimespan;
-	int64_t nMaxCoinDay;
 	mutable unsigned int nScriptCheckThreads;
 	mutable int64_t nViewCacheSize;
 	mutable int nTxCacheHeight;
-	mutable int nIntervalPos;
+	mutable int nIntervalPos; //用于限制矿工 挖矿的 块间隔
+	int nLogmaxsize; // byte  用于限制日志文件的最大长度
+	bool bOutPut;    //是否保存合约脚本操作账户日志
+	bool bAddressToTx;//是否保存地址与交易的对应
 
 public:
 
@@ -66,7 +69,7 @@ public:
 		temp.get()->assign(te.begin(), te.end());
 		return temp;
 	}
-	virtual bool InitalConfig() const{
+	virtual bool InitalConfig() {
 		fServer = GetBoolArg("-server", false);
 
 		m_mapMultiArgs["-debug"].push_back("ERROR"); //add froce ERROR to log
@@ -82,6 +85,11 @@ public:
 		if(ParseMoney(GetArg("-paytxfee", ""), nTransactionFee) && nTransactionFee > 0){
 		paytxfee = nTransactionFee;
 		}
+
+	   nIntervalPos = GetArg("-intervalpos", 1440);
+	   nLogmaxsize = GetArg("-logmaxsize", 100) * 1024 * 1024;
+	   bOutPut = GetBoolArg("-output", false);
+	   bAddressToTx = GetBoolArg("-addresstotx", false);
 		return true;
 	}
 	virtual string ToString() const {
@@ -111,11 +119,11 @@ public:
 		te += strprintf("paytxfee:%d\n",paytxfee);
 		te += strprintf("nTargetSpacing:%d\n",nTargetSpacing);
 		te += strprintf("nTargetTimespan:%d\n",nTargetTimespan);
-		te += strprintf("nMaxCoinDay:%d\n",nMaxCoinDay);
 		te += strprintf("nScriptCheckThreads:%d\n",nScriptCheckThreads);
 		te += strprintf("nViewCacheSize:%d\n",nViewCacheSize);
 		te += strprintf("nTxCacheHeight:%d\n",nTxCacheHeight);
 		te += strprintf("nIntervalPos:%d\n",nIntervalPos);
+		te += strprintf("nLogmaxsize:%d\n",nLogmaxsize);
 
 		return te;
 	}
@@ -202,9 +210,7 @@ public:
 	int64_t GetTargetTimespan() const {
 		return nTargetTimespan;
 	}
-	int64_t GetMaxCoinDay() const {
-		return nMaxCoinDay;
-	}
+
 	int64_t GetBestRecvTime() const {
 		return nTimeBestReceived;
 	}
@@ -220,6 +226,15 @@ public:
 	int GetIntervalPos() const {
 		return nIntervalPos;
 	}
+	int GetLogMaxSize() const
+	{
+		return nLogmaxsize;
+	}
+	int GetMaxDay() const
+	{
+	 return GetIntervalPos() * 30;
+	}
+
 	void SetImporting(bool flag)const {
 		fImporting = flag;
 	}
@@ -245,10 +260,12 @@ public:
 	void SetTxCacheHeight(int nHeight)const {
 		nTxCacheHeight = nHeight;
 	}
-	void SetIntervalPos(int nPos)const {
-		nIntervalPos = nPos;
+	bool GetOutPutLog() const {
+		return bOutPut;
 	}
-
+	bool GetAddressToTxFlag() const {
+		return bAddressToTx;
+	}
 public:
 	/**
 	 *
@@ -284,7 +301,7 @@ public:
 	int GetDefaultPort() const {
 		return nDefaultPort;
 	}
-	const CBigNum& ProofOfWorkLimit() const {
+	const arith_uint256 ProofOfWorkLimit()  {
 		return bnProofOfStakeLimit;
 	}
 	int SubsidyHalvingInterval() const {
@@ -306,6 +323,7 @@ public:
 		return base58Prefixes[type];
 	}
 	virtual const vector<CAddress>& FixedSeeds() const = 0;
+	virtual bool IsInFixedSeeds(CAddress &addr) = 0;
 	int RPCPort() const {
 		return nRPCPort;
 	}
@@ -360,14 +378,14 @@ protected:
 	int nDefaultPort;
 	int nRPCPort;
 	string publicKey;
-	CBigNum bnProofOfStakeLimit;
+	arith_uint256 bnProofOfStakeLimit;
 	int nSubsidyHalvingInterval;
 	string strDataDir;
 	vector<CDNSSeedData> vSeeds;
 	vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
 };
 
-extern const CBaseParams &SysCfg();
+extern CBaseParams &SysCfg();
 
 /**
  * Return the currently selected parameters. This won't change after app startup

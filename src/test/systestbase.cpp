@@ -271,6 +271,19 @@ Value SysTestBase::GetAccountInfo(const string& strID) {
 	return value;
 }
 
+Value SysTestBase::GetAppAccountInfo(const string& scriptId,const string& strAddr)
+{
+	const char *argv[] = { "rpctest", "getappaccinfo", (char*) scriptId.c_str(), (char*) strAddr.c_str()};
+	int argc = sizeof(argv) / sizeof(char*);
+
+	Value value;
+	if (CommandLineRPC_GetValue(argc, argv, value)) {
+		LogPrint("test_miners", "GetAppAccountInfo:%s\r\n", write_string(value, true));
+		return value;
+	}
+	return value;
+}
+
 bool SysTestBase::CommandLineRPC_GetValue(int argc, const char *argv[], Value &value) {
 	string strPrint;
 	bool nRes = false;
