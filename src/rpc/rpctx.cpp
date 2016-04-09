@@ -950,7 +950,7 @@ Value listapp(const Array& params, bool fHelp) {
 			CVmScript vmScript;
 			ds >> vmScript;
 			string strDes(vmScript.ScriptExplain.begin(), vmScript.ScriptExplain.end());
-			script.push_back(Pair("description", HexStr(vmScript.ScriptExplain)));
+			obj.push_back(Pair("description", HexStr(vmScript.ScriptExplain)));
 			if (showDetail)
 				obj.push_back(Pair("scriptContent", string(vScript.begin(), vScript.end())));
 			arrayScript.push_back(obj);
