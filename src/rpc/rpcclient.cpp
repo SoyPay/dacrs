@@ -221,7 +221,8 @@ Array RPCConvertValues(const string &strMethod, const vector<string> &strParams)
 
     if (strMethod == "sendtoaddressraw"          && n > 0)ConvertTo<double>(params[0]);
     if (strMethod == "sendtoaddressraw"          && n>1)ConvertTo<double>(params[1]);
-    if (strMethod == "sendtoaddressraw"          && n >4)ConvertTo<int>(params[4]);
+    if (strMethod == "sendtoaddressraw"          && n >4)ConvertTo<bool>(params[4]);
+    if (strMethod == "sendtoaddressraw"          && n >5)ConvertTo<int>(params[5]);
 
     if (strMethod == "registaccounttxraw"          && n >0)ConvertTo<double>(params[0]);
     if (strMethod == "registaccounttxraw"          && n >3)ConvertTo<int>(params[1]);
