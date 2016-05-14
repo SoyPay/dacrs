@@ -1345,6 +1345,7 @@ Value registaccounttxraw(const Array& params, bool fHelp) {
 	Object obj;
 	obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
 	obj.push_back(Pair("signhash", pBaseTx->SignatureHash().GetHex()));
+	return obj;
 }
 
 Value submittx(const Array& params, bool fHelp) {
