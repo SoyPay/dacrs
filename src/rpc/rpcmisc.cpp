@@ -254,7 +254,7 @@ Value verifymessage(const Array& params, bool fHelp)
             "verifymessage \"Dacrsaddress\" \"signature\" \"message\"\n"
             "\nVerify a signed message\n"
             "\nArguments:\n"
-            "1. \"Dacrsaddress\"  (string, required) The Dacrs address to use for the signature.\n"
+            "1. \"Dacrsaddress or pubkey\"  (string, required) The Dacrs address to use for the signature.\n"
             "2. \"signature\"       (string, required) The signature provided by the signer in base 64 encoding (see signmessage).\n"
             "3. \"message\"         (string, required) The message that was signed.\n"
             "\nResult:\n"
@@ -273,11 +273,15 @@ Value verifymessage(const Array& params, bool fHelp)
     string strAddress  = params[0].get_str();
     string strSign     = params[1].get_str();
     string strMessage  = params[2].get_str();
-
     CKeyID keyID;
-    if (!GetKeyId(strAddress,keyID))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
-
+    if(strAddress.length() == 33 ) {   //pubkey
+    	vector<unsigned char> vPubKey = ParseHex(strAddress);
+    	CPubKey pubkeyIn(vPubKey.begin(), vPubKey.end());
+    	keyID = pubkeyIn.GetKeyID();
+    } else {
+    	if (!GetKeyId(strAddress,keyID))
+    		throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
+    }
     bool fInvalid = false;
     vector<unsigned char> vchSig = DecodeBase64(strSign.c_str(), &fInvalid);
 
