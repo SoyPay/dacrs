@@ -1365,6 +1365,9 @@ Value submittx(const Array& params, bool fHelp) {
 	std::shared_ptr<CBaseTransaction> tx;
 	stream >> tx;
 	std::tuple<bool, string> ret;
+	
+	std::shared_ptr<CRegisterAccountTx> pRegAcctTx =  make_shared<CRegisterAccountTx>(tx.get());
+	LogPrint("INFO","pubkey:%s keyId:%s\n",boost::get<CPubKey>(pRegAcctTx->userId).ToString(), boost::get<CPubKey>(pRegAcctTx->userId).GetKeyID().ToString());
 	ret = pwalletMain->CommitTransaction((CBaseTransaction *) tx.get());
 	if (!std::get<0>(ret)) {
 		throw JSONRPCError(RPC_WALLET_ERROR, "submittx Error:" + std::get<1>(ret));
