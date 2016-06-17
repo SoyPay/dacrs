@@ -14,11 +14,15 @@ Windows Server 2008
 --------
 
 在 Windows 下，推荐使用MinGW编译：
+
 1.运行/dacrs/windowshell/start.bat脚本,安装window版本的库文件。
+
 2.运行/dacrs/autogen-dacrs-man.sh dacrs-d dacrs-test dacrs-ptest 开始编译。
 
 linux ubuntu系统：
+
 1.运行/dacrs/linux_shell/linux.sh脚本。
+
 2.运行/dacrs/autogen-dacrs-man.sh dacrs-d dacrs-test dacrs-ptest 开始编译。
 
 项目介绍
