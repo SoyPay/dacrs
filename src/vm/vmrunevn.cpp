@@ -350,9 +350,10 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 		}else{
 			string dacrsaddr(accountid.begin(), accountid.end());
 			userkeyid = CKeyID(dacrsaddr);
-			 if(!view.GetAccount(CUserID(userkeyid), *tem.get()))
+			 if(!view.GetAccount(CUserID(userkeyid), *tem.get()))         
 			 {
-				return false;                                           /// 账户不存在
+				tem->keyID = userkeyid;									  /// 未产生过交易记录的账户
+				//return false;                                           /// 账户不存在
 			 }
 		}
 

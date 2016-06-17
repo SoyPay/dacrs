@@ -123,14 +123,25 @@ Value importprivkey(const Array& params, bool fHelp)
 //	if (params.size() > 2) {
 //		fRescan = params[2].get_bool();
 //	}
-
+    CKey key;
+    if(strSecret.length() == 32) {
+    	vector<unsigned char> vKey = ParseHex(strSecret.c_str());
+    	CPrivKey privKey(vKey.begin(), vKey.end());
+    	if(!key.SetPrivKey(privKey, true)) {
+    		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+    	}
+    }
+    else {
     CDacrsSecret vchSecret;
     bool fGood = vchSecret.SetString(strSecret);
 
     if (!fGood) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
 
-    CKey key = vchSecret.GetKey();
+    key = vchSecret.GetKey();
     if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+    }
+
+
 
     CPubKey pubkey = key.GetPubKey();
     {

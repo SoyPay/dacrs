@@ -82,9 +82,6 @@ JSON_H = \
   json/json_spirit_writer.h \
   json/json_spirit_writer_template.h
   
-# VmScript #
-		
-	
 VM_H = \
 	vm/vm8051.h \
 	vm/vmrunevn.h \
@@ -93,17 +90,13 @@ VM_H = \
 	vm/appaccount.h
 
 	
-
 VM_CPP = \
 	vm/vm8051.cpp \
 	vm/vmrunevn.cpp \
 	vm/script.cpp \
 	vm/testmcu.cpp \
 	vm/appaccount.cpp
-
-	
-	
-  
+	 
 
 obj/build.h: FORCE
 	@$(MKDIR_P) $(abs_top_builddir)/src/obj

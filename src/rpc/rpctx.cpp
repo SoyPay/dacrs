@@ -950,7 +950,7 @@ Value listapp(const Array& params, bool fHelp) {
 			CVmScript vmScript;
 			ds >> vmScript;
 			string strDes(vmScript.ScriptExplain.begin(), vmScript.ScriptExplain.end());
-			script.push_back(Pair("description", HexStr(vmScript.ScriptExplain)));
+			obj.push_back(Pair("description", HexStr(vmScript.ScriptExplain)));
 			if (showDetail)
 				obj.push_back(Pair("scriptContent", string(vScript.begin(), vScript.end())));
 			arrayScript.push_back(obj);
@@ -1344,8 +1344,8 @@ Value registaccounttxraw(const Array& params, bool fHelp) {
 	ds << pBaseTx;
 	Object obj;
 	obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
+	obj.push_back(Pair("signhash", pBaseTx->SignatureHash().GetHex()));
 	return obj;
-
 }
 
 Value submittx(const Array& params, bool fHelp) {
@@ -1366,6 +1366,9 @@ Value submittx(const Array& params, bool fHelp) {
 	std::shared_ptr<CBaseTransaction> tx;
 	stream >> tx;
 	std::tuple<bool, string> ret;
+	
+	std::shared_ptr<CRegisterAccountTx> pRegAcctTx =  make_shared<CRegisterAccountTx>(tx.get());
+	LogPrint("INFO","pubkey:%s keyId:%s\n",boost::get<CPubKey>(pRegAcctTx->userId).ToString(), boost::get<CPubKey>(pRegAcctTx->userId).GetKeyID().ToString());
 	ret = pwalletMain->CommitTransaction((CBaseTransaction *) tx.get());
 	if (!std::get<0>(ret)) {
 		throw JSONRPCError(RPC_WALLET_ERROR, "submittx Error:" + std::get<1>(ret));

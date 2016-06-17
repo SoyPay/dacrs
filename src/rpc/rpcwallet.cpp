@@ -280,7 +280,7 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 Value sendtoaddressraw(const Array& params, bool fHelp)
 {
 	int size = params.size();
-	if (fHelp || size < 4 || size > 5 )
+	if (fHelp || size < 5 || size > 6 )
 		throw runtime_error(
 						"sendtoaddressraw \"height\" \"fee\" \"amount\" \"srcaddress\" \"recvaddress\"\n"
 						"\n create normal transaction by hegiht,fee,amount,srcaddress, recvaddress.\n"
@@ -289,7 +289,8 @@ Value sendtoaddressraw(const Array& params, bool fHelp)
 						"2. \"amount\"  (numeric, required)  \n"
 						"3. \"srcaddress\"  (string, required) The Dacrs address to send to.\n"
 						"4. \"recvaddress\"  (string, required) The Dacrs address to receive.\n"
-						"5. \"height\"  (int, optional) \n"
+						"5. \"issign\"  (bool, required) weather needs return signed transaction hex.\n"
+						"6. \"height\"  (int, optional) \n"
 						"\nResult:\n"
 						"\"transactionid\"  (string) The transaction id.\n"
 						"\nExamples:\n"
@@ -356,21 +357,25 @@ Value sendtoaddressraw(const Array& params, bool fHelp)
 			rev = regId;
 		}
 	}
+	bool isSign = params[4].get_bool();
 
 	int hight = chainActive.Tip()->nHeight;
-	if(params.size() > 4) {
-		hight = params[4].get_int();
+	if(params.size() > 5) {
+		hight = params[5].get_int();
 	}
 
 	std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(send,rev,Fee, nAmount,hight);
-	if (!pwalletMain->Sign(sendKeyId, tx->SignatureHash(), tx->signature)) {
-				throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
+	if(isSign) {
+		if (!pwalletMain->Sign(sendKeyId, tx->SignatureHash(), tx->signature)) {
+			throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
+		}
 	}
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 	ds << pBaseTx;
 	Object obj;
 	obj.push_back(Pair("rawtx", HexStr(ds.begin(), ds.end())));
+	obj.push_back(Pair("signhash", tx->SignatureHash().GetHex()));
 	return obj;
 
 }
