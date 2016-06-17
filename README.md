@@ -6,24 +6,27 @@ Smartcoin (智能坊)
 支持平台
 --------
 Ubuntu
-Windows 7 SP1 x64
-Windows Server 2008
-未来将支持Debian、FreeBSD、openSUSE、OS X、CentOS等。
+
+Windows 7 SP1 x64  
+
+Windows Server 2008  
+
+未来将支持Debian、FreeBSD、openSUSE、OS X、CentOS等。  
 
 如何编译
 --------
 
-在 Windows 下，推荐使用MinGW编译：
+在 Windows 下，推荐使用MinGW编译：  
 
-1.运行/dacrs/windowshell/start.bat脚本,安装window版本的库文件。
+1.运行/dacrs/windowshell/start.bat脚本,安装window版本的库文件。  
 
-2.运行/dacrs/autogen-dacrs-man.sh dacrs-d dacrs-test dacrs-ptest 开始编译。
+2.运行/dacrs/autogen-dacrs-man.sh dacrs-d dacrs-test dacrs-ptest 开始编译。  
 
-linux ubuntu系统：
+linux ubuntu系统：  
 
-1.运行/dacrs/linux_shell/linux.sh脚本。
+1.运行/dacrs/linux_shell/linux.sh脚本。  
 
-2.运行/dacrs/autogen-dacrs-man.sh dacrs-d dacrs-test dacrs-ptest 开始编译。
+2.运行/dacrs/autogen-dacrs-man.sh dacrs-d dacrs-test dacrs-ptest 开始编译。  
 
 项目介绍
 --------
