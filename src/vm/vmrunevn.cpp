@@ -441,8 +441,8 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 				return false;                                           /// ÕË»§²»´æÔÚ
 			}
 		}else{
-			string popaddr(accountid.begin(), accountid.end());
-			userkeyid = CKeyID(popaddr);
+			string addr(accountid.begin(), accountid.end());
+			userkeyid = CKeyID(addr);
 			 if(!view.GetAccount(CUserID(userkeyid), *tem.get()))
 			 {
 				 tem->keyID = userkeyid;

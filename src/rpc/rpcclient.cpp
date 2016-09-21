@@ -139,6 +139,8 @@ Array RPCConvertValues(const string &strMethod, const vector<string> &strParams)
 		ConvertTo<double>(params[2]);
 		ConvertTo<double>(params[3]);
 	}
+	if (strMethod == "notionalpoolingbalance" && n > 1) ConvertTo<double>(params[1]);
+	if (strMethod == "dispersebalance"        && n > 1) ConvertTo<double>(params[1]);
     if (strMethod == "settxfee"               && n > 0) ConvertTo<double>(params[0]);
     if (strMethod == "getreceivedbyaddress"   && n > 1) ConvertTo<int64_t>(params[1]);
     if (strMethod == "getreceivedbyaccount"   && n > 1) ConvertTo<int64_t>(params[1]);
@@ -235,7 +237,7 @@ Array RPCConvertValues(const string &strMethod, const vector<string> &strParams)
     if (strMethod == "registerscripttxraw"          && n > 2)ConvertTo<bool>(params[2]);
     if (strMethod == "registerscripttxraw"          && n > 4) ConvertTo<int>(params[4]);
     if (strMethod == "gettxhashbyaddress"          && n > 1) ConvertTo<int>(params[1]);
-
+    if (strMethod == "getappkeyvalue"              && n > 1) ConvertTo<Array>(params[1]);
     return params;
 }
 

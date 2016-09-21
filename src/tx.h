@@ -236,7 +236,7 @@ public:
 	virtual bool CheckTransction(CValidationState &state, CAccountViewCache &view, CScriptDBViewCache &scriptDB) = 0;
 
 	virtual uint64_t GetFuel(int nfuelRate);
-
+	virtual uint64_t GetValue() const = 0;
 	int GetFuelRate(CScriptDBViewCache &scriptDB);
 };
 
@@ -286,7 +286,7 @@ public:
 		READWRITE(VARINT(llFees));
 		READWRITE(signature);
 	)
-
+	uint64_t GetValue() const {return 0;}
 	uint64_t GetFee() const {
 		return llFees;
 	}
@@ -396,7 +396,7 @@ public:
 				desUserId = desId.GetUserId();
 			}
 	)
-
+	uint64_t GetValue() const {return 0;}
 	uint256 GetHash() const;
 
 	uint64_t GetFee() const {
@@ -474,7 +474,7 @@ public:
 		READWRITE(VARINT(rewardValue));
 		READWRITE(VARINT(nHeight));
 	)
-
+	uint64_t GetValue() const {return rewardValue;}
 	uint256 GetHash() const;
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
@@ -539,7 +539,7 @@ public:
 		READWRITE(VARINT(llFees));
 		READWRITE(signature);
 	)
-
+	uint64_t GetValue() const {return 0;}
 	uint256 GetHash() const;
 
 	std::shared_ptr<CBaseTransaction> GetNewInstance() {
