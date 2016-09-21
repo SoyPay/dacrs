@@ -1969,11 +1969,6 @@ static int ExGetBase58AddrFunc(lua_State *L){
     	return RetFalse("pVmRunEvn is NULL");
     }
 
-	vector<unsigned char> recvkey;
-	recvkey.assign(retdata.at(0).get()->begin(), retdata.at(0).get()->end());
-
-	std::string recvaddr( recvkey.begin(), recvkey.end() );
-
 	CKeyID addrKeyId;
 	if (!GetKeyId(*pVmRunEvn->GetCatchView(), *retdata.at(0).get(), addrKeyId)) {
 		return RetFalse("ExGetBase58AddrFunc para err1");
