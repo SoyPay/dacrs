@@ -79,19 +79,24 @@ bool CVmRunEvn::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& vie
 	}
 	isCheckAccount = vmScript.IsCheckAccount();
 	scriptType = vmScript.getScriptType();//初始化脚本类型
-	if(secure->vContract.size() >=4*1024 ){
+	if(secure->vContract.size() >= 4*1024 ){
 		LogPrint("ERROR", "%s\r\n", "CVmScriptRun::intial() vContract context size lager 4096");
 		return false;
 	}
-	if(0 == scriptType)
-	{
-		pMcu = make_shared<CVm8051>(vmScript.Rom, secure->vContract);
-		LogPrint("vm", "%s\r\n", "CVmScriptRun::intial() MCU");
-	}else{
-		pLua = make_shared<CVmlua>(vmScript.Rom, secure->vContract);
-		//pVmRunEvn = this; //传CVmRunEvn对象指针给lmylib.cpp库使用
-		LogPrint("vm", "%s\r\n", "CVmScriptRun::intial() LUA");
+	try {
+		if (0 == scriptType) {
+			pMcu = make_shared<CVm8051>(vmScript.Rom, secure->vContract);
+			LogPrint("vm", "%s\r\n", "CVmScriptRun::intial() MCU");
+		} else {
+			pLua = make_shared<CVmlua>(vmScript.Rom, secure->vContract);
+			//pVmRunEvn = this; //传CVmRunEvn对象指针给lmylib.cpp库使用
+			LogPrint("vm", "%s\r\n", "CVmScriptRun::intial() LUA");
+		}
+	} catch (exception& e) {
+		LogPrint("ERROR", "%s\r\n", "CVmScriptRun::intial() init error");
+		return false;
 	}
+
 	return true;
 }
 

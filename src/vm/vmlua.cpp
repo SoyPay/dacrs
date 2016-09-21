@@ -143,12 +143,12 @@ CVmlua::CVmlua(const vector<unsigned char> & vRom, const vector<unsigned char> &
 
     len = vRom.size();
     if(len >= sizeof(m_ExeFile)){
-    	len = sizeof(m_ExeFile) -1;
+    	throw runtime_error("CVmlua::CVmlua() length of vRom exceptions");
     }
 	memcpy(m_ExeFile, &vRom[0], len);
 	unsigned short count = InputData.size();//外面已限制小于4096字节
 	if(count > sizeof(m_ExRam) - 2){
-		count = sizeof(m_ExRam) - 2;
+		throw runtime_error("CVmlua::CVmlua() length of contract > 4094");
 	}
 	memcpy(m_ExRam, &count, 2);
 	memcpy(&m_ExRam[2], &InputData[0],count);
