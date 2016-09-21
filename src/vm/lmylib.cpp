@@ -373,6 +373,343 @@ static bool GetDataTableLogPrint(lua_State *L, vector<std::shared_ptr < std::vec
     	return false;
     }
 }
+
+static bool GetDataTableDes(lua_State *L, vector<std::shared_ptr < std::vector<unsigned char> > > &ret)
+{
+    if(!lua_istable(L,-1))
+    {
+    	LogPrint("vm","is not table\n");
+    	return false;
+    }
+    double doubleValue = 0;
+    vector<unsigned char> vBuf ;
+
+    int dataLen = 0;
+    if(!(getNumberInTable(L,(char *)"dataLen",doubleValue))){
+    		LogPrint("vm","dataLen get fail\n");
+    		return false;
+    	}else{
+    		dataLen = (unsigned int)doubleValue;
+    }
+
+    if(dataLen <= 0) {
+		LogPrint("vm","dataLen <= 0\n");
+		return false;
+    }
+
+    if(!getArrayInTable(L,(char *)"data",dataLen,vBuf))
+    {
+    	LogPrint("vm","data not table\n");
+    	return false;
+    }else{
+
+    	ret.push_back(std::make_shared<vector<unsigned char>>(vBuf.begin(), vBuf.end()));
+    }
+
+    int keyLen = 0;
+    if(!(getNumberInTable(L,(char *)"keyLen",doubleValue))){
+    		LogPrint("vm","keyLen get fail\n");
+    		return false;
+    	}else{
+    		keyLen = (unsigned int)doubleValue;
+    }
+
+    if(keyLen <= 0) {
+		LogPrint("vm","keyLen <= 0\n");
+		return false;
+    }
+
+    if(!getArrayInTable(L,(char *)"key",keyLen,vBuf))
+    {
+    	LogPrint("vm","key not table\n");
+    	return false;
+    }else{
+
+    	ret.push_back(std::make_shared<vector<unsigned char>>(vBuf.begin(), vBuf.end()));
+    }
+
+    int nFlag = 0;
+    if(!(getNumberInTable(L,(char *)"flag",doubleValue))){
+    		LogPrint("vm","flag get fail\n");
+    		return false;
+    	}else{
+    		nFlag = (unsigned int)doubleValue;
+    		CDataStream tep(SER_DISK, CLIENT_VERSION);
+    		tep << (nFlag == 0 ? 0 : 1);
+    		ret.push_back(std::make_shared<vector<unsigned char>>(tep.begin(), tep.end()));
+    }
+
+    return true;
+}
+
+static bool GetDataTableVerifySignature(lua_State *L, vector<std::shared_ptr < std::vector<unsigned char> > > &ret)
+{
+    if(!lua_istable(L,-1))
+    {
+    	LogPrint("vm","is not table\n");
+    	return false;
+    }
+    double doubleValue = 0;
+    vector<unsigned char> vBuf ;
+
+    int dataLen = 0;
+    if(!(getNumberInTable(L,(char *)"dataLen",doubleValue))){
+    		LogPrint("vm","dataLen get fail\n");
+    		return false;
+    	}else{
+    		dataLen = (unsigned int)doubleValue;
+    }
+
+    if(dataLen <= 0) {
+		LogPrint("vm","dataLen <= 0\n");
+		return false;
+    }
+
+    if(!getArrayInTable(L,(char *)"data",dataLen,vBuf))
+    {
+    	LogPrint("vm","data not table\n");
+    	return false;
+    }else{
+
+    	ret.push_back(std::make_shared<vector<unsigned char>>(vBuf.begin(), vBuf.end()));
+    }
+
+    int keyLen = 0;
+    if(!(getNumberInTable(L,(char *)"keyLen",doubleValue))){
+    		LogPrint("vm","keyLen get fail\n");
+    		return false;
+    	}else{
+    		keyLen = (unsigned int)doubleValue;
+    }
+
+    if(keyLen <= 0) {
+		LogPrint("vm","keyLen <= 0\n");
+		return false;
+    }
+
+    if(!getArrayInTable(L,(char *)"key",keyLen,vBuf))
+    {
+    	LogPrint("vm","key not table\n");
+    	return false;
+    }else{
+
+    	ret.push_back(std::make_shared<vector<unsigned char>>(vBuf.begin(), vBuf.end()));
+    }
+
+    int hashLen = 0;
+    if(!(getNumberInTable(L,(char *)"hashLen",doubleValue))){
+    		LogPrint("vm","hashLen get fail\n");
+    		return false;
+    	}else{
+    		hashLen = (unsigned int)doubleValue;
+    }
+
+    if(hashLen <= 0) {
+		LogPrint("vm","hashLen <= 0\n");
+		return false;
+    }
+
+    if(!getArrayInTable(L,(char *)"hash",hashLen,vBuf))
+    {
+    	LogPrint("vm","hash not table\n");
+    	return false;
+    }else{
+
+    	ret.push_back(std::make_shared<vector<unsigned char>>(vBuf.begin(), vBuf.end()));
+    }
+
+    return true;
+}
+
+/**
+ *bool SHA256(void const* pfrist, const unsigned short len, void * const pout)
+ * 这个函数式从中间层传了一个参数过来:
+ * 1.第一个是要被计算hash值的字符串
+ */
+static int ExSha256Func(lua_State *L) {
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+
+	if(!GetDataString(L,retdata) ||retdata.size() != 1 || retdata.at(0).get()->size() <= 0)
+	{
+		return RetFalse("ExSha256Func para err0");
+	}
+
+	uint256 rslt = Hash(&retdata.at(0).get()->at(0), &retdata.at(0).get()->at(0) + retdata.at(0).get()->size());
+
+	CDataStream tep(SER_DISK, CLIENT_VERSION);
+	tep << rslt;
+	vector<unsigned char> tep1(tep.begin(), tep.end());
+	return RetRstToLua(L,tep1);
+}
+
+/**
+ *unsigned short Des(void const* pdata, unsigned short len, void const* pkey, unsigned short keylen, bool IsEn, void * const pOut,unsigned short poutlen)
+ * 这个函数式从中间层传了三个个参数过来:
+ * 1.第一个是要被加密数据或者解密数据
+ * 2.第二格式加密或者解密的key值
+ * 3.第三是标识符，是加密还是解密
+ *
+ * {
+ * 	dataLen = 0,
+ * 	data = {},
+ * 	keyLen = 0,
+ * 	key = {},
+ * 	flag = 0
+ * }
+ */
+static int ExDesFunc(lua_State *L) {
+	vector<std::shared_ptr<vector<unsigned char> > > retdata;
+
+	if (!GetDataTableDes(L, retdata) || retdata.size() != 3) {
+		return RetFalse(string(__FUNCTION__) + "para  err !");
+	}
+
+	DES_key_schedule deskey1, deskey2, deskey3;
+
+	vector<unsigned char> desdata;
+	vector<unsigned char> desout;
+	unsigned char datalen_rest = retdata.at(0).get()->size() % sizeof(DES_cblock);
+	desdata.assign(retdata.at(0).get()->begin(), retdata.at(0).get()->end());
+	if (datalen_rest) {
+		desdata.insert(desdata.end(), sizeof(DES_cblock) - datalen_rest, 0);
+	}
+
+	const_DES_cblock in;
+	DES_cblock out, key;
+
+	desout.resize(desdata.size());
+
+	unsigned char flag = retdata.at(2).get()->at(0);
+	if (flag == 1) {
+		if (retdata.at(1).get()->size() == 8) {
+			//			printf("the des encrypt\r\n");
+			memcpy(key, &retdata.at(1).get()->at(0), sizeof(DES_cblock));
+			DES_set_key_unchecked(&key, &deskey1);
+			for (unsigned int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
+				memcpy(&in, &desdata[ii * sizeof(DES_cblock)], sizeof(in));
+				//				printf("in :%s\r\n", HexStr(in, in + 8, true).c_str());
+				DES_ecb_encrypt(&in, &out, &deskey1, DES_ENCRYPT);
+				//				printf("out :%s\r\n", HexStr(out, out + 8, true).c_str());
+				memcpy(&desout[ii * sizeof(DES_cblock)], &out, sizeof(out));
+			}
+		} else if (retdata.at(1).get()->size() == 16) {
+			//			printf("the 3 des encrypt\r\n");
+			memcpy(key, &retdata.at(1).get()->at(0), sizeof(DES_cblock));
+			DES_set_key_unchecked(&key, &deskey1);
+			DES_set_key_unchecked(&key, &deskey3);
+			memcpy(key, &retdata.at(1).get()->at(0) + sizeof(DES_cblock), sizeof(DES_cblock));
+			DES_set_key_unchecked(&key, &deskey2);
+			for (unsigned int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
+				memcpy(&in, &desdata[ii * sizeof(DES_cblock)], sizeof(in));
+				DES_ecb3_encrypt(&in, &out, &deskey1, &deskey2, &deskey3, DES_ENCRYPT);
+				memcpy(&desout[ii * sizeof(DES_cblock)], &out, sizeof(out));
+			}
+
+		} else {
+			//error
+			return RetFalse(string(__FUNCTION__) + "para  err !");
+		}
+	} else {
+		if (retdata.at(1).get()->size() == 8) {
+			//			printf("the des decrypt\r\n");
+			memcpy(key, &retdata.at(1).get()->at(0), sizeof(DES_cblock));
+			DES_set_key_unchecked(&key, &deskey1);
+			for (unsigned int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
+				memcpy(&in, &desdata[ii * sizeof(DES_cblock)], sizeof(in));
+				//				printf("in :%s\r\n", HexStr(in, in + 8, true).c_str());
+				DES_ecb_encrypt(&in, &out, &deskey1, DES_DECRYPT);
+				//				printf("out :%s\r\n", HexStr(out, out + 8, true).c_str());
+				memcpy(&desout[ii * sizeof(DES_cblock)], &out, sizeof(out));
+			}
+		} else if (retdata.at(1).get()->size() == 16) {
+			//			printf("the 3 des decrypt\r\n");
+			memcpy(key, &retdata.at(1).get()->at(0), sizeof(DES_cblock));
+			DES_set_key_unchecked(&key, &deskey1);
+			DES_set_key_unchecked(&key, &deskey3);
+			memcpy(key, &retdata.at(1).get()->at(0) + sizeof(DES_cblock), sizeof(DES_cblock));
+			DES_set_key_unchecked(&key, &deskey2);
+			for (unsigned int ii = 0; ii < desdata.size() / sizeof(DES_cblock); ii++) {
+				memcpy(&in, &desdata[ii * sizeof(DES_cblock)], sizeof(in));
+				DES_ecb3_encrypt(&in, &out, &deskey1, &deskey2, &deskey3, DES_DECRYPT);
+				memcpy(&desout[ii * sizeof(DES_cblock)], &out, sizeof(out));
+			}
+		} else {
+			//error
+			return RetFalse(string(__FUNCTION__) + "para  err !");
+		}
+	}
+
+	return RetRstToLua(L,desout);
+}
+
+/**
+ *bool SignatureVerify(void const* data, unsigned short datalen, void const* key, unsigned short keylen,
+		void const* phash, unsigned short hashlen)
+ * 这个函数式从中间层传了三个个参数过来:
+ * 1.第一个是签名的数据
+ * 2.第二个是用的签名的publickey
+ * 3.第三是签名之前的hash值
+ *
+ *{
+ * 	dataLen = 0,
+ * 	data = {},
+ * 	keyLen = 0,
+ * 	key = {},
+ * 	hashLen = 0,
+ * 	hash = {}
+ * }
+ */
+static int ExVerifySignatureFunc(lua_State *L) {
+	vector<std::shared_ptr<vector<unsigned char> > > retdata;
+
+	if (!GetDataTableVerifySignature(L, retdata) || retdata.size() != 3 || retdata.at(1).get()->size() != 33
+			|| retdata.at(2).get()->size() != 32) {
+		return RetFalse(string(__FUNCTION__) + "para  err !");
+	}
+
+	CPubKey pk(retdata.at(1).get()->begin(), retdata.at(1).get()->end());
+	vector<unsigned char> vec_hash(retdata.at(2).get()->rbegin(), retdata.at(2).get()->rend());
+	uint256 hash(vec_hash);
+	auto tem = make_shared<std::vector<vector<unsigned char> > >();
+
+	bool rlt = CheckSignScript(hash, *retdata.at(0), pk);
+	if (!rlt) {
+		LogPrint("INFO", "ExVerifySignatureFunc call CheckSignScript verify signature failed!\n");
+	}
+
+	return RetRstBooleanToLua(L, rlt);
+}
+
+
+static int ExGetTxContractsFunc(lua_State *L) {
+
+	vector<std::shared_ptr < vector<unsigned char> > > retdata;
+    if(!GetArray(L,retdata) ||retdata.size() != 1 || retdata.at(0).get()->size() != 32)
+    {
+    	return RetFalse(string(__FUNCTION__)+"para  err !");
+    }
+
+    CVmRunEvn* pVmRunEvn = GetVmRunEvn(L);
+    if(NULL == pVmRunEvn)
+    {
+    	return RetFalse("pVmRunEvn is NULL");
+    }
+
+    vector<unsigned char> vec_hash(retdata.at(0).get()->rbegin(), retdata.at(0).get()->rend());
+	CDataStream tep1(vec_hash, SER_DISK, CLIENT_VERSION);
+	uint256 hash1;
+	tep1 >>hash1;
+
+	std::shared_ptr<CBaseTransaction> pBaseTx;
+
+	if (GetTransaction(pBaseTx, hash1, *pVmRunEvn->GetScriptDB(), false)) {
+		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
+		 return RetRstToLua(L, tx->vContract);
+	}
+
+	return 0;
+}
+
 /**
  *void LogPrint(const void *pdata, const unsigned short datalen,PRINT_FORMAT flag )
  * 这个函数式从中间层传了两个个参数过来:
@@ -419,7 +756,9 @@ static int ExGetTxAccountsFunc(lua_State *L) {
     	return RetFalse("pVmRunEvn is NULL");
     }
 
-	CDataStream tep1(*retdata.at(0), SER_DISK, CLIENT_VERSION);
+    vector<unsigned char> vec_hash(retdata.at(0).get()->rbegin(), retdata.at(0).get()->rend());
+
+	CDataStream tep1(vec_hash, SER_DISK, CLIENT_VERSION);
 	uint256 hash1;
 	tep1 >>hash1;
 //	LogPrint("vm","ExGetTxAccountsFunc:%s",hash1.GetHex().c_str());
@@ -1846,12 +2185,12 @@ static int ExTransferSomeAsset(lua_State *L) {
 }
 
 static const luaL_Reg mylib[] = { //
-//		{ SHA256_FUNC, ExSha256Func },			//
-//		{ DES_FUNC, ExDesFunc },			    //
-//		{ "VerifySignature", ExVerifySignatureFunc },   //
-//		{ SIGNATURE_FUNC, ExSignatureFunc },			//
-		{ "LogPrint", ExLogPrintFunc },         //
-//		{GETTX_CONTRACT_FUNC,ExGetTxContractsFunc},            //
+		{"Sha256", ExSha256Func },			//
+		{"Des", ExDesFunc },			    //
+		{"VerifySignature", ExVerifySignatureFunc },   //
+
+		{"LogPrint", ExLogPrintFunc },         //
+		{"GetTxContracts",ExGetTxContractsFunc},            //
 		{"GetTxAccounts",ExGetTxAccountsFunc},
 		{"GetAccountPublickey",ExGetAccountPublickeyFunc},
 		{"QueryAccountBalance",ExQueryAccountBalanceFunc},
@@ -1863,8 +2202,7 @@ static const luaL_Reg mylib[] = { //
 		{"WriteData",ExWriteDataDBFunc},
 		{"DeleteData",ExDeleteDataDBFunc},
 		{"ReadData",ExReadDataValueDBFunc},
-//		{"GetDBSize",ExGetDBSizeFunc},                 //暂不支持
-//		{"GetDBValue",ExGetDBValueFunc},               //暂不支持
+
 		{"GetCurTxHash",ExGetCurTxHash},
 		{"ModifyData",ExModifyDataDBValueFunc},
 
@@ -1872,9 +2210,7 @@ static const luaL_Reg mylib[] = { //
 		{"GetScriptData",ExGetScriptDataFunc},
 		{"GetScriptID",ExGetScriptIDFunc},
 		{"GetCurTxAccount",ExGetCurTxAccountFunc	  },
-//		{GETCURTXCONTACT_FUNC,ExGetCurTxContactFunc		},
-//		{GETCURDECOMPRESSCONTACR_FUNC,ExCurDeCompressContactFunc },
-//		{GETDECOMPRESSCONTACR_FUNC,ExDeCompressContactFunc  	},
+
 		{"GetCurTxPayAmount",GetCurTxPayAmountFunc},
 
 		{"GetUserAppAccValue",GetUserAppAccValue},
