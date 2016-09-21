@@ -9,6 +9,7 @@
 #include "util.h"
 #include<algorithm>
 #include <boost/foreach.hpp>
+#include "SafeInt3.hpp"
 
  //CVmRunEvn *pVmRunEvn = NULL;
 
@@ -167,8 +168,15 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 		m_dblog->push_back(operlog);
 	}
 
-	uint64_t spend = uRunStep * nBurnFactor;
-		if((spend < uRunStep) || (spend < nBurnFactor)){
+	/*
+		uint64_t spend = uRunStep * nBurnFactor;
+			if((spend < uRunStep) || (spend < nBurnFactor)){
+			return std::make_tuple (false, 0, string("mul error\n"));
+		}
+	*/
+	uint64_t spend = 0;
+	if(!SafeMultiply(uRunStep, nBurnFactor, spend))
+	{
 		return std::make_tuple (false, 0, string("mul error\n"));
 	}
 	return std::make_tuple (true, spend, string("VmScript Sucess\n"));
@@ -245,9 +253,15 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 
 		if (it.opeatortype == ADD_FREE ) {
 			memcpy(&operValue,it.money,sizeof(it.money));
+			/*
 			uint64_t temp = addmoey;
 			temp += operValue;
 			if(temp < operValue || temp<addmoey) {
+				return false;
+			}
+			*/
+			uint64_t temp = 0;
+			if(!SafeAdd(addmoey, operValue, temp)) {
 				return false;
 			}
 			addmoey = temp;
@@ -266,9 +280,15 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 			}
 
 			memcpy(&operValue,it.money,sizeof(it.money));
+			/*
 			uint64_t temp = miusmoney;
 			temp += operValue;
 			if(temp < operValue || temp < miusmoney) {
+				return false;
+			}
+			*/
+			uint64_t temp = 0;
+			if(!SafeAdd(miusmoney, operValue, temp)) {
 				return false;
 			}
 			miusmoney = temp;
@@ -303,29 +323,46 @@ bool CVmRunEvn::CheckAppAcctOperate(CTransaction* tx) {
 	for(auto  vOpItem : MapAppOperate) {
 		for(auto appFund : vOpItem.second) {
 			if(ADD_FREE_OP == appFund.opeatortype || ADD_TAG_OP == appFund.opeatortype) {
+				/*
 				int64_t temp = appFund.mMoney;
 				temp += addValue;
 				if(temp < addValue || temp<appFund.mMoney) {
 					return false;
 				}
+				*/
+				int64_t temp = 0;
+				if(!SafeAdd(appFund.mMoney, addValue, temp)) {
+					return false;
+				}
 				addValue = temp;
 			}
 			else if(SUB_FREE_OP == appFund.opeatortype || SUB_TAG_OP == appFund.opeatortype) {
+				/*
 				int64_t temp = appFund.mMoney;
 				temp += minusValue;
 				if(temp < minusValue || temp<appFund.mMoney) {
+					return false;
+				}
+				*/
+				int64_t temp = 0;
+				if(!SafeAdd(appFund.mMoney, minusValue, temp)) {
 					return false;
 				}
 				minusValue = temp;
 			}
 		}
 	}
+	/*
 	sumValue = addValue - minusValue;
 	if(sumValue > addValue) {
 		return false;
 	}
+	*/
+	if(!SafeSubtract(addValue, minusValue, sumValue)) {
+		return false;
+	}
 
-	int64_t sysContractAcct(0);
+	uint64_t sysContractAcct(0);
 	for(auto item : m_output) {
 		vector_unsigned_char vAccountId = GetAccountID(item);
 		if(vAccountId == boost::get<CRegID>(tx->desUserId).GetVec6() && item.opeatortype == MINUS_FREE) {
@@ -335,19 +372,32 @@ bool CVmRunEvn::CheckAppAcctOperate(CTransaction* tx) {
 			if(temp < 0) {
 				return false;
 			}
+			/*
 			temp += sysContractAcct;
 			if(temp < sysContractAcct || temp < (int64_t)value)
 				return false;
-			sysContractAcct = temp;
+			*/
+			uint64_t tempValue = temp;
+			uint64_t tempOut = 0;
+			if(!SafeAdd(tempValue, sysContractAcct, tempOut)) {
+				return false;
+			}
+			sysContractAcct = tempOut;
 		}
 	}
 
-	int64_t sysAcctSum = tx->llValues - sysContractAcct;
-	if(sysAcctSum > (int64_t)tx->llValues) {
+	/*
+	 int64_t sysAcctSum = tx->llValues - sysContractAcct;
+	 if(sysAcctSum > (int64_t)tx->llValues) {
+	 	 return false;
+	 }
+	*/
+	uint64_t sysAcctSum = 0;
+	if (!SafeSubtract(tx->llValues, sysContractAcct, sysAcctSum)) {
 		return false;
 	}
 
-	if(sumValue != sysAcctSum){
+	if(sumValue != (int64_t)sysAcctSum){
 		LogPrint("vm", "CheckAppAcctOperate:addValue=%lld, minusValue=%lld, txValue=%lld, sysContractAcct=%lld sumValue=%lld, sysAcctSum=%lld\n", addValue, minusValue, tx->llValues, sysContractAcct,sumValue, sysAcctSum);
 		return false;
 	}
