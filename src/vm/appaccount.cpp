@@ -100,6 +100,16 @@ bool CAppUserAccout::AddAppCFund(const CAppCFund& inFound) {
 
 }
 
+uint64_t CAppUserAccout::GetAllFreezedValues()
+{
+	uint64_t total = 0;
+	for (auto &Fund : vFreezedFund) {
+		total += Fund.getvalue();
+	}
+
+	return total;
+}
+
 bool CAppUserAccout::AutoMergeFreezeToFree(int hight) {
 
 	bool isneedremvoe = false;

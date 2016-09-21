@@ -19,6 +19,7 @@ class CVmScript {
 public:
 	vector<unsigned char> Rom;      		//!< Binary code
 	vector<unsigned char> ScriptExplain;	// !<explain the binary code action
+	int  scriptType = 0;                    //!<脚本的类型 0:8051,1:lua
 
 public:
 	/**
@@ -30,8 +31,20 @@ public:
 		///Binary code'size less 64k
 		if((Rom.size() > 64*1024) || (Rom.size() <= 0))
 			return false;
-		if(Rom[0] != 0x02)
-			return false;
+		if(Rom[0] != 0x02){
+			if(!memcmp(&Rom[0],"mylib = require",strlen("mylib = require"))){
+				scriptType = 1;//lua脚本
+				return true;//lua脚本，直接返回
+			}else{
+				return false;
+			}
+		}else{
+			scriptType = 0;//8051脚本
+		}
+
+		if(0 == scriptType) {
+			return false;//禁掉8051脚本
+		}
 
 		//!<指定版本的SDK以上，才去校验 账户平衡开关的取值
 		if(memcmp(&Rom[0x0004],"\x00\x02\x02",3) >= 0){
@@ -39,10 +52,15 @@ public:
         	   return false;
            }
 		}
+
 		return true;
 	}
 
 	bool IsCheckAccount(void){
+		if(scriptType){
+			return false;//lua脚本，直接返回(关掉账户平衡)
+		}
+
 		//!<指定版本的SDK以上，才去读取 账户平衡开关的取值
 		if(memcmp(&Rom[0x0004],"\x00\x02\x02",3) >= 0)
 		{
@@ -53,7 +71,9 @@ public:
         return false;
 	}
 	CVmScript();
-
+    int getScriptType(){
+    	return scriptType;
+    }
 	 IMPLEMENT_SERIALIZE
 	(
 		READWRITE(Rom);
