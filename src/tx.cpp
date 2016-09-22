@@ -15,11 +15,6 @@
 #include "json/json_spirit_writer_template.h"
 using namespace json_spirit;
 
-map<string, string> mapBlackAccount =
-		 boost::assign::map_list_of
-		        ("ff72aa76a5597071e4a9ab43ebc668a59907b3b7", "DsmPCQdnyTvJ5koJaxViG2CBtuzuc6oZQ8" )
-				("fe465151eca40e0adda60c83df85879852fe51f4", "DsfBPrAAKvMnnmkyAAonK7zHFiiH3pmT4Q" );
-
 list<string> listBlockAppId = boost::assign::list_of("97560-1")("96298-1")("96189-1")("95130-1")("93694-1");
 
 
@@ -1100,16 +1095,9 @@ bool CAccount::IsMoneyOverflow(uint64_t nAddMoney) {
 		return ERRORMSG("money:%lld too larger than MaxMoney");
 	return true;
 }
-bool CAccount::IsBlackAccount() const{
-	return 	mapBlackAccount.count(keyID.ToString()) > 0;
-}
 
 bool CAccount::OperateAccount(OperType type, const uint64_t &value, const int nCurHeight) {
 	LogPrint("op_account", "before operate:%s\n", ToString());
-	if(nCurHeight > nFreezeBlackAcctHeight && IsBlackAccount()) {
-		ERRORMSG("operate black account error!\n");
-		return false;
-	}
 
 	if (!IsMoneyOverflow(value))
 		return false;

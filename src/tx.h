@@ -804,7 +804,6 @@ public:
 	bool IsEmptyValue() const {
 		return !(llValues > 0);
 	}
-	bool IsBlackAccount() const;
 	uint256 GetHash(){
 		CHashWriter ss(SER_GETHASH, 0);
 		ss << regID << keyID << PublicKey << MinerPKey << VARINT(llValues)
