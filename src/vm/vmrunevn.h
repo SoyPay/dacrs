@@ -7,8 +7,9 @@
 
 #ifndef SCRIPTCHECK_H_
 #define SCRIPTCHECK_H_
+
 #include "vm8051.h"
-//#include "vmlua.h"
+#include "vmlua.h"
 #include "serialize.h"
 #include "script.h"
 #include "main.h"
@@ -24,8 +25,8 @@ class CVmRunEvn {
 	/**
 	 * Run the script object
 	 */
-	shared_ptr<CVm8051> pMcu;
-//	shared_ptr<CVmlua> pMcu;
+	shared_ptr<CVm8051> pMcu; //执行8051脚本
+	shared_ptr<CVmlua> pLua;  //执行lua脚本
 	/**
 	 * vm before the account state
 	 */
@@ -46,10 +47,19 @@ class CVmRunEvn {
 	 * the block height
 	 */
 	unsigned int RunTimeHeight;
+	/**
+	 * vm before the app account state
+	 */
+	vector<shared_ptr<CAppUserAccout>> RawAppUserAccout;
+	/**
+	 * vm operate the app account  state
+	 */
+	vector<shared_ptr<CAppUserAccout>> NewAppUserAccout;
 	CScriptDBViewCache *m_ScriptDBTip;
 	CAccountViewCache *m_view;
 	vector<CVmOperate> m_output;   //保存操作结果
     bool  isCheckAccount;  //校验账户平衡开关
+    int  scriptType;       //脚本的类型 0:8051,1:lua
 
 	map<vector<unsigned char >,vector<CAppFundOperate> > MapAppOperate;  //vector<unsigned char > 存的是accountId
 	shared_ptr<vector<CScriptDBOperLog> > m_dblog;
@@ -98,6 +108,8 @@ private:
 //	bool IsSignatureAccount(CRegID account);
 	bool OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFundOperate> > opMap, CScriptDBViewCache& view);
 
+	std::shared_ptr<CAppUserAccout> GetAppAccount(shared_ptr<CAppUserAccout>& AppAccount);
+
 public:
 	/**
 	 * A constructor.
@@ -113,6 +125,10 @@ public:
 	 * @return :the variable NewAccont
 	 */
 	vector<shared_ptr<CAccount> > &GetNewAccont();
+
+	vector<shared_ptr<CAppUserAccout>> &GetRawAppUserAccount();
+
+	vector<shared_ptr<CAppUserAccout>> &GetNewAppUserAccount();
 	/**
 	 * @brief  start to run the script
 	 * @param Tx: run the tx
@@ -128,7 +144,7 @@ public:
 	 * @brief just for test
 	 * @return:
 	 */
-	shared_ptr<vector<CVmOperate> > GetOperate() const;
+//	shared_ptr<vector<CVmOperate> > GetOperate() const;
 	const CRegID& GetScriptRegID();
 	const CRegID &GetTxAccount();
 	uint64_t GetValue() const;
@@ -143,6 +159,7 @@ public:
 
 	bool GetAppUserAccout(const vector<unsigned char> &id,shared_ptr<CAppUserAccout> &sptrAcc);
 	bool CheckAppAcctOperate(CTransaction* tx);
+	void SetCheckAccount(bool bCheckAccount);
 	virtual ~CVmRunEvn();
 };
 

@@ -9,24 +9,38 @@
 #include "util.h"
 #include<algorithm>
 #include <boost/foreach.hpp>
+#include "SafeInt3.hpp"
 
-// CVmRunEvn *pVmRunEvn = NULL;
+ //CVmRunEvn *pVmRunEvn = NULL;
 
 #define MAX_OUTPUT_COUNT 100
 CVmRunEvn::CVmRunEvn() {
 	RawAccont.clear();
 	NewAccont.clear();
+	RawAppUserAccout.clear();
+	NewAppUserAccout.clear();
 	RunTimeHeight = 0;
 	m_ScriptDBTip = NULL;
 	m_view = NULL;
 	m_dblog = std::make_shared<std::vector<CScriptDBOperLog> >();
 	isCheckAccount = false;
+	scriptType = 0;//默认跑8051脚本
 }
 vector<shared_ptr<CAccount> > &CVmRunEvn::GetRawAccont() {
 	return RawAccont;
 }
 vector<shared_ptr<CAccount> > &CVmRunEvn::GetNewAccont() {
 	return NewAccont;
+}
+
+vector<shared_ptr<CAppUserAccout>> &CVmRunEvn::GetNewAppUserAccount()
+{
+	return NewAppUserAccout;
+}
+
+vector<shared_ptr<CAppUserAccout>> &CVmRunEvn::GetRawAppUserAccount()
+{
+	return RawAppUserAccout;
 }
 
 bool CVmRunEvn::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& view, int nheight) {
@@ -44,6 +58,7 @@ bool CVmRunEvn::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& vie
 	}
 
 	CTransaction* secure = static_cast<CTransaction*>(Tx.get());
+	
 	if (!m_ScriptDBTip->GetScript(boost::get<CRegID>(secure->desUserId), vScript)) {
 		LogPrint("ERROR", "Script is not Registed %s\r\n", boost::get<CRegID>(secure->desUserId).ToString());
 		return false;
@@ -57,18 +72,31 @@ bool CVmRunEvn::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& vie
 		throw runtime_error("CVmScriptRun::intial() Unserialize to vmScript error:" + string(e.what()));
 	}
 
+
 	if (vmScript.IsValid() == false){
 		LogPrint("ERROR", "%s\r\n", "CVmScriptRun::intial() vmScript.IsValid error");
 		return false;
 	}
 	isCheckAccount = vmScript.IsCheckAccount();
-	if(secure->vContract.size() >=4*1024 ){
+	scriptType = vmScript.getScriptType();//初始化脚本类型
+	if(secure->vContract.size() >= 4*1024 ){
 		LogPrint("ERROR", "%s\r\n", "CVmScriptRun::intial() vContract context size lager 4096");
 		return false;
 	}
-	pMcu = make_shared<CVm8051>(vmScript.Rom, secure->vContract);
-//	pVmRunEvn = this; //传CVmRunEvn对象指针给lmylib.cpp库使用
-//	pMcu = make_shared<CVmlua>(vmScript.Rom, secure->vContract);
+	try {
+		if (0 == scriptType) {
+			pMcu = make_shared<CVm8051>(vmScript.Rom, secure->vContract);
+			LogPrint("vm", "%s\r\n", "CVmScriptRun::intial() MCU");
+		} else {
+			pLua = make_shared<CVmlua>(vmScript.Rom, secure->vContract);
+			//pVmRunEvn = this; //传CVmRunEvn对象指针给lmylib.cpp库使用
+			LogPrint("vm", "%s\r\n", "CVmScriptRun::intial() LUA");
+		}
+	} catch (exception& e) {
+		LogPrint("ERROR", "%s\r\n", "CVmScriptRun::intial() init error");
+		return false;
+	}
+
 	return true;
 }
 
@@ -99,7 +127,14 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 		return std::make_tuple (false, 0, string("VmScript inital Failed\n"));
 	}
 
-	int64_t step = pMcu.get()->run(maxstep,this);
+	int64_t step = 0;
+	if(0 == scriptType){
+		step = pMcu.get()->run(maxstep,this);
+		LogPrint("vm", "%s\r\n", "CVmScriptRun::run() MCU");
+	}else{
+		step = pLua.get()->run(maxstep,this);
+		LogPrint("vm", "%s\r\n", "CVmScriptRun::run() LUA");
+	}
 	if (0 == step) {
 		return std::make_tuple(false, 0, string("VmScript run Failed\n"));
 	} else if (-1 == step) {
@@ -138,8 +173,15 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 		m_dblog->push_back(operlog);
 	}
 
-	uint64_t spend = uRunStep * nBurnFactor;
-		if((spend < uRunStep) || (spend < nBurnFactor)){
+	/*
+		uint64_t spend = uRunStep * nBurnFactor;
+			if((spend < uRunStep) || (spend < nBurnFactor)){
+			return std::make_tuple (false, 0, string("mul error\n"));
+		}
+	*/
+	uint64_t spend = 0;
+	if(!SafeMultiply(uRunStep, nBurnFactor, spend))
+	{
 		return std::make_tuple (false, 0, string("mul error\n"));
 	}
 	return std::make_tuple (true, spend, string("VmScript Sucess\n"));
@@ -187,6 +229,20 @@ vector_unsigned_char CVmRunEvn::GetAccountID(CVmOperate value) {
 	}
 	return accountid;
 }
+
+shared_ptr<CAppUserAccout> CVmRunEvn::GetAppAccount(shared_ptr<CAppUserAccout>& AppAccount) {
+	if (RawAppUserAccout.size() == 0)
+		return NULL;
+	vector<shared_ptr<CAppUserAccout> >::iterator Iter;
+	for (Iter = RawAppUserAccout.begin(); Iter != RawAppUserAccout.end(); Iter++) {
+		shared_ptr<CAppUserAccout> temp = *Iter;
+		if (AppAccount.get()->getaccUserId() == temp.get()->getaccUserId()) {
+			return temp;
+		}
+	}
+	return NULL;
+}
+
 bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 	// judge contract rulue
 	uint64_t addmoey = 0, miusmoney = 0;
@@ -202,9 +258,15 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 
 		if (it.opeatortype == ADD_FREE ) {
 			memcpy(&operValue,it.money,sizeof(it.money));
+			/*
 			uint64_t temp = addmoey;
 			temp += operValue;
 			if(temp < operValue || temp<addmoey) {
+				return false;
+			}
+			*/
+			uint64_t temp = 0;
+			if(!SafeAdd(addmoey, operValue, temp)) {
 				return false;
 			}
 			addmoey = temp;
@@ -223,9 +285,15 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 			}
 
 			memcpy(&operValue,it.money,sizeof(it.money));
+			/*
 			uint64_t temp = miusmoney;
 			temp += operValue;
 			if(temp < operValue || temp < miusmoney) {
+				return false;
+			}
+			*/
+			uint64_t temp = 0;
+			if(!SafeAdd(miusmoney, operValue, temp)) {
 				return false;
 			}
 			miusmoney = temp;
@@ -260,29 +328,46 @@ bool CVmRunEvn::CheckAppAcctOperate(CTransaction* tx) {
 	for(auto  vOpItem : MapAppOperate) {
 		for(auto appFund : vOpItem.second) {
 			if(ADD_FREE_OP == appFund.opeatortype || ADD_TAG_OP == appFund.opeatortype) {
+				/*
 				int64_t temp = appFund.mMoney;
 				temp += addValue;
 				if(temp < addValue || temp<appFund.mMoney) {
 					return false;
 				}
+				*/
+				int64_t temp = 0;
+				if(!SafeAdd(appFund.mMoney, addValue, temp)) {
+					return false;
+				}
 				addValue = temp;
 			}
 			else if(SUB_FREE_OP == appFund.opeatortype || SUB_TAG_OP == appFund.opeatortype) {
+				/*
 				int64_t temp = appFund.mMoney;
 				temp += minusValue;
 				if(temp < minusValue || temp<appFund.mMoney) {
+					return false;
+				}
+				*/
+				int64_t temp = 0;
+				if(!SafeAdd(appFund.mMoney, minusValue, temp)) {
 					return false;
 				}
 				minusValue = temp;
 			}
 		}
 	}
+	/*
 	sumValue = addValue - minusValue;
 	if(sumValue > addValue) {
 		return false;
 	}
+	*/
+	if(!SafeSubtract(addValue, minusValue, sumValue)) {
+		return false;
+	}
 
-	int64_t sysContractAcct(0);
+	uint64_t sysContractAcct(0);
 	for(auto item : m_output) {
 		vector_unsigned_char vAccountId = GetAccountID(item);
 		if(vAccountId == boost::get<CRegID>(tx->desUserId).GetVec6() && item.opeatortype == MINUS_FREE) {
@@ -292,34 +377,47 @@ bool CVmRunEvn::CheckAppAcctOperate(CTransaction* tx) {
 			if(temp < 0) {
 				return false;
 			}
+			/*
 			temp += sysContractAcct;
 			if(temp < sysContractAcct || temp < (int64_t)value)
 				return false;
-			sysContractAcct = temp;
+			*/
+			uint64_t tempValue = temp;
+			uint64_t tempOut = 0;
+			if(!SafeAdd(tempValue, sysContractAcct, tempOut)) {
+				return false;
+			}
+			sysContractAcct = tempOut;
 		}
 	}
 
-	int64_t sysAcctSum = tx->llValues - sysContractAcct;
-	if(sysAcctSum > (int64_t)tx->llValues) {
+	/*
+	 int64_t sysAcctSum = tx->llValues - sysContractAcct;
+	 if(sysAcctSum > (int64_t)tx->llValues) {
+	 	 return false;
+	 }
+	*/
+	uint64_t sysAcctSum = 0;
+	if (!SafeSubtract(tx->llValues, sysContractAcct, sysAcctSum)) {
 		return false;
 	}
 
-	if(sumValue != sysAcctSum){
+	if(sumValue != (int64_t)sysAcctSum){
 		LogPrint("vm", "CheckAppAcctOperate:addValue=%lld, minusValue=%lld, txValue=%lld, sysContractAcct=%lld sumValue=%lld, sysAcctSum=%lld\n", addValue, minusValue, tx->llValues, sysContractAcct,sumValue, sysAcctSum);
 		return false;
 	}
 	return true;
 }
 
-shared_ptr<vector<CVmOperate>> CVmRunEvn::GetOperate() const {
-	auto tem = make_shared<vector<CVmOperate>>();
-	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
-	CDataStream Contractstream(*retData.get(), SER_DISK, CLIENT_VERSION);
-	vector<CVmOperate> retvmcode;
-	;
-	Contractstream >> retvmcode;
-	return tem;
-}
+//shared_ptr<vector<CVmOperate>> CVmRunEvn::GetOperate() const {
+//	auto tem = make_shared<vector<CVmOperate>>();
+//	shared_ptr<vector<unsigned char>> retData = pMcu.get()->GetRetData();
+//	CDataStream Contractstream(*retData.get(), SER_DISK, CLIENT_VERSION);
+//	vector<CVmOperate> retvmcode;
+//	;
+//	Contractstream >> retvmcode;
+//	return tem;
+//}
 
 bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountViewCache& view, const int nCurHeight) {
 
@@ -348,11 +446,12 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 				return false;                                           /// 账户不存在
 			}
 		}else{
-			string dacrsaddr(accountid.begin(), accountid.end());
-			userkeyid = CKeyID(dacrsaddr);
+			string addr(accountid.begin(), accountid.end());
+			userkeyid = CKeyID(addr);
 			 if(!view.GetAccount(CUserID(userkeyid), *tem.get()))
 			 {
-				return false;                                           /// 账户不存在
+				 tem->keyID = userkeyid;
+				//return false;                                           /// 未产生过交易记录的账户
 			 }
 		}
 
@@ -468,6 +567,7 @@ bool CVmRunEvn::GetAppUserAccout(const vector<unsigned char> &vAppUserId, shared
 }
 
 bool CVmRunEvn::OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFundOperate> > opMap, CScriptDBViewCache& view) {
+	NewAppUserAccout.clear();
 	if ((MapAppOperate.size() > 0)) {
 		for (auto const tem : opMap) {
 			shared_ptr<CAppUserAccout> sptrAcc;
@@ -481,6 +581,11 @@ bool CVmRunEvn::OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFu
 				return false;
 
 			}
+			shared_ptr<CAppUserAccout> vmAppAccount = GetAppAccount(sptrAcc);
+			if (vmAppAccount.get() == NULL) {
+				RawAppUserAccout.push_back(sptrAcc);
+				vmAppAccount = sptrAcc;
+			}
 			LogPrint("vm", "before user: %s\r\n", sptrAcc.get()->toString());
 			if (!sptrAcc.get()->Operate(tem.second)) {
 
@@ -493,6 +598,7 @@ bool CVmRunEvn::OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFu
 				return false;
 			}
 			LogPrint("vm", "after user: %s\r\n", sptrAcc.get()->toString());
+			NewAppUserAccout.push_back(sptrAcc);
 			CScriptDBOperLog log;
 			view.SetScriptAcc(GetScriptRegID(), *sptrAcc.get(), log);
 			shared_ptr<vector<CScriptDBOperLog> > m_dblog = GetDbLog();
@@ -503,6 +609,10 @@ bool CVmRunEvn::OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFu
 	return true;
 }
 
+void CVmRunEvn::SetCheckAccount(bool bCheckAccount)
+{
+	isCheckAccount = bCheckAccount;
+}
 
 Object CVmOperate::ToJson() {
 	Object obj;

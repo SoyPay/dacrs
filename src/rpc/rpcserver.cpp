@@ -253,6 +253,7 @@ static const CRPCCommand vRPCCommands[] =
     { "verifychain",            &verifychain,            true,      false,      false },
     { "verifymessage",          &verifymessage,          false,     false,      false },
     { "gettotalcoin",           &gettotalcoin,           false,     false,      false },
+    { "gettotalassets",         &gettotalassets,         false,     false,      false },
 
     /* Mining */
     { "getmininginfo",          &getmininginfo,          true,      false,      false },
@@ -299,7 +300,9 @@ static const CRPCCommand vRPCCommands[] =
 	{ "sendtoaddress",          &sendtoaddress,          false,     false,      true },
 	{ "sendtoaddresswithfee",   &sendtoaddresswithfee,   false,     false,      true },
     { "getbalance",             &getbalance,             false,     false,      true },
-
+    { "notionalpoolingbalance", &notionalpoolingbalance, false,     false,      true },
+    { "dispersebalance", 		&dispersebalance, 		 false,     false,      true },
+    { "getassets", 				&getassets, 	 		 false,     false,      true },
     { "submittx",      			&submittx,       	 	 true,      false,      false},
 
     { "sigstr",    				&sigstr,    			 true,      false,      true },

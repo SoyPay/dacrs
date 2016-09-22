@@ -767,6 +767,7 @@ void luaV_execute (lua_State *L,LUA_INTEGER *pllStep) {
     if(pllStep){
         /*统计运行的step数*/
         if(step >= *pllStep){
+        	*pllStep = -1;//force return
         	return ;
         }else{
         	step++;
@@ -1212,7 +1213,7 @@ void luaV_execute (lua_State *L,LUA_INTEGER *pllStep) {
         if(pllStep)
         {
         	LUA_INTEGER remainStep =  *pllStep - step; //剩余的总step
-        	Protect(luaD_call(L, cb, GETARG_C(i), 1,&remainStep));    //??????????待确认 验证
+        	Protect(luaD_call(L, cb, GETARG_C(i), 1,&remainStep));
         	step += remainStep;  //累加调用call实际运行的step
         }else{
         	Protect(luaD_call(L, cb, GETARG_C(i), 1,NULL));
@@ -1224,6 +1225,7 @@ void luaV_execute (lua_State *L,LUA_INTEGER *pllStep) {
         if(pllStep){
             /*统计运行的step数*/
             if(step >= *pllStep){
+            	*pllStep = -1;//force return
             	return ;
             }else{
             	step++;

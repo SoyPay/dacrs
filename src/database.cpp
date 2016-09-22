@@ -415,6 +415,7 @@ bool CScriptDBView::WriteTxOutPut(const uint256 &txid, const vector<CVmOperate> 
 bool CScriptDBView::ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput) {return false;}
 bool CScriptDBView::GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<unsigned char>, vector<unsigned char> > &vTxHash) { return false;}
 bool CScriptDBView::SetTxHashByAddress(const CKeyID &keyId, int nHeight, int nIndex, const string & strTxHash, CScriptDBOperLog &operLog){return false;}
+bool CScriptDBView::GetAllScriptAcc(const CRegID& scriptId, map<vector<unsigned char>, vector<unsigned char> > &mapAcc) {return false;}
 
 Object CScriptDBView:: ToJosnObj(string Prefix){
 	Object obj;
@@ -437,7 +438,7 @@ bool CScriptDBViewBacked::WriteTxOutPut(const uint256 &txid, const vector<CVmOpe
 bool CScriptDBViewBacked::ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput) {return pBase->ReadTxOutPut(txid, vOutput);}
 bool CScriptDBViewBacked::GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<unsigned char>, vector<unsigned char> > &vTxHash) { return pBase->GetTxHashByAddress(keyId, nHeight, vTxHash);}
 bool CScriptDBViewBacked::SetTxHashByAddress(const CKeyID &keyId, int nHeight, int nIndex, const string & strTxHash, CScriptDBOperLog &operLog){return pBase->SetTxHashByAddress(keyId, nHeight, nIndex, strTxHash, operLog);}
-
+bool CScriptDBViewBacked::GetAllScriptAcc(const CRegID& scriptId, map<vector<unsigned char>, vector<unsigned char> > &mapAcc) {return pBase->GetAllScriptAcc(scriptId, mapAcc);}
 
 CScriptDBViewCache::CScriptDBViewCache(CScriptDBView &base, bool fDummy) : CScriptDBViewBacked(base) {
 	mapDatas.clear();
@@ -728,7 +729,7 @@ bool CScriptDBViewCache::GetTxHashByAddress(const CKeyID &keyId, int nHeight, ma
 	}
 	return true;
 }
-
+bool CScriptDBViewCache::GetAllScriptAcc(const CRegID& scriptId, map<vector<unsigned char>, vector<unsigned char> > &mapAcc) {return pBase->GetAllScriptAcc(scriptId, mapAcc);}
 
 bool CScriptDBViewCache::ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput) {
 	vector<unsigned char> vKey = {'o','u','t','p','u','t'};

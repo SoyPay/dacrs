@@ -1366,6 +1366,9 @@ Value submittx(const Array& params, bool fHelp) {
 	std::shared_ptr<CBaseTransaction> tx;
 	stream >> tx;
 	std::tuple<bool, string> ret;
+	
+	std::shared_ptr<CRegisterAccountTx> pRegAcctTx =  make_shared<CRegisterAccountTx>(tx.get());
+	LogPrint("INFO","pubkey:%s keyId:%s\n",boost::get<CPubKey>(pRegAcctTx->userId).ToString(), boost::get<CPubKey>(pRegAcctTx->userId).GetKeyID().ToString());
 	ret = pwalletMain->CommitTransaction((CBaseTransaction *) tx.get());
 	if (!std::get<0>(ret)) {
 		throw JSONRPCError(RPC_WALLET_ERROR, "submittx Error:" + std::get<1>(ret));
@@ -2029,6 +2032,61 @@ Value gettotalcoin(const Array& params, bool fHelp) {
 		CAccountViewCache view(*pAccountViewTip, true);
 		uint64_t totalcoin = view.TraverseAccount();
 		obj.push_back(Pair("TotalCoin", ValueFromAmount(totalcoin)));
+	}
+	return obj;
+}
+
+Value gettotalassets(const Array& params, bool fHelp) {
+	if(fHelp || params.size() != 1)
+	{
+		throw runtime_error(
+				 "gettotalassets \n"
+				 "\nget all assets\n"
+				 "\nArguments:\n"
+				 "1.\"scriptid\": (string, required)\n"
+				 "\nResult:\n"
+				 "\nExamples:\n"
+				 + HelpExampleCli("gettotalassets", "11-1")
+				 + HelpExampleRpc("gettotalassets", "11-1"));
+	}
+	CRegID regid(params[0].get_str());
+	if (regid.IsEmpty() == true) {
+		throw runtime_error("in gettotalassets :scriptid size is error!\n");
+	}
+
+	if (!pScriptDBTip->HaveScript(regid)) {
+		throw runtime_error("in gettotalassets :scriptid  is not exist!\n");
+	}
+
+	CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+	Object obj;
+	{
+		map<vector<unsigned char>, vector<unsigned char> > mapAcc;
+		bool bRet = contractScriptTemp.GetAllScriptAcc(regid, mapAcc);
+		if(bRet)
+		{
+			uint64_t totalassets = 0;
+			map<vector<unsigned char>, vector<unsigned char>>::iterator it;
+			for(it = mapAcc.begin(); it != mapAcc.end();++it)
+			{
+				CAppUserAccout appAccOut;
+				vector<unsigned char> vKey = it->first;
+				vector<unsigned char> vValue = it->second;
+
+				CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
+				ds >> appAccOut;
+
+				totalassets += appAccOut.getllValues();
+				totalassets += appAccOut.GetAllFreezedValues();
+			}
+
+			obj.push_back(Pair("TotalAssets", ValueFromAmount(totalassets)));
+		}
+		else
+		{
+			throw runtime_error("in gettotalassets :find script account failed!\n");
+		}
+
 	}
 	return obj;
 }

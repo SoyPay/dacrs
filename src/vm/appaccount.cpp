@@ -20,6 +20,7 @@
 #include "json/json_spirit_value.h"
 #include "json/json_spirit_writer_template.h"
 #include "appaccount.h"
+#include "SafeInt3.hpp"
 using namespace json_spirit;
 
 
@@ -46,7 +47,12 @@ CAppCFund::CAppCFund(const vector<unsigned char>& vtag, uint64_t val, int nhight
 inline bool CAppCFund::MergeCFund(const CAppCFund &fund) {
 	assert(fund.GetTag() == this->GetTag());
 	assert(fund.getheight() == this->getheight() && fund.getvalue() > 0);
-	value = fund.getvalue()+value;
+	//value = fund.getvalue()+value;
+	uint64_t tempValue = 0;
+	if(!SafeAdd(fund.getvalue(), value, tempValue)) {
+		return ERRORMSG("Operate overflow !");
+	}
+	value = tempValue;
 	return true;
 }
 
@@ -100,12 +106,27 @@ bool CAppUserAccout::AddAppCFund(const CAppCFund& inFound) {
 
 }
 
+uint64_t CAppUserAccout::GetAllFreezedValues()
+{
+	uint64_t total = 0;
+	for (auto &Fund : vFreezedFund) {
+		total += Fund.getvalue();
+	}
+
+	return total;
+}
+
 bool CAppUserAccout::AutoMergeFreezeToFree(int hight) {
 
 	bool isneedremvoe = false;
 	for (auto &Fund : vFreezedFund) {
 		if (Fund.getheight() <= hight) {
-			llValues += Fund.getvalue();
+			//llValues += Fund.getvalue();
+			uint64_t tempValue = 0;
+			if(!SafeAdd(llValues, Fund.getvalue(), tempValue)) {
+				return ERRORMSG("Operate overflow !");
+			}
+			llValues = tempValue;
 			isneedremvoe = true;
 		}
 	}
@@ -179,7 +200,12 @@ bool CAppUserAccout::Operate(const vector<CAppFundOperate> &Op) {
 bool CAppUserAccout::Operate(const CAppFundOperate& Op) {
 	//LogPrint("acc","Op:%s",Op.toString());
 	if (Op.opeatortype == ADD_FREE_OP) {
-		llValues += Op.GetUint64Value();
+		//llValues += Op.GetUint64Value();
+		uint64_t tempValue = 0;
+		if(!SafeAdd(llValues, Op.GetUint64Value(), tempValue)) {
+			return ERRORMSG("Operate overflow !");
+		}
+		llValues = tempValue;
 		return true;
 	} else if (Op.opeatortype == SUB_FREE_OP) {
 		uint64_t tem = Op.GetUint64Value();
