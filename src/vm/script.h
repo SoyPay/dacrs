@@ -42,10 +42,6 @@ public:
 			scriptType = 0;//8051脚本
 		}
 
-		if(0 == scriptType) {
-			return false;//禁掉8051脚本
-		}
-
 		//!<指定版本的SDK以上，才去校验 账户平衡开关的取值
 		if(memcmp(&Rom[0x0004],"\x00\x02\x02",3) >= 0){
            if(!((Rom[0x0014] == 0x00) || (Rom[0x0014] == 0x01))){
