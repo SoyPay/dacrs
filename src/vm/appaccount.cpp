@@ -50,7 +50,7 @@ inline bool CAppCFund::MergeCFund(const CAppCFund &fund) {
 	//value = fund.getvalue()+value;
 	uint64_t tempValue = 0;
 	if(!SafeAdd(fund.getvalue(), value, tempValue)) {
-		return ERRORMSG("Operate overflow !");
+		return ERRORMSG("Operate overflow %lu, %lu!", fund.getvalue(), value);
 	}
 	value = tempValue;
 	return true;

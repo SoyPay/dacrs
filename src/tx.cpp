@@ -817,6 +817,9 @@ bool CRegisterAppTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidationSt
 	if(!vmScript.IsValid())
 		return state.DoS(100, ERRORMSG("ExecuteTx() : CRegisterAppTx ExecuteTx, vmScript invalid"), UPDATE_ACCOUNT_FAIL, "script-check-failed");
 
+	if(0 == vmScript.scriptType && nHeight >= nLimite8051AppHeight)
+		return state.DoS(100, ERRORMSG("ExecuteTx() : CRegisterAppTx ExecuteTx, 8051 vmScript invalid, nHeight >= 160000"), UPDATE_ACCOUNT_FAIL, "script-check-failed");
+
 	CRegID regId(nHeight, nIndex);
 	//create script account
 	CKeyID keyId = Hash160(regId.GetVec6());

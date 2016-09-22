@@ -397,8 +397,8 @@ bool CVmRunEvn::CheckAppAcctOperate(CTransaction* tx) {
 	 	 return false;
 	 }
 	*/
-	uint64_t sysAcctSum = 0;
-	if (!SafeSubtract(tx->llValues, sysContractAcct, sysAcctSum)) {
+	int64_t sysAcctSum = 0;
+	if (!SafeSubtract((int64_t)tx->llValues, (int64_t)sysContractAcct, sysAcctSum)) {
 		return false;
 	}
 
