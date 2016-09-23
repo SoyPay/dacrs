@@ -382,9 +382,11 @@ bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionD
 	CAccount account;
 	CRewardTransaction *prtx = (CRewardTransaction *) pBlock->vptx[0].get();
 	if (view.GetAccount(prtx->account, account)) {
+		/*
 		if(pBlock->GetHeight() > nFreezeBlackAcctHeight && account.IsBlackAccount()) {
 			return ERRORMSG("Black Account mining\n");
 		}
+		*/
 		if(!CheckSignScript(pBlock->SignatureHash(), pBlock->GetSignature(), account.PublicKey)) {
 			if (!CheckSignScript(pBlock->SignatureHash(), pBlock->GetSignature(), account.MinerPKey)) {
 //				LogPrint("ERROR", "block verify fail\r\n");
