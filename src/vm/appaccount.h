@@ -183,6 +183,20 @@ public:
 		mAccUserID = accUserId;
 	}
 
+	vector<CAppCFund>& getFreezedFund() {
+		return vFreezedFund;
+	}
+
+	void setFreezedFund(const vector<CAppCFund>& vtmp)
+	{
+		vFreezedFund.clear();
+		for(int i = 0; i < (int)vtmp.size(); i++)
+		{
+			vFreezedFund.push_back(vtmp[i]);
+		}
+	}
+
+	uint64_t GetAllFreezedValues();
 	IMPLEMENT_SERIALIZE
 	(
 		READWRITE(VARINT(llValues));
@@ -190,18 +204,54 @@ public:
 		READWRITE(vFreezedFund);
 	)
 
-private:
 	bool MinusAppCFund(const vector<unsigned char> &vtag,uint64_t val,int nhight);
 	bool AddAppCFund(const vector<unsigned char>& vtag, uint64_t val, int nhight);
 	bool MinusAppCFund(const CAppCFund &inFound);
 	bool AddAppCFund(const CAppCFund &inFound);
 	bool ChangeAppCFund(const CAppCFund &inFound);
 	bool Operate(const CAppFundOperate &Op);
+private:
 	uint64_t llValues;       //втси╫П╤Н
 	vector<unsigned char>  mAccUserID;
 	vector<CAppCFund> vFreezedFund;
 };
 
+class CAssetOperate
+{
+public:
+	CAssetOperate() {
+		FundTaglen = 0;
+		outheight = 0;
+		mMoney = 0;
+	}
 
+	uint64_t GetUint64Value() const {
+		return mMoney;
+	}
+
+	int getheight() const {
+		return outheight;
+	}
+
+	const vector<unsigned char> GetFundTagV() const {
+		assert(sizeof(vFundTag) >= FundTaglen );
+		vector<unsigned char> tag(&vFundTag[0], &vFundTag[FundTaglen]);
+		return (tag);
+	}
+
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(outheight);
+		READWRITE(mMoney);
+		READWRITE(FundTaglen);
+		for(unsigned int i = 0;i < sizeof(vFundTag);++i)
+		READWRITE(vFundTag[i]);
+	)
+public:
+	unsigned int outheight;		    //!< the transacion Timeout height
+	uint64_t mMoney;			        //!<The transfer amount
+	unsigned char FundTaglen;
+	unsigned char vFundTag[CAppCFund::MAX_TAG_SIZE ];				//!< accountid
+};
 
 #endif /* APPUSERACCOUT_H_ */

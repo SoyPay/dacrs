@@ -155,6 +155,9 @@ extern json_spirit::Value decoderawtransaction(const json_spirit::Array& params,
 extern json_spirit::Value signrawtransaction(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendrawtransaction(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value signmessage(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value notionalpoolingbalance(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value dispersebalance(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value getassets(const json_spirit:: Array& params, bool fHelp);
 extern json_spirit::Value sendtoaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendtoaddresswithfee(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value sendtoaddressraw(const json_spirit::Array& params, bool fHelp);

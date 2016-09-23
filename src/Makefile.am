@@ -82,12 +82,41 @@ JSON_H = \
   json/json_spirit_writer.h \
   json/json_spirit_writer_template.h
   
+VMLUA_H = \
+	vm/lua/lapi.h \
+	vm/lua/lauxlib.h \
+	vm/lua/lcode.h \
+	vm/lua/lctype.h \
+	vm/lua/ldebug.h \
+	vm/lua/ldo.h \
+	vm/lua/lfunc.h \
+	vm/lua/lgc.h \
+    vm/lua/llex.h \
+	vm/lua/llimits.h \
+	vm/lua/lmem.h \
+	vm/lua/lobject.h \
+	vm/lua/lopcodes.h \
+	vm/lua/lparser.h \
+	vm/lua/lprefix.h \
+	vm/lua/lstate.h \
+	vm/lua/lstring.h \
+	vm/lua/ltable.h \
+	vm/lua/ltm.h \
+	vm/lua/lua.h \
+	vm/lua/lua.hpp \
+	vm/lua/luaconf.h \
+	vm/lua/lualib.h \
+	vm/lua/lundump.h \
+	vm/lua/lvm.h \
+	vm/lua/lzio.h 	
+  
 VM_H = \
 	vm/vm8051.h \
 	vm/vmrunevn.h \
 	vm/script.h \
 	vm/testmcu.h \
-	vm/appaccount.h
+	vm/appaccount.h \
+	vm/vmlua.h
 
 	
 VM_CPP = \
@@ -95,7 +124,9 @@ VM_CPP = \
 	vm/vmrunevn.cpp \
 	vm/script.cpp \
 	vm/testmcu.cpp \
-	vm/appaccount.cpp
+	vm/appaccount.cpp \
+	vm/lmylib.cpp \
+	vm/vmlua.cpp 
 	 
 
 obj/build.h: FORCE
@@ -126,6 +157,7 @@ libdacrs_server_a_SOURCES = \
   txdb.cpp \
   txmempool.cpp \
   cuiserver.cpp	\
+  $(VMLUA_H) \
   $(VM_CPP) \
   $(VM_H) \
   $(JSON_H) \
@@ -184,6 +216,7 @@ dacrs_d_LDADD = \
   libdacrs_wallet.a \
   libdacrs_cli.a \
   libdacrs_common.a \
+  liblua53.a \
   $(LIBLEVELDB) \
   $(LIBMEMENV)
 #if ENABLE_WALLET

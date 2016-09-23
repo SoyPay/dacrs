@@ -126,6 +126,7 @@ public:
 	virtual bool ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput);
 	virtual bool GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<unsigned char>, vector<unsigned char> > &mapTxHash);
 	virtual bool SetTxHashByAddress(const CKeyID &keyId, int nHeight, int nIndex, const string & strTxHash, CScriptDBOperLog &operLog);
+	virtual bool GetAllScriptAcc(const CRegID& scriptId, map<vector<unsigned char>, vector<unsigned char> > &mapAcc);
 	virtual ~CScriptDBView(){};
 };
 
@@ -148,6 +149,7 @@ public:
 	bool ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput);
 	bool GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<unsigned char>, vector<unsigned char> > &mapTxHash);
 	bool SetTxHashByAddress(const CKeyID &keyId, int nHeight, int nIndex, const string & strTxHash, CScriptDBOperLog &operLog);
+	bool GetAllScriptAcc(const CRegID& scriptId, map<vector<unsigned char>, vector<unsigned char> > &mapAcc);
 };
 
 class CScriptDBViewCache : public CScriptDBViewBacked {
@@ -210,6 +212,7 @@ public:
 	bool ReadTxOutPut(const uint256 &txid, vector<CVmOperate> &vOutput);
 	bool GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<unsigned char>, vector<unsigned char> > &mapTxHash);
 	bool SetTxHashByAddress(const CKeyID &keyId, int nHeight, int nIndex, const string & strTxHash, CScriptDBOperLog &operLog);
+	bool GetAllScriptAcc(const CRegID& scriptId, map<vector<unsigned char>, vector<unsigned char> > &mapAcc);
 private:
 	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
 	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);

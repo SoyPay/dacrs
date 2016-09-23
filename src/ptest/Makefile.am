@@ -12,6 +12,7 @@ dacrs_ptest_LDADD = $(LIBBITCOIN_SERVER) \
                $(LIBBITCOIN_WALLET)   \
 			   $(LIBBITCOIN_CLI) \
 			   $(LIBBITCOIN_COMMON) \
+			   $(LIBLUA53) \
 			   $(LIBLEVELDB) \
 			   $(LIBMEMENV) \
                $(BOOST_LIBS) \
