@@ -285,7 +285,7 @@ Value createcontracttx(const Array& params, bool fHelp) {
 		throw runtime_error("in createcontracttx :addresss is error!\n");
 	}
 	EnsureWalletIsUnlocked();
-	std::shared_ptr<CTransaction> tx = make_shared<CTransaction>();
+	std::shared_ptr<CTransaction> tx = std::make_shared<CTransaction>();
 	{
 		//balance
 		CAccountViewCache view(*pAccountViewTip, true);
@@ -1338,7 +1338,7 @@ Value registaccounttxraw(const Array& params, bool fHelp) {
 		hight = params[3].get_int();
 	}
 
-	std::shared_ptr<CRegisterAccountTx> tx = make_shared<CRegisterAccountTx>(ukey, uminerkey, Fee, hight);
+	std::shared_ptr<CRegisterAccountTx> tx = std::make_shared<CRegisterAccountTx>(ukey, uminerkey, Fee, hight);
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 	ds << pBaseTx;
@@ -1367,7 +1367,7 @@ Value submittx(const Array& params, bool fHelp) {
 	stream >> tx;
 	std::tuple<bool, string> ret;
 	
-	std::shared_ptr<CRegisterAccountTx> pRegAcctTx =  make_shared<CRegisterAccountTx>(tx.get());
+	std::shared_ptr<CRegisterAccountTx> pRegAcctTx =  std::make_shared<CRegisterAccountTx>(tx.get());
 	LogPrint("INFO","pubkey:%s keyId:%s\n",boost::get<CPubKey>(pRegAcctTx->userId).ToString(), boost::get<CPubKey>(pRegAcctTx->userId).GetKeyID().ToString());
 	ret = pwalletMain->CommitTransaction((CBaseTransaction *) tx.get());
 	if (!std::get<0>(ret)) {
@@ -1440,7 +1440,7 @@ Value createcontracttxraw(const Array& params, bool fHelp) {
 		height = params[5].get_int();
 	}
 
-	std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(userid, appid, fee, amount, height, vcontract);
+	std::shared_ptr<CTransaction> tx = std::make_shared<CTransaction>(userid, appid, fee, amount, height, vcontract);
 
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
@@ -1561,7 +1561,7 @@ Value registerscripttxraw(const Array& params, bool fHelp) {
 		throw runtime_error(
 				tinyformat::format("registerscripttxraw :account id %s is not exist\n", mkeyId.ToAddress()));
 	};
-	std::shared_ptr<CRegisterAppTx> tx = make_shared<CRegisterAppTx>();
+	std::shared_ptr<CRegisterAppTx> tx = std::make_shared<CRegisterAppTx>();
 	tx.get()->regAcctId = GetUserId(keyid);
 	tx.get()->script = vscript;
 	tx.get()->llFees = fee;
@@ -1606,7 +1606,7 @@ Value sigstr(const Array& params, bool fHelp) {
 	Object obj;
 	switch (pBaseTx.get()->nTxType) {
 	case COMMON_TX: {
-		std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(pBaseTx.get());
+		std::shared_ptr<CTransaction> tx = std::make_shared<CTransaction>(pBaseTx.get());
 		CKeyID keyid;
 		if (!view.GetKeyId(tx.get()->srcRegId, keyid)) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "vaccountid have no key id");
@@ -1621,7 +1621,7 @@ Value sigstr(const Array& params, bool fHelp) {
 	}
 		break;
 	case REG_ACCT_TX: {
-		std::shared_ptr<CRegisterAccountTx> tx = make_shared<CRegisterAccountTx>(pBaseTx.get());
+		std::shared_ptr<CRegisterAccountTx> tx = std::make_shared<CRegisterAccountTx>(pBaseTx.get());
 		if (!pwalletMain->Sign(keyid, tx.get()->SignatureHash(), tx.get()->signature)) {
 			throw JSONRPCError(RPC_INVALID_PARAMETER, "Sign failed");
 		}
@@ -1632,7 +1632,7 @@ Value sigstr(const Array& params, bool fHelp) {
 	}
 		break;
 	case CONTRACT_TX: {
-		std::shared_ptr<CTransaction> tx = make_shared<CTransaction>(pBaseTx.get());
+		std::shared_ptr<CTransaction> tx = std::make_shared<CTransaction>(pBaseTx.get());
 		if (!pwalletMain->Sign(keyid, tx.get()->SignatureHash(), tx.get()->signature)) {
 			throw JSONRPCError(RPC_INVALID_PARAMETER, "Sign failed");
 		}
@@ -1645,7 +1645,7 @@ Value sigstr(const Array& params, bool fHelp) {
 	case REWARD_TX:
 		break;
 	case REG_APP_TX: {
-		std::shared_ptr<CRegisterAppTx> tx = make_shared<CRegisterAppTx>(pBaseTx.get());
+		std::shared_ptr<CRegisterAppTx> tx = std::make_shared<CRegisterAppTx>(pBaseTx.get());
 		if (!pwalletMain->Sign(keyid, tx.get()->SignatureHash(), tx.get()->signature)) {
 			throw JSONRPCError(RPC_INVALID_PARAMETER, "Sign failed");
 		}
@@ -1759,18 +1759,18 @@ Value getappaccinfo(const Array& params, bool fHelp) {
 		string addr = params[1].get_str();
 		key.assign(addr.c_str(), addr.c_str() + addr.length());
 	}
-	std::shared_ptr<CAppUserAccout> tem = make_shared<CAppUserAccout>();
+	std::shared_ptr<CAppUserAccout> tem = std::make_shared<CAppUserAccout>();
 	if(params.size() == 3 && 0 == params[2].get_int())
 	{
 
 		CScriptDBViewCache contractScriptTemp(*mempool.pScriptDBViewCache, true);
 		if (!contractScriptTemp.GetScriptAcc(script, key, *tem.get())) {
-			tem = make_shared<CAppUserAccout>(key);
+			tem = std::make_shared<CAppUserAccout>(key);
 		}
 	}else {
 		CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
 		if (!contractScriptTemp.GetScriptAcc(script, key, *tem.get())) {
-			tem = make_shared<CAppUserAccout>(key);
+			tem = std::make_shared<CAppUserAccout>(key);
 		}
 	}
 

@@ -2162,15 +2162,15 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 	std::shared_ptr<CTransactionDBCache> pForkTxCache;
 	std::shared_ptr<CScriptDBViewCache> pForkScriptDBCache;
 
-	std::shared_ptr<CAccountViewCache> pAcctViewCache = make_shared<CAccountViewCache>(*pAccountViewDB, true);
+	std::shared_ptr<CAccountViewCache> pAcctViewCache = std::make_shared<CAccountViewCache>(*pAccountViewDB, true);
 	pAcctViewCache->cacheAccounts = pAccountViewTip->cacheAccounts;
 	pAcctViewCache->cacheKeyIds = pAccountViewTip->cacheKeyIds;
 	pAcctViewCache->hashBlock = pAccountViewTip->hashBlock;
 
-	std::shared_ptr<CTransactionDBCache> pTxCache = make_shared<CTransactionDBCache>(*pTxCacheDB, true);
+	std::shared_ptr<CTransactionDBCache> pTxCache = std::make_shared<CTransactionDBCache>(*pTxCacheDB, true);
 	pTxCache->SetCacheMap(pTxCacheTip->GetCacheMap());
 
-	std::shared_ptr<CScriptDBViewCache> pScriptDBCache = make_shared<CScriptDBViewCache>(*pScriptDB, true);
+	std::shared_ptr<CScriptDBViewCache> pScriptDBCache = std::make_shared<CScriptDBViewCache>(*pScriptDB, true);
 	pScriptDBCache->mapDatas = pScriptDBTip->mapDatas;
 
 	uint256 preBlockHash;
@@ -4668,13 +4668,13 @@ std::shared_ptr<CBaseTransaction> CreateNewEmptyTransaction(unsigned char uType)
 	switch(uType){
 	case COMMON_TX:
 	case CONTRACT_TX:
-		return make_shared<CTransaction>();
+		return std::make_shared<CTransaction>();
 	case REG_ACCT_TX:
-		return make_shared<CRegisterAccountTx>();
+		return std::make_shared<CRegisterAccountTx>();
 	case REWARD_TX:
-		return make_shared<CRewardTransaction>();
+		return std::make_shared<CRewardTransaction>();
 	case REG_APP_TX:
-		return make_shared<CRegisterAppTx>();
+		return std::make_shared<CRegisterAppTx>();
 	default:
 		ERRORMSG("CreateNewEmptyTransaction type error");
 		break;

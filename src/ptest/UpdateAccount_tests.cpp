@@ -38,7 +38,7 @@ int TestCallRPC(std::string strMethod, const std::vector<std::string> &vParams, 
 			strPrint = write_string(result, true);
 	}
 	strRet = strPrint;
-	BOOST_MESSAGE(strPrint);
+	BOOST_TEST_MESSAGE(strPrint);
 	//cout << strPrint << endl;
 	return nRet;
 }
