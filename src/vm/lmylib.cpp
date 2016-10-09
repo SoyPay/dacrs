@@ -1530,7 +1530,7 @@ static RET_DEFINE ExGetCurTxContactFunc(unsigned char * ipara, void *pVmEvn)
 	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 	vector<unsigned char> contact =pVmRunEvn->GetTxContact();
 
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+	auto tem =  std::make_shared<std::vector< vector<unsigned char> > >();
 
 	(*tem.get()).push_back(contact);
 	return std::make_tuple (true,0, tem);
@@ -1635,7 +1635,7 @@ static RET_DEFINE ExCurDeCompressContactFunc(unsigned char *ipara,void *pVmEvn){
 		return RetFalse(string(__FUNCTION__)+"para  err !");
 	 }
 
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+	auto tem =  std::make_shared<std::vector< vector<unsigned char> > >();
 	(*tem.get()).push_back(outContact);
 	return std::make_tuple (true,0, tem);
 
@@ -1651,7 +1651,7 @@ static RET_DEFINE ExDeCompressContactFunc(unsigned char *ipara,void *pVmEvn){
 //	LogPrint("vm","ExGetTxContractsFunc1:%s\n",hash1.GetHex().c_str());
     bool flag = false;
 	std::shared_ptr<CBaseTransaction> pBaseTx;
-	auto tem =  make_shared<std::vector< vector<unsigned char> > >();
+	auto tem =  std::make_shared<std::vector< vector<unsigned char> > >();
 	if (GetTransaction(pBaseTx, hash1, *pVmScript->GetScriptDB(), false)) {
 		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
 		 std::vector<unsigned char> outContact;
