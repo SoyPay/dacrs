@@ -228,7 +228,8 @@ srcdir="$(dirname $0)"
 cd "$srcdir"
 autoreconf --install --force
 
-CPPFLAGS="-std=c++11" \
+CPPFLAGS="-stdlib=libc++ -std=c++11 -I/usr/local/opt/boost160/include -I/usr/local/BerkeleyDB.4.8/include" \
+LDFLAGS="-L/usr/local/opt/boost160/lib -L/usr/local/BerkeleyDB.4.8/lib -lc++" \
 ./configure \
 --disable-upnp-default \
 --enable-debug \
@@ -237,5 +238,6 @@ $flag1 \
 $flag2 \
 $flag3 \
 $flag4 \
---with-protoc-bindir=/c/deps/protobuf-2.5.0/src \
+--with-boost-libdir=/usr/local/opt/boost160/lib \
 --with-incompatible-bdb
+
