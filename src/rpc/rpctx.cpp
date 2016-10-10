@@ -907,17 +907,35 @@ Value resetclient(const Array& params, bool fHelp) {
 }
 
 Value listapp(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 1) {
+	if (fHelp || params.size() < 1) {
 		throw runtime_error("listapp \"showDetail\" \n"
 				"\nget the list register script\n"
 				"\nArguments:\n"
 	            "1. showDetail  (boolean, required)true to show scriptContent,otherwise to not show it.\n"
+				"2. script id   (string, option)"
 				"\nResult an object contain many script data\n"
 				"\nResult:\n"
 				"\nExamples:\n" + HelpExampleCli("listapp", "true") + HelpExampleRpc("listapp", "true"));
 	}
 	bool showDetail = false;
 	showDetail = params[0].get_bool();
+
+	bool bHaveRegId = false;
+	CRegID scriptId;
+	if(params.size() >= 2) {
+		string strRegId = params[1].get_str();
+		CRegID regid(strRegId);
+		if (regid.IsEmpty() == true) {
+			throw runtime_error("in listapp :scriptid size is error!\n");
+		}
+
+		if (!pScriptDBTip->HaveScript(regid)) {
+			throw runtime_error("in listapp :scriptid  is not exist!\n");
+		}
+
+		bHaveRegId = true;
+		scriptId = regid;
+	}
 	Object obj;
 	Array arrayScript;
 
@@ -931,18 +949,38 @@ Value listapp(const Array& params, bool fHelp) {
 		Object script;
 		if (!pScriptDBTip->GetScript(0, regId, vScript))
 			throw JSONRPCError(RPC_DATABASE_ERROR, "get script error: cannot get registered script.");
-		script.push_back(Pair("scriptId", regId.ToString()));
-		script.push_back(Pair("scriptId2", HexStr(regId.GetVec6())));
-		CDataStream ds(vScript, SER_DISK, CLIENT_VERSION);
-		CVmScript vmScript;
-		ds >> vmScript;
-		string strDes(vmScript.ScriptExplain.begin(), vmScript.ScriptExplain.end());
-		script.push_back(Pair("description", HexStr(vmScript.ScriptExplain)));
 
-		if (showDetail)
-			script.push_back(Pair("scriptContent", HexStr(vScript.begin(), vScript.end())));
-		arrayScript.push_back(script);
+		bool bFound = false;
+		if(bHaveRegId) {
+			if(scriptId == regId)
+				bFound = true;
+		}
+
+		if(bFound || !bHaveRegId) {
+			script.push_back(Pair("scriptId", regId.ToString()));
+			script.push_back(Pair("scriptId2", HexStr(regId.GetVec6())));
+			CDataStream ds(vScript, SER_DISK, CLIENT_VERSION);
+			CVmScript vmScript;
+			ds >> vmScript;
+			string strDes(vmScript.ScriptExplain.begin(), vmScript.ScriptExplain.end());
+			script.push_back(Pair("description", HexStr(vmScript.ScriptExplain)));
+
+			if (showDetail)
+				script.push_back(Pair("scriptContent", HexStr(vScript.begin(), vScript.end())));
+
+			arrayScript.push_back(script);
+
+			if(bFound) {
+				obj.push_back(Pair("listregedscript", arrayScript));
+				return obj;
+			}
+		}
+
 		while (pScriptDBTip->GetScript(1, regId, vScript)) {
+			if(bHaveRegId) {
+				if(scriptId != regId)
+					continue;
+			}
 			Object obj;
 			obj.push_back(Pair("scriptId", regId.ToString()));
 			obj.push_back(Pair("scriptId2", HexStr(regId.GetVec6())));
@@ -954,6 +992,9 @@ Value listapp(const Array& params, bool fHelp) {
 			if (showDetail)
 				obj.push_back(Pair("scriptContent", string(vScript.begin(), vScript.end())));
 			arrayScript.push_back(obj);
+			if(bHaveRegId) {
+				break;
+			}
 		}
 	}
 
