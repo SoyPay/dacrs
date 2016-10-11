@@ -39,7 +39,7 @@ extern Value getaccountinfo(const Array& params, bool fHelp);
 
 extern Value disconnectblock(const Array& params, bool fHelp);
 extern Value listapp(const Array& params, bool fHelp);
-
+extern Value getappinfo(const Array& params, bool fHelp);
 
 extern Value getaddrbalance(const Array& params, bool fHelp);
 extern Value generateblock(const Array& params, bool fHelp);

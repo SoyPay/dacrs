@@ -961,6 +961,42 @@ Value listapp(const Array& params, bool fHelp) {
 	return obj;
 }
 
+Value getappinfo(const Array& params, bool fHelp) {
+	if (fHelp || params.size() != 1)
+	        throw runtime_error(
+	            "getappinfo ( \"scriptid\" )\n"
+	            "\nget app information.\n"
+	            "\nArguments:\n"
+	            "1. \"scriptid\"    (string). The script ID. \n"
+	            "\nget app information in the systems\n"
+				"\nExamples:\n" + HelpExampleCli("listapp", "123-1") + HelpExampleRpc("listapp", "123-1"));
+
+	string strRegId = params[0].get_str();
+	CRegID regid(strRegId);
+	if (regid.IsEmpty() == true) {
+		throw runtime_error("in getappinfo :scriptid size is error!\n");
+	}
+
+	if (!pScriptDBTip->HaveScript(regid)) {
+		throw runtime_error("in getappinfo :scriptid  is not exist!\n");
+	}
+
+	vector<unsigned char> vScript;
+	if (!pScriptDBTip->GetScript(regid, vScript)) {
+		throw JSONRPCError(RPC_DATABASE_ERROR, "get script error: cannot get registered script.");
+	}
+
+	Object obj;
+	obj.push_back(Pair("scriptId", regid.ToString()));
+	obj.push_back(Pair("scriptId2", HexStr(regid.GetVec6())));
+	CDataStream ds(vScript, SER_DISK, CLIENT_VERSION);
+	CVmScript vmScript;
+	ds >> vmScript;
+	obj.push_back(Pair("description", HexStr(vmScript.ScriptExplain)));
+	obj.push_back(Pair("scriptContent", HexStr(vmScript.Rom.begin(), vmScript.Rom.end())));
+	return obj;
+}
+
 Value getaddrbalance(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 1) {
 		string msg = "getaddrbalance nrequired [\"key\",...] ( \"account\" )\n"
