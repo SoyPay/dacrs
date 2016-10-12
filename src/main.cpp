@@ -2358,6 +2358,16 @@ bool CheckBlock(const CBlock& block, CValidationState& state, CAccountViewCache 
     if (fCheckMerkleRoot && block.GetHashMerkleRoot() != block.vMerkleTree.back())
         return state.DoS(100, ERRORMSG("CheckBlock() : hashMerkleRoot mismatch, block.hashMerkleRoot=%s, block.vMerkleTree.back()=%s", block.GetHashMerkleRoot().ToString(), block.vMerkleTree.back().ToString()),
                          REJECT_INVALID, "bad-txnmrklroot", true);
+
+
+    //check nonce
+	uint64_t maxNonce = SysCfg().GetBlockMaxNonce(); //cacul times
+	if (block.GetNonce() > maxNonce) {
+        return state.Invalid(ERRORMSG("CheckBlock() : Nonce is larger than maxNonce"),
+                             REJECT_INVALID, "Nonce-too-large");
+	}
+
+
     return true;
 }
 
