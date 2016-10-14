@@ -6,3 +6,4 @@ cp -rf ./liblua53.a ../src/
 cp -rf ./libmemenv.a ../src/leveldb
 cp -rf ./libleveldb.a ../src/leveldb
 cp -rf ./autogen-dacrs-man.sh ../
+cp -rf ./genbuild.sh ../share/
