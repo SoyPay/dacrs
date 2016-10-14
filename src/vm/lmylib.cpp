@@ -2179,6 +2179,23 @@ static int ExTransferSomeAsset(lua_State *L) {
 
 }
 
+static int ExGetLastBlcokTimestamp(lua_State *L) {
+	int height = chainActive.Height();
+
+	CBlockIndex *pindex = chainActive[height];
+	if(!pindex) {
+		return RetFalse("ExGetLastBlcokTimestamp get time stamp error");
+	}
+
+	if (lua_checkstack(L, sizeof(lua_Integer))) {
+		lua_pushinteger(L, (lua_Integer) pindex->nTime + 8 * 60 * 60);
+		return 1;
+	}
+
+	LogPrint("vm", "%s\r\n", "ExGetLastBlcokTimestamp stack overflow");
+	return 0;
+}
+
 static const luaL_Reg mylib[] = { //
 		{"Sha256", ExSha256Func },			//
 		{"Des", ExDesFunc },			    //
@@ -2218,6 +2235,7 @@ static const luaL_Reg mylib[] = { //
 		{"IntegerToByte8",ExIntegerToByte8Func},
 		{"TransferContactAsset", ExTransferContactAsset},
 		{"TransferSomeAsset", ExTransferSomeAsset},
+		{"GetLastBlcokTimestamp", ExGetLastBlcokTimestamp},
 		{NULL,NULL}
 
 		};
