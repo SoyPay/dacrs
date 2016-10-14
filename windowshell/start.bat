@@ -4,5 +4,5 @@ copy .\windowshell\makefile_liblua .\src\. /Y
 copy .\windowshell\libleveldb.a  .\src\leveldb\.  /Y
 copy .\windowshell\libmemenv.a .\src\leveldb\.  /Y
 copy .\windowshell\autogen-dacrs-man.sh  .  /Y
-copy .\windowshell\genbuild.sh .\share\.
+copy .\windowshell\genbuild.sh .\share\. /Y
 pause
