@@ -2179,20 +2179,31 @@ static int ExTransferSomeAsset(lua_State *L) {
 
 }
 
-static int ExGetLastBlcokTimestamp(lua_State *L) {
-	int height = chainActive.Height();
+static int ExGetBlcokTimestamp(lua_State *L) {
+	int height = 0;
+    if(!GetDataInt(L,height)){
+    	return RetFalse("ExGetBlcokTimestamp para err1");
+    }
+
+    if(height <= 0) {
+    	height = chainActive.Height() + height;
+        if(height < 0) {
+        	return RetFalse("ExGetBlcokTimestamp para err2");
+        }
+    }
+
 
 	CBlockIndex *pindex = chainActive[height];
 	if(!pindex) {
-		return RetFalse("ExGetLastBlcokTimestamp get time stamp error");
+		return RetFalse("ExGetBlcokTimestamp get time stamp error");
 	}
 
 	if (lua_checkstack(L, sizeof(lua_Integer))) {
-		lua_pushinteger(L, (lua_Integer) pindex->nTime + 8 * 60 * 60);
+		lua_pushinteger(L, (lua_Integer) pindex->nTime);
 		return 1;
 	}
 
-	LogPrint("vm", "%s\r\n", "ExGetLastBlcokTimestamp stack overflow");
+	LogPrint("vm", "%s\r\n", "ExGetBlcokTimestamp stack overflow");
 	return 0;
 }
 
@@ -2235,7 +2246,7 @@ static const luaL_Reg mylib[] = { //
 		{"IntegerToByte8",ExIntegerToByte8Func},
 		{"TransferContactAsset", ExTransferContactAsset},
 		{"TransferSomeAsset", ExTransferSomeAsset},
-		{"GetLastBlcokTimestamp", ExGetLastBlcokTimestamp},
+		{"GetBlcokTimestamp", ExGetBlcokTimestamp},
 		{NULL,NULL}
 
 		};
