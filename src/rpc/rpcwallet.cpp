@@ -9,6 +9,7 @@
 #include "net.h"
 #include "netbase.h"
 #include "util.h"
+#include "miner.h"
 #include "../wallet/wallet.h"
 #include "../wallet/walletdb.h"
 
@@ -587,6 +588,146 @@ Value dispersebalance(const Array& params, bool fHelp)
     }
 
     retObj.push_back(Pair("Tx", arrayTxIds));
+
+	return retObj;
+}
+
+#pragma pack(1)
+typedef struct {
+	unsigned char systype;
+	unsigned char type;
+	unsigned char address[34]; //  ×ªÕËµØÖ·
+
+	IMPLEMENT_SERIALIZE
+	(
+		READWRITE(systype);
+		READWRITE(type);
+		for(unsigned int i = 0;i < 34;++i)
+			READWRITE(address[i]);
+	)
+}TRAN_USER;
+#pragma pack()
+
+Value notionalpoolingasset(const Array& params, bool fHelp)
+{
+	if(fHelp || params.size() < 2)
+	{
+		throw runtime_error(
+				 "notionalpoolingasset \"scriptid\" \"recvaddress\"\n"
+				 "\nThe collection of all assets\n"
+				 "\nArguments:\n"
+				 "1.\"scriptid\": (string, required)\n"
+				 "2.\"recvaddress\"  (string, required) The Popcoin address to receive.\n"
+				 "3.\"amount\" (number optional)\n"
+				 "\nResult:\n"
+				 "\nExamples:\n"
+				 + HelpExampleCli("notionalpoolingasset", "11-1 pPKAiv9v4EaKjZGg7yWqnFJbhdZLVLyX8N 10")
+				 + HelpExampleRpc("notionalpoolingasset", "11-1 pPKAiv9v4EaKjZGg7yWqnFJbhdZLVLyX8N 10"));
+	}
+	EnsureWalletIsUnlocked();
+	CRegID regid(params[0].get_str());
+	if (regid.IsEmpty() == true) {
+		throw runtime_error("in notionalpoolingasset :scriptid size is error!\n");
+	}
+
+	if (!pScriptDBTip->HaveScript(regid)) {
+		throw runtime_error("in notionalpoolingasset :scriptid  is not exist!\n");
+	}
+
+	int64_t nAmount = 10 * COIN;
+	if(3 == params.size())
+		nAmount = params[2].get_real() * COIN;
+
+	CKeyID RevKeyId;
+
+	auto GetKeyId = [](string const &addr,CKeyID &KeyId) {
+		if (!CRegID::GetKeyID(addr, KeyId)) {
+			KeyId=CKeyID(addr);
+			if (KeyId.IsEmpty())
+			return false;
+		}
+		return true;
+	};
+
+	Object retObj;
+	string strRevAddr = params[1].get_str();
+	if (!GetKeyId(strRevAddr, RevKeyId)) {
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "to address Invalid  ");
+	}
+
+	if(!pwalletMain->HaveKey(RevKeyId)) {
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "to address Invalid  ");
+	}
+
+	set<CKeyID> sKeyid;
+	pwalletMain->GetKeys(sKeyid);
+	if(sKeyid.empty())
+	{
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No Key In wallet \n");
+	}
+	set<CKeyID> sResultKeyid;
+	for (auto &te : sKeyid) {
+		if(te.ToString() == RevKeyId.ToString())
+			continue;
+		if (pAccountViewTip->GetRawBalance(te) >= nAmount)
+			sResultKeyid.insert(te);
+	}
+
+	set<CKeyID>::iterator it;
+	CKeyID sendKeyId;
+	Array arrayTxIds;
+
+	CUserID rev;
+	CRegID revreg;
+
+	for(it=sResultKeyid.begin();it!=sResultKeyid.end();it++)
+	{
+	    sendKeyId = *it;
+
+	    if (sendKeyId.IsNull()) {
+	    	continue;
+	    }
+
+	    CRegID sendreg;
+    	if (!pAccountViewTip->GetRegId(CUserID(sendKeyId), sendreg)) {
+    		continue;
+    	}
+
+    	TRAN_USER tu;
+    	memset(&tu, 0, sizeof(TRAN_USER));
+    	tu.systype = 0xff;
+    	tu.type = 0x03;
+    	memcpy(&tu.address, strRevAddr.c_str(), 34);
+
+		CDataStream scriptData(SER_DISK, CLIENT_VERSION);
+		scriptData << tu;
+		string sendcontract = HexStr(scriptData);
+
+		LogPrint("vm", "sendcontract=%s\n",sendcontract.c_str());
+
+		vector_unsigned_char pContract;
+		pContract = ParseHex(sendcontract);
+
+		int nFuelRate = GetElementForBurn(chainActive.Tip());
+		const int STEP = 645;
+
+		int64_t nFee = (STEP / 100 + 1) * nFuelRate + SysCfg().GetTxFee();
+
+		LogPrint("vm", "nFuelRate=%d, nFee=%lld\n",nFuelRate, nFee);
+
+    	CTransaction tx(sendreg, regid, nFee, 0 , chainActive.Height(), pContract);
+
+    	if (!pwalletMain->Sign(sendKeyId, tx.SignatureHash(), tx.signature)) {
+    		continue;
+    	}
+
+    	std::tuple<bool,string> ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
+    	if(!std::get<0>(ret))
+    		 continue;
+    	arrayTxIds.push_back(std::get<1>(ret));
+	}
+
+	retObj.push_back(Pair("Tx", arrayTxIds));
 
 	return retObj;
 }
