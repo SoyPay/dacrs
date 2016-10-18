@@ -2179,7 +2179,7 @@ static int ExTransferSomeAsset(lua_State *L) {
 
 }
 
-static int ExGetBlcokTimestamp(lua_State *L) {
+static int ExGetBlockTimestamp(lua_State *L) {
 	int height = 0;
     if(!GetDataInt(L,height)){
     	return RetFalse("ExGetBlcokTimestamp para err1");
@@ -2246,7 +2246,7 @@ static const luaL_Reg mylib[] = { //
 		{"IntegerToByte8",ExIntegerToByte8Func},
 		{"TransferContactAsset", ExTransferContactAsset},
 		{"TransferSomeAsset", ExTransferSomeAsset},
-		{"GetBlcokTimestamp", ExGetBlcokTimestamp},
+		{"GetBlockTimestamp", ExGetBlockTimestamp},
 		{NULL,NULL}
 
 		};
