@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(cvir8051_test2)
 	end =  (sizeof(map) / sizeof(map[0]));
 
 	(test.*(map[101].fun))(space);
-	BOOST_MESSAGE("test ok:function->" + map[101].fname);
+	BOOST_TEST_MESSAGE("test ok:function->" + map[101].fname);
 	for (int index = start; index < end; index+=(rand()%40)) {
 		string ret = (test.*(map[index].fun))(space);
 		if (ret != "OK") {
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(cvir8051_test2)
 			sprintf(temp, "No.%d-", map[index].index);
 			reslut +=  (string(temp) + "ERROR:function->" + map[index].fname + " info:\r\n" + ret + "\r\n");
 		}
-		BOOST_MESSAGE("test ok:function->" + map[index].fname);
+		BOOST_TEST_MESSAGE("test ok:function->" + map[index].fname);
 	}
 
 	if (reslut != "") {

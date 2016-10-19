@@ -274,7 +274,7 @@ Value verifymessage(const Array& params, bool fHelp)
     string strSign     = params[1].get_str();
     string strMessage  = params[2].get_str();
     CKeyID keyID;
-    if(strAddress.length() == 33 ) {   //pubkey
+    if(strAddress.length() == 66 ) {   //pubkey
     	vector<unsigned char> vPubKey = ParseHex(strAddress);
     	CPubKey pubkeyIn(vPubKey.begin(), vPubKey.end());
     	keyID = pubkeyIn.GetKeyID();

@@ -342,16 +342,16 @@ public:
 		switch (pTx->nTxType) {
 		case COMMON_TX:
 		case CONTRACT_TX:
-			mapAccountTx[hash] = make_shared<CTransaction>(pTx);
+			mapAccountTx[hash] = std::make_shared<CTransaction>(pTx);
 			break;
 		case REG_ACCT_TX:
-			mapAccountTx[hash] = make_shared<CRegisterAccountTx>(pTx);
+			mapAccountTx[hash] = std::make_shared<CRegisterAccountTx>(pTx);
 			break;
 		case REWARD_TX:
-			mapAccountTx[hash] = make_shared<CRewardTransaction>(pTx);
+			mapAccountTx[hash] = std::make_shared<CRewardTransaction>(pTx);
 			break;
 		case REG_APP_TX:
-			mapAccountTx[hash] = make_shared<CRegisterAppTx>(pTx);
+			mapAccountTx[hash] = std::make_shared<CRegisterAppTx>(pTx);
 			break;
 		default:
 //			assert(0);

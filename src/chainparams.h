@@ -64,7 +64,7 @@ protected:
 public:
 
 	std::shared_ptr<vector<string> > GetMultiArgsMap(string str) const{
-		std::shared_ptr<vector<string> > temp = make_shared<vector<string> >();
+		std::shared_ptr<vector<string> > temp = std::make_shared<vector<string> >();
 		vector<string> te = m_mapMultiArgs[str];
 		temp.get()->assign(te.begin(), te.end());
 		return temp;

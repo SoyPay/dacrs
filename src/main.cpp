@@ -2162,15 +2162,15 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 	std::shared_ptr<CTransactionDBCache> pForkTxCache;
 	std::shared_ptr<CScriptDBViewCache> pForkScriptDBCache;
 
-	std::shared_ptr<CAccountViewCache> pAcctViewCache = make_shared<CAccountViewCache>(*pAccountViewDB, true);
+	std::shared_ptr<CAccountViewCache> pAcctViewCache = std::make_shared<CAccountViewCache>(*pAccountViewDB, true);
 	pAcctViewCache->cacheAccounts = pAccountViewTip->cacheAccounts;
 	pAcctViewCache->cacheKeyIds = pAccountViewTip->cacheKeyIds;
 	pAcctViewCache->hashBlock = pAccountViewTip->hashBlock;
 
-	std::shared_ptr<CTransactionDBCache> pTxCache = make_shared<CTransactionDBCache>(*pTxCacheDB, true);
+	std::shared_ptr<CTransactionDBCache> pTxCache = std::make_shared<CTransactionDBCache>(*pTxCacheDB, true);
 	pTxCache->SetCacheMap(pTxCacheTip->GetCacheMap());
 
-	std::shared_ptr<CScriptDBViewCache> pScriptDBCache = make_shared<CScriptDBViewCache>(*pScriptDB, true);
+	std::shared_ptr<CScriptDBViewCache> pScriptDBCache = std::make_shared<CScriptDBViewCache>(*pScriptDB, true);
 	pScriptDBCache->mapDatas = pScriptDBTip->mapDatas;
 
 	uint256 preBlockHash;
@@ -2358,6 +2358,16 @@ bool CheckBlock(const CBlock& block, CValidationState& state, CAccountViewCache 
     if (fCheckMerkleRoot && block.GetHashMerkleRoot() != block.vMerkleTree.back())
         return state.DoS(100, ERRORMSG("CheckBlock() : hashMerkleRoot mismatch, block.hashMerkleRoot=%s, block.vMerkleTree.back()=%s", block.GetHashMerkleRoot().ToString(), block.vMerkleTree.back().ToString()),
                          REJECT_INVALID, "bad-txnmrklroot", true);
+
+
+    //check nonce
+	uint64_t maxNonce = SysCfg().GetBlockMaxNonce(); //cacul times
+	if (block.GetNonce() > maxNonce) {
+        return state.Invalid(ERRORMSG("CheckBlock() : Nonce is larger than maxNonce"),
+                             REJECT_INVALID, "Nonce-too-large");
+	}
+
+
     return true;
 }
 
@@ -4668,13 +4678,13 @@ std::shared_ptr<CBaseTransaction> CreateNewEmptyTransaction(unsigned char uType)
 	switch(uType){
 	case COMMON_TX:
 	case CONTRACT_TX:
-		return make_shared<CTransaction>();
+		return std::make_shared<CTransaction>();
 	case REG_ACCT_TX:
-		return make_shared<CRegisterAccountTx>();
+		return std::make_shared<CRegisterAccountTx>();
 	case REWARD_TX:
-		return make_shared<CRewardTransaction>();
+		return std::make_shared<CRewardTransaction>();
 	case REG_APP_TX:
-		return make_shared<CRegisterAppTx>();
+		return std::make_shared<CRegisterAppTx>();
 	default:
 		ERRORMSG("CreateNewEmptyTransaction type error");
 		break;

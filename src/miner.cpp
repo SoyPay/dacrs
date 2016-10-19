@@ -507,7 +507,7 @@ CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txC
 		CRewardTransaction rtx;
 
 		// Add our coinbase tx as first transaction
-		pblock->vptx.push_back(make_shared<CRewardTransaction>(rtx));
+		pblock->vptx.push_back(std::make_shared<CRewardTransaction>(rtx));
 		pblocktemplate->vTxFees.push_back(-1); // updated at end
 		pblocktemplate->vTxSigOps.push_back(-1); // updated at end
 
