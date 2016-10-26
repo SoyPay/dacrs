@@ -969,7 +969,7 @@ Value getappinfo(const Array& params, bool fHelp) {
 	            "\nArguments:\n"
 	            "1. \"scriptid\"    (string). The script ID. \n"
 	            "\nget app information in the systems\n"
-				"\nExamples:\n" + HelpExampleCli("listapp", "123-1") + HelpExampleRpc("listapp", "123-1"));
+				"\nExamples:\n" + HelpExampleCli("getappinfo", "123-1") + HelpExampleRpc("getappinfo", "123-1"));
 
 	string strRegId = params[0].get_str();
 	CRegID regid(strRegId);
