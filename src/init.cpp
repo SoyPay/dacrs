@@ -24,6 +24,13 @@
 #include "./wallet/walletdb.h"
 #include "syncdatadb.h"
 #include "noui.h"
+#include "./vm/lua/lua.h"
+#ifdef USE_UPNP
+#include <miniupnpc/miniupnpc.h>
+#include <miniupnpc/miniwget.h>
+#include <miniupnpc/upnpcommands.h>
+#include <miniupnpc/upnperrors.h>
+#endif
 
 #include <stdint.h>
 #include <stdio.h>
@@ -43,6 +50,7 @@ using namespace boost::assign;
 using namespace std;
 using namespace boost;
 
+#define USE_LUA 1
 
 CWallet* pwalletMain;
 
@@ -611,6 +619,24 @@ bool AppInit2(boost::thread_group& threadGroup)
     printf("Dacrs version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
     LogPrint("INFO","Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
     printf("Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
+#ifdef USE_LUA
+    LogPrint("INFO","Using Lua version %s\n", LUA_RELEASE);
+    printf("Using Lua version %s\n", LUA_RELEASE);
+#endif
+    string boost_version = BOOST_LIB_VERSION;
+    StringReplace(boost_version, "_", ".");
+    LogPrint("INFO","Using Boost version %s\n", boost_version);
+    printf("Using Boost version %s\n", boost_version.c_str());
+    string leveldb_version = strprintf("%d.%d", leveldb::kMajorVersion, leveldb::kMinorVersion);
+    LogPrint("INFO","Using Level DB version %s\n", leveldb_version);
+    printf("Using Level DB version %s\n", leveldb_version.c_str());
+    LogPrint("INFO","Using Berkeley DB version %s\n", DB_VERSION_STRING);
+    printf("Using Berkeley DB version %s\n", DB_VERSION_STRING);
+
+#ifdef USE_UPNP
+    LogPrint("INFO","Using miniupnpc version %s,API version %d\n", MINIUPNPC_VERSION, MINIUPNPC_API_VERSION);
+    printf("Using miniupnpc version %s,API version %d\n", MINIUPNPC_VERSION, MINIUPNPC_API_VERSION);
+#endif
 //    if (!fLogTimestamps)
     LogPrint("INFO","Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
     printf("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
