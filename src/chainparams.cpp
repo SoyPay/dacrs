@@ -138,7 +138,8 @@ public:
 		pchMessageStart[3] = 0x20;
 		vAlertPubKey =	ParseHex("02d99681b6287b3765dfbb930e6caa10d1f8ac19e02b88f52362ce6eb43c0ec71e");
 		nDefaultPort = 8668;
-		nRPCPort = 8669;
+		nRPCPort = 18332;
+		nUIPort = 4246;
 		strDataDir = "main";
 		bnProofOfStakeLimit =~arith_uint256(0) >> 10;        //00 3f ff ff
 		nSubsidyHalvingInterval = 210000;
@@ -229,7 +230,8 @@ public:
         pchMessageStart[3] = 0x0d;
 		vAlertPubKey =	ParseHex("036e15523feb9e329b4fdf53c227fc89ea45a1a36342e7e38fad7fe6e3777243af");
 		nDefaultPort = 18668;
-		nRPCPort = 18669;
+		nRPCPort = 18383;
+		nUIPort = 4264;
 		strDataDir = "testnet";
 		publicKey = "036e15523feb9e329b4fdf53c227fc89ea45a1a36342e7e38fad7fe6e3777243af";
 		// Modify the testnet genesis block so the timestamp is valid for a later start.
@@ -601,6 +603,7 @@ CBaseParams::CBaseParams() {
 	fServer = 0;
 	nRPCPort = 0;
 	bOutPut = false;
+	nUIPort = 0;
 
 
 }

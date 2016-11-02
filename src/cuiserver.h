@@ -24,7 +24,7 @@ public:
 	static void PackageData(string &strData);
 
 private:
-	CUIServer() :m_acceptor(m_iosev, tcp::endpoint(tcp::v4(), SysCfg().GetArg("-uiport", 18999))) {
+	CUIServer() :m_acceptor(m_iosev, tcp::endpoint(tcp::v4(), SysCfg().GetArg("-uiport", SysCfg().GetUIPort()))) {
 		m_bConnect = false;
 		m_bRunFlag = true;
 	}

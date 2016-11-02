@@ -327,6 +327,9 @@ public:
 	int RPCPort() const {
 		return nRPCPort;
 	}
+	int GetUIPort() const {
+		return nUIPort;
+	}
 	const string& GetPublicKey() const {return publicKey;}
 	/******************************paras**************************************/
 	static bool IntialParams(int argc, const char* const argv[]);
@@ -377,6 +380,7 @@ protected:
 	vector<unsigned char> vAlertPubKey;
 	int nDefaultPort;
 	int nRPCPort;
+	int nUIPort;
 	string publicKey;
 	arith_uint256 bnProofOfStakeLimit;
 	int nSubsidyHalvingInterval;
