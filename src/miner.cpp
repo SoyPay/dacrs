@@ -132,10 +132,15 @@ int GetElementForBurn(CBlockIndex* pindex)
 			}
 			nAverateStep = nTotalStep / nBlock;
 			int newFuelRate(0);
+
 			if (nAverateStep < MAX_BLOCK_RUN_STEP * 0.75) {
 				newFuelRate = pindex->nFuelRate * 0.9;
 			} else if (nAverateStep > MAX_BLOCK_RUN_STEP * 0.85) {
 				newFuelRate = pindex->nFuelRate * 1.1;
+				if (pindex->nHeight > nRegAppFuel2FeeForkHeight && newFuelRate <= pindex->nFuelRate) {
+					newFuelRate = pindex->nFuelRate + 1; //如果跟之前块相同或更小则强制等于之前块加1
+					LogPrint("HeighStep","Height: %d, AverateStep: %ld\n",pindex->nHeight, nAverateStep);
+				}
 			} else {
 				newFuelRate = pindex->nFuelRate;
 			}
@@ -144,7 +149,6 @@ int GetElementForBurn(CBlockIndex* pindex)
 			LogPrint("fuel", "preFuelRate=%d fuelRate=%d, nHeight=%d\n", pindex->nFuelRate, newFuelRate, pindex->nHeight);
 			return newFuelRate;
 		}
-
 	}
 }
 

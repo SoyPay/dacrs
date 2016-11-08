@@ -259,8 +259,12 @@ bool CBaseTransaction::UndoExecuteTx(int nIndex, CAccountViewCache &view, CValid
 uint64_t CBaseTransaction::GetFuel(int nfuelRate) {
 	uint64_t llFuel = ceil(nRunStep/100.0f) * nfuelRate;
 	if(REG_APP_TX == nTxType) {
-		if (llFuel < 1 * COIN) {
-			llFuel = 1 * COIN;
+		if (chainActive.Tip()->nHeight > nRegAppFuel2FeeForkHeight) {
+			llFuel = 0;
+		} else {
+			if (llFuel < 1 * COIN) {
+				llFuel = 1 * COIN;
+			}
 		}
 	}
 	return llFuel;

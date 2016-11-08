@@ -103,6 +103,7 @@ extern const string strMessageMagic;
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;
 
+static const int nRegAppFuel2FeeForkHeight = 200000; // 改注册app燃料费为小费高度[Lockie]
 static const int nBurnRateForkHeight = 45000;    //修改燃烧费率算法
 static const int nTwelveForwardLimits = 28000;   //修改限制block时间不能超过本地时间12分钟
 static const int nFixedDifficulty = 35001;    //此高度前的block不检查难度，通过checkpoint保证

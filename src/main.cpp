@@ -1537,9 +1537,14 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CAccountViewCache &vie
 			}
 			uint64_t llFuel = ceil(pBaseTx->nRunStep / 100.f) * block.GetFuelRate();
 			if(REG_APP_TX == pBaseTx->nTxType) {
-				if(llFuel < 1 * COIN){
-					llFuel = 1 * COIN;
+				if (chainActive.Tip()->nHeight > nRegAppFuel2FeeForkHeight) {
+					llFuel = 0;
+				} else {
+					if(llFuel < 1 * COIN){
+						llFuel = 1 * COIN;
+					}
 				}
+
 			}
 			nTotalFuel += llFuel;
 			LogPrint("fuel", "connect block total fuel:%d, tx fuel:%d runStep:%d fuelRate:%d txhash:%s \n",nTotalFuel, llFuel, pBaseTx->nRunStep,block.GetFuelRate(), pBaseTx->GetHash().GetHex());
