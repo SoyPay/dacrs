@@ -30,6 +30,15 @@
 #include <miniupnpc/miniwget.h>
 #include <miniupnpc/upnpcommands.h>
 #include <miniupnpc/upnperrors.h>
+
+#ifndef MINIUPNPC_VERSION
+#define MINIUPNPC_VERSION	"1.9"
+#endif
+
+#ifndef MINIUPNPC_API_VERSION
+#define MINIUPNPC_API_VERSION	10
+#endif
+
 #endif
 
 #include <stdint.h>
