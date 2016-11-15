@@ -200,8 +200,9 @@ tuple<bool,string> CVmlua::syntaxcheck(const char* filePath) {
 
 	int nRet = luaL_loadfile(lua_state, filePath);
 	if (nRet) {
+		const char* errStr = lua_tostring(lua_state, -1);
 		lua_close(lua_state);
-		return std::make_tuple (false, string(lua_tostring(lua_state, -1)));
+		return std::make_tuple (false, string(errStr));
 	}
 
 	lua_close(lua_state);
