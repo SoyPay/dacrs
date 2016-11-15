@@ -389,6 +389,14 @@ Value registerapptx(const Array& params, bool fHelp) {
 		string scriptDesc = params[4].get_str();
 		vmScript.ScriptExplain.insert(vmScript.ScriptExplain.end(), scriptDesc.begin(), scriptDesc.end());
 	}
+	
+	if(1 == vmScript.getScriptType()) {//ÅÐ¶ÏÎªlua½Å±¾
+		std::tuple<bool, string> result = CVmlua::syntaxcheck(path.c_str());
+		bool bOK = std::get<0>(result);
+		if(!bOK) {
+			throw JSONRPCError(RPC_INVALID_PARAMS, std::get<1>(result));
+		}
+	}
 
 	CDataStream ds(SER_DISK, CLIENT_VERSION);
 	ds << vmScript;
