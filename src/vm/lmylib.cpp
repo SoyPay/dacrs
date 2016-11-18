@@ -2026,7 +2026,7 @@ static int ExTransferContactAsset(lua_State *L) {
 		return RetFalse(string(__FUNCTION__)+"para  err3 !");
 	}
 
-	temp.get()->AutoMergeFreezeToFree(chainActive.Tip()->nHeight);
+	temp.get()->AutoMergeFreezeToFree(script.getHight(), chainActive.Tip()->nHeight);
 
 	uint64_t nMoney = temp.get()->getllValues();
 

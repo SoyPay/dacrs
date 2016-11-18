@@ -559,7 +559,7 @@ bool CVmRunEvn::GetAppUserAccout(const vector<unsigned char> &vAppUserId, shared
 			sptrAcc = tem;
 			return true;
 	}
-	if (!tem.get()->AutoMergeFreezeToFree(RunTimeHeight)) {
+	if (!tem.get()->AutoMergeFreezeToFree(GetScriptRegID().getHight(), RunTimeHeight)) {
 		return false;
 	}
 	sptrAcc = tem;
@@ -576,7 +576,7 @@ bool CVmRunEvn::OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFu
 						HexStr(tem.first));
 				return false;
 			}
-			if (!sptrAcc.get()->AutoMergeFreezeToFree(RunTimeHeight)) {
+			if (!sptrAcc.get()->AutoMergeFreezeToFree(GetScriptRegID().getHight(), RunTimeHeight)) {
 				LogPrint("vm", "AutoMergeFreezeToFreefailed \r\n appuser :%s\r\n", sptrAcc.get()->toString());
 				return false;
 

@@ -1818,7 +1818,7 @@ Value getappaccinfo(const Array& params, bool fHelp) {
 		}
 	}
 
-	tem.get()->AutoMergeFreezeToFree(chainActive.Tip()->nHeight);
+	tem.get()->AutoMergeFreezeToFree(script.getHight(), chainActive.Tip()->nHeight);
 	return Value(tem.get()->toJSON());
 }
 
