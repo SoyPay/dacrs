@@ -735,10 +735,8 @@ public :
 	/**
 	 * @brief operate account
 	 * @param type:	operate type
-	 * @param fund
-	 * @param nHeight:	the height that block connected into chain
-	 * @param pscriptID
-	 * @param bCheckAuthorized
+	 * @param values
+	 * @param nCurHeight:the height that block connected into chain
 	 * @return if operate successfully return ture,otherwise return false
 	 */
 	bool OperateAccount(OperType type, const uint64_t &values,const int nCurHeight);
