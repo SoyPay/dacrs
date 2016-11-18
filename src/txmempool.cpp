@@ -50,11 +50,11 @@ CTxMemPool::CTxMemPool() {
 }
 
 void CTxMemPool::SetAccountViewDB(CAccountViewCache *pAccountViewCacheIn) {
-	pAccountViewCache = make_shared<CAccountViewCache>(*pAccountViewCacheIn, false);
+	pAccountViewCache = std::make_shared<CAccountViewCache>(*pAccountViewCacheIn, false);
 }
 
 void CTxMemPool::SetScriptDBViewDB(CScriptDBViewCache *pScriptDBViewCacheIn) {
-	pScriptDBViewCache = make_shared<CScriptDBViewCache>(*pScriptDBViewCacheIn, false);
+	pScriptDBViewCache = std::make_shared<CScriptDBViewCache>(*pScriptDBViewCacheIn, false);
 }
 
 void CTxMemPool::ReScanMemPoolTx(CAccountViewCache *pAccountViewCacheIn, CScriptDBViewCache *pScriptDBViewCacheIn) {

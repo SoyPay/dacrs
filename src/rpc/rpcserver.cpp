@@ -292,6 +292,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "walletpassphrase",       &walletpassphrase,       true,      false,      true },
 	{ "setgenerate",            &setgenerate,            true,      true,       false},
 	{ "listapp",                &listapp,                true,      false,      true },
+	{ "getappinfo",             &getappinfo,             true,      false,      true },
 	{ "generateblock",          &generateblock, 		 true,      true,       true },
 	{ "listtxcache",            &listtxcache,            true,      false,      true },
 	{ "getscriptdata",          &getscriptdata,          true,      false,      true },
@@ -302,6 +303,7 @@ static const CRPCCommand vRPCCommands[] =
     { "getbalance",             &getbalance,             false,     false,      true },
     { "notionalpoolingbalance", &notionalpoolingbalance, false,     false,      true },
     { "dispersebalance", 		&dispersebalance, 		 false,     false,      true },
+    { "notionalpoolingasset", 	&notionalpoolingasset, 	 false,     false,      true },
     { "getassets", 				&getassets, 	 		 false,     false,      true },
     { "submittx",      			&submittx,       	 	 true,      false,      false},
 

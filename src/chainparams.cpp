@@ -138,7 +138,8 @@ public:
 		pchMessageStart[3] = 0x20;
 		vAlertPubKey =	ParseHex("02d99681b6287b3765dfbb930e6caa10d1f8ac19e02b88f52362ce6eb43c0ec71e");
 		nDefaultPort = 8668;
-		nRPCPort = 8669;
+		nRPCPort = 18332;
+		nUIPort = 4246;
 		strDataDir = "main";
 		bnProofOfStakeLimit =~arith_uint256(0) >> 10;        //00 3f ff ff
 		nSubsidyHalvingInterval = 210000;
@@ -229,7 +230,8 @@ public:
         pchMessageStart[3] = 0x0d;
 		vAlertPubKey =	ParseHex("036e15523feb9e329b4fdf53c227fc89ea45a1a36342e7e38fad7fe6e3777243af");
 		nDefaultPort = 18668;
-		nRPCPort = 18669;
+		nRPCPort = 18383;
+		nUIPort = 4264;
 		strDataDir = "testnet";
 		publicKey = "036e15523feb9e329b4fdf53c227fc89ea45a1a36342e7e38fad7fe6e3777243af";
 		// Modify the testnet genesis block so the timestamp is valid for a later start.
@@ -437,13 +439,13 @@ CBaseParams &SysCfg() {
 
 		if (fRegTest) {
 			//LogPrint("spark", "In Reg Test Net\n");
-			pParams = make_shared<CRegTestParams>();
+			pParams = std::make_shared<CRegTestParams>();
 		} else if (fTestNet) {
 			//LogPrint("spark", "In Test Net\n");
-			pParams = make_shared<CTestNetParams>();
+			pParams = std::make_shared<CTestNetParams>();
 		} else {
 			//LogPrint("spark", "In Main Net\n");
-			pParams = make_shared<CMainParams>();
+			pParams = std::make_shared<CMainParams>();
 		}
 
 	}
@@ -454,7 +456,7 @@ CBaseParams &SysCfg() {
 //write for test code
 const CBaseParams &SysParamsMain() {
 	static std::shared_ptr<CBaseParams> pParams;
-	pParams = make_shared<CMainParams>();
+	pParams = std::make_shared<CMainParams>();
 	assert(pParams != NULL);
 	return *pParams.get();
 }
@@ -462,7 +464,7 @@ const CBaseParams &SysParamsMain() {
 //write for test code
 const CBaseParams &SysParamsTest() {
 	static std::shared_ptr<CBaseParams> pParams;
-	pParams = make_shared<CTestNetParams>();
+	pParams = std::make_shared<CTestNetParams>();
 	assert(pParams != NULL);
 	return *pParams.get();
 }
@@ -470,7 +472,7 @@ const CBaseParams &SysParamsTest() {
 //write for test code
 const CBaseParams &SysParamsReg() {
 	static std::shared_ptr<CBaseParams> pParams;
-	pParams = make_shared<CRegTestParams>();
+	pParams = std::make_shared<CRegTestParams>();
 	assert(pParams != NULL);
 	return *pParams.get();
 }
@@ -540,7 +542,7 @@ bool CBaseParams::CreateGenesisRewardTx(vector<std::shared_ptr<CBaseTransaction>
 		if( i > 0) {
 			money = 1000000000 * COIN;
 		}
-		shared_ptr<CRewardTransaction> pRewardTx = make_shared<CRewardTransaction>(ParseHex(vInitPubKey[i].c_str()), money, 0);
+		shared_ptr<CRewardTransaction> pRewardTx = std::make_shared<CRewardTransaction>(ParseHex(vInitPubKey[i].c_str()), money, 0);
 		pRewardTx->nVersion = nTxVersion1;
 		if (pRewardTx.get())
 			vRewardTx.push_back(pRewardTx);
@@ -601,6 +603,7 @@ CBaseParams::CBaseParams() {
 	fServer = 0;
 	nRPCPort = 0;
 	bOutPut = false;
+	nUIPort = 0;
 
 
 }

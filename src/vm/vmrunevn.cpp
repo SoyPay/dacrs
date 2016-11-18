@@ -85,10 +85,10 @@ bool CVmRunEvn::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& vie
 	}
 	try {
 		if (0 == scriptType) {
-			pMcu = make_shared<CVm8051>(vmScript.Rom, secure->vContract);
+			pMcu = std::make_shared<CVm8051>(vmScript.Rom, secure->vContract);
 			LogPrint("vm", "%s\r\n", "CVmScriptRun::intial() MCU");
 		} else {
-			pLua = make_shared<CVmlua>(vmScript.Rom, secure->vContract);
+			pLua = std::make_shared<CVmlua>(vmScript.Rom, secure->vContract);
 			//pVmRunEvn = this; //传CVmRunEvn对象指针给lmylib.cpp库使用
 			LogPrint("vm", "%s\r\n", "CVmScriptRun::intial() LUA");
 		}
@@ -430,7 +430,7 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 		uint64_t value;
 		memcpy(&value, it.money, sizeof(it.money));
 
-		auto tem = make_shared<CAccount>();
+		auto tem = std::make_shared<CAccount>();
 //		vector_unsigned_char accountid = GetAccountID(it);
 //		if (accountid.size() == 0) {
 //			return false;
@@ -553,9 +553,9 @@ shared_ptr<vector<CScriptDBOperLog> > CVmRunEvn::GetDbLog()
  */
 bool CVmRunEvn::GetAppUserAccout(const vector<unsigned char> &vAppUserId, shared_ptr<CAppUserAccout> &sptrAcc) {
 	assert(m_ScriptDBTip != NULL);
-	shared_ptr<CAppUserAccout> tem = make_shared<CAppUserAccout>();
+	shared_ptr<CAppUserAccout> tem = std::make_shared<CAppUserAccout>();
 	if (!m_ScriptDBTip->GetScriptAcc(GetScriptRegID(), vAppUserId, *tem.get())) {
-			tem = make_shared<CAppUserAccout>(vAppUserId);
+			tem = std::make_shared<CAppUserAccout>(vAppUserId);
 			sptrAcc = tem;
 			return true;
 	}
