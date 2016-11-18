@@ -162,7 +162,7 @@ public:
 	bool Operate(const vector<CAppFundOperate> &Op);
 	bool GetAppCFund(CAppCFund &outFound,const vector<unsigned char> &vtag,int nhight);
 
-	bool AutoMergeFreezeToFree(int hight);
+	bool AutoMergeFreezeToFree(int height);
 
 	virtual ~CAppUserAccout();
 	Object toJSON()const;

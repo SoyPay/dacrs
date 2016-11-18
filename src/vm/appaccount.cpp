@@ -116,11 +116,19 @@ uint64_t CAppUserAccout::GetAllFreezedValues()
 	return total;
 }
 
-bool CAppUserAccout::AutoMergeFreezeToFree(int hight) {
+bool CAppUserAccout::AutoMergeFreezeToFree(int height) {
 
+	int nHeightOrTime = height;
+	if(height >= nBlockTime4AppAccountHeight) {
+		if(height <= chainActive.Tip()->nHeight) {
+			nHeightOrTime = chainActive[height]->nTime;
+		} else {
+			nHeightOrTime = chainActive.Tip()->nTime;
+		}
+	}
 	bool isneedremvoe = false;
 	for (auto &Fund : vFreezedFund) {
-		if (Fund.getheight() <= hight) {
+		if (Fund.getheight() <= nHeightOrTime) {
 			//llValues += Fund.getvalue();
 			uint64_t tempValue = 0;
 			if(!SafeAdd(llValues, Fund.getvalue(), tempValue)) {
@@ -132,7 +140,7 @@ bool CAppUserAccout::AutoMergeFreezeToFree(int hight) {
 	}
 	if (isneedremvoe) {
 		vFreezedFund.erase(remove_if(vFreezedFund.begin(), vFreezedFund.end(), [&](const CAppCFund& CfundIn) {
-			return (CfundIn.getheight() <= hight);}),vFreezedFund.end());
+			return (CfundIn.getheight() <= nHeightOrTime);}),vFreezedFund.end());
 	}
 	return true;
 

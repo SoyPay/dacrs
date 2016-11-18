@@ -113,6 +113,7 @@ static const int nLimiteAppHeight = 189000;
 static const int nUpdateTxVersion2Height = 196000;  //主链在此高度后不再接受交易版本为nTxVersion1的交易
 static const int nUpdateBlockVersionHeight = 209000;   //主链在此高度后，block版本升级
 static const int nLimite8051AppHeight = 160000;    //在此高度后，不能注册8051脚本
+static const int nBlockTime4AppAccountHeight = 600000;  //在此高度后，改用block时间取代高度操作脚本应用账户
 class CCoinsDB;
 class CBlockTreeDB;
 struct CDiskBlockPos;
