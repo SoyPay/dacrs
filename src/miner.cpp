@@ -132,17 +132,27 @@ int GetElementForBurn(CBlockIndex* pindex)
 			}
 			nAverateStep = nTotalStep / nBlock;
 			int newFuelRate(0);
-
-			if (nAverateStep < MAX_BLOCK_RUN_STEP * 0.75) {
-				newFuelRate = pindex->nFuelRate * 0.9;
-			} else if (nAverateStep > MAX_BLOCK_RUN_STEP * 0.85) {
-				newFuelRate = pindex->nFuelRate * 1.1;
-				if (pindex->nHeight > nRegAppFuel2FeeForkHeight && newFuelRate <= pindex->nFuelRate) {
-					newFuelRate = pindex->nFuelRate + 1; //如果跟之前块相同或更小则强制等于之前块加1
+			if (pindex->nHeight <= nRegAppFuel2FeeForkHeight) {
+				if (nAverateStep < MAX_BLOCK_RUN_STEP * 0.75) {
+					newFuelRate = pindex->nFuelRate * 0.9;
+				} else if (nAverateStep > MAX_BLOCK_RUN_STEP * 0.85) {
+					newFuelRate = pindex->nFuelRate * 1.1;
 					LogPrint("HeighStep","Height: %d, AverateStep: %ld\n",pindex->nHeight, nAverateStep);
+				} else {
+					newFuelRate = pindex->nFuelRate;
 				}
-			} else {
-				newFuelRate = pindex->nFuelRate;
+			} else { // 燃料费率不能上调问题，改浮点运算为整数运算
+				if (nAverateStep < MAX_BLOCK_RUN_STEP * 3 / 4 /* 0.75 */) {
+					newFuelRate = pindex->nFuelRate * 9 / 10; /* 0.9 */
+				} else if (nAverateStep > MAX_BLOCK_RUN_STEP * 17 / 20 /* 0.85 */) {
+					newFuelRate = pindex->nFuelRate * 11 / 10; /* 1.1 */
+					if (newFuelRate <= pindex->nFuelRate) {
+						newFuelRate = pindex->nFuelRate + 1; //如果跟之前块相同或更小则强制等于之前块加1
+					}
+					LogPrint("HeighStep","Height: %d, AverateStep: %ld\n",pindex->nHeight, nAverateStep);
+				} else {
+					newFuelRate = pindex->nFuelRate;
+				}
 			}
 			if (newFuelRate < MIN_FUEL_RATES)
 				newFuelRate = MIN_FUEL_RATES;
