@@ -391,7 +391,7 @@ Value registerapptx(const Array& params, bool fHelp) {
 	}
 	
 	if(1 == vmScript.getScriptType()) {//ÅÐ¶ÏÎªlua½Å±¾
-		std::tuple<bool, string> result = CVmlua::syntaxcheck(path.c_str());
+		std::tuple<bool, string> result = CVmlua::syntaxcheck(true, path.c_str(), path.length());
 		bool bOK = std::get<0>(result);
 		if(!bOK) {
 			throw JSONRPCError(RPC_INVALID_PARAMS, std::get<1>(result));

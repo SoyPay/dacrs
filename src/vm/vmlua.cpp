@@ -186,7 +186,7 @@ void vm_openlibs (lua_State *L) {
 	}
 }
 
-tuple<bool,string> CVmlua::syntaxcheck(const char* filePath) {
+tuple<bool,string> CVmlua::syntaxcheck(bool bFile, const char* filePathOrContent, int len) {
 	//1.创建Lua运行环境
 	lua_State *lua_state = luaL_newstate();
 	if (NULL == lua_state) {
@@ -198,7 +198,12 @@ tuple<bool,string> CVmlua::syntaxcheck(const char* filePath) {
 	//3.注册自定义模块
 	luaL_requiref(lua_state, "mylib", luaopen_mylib, 1);
 
-	int nRet = luaL_loadfile(lua_state, filePath);
+	int nRet = 0;
+	if(bFile) {
+		nRet = luaL_loadfile(lua_state, filePathOrContent);
+	} else {
+		nRet = luaL_loadbuffer(lua_state, (char *)filePathOrContent, len, "line");
+	}
 	if (nRet) {
 		const char* errStr = lua_tostring(lua_state, -1);
 		lua_close(lua_state);
