@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(chain_main) {
 	BOOST_CHECK(SysParamsMain().RequireRPCPassword() == true);
 	BOOST_CHECK(SysParamsMain().DataDir() == "main");
 	BOOST_CHECK(SysParamsMain().NetworkID() == CBaseParams::MAIN);
-	BOOST_CHECK(SysParamsMain().RPCPort() == 8669);
+	BOOST_CHECK(SysParamsMain().RPCPort() == 18332);
 }
 
 BOOST_AUTO_TEST_CASE(chain_test) {
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(chain_test) {
 	BOOST_CHECK(SysParamsTest().RequireRPCPassword() == true);
 	BOOST_CHECK(SysParamsTest().DataDir() == "testnet");
 	BOOST_CHECK(SysParamsTest().NetworkID() == CBaseParams::TESTNET);
-	BOOST_CHECK(SysParamsTest().RPCPort() == 18669);
+	BOOST_CHECK(SysParamsTest().RPCPort() == 18383);
 }
 
 BOOST_AUTO_TEST_CASE(chain_regtest) {
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(chain_regtest) {
 	BOOST_CHECK(SysParamsReg().RequireRPCPassword() == false);
 	BOOST_CHECK(SysParamsReg().DataDir() == "regtest");
 	BOOST_CHECK(SysParamsReg().NetworkID() == CBaseParams::REGTEST);
-	BOOST_CHECK(SysParamsReg().RPCPort() == 18669);
+	BOOST_CHECK(SysParamsReg().RPCPort() == 18383);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

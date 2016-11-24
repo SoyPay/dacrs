@@ -311,6 +311,7 @@ public:
 BOOST_FIXTURE_TEST_SUITE(pressure_tests, PressureTest)
 BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 {
+#if 0
 	//初始化环境,注册一个合约脚本，并且挖矿确认
 	InitRegScript();
 //	BOOST_CHECK(DetectionAccount(1*COIN));
@@ -402,6 +403,6 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 		vTransactionHash.clear();
 		vSendFee.clear();
 	}
-
+#endif //0
 }
 BOOST_AUTO_TEST_SUITE_END()

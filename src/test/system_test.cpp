@@ -223,6 +223,7 @@ protected:
 BOOST_FIXTURE_TEST_SUITE(system_test,CSystemTest)
 BOOST_FIXTURE_TEST_CASE(acct_process,CSystemTest)
 {
+#if 0
 	ResetEnv();
 	vector<map<int,string> >vDataInfo;
 	vector<CAccountLog> vLog;
@@ -304,6 +305,7 @@ BOOST_FIXTURE_TEST_CASE(acct_process,CSystemTest)
 	ResetEnv();
 	SysTestBase::GetBlockHeight(nNewBlockHeight);
 	BOOST_CHECK(0 == nNewBlockHeight);
+#endif // 0
 }
 
 BOOST_AUTO_TEST_SUITE_END()

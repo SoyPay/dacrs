@@ -118,7 +118,7 @@ BOOST_FIXTURE_TEST_CASE(tx_add_free,CTxTest) {
 	int nHeight = chainActive.Tip()->nHeight;
 	BOOST_CHECK(accOperate.OperateAccount(ADD_FREE, 1, nHeight));
 //	fund.value = MAX_MONEY;
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_FREE, GetMaxMoney(), nHeight));
+
 
 //	accOperate.CompactAccount(CHAIN_HEIGHT);
 
@@ -130,6 +130,7 @@ BOOST_FIXTURE_TEST_CASE(tx_add_free,CTxTest) {
 		//BOOST_CHECK(accOperate.GetRewardAmount(CHAIN_HEIGHT)+accOperate.GetRawBalance(CHAIN_HEIGHT) == nOld + randValue);
 
 	}
+	BOOST_CHECK(!accOperate.OperateAccount(ADD_FREE, GetMaxMoney(), nHeight));
 
 	CheckAccountEqual();
 }

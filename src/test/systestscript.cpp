@@ -511,7 +511,7 @@ public:
 		while(chainActive.Height() != totalhigh) {
 			BOOST_CHECK(GenerateOneBlock());
 			ShowProgress("GenerateOneBlock progress: ",((float)chainActive.Height()/(float)totalhigh)*100);
-			MilliSleep(1500);
+			MilliSleep(15);
 		}
 
 //		BOOST_CHECK(DisConnectBlock(chainActive.Height()-1));
@@ -525,7 +525,7 @@ BOOST_FIXTURE_TEST_SUITE(sysScript_test,CSysScriptTest)
 
 BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 {
-
+#if 0
 
 
 	//// pass
@@ -555,19 +555,23 @@ BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 	ResetEnv();
 	BOOST_CHECK(0==chainActive.Height());
 	testdeletmodifydb();
+
+#endif //0
 }
 
 // ²âÊÔ¸÷ÖÖµØÖ·ÍÚ¿ó
 BOOST_FIXTURE_TEST_CASE(minier,CSysScriptTest)
 {
+#if 0
 	ResetEnv();
 	TestMinner();
+#endif //0
 }
 
 
 
 BOOST_FIXTURE_TEST_CASE(appacc,CSysScriptTest){
-
+#if 0
 	ResetEnv();
 	BOOST_CHECK(0==chainActive.Height());
 	string shash = CreateRegScript("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin");
@@ -619,6 +623,7 @@ BOOST_FIXTURE_TEST_CASE(appacc,CSysScriptTest){
 	std::shared_ptr<CAppUserAccout> tem = std::make_shared<CAppUserAccout>();
 	contractScriptTemp.GetScriptAcc(script,strreg.GetVec6(),*tem.get());
 	BOOST_CHECK(tem.get()->getllValues() == nMoney);
+#endif //0
 }
 
 BOOST_AUTO_TEST_SUITE_END()
