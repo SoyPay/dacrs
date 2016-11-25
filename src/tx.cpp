@@ -1166,7 +1166,21 @@ bool CAccount::OperateAccount(OperType type, const uint64_t &value, const int nC
 	case MINUS_FREE: {
 		if (value > llValues)
 			return false;
-		uint64_t remainCoinDay = nCoinDay - value / llValues * nCoinDay;
+		uint64_t remainCoinDay;
+		if(nCurHeight<nBlockRemainCoinDayHeight651800)
+		{
+			remainCoinDay = nCoinDay - value / llValues * nCoinDay;
+		}
+		else
+		{
+			arith_uint256 nCoinDay256=(arith_uint256)nCoinDay;
+			arith_uint256 llValues256=(arith_uint256)llValues;
+			arith_uint256 value256=(arith_uint256)value;
+			arith_uint256 remainCoinDay256=(nCoinDay256*(llValues256 - value256)) / llValues256;//币的持有量发生变化后，原来的计算不对，改为这个计算 。
+			remainCoinDay = remainCoinDay256.GetLow64();
+			//LogPrint("CGP", "\n nHeight=%d\n remainCoinDay=%d\n nCoinDay=%d\n llValues=%d\n value=%d\n",nHeight,remainCoinDay,nCoinDay,llValues,value);//CGPADD FOR TEST
+		}
+
 		if (nCoinDay > llValues * SysCfg().GetIntervalPos()) {
 			if (remainCoinDay < llValues * SysCfg().GetIntervalPos())
 				remainCoinDay = llValues * SysCfg().GetIntervalPos();
