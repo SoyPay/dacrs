@@ -521,9 +521,13 @@ bool CTransaction::ExecuteTx(int nIndex, CAccountViewCache &view, CValidationSta
 			userId = itemAccount->keyID;
 			CAccount oldAcct;
 			if(!view.GetAccount(userId, oldAcct)) {
-				return state.DoS(100,
+				if(!itemAccount->keyID.IsNull()) {  //合约往未发生过转账记录地址转币
+					oldAcct.keyID = itemAccount->keyID;
+				}else {
+					return state.DoS(100,
 							ERRORMSG("ExecuteTx() : ContractTransaction ExecuteTx, read account info error"),
 							UPDATE_ACCOUNT_FAIL, "bad-read-accountdb");
+				}
 			}
 			CAccountLog oldAcctLog(oldAcct);
 			if (!view.SetAccount(userId, *itemAccount))
