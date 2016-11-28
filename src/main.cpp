@@ -2181,7 +2181,8 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 	uint256 preBlockHash;
 	bool bFindForkChainTip(false);
 	vector<CBlock> vPreBlocks;
-	if (pPreBlockIndex->GetBlockHash() != chainActive.Tip()->GetBlockHash()) {
+	if (pPreBlockIndex->GetBlockHash() != chainActive.Tip()->GetBlockHash()
+		&& pPreBlockIndex->nChainWork > chainActive.Tip()->nChainWork) {
 		while (!chainActive.Contains(pPreBlockIndex)){
 			if(mapCache.count(pPreBlockIndex->GetBlockHash()) > 0 && !bFindForkChainTip) {
 				preBlockHash = pPreBlockIndex->GetBlockHash();
