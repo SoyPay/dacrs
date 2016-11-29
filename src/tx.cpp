@@ -1171,7 +1171,7 @@ bool CAccount::OperateAccount(OperType type, const uint64_t &value, const int nC
 		if (value > llValues)
 			return false;
 		uint64_t remainCoinDay;
-		if(nCurHeight<nBlockRemainCoinDayHeight651800)
+		if(nCurHeight<nBlockRemainCoinDayHeight)
 		{
 			remainCoinDay = nCoinDay - value / llValues * nCoinDay;
 		}
