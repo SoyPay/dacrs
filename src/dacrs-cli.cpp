@@ -6,7 +6,7 @@
 #include "util.h"
 #include "init.h"
 #include "rpc/rpcclient.h"
-#include "rpcprotocol.h"
+#include "rpc/rpcprotocol.h"
 #include "ui_interface.h" /* for _(...) */
 #include "chainparams.h"
 
