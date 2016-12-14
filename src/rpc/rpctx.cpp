@@ -22,6 +22,7 @@
 #include "vm/script.h"
 #include "vm/vmrunevn.h"
 #include <stdint.h>
+#include "vm/vmlua.h"
 
 #include <boost/assign/list_of.hpp>
 #include "json/json_spirit_utils.h"
@@ -477,6 +478,149 @@ Value registerapptx(const Array& params, bool fHelp) {
 	return obj;
 
 }
+
+//估算合约的
+Value contractreckon(const Array& params, bool fHelp) {
+	if (fHelp || params.size() < 4 || params.size() > 4) {
+		throw runtime_error("contractreckon \"addr\" \"filepath\"\"fee\" (\"height\") (\"scriptdescription\")\n"
+				"\ncreate a register script transaction\n"
+				"\nArguments:\n"
+				"1.\"filepath\": (string required),app's file path\n"
+				"2.\"contract\": (string, required)\n"
+				"3.\"userregid\": (string, required)\n the address for send"
+				"4.\"appid\":(string, required) the appID (for example: Ipo.bin)\n"
+				"\nResult:\n"
+				"\"txhash\": (string)\n"
+				"\nExamples:\n"
+				+ HelpExampleCli("registerapptx",
+						"\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" \"run.exe\" \"010203040506\" \"100000\" (\"scriptdescription\")") + "\nAs json rpc call\n"
+				+ HelpExampleRpc("registerapptx",
+						"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG \"run.exe\" \"010203040506\" \"100000\" (\"scriptdescription\")"));
+	}
+
+	RPCTypeCheck(params, list_of(str_type)(str_type)(str_type)(str_type));
+	CVmScript vmScript;
+	vector<unsigned char> vscript;
+//合约文件处理
+	string path = params[0].get_str();
+	FILE* file = fopen(path.c_str(), "rb+");
+	if (!file) {
+		throw runtime_error("create contractreckon open script file" + path + "error");
+	}
+	long lSize;
+	fseek(file, 0, SEEK_END);
+	lSize = ftell(file);
+	rewind(file);
+
+	// allocate memory to contain the whole file:
+	char *buffer = (char*) malloc(sizeof(char) * lSize);
+	if (buffer == NULL) {
+		fclose(file); //及时关闭
+		throw runtime_error("allocate memory failed");
+	}
+	if (fread(buffer, 1, lSize, file) != (size_t) lSize) {
+		free(buffer);  //及时释放
+		fclose(file);  //及时关闭
+		throw runtime_error("read script file error");
+	}
+	else
+	{
+		fclose(file); //使用完关闭文件
+	}
+
+	vmScript.Rom.insert(vmScript.Rom.end(), buffer, buffer + lSize);
+    if (buffer)
+		free(buffer);
+
+	vector<unsigned char> vcontract = ParseHex(params[1].get_str());//合约内容
+
+	if(false==vmScript.IsValid())
+	{
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "vmScript.IsValid=false");
+	}
+
+	//////////////////////===============================================================
+
+		CRegID userId(params[2].get_str());
+		CKeyID srckeyid;
+		if (userId.IsEmpty()) {
+			if (!GetKeyId(params[2].get_str(), srckeyid)) {
+				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Source Invalid  address");
+			}
+			if(!pAccountViewTip->GetRegId(CUserID(srckeyid),userId))
+			{
+				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "address not regist");
+			}
+		}
+
+		CRegID appId(params[3].get_str());
+		if (appId.IsEmpty()) {
+			throw runtime_error("in createcontracttx :addresss is error!\n");
+		}
+		std::shared_ptr<CTransaction> tx = std::make_shared<CTransaction>();
+		{
+			//balance
+			CAccountViewCache view(*pAccountViewTip, true);
+			CAccount secureAcc;
+
+			if (!pScriptDBTip->HaveScript(appId)) {
+				throw runtime_error(tinyformat::format("createcontracttx :script id %s is not exist\n", appId.ToString()));
+			}
+			tx.get()->nTxType = CONTRACT_TX;
+			tx.get()->srcRegId = userId;
+			tx.get()->desUserId = appId;
+			tx.get()->llValues = 500000;
+			tx.get()->llFees = 100000;
+			tx.get()->vContract = vcontract;
+			tx.get()->nValidHeight = chainActive.Tip()->nHeight;
+
+			//get keyid by accountid
+			CKeyID keyid;
+			if (!view.GetKeyId(userId, keyid)) {
+				CID id(userId);
+				LogPrint("INFO", "vaccountid:%s have no key id\r\n", HexStr(id.GetID()).c_str());
+				throw JSONRPCError(RPC_WALLET_ERROR, "createcontracttx Error: have no key id.");
+			}
+		}
+
+		CVmRunEvn vmRunEvn;
+		std::shared_ptr<CBaseTransaction> pTx = tx;
+		uint64_t el = GetElementForBurn(chainActive.Tip());
+		uint64_t nnRunStep =MAX_BLOCK_RUN_STEP;
+		std::tuple<bool, uint64_t, string> ret = vmRunEvn.run(pTx, *pAccountViewTip, *pScriptDBTip, chainActive.Tip()->nHeight, el, nnRunStep);
+		if (!std::get<0>(ret))
+		{
+			 throw runtime_error("vmRunEvn.run() error\n");
+		}
+	//////////////////////===========================================================
+
+    int64_t step=0;
+	if(1 == vmScript.getScriptType())
+	{//判断为lua脚本
+		LogPrint("vm", "vmScript.getScriptType()=1\n");
+		CVmlua CVmluaTest(vmScript.Rom,vcontract);
+		step = CVmluaTest.getreckonstep(path.c_str(),&vmRunEvn);//
+		if(-1 == step)
+		{
+			 throw runtime_error("in contractreckon :step=-1\n");
+		}
+	}
+	else
+	{
+		LogPrint("vm", "vmScript.getScriptType()=0\n");
+	}
+
+//////////////////////===============================================================
+	int nFuelRate = GetElementForBurn(chainActive.Tip());
+	int64_t nFee = (step / 100 + 1) * nFuelRate + SysCfg().GetTxFee();
+//////////////////////===============================================================
+	Object obj;
+    obj.push_back(Pair("step",step));
+    obj.push_back(Pair("fuelrate",nFuelRate));
+    obj.push_back(Pair("fuel",ValueFromAmount(nFee)));
+	return obj;
+}
+
 
 Value listaddr(const Array& params, bool fHelp) {
 	if (fHelp || params.size() != 0) {

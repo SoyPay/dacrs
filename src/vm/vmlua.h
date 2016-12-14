@@ -21,6 +21,7 @@ public:
 	~CVmlua();
 	int64_t run(uint64_t maxstep,CVmRunEvn *pVmScriptRun);
     static tuple<bool,string> syntaxcheck(bool bFile, const char* filePathOrContent, int len);
+    int64_t getreckonstep(const char* filePathOrContent,CVmRunEvn *pVmScriptRun);
 private:
 	unsigned char m_ExRam[65536];  //存放的是合约交易的contact内容
 	unsigned char m_ExeFile[65536];//可执行文件 IpboApp.lua
