@@ -1183,6 +1183,22 @@ arith_uint256 GetBlockProof(const CBlockIndex& block)
     return (~bnTarget / (bnTarget + 1)) + 1;
 }
 
+arith_uint256 GetBlockChainWork( CBlock& block)
+{
+	CBlockIndex* pindexNew = new CBlockIndex(block);
+    map<uint256, CBlockIndex*>::iterator miPrev = mapBlockIndex.find(block.GetHashPrevBlock());
+    if (miPrev != mapBlockIndex.end())
+    {
+        pindexNew->pprev = (*miPrev).second;
+    }
+
+    arith_uint256 nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + GetBlockProof(*pindexNew);
+
+    delete pindexNew;
+
+    return nChainWork;
+}
+
 bool fLargeWorkForkFound = false;
 bool fLargeWorkInvalidChainFound = false;
 CBlockIndex *pindexBestForkTip = NULL, *pindexBestForkBase = NULL;
@@ -2308,6 +2324,59 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 
 }
 
+typedef struct tagBlockPair {
+	CBlock blk;
+	CBlockIndex* bi;
+} BlockPair;
+
+bool CheckBlockProofWorkWithCoinDayEx(const CBlock& block, CBlockIndex *pPreBlockIndex, CValidationState& state) {
+	bool bFindForkChainTip(false);
+	vector<BlockPair> vPreBlocks;
+
+	if (pPreBlockIndex->GetBlockHash() != chainActive.Tip()->GetBlockHash()
+			&& GetBlockChainWork((CBlock&)block) >= chainActive.Tip()->nChainWork) {
+
+		BlockPair bp;
+		bp.blk = block;
+		bp.bi = pPreBlockIndex;
+		vPreBlocks.push_back(bp);
+		while (!chainActive.Contains(pPreBlockIndex)) {
+			if (mapCache.count(pPreBlockIndex->GetBlockHash()) > 0 && !bFindForkChainTip) {
+				bFindForkChainTip = true;
+			}
+
+			if (!bFindForkChainTip) {
+				if (!ReadBlockFromDisk(bp.blk, pPreBlockIndex))
+					return state.Abort(_("Failed to read block"));
+			}
+			pPreBlockIndex = pPreBlockIndex->pprev;
+			if (chainActive.Tip()->nHeight - pPreBlockIndex->nHeight > SysCfg().GetIntervalPos()) {
+				return state.DoS(100,
+						ERRORMSG("block at fork chain too earlier than tip block hash=%s block height=%d\n",
+								bp.blk.GetHash().GetHex(), bp.blk.GetHeight()));
+			}
+			map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(pPreBlockIndex->GetBlockHash());
+			if (mi == mapBlockIndex.end())
+				return state.DoS(10, ERRORMSG("prev block not found"), 0, "bad-prevblk");
+
+			if (!bFindForkChainTip) {
+				bp.bi = pPreBlockIndex;
+				vPreBlocks.push_back(bp);            //将支链的block保存起来
+			}
+		}                   //如果进来的preblock hash不为tip的hash,找到主链中分叉处
+
+		vector<BlockPair>::reverse_iterator r_iter;
+		for (r_iter = vPreBlocks.rbegin(); r_iter != vPreBlocks.rend(); ++r_iter) {
+			BlockPair tmpBP = *r_iter;
+			if (!CheckBlockProofWorkWithCoinDay(tmpBP.blk, tmpBP.bi, state)) {
+				return state.DoS(100, ERRORMSG("CheckBlockProofWorkWithCoinDayEx() : check proof of pos tx"), REJECT_INVALID, "bad-pos-tx");
+			}
+		}
+	}
+
+	return true;
+}
+
 bool CheckBlock(const CBlock& block, CValidationState& state, CAccountViewCache &view, CScriptDBViewCache &scriptDBCache, bool fCheckTx, bool fCheckMerkleRoot)
 {
     // These are checks that are independent of context
@@ -2425,8 +2494,8 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 			return state.DoS(100, ERRORMSG("AcceptBlock() : incorrect proof of work actual vs need(%d vs %d)", block.GetBits(), GetNextWorkRequired(pindexPrev, &block)), REJECT_INVALID, "bad-diffbits");
 
 		//Check proof of pos tx
-		if (!CheckBlockProofWorkWithCoinDay(block, pindexPrev, state)) {
-			LogPrint("INFO", "CheckBlockProofWorkWithCoinDay() end:%lld ms\n", GetTimeMillis() - tempTime);
+		if (!CheckBlockProofWorkWithCoinDayEx(block, pindexPrev, state)) {
+			LogPrint("INFO", "CheckBlockProofWorkWithCoinDayEx() end:%lld ms\n", GetTimeMillis() - tempTime);
 			return state.DoS(100, ERRORMSG("AcceptBlock() : check proof of pos tx"), REJECT_INVALID, "bad-pos-tx");
 		}
 
