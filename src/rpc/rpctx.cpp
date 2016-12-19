@@ -538,7 +538,7 @@ Value contractreckon(const Array& params, bool fHelp) {
 		tx.get()->srcRegId = userId;
 		tx.get()->desUserId = appId;
 		tx.get()->llValues = 500000;
-		tx.get()->llFees = 1000000;// 130000
+		tx.get()->llFees = SysCfg().GetMaxFee();// 130000
 		tx.get()->vContract = vcontract;
 		tx.get()->nValidHeight = chainActive.Tip()->nHeight;
 
