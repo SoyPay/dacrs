@@ -215,63 +215,6 @@ tuple<bool,string> CVmlua::syntaxcheck(bool bFile, const char* filePathOrContent
 	return std::make_tuple (true, string("OK"));
 }
 
-int64_t CVmlua::getreckonstep(const char* filePathOrContent,CVmRunEvn *pVmScriptRun)
-{
-	 long long step = 0;
-	 unsigned short count = 0;
-	//1.创建Lua运行环境
-	lua_State *lua_state = luaL_newstate();
-	if (NULL == lua_state) {
-		   LogPrint("vm", "luaL_newstate error\n");
-		   return -1;
-	}
-
-	vm_openlibs(lua_state);
-	//3.注册自定义模块
-	luaL_requiref(lua_state, "mylib", luaopen_mylib, 1);
-
-
-	 //4.往lua脚本传递合约内容
-		lua_newtable(lua_state);    //新建一个表,压入栈顶
-		lua_pushnumber(lua_state,-1);
-		lua_rawseti(lua_state,-2,0);
-		memcpy(&count,m_ExRam,  2);//外面已限制，合约内容小于4096字节
-	    for(unsigned short n = 0;n < count;n++)
-	    {
-	        lua_pushinteger(lua_state,m_ExRam[2 + n]);// value值放入
-	        lua_rawseti(lua_state,-2,n+1);  //set table at key 'n + 1'
-	    }
-	    lua_setglobal(lua_state,"contract");
-
-
-	    //传递pVmScriptRun指针，以便后面代码引用，去掉了使用全局变量保存该指针
-	    lua_pushlightuserdata(lua_state, pVmScriptRun);
-	    lua_setglobal(lua_state,"VmScriptRun");
-
-	    LogPrint("vm", "pVmScriptRun=%p\n",pVmScriptRun);
-
-	   //5.加载脚本  maxstep = MAX_BLOCK_RUN_STEP;
-	    step = MAX_BLOCK_RUN_STEP;
-	    int nRet = luaL_loadfile(lua_state, filePathOrContent);
-	    if(nRet)
-	    {
-	    	LogPrint("vm", "luaL_loadfile fail\n");
-	    }
-	    else
-	    {
-	    	LogPrint("vm", "luaL_loadfile OK!\n");
-	    }
-	    if(nRet || lua_pcallk(lua_state,0,0,0,0,NULL,&step))
-//	    if(luaL_loadbuffer(lua_state,(char *)m_ExeFile,strlen((char *)m_ExeFile),"line") || lua_pcallk(lua_state,0,0,0,0,NULL,&step))
-	    {
-		   LogPrint("vm", "luaL_loadfile fail:%s\n", lua_tostring(lua_state,-1));
-		   step = -1;
-	    }
-
-	    //7.关闭Lua虚拟机
-		lua_close(lua_state);
-		LogPrint("vm", "run step=%ld\n",step);
-		return step;
 }
 int64_t CVmlua::run(uint64_t maxstep,CVmRunEvn *pVmScriptRun) {
 	 long long step = 0;
