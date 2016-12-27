@@ -30,8 +30,8 @@ Value getconnectioncount(const Array& params, bool fHelp)
             + HelpExampleRpc("getconnectioncount", "")
         );
 
-    LOCK(cs_vNodes);
-    return (int)vNodes.size();
+    LOCK(g_cs_vNodes);
+    return (int)g_vNodes.size();
 }
 
 Value ping(const Array& params, bool fHelp)
@@ -48,9 +48,9 @@ Value ping(const Array& params, bool fHelp)
         );
 
     // Request that each node send a ping during next message processing pass
-    LOCK(cs_vNodes);
-    for (auto pNode : vNodes) {
-        pNode->fPingQueued = true;
+    LOCK(g_cs_vNodes);
+    for (auto pNode : g_vNodes) {
+        pNode->m_bPingQueued = true;
     }
 
     return Value::null;
@@ -60,9 +60,9 @@ static void CopyNodeStats(vector<CNodeStats>& vstats)
 {
     vstats.clear();
 
-    LOCK(cs_vNodes);
-    vstats.reserve(vNodes.size());
-    for(auto pnode : vNodes) {
+    LOCK(g_cs_vNodes);
+    vstats.reserve(g_vNodes.size());
+    for(auto pnode : g_vNodes) {
         CNodeStats stats;
         pnode->copyStats(stats);
         vstats.push_back(stats);
@@ -111,30 +111,30 @@ Value getpeerinfo(const Array& params, bool fHelp)
     for(const CNodeStats& stats: vstats) {
         Object obj;
         CNodeStateStats statestats;
-        bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
-        obj.push_back(Pair("addr", stats.addrName));
-        if (!(stats.addrLocal.empty()))
-            obj.push_back(Pair("addrlocal", stats.addrLocal));
-        obj.push_back(Pair("services", strprintf("%08x", stats.nServices)));
-        obj.push_back(Pair("lastsend", stats.nLastSend));
-        obj.push_back(Pair("lastrecv", stats.nLastRecv));
-        obj.push_back(Pair("bytessent", stats.nSendBytes));
-        obj.push_back(Pair("bytesrecv", stats.nRecvBytes));
-        obj.push_back(Pair("conntime", stats.nTimeConnected));
-        obj.push_back(Pair("pingtime", stats.dPingTime));
-        if (stats.dPingWait > 0.0)
-            obj.push_back(Pair("pingwait", stats.dPingWait));
-        obj.push_back(Pair("version", stats.nVersion));
+        bool fStateStats = GetNodeStateStats(stats.m_nNodeId, statestats);
+        obj.push_back(Pair("addr", stats.m_strAddrName));
+        if (!(stats.m_strAddrLocal.empty()))
+            obj.push_back(Pair("addrlocal", stats.m_strAddrLocal));
+        obj.push_back(Pair("services", strprintf("%08x", stats.m_ullServices)));
+        obj.push_back(Pair("lastsend", stats.m_llLastSend));
+        obj.push_back(Pair("lastrecv", stats.m_llLastRecv));
+        obj.push_back(Pair("bytessent", stats.m_ullSendBytes));
+        obj.push_back(Pair("bytesrecv", stats.m_ullRecvBytes));
+        obj.push_back(Pair("conntime", stats.m_llTimeConnected));
+        obj.push_back(Pair("pingtime", stats.m_dPingTime));
+        if (stats.m_dPingWait > 0.0)
+            obj.push_back(Pair("pingwait", stats.m_dPingWait));
+        obj.push_back(Pair("version", stats.m_nVersion));
         // Use the sanitized form of subver here, to avoid tricksy remote peers from
         // corrupting or modifiying the JSON output by putting special characters in
         // their ver message.
-        obj.push_back(Pair("subver", stats.cleanSubVer));
-        obj.push_back(Pair("inbound", stats.fInbound));
-        obj.push_back(Pair("startingheight", stats.nStartingHeight));
+        obj.push_back(Pair("subver", stats.m_strCleanSubVer));
+        obj.push_back(Pair("inbound", stats.m_bInbound));
+        obj.push_back(Pair("startingheight", stats.m_nStartingHeight));
         if (fStateStats) {
             obj.push_back(Pair("banscore", statestats.nMisbehavior));
         }
-        obj.push_back(Pair("syncnode", stats.fSyncNode));
+        obj.push_back(Pair("syncnode", stats.m_bSyncNode));
 
         ret.push_back(obj);
     }
@@ -171,23 +171,23 @@ Value addnode(const Array& params, bool fHelp)
         return Value::null;
     }
 
-    LOCK(cs_vAddedNodes);
-    vector<string>::iterator it = vAddedNodes.begin();
-    for(; it != vAddedNodes.end(); it++)
+    LOCK(g_cs_vAddedNodes);
+    vector<string>::iterator it = g_vAddedNodes.begin();
+    for(; it != g_vAddedNodes.end(); it++)
         if (strNode == *it)
             break;
 
     if (strCommand == "add")
     {
-        if (it != vAddedNodes.end())
+        if (it != g_vAddedNodes.end())
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Node already added");
-        vAddedNodes.push_back(strNode);
+        g_vAddedNodes.push_back(strNode);
     }
     else if(strCommand == "remove")
     {
-        if (it == vAddedNodes.end())
+        if (it == g_vAddedNodes.end())
             throw JSONRPCError(RPC_CLIENT_NODE_NOT_ADDED, "Error: Node has not been added.");
-        vAddedNodes.erase(it);
+        g_vAddedNodes.erase(it);
     }
 
     return Value::null;
@@ -231,15 +231,15 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
     list<string> laddedNodes(0);
     if (params.size() == 1)
     {
-        LOCK(cs_vAddedNodes);
-        for (auto& strAddNode : vAddedNodes)
+        LOCK(g_cs_vAddedNodes);
+        for (auto& strAddNode : g_vAddedNodes)
             laddedNodes.push_back(strAddNode);
     }
     else
     {
         string strNode = params[1].get_str();
-        LOCK(cs_vAddedNodes);
-        for (auto & strAddNode : vAddedNodes)
+        LOCK(g_cs_vAddedNodes);
+        for (auto & strAddNode : g_vAddedNodes)
             if (strAddNode == strNode)
             {
                 laddedNodes.push_back(strAddNode);
@@ -277,7 +277,7 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
         }
     }
 
-    LOCK(cs_vNodes);
+    LOCK(g_cs_vNodes);
     for (list<pair<string, vector<CService> > >::iterator it = laddedAddreses.begin(); it != laddedAddreses.end(); it++)
     {
         Object obj;
@@ -290,12 +290,12 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
             bool fFound = false;
             Object node;
             node.push_back(Pair("address", addrNode.ToString()));
-            for (auto pnode : vNodes)
-                if (pnode->addr == addrNode)
+            for (auto pnode : g_vNodes)
+                if (pnode->m_cAddress == addrNode)
                 {
                     fFound = true;
                     fConnected = true;
-                    node.push_back(Pair("connected", pnode->fInbound ? "inbound" : "outbound"));
+                    node.push_back(Pair("connected", pnode->m_bInbound ? "inbound" : "outbound"));
                     break;
                 }
             if (!fFound)
@@ -367,7 +367,7 @@ Value getnetworkinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("version",       (int)CLIENT_VERSION));
     obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));
-    obj.push_back(Pair("connections",   (int)vNodes.size()));
+    obj.push_back(Pair("connections",   (int)g_vNodes.size()));
     obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
     obj.push_back(Pair("relayfee",      ValueFromAmount(CTransaction::nMinRelayTxFee)));
     Array localAddresses;

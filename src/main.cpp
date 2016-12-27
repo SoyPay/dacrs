@@ -330,7 +330,7 @@ int GetHeight()
 void InitializeNode(NodeId nodeid, const CNode *pnode) {
     LOCK(cs_main);
     CNodeState &state = mapNodeState.insert(make_pair(nodeid, CNodeState())).first->second;
-    state.name = pnode->addrName;
+    state.name = pnode->m_strAddrName;
 }
 
 void FinalizeNode(NodeId nodeid) {
@@ -413,7 +413,7 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats) {
     return true;
 }
 
-void RegisterNodeSignals(CNodeSignals& nodeSignals)
+void RegisterNodeSignals(ST_NodeSignals& nodeSignals)
 {
     nodeSignals.GetHeight.connect(&GetHeight);
     nodeSignals.ProcessMessages.connect(&ProcessMessages);
@@ -422,7 +422,7 @@ void RegisterNodeSignals(CNodeSignals& nodeSignals)
     nodeSignals.FinalizeNode.connect(&FinalizeNode);
 }
 
-void UnregisterNodeSignals(CNodeSignals& nodeSignals)
+void UnregisterNodeSignals(ST_NodeSignals& nodeSignals)
 {
     nodeSignals.GetHeight.disconnect(&GetHeight);
     nodeSignals.ProcessMessages.disconnect(&ProcessMessages);
@@ -2529,9 +2529,9 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CDiskBlockPos* dbp) {
 	// Relay inventory, but don't relay old inventory during initial block download
 	int nBlockEstimate = Checkpoints::GetTotalBlocksEstimate();
 	if (chainActive.Tip()->GetBlockHash() == hash) {
-		LOCK(cs_vNodes);
-		for (auto pnode : vNodes)
-			if (chainActive.Height() > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : nBlockEstimate))
+		LOCK(g_cs_vNodes);
+		for (auto pnode : g_vNodes)
+			if (chainActive.Height() > (pnode->m_nStartingHeight != -1 ? pnode->m_nStartingHeight - 2000 : nBlockEstimate))
 				pnode->PushInventory(CInv(MSG_BLOCK, hash));
 	}
 	return true;
@@ -2566,18 +2566,18 @@ void PushGetBlocks(CNode* pnode, CBlockIndex* pindexBegin, uint256 hashEnd)
 {   // Ask this guy to fill in what we're missing ,要求从网络上同步，从pindexBegin 开始,hashEnd值结束的块
     AssertLockHeld(cs_main);
     // Filter out duplicate requests
-    if (pindexBegin == pnode->pindexLastGetBlocksBegin && hashEnd == pnode->hashLastGetBlocksEnd){
+    if (pindexBegin == pnode->m_pIndexLastGetBlocksBegin && hashEnd == pnode->m_cHashLastGetBlocksEnd){
     	LogPrint("GetLocator", "filter the same GetLocator\n");
     	return;
     }
-    pnode->pindexLastGetBlocksBegin = pindexBegin;
-    pnode->hashLastGetBlocksEnd = hashEnd;
+    pnode->m_pIndexLastGetBlocksBegin = pindexBegin;
+    pnode->m_cHashLastGetBlocksEnd = hashEnd;
     ST_BlockLocator blockLocator = chainActive.GetLocator(pindexBegin);
 	for (auto & blockHash : blockLocator.vcHave) {
 		LogPrint("net", "GetLocator block hash:%s\n", blockHash.GetHex());
 	}
     pnode->PushMessage("getblocks", blockLocator, hashEnd);
-    LogPrint("net", "getblocks from peer %s, hashEnd:%s\n", pnode->addr.ToString(), hashEnd.GetHex());
+    LogPrint("net", "getblocks from peer %s, hashEnd:%s\n", pnode->m_cAddress.ToString(), hashEnd.GetHex());
 }
 
 bool ProcessBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, CDiskBlockPos *dbp)
@@ -3492,15 +3492,15 @@ bool static AlreadyHave(const CInv& inv)
 
 void static ProcessGetData(CNode* pfrom)
 {
-    deque<CInv>::iterator it = pfrom->vRecvGetData.begin();
+    deque<CInv>::iterator it = pfrom->m_vRecvGetData.begin();
 
     vector<CInv> vNotFound;
 
     LOCK(cs_main);
 
-    while (it != pfrom->vRecvGetData.end()) {
+    while (it != pfrom->m_vRecvGetData.end()) {
         // Don't bother if send buffer is too full to respond anyway
-        if (pfrom->nSendSize >= SendBufferSize())
+        if (pfrom->m_unSendSize >= SendBufferSize())
             break;
 
         const CInv &inv = *it;
@@ -3538,10 +3538,10 @@ void static ProcessGetData(CNode* pfrom)
                         pfrom->PushMessage("block", block);
                     else // MSG_FILTERED_BLOCK)
                     {
-                        LOCK(pfrom->cs_filter);
-                        if (pfrom->pfilter)
+                        LOCK(pfrom->m_cs_filter);
+                        if (pfrom->m_pBloomFilter)
                         {
-                            CMerkleBlock merkleBlock(block, *pfrom->pfilter);
+                            CMerkleBlock merkleBlock(block, *pfrom->m_pBloomFilter);
                             pfrom->PushMessage("merkleblock", merkleBlock);
                             // CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see
                             // This avoids hurting performance by pointlessly requiring a round-trip
@@ -3551,7 +3551,7 @@ void static ProcessGetData(CNode* pfrom)
                             // however we MUST always provide at least what the remote peer needs
 //                            typedef pair<unsigned int, uint256> PairType;
 							for (auto& pair : merkleBlock.vMatchedTxn)
-								if (!pfrom->setInventoryKnown.count(CInv(MSG_TX, pair.second)))
+								if (!pfrom->m_setInventoryKnown.count(CInv(MSG_TX, pair.second)))
 									pfrom->PushMessage("tx", block.vptx[pair.first]);
                         }
                         // else
@@ -3559,7 +3559,7 @@ void static ProcessGetData(CNode* pfrom)
                     }
 
                     // Trigger them to send a getblocks request for the next batch of inventory
-                    if (inv.hash == pfrom->hashContinue)
+                    if (inv.hash == pfrom->m_cHashContinue)
                     {
                         // Bypass PushInventory, this must send even if redundant,
                         // and we want it right after the last block so they don't
@@ -3567,7 +3567,7 @@ void static ProcessGetData(CNode* pfrom)
                         vector<CInv> vInv;
                         vInv.push_back(CInv(MSG_BLOCK, chainActive.Tip()->GetBlockHash()));
                         pfrom->PushMessage("inv", vInv);
-                        pfrom->hashContinue.SetNull();
+                        pfrom->m_cHashContinue.SetNull();
                         LogPrint("net", "reset node hashcontinue\n");
                     }
                 }
@@ -3577,9 +3577,9 @@ void static ProcessGetData(CNode* pfrom)
                 // Send stream from relay memory
                 bool pushed = false;
                 {
-                    LOCK(cs_mapRelay);
-                    map<CInv, CDataStream>::iterator mi = mapRelay.find(inv);
-                    if (mi != mapRelay.end()) {
+                    LOCK(g_cs_mapRelay);
+                    map<CInv, CDataStream>::iterator mi = g_mapRelay.find(inv);
+                    if (mi != g_mapRelay.end()) {
                         pfrom->PushMessage(inv.GetCommand(), (*mi).second);
                         pushed = true;
                     }
@@ -3615,7 +3615,7 @@ void static ProcessGetData(CNode* pfrom)
         }
     }
 
-    pfrom->vRecvGetData.erase(pfrom->vRecvGetData.begin(), it);
+    pfrom->m_vRecvGetData.erase(pfrom->m_vRecvGetData.begin(), it);
 
     if (!vNotFound.empty()) {
         // Let the peer know that we didn't find what it asked for, so it doesn't
@@ -3649,7 +3649,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     if (strCommand == "version")
     {
         // Each connection can only send one version message
-        if (pfrom->nVersion != 0)
+        if (pfrom->m_nVersion != 0)
         {
             pfrom->PushMessage("reject", strCommand, REJECT_DUPLICATE, string("Duplicate version message"));
             LogPrint("INFO", "Misbehaving, Duplicate version message, nMisbehavior add 1\n");
@@ -3661,79 +3661,79 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CAddress addrMe;
         CAddress addrFrom;
         uint64_t nNonce = 1;
-        vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
-        if (pfrom->nVersion < MIN_PEER_PROTO_VERSION)
+        vRecv >> pfrom->m_nVersion >> pfrom->m_ullServices >> nTime >> addrMe;
+        if (pfrom->m_nVersion < MIN_PEER_PROTO_VERSION)
         {
             // disconnect from peers older than this proto version
-            LogPrint("INFO","partner %s using obsolete version %i; disconnecting\n", pfrom->addr.ToString(), pfrom->nVersion);
+            LogPrint("INFO","partner %s using obsolete version %i; disconnecting\n", pfrom->m_cAddress.ToString(), pfrom->m_nVersion);
             pfrom->PushMessage("reject", strCommand, REJECT_OBSOLETE,
                                strprintf("Version must be %d or greater", MIN_PEER_PROTO_VERSION));
-            pfrom->fDisconnect = true;
+            pfrom->m_bDisconnect = true;
             return false;
         }
 
-        if (pfrom->nVersion == 10300)
-            pfrom->nVersion = 300;
+        if (pfrom->m_nVersion == 10300)
+            pfrom->m_nVersion = 300;
         if (!vRecv.empty())
             vRecv >> addrFrom >> nNonce;
         if (!vRecv.empty()) {
-            vRecv >> pfrom->strSubVer;
-            pfrom->cleanSubVer = SanitizeString(pfrom->strSubVer);
+            vRecv >> pfrom->m_strSubVer;
+            pfrom->m_strCleanSubVer = SanitizeString(pfrom->m_strSubVer);
         }
         if (!vRecv.empty())
-            vRecv >> pfrom->nStartingHeight;
+            vRecv >> pfrom->m_nStartingHeight;
         if (!vRecv.empty())
-            vRecv >> pfrom->fRelayTxes; // set to true after we get the first filter* message
+            vRecv >> pfrom->m_bRelayTxes; // set to true after we get the first filter* message
         else
-            pfrom->fRelayTxes = true;
+            pfrom->m_bRelayTxes = true;
 
-        if (pfrom->fInbound && addrMe.IsRoutable())
+        if (pfrom->m_bInbound && addrMe.IsRoutable())
         {
-            pfrom->addrLocal = addrMe;
+            pfrom->m_strAddrLocal = addrMe;
             SeenLocal(addrMe);
         }
 
         // Disconnect if we connected to ourself
         if (nNonce == g_ullLocalHostNonce && nNonce > 1)
         {
-            LogPrint("INFO","connected to self at %s, disconnecting\n", pfrom->addr.ToString());
-            pfrom->fDisconnect = true;
+            LogPrint("INFO","connected to self at %s, disconnecting\n", pfrom->m_cAddress.ToString());
+            pfrom->m_bDisconnect = true;
             return true;
         }
 
         // Be shy and don't send version until we hear
-        if (pfrom->fInbound)
+        if (pfrom->m_bInbound)
             pfrom->PushVersion();
 
-        pfrom->fClient = !(pfrom->nServices & NODE_NETWORK);
+        pfrom->m_bClient = !(pfrom->m_ullServices & NODE_NETWORK);
 
 
         // Change version
         pfrom->PushMessage("verack");
-        pfrom->ssSend.SetVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
+        pfrom->m_cDSSend.SetVersion(min(pfrom->m_nVersion, PROTOCOL_VERSION));
 
-        if (!pfrom->fInbound)
+        if (!pfrom->m_bInbound)
         {
             // Advertise our address
             if (!fNoListen && !IsInitialBlockDownload())
             {
-                CAddress addr = GetLocalAddress(&pfrom->addr);
+                CAddress addr = GetLocalAddress(&pfrom->m_cAddress);
                 if (addr.IsRoutable())
                     pfrom->PushAddress(addr);
             }
 
             // Get recent addresses
-            if (pfrom->fOneShot || /*pfrom->nVersion >= CADDR_TIME_VERSION || */addrman.size() < 1000)
+            if (pfrom->m_bOneShot || /*pfrom->nVersion >= CADDR_TIME_VERSION || */g_cAddrman.size() < 1000)
             {
                 pfrom->PushMessage("getaddr");
-                pfrom->fGetAddr = true;
+                pfrom->m_bGetAddr = true;
             }
-            addrman.Good(pfrom->addr);
+            g_cAddrman.Good(pfrom->m_cAddress);
         } else {
-            if (((CNetAddr)pfrom->addr) == (CNetAddr)addrFrom)
+            if (((CNetAddr)pfrom->m_cAddress) == (CNetAddr)addrFrom)
             {
-                addrman.Add(addrFrom, addrFrom);
-                addrman.Good(addrFrom);
+                g_cAddrman.Add(addrFrom, addrFrom);
+                g_cAddrman.Good(addrFrom);
             }
         }
 
@@ -3744,23 +3744,23 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 item.second.RelayTo(pfrom);
         }
 
-        pfrom->fSuccessfullyConnected = true;
+        pfrom->m_bSuccessfullyConnected = true;
 
-        LogPrint("INFO","receive version message: %s: version %d, blocks=%d, us=%s, them=%s, peer=%s\n", pfrom->cleanSubVer, pfrom->nVersion, pfrom->nStartingHeight, addrMe.ToString(), addrFrom.ToString(), pfrom->addr.ToString());
+        LogPrint("INFO","receive version message: %s: version %d, blocks=%d, us=%s, them=%s, peer=%s\n", pfrom->m_strCleanSubVer, pfrom->m_nVersion, pfrom->m_nStartingHeight, addrMe.ToString(), addrFrom.ToString(), pfrom->m_cAddress.ToString());
 
-        AddTimeData(pfrom->addr, nTime);
+        AddTimeData(pfrom->m_cAddress, nTime);
 
         LOCK(cs_main);
-        cPeerBlockCounts.input(pfrom->nStartingHeight);
+        cPeerBlockCounts.input(pfrom->m_nStartingHeight);
 
-		if (pfrom->nStartingHeight > Checkpoints::GetTotalBlocksEstimate())
+		if (pfrom->m_nStartingHeight > Checkpoints::GetTotalBlocksEstimate())
 		{
 			pfrom->PushMessage("getcheck", Checkpoints::GetTotalBlocksEstimate());
 		}
     }
 
 
-    else if (pfrom->nVersion == 0)
+    else if (pfrom->m_nVersion == 0)
     {
         // Must have a version message before anything else
         Misbehaving(pfrom->GetId(), 1);
@@ -3770,7 +3770,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "verack")
     {
-        pfrom->SetRecvVersion(min(pfrom->nVersion, PROTOCOL_VERSION));
+        pfrom->SetRecvVersion(min(pfrom->m_nVersion, PROTOCOL_VERSION));
     }
 
 
@@ -3800,11 +3800,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 addr.nTime = nNow - 5 * 24 * 60 * 60;
             pfrom->AddAddressKnown(addr);
             bool fReachable = IsReachable(addr);
-            if (addr.nTime > nSince && !pfrom->fGetAddr && vAddr.size() <= 10 && addr.IsRoutable())
+            if (addr.nTime > nSince && !pfrom->m_bGetAddr && vAddr.size() <= 10 && addr.IsRoutable())
             {
                 // Relay to a limited number of other nodes
                 {
-                    LOCK(cs_vNodes);
+                    LOCK(g_cs_vNodes);
                     // Use deterministic randomness to send to the same nodes for 24 hours
                     // at a time so the setAddrKnowns of the chosen nodes prevent repeats
                     static uint256 hashSalt;
@@ -3814,7 +3814,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                     uint256 hashRand = ArithToUint256(UintToArith256(hashSalt) ^ (hashAddr<<32) ^ ((GetTime()+hashAddr)/(24*60*60)));
                     hashRand = Hash(BEGIN(hashRand), END(hashRand));
                     multimap<uint256, CNode*> mapMix;
-                    for(auto pnode:vNodes)
+                    for(auto pnode:g_vNodes)
                     {
 //                        if (pnode->nVersion < CADDR_TIME_VERSION)
 //                            continue;
@@ -3833,11 +3833,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             if (fReachable)
                 vAddrOk.push_back(addr);
         }
-        addrman.Add(vAddrOk, pfrom->addr, 2 * 60 * 60);
+        g_cAddrman.Add(vAddrOk, pfrom->m_cAddress, 2 * 60 * 60);
         if (vAddr.size() < 1000)
-            pfrom->fGetAddr = false;
-        if (pfrom->fOneShot)
-            pfrom->fDisconnect = true;
+            pfrom->m_bGetAddr = false;
+        if (pfrom->m_bOneShot)
+            pfrom->m_bDisconnect = true;
     }
 
 
@@ -3866,7 +3866,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             if(mapBlockIndex.count(inv.hash) && inv.type == MSG_BLOCK) {
             	nBlockHeight = mapBlockIndex[inv.hash]->nHeight;
             }
-            LogPrint("net", "  got inventory [%d]: %s  %s %d from node:%s\n", nInv, inv.ToString(), fAlreadyHave ? "have" : "new", nBlockHeight, pfrom->addr.ToString());
+            LogPrint("net", "  got inventory [%d]: %s  %s %d from node:%s\n", nInv, inv.ToString(), fAlreadyHave ? "have" : "new", nBlockHeight, pfrom->m_cAddress.ToString());
 
             if (!fAlreadyHave) {
                 if (!SysCfg().IsImporting() && !SysCfg().IsReindex()) {
@@ -3903,7 +3903,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if ((vInv.size() > 0) || (vInv.size() == 1))
             LogPrint("net", "received getdata for: %s\n", vInv[0].ToString());
 
-        pfrom->vRecvGetData.insert(pfrom->vRecvGetData.end(), vInv.begin(), vInv.end());
+        pfrom->m_vRecvGetData.insert(pfrom->m_vRecvGetData.end(), vInv.begin(), vInv.end());
         ProcessGetData(pfrom);
     }
 
@@ -3920,8 +3920,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CBlockIndex* pindex = chainActive.FindFork(locator);
         CBlockIndex* pContinueIndex = NULL;
         CBlockIndex* pStopIndex = NULL;
-        if(mapBlockIndex.count(pfrom->hashContinue) > 0) {
-        	pContinueIndex = mapBlockIndex[pfrom->hashContinue];
+        if(mapBlockIndex.count(pfrom->m_cHashContinue) > 0) {
+        	pContinueIndex = mapBlockIndex[pfrom->m_cHashContinue];
         }
         if(mapBlockIndex.count(hashStop) > 0) {
         	pStopIndex = mapBlockIndex[hashStop];
@@ -3942,7 +3942,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             if (pindex->GetBlockHash() == hashStop)
 			{
 				LogPrint("net", "  getblocks stopping at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
-				pfrom->hashContinue = hashStop;  //add by frank
+				pfrom->m_cHashContinue = hashStop;  //add by frank
 				break;
 			}
             if (--nLimit <= 0)
@@ -3951,13 +3951,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
                 // getblocks the next batch of inventory.
                 LogPrint("net", "  getblocks stopping at limit %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
                 if(NULL == pContinueIndex || (pindex->nHeight > pContinueIndex->nHeight))
-                	pfrom->hashContinue = pindex->GetBlockHash();
+                	pfrom->m_cHashContinue = pindex->GetBlockHash();
                 break;
             }
         }
         //add by frank
         if(!pindex)
-        	pfrom->hashContinue.SetNull();
+        	pfrom->m_cHashContinue.SetNull();
     }
 
 
@@ -4024,7 +4024,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
 
 			LogPrint("INFO", "AcceptToMemoryPool: %s %s : accepted %s (poolsz %u)\n",
-			pfrom->addr.ToString(), pfrom->cleanSubVer,
+			pfrom->m_cAddress.ToString(), pfrom->m_strCleanSubVer,
 			pBaseTx->GetHash().ToString(),
 			mempool.mapTx.size());
 
@@ -4033,7 +4033,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 		if (state.IsInvalid(nDoS))
 		{
 			LogPrint("INFO", "%s from %s %s was not accepted into the memory pool: %s\n", pBaseTx->GetHash().ToString(),
-				pfrom->addr.ToString(), pfrom->cleanSubVer,
+				pfrom->m_cAddress.ToString(), pfrom->m_strCleanSubVer,
 				state.GetRejectReason());
 			pfrom->PushMessage("reject", strCommand, state.GetRejectCode(), state.GetRejectReason(), inv.hash);
 //			if (nDoS > 0) {
@@ -4049,7 +4049,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         CBlock block;
         vRecv >> block;
 
-        LogPrint("net", "received block %s from %s\n", block.GetHash().ToString(), pfrom->addr.ToString());
+        LogPrint("net", "received block %s from %s\n", block.GetHash().ToString(), pfrom->m_cAddress.ToString());
         // block.print();
 
         CInv inv(MSG_BLOCK, block.GetHash());
@@ -4067,9 +4067,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         if (nodestate == NULL)
 			  return false;
 
-		if(0 == nodestate->vBlocksToDownload.size() && pfrom->nStartingHeight > chainActive.Tip()->nHeight)
+		if(0 == nodestate->vBlocksToDownload.size() && pfrom->m_nStartingHeight > chainActive.Tip()->nHeight)
 		{
-			 LogPrint("GetLocator", "continue get block from node:%s\n", pfrom->addr.ToString());
+			 LogPrint("GetLocator", "continue get block from node:%s\n", pfrom->m_cAddress.ToString());
 			 PushGetBlocks(pfrom, chainActive.Tip(), inv.hash);
 		}
     }
@@ -4077,8 +4077,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "getaddr")
     {
-        pfrom->vAddrToSend.clear();
-        vector<CAddress> vAddr = addrman.GetAddr();
+        pfrom->m_vcAddrToSend.clear();
+        vector<CAddress> vAddr = g_cAddrman.GetAddr();
 		for (const auto &addr : vAddr)
 			pfrom->PushAddress(addr);
     }
@@ -4086,7 +4086,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "mempool")
     {
-        LOCK2(cs_main, pfrom->cs_filter);
+        LOCK2(cs_main, pfrom->m_cs_filter);
 
         vector<uint256> vtxid;
         mempool.queryHashes(vtxid);
@@ -4098,8 +4098,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 			if (pBaseTx.get())
 				continue; // another thread removed since queryHashes, maybe...
 
-			if ((pfrom->pfilter && pfrom->pfilter->contains(hash)) ||     //other type transaction
-					(!pfrom->pfilter))
+			if ((pfrom->m_pBloomFilter && pfrom->m_pBloomFilter->contains(hash)) ||     //other type transaction
+					(!pfrom->m_pBloomFilter))
 				vInv.push_back(inv);
 
 			if (vInv.size() == g_sMaxInvSz) {
@@ -4146,14 +4146,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             vRecv >> nonce;
 
             // Only process pong message if there is an outstanding ping (old ping without nonce should never pong)
-            if (pfrom->nPingNonceSent != 0) {
-                if (nonce == pfrom->nPingNonceSent) {
+            if (pfrom->m_ullPingNonceSent != 0) {
+                if (nonce == pfrom->m_ullPingNonceSent) {
                     // Matching pong received, this ping is no longer outstanding
                     bPingFinished = true;
-                    int64_t pingUsecTime = pingUsecEnd - pfrom->nPingUsecStart;
+                    int64_t pingUsecTime = pingUsecEnd - pfrom->m_llnPingUsecStart;
                     if (pingUsecTime > 0) {
                         // Successful ping time measurement, replace previous
-                        pfrom->nPingUsecTime = pingUsecTime;
+                        pfrom->m_llPingUsecTime = pingUsecTime;
                     } else {
                         // This should never happen
                         sProblem = "Timing mishap";
@@ -4178,15 +4178,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         if (!(sProblem.empty())) {
             LogPrint("net", "pong %s %s: %s, %x expected, %x received, %u bytes\n",
-                pfrom->addr.ToString(),
-                pfrom->cleanSubVer,
+                pfrom->m_cAddress.ToString(),
+                pfrom->m_strCleanSubVer,
                 sProblem,
-                pfrom->nPingNonceSent,
+                pfrom->m_ullPingNonceSent,
                 nonce,
                 nAvail);
         }
         if (bPingFinished) {
-            pfrom->nPingNonceSent = 0;
+            pfrom->m_ullPingNonceSent = 0;
         }
     }
 
@@ -4197,15 +4197,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         vRecv >> alert;
 
         uint256 alertHash = alert.GetHash();
-        if (pfrom->setKnown.count(alertHash) == 0)
+        if (pfrom->m_setKnown.count(alertHash) == 0)
         {
             if (alert.ProcessAlert())
             {
                 // Relay
-                pfrom->setKnown.insert(alertHash);
+                pfrom->m_setKnown.insert(alertHash);
                 {
-                    LOCK(cs_vNodes);
-					for (auto pnode : vNodes)
+                    LOCK(g_cs_vNodes);
+					for (auto pnode : g_vNodes)
 						alert.RelayTo(pnode);
                 }
             }
@@ -4234,12 +4234,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
         else
         {
-            LOCK(pfrom->cs_filter);
-            delete pfrom->pfilter;
-            pfrom->pfilter = new CBloomFilter(filter);
-            pfrom->pfilter->UpdateEmptyFull();
+            LOCK(pfrom->m_cs_filter);
+            delete pfrom->m_pBloomFilter;
+            pfrom->m_pBloomFilter = new CBloomFilter(filter);
+            pfrom->m_pBloomFilter->UpdateEmptyFull();
         }
-        pfrom->fRelayTxes = true;
+        pfrom->m_bRelayTxes = true;
     }
 
 
@@ -4255,9 +4255,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         	LogPrint("INFO", "Misebehaving, send a data item > 520 bytes, Misbehavior add 100");
             Misbehaving(pfrom->GetId(), 100);
         } else {
-            LOCK(pfrom->cs_filter);
-            if (pfrom->pfilter)
-                pfrom->pfilter->insert(vData);
+            LOCK(pfrom->m_cs_filter);
+            if (pfrom->m_pBloomFilter)
+                pfrom->m_pBloomFilter->insert(vData);
             else {
             	LogPrint("INFO", "Misebehaving, filter error, Misbehavior add 100");
                 Misbehaving(pfrom->GetId(), 100);
@@ -4268,10 +4268,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "filterclear")
     {
-        LOCK(pfrom->cs_filter);
-        delete pfrom->pfilter;
-        pfrom->pfilter = new CBloomFilter();
-        pfrom->fRelayTxes = true;
+        LOCK(pfrom->m_cs_filter);
+        delete pfrom->m_pBloomFilter;
+        pfrom->m_pBloomFilter = new CBloomFilter();
+        pfrom->m_bRelayTxes = true;
     }
 
 
@@ -4315,19 +4315,19 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 					db.WriteCheckpoint(point.m_height, data);
 					Checkpoints::AddCheckpoint(point.m_height, point.m_hashCheckpoint);
 					CheckActiveChain(point.m_height, point.m_hashCheckpoint);
-					pfrom->setcheckPointKnown.insert(point.m_height);
+					pfrom->m_setcheckPointKnown.insert(point.m_height);
 					vIndex.push_back(point.m_height);
 				}
 			}
 		}
 		if (vIndex.size() == 1 && vIndex.size() == vdata.size())
 		{
-			LOCK(cs_vNodes);
-			BOOST_FOREACH(CNode* pnode, vNodes)
+			LOCK(g_cs_vNodes);
+			BOOST_FOREACH(CNode* pnode, g_vNodes)
 			{
-				if (pnode->setcheckPointKnown.count(vIndex[0]) == 0)
+				if (pnode->m_setcheckPointKnown.count(vIndex[0]) == 0)
 				{
-					pnode->setcheckPointKnown.insert(vIndex[0]);
+					pnode->m_setcheckPointKnown.insert(vIndex[0]);
 					pnode->PushMessage("checkpoint", vdata);
 				}
 			}
@@ -4344,10 +4344,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 		for (std::size_t i = 0; i < vheight.size(); ++i)
 		{
 			SyncData::CSyncData data;
-			if (pfrom->setcheckPointKnown.count(vheight[i]) == 0
+			if (pfrom->m_setcheckPointKnown.count(vheight[i]) == 0
 				&& db.ReadCheckpoint(vheight[i], data))
 			{
-				pfrom->setcheckPointKnown.insert(vheight[i]);
+				pfrom->m_setcheckPointKnown.insert(vheight[i]);
 				vdata.push_back(data);
 			}
 		}
@@ -4363,9 +4363,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
 
     // Update the last seen time for this node's address
-    if (pfrom->fNetworkNode)
+    if (pfrom->m_bNetworkNode)
         if (strCommand == "version" || strCommand == "addr" || strCommand == "inv" || strCommand == "getdata" || strCommand == "ping")
-            AddressCurrentlyConnected(pfrom->addr);
+            AddressCurrentlyConnected(pfrom->m_cAddress);
 
 
     return true;
@@ -4387,16 +4387,16 @@ bool ProcessMessages(CNode* pfrom)
     //
     bool fOk = true;
 
-    if (!pfrom->vRecvGetData.empty())
+    if (!pfrom->m_vRecvGetData.empty())
         ProcessGetData(pfrom);
 
     // this maintains the order of responses
-    if (!pfrom->vRecvGetData.empty()) return fOk;
+    if (!pfrom->m_vRecvGetData.empty()) return fOk;
 
-    deque<CNetMessage>::iterator it = pfrom->vRecvMsg.begin();
-    while (!pfrom->fDisconnect && it != pfrom->vRecvMsg.end()) {
+    deque<CNetMessage>::iterator it = pfrom->m_vRecvMsg.begin();
+    while (!pfrom->m_bDisconnect && it != pfrom->m_vRecvMsg.end()) {
         // Don't bother if send buffer is too full to respond anyway
-        if (pfrom->nSendSize >= SendBufferSize())
+        if (pfrom->m_unSendSize >= SendBufferSize())
             break;
 
         // get next message
@@ -4487,8 +4487,8 @@ bool ProcessMessages(CNode* pfrom)
     }
 
     // In case the connection got shut down, its receive buffer was wiped
-    if (!pfrom->fDisconnect)
-        pfrom->vRecvMsg.erase(pfrom->vRecvMsg.begin(), it);
+    if (!pfrom->m_bDisconnect)
+        pfrom->m_vRecvMsg.erase(pfrom->m_vRecvMsg.begin(), it);
 
     return fOk;
 }
@@ -4498,18 +4498,18 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 {
     {
         // Don't send anything until we get their version message
-        if (pto->nVersion == 0)
+        if (pto->m_nVersion == 0)
             return true;
 
         //
         // Message: ping
         //
         bool pingSend = false;
-        if (pto->fPingQueued) {
+        if (pto->m_bPingQueued) {
             // RPC ping request by user
             pingSend = true;
         }
-        if (pto->nLastSend && GetTime() - pto->nLastSend > 30 * 60 && pto->vSendMsg.empty()) {
+        if (pto->m_llLastSend && GetTime() - pto->m_llLastSend > 30 * 60 && pto->m_vSendMsg.empty()) {
             // Ping automatically sent as a keepalive
             pingSend = true;
         }
@@ -4518,11 +4518,11 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             while (nonce == 0) {
                 RAND_bytes((unsigned char*)&nonce, sizeof(nonce));
             }
-            pto->nPingNonceSent = nonce;
-            pto->fPingQueued = false;
+            pto->m_ullPingNonceSent = nonce;
+            pto->m_bPingQueued = false;
 //            if (pto->nVersion > BIP0031_VERSION) {
                 // Take timestamp as close as possible before transmitting ping
-                pto->nPingUsecStart = GetTimeMicros();
+                pto->m_llnPingUsecStart = GetTimeMicros();
                 pto->PushMessage("ping", nonce);
 //            } else {
 //                // Peer is too old to support ping command with nonce, pong will never arrive, disable timing
@@ -4540,17 +4540,17 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         if (!IsInitialBlockDownload() && (GetTime() - nLastRebroadcast > 24 * 60 * 60))
         {
             {
-                LOCK(cs_vNodes);
-				for (auto pnode : vNodes)
+                LOCK(g_cs_vNodes);
+				for (auto pnode : g_vNodes)
                 {
                     // Periodically clear setAddrKnown to allow refresh broadcasts
                     if (nLastRebroadcast)
-                        pnode->setAddrKnown.clear();
+                        pnode->m_cAddrKnown.clear();
 
                     // Rebroadcast our address
                     if (!fNoListen)
                     {
-                        CAddress addr = GetLocalAddress(&pnode->addr);
+                        CAddress addr = GetLocalAddress(&pnode->m_cAddress);
                         if (addr.IsRoutable())
                             pnode->PushAddress(addr);
                     }
@@ -4565,11 +4565,11 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         if (fSendTrickle)
         {
             vector<CAddress> vAddr;
-            vAddr.reserve(pto->vAddrToSend.size());
-            for(const auto& addr:pto->vAddrToSend)
+            vAddr.reserve(pto->m_vcAddrToSend.size());
+            for(const auto& addr:pto->m_vcAddrToSend)
             {
                 // returns true if wasn't already contained in the set
-                if (pto->setAddrKnown.insert(addr).second)
+                if (pto->m_cAddrKnown.insert(addr).second)
                 {
                     vAddr.push_back(addr);
                     // receiver rejects addr messages larger than 1000
@@ -4580,18 +4580,18 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     }
                 }
             }
-            pto->vAddrToSend.clear();
+            pto->m_vcAddrToSend.clear();
             if (!vAddr.empty())
                 pto->PushMessage("addr", vAddr);
         }
 
         CNodeState &state = *State(pto->GetId());
         if (state.fShouldBan) {
-            if (pto->addr.IsLocal())
-                LogPrint("INFO","Warning: not banning local node %s!\n", pto->addr.ToString());
+            if (pto->m_cAddress.IsLocal())
+                LogPrint("INFO","Warning: not banning local node %s!\n", pto->m_cAddress.ToString());
             else {
-                pto->fDisconnect = true;
-                CNode::Ban(pto->addr);
+                pto->m_bDisconnect = true;
+                CNode::Ban(pto->m_cAddress);
             }
             state.fShouldBan = false;
         }
@@ -4601,9 +4601,9 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         state.rejects.clear();
 
         // Start block sync
-        if (pto->fStartSync && !SysCfg().IsImporting() && !SysCfg().IsReindex()) {
-            pto->fStartSync = false;
-            g_nSyncTipHeight = pto->nStartingHeight;
+        if (pto->m_bStartSync && !SysCfg().IsImporting() && !SysCfg().IsReindex()) {
+            pto->m_bStartSync = false;
+            g_nSyncTipHeight = pto->m_nStartingHeight;
             uiInterface.NotifyBlocksChanged(0, chainActive.Tip()->nHeight, chainActive.Tip()->GetBlockHash());
             LogPrint("net", "start block sync lead to getblocks\n");
             PushGetBlocks(pto, chainActive.Tip(), uint256());
@@ -4623,12 +4623,12 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         vector<CInv> vInv;
         vector<CInv> vInvWait;
         {
-            LOCK(pto->cs_inventory);
-            vInv.reserve(pto->vInventoryToSend.size());
-            vInvWait.reserve(pto->vInventoryToSend.size());
-            for (const auto& inv: pto->vInventoryToSend)
+            LOCK(pto->m_cs_inventory);
+            vInv.reserve(pto->m_vInventoryToSend.size());
+            vInvWait.reserve(pto->m_vInventoryToSend.size());
+            for (const auto& inv: pto->m_vInventoryToSend)
             {
-                if (pto->setInventoryKnown.count(inv))
+                if (pto->m_setInventoryKnown.count(inv))
                     continue;
 
                 // trickle out tx inv to protect privacy
@@ -4650,7 +4650,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                 }
 
                 // returns true if wasn't already contained in the set
-                if (pto->setInventoryKnown.insert(inv).second)
+                if (pto->m_setInventoryKnown.insert(inv).second)
                 {
                     vInv.push_back(inv);
                     if (vInv.size() >= 1000)
@@ -4660,7 +4660,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     }
                 }
             }
-            pto->vInventoryToSend = vInvWait;
+            pto->m_vInventoryToSend = vInvWait;
         }
         if (!vInv.empty())
             pto->PushMessage("inv", vInv);
@@ -4671,11 +4671,11 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // in flight for over two minutes, since we first had a chance to
         // process an incoming block.
         int64_t nNow = GetTimeMicros();
-        if (!pto->fDisconnect && state.nBlocksInFlight &&
+        if (!pto->m_bDisconnect && state.nBlocksInFlight &&
             state.nLastBlockReceive < state.nLastBlockProcess - BLOCK_DOWNLOAD_TIMEOUT*1000000 &&
             state.vBlocksInFlight.front().nTime < state.nLastBlockProcess - 2*BLOCK_DOWNLOAD_TIMEOUT*1000000) {
             LogPrint("INFO","Peer %s is stalling block download, disconnecting\n", state.name.c_str());
-            pto->fDisconnect = true;
+            pto->m_bDisconnect = true;
         }
 
         //
@@ -4683,7 +4683,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         //
         vector<CInv> vGetData;
         int nIndex(0);
-        while (!pto->fDisconnect && state.nBlocksToDownload && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+        while (!pto->m_bDisconnect && state.nBlocksToDownload && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             uint256 hash = state.vBlocksToDownload.front();
             vGetData.push_back(CInv(MSG_BLOCK, hash));
             MarkBlockAsInFlight(pto->GetId(), hash);
@@ -4699,9 +4699,9 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         //
         // Message: getdata (non-blocks)
         //
-        while (!pto->fDisconnect && !pto->mapAskFor.empty() && (*pto->mapAskFor.begin()).first <= nNow)
+        while (!pto->m_bDisconnect && !pto->m_mapAskFor.empty() && (*pto->m_mapAskFor.begin()).first <= nNow)
         {
-            const CInv& inv = (*pto->mapAskFor.begin()).second;
+            const CInv& inv = (*pto->m_mapAskFor.begin()).second;
             if (!AlreadyHave(inv))
             {
 
@@ -4713,7 +4713,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     vGetData.clear();
                 }
             }
-            pto->mapAskFor.erase(pto->mapAskFor.begin());
+            pto->m_mapAskFor.erase(pto->m_mapAskFor.begin());
         }
         if (!vGetData.empty())
             pto->PushMessage("getdata", vGetData);

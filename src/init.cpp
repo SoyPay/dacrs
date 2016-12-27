@@ -517,14 +517,14 @@ bool AppInit2(boost::thread_group& threadGroup) {
     }
     // Make sure enough file descriptors are available
     int nBind = max((int)SysCfg().IsArgCount("-bind"), 1);
-    nMaxConnections = SysCfg().GetArg("-maxconnections", 125);
-    nMaxConnections = max(min(nMaxConnections, (int)(FD_SETSIZE - nBind - MIN_CORE_FILEDESCRIPTORS)), 0);
-    int nFD = RaiseFileDescriptorLimit(nMaxConnections + MIN_CORE_FILEDESCRIPTORS);
+    g_nMaxConnections = SysCfg().GetArg("-maxconnections", 125);
+    g_nMaxConnections = max(min(g_nMaxConnections, (int)(FD_SETSIZE - nBind - MIN_CORE_FILEDESCRIPTORS)), 0);
+    int nFD = RaiseFileDescriptorLimit(g_nMaxConnections + MIN_CORE_FILEDESCRIPTORS);
     if (nFD < MIN_CORE_FILEDESCRIPTORS) {
     	return InitError(_("Not enough file descriptors available."));
     }
-    if (nFD - MIN_CORE_FILEDESCRIPTORS < nMaxConnections) {
-    	nMaxConnections = nFD - MIN_CORE_FILEDESCRIPTORS;
+    if (nFD - MIN_CORE_FILEDESCRIPTORS < g_nMaxConnections) {
+    	g_nMaxConnections = nFD - MIN_CORE_FILEDESCRIPTORS;
     }
     // ********************************************************* Step 3: parameter-to-internal-flags
 
@@ -633,8 +633,8 @@ bool AppInit2(boost::thread_group& threadGroup) {
     printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
     LogPrint("INFO","Using data directory %s\n", strDataDir);
     printf("Using data directory %s\n", strDataDir.c_str());
-    LogPrint("INFO","Using at most %i connections (%i file descriptors available)\n", nMaxConnections, nFD);
-    printf("Using at most %i connections (		%i file descriptors available)\n", nMaxConnections, nFD);
+    LogPrint("INFO","Using at most %i connections (%i file descriptors available)\n", g_nMaxConnections, nFD);
+    printf("Using at most %i connections (		%i file descriptors available)\n", g_nMaxConnections, nFD);
     ostringstream strErrors;
 
     int64_t nStart;
@@ -961,12 +961,12 @@ bool AppInit2(boost::thread_group& threadGroup) {
 
     {
         CAddrDB adb;
-        if (!adb.Read(addrman))
+        if (!adb.Read(g_cAddrman))
             LogPrint("INFO","Invalid or missing peers.dat; recreating\n");
     }
 
     LogPrint("INFO","Loaded %i addresses from peers.dat  %dms\n",
-           addrman.size(), GetTimeMillis() - nStart);
+           g_cAddrman.size(), GetTimeMillis() - nStart);
 
     // ********************************************************* Step 11: start node
 

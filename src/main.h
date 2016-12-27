@@ -139,9 +139,9 @@ void SyncWithWallets(const uint256 &hash, CBaseTransaction *pBaseTx, const CBloc
 /** Erase Tx from wallets **/
 void EraseTransaction(const uint256 &hash);
 /** Register with a network node to receive its signals */
-void RegisterNodeSignals(CNodeSignals& nodeSignals);
+void RegisterNodeSignals(ST_NodeSignals& nodeSignals);
 /** Unregister a network node */
-void UnregisterNodeSignals(CNodeSignals& nodeSignals);
+void UnregisterNodeSignals(ST_NodeSignals& nodeSignals);
 
 void PushGetBlocks(CNode* pnode, CBlockIndex* pindexBegin, uint256 hashEnd);
 

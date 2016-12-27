@@ -668,7 +668,7 @@ bool static MiningBlock(CBlock *pBlock, CWallet *pWallet, CBlockIndex* pBlockInd
 	while (true) {
 		// Check for stop or if block needs to be rebuilt
 		boost::this_thread::interruption_point();
-		if (vNodes.empty() && SysCfg().NetworkID() != CBaseParams::EM_REGTEST) {
+		if (g_vNodes.empty() && SysCfg().NetworkID() != CBaseParams::EM_REGTEST) {
 			return false;
 		}
 		if (pBlockIndexPrev != chainActive.Tip()) {
@@ -743,7 +743,7 @@ void static DacrsMiner(CWallet *pWallet,int nTargetConter) {
 			if (SysCfg().NetworkID() != CBaseParams::EM_REGTEST) {
 				// Busy-wait for the network to come online so we don't waste time mining
 				// on an obsolete chain. In regtest mode we expect to fly solo.
-				while (vNodes.empty()
+				while (g_vNodes.empty()
 						|| (chainActive.Tip() && chainActive.Tip()->nHeight > 1
 								&& GetAdjustedTime() - chainActive.Tip()->nTime > 60 * 60))
 					MilliSleep(1000);
