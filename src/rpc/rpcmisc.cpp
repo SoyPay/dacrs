@@ -53,19 +53,19 @@ Value getbalance(const Array& params, bool fHelp)
 	}
 	Object obj;
 	if (size == 0) {
-		obj.push_back(Pair("balance", ValueFromAmount(pwalletMain->GetRawBalance())));
+		obj.push_back(Pair("balance", ValueFromAmount(g_pwalletMain->GetRawBalance())));
 		return std::move(obj);
 	} else if (size == 1) {
 		string addr = params[0].get_str();
 		if (addr == "*") {
-			obj.push_back(Pair("balance", ValueFromAmount(pwalletMain->GetRawBalance())));
+			obj.push_back(Pair("balance", ValueFromAmount(g_pwalletMain->GetRawBalance())));
 			return std::move(obj);
 		} else {
 			CKeyID keyid;
 			if (!GetKeyId(addr, keyid)) {
 				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 			}
-			if (pwalletMain->HaveKey(keyid)) {
+			if (g_pwalletMain->HaveKey(keyid)) {
 				CAccount account;
 				CAccountViewCache accView(*pAccountViewTip, true);
 				if (accView.GetAccount(CUserID(keyid), account)) {
@@ -88,15 +88,15 @@ Value getbalance(const Array& params, bool fHelp)
 				CBlockIndex *pBlockIndex = chainActive.Tip();
 				int64_t nValue(0);
 				while (nConf) {
-					if (pwalletMain->mapInBlockTx.count(pBlockIndex->GetBlockHash()) > 0) {
-						map<uint256, std::shared_ptr<CBaseTransaction> > mapTx = pwalletMain->mapInBlockTx[pBlockIndex->GetBlockHash()].mapAccountTx;
+					if (g_pwalletMain->m_mapInBlockTx.count(pBlockIndex->GetBlockHash()) > 0) {
+						map<uint256, std::shared_ptr<CBaseTransaction> > mapTx = g_pwalletMain->m_mapInBlockTx[pBlockIndex->GetBlockHash()].m_mapAccountTx;
 						for (auto &item : mapTx) {
 							if (COMMON_TX == item.second->nTxType) {
 								CTransaction *pTx = (CTransaction *) item.second.get();
 								CKeyID srcKeyId, desKeyId;
 								pAccountViewTip->GetKeyId(pTx->srcRegId, srcKeyId);
 								pAccountViewTip->GetKeyId(pTx->desUserId, desKeyId);
-								if (!pwalletMain->HaveKey(srcKeyId) && pwalletMain->HaveKey(desKeyId)) {
+								if (!g_pwalletMain->HaveKey(srcKeyId) && g_pwalletMain->HaveKey(desKeyId)) {
 									nValue = pTx->llValues;
 								}
 							}
@@ -105,10 +105,10 @@ Value getbalance(const Array& params, bool fHelp)
 					pBlockIndex = pBlockIndex->pprev;
 					--nConf;
 				}
-				obj.push_back(Pair("balance", ValueFromAmount(pwalletMain->GetRawBalance() - nValue)));
+				obj.push_back(Pair("balance", ValueFromAmount(g_pwalletMain->GetRawBalance() - nValue)));
 				return std::move(obj);
 			} else {
-				obj.push_back(Pair("balance", ValueFromAmount(pwalletMain->GetRawBalance(false))));
+				obj.push_back(Pair("balance", ValueFromAmount(g_pwalletMain->GetRawBalance(false))));
 				return std::move(obj);
 			}
 		} else {
@@ -116,13 +116,13 @@ Value getbalance(const Array& params, bool fHelp)
 			if (!GetKeyId(addr, keyid)) {
 				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 			}
-			if (pwalletMain->HaveKey(keyid)) {
+			if (g_pwalletMain->HaveKey(keyid)) {
 				if (0 != nConf) {
 					CBlockIndex *pBlockIndex = chainActive.Tip();
 					int64_t nValue(0);
 					while (nConf) {
-						if (pwalletMain->mapInBlockTx.count(pBlockIndex->GetBlockHash()) > 0) {
-							map<uint256, std::shared_ptr<CBaseTransaction> > mapTx = pwalletMain->mapInBlockTx[pBlockIndex->GetBlockHash()].mapAccountTx;
+						if (g_pwalletMain->m_mapInBlockTx.count(pBlockIndex->GetBlockHash()) > 0) {
+							map<uint256, std::shared_ptr<CBaseTransaction> > mapTx = g_pwalletMain->m_mapInBlockTx[pBlockIndex->GetBlockHash()].m_mapAccountTx;
 							for (auto &item : mapTx) {
 								if (COMMON_TX == item.second->nTxType) {
 									CTransaction *pTx = (CTransaction *) item.second.get();
@@ -198,9 +198,9 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("fullversion",fullersion));
     obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
 
-    if (pwalletMain) {
-        obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
-        obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetRawBalance())));
+    if (g_pwalletMain) {
+        obj.push_back(Pair("walletversion", g_pwalletMain->GetVersion()));
+        obj.push_back(Pair("balance",       ValueFromAmount(g_pwalletMain->GetRawBalance())));
     }
     static const string name[] = {"MAIN", "TESTNET", "REGTEST"};
 
@@ -212,7 +212,7 @@ Value getinfo(const Array& params, bool fHelp)
     obj.push_back(Pair("nettype",       name[SysCfg().NetworkID()]));
     obj.push_back(Pair("chainwork", 	chainActive.Tip()->nChainWork.GetHex()));
     obj.push_back(Pair("tipblocktime", 	(int)chainActive.Tip()->nTime));
-    if (pwalletMain && pwalletMain->IsCrypted())
+    if (g_pwalletMain && g_pwalletMain->IsCrypted())
 	 obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
 	 obj.push_back(Pair("paytxfee",      ValueFromAmount(SysCfg().GetTxFee())));
 
@@ -235,7 +235,7 @@ public:
     Object operator()(const CKeyID &keyID) const {
         Object obj;
         CPubKey vchPubKey;
-        pwalletMain->GetPubKey(keyID, vchPubKey);
+        g_pwalletMain->GetPubKey(keyID, vchPubKey);
         obj.push_back(Pair("isscript", false));
         obj.push_back(Pair("pubkey", HexStr(vchPubKey)));
         obj.push_back(Pair("iscompressed", vchPubKey.IsCompressed()));

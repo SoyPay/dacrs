@@ -11,8 +11,8 @@
 // - E-mail usually won't line-break if there's no punctuation to break at.
 // - Double-clicking selects the whole number as one word if it's all alphanumeric.
 //
-#ifndef DACRS_BASE58_H
-#define DACRS_BASE58_H
+#ifndef DACRS_BASE58_H_
+#define DACRS_BASE58_H_
 
 #include "chainparams.h"
 #include "key.h"
@@ -64,31 +64,40 @@ inline bool DecodeBase58Check(const string& str, vector<unsigned char>& vchRet);
 /**
  * Base class for all base58-encoded data
  */
-class CBase58Data
-{
-protected:
-    // the version byte(s)
-    vector<unsigned char> vchVersion;
+class CBase58Data {
+ public:
+	bool SetString(const char* psz, unsigned int nVersionBytes = 1);
+	bool SetString(const string& str);
+	string ToString() const;
+	int CompareTo(const CBase58Data& b58) const;
 
-    // the actually encoded data
-    typedef vector<unsigned char, zero_after_free_allocator<unsigned char> > vector_uchar;
-    vector_uchar vchData;
+	bool operator==(const CBase58Data& b58) const {
+		return CompareTo(b58) == 0;
+	}
+	bool operator<=(const CBase58Data& b58) const {
+		return CompareTo(b58) <= 0;
+	}
+	bool operator>=(const CBase58Data& b58) const {
+		return CompareTo(b58) >= 0;
+	}
+	bool operator<(const CBase58Data& b58) const {
+		return CompareTo(b58) < 0;
+	}
+	bool operator>(const CBase58Data& b58) const {
+		return CompareTo(b58) > 0;
+	}
 
-    CBase58Data();
-    void SetData(const vector<unsigned char> &vchVersionIn, const void* pdata, size_t nSize);
-    void SetData(const vector<unsigned char> &vchVersionIn, const unsigned char *pbegin, const unsigned char *pend);
+ protected:
+	CBase58Data();
+	void SetData(const vector<unsigned char> &vchVersionIn, const void* pdata, size_t nSize);
+	void SetData(const vector<unsigned char> &vchVersionIn, const unsigned char *pbegin, const unsigned char *pend);
 
-public:
-    bool SetString(const char* psz, unsigned int nVersionBytes = 1);
-    bool SetString(const string& str);
-    string ToString() const;
-    int CompareTo(const CBase58Data& b58) const;
+	// the version byte(s)
+	vector<unsigned char> m_vchVersion;
 
-    bool operator==(const CBase58Data& b58) const { return CompareTo(b58) == 0; }
-    bool operator<=(const CBase58Data& b58) const { return CompareTo(b58) <= 0; }
-    bool operator>=(const CBase58Data& b58) const { return CompareTo(b58) >= 0; }
-    bool operator< (const CBase58Data& b58) const { return CompareTo(b58) <  0; }
-    bool operator> (const CBase58Data& b58) const { return CompareTo(b58) >  0; }
+	// the actually encoded data
+	typedef vector<unsigned char, zero_after_free_allocator<unsigned char> > vector_uchar;
+	vector_uchar m_vchData;
 };
 
 /** base58-encoded Dacrs addresses.
@@ -97,62 +106,70 @@ public:
  * Script-hash-addresses have version 5 (or 196 testnet).
  * The data vector contains RIPEMD160(SHA256(cscript)), where cscript is the serialized redemption script.
  */
-class CDacrsAddress : public CBase58Data {
-public:
-    bool Set(const CKeyID &id);
-    bool Set(const CTxDestination &dest);
-    bool IsValid() const;
+class CDacrsAddress: public CBase58Data {
+ public:
+	bool Set(const CKeyID &id);
+	bool Set(const CTxDestination &dest);
+	bool IsValid() const;
 
-    CDacrsAddress() {}
-    CDacrsAddress(const CTxDestination &dest) { Set(dest); }
-    CDacrsAddress(const string& strAddress) { SetString(strAddress); }
-    CDacrsAddress(const char* pszAddress) { SetString(pszAddress); }
+	CDacrsAddress() {
+	}
+	CDacrsAddress(const CTxDestination &dest) {
+		Set(dest);
+	}
+	CDacrsAddress(const string& strAddress) {
+		SetString(strAddress);
+	}
+	CDacrsAddress(const char* pszAddress) {
+		SetString(pszAddress);
+	}
 
-    CTxDestination Get() const;
-    bool GetKeyID(CKeyID &keyID) const;
-//    bool GetRegID(CRegID &Regid) const ;
-    bool IsScript() const;
+	CTxDestination Get() const;
+	bool GetKeyID(CKeyID &keyID) const;
+	bool IsScript() const;
 };
 
 /**
  * A base58-encoded secret key
  */
-class CDacrsSecret : public CBase58Data
-{
-public:
-    void SetKey(const CKey& vchSecret);
-    CKey GetKey();
-    bool IsValid() const;
-    bool SetString(const char* pszSecret);
-    bool SetString(const string& strSecret);
+class CDacrsSecret: public CBase58Data {
+ public:
+	void SetKey(const CKey& vchSecret);
+	CKey GetKey();
+	bool IsValid() const;
+	bool SetString(const char* pszSecret);
+	bool SetString(const string& strSecret);
 
-    CDacrsSecret(const CKey& vchSecret) { SetKey(vchSecret); }
-    CDacrsSecret() {}
+	CDacrsSecret(const CKey& vchSecret) {
+		SetKey(vchSecret);
+	}
+	CDacrsSecret() {
+	}
 };
 
-template<typename K, int Size, CBaseParams::Base58Type Type> class CDacrsExtKeyBase : public CBase58Data
-{
-public:
-    void SetKey(const K &key) {
-        unsigned char vch[Size];
-        key.Encode(vch);
-        SetData(SysCfg().Base58Prefix(Type), vch, vch+Size);
-    }
+template<typename K, int Size, CBaseParams::emBase58Type Type> class CDacrsExtKeyBase: public CBase58Data {
+ public:
+	void SetKey(const K &key) {
+		unsigned char vch[Size];
+		key.Encode(vch);
+		SetData(SysCfg().Base58Prefix(Type), vch, vch + Size);
+	}
 
-    K GetKey() {
-        K ret;
-        ret.Decode(&vchData[0], &vchData[Size]);
-        return ret;
-    }
+	K GetKey() {
+		K ret;
+		ret.Decode(&m_vchData[0], &m_vchData[Size]);
+		return ret;
+	}
 
-    CDacrsExtKeyBase(const K &key) {
-        SetKey(key);
-    }
+	CDacrsExtKeyBase(const K &key) {
+		SetKey(key);
+	}
 
-    CDacrsExtKeyBase() {}
+	CDacrsExtKeyBase() {
+	}
 };
 
-typedef CDacrsExtKeyBase<CExtKey, 74, CBaseParams::EXT_SECRET_KEY> CDacrsExtKey;
-typedef CDacrsExtKeyBase<CExtPubKey, 74, CBaseParams::EXT_PUBLIC_KEY> CDacrsExtPubKey;
+typedef CDacrsExtKeyBase<CExtKey, 74, CBaseParams::EM_EXT_SECRET_KEY> CDacrsExtKey;
+typedef CDacrsExtKeyBase<CExtPubKey, 74, CBaseParams::EM_EXT_PUBLIC_KEY> CDacrsExtPubKey;
 
-#endif // DACRS_BASE58_H
+#endif // DACRS_BASE58_H_

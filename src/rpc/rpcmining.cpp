@@ -42,7 +42,7 @@ using namespace std;
 
 void InitRPCMining()
 {
-    if (!pwalletMain)
+    if (!g_pwalletMain)
         return;
 
     // getwork/getblocktemplate mining rewards paid here:
@@ -157,7 +157,7 @@ Value setgenerate(const Array& params, bool fHelp)
 
     set<CKeyID> setKeyId;
     setKeyId.clear();
-    pwalletMain->GetKeys(setKeyId, true);
+    g_pwalletMain->GetKeys(setKeyId, true);
 
     bool bSetEmpty(true);
     for(auto & keyId : setKeyId) {
@@ -186,13 +186,13 @@ Value setgenerate(const Array& params, bool fHelp)
     }
     Object obj;
 	if(fGenerate == false){
-		GenerateDacrsBlock(false, pwalletMain, 1);
+		GenerateDacrsBlock(false, g_pwalletMain, 1);
 
 	    obj.push_back(Pair("msg","stoping  mining"));
 		 return obj;
 	}
 
-	GenerateDacrsBlock(true, pwalletMain, nGenProcLimit);//跑完之后需要退出
+	GenerateDacrsBlock(true, g_pwalletMain, nGenProcLimit);//跑完之后需要退出
 	obj.push_back(Pair("msg","in  mining"));
 	return obj;
 
@@ -225,8 +225,8 @@ Value getmininginfo(const Array& params, bool fHelp)
 
     Object obj;
     obj.push_back(Pair("blocks",           (int)chainActive.Height()));
-    obj.push_back(Pair("currentblocksize", (uint64_t)nLastBlockSize));
-    obj.push_back(Pair("currentblocktx",   (uint64_t)nLastBlockTx));
+    obj.push_back(Pair("currentblocksize", (uint64_t)g_ullLastBlockSize));
+    obj.push_back(Pair("currentblocktx",   (uint64_t)g_ullLastBlockTx));
     obj.push_back(Pair("difficulty",       (double)GetDifficulty()));
     obj.push_back(Pair("errors",           GetWarnings("statusbar")));
     obj.push_back(Pair("genproclimit",     1));

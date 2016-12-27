@@ -4,75 +4,80 @@
 #include "json/json_spirit_writer_template.h"
 using namespace json_spirit;
 
-boost::thread_group CUIServer::m_threadGroup;
+boost::thread_group CUIServer::m_sThreadGroup;
+bool CUIServer::m_bIsInitalEnd = false;
+CUIServer* CUIServer::m_sInstance = NULL;
 
-bool CUIServer::HasConnection(){
-	if(NULL == instance)
+bool CUIServer::HasConnection() {
+	if (NULL == m_sInstance) {
 		return false;
+	}
 
-	return instance->m_bConnect;
+	return m_sInstance->m_bConnect;
 }
 
 void CUIServer::StartServer() {
-	m_threadGroup.create_thread(boost::bind(&CUIServer::RunThreadPorc, CUIServer::getInstance()));
+	m_sThreadGroup.create_thread(boost::bind(&CUIServer::RunThreadPorc, CUIServer::getInstance()));
 }
 
-void CUIServer::StopServer(){
-	if(NULL == instance)
-		return ;
-	instance->m_iosev.stop();
-	instance->m_bRunFlag = false;
-	m_threadGroup.interrupt_all();
-	m_threadGroup.join_all();
+void CUIServer::StopServer() {
+	if (NULL == m_sInstance) {
+		return;
+	}
+	m_sInstance->m_IoSev.stop();
+	m_sInstance->m_bRunFlag = false;
+	m_sThreadGroup.interrupt_all();
+	m_sThreadGroup.join_all();
 }
 
 void CUIServer::RunThreadPorc(CUIServer* pThis) {
-	if (NULL == pThis)
+	if (NULL == pThis) {
 		return;
-
+	}
 	pThis->RunServer();
 }
 
 CUIServer* CUIServer::getInstance() {
-	if (NULL == instance)
-		instance = new CUIServer();
-	return instance;
+	if (NULL == m_sInstance) {
+		m_sInstance = new CUIServer();
+	}
+
+	return m_sInstance;
 }
 
 void CUIServer::Send(const string& strData) {
-	if(NULL == instance)
+	if(NULL == m_sInstance) {
 		return ;
+	}
 //	LogPrint("TOUI","send message: %s\n", strData);
 	string sendData(strData);
 	PackageData(sendData);
 	LogPrint("TOUI","send message: %s\n", sendData);
-	instance->SendData(sendData);
+	m_sInstance->SendData(sendData);
 }
 
-bool CUIServer::IsInitalEnd = false;
 void CUIServer::SendData(const string& strData) {
 	system::error_code ignored_error;
-	if(m_bConnect&&m_socket.get() ){
-		m_socket->write_some(asio::buffer(strData), ignored_error);
+	if(m_bConnect&&m_Socket.get() ){
+		m_Socket->write_some(asio::buffer(strData), ignored_error);
 	}
 }
 
 void CUIServer::Accept() {
-	sock_pt sock(new tcp::socket(m_iosev));
-	m_acceptor.async_accept(*sock, bind(&CUIServer::Accept_handler, this, sock));
+	sock_pt sock(new tcp::socket(m_IoSev));
+	m_Acceptor.async_accept(*sock, bind(&CUIServer::Accept_handler, this, sock));
 }
 
 void CUIServer::Accept_handler(sock_pt sock) {
-	if(m_bConnect)
-	{
+	if (m_bConnect) {
 		//only save one connection
 		Accept();
 		return;
 	}
-	m_socket = sock;
+	m_Socket = sock;
 	m_bConnect = true;
 	Object obj;
-	if (CUIServer::IsInitalEnd == true) {
+	if (CUIServer::m_bIsInitalEnd == true) {
 		obj.push_back(Pair("type", "init"));
 		obj.push_back(Pair("msg", "initialize end"));
 	} else {
@@ -81,13 +86,13 @@ void CUIServer::Accept_handler(sock_pt sock) {
 	}
 
 	Accept();
-	string sendData = write_string(Value(std::move(obj)),true);
-	PackageData(sendData);
-	sock->async_write_some(asio::buffer(sendData), bind(&CUIServer::write_handler, this));
+	string strSendData = write_string(Value(std::move(obj)), true);
+	PackageData(strSendData);
+	sock->async_write_some(asio::buffer(strSendData), bind(&CUIServer::write_handler, this));
 	std::shared_ptr<vector<char> > str(new vector<char>(100, 0));
-	memset(data_,0,max_length);
-	sock->async_read_some(asio::buffer(data_,max_length),
-			bind(&CUIServer::read_handler, this, asio::placeholders::error, data_, sock));
+	memset(m_chData_, 0, EM_MAX_LENGTH);
+	sock->async_read_some(asio::buffer(m_chData_, EM_MAX_LENGTH),
+			bind(&CUIServer::read_handler, this, asio::placeholders::error, m_chData_, sock));
 }
 
 void CUIServer::read_handler(const system::error_code& ec, char* pstr, sock_pt sock) {
@@ -101,27 +106,25 @@ void CUIServer::read_handler(const system::error_code& ec, char* pstr, sock_pt s
 
 void CUIServer::RunServer(){
 	Accept();
-	m_iosev.run();
-	if(instance != NULL && !instance->m_bRunFlag) {
-		delete instance;
-			instance = NULL;
+	m_IoSev.run();
+	if(m_sInstance != NULL && !m_sInstance->m_bRunFlag) {
+		delete m_sInstance;
+		m_sInstance = NULL;
 	}
 }
 
-CUIServer* CUIServer::instance = NULL;
-
-
 void CUIServer::PackageData(string &strData) {
-	unsigned char cDataTemp[65536] = {0};
-	unsigned short nDataLen = strData.length();
-	if(0 == nDataLen)
+	unsigned char chDataTemp[65536] = {0};
+	unsigned short usDataLen = strData.length();
+	if(0 == usDataLen) {
 		return;
-	cDataTemp[0] = '<';
-	memcpy(cDataTemp+1, &nDataLen, 2);
-	memcpy(cDataTemp+3, strData.c_str(), nDataLen);
-	cDataTemp[nDataLen+3] = '>';
-	LogPrint("TOUI","send message length: %d\n", nDataLen);
-	strData.assign(cDataTemp, cDataTemp+nDataLen+4);
+	}
+	chDataTemp[0] = '<';
+	memcpy(chDataTemp+1, &usDataLen, 2);
+	memcpy(chDataTemp+3, strData.c_str(), usDataLen);
+	chDataTemp[usDataLen+3] = '>';
+	LogPrint("TOUI","send message length: %d\n", usDataLen);
+	strData.assign(chDataTemp, chDataTemp+usDataLen+4);
 //	cout << "Send Data len " << nDataLen + 4 << ":";
 //	for(int i=0; i< nDataLen+4; ++i)
 //		printf("%02X", cDataTemp[i]);

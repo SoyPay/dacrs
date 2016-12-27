@@ -20,81 +20,81 @@ CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int 
 // The ideal size for a bloom filter with a given number of elements and false positive rate is:
 // - nElements * log(fp rate) / ln(2)^2
 // We ignore filter parameters which will create a bloom filter larger than the protocol limits
-vData(min((unsigned int)(-1  / LN2SQUARED * nElements * log(nFPRate)), MAX_BLOOM_FILTER_SIZE * 8) / 8),
+		m_vchData(min((unsigned int) (-1 / LN2SQUARED * nElements * log(nFPRate)), g_sMaxBloomFilterSize * 8) / 8),
 // The ideal number of hash functions is filter size * ln(2) / number of elements
 // Again, we ignore filter parameters which will create a bloom filter with more hash functions than the protocol limits
 // See http://en.wikipedia.org/wiki/Bloom_filter for an explanation of these formulas
-isFull(false),
-isEmpty(false),
-nHashFuncs(min((unsigned int)(vData.size() * 8 / nElements * LN2), MAX_HASH_FUNCS)),
-nTweak(nTweakIn),
-nFlags(nFlagsIn)
-{
+		m_bIsFull(false), m_bIsEmpty(false), m_unHashFuncs(
+				min((unsigned int) (m_vchData.size() * 8 / nElements * LN2), g_sMaxHashFuncs)), m_unTweak(nTweakIn), m_uchFlags(
+				nFlagsIn) {
 }
 
-inline unsigned int CBloomFilter::Hash(unsigned int nHashNum, const vector<unsigned char>& vDataToHash) const
-{
-    // 0xFBA4C795 chosen as it guarantees a reasonable bit difference between nHashNum values.
-    return MurmurHash3(nHashNum * 0xFBA4C795 + nTweak, vDataToHash) % (vData.size() * 8);
+inline unsigned int CBloomFilter::Hash(unsigned int nHashNum, const vector<unsigned char>& vDataToHash) const {
+	// 0xFBA4C795 chosen as it guarantees a reasonable bit difference between nHashNum values.
+	return MurmurHash3(nHashNum * 0xFBA4C795 + m_unTweak, vDataToHash) % (m_vchData.size() * 8);
 }
 
-void CBloomFilter::insert(const vector<unsigned char>& vKey)
-{
-    if (isFull)
-        return;
-    for (unsigned int i = 0; i < nHashFuncs; i++)
-    {
-        unsigned int nIndex = Hash(i, vKey);
-        // Sets bit nIndex of vData
-        vData[nIndex >> 3] |= (1 << (7 & nIndex));
-    }
-    isEmpty = false;
+void CBloomFilter::insert(const vector<unsigned char>& vKey) {
+	if (m_bIsFull) {
+		return;
+	}
+
+	for (unsigned int i = 0; i < m_unHashFuncs; i++) {
+		unsigned int nIndex = Hash(i, vKey);
+		// Sets bit nIndex of vData
+		m_vchData[nIndex >> 3] |= (1 << (7 & nIndex));
+	}
+
+	m_bIsEmpty = false;
+}
+
+void CBloomFilter::insert(const uint256& hash) {
+	vector<unsigned char> data(hash.begin(), hash.end());
+	insert(data);
+}
+
+bool CBloomFilter::contains(const vector<unsigned char>& vKey) const {
+	if (m_bIsFull) {
+		return true;
+	}
+
+	if (m_bIsEmpty) {
+		return false;
+	}
+
+	for (unsigned int i = 0; i < m_unHashFuncs; i++) {
+		unsigned int nIndex = Hash(i, vKey);
+		// Checks bit nIndex of vData
+		if (!(m_vchData[nIndex >> 3] & (1 << (7 & nIndex)))) {
+			return false;
+		}
+	}
+
+	return true;
 }
 
 
-void CBloomFilter::insert(const uint256& hash)
-{
-    vector<unsigned char> data(hash.begin(), hash.end());
-    insert(data);
+bool CBloomFilter::contains(const uint256& hash) const {
+	vector<unsigned char> data(hash.begin(), hash.end());
+
+	return contains(data);
 }
 
-bool CBloomFilter::contains(const vector<unsigned char>& vKey) const
-{
-    if (isFull)
-        return true;
-    if (isEmpty)
-        return false;
-    for (unsigned int i = 0; i < nHashFuncs; i++)
-    {
-        unsigned int nIndex = Hash(i, vKey);
-        // Checks bit nIndex of vData
-        if (!(vData[nIndex >> 3] & (1 << (7 & nIndex))))
-            return false;
-    }
-    return true;
+bool CBloomFilter::IsWithinSizeConstraints() const {
+	return m_vchData.size() <= g_sMaxBloomFilterSize && m_unHashFuncs <= g_sMaxHashFuncs;
 }
 
+bool CBloomFilter::IsRelevantAndUpdate(CBaseTransaction *pBaseTx, const uint256& hash) {
+	// Match if the filter contains the hash of tx
+	//  for finding tx when they appear in a block
+	if (m_bIsFull) {
+		return true;
+	}
 
-bool CBloomFilter::contains(const uint256& hash) const
-{
-    vector<unsigned char> data(hash.begin(), hash.end());
-    return contains(data);
-}
+	if (m_bIsEmpty) {
+		return false;
+	}
 
-bool CBloomFilter::IsWithinSizeConstraints() const
-{
-    return vData.size() <= MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
-}
-
-bool CBloomFilter::IsRelevantAndUpdate(CBaseTransaction *pBaseTx, const uint256& hash)
-{
-//    bool fFound = false;
-    // Match if the filter contains the hash of tx
-    //  for finding tx when they appear in a block
-    if (isFull)
-        return true;
-    if (isEmpty)
-        return false;
 //    if (contains(hash))
 //        fFound = true;
 
@@ -152,18 +152,18 @@ bool CBloomFilter::IsRelevantAndUpdate(CBaseTransaction *pBaseTx, const uint256&
 //        }
 //    }
 
-    return false;
+	return false;
 }
 
-void CBloomFilter::UpdateEmptyFull()
-{
-    bool full = true;
-    bool empty = true;
-    for (unsigned int i = 0; i < vData.size(); i++)
-    {
-        full &= vData[i] == 0xff;
-        empty &= vData[i] == 0;
-    }
-    isFull = full;
-    isEmpty = empty;
+void CBloomFilter::UpdateEmptyFull() {
+	bool bFull = true;
+	bool bEmpty = true;
+
+	for (unsigned int i = 0; i < m_vchData.size(); i++) {
+		bFull &= m_vchData[i] == 0xff;
+		bEmpty &= m_vchData[i] == 0;
+	}
+
+	m_bIsFull = bFull;
+	m_bIsEmpty = bEmpty;
 }

@@ -88,18 +88,13 @@ map<string, vector<string> > CBaseParams::m_mapMultiArgs;
 //
 // testnet network
 //
-vector<string> intPubKey_mainNet = {
-		"0388a07c89727f9065703100e94c00ce82bda6987215a88abee65db9b37f52f9e0",
-		"03fdfda984690ff2b10f27ccc38b90634ca101a27621c1a9dcec7a2f33fa0282d6"
-};
+vector<string> intPubKey_mainNet = { "0388a07c89727f9065703100e94c00ce82bda6987215a88abee65db9b37f52f9e0",
+		"03fdfda984690ff2b10f27ccc38b90634ca101a27621c1a9dcec7a2f33fa0282d6" };
 
-vector<string> initPubKey_testNet = { //
-		"0388a07c89727f9065703100e94c00ce82bda6987215a88abee65db9b37f52f9e0",
-		"0360328964121d4625ca827c3e111f99fb005d5b30455d2609ac0ac3bbe17df601"
-};
+vector<string> initPubKey_testNet = { "0388a07c89727f9065703100e94c00ce82bda6987215a88abee65db9b37f52f9e0",
+		"0360328964121d4625ca827c3e111f99fb005d5b30455d2609ac0ac3bbe17df601" };
 
-vector<string> initPubkey_regTest = {
-		"03d308757fc1f8efd69f2da329db560cd7d3cba951eb09786c375cf1709f9165ba",
+vector<string> initPubkey_regTest = { "03d308757fc1f8efd69f2da329db560cd7d3cba951eb09786c375cf1709f9165ba",
 		"024126ccf4b5f6463a3f874f234b77d02e9f5c2057c6c382160dc17c7f9ba2b333",
 		"0221b571330617821e8c508416b90988e81e8dc8623576b8f6e942797e9f381111",
 		"02e5c2fbea1055139e3d46621ef49aede5eb3ca1629fc3520986c5aba203706e74",
@@ -120,29 +115,29 @@ vector<string> initPubkey_regTest = {
 		"025a1c65b72c72569559edf54491dcf45e7ed0299886ee3eaa3cf5d5765b5b606b",
 		"035a998c0adb99003c0552ed44ac3f46e80f542b2d26cb94dd3356027b1c844b99",
 		"03f61c32ccc409ce5b55844f7cd2b62c52a8fe3d790efbc0644140cda33547aa67",
-		"03ae28a4100145a4c354338c727a54800dc540069fa2f5fd5d4a1c80b4a35a1762"
-};
-unsigned int pnSeed[] = //
-		{0xa78a2879, 0xb5af0bc6, 0x2f4f4a70, 0x30e65cb6, 0x7ae82879, 0x680ec48b,  0x7F1E4A70, 0x8868D772, 0xCD382879, 0xD239397B, 0x51C41978, 0x73B4C48B, 0x73EF1A78};
+		"03ae28a4100145a4c354338c727a54800dc540069fa2f5fd5d4a1c80b4a35a1762" };
+
+unsigned int pnSeed[] = { 0xa78a2879, 0xb5af0bc6, 0x2f4f4a70, 0x30e65cb6, 0x7ae82879, 0x680ec48b, 0x7F1E4A70,
+		0x8868D772, 0xCD382879, 0xD239397B, 0x51C41978, 0x73B4C48B, 0x73EF1A78 };
 
 class CMainParams: public CBaseParams {
-public:
+ public:
 	CMainParams() {
 
 // The message start string is designed to be unlikely to occur in normal data.
 // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
 // a large 4-byte int at any alignment.
-		pchMessageStart[0] = 0xff;
-		pchMessageStart[1] = 0xfe;
-		pchMessageStart[2] = 0x1d;
-		pchMessageStart[3] = 0x20;
-		vAlertPubKey =	ParseHex("02d99681b6287b3765dfbb930e6caa10d1f8ac19e02b88f52362ce6eb43c0ec71e");
-		nDefaultPort = 8668;
-		nRPCPort = 18332;
-		nUIPort = 4246;
-		strDataDir = "main";
-		bnProofOfStakeLimit =~arith_uint256(0) >> 10;        //00 3f ff ff
-		nSubsidyHalvingInterval = 210000;
+		m_pchMessageStart[0] = 0xff;
+		m_pchMessageStart[1] = 0xfe;
+		m_pchMessageStart[2] = 0x1d;
+		m_pchMessageStart[3] = 0x20;
+		m_vchAlertPubKey = ParseHex("02d99681b6287b3765dfbb930e6caa10d1f8ac19e02b88f52362ce6eb43c0ec71e");
+		m_nDefaultPort = 8668;
+		m_nRPCPort = 18332;
+		m_nUIPort = 4246;
+		m_strDataDir = "main";
+		m_bnProofOfStakeLimit = ~arith_uint256(0) >> 10;        //00 3f ff ff
+		m_nSubsidyHalvingInterval = 210000;
 
 		assert(CreateGenesisRewardTx(genesis.vptx, intPubKey_mainNet));
 		genesis.SetHashPrevBlock(uint256());
@@ -155,23 +150,25 @@ public:
 		genesis.SetFuelRate(INIT_FUEL_RATES);
 		genesis.SetHeight(0);
 		genesis.ClearSignature();
-		hashGenesisBlock = genesis.GetHash();
-		publicKey = "02d99681b6287b3765dfbb930e6caa10d1f8ac19e02b88f52362ce6eb43c0ec71e";
+		m_cHashGenesisBlock = genesis.GetHash();
+		m_strPublicKey = "02d99681b6287b3765dfbb930e6caa10d1f8ac19e02b88f52362ce6eb43c0ec71e";
 //		{
 //			cout << "main hashGenesisBlock:\r\n" << hashGenesisBlock.ToString() << endl;
 //			cout << "main hashMerkleRoot:\r\n" << genesis.hashMerkleRoot.ToString() << endl;
 //		}
-		assert(hashGenesisBlock == uint256S("0xd9ffedf0475c7734e1ea1a7aa1a05361825e77869371962ee6a3ec515e2e2c3d"));
-		assert(genesis.GetHashMerkleRoot() == uint256S("0x362155f5bb005be0523c7247cf1b901bd6f3567d105bd5defca28d221c90d1ef"));
+		assert(m_cHashGenesisBlock == uint256S("0xd9ffedf0475c7734e1ea1a7aa1a05361825e77869371962ee6a3ec515e2e2c3d"));
+		assert(
+				genesis.GetHashMerkleRoot()
+						== uint256S("0x362155f5bb005be0523c7247cf1b901bd6f3567d105bd5defca28d221c90d1ef"));
 
 //      vSeeds.push_back(CDNSSeedData("soypay.org.cn", "seed_cn_0.dspay.org"));
 //      vSeeds.push_back(CDNSSeedData("soypay.org.us", "seed_us_0.dspay.org"));
 
-        base58Prefixes[PUBKEY_ADDRESS] = {0x1f};
-		base58Prefixes[SCRIPT_ADDRESS] = {5};
-		base58Prefixes[SECRET_KEY] = {128};
-		base58Prefixes[EXT_PUBLIC_KEY] = {0x04,0x88,0xB2,0x1E};
-		base58Prefixes[EXT_SECRET_KEY] = {0x04,0x88,0xAD,0xE4};
+		m_vchBase58Prefixes[EM_PUBKEY_ADDRESS] = {0x1f};
+		m_vchBase58Prefixes[EM_SCRIPT_ADDRESS] = {5};
+		m_vchBase58Prefixes[EM_SECRET_KEY] = {128};
+		m_vchBase58Prefixes[EM_EXT_PUBLIC_KEY] = {0x04,0x88,0xB2,0x1E};
+		m_vchBase58Prefixes[EM_EXT_SECRET_KEY] = {0x04,0x88,0xAD,0xE4};
 
 		// Convert the pnSeeds array into usable address objects.
 		for (unsigned int i = 0; i < ARRAYLEN(pnSeed); i++) {
@@ -191,14 +188,13 @@ public:
 	virtual const CBlock& GenesisBlock() const {
 		return genesis;
 	}
-	virtual Network NetworkID() const {
-		return CBaseParams::MAIN;
+	virtual emNetWork NetworkID() const {
+		return CBaseParams::EM_MAIN;
 	}
 	virtual bool InitalConfig() {
 		return CBaseParams::InitalConfig();
 	}
-	virtual int GetBlockMaxNonce() const
-	{
+	virtual int GetBlockMaxNonce() const {
 		return 1000;
 	}
 	virtual const vector<CAddress>& FixedSeeds() const {
@@ -224,46 +220,46 @@ public:
 		// The message start string is designed to be unlikely to occur in normal data.
 		// The characters are rarely used upper ASCII, not valid as UTF-8, and produce
 		// a large 4-byte int at any alignment.
-        pchMessageStart[0] = 0xfe;
-        pchMessageStart[1] = 0x2d;
-        pchMessageStart[2] = 0x1c;
-        pchMessageStart[3] = 0x0d;
-		vAlertPubKey =	ParseHex("036e15523feb9e329b4fdf53c227fc89ea45a1a36342e7e38fad7fe6e3777243af");
-		nDefaultPort = 18668;
-		nRPCPort = 18383;
-		nUIPort = 4264;
-		strDataDir = "testnet";
-		publicKey = "036e15523feb9e329b4fdf53c227fc89ea45a1a36342e7e38fad7fe6e3777243af";
+        m_pchMessageStart[0] = 0xfe;
+        m_pchMessageStart[1] = 0x2d;
+        m_pchMessageStart[2] = 0x1c;
+        m_pchMessageStart[3] = 0x0d;
+		m_vchAlertPubKey =	ParseHex("036e15523feb9e329b4fdf53c227fc89ea45a1a36342e7e38fad7fe6e3777243af");
+		m_nDefaultPort = 18668;
+		m_nRPCPort = 18383;
+		m_nUIPort = 4264;
+		m_strDataDir = "testnet";
+		m_strPublicKey = "036e15523feb9e329b4fdf53c227fc89ea45a1a36342e7e38fad7fe6e3777243af";
 		// Modify the testnet genesis block so the timestamp is valid for a later start.
 		genesis.SetTime(1436598023);
 		genesis.SetNonce(888);
 		genesis.vptx.clear();
 		assert(CreateGenesisRewardTx(genesis.vptx, initPubKey_testNet));
 		genesis.SetHashMerkleRoot(genesis.BuildMerkleTree());
-		hashGenesisBlock = genesis.GetHash();
+		m_cHashGenesisBlock = genesis.GetHash();
 		for(auto & item : vFixedSeeds)
 			item.SetPort(GetDefaultPort());
 
 //		{
 //			cout << "testnet hashGenesisBlock:\r\n" << hashGenesisBlock.ToString() << endl;
 //		}
-		assert(hashGenesisBlock == uint256S("0xc6f81a98e9de1ac7da65a8b2bbd937f1d49aaedc7f8f2f0517c13f099df1ed49"));
+		assert(m_cHashGenesisBlock == uint256S("0xc6f81a98e9de1ac7da65a8b2bbd937f1d49aaedc7f8f2f0517c13f099df1ed49"));
 //		vSeeds.clear();
 //		vSeeds.push_back(CDNSSeedData("Dacrs.petertodd.org", "testnet-seed.Dacrs.petertodd.org"));
 //		vSeeds.push_back(CDNSSeedData("bluematt.me", "testnet-seed.bluematt.me"));
 
 //		base58Prefixes[PUBKEY_ADDRESS] = {111};
-		base58Prefixes[PUBKEY_ADDRESS] = {0x5b};
-		base58Prefixes[SCRIPT_ADDRESS] = {196};
-		base58Prefixes[SECRET_KEY]     = {239};
-		base58Prefixes[EXT_PUBLIC_KEY] = {0x04,0x35,0x87,0xCF};
-		base58Prefixes[EXT_SECRET_KEY] = {0x04,0x35,0x83,0x94};
+		m_vchBase58Prefixes[EM_PUBKEY_ADDRESS] = {0x5b};
+		m_vchBase58Prefixes[EM_SCRIPT_ADDRESS] = {196};
+		m_vchBase58Prefixes[EM_SECRET_KEY]     = {239};
+		m_vchBase58Prefixes[EM_EXT_PUBLIC_KEY] = {0x04,0x35,0x87,0xCF};
+		m_vchBase58Prefixes[EM_EXT_SECRET_KEY] = {0x04,0x35,0x83,0x94};
 	}
-	virtual Network NetworkID() const {return CBaseParams::TESTNET;}
+	virtual emNetWork NetworkID() const {return CBaseParams::EM_TESTNET;}
 	virtual bool InitalConfig()
 	{
 		CMainParams::InitalConfig();
-		fServer = true;
+		m_bServer = true;
 		return true;
 	}
 	virtual int GetBlockMaxNonce() const
@@ -279,23 +275,23 @@ public:
 class CRegTestParams: public CTestNetParams {
 public:
 	CRegTestParams() {
-		pchMessageStart[0] = 0xfc;
-		pchMessageStart[1] = 0x1d;
-		pchMessageStart[2] = 0x2d;
-		pchMessageStart[3] = 0x3d;
-		nSubsidyHalvingInterval = 150;
-		bnProofOfStakeLimit = ~arith_uint256(0) >> 6;     //target:00000011 11111111 11111111
+		m_pchMessageStart[0] = 0xfc;
+		m_pchMessageStart[1] = 0x1d;
+		m_pchMessageStart[2] = 0x2d;
+		m_pchMessageStart[3] = 0x3d;
+		m_nSubsidyHalvingInterval = 150;
+		m_bnProofOfStakeLimit = ~arith_uint256(0) >> 6;     //target:00000011 11111111 11111111
 		genesis.SetTime(1421808634);
 		genesis.SetBits(0x2003ffff);
 		genesis.SetNonce(888);
 		genesis.vptx.clear();
 		assert(CreateGenesisRewardTx(genesis.vptx, initPubkey_regTest));
 		genesis.SetHashMerkleRoot(genesis.BuildMerkleTree());
-		hashGenesisBlock = genesis.GetHash();
-		nDefaultPort = 18666;
-		nTargetSpacing = 20;
-		nTargetTimespan = 30 * 20;
-		strDataDir = "regtest";
+		m_cHashGenesisBlock = genesis.GetHash();
+		m_nDefaultPort = 18666;
+		m_llTargetSpacing = 20;
+		m_llTargetTimespan = 30 * 20;
+		m_strDataDir = "regtest";
 //		{
 //			CBigNum bnTarget;
 //			bnTarget.SetCompact(genesis.nBits);
@@ -303,21 +299,21 @@ public:
 //			cout << "regtest hashGenesisBlock:\r\n" << hashGenesisBlock.ToString() << endl;
 //			cout << "regtest hashMerkleRoot:\r\n" << genesis.hashMerkleRoot.ToString() << endl;
 //		}
-		assert(hashGenesisBlock == uint256S("0x18d876339c5014803507332d0ae509862b4da382253b7696605e58963592723f"));
+		assert(m_cHashGenesisBlock == uint256S("0x18d876339c5014803507332d0ae509862b4da382253b7696605e58963592723f"));
 
 		vFixedSeeds.clear();
-		vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
+		m_vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
 	}
 
 	virtual bool RequireRPCPassword() const {
 		return false;
 	}
-	virtual Network NetworkID() const {
-		return CBaseParams::REGTEST;
+	virtual emNetWork NetworkID() const {
+		return CBaseParams::EM_REGTEST;
 	}
 	virtual bool InitalConfig() {
 		CTestNetParams::InitalConfig();
-		fServer = true;
+		m_bServer = true;
 		return true;
 	}
 };
@@ -569,43 +565,39 @@ bool CBaseParams::IntialParams(int argc, const char* const argv[]) {
 }
 
 int64_t CBaseParams::GetTxFee() const{
-     return paytxfee;
+     return m_llpaytxfee;
 }
 int64_t CBaseParams::SetDeflautTxFee(int64_t fee)const{
-	paytxfee = fee;
+	m_llpaytxfee = fee;
 
 	return fee;
 }
 
 CBaseParams::CBaseParams() {
-	fImporting = false;
-	fReindex = false;
-	fBenchmark = false;
-	fTxIndex = false;
-	nIntervalPos = 1;
-	nLogmaxsize = 100 * 1024 * 1024;//100M
-	nTxCacheHeight = 500;
-	nTimeBestReceived = 0;
-	nScriptCheckThreads = 0;
-	nViewCacheSize = 2000000;
-	nTargetSpacing = 60;
-	nTargetTimespan = 30 * 60;
-	nSubsidyHalvingInterval = 0;
-	paytxfee = 10000;
-	nDefaultPort = 0;
-	fPrintToConsole= 0;
-	fPrintToToFile = 0;
-	fLogTimestamps = 0;
-	fLogPrintFileLine = 0;
-	fDebug = 0;
-	fDebugAll= 0 ;
-	fServer = 0 ;
-	fServer = 0;
-	nRPCPort = 0;
-	bOutPut = false;
-	nUIPort = 0;
-
-
+	m_bImporting 			= false;
+	m_bReindex 				= false;
+	m_bBenchmark 			= false;
+	m_bTxIndex 				= false;
+	m_nIntervalPos 			= 1;
+	m_nLogmaxsize 			= 100 * 1024 * 1024;//100M
+	m_nTxCacheHeight 		= 500;
+	m_llTimeBestReceived 	= 0;
+	m_unScriptCheckThreads 	= 0;
+	m_llViewCacheSize 		= 2000000;
+	m_llTargetSpacing 		= 60;
+	m_llTargetTimespan 		= 30 * 60;
+	m_nSubsidyHalvingInterval = 0;
+	m_llpaytxfee 			= 10000;
+	m_nDefaultPort 			= 0;
+	m_bPrintToConsole		= 0;
+	m_bPrintToToFile 		= 0;
+	m_bLogTimestamps 		= 0;
+	m_bLogPrintFileLine 	= 0;
+	m_bDebug 				= 0;
+	m_bDebugAll				= 0 ;
+	m_bServer 				= 0 ;
+	m_nRPCPort 				= 0;
+	m_bOutPut 				= false;
+	m_nUIPort 				= 0;
+	m_bAddressToTx			= false;
 }
-/********************************************************************************/
-

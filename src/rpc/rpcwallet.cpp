@@ -29,14 +29,14 @@ static CCriticalSection cs_nWalletUnlockTime;
 
 string HelpRequiringPassphrase()
 {
-    return pwalletMain && pwalletMain->IsCrypted()
+    return g_pwalletMain && g_pwalletMain->IsCrypted()
         ? "\nRequires wallet passphrase to be set with walletpassphrase call."
         : "";
 }
 
 void EnsureWalletIsUnlocked()
 {
-    if (pwalletMain->IsLocked())
+    if (g_pwalletMain->IsLocked())
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 }
 
@@ -45,10 +45,10 @@ Value islocked(const Array& params,  bool fHelp)
 	if(fHelp)
 		return true;
 	Object obj;
-	if(!pwalletMain->IsCrypted()) {        //decrypted
+	if(!g_pwalletMain->IsCrypted()) {        //decrypted
 		obj.push_back(Pair("islock", 0));
 	}
-	else if (!pwalletMain->IsLocked()) {   //encryped and unlocked
+	else if (!g_pwalletMain->IsLocked()) {   //encryped and unlocked
 		obj.push_back(Pair("islock", 1));
 	}else {
 		obj.push_back(Pair("islock", 2)); //encryped and locked
@@ -86,10 +86,10 @@ Value getnewaddress(const Array& params, bool fHelp)
     CKeyID keyID = newKey.GetKeyID();
 
 	if (IsForMiner) {
-		if (!pwalletMain->AddKey(mCkey, Minter))
+		if (!g_pwalletMain->AddKey(mCkey, Minter))
 			throw runtime_error("add key failed ");
 	}
-	else if (!pwalletMain->AddKey(mCkey)) {
+	else if (!g_pwalletMain->AddKey(mCkey)) {
 		throw runtime_error("add key failed ");
 	}
 	Object obj;
@@ -132,7 +132,7 @@ Value signmessage(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
     CKey key;
-    if (!pwalletMain->GetKey(keyID, key))
+    if (!g_pwalletMain->GetKey(keyID, key))
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
 
     CHashWriter ss(SER_GETHASH, 0);
@@ -210,7 +210,7 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 		nAmount = AmountToRawValue(params[1]);
 		set<CKeyID> sKeyid;
 		sKeyid.clear();
-		pwalletMain->GetKeys(sKeyid);
+		g_pwalletMain->GetKeys(sKeyid);
 		if (sKeyid.empty()) //get addrs
 		{
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No Key In wallet \n");
@@ -244,10 +244,10 @@ Value sendtoaddresswithfee(const Array& params, bool fHelp)
 			return std::make_tuple (false,"key or keID failed");
 		}
 
-		if (!pwalletMain->Sign(keID,tx.SignatureHash(), tx.signature)) {
+		if (!g_pwalletMain->Sign(keID,tx.SignatureHash(), tx.signature)) {
 			return std::make_tuple (false,"Sign failed");
 		}
-		std::tuple<bool,string> ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
+		std::tuple<bool,string> ret = g_pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
 		bool falg = std::get<0>(ret);
 		string te = std::get<1>(ret);
 		if(falg == true)
@@ -367,7 +367,7 @@ Value sendtoaddressraw(const Array& params, bool fHelp)
 
 	std::shared_ptr<CTransaction> tx = std::make_shared<CTransaction>(send,rev,Fee, nAmount,hight);
 	if(isSign) {
-		if (!pwalletMain->Sign(sendKeyId, tx->SignatureHash(), tx->signature)) {
+		if (!g_pwalletMain->Sign(sendKeyId, tx->SignatureHash(), tx->signature)) {
 			throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
 		}
 	}
@@ -421,7 +421,7 @@ Value notionalpoolingbalance(const Array& params, bool fHelp)
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "to address Invalid  ");
 	}
 
-	if(!pwalletMain->HaveKey(RevKeyId)) {
+	if(!g_pwalletMain->HaveKey(RevKeyId)) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "to address Invalid  ");
 	}
 
@@ -430,7 +430,7 @@ Value notionalpoolingbalance(const Array& params, bool fHelp)
 		nAmount = 0.01 * COIN;
 	set<CKeyID> sKeyid;
 	sKeyid.clear();
-	pwalletMain->GetKeys(sKeyid); //get addrs
+	g_pwalletMain->GetKeys(sKeyid); //get addrs
 	if(sKeyid.empty())
 	{
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No Key In wallet \n");
@@ -473,11 +473,11 @@ Value notionalpoolingbalance(const Array& params, bool fHelp)
 
     	CTransaction tx(sendreg, rev, SysCfg().GetTxFee(), pAccountViewTip->GetRawBalance(sendreg) - SysCfg().GetTxFee() , chainActive.Height());
 
-    	if (!pwalletMain->Sign(sendKeyId, tx.SignatureHash(), tx.signature)) {
+    	if (!g_pwalletMain->Sign(sendKeyId, tx.SignatureHash(), tx.signature)) {
     		continue;
     	}
 
-    	std::tuple<bool,string> ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
+    	std::tuple<bool,string> ret = g_pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
     	if(!std::get<0>(ret))
     		 continue;
     	arrayTxIds.push_back(std::get<1>(ret));
@@ -522,7 +522,7 @@ Value dispersebalance(const Array& params, bool fHelp)
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "send address Invalid  ");
 	}
 
-	if(!pwalletMain->HaveKey(sendKeyId)) {
+	if(!g_pwalletMain->HaveKey(sendKeyId)) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "send address Invalid  ");
 	}
 
@@ -539,7 +539,7 @@ Value dispersebalance(const Array& params, bool fHelp)
 	}
 
 	set<CKeyID> sKeyid;
-	pwalletMain->GetKeys(sKeyid); //get addrs
+	g_pwalletMain->GetKeys(sKeyid); //get addrs
 	if(sKeyid.empty())
 	{
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No Key In wallet \n");
@@ -577,11 +577,11 @@ Value dispersebalance(const Array& params, bool fHelp)
 
     	CTransaction tx(sendreg, rev, SysCfg().GetTxFee(), nAmount , chainActive.Height());
 
-    	if (!pwalletMain->Sign(sendKeyId, tx.SignatureHash(), tx.signature)) {
+    	if (!g_pwalletMain->Sign(sendKeyId, tx.SignatureHash(), tx.signature)) {
     		continue;
     	}
 
-    	std::tuple<bool,string> ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
+    	std::tuple<bool,string> ret = g_pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
     	if(!std::get<0>(ret))
     		 continue;
     	arrayTxIds.push_back(std::get<1>(ret));
@@ -655,12 +655,12 @@ Value notionalpoolingasset(const Array& params, bool fHelp)
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "to address Invalid  ");
 	}
 
-	if(!pwalletMain->HaveKey(RevKeyId)) {
+	if(!g_pwalletMain->HaveKey(RevKeyId)) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "to address Invalid  ");
 	}
 
 	set<CKeyID> sKeyid;
-	pwalletMain->GetKeys(sKeyid);
+	g_pwalletMain->GetKeys(sKeyid);
 	if(sKeyid.empty())
 	{
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No Key In wallet \n");
@@ -717,11 +717,11 @@ Value notionalpoolingasset(const Array& params, bool fHelp)
 
     	CTransaction tx(sendreg, regid, nFee, 0 , chainActive.Height(), pContract);
 
-    	if (!pwalletMain->Sign(sendKeyId, tx.SignatureHash(), tx.signature)) {
+    	if (!g_pwalletMain->Sign(sendKeyId, tx.SignatureHash(), tx.signature)) {
     		continue;
     	}
 
-    	std::tuple<bool,string> ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
+    	std::tuple<bool,string> ret = g_pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
     	if(!std::get<0>(ret))
     		 continue;
     	arrayTxIds.push_back(std::get<1>(ret));
@@ -760,7 +760,7 @@ Value getassets(const Array& params, bool fHelp)
 	Object retObj;
 
 	set<CKeyID> sKeyid;
-	pwalletMain->GetKeys(sKeyid);
+	g_pwalletMain->GetKeys(sKeyid);
 	if(sKeyid.empty())
 	{
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No Key In wallet \n");
@@ -868,7 +868,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 		nAmount = AmountToRawValue(params[1]);
 		set<CKeyID> sKeyid;
 		sKeyid.clear();
-		pwalletMain->GetKeys(sKeyid); //get addrs
+		g_pwalletMain->GetKeys(sKeyid); //get addrs
 		if(sKeyid.empty())
 		{
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No Key In wallet \n");
@@ -902,11 +902,11 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
 	CTransaction tx(sendreg, rev, SysCfg().GetTxFee(), nAmount, chainActive.Height());
 
-	if (!pwalletMain->Sign(sendKeyId, tx.SignatureHash(), tx.signature)) {
+	if (!g_pwalletMain->Sign(sendKeyId, tx.SignatureHash(), tx.signature)) {
 		throw JSONRPCError(RPC_INVALID_PARAMETER,  "Sign failed");
 	}
 
-	std::tuple<bool,string> ret = pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
+	std::tuple<bool,string> ret = g_pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
 	if(!std::get<0>(ret))
 		 throw JSONRPCError(RPC_INVALID_PARAMETER,  std::get<1>(ret));
 
@@ -929,7 +929,7 @@ Value backupwallet(const Array& params, bool fHelp)
         );
 
     string strDest = params[0].get_str();
-    if (!BackupWallet(*pwalletMain, strDest))
+    if (!BackupWallet(*g_pwalletMain, strDest))
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Wallet backup failed!");
 
     return Value::null;
@@ -944,7 +944,7 @@ static void LockWallet(CWallet* pWallet)
 
 Value walletpassphrase(const Array& params, bool fHelp)
 {
-    if (pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
+    if (g_pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
         throw runtime_error(
             "walletpassphrase \"passphrase\" timeout\n"
             "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
@@ -964,11 +964,11 @@ Value walletpassphrase(const Array& params, bool fHelp)
             + HelpExampleRpc("walletpassphrase", "\"my pass phrase\", 60")
         );
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK2(cs_main, g_pwalletMain->m_cs_wallet);
 
     if (fHelp)
         return true;
-    if (!pwalletMain->IsCrypted())
+    if (!g_pwalletMain->IsCrypted())
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrase was called.");
 
     // Note that the walletpassphrase is stored in params[0] which is not mlock()ed
@@ -980,7 +980,7 @@ Value walletpassphrase(const Array& params, bool fHelp)
 	//assert(0);
     if (strWalletPass.length() > 0)
     {
-        if (!pwalletMain->Unlock(strWalletPass))
+        if (!g_pwalletMain->Unlock(strWalletPass))
             throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
     }
     else
@@ -991,7 +991,7 @@ Value walletpassphrase(const Array& params, bool fHelp)
     int64_t nSleepTime = params[1].get_int64();
     LOCK(cs_nWalletUnlockTime);
     nWalletUnlockTime = GetTime() + nSleepTime;
-    RPCRunLater("lockwallet", boost::bind(LockWallet, pwalletMain), nSleepTime);
+    RPCRunLater("lockwallet", boost::bind(LockWallet, g_pwalletMain), nSleepTime);
     Object retObj;
     retObj.push_back(Pair("passphrase", true));
     return retObj;
@@ -999,7 +999,7 @@ Value walletpassphrase(const Array& params, bool fHelp)
 
 Value walletpassphrasechange(const Array& params, bool fHelp)
 {
-    if (pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
+    if (g_pwalletMain->IsCrypted() && (fHelp || params.size() != 2))
         throw runtime_error(
             "walletpassphrasechange \"oldpassphrase\" \"newpassphrase\"\n"
             "\nChanges the wallet passphrase from 'oldpassphrase' to 'newpassphrase'.\n"
@@ -1013,7 +1013,7 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
 
     if (fHelp)
         return true;
-    if (!pwalletMain->IsCrypted())
+    if (!g_pwalletMain->IsCrypted())
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.");
 
     // TODO: get rid of these .c_str() calls by implementing SecureString::operator=(string)
@@ -1031,7 +1031,7 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
             "walletpassphrasechange <oldpassphrase> <newpassphrase>\n"
             "Changes the wallet passphrase from <oldpassphrase> to <newpassphrase>.");
 
-    if (!pwalletMain->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass))
+    if (!g_pwalletMain->ChangeWalletPassphrase(strOldWalletPass, strNewWalletPass))
         throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Error: The wallet passphrase entered was incorrect.");
     Object retObj;
     retObj.push_back(Pair("chgpwd", true));
@@ -1040,7 +1040,7 @@ Value walletpassphrasechange(const Array& params, bool fHelp)
 
 Value walletlock(const Array& params, bool fHelp)
 {
-    if (pwalletMain->IsCrypted() && (fHelp || params.size() != 0))
+    if (g_pwalletMain->IsCrypted() && (fHelp || params.size() != 0))
         throw runtime_error(
             "walletlock\n"
             "\nRemoves the wallet encryption key from memory, locking the wallet.\n"
@@ -1059,11 +1059,11 @@ Value walletlock(const Array& params, bool fHelp)
 
     if (fHelp)
         return true;
-    if (!pwalletMain->IsCrypted())
+    if (!g_pwalletMain->IsCrypted())
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an unencrypted wallet, but walletlock was called.");
     {
         LOCK(cs_nWalletUnlockTime);
-        pwalletMain->Lock();
+        g_pwalletMain->Lock();
         nWalletUnlockTime = 0;
     }
     Object retObj;
@@ -1073,7 +1073,7 @@ Value walletlock(const Array& params, bool fHelp)
 
 Value encryptwallet(const Array& params, bool fHelp)
 {
-    if (!pwalletMain->IsCrypted() && (fHelp || params.size() != 1))
+    if (!g_pwalletMain->IsCrypted() && (fHelp || params.size() != 1))
         throw runtime_error(
             "encryptwallet \"passphrase\"\n"
             "\nEncrypts the wallet with 'passphrase'. This is for first time encryption.\n"
@@ -1096,11 +1096,11 @@ Value encryptwallet(const Array& params, bool fHelp)
             "\nAs a json rpc call\n"
             + HelpExampleRpc("encryptwallet", "\"my pass phrase\"")
         );
-    LOCK2(cs_main, pwalletMain->cs_wallet);
+    LOCK2(cs_main, g_pwalletMain->m_cs_wallet);
 
     if (fHelp)
         return true;
-    if (pwalletMain->IsCrypted())
+    if (g_pwalletMain->IsCrypted())
         throw JSONRPCError(RPC_WALLET_WRONG_ENC_STATE, "Error: running with an encrypted wallet, but encryptwallet was called.");
 
     // TODO: get rid of this .c_str() by implementing SecureString::operator=(string)
@@ -1114,7 +1114,7 @@ Value encryptwallet(const Array& params, bool fHelp)
             "encryptwallet <passphrase>\n"
             "Encrypts the wallet with <passphrase>.");
 
-    if (!pwalletMain->EncryptWallet(strWalletPass))
+    if (!g_pwalletMain->EncryptWallet(strWalletPass))
         throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Failed to encrypt the wallet.");
 
     //BDB seems to have a bad habit of writing old data into
@@ -1180,11 +1180,11 @@ Value getwalletinfo(const Array& params, bool fHelp)
         );
 
     Object obj;
-    obj.push_back(Pair("walletversion", pwalletMain->GetVersion()));
-    obj.push_back(Pair("balance",       ValueFromAmount(pwalletMain->GetRawBalance())));
-    obj.push_back(Pair("Inblocktx",       (int)pwalletMain->mapInBlockTx.size()));
-    obj.push_back(Pair("unconfirmtx", (int)pwalletMain->UnConfirmTx.size()));
-    if (pwalletMain->IsCrypted())
+    obj.push_back(Pair("walletversion", g_pwalletMain->GetVersion()));
+    obj.push_back(Pair("balance",       ValueFromAmount(g_pwalletMain->GetRawBalance())));
+    obj.push_back(Pair("Inblocktx",       (int)g_pwalletMain->m_mapInBlockTx.size()));
+    obj.push_back(Pair("unconfirmtx", (int)g_pwalletMain->m_mapUnConfirmTx.size()));
+    if (g_pwalletMain->IsCrypted())
         obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     return obj;
 }

@@ -37,24 +37,29 @@ namespace boost {
 }
 
 /** The maximum number of entries in an 'inv' protocol message */
-static const unsigned int MAX_INV_SZ = 50000;
+static const unsigned int g_sMaxInvSz = 50000;
 
-inline unsigned int ReceiveFloodSize() { return 1000*SysCfg().GetArg("-maxreceivebuffer", 5*1000); }
-inline unsigned int SendBufferSize() { return 1000*SysCfg().GetArg("-maxsendbuffer", 1*1000); }
+inline unsigned int ReceiveFloodSize() {
+	return 1000 * SysCfg().GetArg("-maxreceivebuffer", 5 * 1000);
+}
+
+inline unsigned int SendBufferSize() {
+	return 1000 * SysCfg().GetArg("-maxsendbuffer", 1 * 1000);
+}
 
 void AddOneShot(string strDest);
 bool RecvLine(SOCKET hSocket, string& strLine);
-bool GetMyExternalIP(CNetAddr& ipRet);
-void AddressCurrentlyConnected(const CService& addr);
-CNode* FindNode(const CNetAddr& ip);
-CNode* FindNode(const CService& ip);
-CNode* ConnectNode(CAddress addrConnect, const char *strDest = NULL);
-void MapPort(bool fUseUPnP);
+bool GetMyExternalIP(CNetAddr& cIpRet);
+void AddressCurrentlyConnected(const CService& cAddr);
+CNode* FindNode(const CNetAddr& cIp);
+CNode* FindNode(const CService& cIp);
+CNode* ConnectNode(CAddress cAddrConnect, const char *pszDest = NULL);
+void MapPort(bool bUseUPnP);
 unsigned short GetListenPort();
-bool BindListenPort(const CService &bindAddr, string& strError=REF(string()));
+bool BindListenPort(const CService &cBindAddr, string& strError=REF(string()));
 void StartNode(boost::thread_group& threadGroup);
 bool StopNode();
-void SocketSendData(CNode *pnode);
+void SocketSendData(CNode *pNode);
 
 typedef int NodeId;
 
@@ -68,20 +73,16 @@ struct CNodeSignals
     boost::signals2::signal<void (NodeId)> FinalizeNode;
 };
 
-
 CNodeSignals& GetNodeSignals();
 
-
-enum
-{
-    LOCAL_NONE,   // unknown
-    LOCAL_IF,     // address a local interface listens on
-    LOCAL_BIND,   // address explicit bound to
-    LOCAL_UPNP,   // address reported by UPnP
-    LOCAL_HTTP,   // address reported by whatismyip.com and similar
-    LOCAL_MANUAL, // address explicitly specified (-externalip=)
-
-    LOCAL_MAX
+enum {
+	LOCAL_NONE,   // unknown
+	LOCAL_IF,     // address a local interface listens on
+	LOCAL_BIND,   // address explicit bound to
+	LOCAL_UPNP,   // address reported by UPnP
+	LOCAL_HTTP,   // address reported by whatismyip.com and similar
+	LOCAL_MANUAL, // address explicitly specified (-externalip=)
+	LOCAL_MAX
 };
 
 void SetLimited(enum Network net, bool fLimited = true);
@@ -97,9 +98,9 @@ void SetReachable(enum Network net, bool fFlag = true);
 CAddress GetLocalAddress(const CNetAddr *paddrPeer = NULL);
 
 
-extern bool fDiscover;
-extern uint64_t nLocalServices;
-extern uint64_t nLocalHostNonce;
+extern bool g_bDiscover;
+extern uint64_t g_ullLocalServices;
+extern uint64_t g_ullLocalHostNonce;
 extern CAddrMan addrman;
 extern int nMaxConnections;
 
@@ -121,8 +122,8 @@ struct LocalServiceInfo {
     int nPort;
 };
 
-extern CCriticalSection cs_mapLocalHost;
-extern map<CNetAddr, LocalServiceInfo> mapLocalHost;
+extern CCriticalSection g_cs_mapLocalHost;
+extern map<CNetAddr, LocalServiceInfo> g_mapLocalHost;
 
 class CNodeStats
 {
@@ -145,47 +146,38 @@ public:
     string addrLocal;
 };
 
-
-
-
 class CNetMessage {
-public:
-    bool in_data;                   // parsing header (false) or data (true)
+ public:
+	CNetMessage(int nTypeIn, int nVersionIn) :
+			m_cDSHeaderBuf(nTypeIn, nVersionIn), m_cDSRecv(nTypeIn, nVersionIn) {
+		m_cDSHeaderBuf.resize(24);
+		m_bInData = false;
+		m_unHeaderPos = 0;
+		m_unDataPos = 0;
+	}
 
-    CDataStream hdrbuf;             // partially received header
-    CMessageHeader hdr;             // complete header
-    unsigned int nHdrPos;
+	bool complete() const {
+		if (!m_bInData) {
+			return false;
+		}
+		return (m_cMessageHeader.nMessageSize == m_unDataPos);
+	}
 
-    CDataStream vRecv;              // received message data
-    unsigned int nDataPos;
-
-    CNetMessage(int nTypeIn, int nVersionIn) : hdrbuf(nTypeIn, nVersionIn), vRecv(nTypeIn, nVersionIn) {
-        hdrbuf.resize(24);
-        in_data = false;
-        nHdrPos = 0;
-        nDataPos = 0;
-    }
-
-    bool complete() const
-    {
-        if (!in_data)
-            return false;
-        return (hdr.nMessageSize == nDataPos);
-    }
-
-    void SetVersion(int nVersionIn)
-    {
-        hdrbuf.SetVersion(nVersionIn);
-        vRecv.SetVersion(nVersionIn);
-    }
+	void SetVersion(int nVersionIn) {
+		m_cDSHeaderBuf.SetVersion(nVersionIn);
+		m_cDSRecv.SetVersion(nVersionIn);
+	}
 
     int readHeader(const char *pch, unsigned int nBytes);
     int readData(const char *pch, unsigned int nBytes);
+
+    bool m_bInData;                   		// parsing header (false) or data (true)
+	CDataStream m_cDSHeaderBuf;             // partially received header
+	CMessageHeader m_cMessageHeader;        // complete header
+	unsigned int m_unHeaderPos;
+	CDataStream m_cDSRecv;              	// received message data
+	unsigned int m_unDataPos;
 };
-
-
-
-
 
 /** Information about a peer */
 class CNode
@@ -361,7 +353,7 @@ public:
     {
         unsigned int total = 0;
         for (const auto &msg : vRecvMsg)
-            total += msg.vRecv.size() + 24;
+            total += msg.m_cDSRecv.size() + 24;
         return total;
     }
 
@@ -707,21 +699,19 @@ public:
     static uint64_t GetTotalBytesSent();
 };
 
-
-
 class CTransaction;
-void RelayTransaction(CBaseTransaction *pBaseTx, const uint256& hash);
-void RelayTransaction(CBaseTransaction *pBaseTx, const uint256& hash, const CDataStream& ss);
+void RelayTransaction(CBaseTransaction *pBaseTx, const uint256& cHash);
+void RelayTransaction(CBaseTransaction *pBaseTx, const uint256& cHash, const CDataStream& cDS);
 
 /** Access to the (IP) address database (peers.dat) */
-class CAddrDB
-{
-private:
-    boost::filesystem::path pathAddr;
-public:
-    CAddrDB();
-    bool Write(const CAddrMan& addr);
-    bool Read(CAddrMan& addr);
+class CAddrDB {
+ public:
+	CAddrDB();
+	bool Write(const CAddrMan& cAddr);
+	bool Read(CAddrMan& cAddr);
+
+ private:
+ 	boost::filesystem::path m_pathAddr;
 };
 
 #endif

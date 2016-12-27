@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DACRS_HASH_H
-#define DACRS_HASH_H
+#ifndef DACRS_HASH_H_
+#define DACRS_HASH_H_
 
 #include "serialize.h"
 #include "uint256.h"
@@ -19,53 +19,52 @@
 template<typename T1>
 inline uint256 Hash(const T1 pbegin, const T1 pend)
 {
-    static unsigned char pblank[1];
-    uint256 hash1;
-    SHA256((pbegin == pend ? pblank : (unsigned char*)&pbegin[0]), (pend - pbegin) * sizeof(pbegin[0]), (unsigned char*)&hash1);
-    uint256 hash2;
-    SHA256((unsigned char*)&hash1, sizeof(hash1), (unsigned char*)&hash2);
-    return std::move(hash2);
+    static unsigned char schblank[1];
+    uint256 cHash1;
+    SHA256((pbegin == pend ? schblank : (unsigned char*)&pbegin[0]), (pend - pbegin) * sizeof(pbegin[0]), (unsigned char*)&cHash1);
+    uint256 cHash2;
+    SHA256((unsigned char*)&cHash1, sizeof(cHash1), (unsigned char*)&cHash2);
+    return std::move(cHash2);
 }
 
-class CHashWriter
-{
-private:
-    SHA256_CTX ctx;
+class CHashWriter {
+ public:
+	void Init() {
+		SHA256_Init(&m_CTx);
+	}
 
-public:
-    int nType;
-    int nVersion;
+	CHashWriter(int nTypeIn, int nVersionIn) :
+		m_nType(nTypeIn), m_nVersion(nVersionIn) {
+		Init();
+	}
 
-    void Init() {
-        SHA256_Init(&ctx);
-    }
+	CHashWriter& write(const char *pch, size_t unSize) {
+		SHA256_Update(&m_CTx, pch, unSize);
+		return (*this);
+	}
 
-    CHashWriter(int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn) {
-        Init();
-    }
+	// invalidates the object
+	uint256 GetHash() {
+		uint256 cHash1;
+		SHA256_Final((unsigned char*) &cHash1, &m_CTx);
+		uint256 cHash2;
+		SHA256((unsigned char*) &cHash1, sizeof(cHash1), (unsigned char*) &cHash2);
+		return std::move(cHash2);
+	}
 
-    CHashWriter& write(const char *pch, size_t size) {
-        SHA256_Update(&ctx, pch, size);
-        return (*this);
-    }
+	template<typename T>
+	CHashWriter& operator<<(const T& obj) {
+		// Serialize to this stream
+		::Serialize(*this, obj, m_nType, m_nVersion);
+		return (*this);
+	}
 
-    // invalidates the object
-    uint256 GetHash() {
-        uint256 hash1;
-        SHA256_Final((unsigned char*)&hash1, &ctx);
-        uint256 hash2;
-        SHA256((unsigned char*)&hash1, sizeof(hash1), (unsigned char*)&hash2);
-        return std::move(hash2);
-    }
+	int m_nType;
+	int m_nVersion;
 
-    template<typename T>
-    CHashWriter& operator<<(const T& obj) {
-        // Serialize to this stream
-        ::Serialize(*this, obj, nType, nVersion);
-        return (*this);
-    }
+ private:
+ 	SHA256_CTX m_CTx;
 };
-
 
 template<typename T1, typename T2>
 inline uint256 Hash(const T1 p1begin, const T1 p1end,
