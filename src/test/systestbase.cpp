@@ -95,7 +95,7 @@ bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {
 					+ "  Dacrsd [options] help                " + _("List commands") + "\n"
 					+ "  Dacrsd [options] help <command>      " + _("Get help for a command") + "\n";
 
-			strUsage += "\n" + HelpMessage(HMM_BITCOIND);
+			strUsage += "\n" + HelpMessage(EM_HMM_COIND);
 			strUsage += "\n" + HelpMessageCli(false);
 
 			fprintf(stdout, "%s", strUsage.c_str());
@@ -704,7 +704,7 @@ bool SysTestBase::IsTxInMemorypool(const uint256& txHash) {
 }
 
 bool SysTestBase::IsTxUnConfirmdInWallet(const uint256& txHash) {
-		for (const auto &item : pwalletMain->m_mapUnConfirmTx) {
+		for (const auto &item : g_pwalletMain->m_mapUnConfirmTx) {
 			if (txHash == item.first) {
 				return true;
 			}

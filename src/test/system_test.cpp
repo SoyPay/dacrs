@@ -26,11 +26,10 @@ using namespace boost;
 #pragma pack(1)
 typedef struct tag_INT64 {
 	unsigned char data[8];
-} Int64;
-typedef struct tagACCOUNT_ID
-{
+} ST_INT64;
+typedef struct tagACCOUNT_ID {
 	char accounid[MAX_ACCOUNT_LEN];
-}ACCOUNT_ID;
+} ST_ACCOUNT_ID;
 typedef struct {
 	unsigned char nType;
 	ST_ACCOUNT_ID vregID[3];

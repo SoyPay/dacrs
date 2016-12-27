@@ -367,8 +367,8 @@ Value getnetworkinfo(const Array& params, bool bHelp)
 	obj.push_back(Pair("relayfee", ValueFromAmount(CTransaction::nMinRelayTxFee)));
 	Array localAddresses;
 	{
-		LOCK(cs_mapLocalHost);
-		for (const auto &item : mapLocalHost) {
+		LOCK(g_cs_mapLocalHost);
+		for (const auto &item : g_mapLocalHost) {
 			Object rec;
 			rec.push_back(Pair("address", item.first.ToString()));
 			rec.push_back(Pair("port", item.second.nPort));

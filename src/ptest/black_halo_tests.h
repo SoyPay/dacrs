@@ -77,15 +77,15 @@ class CBlackHalo: public CycleTestBase {
 	}
 	virtual emTEST_STATE Run();
 	uint64_t GetPayMoney() {
-		uint64_t llR = 0;
+		uint64_t ullR = 0;
 		while (true) {
 			srand(time(NULL));
-			llR = (rand() % 1000002) + 100000000;
-			if (llR % 2 == 0 && llR != 0)
+			ullR = (rand() % 1000002) + 100000000;
+			if (ullR % 2 == 0 && ullR != 0)
 				break;
 		}
 
-		return llR;
+		return ullR;
 	}
 	bool RegistScript();
 	bool SendBuyerPackage();

@@ -142,7 +142,7 @@ string CRPCTable::help(string strCommand) const {
 			continue;
 		}
 
-		if (pcmd->m_bReqWallet && !pwalletMain) {
+		if (pcmd->m_bReqWallet && !g_pwalletMain) {
 			continue;
 		}
 		try {
@@ -805,7 +805,7 @@ json_spirit::Value CRPCTable::execute(const string &strMethod, const json_spirit
 	if (!pcmd) {
 		throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found");
 	}
-	if (pcmd->m_bReqWallet && !pwalletMain) {
+	if (pcmd->m_bReqWallet && !g_pwalletMain) {
 		throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found (disabled)");
 	}
 	// Observe safe mode
@@ -819,11 +819,11 @@ json_spirit::Value CRPCTable::execute(const string &strMethod, const json_spirit
 		{
 			if (pcmd->m_bThreadSafe) {
 				result = pcmd->m_Actor(params, false);
-			} else if (!pwalletMain) {
+			} else if (!g_pwalletMain) {
 				LOCK(cs_main);
 				result = pcmd->m_Actor(params, false);
 			} else {
-				LOCK2(cs_main, pwalletMain->cs_wallet);
+				LOCK2(cs_main, g_pwalletMain->m_cs_wallet);
 				result = pcmd->m_Actor(params, false);
 			}
 		}
