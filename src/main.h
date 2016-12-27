@@ -1079,7 +1079,7 @@ extern CBlockTreeDB *pblocktree;
 extern CAccountViewCache *pAccountViewTip;
 
 /** account db */
-extern CAccountViewDB *pAccountViewDB;
+extern CAccountViewDB *g_pAccountViewDB;
 
 /** transaction db cache*/
 extern CTransactionDB *pTxCacheDB;

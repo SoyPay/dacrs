@@ -67,60 +67,60 @@ map<string, string> mapDesAddress[] = {
         ("010000003000",	"mvqUh3LR4R7cDWfw4AW7mRUSxfZbvonQ8v")};
 
 
-int64_t sendValues[] = {1000000000, 2000000000, 3000000000, 4000000000, 5000000000, 6000000000, 7000000000, 8000000000, 9000000000, 10000000000};
+int64_t llSendValues[] = {1000000000, 2000000000, 3000000000, 4000000000, 5000000000, 6000000000, 7000000000, 8000000000, 9000000000, 10000000000};
 
 
-void SubmitBlock(vector<string> &param) {
-	if(1 != param.size())
-			return;
-	param.insert(param.begin(), "submitblock");
-	param.insert(param.begin(), "rpctest");
+void SubmitBlock(vector<string> &vstrParam) {
+	if (1 != vstrParam.size()) {
+		return;
+	}
+	vstrParam.insert(vstrParam.begin(), "submitblock");
+	vstrParam.insert(vstrParam.begin(), "rpctest");
 
-	char *argv[param.size()];
-	for(size_t i=0; i<param.size(); ++i) {
-		argv[i] = const_cast<char *>(param[i].c_str());
+	char *pszArgv[vstrParam.size()];
+	for (size_t i = 0; i < vstrParam.size(); ++i) {
+		pszArgv[i] = const_cast<char *>(vstrParam[i].c_str());
 		++i;
 	}
-	CommandLineRPC(param.size(), argv);
+	CommandLineRPC(vstrParam.size(), pszArgv);
 }
 
-bool readblock(const string &filePath)
-{
+bool readblock(const string &filePath) {
 	CBlock block;
-    FILE* fp = fopen(filePath.c_str(), "rb");
-    if (!fp) return false;
+	FILE* fp = fopen(filePath.c_str(), "rb");
+	if (!fp){
+		return false;
+	}
+	fseek(fp, 8, SEEK_SET); // skip msgheader/size
 
-    fseek(fp, 8, SEEK_SET); // skip msgheader/size
-
-    CAutoFile filein = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
-    if (!filein) return false;
-    while(!feof(fp)) {
-    	filein >> block;
-		CDataStream ds(SER_DISK, CLIENT_VERSION);
-		ds << block;
-    	vector<string> param;
-    	param.push_back(HexStr(ds));
-    	SubmitBlock(param);
-    }
-    return true;
+	CAutoFile filein = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
+	if (!filein){
+		return false;}
+	while (!feof(fp)) {
+		filein >> block;
+		CDataStream cDs(SER_DISK, CLIENT_VERSION);
+		cDs << block;
+		vector<string> param;
+		param.push_back(HexStr(cDs));
+		SubmitBlock(param);
+	}
+	return true;
 }
 
 class CMiningTest {
 public:
 	//初始化运行环境，导入Block信息
 	CMiningTest() {
-
 	}
-	~CMiningTest() {};
+	~CMiningTest() {
+	}
+	;
 
 };
 
 
 class CSendItem:public SysTestBase{
-private:
-	string m_strRegId;
-	string m_strAddress;
-	int64_t m_llSendValue;
+
 public:
 	CSendItem(){
 	};
@@ -151,7 +151,7 @@ public:
 		do {
 			iterAddr++;
 		} while (--randAddr > 0 && iterAddr != iterLast);
-		return CSendItem(iterAddr->first, iterAddr->second, sendValues[randSendValue]);
+		return CSendItem(iterAddr->first, iterAddr->second, llSendValues[randSendValue]);
 	}
 	string GetRegID() {
 		return m_strRegId;
@@ -169,7 +169,10 @@ public:
 		return m_llSendValue;
 	}
 
-
+private:
+	string m_strRegId;
+	string m_strAddress;
+	int64_t m_llSendValue;
 };
 /**
  *构建普通交易
@@ -180,16 +183,17 @@ public:
  * param[3]:手续费
  * param[4]:有效期高度
  */
-void CreateNormalTx(vector<string> &param) {
-	if(3 != param.size())
+void CreateNormalTx(vector<string> &vstrParam) {
+	if (3 != vstrParam.size()) {
 		return;
-	param.insert(param.begin(), "sendtoaddress");
-	param.insert(param.begin(), "rpctest");
-	char *argv[param.size()];
-	for(size_t i=0; i<param.size();++i) {
-	     argv[i] = const_cast<char *>(param[i].c_str());
 	}
-	CommandLineRPC(param.size(), argv);
+	vstrParam.insert(vstrParam.begin(), "sendtoaddress");
+	vstrParam.insert(vstrParam.begin(), "rpctest");
+	char *argv[vstrParam.size()];
+	for (size_t i = 0; i < vstrParam.size(); ++i) {
+		argv[i] = const_cast<char *>(vstrParam[i].c_str());
+	}
+	CommandLineRPC(vstrParam.size(), argv);
 }
 
 /**
@@ -201,16 +205,17 @@ void CreateNormalTx(vector<string> &param) {
  * param[3]:手续费
  * param[4]:有效期高度
  */
-void CreateContractTx(vector<string> &param) {
-	if(5 != param.size())
+void CreateContractTx(vector<string> &vstrParam) {
+	if (5 != vstrParam.size()) {
 		return;
-	param.insert(param.begin(), "createcontracttx");
-	param.insert(param.begin(), "rpctest");
-	char *argv[param.size()];
-	for(size_t i=0; i<param.size();++i) {
-	     argv[i] = const_cast<char *>(param[i].c_str());
 	}
-	CommandLineRPC(param.size(), argv);
+	vstrParam.insert(vstrParam.begin(), "createcontracttx");
+	vstrParam.insert(vstrParam.begin(), "rpctest");
+	char *argv[vstrParam.size()];
+	for (size_t i = 0; i < vstrParam.size(); ++i) {
+		argv[i] = const_cast<char *>(vstrParam[i].c_str());
+	}
+	CommandLineRPC(vstrParam.size(), argv);
 }
 
 
@@ -230,34 +235,36 @@ void CreateContractTx(vector<string> &param) {
  * param[10]:用户自定义数据
  *
  */
-void CreateRegScriptTx(vector<string> &param) {
-	if(5 > param.size())
+void CreateRegScriptTx(vector<string> &vstrParam) {
+	if (5 > vstrParam.size()) {
 		return;
-	param.insert(param.begin(), "registerapptx");
-	param.insert(param.begin(), "rpctest");
-
-	char *argv[param.size()];
-	for(size_t i=0; i<param.size();++i) {
-	     argv[i] = const_cast<char *>(param[i].c_str());
 	}
-	CommandLineRPC(param.size(), argv);
+	vstrParam.insert(vstrParam.begin(), "registerapptx");
+	vstrParam.insert(vstrParam.begin(), "rpctest");
+
+	char *argv[vstrParam.size()];
+	for (size_t i = 0; i < vstrParam.size(); ++i) {
+		argv[i] = const_cast<char *>(vstrParam[i].c_str());
+	}
+	CommandLineRPC(vstrParam.size(), argv);
 }
 
-time_t sleepTime = 500;     //每隔1秒发送一个交易
-int64_t llTime = 24*60*60;   //测试24小时
+time_t g_tSleepTime = 500;     //每隔1秒发送一个交易
+int64_t g_llTime = 24*60*60;   //测试24小时
 
-time_t string2time(const char * str,const char * formatStr)
-{
-  struct tm tm1;
-  int year,mon,mday,hour,min,sec;
-  if( -1 == sscanf(str,formatStr,&year,&mon,&mday,&hour,&min,&sec)) return -1;
-  tm1.tm_year=year-1900;
-  tm1.tm_mon=mon-1;
-  tm1.tm_mday=mday;
-  tm1.tm_hour=hour;
-  tm1.tm_min=min;
-  tm1.tm_sec=sec;
-  return mktime(&tm1);
+time_t string2time(const char * str, const char * formatStr) {
+	struct tm tTm1;
+	int year, mon, mday, hour, min, sec;
+	if (-1 == sscanf(str, formatStr, &year, &mon, &mday, &hour, &min, &sec)) {
+		return -1;
+	}
+	tTm1.tm_year = year - 1900;
+	tTm1.tm_mon = mon - 1;
+	tTm1.tm_mday = mday;
+	tTm1.tm_hour = hour;
+	tTm1.tm_min = min;
+	tTm1.tm_sec = sec;
+	return mktime(&tTm1);
 }
 BOOST_FIXTURE_TEST_SUITE(auto_mining_test, CSendItem)
 BOOST_FIXTURE_TEST_CASE(regscript,CSendItem) {
@@ -272,25 +279,25 @@ BOOST_FIXTURE_TEST_CASE(test1, CSendItem)
 //	time_t t1 = string2time("2014-12-01 17:30:00","%d-%d-%d %d:%d:%d");
 
 	Value resulut = RegisterAppTx("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin",0);
-	string scripthash = "";
-	BOOST_CHECK(GetHashFromCreatedTx(resulut,scripthash));
-	string scriptid = "";
-	BOOST_CHECK(GetTxConfirmedRegID(scripthash,scriptid));
+	string strScripthash = "";
+	BOOST_CHECK(GetHashFromCreatedTx(resulut,strScripthash));
+	string strScriptid = "";
+	BOOST_CHECK(GetTxConfirmedRegID(strScripthash,strScriptid));
 
-	int64_t runTime = GetTime()+llTime;
-	vector<string> param;
-	while(GetTime()<runTime) {
+	int64_t llRunTime = GetTime()+g_llTime;
+	vector<string> vstrParam;
+	while(GetTime()<llRunTime) {
 		//创建客户端1->客户端2的普通交易
-		CSendItem sendItem = CSendItem::GetRandomSendItem(1);
-		CSendItem recItem = CSendItem::GetRandomSendItem(2);
-		CreateNormalTx(sendItem.GetAddress(),recItem.GetAddress(),recItem.GetSendValue());                          //创建普通交易
-		MilliSleep(sleepTime);
+		CSendItem cSendItem = CSendItem::GetRandomSendItem(1);
+		CSendItem cRecItem = CSendItem::GetRandomSendItem(2);
+		CreateNormalTx(cSendItem.GetAddress(),cRecItem.GetAddress(),cRecItem.GetSendValue());                          //创建普通交易
+		MilliSleep(g_tSleepTime);
 
 		//创建客户端1->客户端2的合约交易
-		CSendItem sendItem1 = CSendItem::GetRandomSendItem(1);
+		CSendItem cSendItem1 = CSendItem::GetRandomSendItem(1);
 
-		CreateContractTx(scriptid,sendItem1.GetAddress(),"01",0);                        //创建合约交易
-		MilliSleep(sleepTime);
+		CreateContractTx(strScriptid,cSendItem1.GetAddress(),"01",0);                        //创建合约交易
+		MilliSleep(g_tSleepTime);
 	}
 }
 BOOST_AUTO_TEST_CASE(test2)
@@ -298,24 +305,24 @@ BOOST_AUTO_TEST_CASE(test2)
 	const char *argv[] = {"progname", "-datadir=D:\\bitcoin\\2"};
 	int argc = sizeof(argv) / sizeof(char*);
 	CBaseParams::IntialParams(argc, argv);
-	int64_t runTime = GetTime()+llTime;
+	int64_t llRunTime = GetTime()+g_llTime;
 	Value resulut = RegisterAppTx("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin",0);
-	string scripthash = "";
-	BOOST_CHECK(GetHashFromCreatedTx(resulut,scripthash));
-	string scriptid = "";
-	BOOST_CHECK(GetTxConfirmedRegID(scripthash,scriptid));
+	string strScripthash = "";
+	BOOST_CHECK(GetHashFromCreatedTx(resulut,strScripthash));
+	string strScriptid = "";
+	BOOST_CHECK(GetTxConfirmedRegID(strScripthash,strScriptid));
 
-	while(GetTime()<runTime) {
+	while(GetTime()<llRunTime) {
 		//创建客户端2->客户端3的普通交易
-		CSendItem sendItem = CSendItem::GetRandomSendItem(2);
-		CSendItem recItem = CSendItem::GetRandomSendItem(3);
-		CreateNormalTx(sendItem.GetAddress(),recItem.GetAddress(),recItem.GetSendValue());
-		MilliSleep(sleepTime);
+		CSendItem cSendItem = CSendItem::GetRandomSendItem(2);
+		CSendItem cRecItem = CSendItem::GetRandomSendItem(3);
+		CreateNormalTx(cSendItem.GetAddress(),cRecItem.GetAddress(),cRecItem.GetSendValue());
+		MilliSleep(g_tSleepTime);
 
 		//创建客户端2->客户端3的合约交易
-		CSendItem sendItem1 = CSendItem::GetRandomSendItem(2);
-		CreateContractTx(scriptid,sendItem1.GetAddress(),"01",0);                        //创建合约交易
-		MilliSleep(sleepTime);
+		CSendItem cSendItem1 = CSendItem::GetRandomSendItem(2);
+		CreateContractTx(strScriptid,cSendItem1.GetAddress(),"01",0);                        //创建合约交易
+		MilliSleep(g_tSleepTime);
 	}
 
 }
@@ -324,24 +331,24 @@ BOOST_AUTO_TEST_CASE(test3)
 	const char *argv[] = {"progname", "-datadir=D:\\bitcoin\\3"};
 	int argc = sizeof(argv) / sizeof(char*);
 	CBaseParams::IntialParams(argc, argv);
-	int64_t runTime = GetTime()+llTime;
+	int64_t llRunTime = GetTime()+g_llTime;
 
 	Value resulut = RegisterAppTx("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin",0);
-	string scripthash = "";
-	BOOST_CHECK(GetHashFromCreatedTx(resulut,scripthash));
-	string scriptid = "";
-	BOOST_CHECK(GetTxConfirmedRegID(scripthash,scriptid));
-	while(GetTime()<runTime) {
+	string strScripthash = "";
+	BOOST_CHECK(GetHashFromCreatedTx(resulut,strScripthash));
+	string strScriptid = "";
+	BOOST_CHECK(GetTxConfirmedRegID(strScripthash,strScriptid));
+	while(GetTime()<llRunTime) {
 		//创建客户端3->客户端4的普通交易
-		CSendItem sendItem = CSendItem::GetRandomSendItem(3);
-		CSendItem recItem = CSendItem::GetRandomSendItem(4);
-		CreateNormalTx(sendItem.GetAddress(),recItem.GetAddress(),recItem.GetSendValue());
-		MilliSleep(sleepTime);
+		CSendItem cSendItem = CSendItem::GetRandomSendItem(3);
+		CSendItem cRecItem = CSendItem::GetRandomSendItem(4);
+		CreateNormalTx(cSendItem.GetAddress(),cRecItem.GetAddress(),cRecItem.GetSendValue());
+		MilliSleep(g_tSleepTime);
 
 		//创建客户端3->客户端4的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(3);
-		CreateContractTx(scriptid,sendItem1.GetAddress(),"01",0);
-		MilliSleep(sleepTime);
+		CreateContractTx(strScriptid,sendItem1.GetAddress(),"01",0);
+		MilliSleep(g_tSleepTime);
 	}
 }
 
@@ -351,24 +358,24 @@ BOOST_AUTO_TEST_CASE(test4)
 	const char *argv[] = {"progname", "-datadir=D:\\bitcoin\\4"};
 	int argc = sizeof(argv) / sizeof(char*);
 	CBaseParams::IntialParams(argc, argv);
-	int64_t runTime = GetTime()+llTime;
+	int64_t llRunTime = GetTime()+g_llTime;
 
 	Value resulut = RegisterAppTx("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin",0);
-	string scripthash = "";
-	BOOST_CHECK(GetHashFromCreatedTx(resulut,scripthash));
-	string scriptid = "";
-	BOOST_CHECK(GetTxConfirmedRegID(scripthash,scriptid));
-	while(GetTime()<runTime) {
+	string strScripthash = "";
+	BOOST_CHECK(GetHashFromCreatedTx(resulut,strScripthash));
+	string strScriptid = "";
+	BOOST_CHECK(GetTxConfirmedRegID(strScripthash,strScriptid));
+	while(GetTime()<llRunTime) {
 		//创建客户端4->客户端5的普通交易
-		CSendItem sendItem = CSendItem::GetRandomSendItem(4);
-		CSendItem recItem = CSendItem::GetRandomSendItem(5);
-		CreateNormalTx(sendItem.GetAddress(),recItem.GetAddress(),recItem.GetSendValue());                     //创建普通交易
-		MilliSleep(sleepTime);
+		CSendItem cSendItem = CSendItem::GetRandomSendItem(4);
+		CSendItem cRecItem = CSendItem::GetRandomSendItem(5);
+		CreateNormalTx(cSendItem.GetAddress(),cRecItem.GetAddress(),cRecItem.GetSendValue());                     //创建普通交易
+		MilliSleep(g_tSleepTime);
 
 		//创建客户端4->客户端5的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(4);
-		CreateContractTx(scriptid,sendItem1.GetAddress(),"01",0);
-		MilliSleep(sleepTime);
+		CreateContractTx(strScriptid,sendItem1.GetAddress(),"01",0);
+		MilliSleep(g_tSleepTime);
 	}
 }
 BOOST_AUTO_TEST_CASE(test5)
@@ -378,23 +385,23 @@ BOOST_AUTO_TEST_CASE(test5)
 	int argc = sizeof(argv) / sizeof(char*);
 	CBaseParams::IntialParams(argc, argv);
 
-	int64_t runTime = GetTime()+llTime;
+	int64_t llRunTime = GetTime()+g_llTime;
 	Value resulut = RegisterAppTx("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin",0);
-	string scripthash = "";
-	BOOST_CHECK(GetHashFromCreatedTx(resulut,scripthash));
-	string scriptid = "";
-	BOOST_CHECK(GetTxConfirmedRegID(scripthash,scriptid));
-	while(GetTime()<runTime) {
+	string strScripthash = "";
+	BOOST_CHECK(GetHashFromCreatedTx(resulut,strScripthash));
+	string strScriptid = "";
+	BOOST_CHECK(GetTxConfirmedRegID(strScripthash,strScriptid));
+	while(GetTime()<llRunTime) {
 		//创建客户端5->客户端1的普通交易
-		CSendItem sendItem = CSendItem::GetRandomSendItem(5);
-		CSendItem recItem = CSendItem::GetRandomSendItem(1);
-		CreateNormalTx(sendItem.GetAddress(),recItem.GetAddress(),recItem.GetSendValue());
-		MilliSleep(sleepTime);
+		CSendItem cSendItem = CSendItem::GetRandomSendItem(5);
+		CSendItem cRecItem = CSendItem::GetRandomSendItem(1);
+		CreateNormalTx(cSendItem.GetAddress(),cRecItem.GetAddress(),cRecItem.GetSendValue());
+		MilliSleep(g_tSleepTime);
 
 		//创建客户端5->客户端1的合约交易
 		CSendItem sendItem1 = CSendItem::GetRandomSendItem(5);
-		CreateContractTx(scriptid,sendItem1.GetAddress(),"01",0);
-		MilliSleep(sleepTime);
+		CreateContractTx(strScriptid,sendItem1.GetAddress(),"01",0);
+		MilliSleep(g_tSleepTime);
 	}
 
 }

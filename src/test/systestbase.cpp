@@ -685,10 +685,10 @@ uint64_t SysTestBase::GetRandomBetfee() {
 		return r;
 	}
 
-bool SysTestBase::GetKeyId(string const &addr,CKeyID &KeyId) {
-	if (!CRegID::GetKeyID(addr, KeyId)) {
-		KeyId=CKeyID(addr);
-		if (KeyId.IsEmpty())
+bool SysTestBase::GetKeyId(string const &addr,CKeyID &cKeyId) {
+	if (!CRegID::GetKeyID(addr, cKeyId)) {
+		cKeyId=CKeyID(addr);
+		if (cKeyId.IsEmpty())
 		return false;
 	}
 	return true;

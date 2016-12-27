@@ -490,7 +490,7 @@ CBlockIndex *CChain::FindFork(const CBlockLocator &locator) const {
 }
 
 
-CAccountViewDB *pAccountViewDB = NULL;
+CAccountViewDB *g_pAccountViewDB = NULL;
 CBlockTreeDB *pblocktree = NULL;
 CAccountViewCache *pAccountViewTip = NULL;
 CTransactionDB *pTxCacheDB = NULL;
@@ -2183,7 +2183,7 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 	std::shared_ptr<CTransactionDBCache> pForkTxCache;
 	std::shared_ptr<CScriptDBViewCache> pForkScriptDBCache;
 
-	std::shared_ptr<CAccountViewCache> pAcctViewCache = std::make_shared<CAccountViewCache>(*pAccountViewDB, true);
+	std::shared_ptr<CAccountViewCache> pAcctViewCache = std::make_shared<CAccountViewCache>(*g_pAccountViewDB, true);
 	pAcctViewCache->cacheAccounts = pAccountViewTip->cacheAccounts;
 	pAcctViewCache->cacheKeyIds = pAccountViewTip->cacheKeyIds;
 	pAcctViewCache->hashBlock = pAccountViewTip->hashBlock;

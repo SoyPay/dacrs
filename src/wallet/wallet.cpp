@@ -808,20 +808,20 @@ bool CWallet::AddKey(const CKey& key,const CKey& minerKey)
 	CKeyCombi keyCombi(key, minerKey, nWalletVersion);
 	return AddKey(key.GetPubKey().GetKeyID(), keyCombi);
 }
-bool CWallet::AddKey(const CKeyID &KeyId, const CKeyCombi& keyCombi)
+bool CWallet::AddKey(const CKeyID &cKeyId, const CKeyCombi& keyCombi)
 {
 	if (!fFileBacked)
 		return true;
 
 	if(keyCombi.IsContainMainKey()) {
-		if(KeyId != keyCombi.GetCKeyID())
+		if(cKeyId != keyCombi.GetCKeyID())
 			return false;
 	}
 
-	if(!CWalletDB(strWalletFile).WriteKeyStoreValue(KeyId, keyCombi, nWalletVersion)) {
+	if(!CWalletDB(strWalletFile).WriteKeyStoreValue(cKeyId, keyCombi, nWalletVersion)) {
 		return false;
 	}
-	return CCryptoKeyStore::AddKeyCombi(KeyId, keyCombi);
+	return CCryptoKeyStore::AddKeyCombi(cKeyId, keyCombi);
 }
 
 bool CWallet::AddKey(const CKey& key)

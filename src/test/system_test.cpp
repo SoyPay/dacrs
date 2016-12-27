@@ -33,9 +33,9 @@ typedef struct tagACCOUNT_ID
 }ACCOUNT_ID;
 typedef struct {
 	unsigned char nType;
-	ACCOUNT_ID vregID[3];
+	ST_ACCOUNT_ID vregID[3];
 	long nHeight;
-	Int64 nPay;
+	ST_INT64 nPay;
 } CONTRACT_DATA;
 #pragma pack()
 

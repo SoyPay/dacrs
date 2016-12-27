@@ -25,9 +25,9 @@ using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
 
-//Value getrawtransaction(const Array& params, bool fHelp)
+//Value getrawtransaction(const Array& params, bool bHelp)
 //{
-//    if (fHelp || params.size() < 1 || params.size() > 2)
+//    if (bHelp || params.size() < 1 || params.size() > 2)
 //        throw runtime_error(
 //            "getrawtransaction \"txid\" ( verbose )\n"
 //            "\nReturn the raw transaction data.\n"
@@ -113,9 +113,9 @@ using namespace json_spirit;
 //}
 
 
-//Value createrawtransaction(const Array& params, bool fHelp)
+//Value createrawtransaction(const Array& params, bool bHelp)
 //{
-//    if (fHelp || params.size() != 2)
+//    if (bHelp || params.size() != 2)
 //        throw runtime_error(
 //            "createrawtransaction [{\"txid\":\"id\",\"vout\":n},...] {\"address\":amount,...}\n"
 //            "\nCreate a transaction spending the given inputs and sending to the given addresses.\n"
@@ -194,9 +194,9 @@ using namespace json_spirit;
 //    return HexStr(ss.begin(), ss.end());
 //}
 
-//Value decoderawtransaction(const Array& params, bool fHelp)
+//Value decoderawtransaction(const Array& params, bool bHelp)
 //{
-//    if (fHelp || params.size() != 1)
+//    if (bHelp || params.size() != 1)
 //        throw runtime_error(
 //            "decoderawtransaction \"hexstring\"\n"
 //            "\nReturn a JSON object representing the serialized, hex-encoded transaction.\n"
@@ -261,9 +261,9 @@ using namespace json_spirit;
 //    return result;
 //}
 
-//Value decodescript(const Array& params, bool fHelp)
+//Value decodescript(const Array& params, bool bHelp)
 //{
-//    if (fHelp || params.size() != 1)
+//    if (bHelp || params.size() != 1)
 //        throw runtime_error(
 //            "decodescript \"hex\"\n"
 //            "\nDecode a hex-encoded script.\n"
@@ -302,9 +302,9 @@ using namespace json_spirit;
 //    return r;
 //}
 
-//Value signrawtransaction(const Array& params, bool fHelp)
+//Value signrawtransaction(const Array& params, bool bHelp)
 //{
-//    if (fHelp || params.size() < 1 || params.size() > 4)
+//    if (bHelp || params.size() < 1 || params.size() > 4)
 //        throw runtime_error(
 //            "signrawtransaction \"hexstring\" ( [{\"txid\":\"id\",\"vout\":n,\"scriptPubKey\":\"hex\",\"redeemScript\":\"hex\"},...] [\"privatekey1\",...] sighashtype )\n"
 //            "\nSign inputs for raw transaction (serialized, hex-encoded).\n"
@@ -526,9 +526,9 @@ using namespace json_spirit;
 //    return result;
 //}
 extern void SyncWithWallets(const uint256 &hash, const CBaseTransaction *pTx, const CBlock *pblock);
-//Value sendrawtransaction(const Array& params, bool fHelp)
+//Value sendrawtransaction(const Array& params, bool bHelp)
 //{
-//    if (fHelp || params.size() < 1 || params.size() > 2)
+//    if (bHelp || params.size() < 1 || params.size() > 2)
 //        throw runtime_error(
 //            "sendrawtransaction \"hexstring\" ( allowhighfees )\n"
 //            "\nSubmits raw transaction (serialized, hex-encoded) to local node and network.\n"

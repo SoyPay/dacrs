@@ -161,7 +161,7 @@ void Shutdown()
         if(pScriptDBTip)
         	pScriptDBTip->Flush();
         delete pAccountViewTip; pAccountViewTip = NULL;
-        delete pAccountViewDB; pAccountViewDB = NULL;
+        delete g_pAccountViewDB; g_pAccountViewDB = NULL;
         delete pblocktree; pblocktree = NULL;
         delete pTxCacheDB; pTxCacheDB = NULL;
         delete pScriptDB; pScriptDB = NULL;
@@ -844,7 +844,7 @@ bool AppInit2(boost::thread_group& threadGroup)
         do {
             try {
                 UnloadBlockIndex();
-                delete pAccountViewDB;
+                delete g_pAccountViewDB;
                 delete pblocktree;
                 delete pAccountViewTip;
                 delete pTxCacheDB;
@@ -853,8 +853,8 @@ bool AppInit2(boost::thread_group& threadGroup)
                 delete pScriptDBTip;
 
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, SysCfg().IsReindex());
-                pAccountViewDB = new CAccountViewDB(nAccountDBCache, false, SysCfg().IsReindex());
-                pAccountViewTip =  new CAccountViewCache(*pAccountViewDB,true);
+                g_pAccountViewDB = new CAccountViewDB(nAccountDBCache, false, SysCfg().IsReindex());
+                pAccountViewTip =  new CAccountViewCache(*g_pAccountViewDB,true);
                 pTxCacheDB = new CTransactionDB(nTxCacheSize, false, SysCfg().IsReindex());
                 pTxCacheTip = new CTransactionDBCache(*pTxCacheDB,true);
                 pScriptDB = new CScriptDB(nScriptCacheSize, false , SysCfg().IsReindex());

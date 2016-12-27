@@ -219,9 +219,9 @@ vector_unsigned_char CVmRunEvn::GetAccountID(CVmOperate value) {
 		accountid.assign(value.accountid, value.accountid + 6);
 	} else if (value.nacctype == base58addr) {
 		string addr(value.accountid,value.accountid+sizeof(value.accountid));
-		CKeyID KeyId = CKeyID(addr);
+		CKeyID cKeyId = CKeyID(addr);
 		CRegID regid;
-		if(m_view->GetRegId(CUserID(KeyId), regid)){
+		if(m_view->GetRegId(CUserID(cKeyId), regid)){
 			accountid.assign(regid.GetVec6().begin(),regid.GetVec6().end());
 		}else{
 			accountid.assign(value.accountid, value.accountid + 34);

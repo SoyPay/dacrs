@@ -30,12 +30,13 @@ int TestCallRPC(std::string strMethod, const std::vector<std::string> &vParams, 
 		nRet = abs(code);
 	} else {
 		// Result
-		if (result.type() == null_type)
+		if (result.type() == null_type) {
 			strPrint = "";
-		else if (result.type() == str_type)
+		} else if (result.type() == str_type) {
 			strPrint = result.get_str();
-		else
+		} else {
 			strPrint = write_string(result, true);
+		}
 	}
 	strRet = strPrint;
 	BOOST_TEST_MESSAGE(strPrint);
@@ -72,8 +73,8 @@ void CreateRegScriptTx() {
 void CreateRegScriptTxTest() {
 	//cout <<"CreateRegScriptTx" << endl;
 	int argc = 7;
-	const char *argv[7] =
-			{ "rpctest", "registerapptx", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9","0","d:\\sdk.bin","1000000", "10" };
+	const char *argv[7] = { "rpctest", "registerapptx", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9", "0",
+			"d:\\sdk.bin", "1000000", "10" };
 	CommandLineRPC(argc, const_cast<char**>(argv));
 }
 
@@ -136,19 +137,19 @@ void CreateBetTx2() {
 
 void CreateBetTx3() {
 	//cout << "Create Bet tx2" << endl;
-	std::vector<std::string> vInputParams;
-	vInputParams.clear();
-	vInputParams.push_back("01");
-	vInputParams.push_back(strSecureBetTxHash);
+	std::vector<std::string> vstrInputParams;
+	vstrInputParams.clear();
+	vstrInputParams.push_back("01");
+	vstrInputParams.push_back(strSecureBetTxHash);
 	//strSecureTxHash = "";
-	vInputParams.push_back("00");
-	vInputParams.push_back("100000");
+	vstrInputParams.push_back("00");
+	vstrInputParams.push_back("100000");
 	std::string strReturn;
-	if (TestCallRPC("createappealtx", vInputParams, strReturn) > 0) {
-		vInputParams.clear();
-		vInputParams.push_back(strReturn);
+	if (TestCallRPC("createappealtx", vstrInputParams, strReturn) > 0) {
+		vstrInputParams.clear();
+		vstrInputParams.push_back(strReturn);
 		//cout << "sign appeal tx succeed" << endl;
-		TestCallRPC("signappealtx", vInputParams, strReturn);
+		TestCallRPC("signappealtx", vstrInputParams, strReturn);
 	}
 
 }
@@ -171,25 +172,25 @@ bool CreateSecuretx() {
 	//cout << "Create secure tx" << endl;
 //	const char *argv[8] = {"rpctest", "createsecuretx", "030000000300", "[\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"]", "[\"5j9hghjMKwAcY33kQoSxPDJPvokt75dDeYpU5LVgUc\",\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"]", "01021e00070021120500000000000000", "100000", "10"};
 //	CommandLineRPC(argc, const_cast<char* [5]>(argv));
-	std::vector<std::string> vInputParams;
-	vInputParams.clear();
-	vInputParams.push_back("030000000300");
-	vInputParams.push_back("[\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"]");
-	vInputParams.push_back(
+	std::vector<std::string> vstrInputParams;
+	vstrInputParams.clear();
+	vstrInputParams.push_back("030000000300");
+	vstrInputParams.push_back("[\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"]");
+	vstrInputParams.push_back(
 			"[\"5j9hghjMKwAcY33kQoSxPDJPvokt75dDeYpU5LVgUc\",\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"]");
-	vInputParams.push_back("1e00070035303030303030303000a21040049e1062a4ae75");
-	vInputParams.push_back("100000");
-	vInputParams.push_back("10");
+	vstrInputParams.push_back("1e00070035303030303030303000a21040049e1062a4ae75");
+	vstrInputParams.push_back("100000");
+	vstrInputParams.push_back("10");
 	std::string strReturn;
-	if (TestCallRPC("createsecuretx", vInputParams, strReturn) > 0) {
-		vInputParams.clear();
+	if (TestCallRPC("createsecuretx", vstrInputParams, strReturn) > 0) {
+		vstrInputParams.clear();
 		//cout << "create secure tx succeed" << endl;
-		vInputParams.push_back(strReturn);
-		if (TestCallRPC("signsecuretx", vInputParams, strReturn) > 0) {
-			vInputParams.clear();
-			vInputParams.push_back(strReturn);
+		vstrInputParams.push_back(strReturn);
+		if (TestCallRPC("signsecuretx", vstrInputParams, strReturn) > 0) {
+			vstrInputParams.clear();
+			vstrInputParams.push_back(strReturn);
 			//cout <<"sign securte tx succeed" << endl;
-			if (TestCallRPC("signsecuretx", vInputParams, strReturn) > 0) {
+			if (TestCallRPC("signsecuretx", vstrInputParams, strReturn) > 0) {
 				strSecureTxHash = strReturn;
 				return true;
 			}
@@ -200,49 +201,49 @@ bool CreateSecuretx() {
 
 void CreateAppealtx() {
 	//cout << "Create Appeal tx" << endl;
-	std::vector<std::string> vInputParams;
-	vInputParams.clear();
-	vInputParams.push_back("01");
-	vInputParams.push_back(strSecureTxHash);
+	std::vector<std::string> vstrInputParams;
+	vstrInputParams.clear();
+	vstrInputParams.push_back("01");
+	vstrInputParams.push_back(strSecureTxHash);
 	//strSecureTxHash = "";
-	vInputParams.push_back("35303030303030303000d10020fc280020fc2800");
-	vInputParams.push_back("100000");
+	vstrInputParams.push_back("35303030303030303000d10020fc280020fc2800");
+	vstrInputParams.push_back("100000");
 	std::string strReturn;
-	if (TestCallRPC("createappealtx", vInputParams, strReturn) > 0) {
-		vInputParams.clear();
-		vInputParams.push_back(strReturn);
+	if (TestCallRPC("createappealtx", vstrInputParams, strReturn) > 0) {
+		vstrInputParams.clear();
+		vstrInputParams.push_back(strReturn);
 		//cout <<"sign appeal tx succeed" << endl;
-		TestCallRPC("signappealtx", vInputParams, strReturn);
+		TestCallRPC("signappealtx", vstrInputParams, strReturn);
 	}
 }
 
 void CreateArbitratetx() {
 	//cout << "Create Appeal tx" << endl;
-	std::vector<std::string> vInputParams;
-	vInputParams.clear();
-	vInputParams.push_back("00");
-	vInputParams.push_back(strSecureTxHash);
+	std::vector<std::string> vstrInputParams;
+	vstrInputParams.clear();
+	vstrInputParams.push_back("00");
+	vstrInputParams.push_back(strSecureTxHash);
 	//strSecureTxHash = "";
-	vInputParams.push_back("353030303030303030000000c856a210741cd60058039e10741cd600100000000000000000000000");
-	vInputParams.push_back("100000");
+	vstrInputParams.push_back("353030303030303030000000c856a210741cd60058039e10741cd600100000000000000000000000");
+	vstrInputParams.push_back("100000");
 	std::string strReturn;
-	if (TestCallRPC("createappealtx", vInputParams, strReturn) > 0) {
-		vInputParams.clear();
-		vInputParams.push_back(strReturn);
+	if (TestCallRPC("createappealtx", vstrInputParams, strReturn) > 0) {
+		vstrInputParams.clear();
+		vstrInputParams.push_back(strReturn);
 		//cout <<"sign appeal tx succeed" << endl;
-		TestCallRPC("signappealtx", vInputParams, strReturn);
+		TestCallRPC("signappealtx", vstrInputParams, strReturn);
 	}
 }
 
-void GetAccountInfo(const char *address) {
+void GetAccountInfo(const char *pchAddress) {
 	//cout << "Get Address " << address << "INFO" << endl;
 	int argc = 3;
-	const char *argv[3] = { "rpctest", "getaccountinfo", address };
+	const char *argv[3] = { "rpctest", "getaccountinfo", pchAddress };
 	CommandLineRPC(argc, const_cast<char**>(argv));
 
 }
 
-void DisconnectBlock(int number) {
+void DisconnectBlock(int nNumber) {
 	//cout << "disconnect block" <<endl;
 	int argc = 3;
 	const char *argv[3] = { "rpctest", "disconnectblock", "1" };
@@ -258,35 +259,28 @@ void GetAccountState() {
 
 BOOST_AUTO_TEST_SUITE(updateaccount_test)
 
-
-
-BOOST_AUTO_TEST_CASE(get_account_info)
-{
+BOOST_AUTO_TEST_CASE(get_account_info) {
 	//cout << "=====================get account info ==================================" << endl;
 	GetAccountInfo("5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG");
 	GetAccountInfo("dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr");
 	GetAccountInfo("5j9hghjMKwAcY33kQoSxPDJPvokt75dDeYpU5LVgUc");
 	GetAccountInfo("5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9");
 }
-BOOST_AUTO_TEST_CASE(create_normaltx)
-{
+BOOST_AUTO_TEST_CASE(create_normaltx) {
 	CreateNormalTx();
 }
-BOOST_AUTO_TEST_CASE(create_regscripttx)
-{
+BOOST_AUTO_TEST_CASE(create_regscripttx) {
 //	CreateRegScriptTx();
 	CreateRegScriptTxTest();
 }
-BOOST_AUTO_TEST_CASE(create_registertx)
-{
+BOOST_AUTO_TEST_CASE(create_registertx) {
 	CreateRegisterTx();
 }
-BOOST_AUTO_TEST_CASE(connect_block_test)
-{
+BOOST_AUTO_TEST_CASE(connect_block_test) {
 	//cout << "=====================init account info ========================" << endl;
 	GetAccountState();
 	//MilliSleep(1000);
-	CreateNormalTx();//"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG" "dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr"
+	CreateNormalTx(); //"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG" "dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr"
 	GenerateMiner();
 	//MilliSleep(1000);
 	//cout << "=====================block height 1 account info ==============" << endl;
@@ -296,8 +290,8 @@ BOOST_AUTO_TEST_CASE(connect_block_test)
 	//cout << "=====================block height 2 account info ==============" << endl;
 	GetAccountState();
 	CreateNormalTx();
-	CreateRegisterTx();//"dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr"
-	CreateRegScriptTx();//"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9"
+	CreateRegisterTx();	//"dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr"
+	CreateRegScriptTx();	//"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9"
 	GenerateMiner();
 	//MilliSleep(1000);
 	//cout << "=====================block height 3 account info ==============" << endl;
@@ -329,7 +323,7 @@ BOOST_AUTO_TEST_CASE(create_securetx) {
 BOOST_AUTO_TEST_CASE(create_appealtx) {
 	CreateRegScriptTx();
 	GenerateMiner();
-	if(CreateSecuretx()) {
+	if (CreateSecuretx()) {
 		GenerateMiner();
 		CreateAppealtx();
 	}
@@ -388,7 +382,7 @@ BOOST_AUTO_TEST_CASE(test) {
  */
 BOOST_AUTO_TEST_CASE(test1) {
 	int nIndex = 10000;
-	while(nIndex--) {
+	while (nIndex--) {
 		CreateNormalTx();
 		MilliSleep(500);
 	}
