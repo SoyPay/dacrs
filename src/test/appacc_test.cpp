@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(key_test1)
 		CAppCFund tep2;
 		BOOST_CHECK(AccCount.GetAppCFund(tep2, fundtag, maxtimeout + 5) == false); //获取相应的冻结项 超时时间不同 必须获取不到
 
-		AccCount.AutoMergeFreezeToFree(timeout - 1);               	   //自动合并 超时高度没有到  这里的 50 是为了配合签名 time out de 51
+		AccCount.AutoMergeFreezeToFree(0, timeout - 1);               	   //自动合并 超时高度没有到  这里的 50 是为了配合签名 time out de 51
 		BOOST_CHECK(AccCount.GetAppCFund(tep, fundtag, timeout));			 //没有合并必须金额还是没有变动
 		BOOST_CHECK(tep.getvalue() == OpArry[0].GetUint64Value());         	//没有合并必须金额还是没有变动
 	}
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(key_test1)
 
 	{         	//合并第一个
 		CAppCFund tep;
-		AccCount.AutoMergeFreezeToFree(timeout);                  				//自动合并 第0个
+		AccCount.AutoMergeFreezeToFree(0, timeout);                  				//自动合并 第0个
 		BOOST_CHECK(AccCount.GetAppCFund(tep, fundtag, timeout) == false); 		//必须找不到数据
 		BOOST_CHECK(AccCount.getllValues() == OpArry[0].GetUint64Value());;          				//合并后自由金额必须没有问题
 	}
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(key_test1)
 		BOOST_CHECK(AccCount.getllValues() == OpArry[0].GetUint64Value());                //加上后 就回来了
 	}
 
-	AccCount.AutoMergeFreezeToFree(maxtimeout);     				//全部合并
+	AccCount.AutoMergeFreezeToFree(0, maxtimeout);     				//全部合并
 //	BOOST_CHECK_MESSAGE(AccCount.getllValues() == allmoney, "" << allmoney << ' ' << AccCount.getllValues());                //余额平账
 
 }
