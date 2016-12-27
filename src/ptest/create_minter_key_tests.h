@@ -5,8 +5,8 @@
  *      Author: ranger.shi
  */
 
-#ifndef CREATEMINTERKEY_TESTS_H
-#define CREATEMINTERKEY_TESTS_H
+#ifndef CREATE_MINTER_KEY_TESTS_H
+#define CREATE_MINTER_KEY_TESTS_H
 
 
 class CCreateMinerkey :public SysTestBase{
@@ -17,7 +17,7 @@ public:
 	CCreateMinerkey(){};
 	virtual ~CCreateMinerkey();
 private:
-	vector<string> vAccount;
+	vector<string> vecAccount;
 	map<string, uint64_t> mapSendValue;
 
 };

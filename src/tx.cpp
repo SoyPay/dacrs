@@ -18,17 +18,17 @@ using namespace json_spirit;
 list<string> listBlockAppId = boost::assign::list_of("97560-1")("96298-1")("96189-1")("95130-1")("93694-1");
 
 static bool GetKeyId(const CAccountViewCache &view, const vector<unsigned char> &ret,
-		CKeyID &KeyId) {
+		CKeyID &cKeyId) {
 	if (ret.size() == 6) {
 		CRegID reg(ret);
-		KeyId = reg.getKeyID(view);
+		cKeyId = reg.getKeyID(view);
 	} else if (ret.size() == 34) {
 		string addr(ret.begin(), ret.end());
-		KeyId = CKeyID(addr);
+		cKeyId = CKeyID(addr);
 	}else{
 		return false;
 	}
-	if (KeyId.IsEmpty())
+	if (cKeyId.IsEmpty())
 		return false;
 
 	return true;

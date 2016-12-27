@@ -24,29 +24,29 @@ dacrs_ptest_LDADD += $(BDB_LIBS)
 
 dacrs_ptest_SOURCES = \
   P_test.cpp \
-  Main_tests.cpp \
+  main_tests.cpp \
   UpdateAccount_tests.cpp \
-  Mining_tests.cpp	\
-  CreateTx_tests.cpp \
-  CBlackHalo_tests.cpp	\
-  CAnony_tests.cpp     \
+  mining_tests.cpp	\
+  create_tx_tests.cpp \
+  black_halo_tests.cpp	\
+  anony_tests.cpp     \
   ../test/systestbase.cpp \
-  CycleSesureTrade_tests.cpp	\
-  CycleTestBase.cpp	\
-  CycleTestManger.cpp \
-  CycleTestManger.h	\
-  CycleTestBase.h	\
-  CycleSesureTrade_tests.h	\
-  CBlackHalo_tests.h	\
-  CAnony_tests.h   \
-  CreateTx_tests.h  \
+  cycle_sesure_trade_tests.cpp	\
+  cycle_test_base.cpp	\
+  cycle_test_manger.cpp \
+  cycle_test_manger.h	\
+  cycle_test_base.h	\
+  cycle_sesure_trade_tests.h	\
+  black_halo_tests.h	\
+  anony_tests.h   \
+  create_tx_tests.h  \
   ../test/systestbase.h \
-  CycleP2PBet_tests.cpp \
-  CycleP2PBet_tests.h \
-  CreateMinterKey_tests.cpp \
-  CreateMinterKey_tests.h  \
-  CIpo_tests.h \
-  CIpo_tests.cpp \
-  CRedPacket_tests.cpp \
-  CGuarantee_tests.h \
-  CGuarantee_tests.cpp
+  cycle_p2p_bet_tests.cpp \
+  cycle_p2p_bet_tests.h \
+  create_minter_key_tests.cpp \
+  create_minter_key_tests.h  \
+  ipo_tests.h \
+  ipo_tests.cpp \
+  red_packet_tests.cpp \
+  guarantee_tests.h \
+  guarantee_tests.cpp

@@ -27,58 +27,30 @@ using namespace std;
 
 void EnsureWalletIsUnlocked();
 
-string static EncodeDumpTime(int64_t nTime) {
-    return DateTimeStrFormat("%Y-%m-%dT%H:%M:%SZ", nTime);
+string static EncodeDumpTime(int64_t llTime) {
+    return DateTimeStrFormat("%Y-%m-%dT%H:%M:%SZ", llTime);
 }
-
-//int64_t static DecodeDumpTime(const string &str) {
-//    static const boost::posix_time::ptime epoch = boost::posix_time::from_time_t(0);
-//    static const locale loc(locale::classic(),
-//        new boost::posix_time::time_input_facet("%Y-%m-%dT%H:%M:%SZ"));
-//    istringstream iss(str);
-//    iss.imbue(loc);
-//    boost::posix_time::ptime ptime(boost::date_time::not_a_date_time);
-//    iss >> ptime;
-//    if (ptime.is_not_a_date_time())
-//        return 0;
-//    return (ptime - epoch).total_seconds();
-//}
-
-//string static EncodeDumpString(const string &str) {
-//    stringstream ret;
-//    for (auto c : str) {
-//        if (c <= 32 || c >= 128 || c == '%') {
-//            ret << '%' << HexStr(&c, &c + 1);
-//        } else {
-//            ret << c;
-//        }
-//    }
-//    return ret.str();
-//}
 
 string DecodeDumpString(const string &str) {
-    stringstream ret;
-    for (unsigned int pos = 0; pos < str.length(); pos++) {
-        unsigned char c = str[pos];
-        if (c == '%' && pos+2 < str.length()) {
-            c = (((str[pos+1]>>6)*9+((str[pos+1]-'0')&15)) << 4) | 
-                ((str[pos+2]>>6)*9+((str[pos+2]-'0')&15));
-            pos += 2;
-        }
-        ret << c;
-    }
-    return ret.str();
+	stringstream ret;
+	for (unsigned int pos = 0; pos < str.length(); pos++) {
+		unsigned char c = str[pos];
+		if (c == '%' && pos + 2 < str.length()) {
+			c = (((str[pos + 1] >> 6) * 9 + ((str[pos + 1] - '0') & 15)) << 4)
+					| ((str[pos + 2] >> 6) * 9 + ((str[pos + 2] - '0') & 15));
+			pos += 2;
+		}
+		ret << c;
+	}
+	return ret.str();
 }
 
-Value dropprivkey(const Array& params, bool fHelp){
-	if (fHelp || params.size() != 0)
+Value dropprivkey(const Array& params, bool bHelp) {
+	if (bHelp || params.size() != 0)
 		throw runtime_error("dropprivkey \n"
-			    "\ndrop private key.\n"
-			    "\nResult:\n"
-			    "\nExamples:\n"
-			    + HelpExampleCli("dropprivkey", "")
-			    + HelpExampleRpc("dropprivkey", "")
-		);
+				"\ndrop private key.\n"
+				"\nResult:\n"
+				"\nExamples:\n" + HelpExampleCli("dropprivkey", "") + HelpExampleRpc("dropprivkey", ""));
 
 	EnsureWalletIsUnlocked();
 	if (!g_pwalletMain->IsReadyForCoolMiner(*pAccountViewTip)) {
@@ -91,30 +63,24 @@ Value dropprivkey(const Array& params, bool fHelp){
 	return reply2;
 }
 
-Value importprivkey(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() < 1 || params.size() > 3)
-        throw runtime_error(
-            "importprivkey \"Dacrsprivkey\" ( \"label\" rescan )\n"
-            "\nAdds a private key (as returned by dumpprivkey) to your wallet.\n"
-            "\nArguments:\n"
-            "1. \"Dacrsprivkey\"   (string, required) The private key (see dumpprivkey)\n"
-            "2. \"label\"            (string, optional) an optional label\n"
-            "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
-            "\nExamples:\n"
-            "\nDump a private key\n"
-            + HelpExampleCli("dumpprivkey", "\"myaddress\"") +
-            "\nImport the private key\n"
-            + HelpExampleCli("importprivkey", "\"mykey\"") +
-            "\nImport using a label\n"
-            + HelpExampleCli("importprivkey", "\"mykey\" \"testing\" false") +
-            "\nAs a json rpc call\n"
-            + HelpExampleRpc("importprivkey", "\"mykey\", \"testing\", false")
-        );
+Value importprivkey(const Array& params, bool bHelp) {
+	if (bHelp || params.size() < 1 || params.size() > 3)
+		throw runtime_error(
+				"importprivkey \"Dacrsprivkey\" ( \"label\" rescan )\n"
+						"\nAdds a private key (as returned by dumpprivkey) to your wallet.\n"
+						"\nArguments:\n"
+						"1. \"Dacrsprivkey\"   (string, required) The private key (see dumpprivkey)\n"
+						"2. \"label\"            (string, optional) an optional label\n"
+						"3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
+						"\nExamples:\n"
+						"\nDump a private key\n" + HelpExampleCli("dumpprivkey", "\"myaddress\"")
+						+ "\nImport the private key\n" + HelpExampleCli("importprivkey", "\"mykey\"")
+						+ "\nImport using a label\n" + HelpExampleCli("importprivkey", "\"mykey\" \"testing\" false")
+						+ "\nAs a json rpc call\n" + HelpExampleRpc("importprivkey", "\"mykey\", \"testing\", false"));
 
-    EnsureWalletIsUnlocked();
+	EnsureWalletIsUnlocked();
 
-    string strSecret = params[0].get_str();
+	string strSecret = params[0].get_str();
 //  string strLabel = "";
 //  if (params.size() > 1)
 //      strLabel = params[1].get_str();
@@ -123,42 +89,42 @@ Value importprivkey(const Array& params, bool fHelp)
 //	if (params.size() > 2) {
 //		fRescan = params[2].get_bool();
 //	}
-    CKey key;
-    if(strSecret.length() == 32) {
-    	vector<unsigned char> vKey = ParseHex(strSecret.c_str());
-    	CPrivKey privKey(vKey.begin(), vKey.end());
-    	if(!key.SetPrivKey(privKey, true)) {
-    		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
-    	}
-    }
-    else {
-    CDacrsSecret vchSecret;
-    bool fGood = vchSecret.SetString(strSecret);
+	CKey key;
+	if (strSecret.length() == 32) {
+		vector<unsigned char> vKey = ParseHex(strSecret.c_str());
+		CPrivKey privKey(vKey.begin(), vKey.end());
+		if (!key.SetPrivKey(privKey, true)) {
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+		}
+	} else {
+		CDacrsSecret vchSecret;
+		bool fGood = vchSecret.SetString(strSecret);
 
-    if (!fGood) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
+		if (!fGood){
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key encoding");
+		}
+		key = vchSecret.GetKey();
+		if (!key.IsValid()){
+			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+		}
+	}
 
-    key = vchSecret.GetKey();
-    if (!key.IsValid()) throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
-    }
+	CPubKey pubkey = key.GetPubKey();
+	{
+		LOCK2(cs_main, g_pwalletMain->m_cs_wallet);
 
+		if (!g_pwalletMain->AddKey(key))
+			throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
 
-
-    CPubKey pubkey = key.GetPubKey();
-    {
-        LOCK2(cs_main, g_pwalletMain->m_cs_wallet);
-
-       if (!g_pwalletMain->AddKey(key))
-           throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
-
-    }
-    Object reply2;
-    reply2.push_back(Pair("imorpt key address",pubkey.GetKeyID().ToAddress()));
-    return reply2;
+	}
+	Object reply2;
+	reply2.push_back(Pair("imorpt key address", pubkey.GetKeyID().ToAddress()));
+	return reply2;
 }
 
-Value importwallet(const Array& params, bool fHelp)
+Value importwallet(const Array& params, bool bHelp)
 {
-    if (fHelp || params.size() != 1)
+    if (bHelp || params.size() != 1)
         throw runtime_error(
             "importwallet \"filename\"\n"
             "\nImports keys from a wallet dump file (see dumpwallet).\n"
@@ -179,9 +145,9 @@ Value importwallet(const Array& params, bool fHelp)
 
     ifstream file;
     file.open(params[0].get_str().c_str(), ios::in | ios::ate);
-    if (!file.is_open())
+    if (!file.is_open()){
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
-
+    }
 //  int64_t nTimeBegin = chainActive.Tip()->nTime;
 
 //  bool fGood = true;
@@ -219,53 +185,53 @@ Value importwallet(const Array& params, bool fHelp)
     Object reply2;
     reply2.push_back(Pair("imorpt key size",inmsizeport));
     return reply2;
-
-
 }
 
-Value dumpprivkey(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 1)
-        throw runtime_error(
-            "dumpprivkey \"Dacrsaddress\"\n"
-            "\nReveals the private key corresponding to 'Dacrsaddress'.\n"
-            "Then the importprivkey can be used with this output\n"
-            "\nArguments:\n"
-            "1. \"Dacrsaddress\"   (string, required) The Dacrs address for the private key\n"
-            "\nResult:\n"
-            "\"key\"                (string) The private key\n"
-            "\nExamples:\n"
-            + HelpExampleCli("dumpprivkey", "\"myaddress\"")
-            + HelpExampleCli("importprivkey", "\"mykey\"")
-            + HelpExampleRpc("dumpprivkey", "\"myaddress\"")
-        );
+Value dumpprivkey(const Array& params, bool bHelp) {
+	if (bHelp || params.size() != 1)
+		throw runtime_error(
+				"dumpprivkey \"Dacrsaddress\"\n"
+						"\nReveals the private key corresponding to 'Dacrsaddress'.\n"
+						"Then the importprivkey can be used with this output\n"
+						"\nArguments:\n"
+						"1. \"Dacrsaddress\"   (string, required) The Dacrs address for the private key\n"
+						"\nResult:\n"
+						"\"key\"                (string) The private key\n"
+						"\nExamples:\n" + HelpExampleCli("dumpprivkey", "\"myaddress\"")
+						+ HelpExampleCli("importprivkey", "\"mykey\"")
+						+ HelpExampleRpc("dumpprivkey", "\"myaddress\""));
 
-    EnsureWalletIsUnlocked();
+	EnsureWalletIsUnlocked();
 
-    string strAddress = params[0].get_str();
-    CDacrsAddress address;
-    if (!address.SetString(strAddress))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dacrs address");
-    CKeyID keyID;
-    if (!address.GetKeyID(keyID))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
-    CKey vchSecret;
-    if (!g_pwalletMain->GetKey(keyID, vchSecret))
-        throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
-    CKey minerkey;
-    if (!g_pwalletMain->GetKey(keyID, minerkey,true))
-           throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
-    Object reply;
-    	reply.push_back(Pair("privkey", CDacrsSecret(vchSecret).ToString()));
-    if(minerkey.ToString() != vchSecret.ToString())
-    	reply.push_back(Pair("minerkey", CDacrsSecret(minerkey).ToString()));
-    else
-    	reply.push_back(Pair("minerkey", " "));
-    return reply;
+	string strAddress = params[0].get_str();
+	CDacrsAddress address;
+	if (!address.SetString(strAddress)) {
+		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dacrs address");
+	}
+	CKeyID keyID;
+	if (!address.GetKeyID(keyID)) {
+		throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
+	}
+	CKey vchSecret;
+	if (!g_pwalletMain->GetKey(keyID, vchSecret)) {
+		throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
+	}
+	CKey minerkey;
+	if (!g_pwalletMain->GetKey(keyID, minerkey, true)) {
+		throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
+	}
+	Object reply;
+	reply.push_back(Pair("privkey", CDacrsSecret(vchSecret).ToString()));
+	if (minerkey.ToString() != vchSecret.ToString()) {
+		reply.push_back(Pair("minerkey", CDacrsSecret(minerkey).ToString()));
+	} else {
+		reply.push_back(Pair("minerkey", " "));
+	}
+	return reply;
 }
 
-Value dumpwallet(const Array& params, bool fHelp) {
-	if (fHelp || params.size() != 1)
+Value dumpwallet(const Array& params, bool bHelp) {
+	if (bHelp || params.size() != 1)
 		throw runtime_error("dumpwallet \"filename\"\n"
 				"\nDumps all wallet keys in a human-readable format.\n"
 				"\nArguments:\n"
@@ -276,9 +242,9 @@ Value dumpwallet(const Array& params, bool fHelp) {
 
 	ofstream file;
 	file.open(params[0].get_str().c_str());
-	if (!file.is_open())
+	if (!file.is_open()) {
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
-
+	}
 	Object reply;
 	reply.push_back(Pair("created by Dacrs", CLIENT_BUILD + CLIENT_DATE));
 	reply.push_back(Pair("Created Time ", EncodeDumpTime(GetTime())));
@@ -288,19 +254,18 @@ Value dumpwallet(const Array& params, bool fHelp) {
 	set<CKeyID> setKeyId;
 	g_pwalletMain->GetKeys(setKeyId);
 	Array key;
-	for(auto & keyId : setKeyId)
-	{
+	for (auto & keyId : setKeyId) {
 		CKeyCombi keyCombi;
 		g_pwalletMain->GetKeyCombi(keyId, keyCombi);
 		Object obj = keyCombi.ToJsonObj();
 		obj.push_back(Pair("keyid", keyId.ToString()));
 		key.push_back(obj);
 	}
-	reply.push_back(Pair("key",key));
-	file <<  write_string(Value(reply), true);
+	reply.push_back(Pair("key", key));
+	file << write_string(Value(reply), true);
 	file.close();
 	Object reply2;
-	reply2.push_back(Pair("info","dump ok"));
-	reply2.push_back(Pair("key size",(int)setKeyId.size()));
+	reply2.push_back(Pair("info", "dump ok"));
+	reply2.push_back(Pair("key size", (int) setKeyId.size()));
 	return reply2;
 }

@@ -31,38 +31,38 @@
 using namespace std;
 using namespace boost;
 struct AccState {
-	int64_t dUnmatureMoney;
-	int64_t dFreeMoney;
-	int64_t dFrozenMoney;
+	int64_t lldUnmatureMoney;
+	int64_t lldFreeMoney;
+	int64_t lldFrozenMoney;
 	AccState() {
-		dUnmatureMoney = 0;
-		dFreeMoney = 0;
-		dFrozenMoney = 0;
+		lldUnmatureMoney = 0;
+		lldFreeMoney = 0;
+		lldFrozenMoney = 0;
 	}
 	AccState(int64_t a, int64_t b, int64_t c) {
-		dUnmatureMoney = a;
-		dFreeMoney = b;
-		dFrozenMoney = c;
+		lldUnmatureMoney = a;
+		lldFreeMoney = b;
+		lldFrozenMoney = c;
 	}
 
 	bool operator==(AccState &a) {
-		if (dUnmatureMoney == a.dUnmatureMoney && dFreeMoney == a.dFreeMoney && dFrozenMoney == a.dFrozenMoney) {
+		if (lldUnmatureMoney == a.lldUnmatureMoney && lldFreeMoney == a.lldFreeMoney && lldFrozenMoney == a.lldFrozenMoney) {
 			return true;
 		}
 		return false;
 	}
 
 	bool SumEqual(AccState &a) {
-		int64_t l = dUnmatureMoney + dFreeMoney + dFrozenMoney;
-		int64_t r = a.dUnmatureMoney + a.dFreeMoney + a.dFrozenMoney;
+		int64_t l = lldUnmatureMoney + lldFreeMoney + lldFrozenMoney;
+		int64_t r = a.lldUnmatureMoney + a.lldFreeMoney + a.lldFrozenMoney;
 
 		return l == r;
 	}
 
 	AccState& operator+=(AccState &a) {
-		dUnmatureMoney += a.dUnmatureMoney;
-		dFreeMoney += a.dFreeMoney;
-		dFrozenMoney += a.dFrozenMoney;
+		lldUnmatureMoney += a.lldUnmatureMoney;
+		lldFreeMoney += a.lldFreeMoney;
+		lldFrozenMoney += a.lldFrozenMoney;
 		return *this;
 	}
 };
@@ -82,13 +82,13 @@ struct AccOperLog {
 	void MergeAcc(int nHeight) {
 		for (auto &item : mapAccState) {
 			if (nHeight > item.first + nFrozenHeight) {
-				item.second.dFreeMoney += item.second.dFrozenMoney;
-				item.second.dFrozenMoney = 0.0;
+				item.second.lldFreeMoney += item.second.lldFrozenMoney;
+				item.second.lldFrozenMoney = 0.0;
 			}
 
 			if (nHeight > item.first + nMatureHeight) {
-				item.second.dFreeMoney += item.second.dUnmatureMoney;
-				item.second.dUnmatureMoney = 0.0;
+				item.second.lldFreeMoney += item.second.lldUnmatureMoney;
+				item.second.lldUnmatureMoney = 0.0;
 			}
 		}
 	}
@@ -228,7 +228,7 @@ public:
 
 	uint64_t GetRandomBetfee();
 
-	bool GetKeyId(string const &addr,CKeyID &KeyId);
+	bool GetKeyId(string const &addr,CKeyID &cKeyId);
 
 	bool IsTxInMemorypool(const uint256& txHash);
 

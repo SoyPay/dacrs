@@ -79,17 +79,17 @@ struct __MapExterFun {
 };
 
 static bool GetKeyId(const CAccountViewCache &view, vector<unsigned char> &ret,
-		CKeyID &KeyId) {
+		CKeyID &cKeyId) {
 	if (ret.size() == 6) {
 		CRegID reg(ret);
-		KeyId = reg.getKeyID(view);
+		cKeyId = reg.getKeyID(view);
 	} else if (ret.size() == 34) {
 		string addr(ret.begin(), ret.end());
-		KeyId = CKeyID(addr);
+		cKeyId = CKeyID(addr);
 	}else{
 		return false;
 	}
-	if (KeyId.IsEmpty())
+	if (cKeyId.IsEmpty())
 		return false;
 
 	return true;
@@ -137,7 +137,7 @@ static bool GetData(unsigned char * ipara, vector<std::shared_ptr < std::vector<
 	return true;
 }
 /**
- *COMP_RET Int64Compare(const Int64* const pM1, const Int64* const pM2)
+ *COMP_RET Int64Compare(const ST_INT64* const pM1, const ST_INT64* const pM2)
  * 这个函数式从中间层传了两个参数过来:
  * 1.第一个是int64_t类型的数据
  * 2.第一个是int64_t类型的数据
@@ -173,7 +173,7 @@ static RET_DEFINE ExInt64CompFunc(unsigned char *ipara,void * pVmScriptRun) {
 	return std::make_tuple (true,0, tem);
 }
 /**
- *bool Int64Mul(const Int64* const pM1, const Int64* const pM2, Int64* const pOutM)
+ *bool Int64Mul(const ST_INT64* const pM1, const ST_INT64* const pM2, ST_INT64* const pOutM)
  * 这个函数式从中间层传了两个参数过来:
  * 1.第一个是int64_t类型的数据
  * 2.第一个是int64_t类型的数据
@@ -201,7 +201,7 @@ static RET_DEFINE ExInt64MullFunc(unsigned char *ipara,void * pVmScriptRun) {
 	return std::make_tuple (true,0, tem);
 }
 /**
- *bool Int64Add(const Int64* const pM1, const Int64* const pM2, Int64* const pOutM)
+ *bool Int64Add(const ST_INT64* const pM1, const ST_INT64* const pM2, ST_INT64* const pOutM)
  * 这个函数式从中间层传了两个参数过来:
  * 1.第一个是int64_t类型的数据
  * 2.第一个是int64_t类型的数据
@@ -229,7 +229,7 @@ static RET_DEFINE ExInt64AddFunc(unsigned char *ipara,void * pVmScriptRun) {
 	return std::make_tuple (true,0, tem);
 }
 /**
- *bool Int64Sub(const Int64* const pM1, const Int64* const pM2, Int64* const pOutM)
+ *bool Int64Sub(const ST_INT64* const pM1, const ST_INT64* const pM2, ST_INT64* const pOutM)
  * 这个函数式从中间层传了两个参数过来:
  * 1.第一个是int64_t类型的数据
  * 2.第一个是int64_t类型的数据
@@ -256,7 +256,7 @@ static RET_DEFINE ExInt64SubFunc(unsigned char *ipara,void * pVmScriptRun) {
 	return std::make_tuple (true,0, tem);
 }
 /**
- *bool Int64Div(const Int64* const pM1, const Int64* const pM2, Int64* const pOutM)
+ *bool Int64Div(const ST_INT64* const pM1, const ST_INT64* const pM2, ST_INT64* const pOutM)
  * 这个函数式从中间层传了两个参数过来:
  * 1.第一个是int64_t类型的数据
  * 2.第一个是int64_t类型的数据
@@ -581,7 +581,7 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 	return std::make_tuple (true,0, tem);
 }
 /**
- *bool QueryAccountBalance(const unsigned char* const account,Int64* const pBalance)
+ *bool QueryAccountBalance(const unsigned char* const account,ST_INT64* const pBalance)
  * 这个函数式从中间层传了一个参数过来:
  * 1.第一个是 账户id,六个字节
  */

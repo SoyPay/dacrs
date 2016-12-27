@@ -7,7 +7,7 @@
 
 #ifndef CREATETX_TESTS_H_
 #define CREATETX_TESTS_H_
-#include "CycleTestBase.h"
+#include "cycle_test_base.h"
 #include "../test/systestbase.h"
 #include "../rpc/rpcclient.h"
 #include "tx.h"
@@ -15,19 +15,20 @@
 using namespace std;
 
 class CCreateTxTest : public CycleTestBase{
-public:
+ public:
 	CCreateTxTest();
 	 ~CCreateTxTest(){};
 	 bool  CreateTx(int nTxType);
 	 void Initialize();
-	 TEST_STATE Run();
-private:
+	 emTEST_STATE Run();
+
+ private:
 	 static  int nCount ;
 	 int nTxType;
 	 int nNum;
 	 int nStep ;
-	 string sendhash;
-	 string newAddr;
+	 string strSendHash;
+	 string strNewAddr;
 
 };
 #endif /* CDARKANDANONY_H_ */

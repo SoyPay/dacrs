@@ -1,5 +1,7 @@
+#ifndef RED_PACKET_TESTS_H_
+#define RED_PACKET_TESTS_H_
 
-#include "CycleTestBase.h"
+#include "cycle_test_base.h"
 #include <stdlib.h>
 #include <time.h>
 #include "main.h"
@@ -25,25 +27,32 @@ using namespace json_spirit;
 
 
 class CRedPacketTest: public CycleTestBase {
-	int nNum;
-	int nStep;
-	string TxHash;
-	string strAppRegId;
-	string redHash;
-	string appaddr;
-	uint64_t specailmM;
-	string rchangeaddr;
-public:
+ public:
 	CRedPacketTest();
 	~CRedPacketTest(){};
-	virtual TEST_STATE Run() ;
+	virtual emTEST_STATE Run() ;
 	bool RegistScript();
 	bool WaitRegistScript();
 	bool WithDraw();
 	bool SendRedPacketTx();
 	bool AcceptRedPacketTx();
-	bool WaitTxConfirmedPackage(string TxHash);
+	bool WaitTxConfirmedPackage(string m_strTxHash);
 	void Initialize();
 	bool SendSpecailRedPacketTx();
 	bool AcceptSpecailRedPacketTx();
+
+ private:
+	int m_nNum;
+	int m_nStep;
+	string m_strTxHash;
+	string m_strAppRegId;
+	string m_strRedHash;
+	string m_strAppAddr;
+	uint64_t m_llSpecailmM;
+	string m_srtRchangeAddr;
 };
+
+
+
+#endif
+

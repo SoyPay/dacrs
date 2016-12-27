@@ -125,17 +125,17 @@ static CVmRunEvn* GetVmRunEvn(lua_State *L)
 }
 
 static bool GetKeyId(const CAccountViewCache &view, vector<unsigned char> &ret,
-		CKeyID &KeyId) {
+		CKeyID &cKeyId) {
 	if (ret.size() == 6) {
 		CRegID reg(ret);
-		KeyId = reg.getKeyID(view);
+		cKeyId = reg.getKeyID(view);
 	} else if (ret.size() == 34) {
 		string addr(ret.begin(), ret.end());
-		KeyId = CKeyID(addr);
+		cKeyId = CKeyID(addr);
 	}else{
 		return false;
 	}
-	if (KeyId.IsEmpty())
+	if (cKeyId.IsEmpty())
 		return false;
 
 	return true;
@@ -880,7 +880,7 @@ static int ExGetAccountPublickeyFunc(lua_State *L) {
 }
 
 /**
- *bool QueryAccountBalance(const unsigned char* const account,Int64* const pBalance)
+ *bool QueryAccountBalance(const unsigned char* const account,ST_INT64* const pBalance)
  * 这个函数式从中间层传了一个参数过来:
  * 1.第一个是 账户id,六个字节
  */
