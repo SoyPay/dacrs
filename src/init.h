@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DACRS_INIT_H
-#define DACRS_INIT_H
+#ifndef DACRS_INIT_H_
+#define DACRS_INIT_H_
 
 #include <string>
 using std::string;
@@ -14,7 +14,7 @@ namespace boost {
     class thread_group;
 };
 
-extern CWallet* pwalletMain;
+extern CWallet* g_pwalletMain;
 
 void StartShutdown();
 bool ShutdownRequested();
@@ -22,12 +22,12 @@ void Shutdown();
 bool AppInit2(boost::thread_group& threadGroup);
 
 /* The help message mode determines what help message to show */
-enum HelpMessageMode
+enum emHelpMessageMode
 {
-    HMM_BITCOIND,
-    HMM_BITCOIN_QT
+    EM_HMM_COIND,
+    EM_HMM_COIN_QT
 };
 
-string HelpMessage(HelpMessageMode mode);
+string HelpMessage(emHelpMessageMode mode);
 
 #endif

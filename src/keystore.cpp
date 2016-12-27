@@ -70,7 +70,7 @@ CKeyCombi::CKeyCombi(const CKey& inkey, int nVersion) {
 	assert(inkey.IsValid());
 	CleanAll();
 	mMainCkey = inkey ;
-	if(FEATURE_BASE == nVersion)
+	if(EM_FEATURE_BASE == nVersion)
 		mMainPKey = mMainCkey.GetPubKey();
 	nCreationTime = GetTime();
 }
@@ -81,7 +81,7 @@ CKeyCombi::CKeyCombi(const CKey& inkey, const CKey& minerKey, int nVersion) {
 	CleanAll();
 	mMinerCkey = minerKey;
 	mMainCkey = inkey ;
-	if(FEATURE_BASE == nVersion) {
+	if(EM_FEATURE_BASE == nVersion) {
 		mMainPKey = mMainCkey.GetPubKey();
 		mMinerPKey = mMinerCkey.GetPubKey();
 	}

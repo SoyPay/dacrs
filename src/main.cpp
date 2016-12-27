@@ -163,7 +163,7 @@ struct CMainSignals {
     // Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible).
     boost::signals2::signal<void (const uint256 &)> UpdatedTransaction;
     // Notifies listeners of a new active block chain.
-    boost::signals2::signal<void (const CBlockLocator &)> SetBestChain;
+    boost::signals2::signal<void (const ST_BlockLocator &)> SetBestChain;
     // Notifies listeners about an inventory item being seen on the network.
     boost::signals2::signal<void (const uint256 &)> Inventory;
     // Tells listeners to broadcast their data.
@@ -450,7 +450,7 @@ CBlockIndex *CChain::SetTip(CBlockIndex *pindex) {
     return pindex;
 }
 
-CBlockLocator CChain::GetLocator(const CBlockIndex *pindex) const {
+ST_BlockLocator CChain::GetLocator(const CBlockIndex *pindex) const {
     int nStep = 1;
     vector<uint256> vHave;
     vHave.reserve(32);
@@ -473,12 +473,12 @@ CBlockLocator CChain::GetLocator(const CBlockIndex *pindex) const {
         if (vHave.size() > 10)
             nStep *= 2;
     }
-    return CBlockLocator(vHave);
+    return ST_BlockLocator(vHave);
 }
 
-CBlockIndex *CChain::FindFork(const CBlockLocator &locator) const {
+CBlockIndex *CChain::FindFork(const ST_BlockLocator &locator) const {
     // Find the first block the caller has in the main chain
-	for (const auto& hash : locator.vHave) {
+	for (const auto& hash : locator.vcHave) {
 		map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
 		if (mi != mapBlockIndex.end()) {
 			CBlockIndex* pindex = (*mi).second;
@@ -490,7 +490,7 @@ CBlockIndex *CChain::FindFork(const CBlockLocator &locator) const {
 }
 
 
-CAccountViewDB *g_pAccountViewDB = NULL;
+CAccountViewDB *pAccountViewDB = NULL;
 CBlockTreeDB *pblocktree = NULL;
 CAccountViewCache *pAccountViewTip = NULL;
 CTransactionDB *pTxCacheDB = NULL;
@@ -673,7 +673,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     string reason;
-    if (SysCfg().NetworkID() == CBaseParams::MAIN && !IsStandardTx(pBaseTx, reason))
+    if (SysCfg().NetworkID() == CBaseParams::EM_MAIN && !IsStandardTx(pBaseTx, reason))
         return state.DoS(0,
                          ERRORMSG("AcceptToMemoryPool : nonstandard transaction: %s", reason),
                          REJECT_NONSTANDARD, reason);
@@ -1735,12 +1735,12 @@ void static UpdateTip(CBlockIndex *pindexNew, const CBlock &block) {
         const CBlockIndex* pindex = chainActive.Tip();
         for (int i = 0; i < 100 && pindex != NULL; i++)
         {
-            if (pindex->nVersion > CBlock::CURRENT_VERSION)
+            if (pindex->nVersion > CBlock::m_sCurrentVersion)
                 ++nUpgraded;
             pindex = pindex->pprev;
         }
         if (nUpgraded > 0)
-            LogPrint("INFO","SetBestChain: %d of last 100 blocks above version %d\n", nUpgraded, (int)CBlock::CURRENT_VERSION);
+            LogPrint("INFO","SetBestChain: %d of last 100 blocks above version %d\n", nUpgraded, (int)CBlock::m_sCurrentVersion);
         if (nUpgraded > 100/2)
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
             strMiscWarning = _("Warning: This version is obsolete, upgrade required!");
@@ -2183,16 +2183,16 @@ bool CheckBlockProofWorkWithCoinDay(const CBlock& block, CBlockIndex *pPreBlockI
 	std::shared_ptr<CTransactionDBCache> pForkTxCache;
 	std::shared_ptr<CScriptDBViewCache> pForkScriptDBCache;
 
-	std::shared_ptr<CAccountViewCache> pAcctViewCache = std::make_shared<CAccountViewCache>(*g_pAccountViewDB, true);
-	pAcctViewCache->cacheAccounts = pAccountViewTip->cacheAccounts;
-	pAcctViewCache->cacheKeyIds = pAccountViewTip->cacheKeyIds;
-	pAcctViewCache->hashBlock = pAccountViewTip->hashBlock;
+	std::shared_ptr<CAccountViewCache> pAcctViewCache = std::make_shared<CAccountViewCache>(*pAccountViewDB, true);
+	pAcctViewCache->m_mapCacheAccounts = pAccountViewTip->m_mapCacheAccounts;
+	pAcctViewCache->m_mapCacheKeyIds = pAccountViewTip->m_mapCacheKeyIds;
+	pAcctViewCache->m_cHashBlock = pAccountViewTip->m_cHashBlock;
 
 	std::shared_ptr<CTransactionDBCache> pTxCache = std::make_shared<CTransactionDBCache>(*pTxCacheDB, true);
 	pTxCache->SetCacheMap(pTxCacheTip->GetCacheMap());
 
 	std::shared_ptr<CScriptDBViewCache> pScriptDBCache = std::make_shared<CScriptDBViewCache>(*pScriptDB, true);
-	pScriptDBCache->mapDatas = pScriptDBTip->mapDatas;
+	pScriptDBCache->m_mapDatas = pScriptDBTip->m_mapDatas;
 
 	uint256 preBlockHash;
 	bool bFindForkChainTip(false);
@@ -2388,7 +2388,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, CAccountViewCache 
         return state.DoS(100, ERRORMSG("CheckBlock() : size limits failed"),
                          REJECT_INVALID, "bad-blk-length");
 
-    if((block.GetHeight() >= nUpdateBlockVersionHeight) && (block.GetVersion() != CBlockHeader::CURRENT_VERSION)) {
+    if((block.GetHeight() >= nUpdateBlockVersionHeight) && (block.GetVersion() != CBlockHeader::m_sCurrentVersion)) {
     	return state.Invalid(ERRORMSG("CheckBlock() : block version must be set 3"),
     	                             REJECT_INVALID, "block-version-error");
     }
@@ -2572,8 +2572,8 @@ void PushGetBlocks(CNode* pnode, CBlockIndex* pindexBegin, uint256 hashEnd)
     }
     pnode->pindexLastGetBlocksBegin = pindexBegin;
     pnode->hashLastGetBlocksEnd = hashEnd;
-    CBlockLocator blockLocator = chainActive.GetLocator(pindexBegin);
-	for (auto & blockHash : blockLocator.vHave) {
+    ST_BlockLocator blockLocator = chainActive.GetLocator(pindexBegin);
+	for (auto & blockHash : blockLocator.vcHave) {
 		LogPrint("net", "GetLocator block hash:%s\n", blockHash.GetHex());
 	}
     pnode->PushMessage("getblocks", blockLocator, hashEnd);
@@ -3440,12 +3440,12 @@ string GetWarnings(string strFor)
 
     // Alerts
     {
-        LOCK(cs_mapAlerts);
-		for (auto& item : mapAlerts) {
+        LOCK(g_cs_mapAlerts);
+		for (auto& item : g_mapAlerts) {
 			const CAlert& alert = item.second;
-			if (alert.AppliesToMe() && alert.nPriority > nPriority) {
-				nPriority = alert.nPriority;
-				strStatusBar = alert.strStatusBar;
+			if (alert.AppliesToMe() && alert.m_nPriority > nPriority) {
+				nPriority = alert.m_nPriority;
+				strStatusBar = alert.m_strStatusBar;
 			}
 		}
     }
@@ -3694,7 +3694,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
 
         // Disconnect if we connected to ourself
-        if (nNonce == nLocalHostNonce && nNonce > 1)
+        if (nNonce == g_ullLocalHostNonce && nNonce > 1)
         {
             LogPrint("INFO","connected to self at %s, disconnecting\n", pfrom->addr.ToString());
             pfrom->fDisconnect = true;
@@ -3739,8 +3739,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         // Relay alerts
         {
-            LOCK(cs_mapAlerts);
-            for(const auto& item:mapAlerts)
+            LOCK(g_cs_mapAlerts);
+            for(const auto& item:g_mapAlerts)
                 item.second.RelayTo(pfrom);
         }
 
@@ -3845,7 +3845,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         vector<CInv> vInv;
         vRecv >> vInv;
-        if (vInv.size() > MAX_INV_SZ)
+        if (vInv.size() > g_sMaxInvSz)
         {
             Misbehaving(pfrom->GetId(), 20);
             return ERRORMSG("message inv size() = %u", vInv.size());
@@ -3891,7 +3891,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     {
         vector<CInv> vInv;
         vRecv >> vInv;
-        if (vInv.size() > MAX_INV_SZ)
+        if (vInv.size() > g_sMaxInvSz)
         {
             Misbehaving(pfrom->GetId(), 20);
             return ERRORMSG("message getdata size() = %u", vInv.size());
@@ -3910,7 +3910,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "getblocks")
     {
-        CBlockLocator locator;
+    	ST_BlockLocator locator;
         uint256 hashStop;
         vRecv >> locator >> hashStop;
 
@@ -3963,7 +3963,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
     else if (strCommand == "getheaders")
     {
-        CBlockLocator locator;
+    	ST_BlockLocator locator;
         uint256 hashStop;
         vRecv >> locator >> hashStop;
 
@@ -4102,7 +4102,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 					(!pfrom->pfilter))
 				vInv.push_back(inv);
 
-			if (vInv.size() == MAX_INV_SZ) {
+			if (vInv.size() == g_sMaxInvSz) {
 				pfrom->PushMessage("inv", vInv);
 				vInv.clear();
 			}
@@ -4415,14 +4415,14 @@ bool ProcessMessages(CNode* pfrom)
         it++;
 
         // Scan for message start
-        if (memcmp(msg.hdr.pchMessageStart, SysCfg().MessageStart(), MESSAGE_START_SIZE) != 0) {
+        if (memcmp(msg.m_cMessageHeader.pchMessageStart, SysCfg().MessageStart(), MESSAGE_START_SIZE) != 0) {
             LogPrint("INFO","\n\nPROCESSMESSAGE: INVALID MESSAGESTART\n\n");
             fOk = false;
             break;
         }
 
         // Read header
-        CMessageHeader& hdr = msg.hdr;
+        CMessageHeader& hdr = msg.m_cMessageHeader;
         if (!hdr.IsValid())
         {
             LogPrint("INFO","\n\nPROCESSMESSAGE: ERRORS IN HEADER %s\n\n\n", hdr.GetCommand());
@@ -4434,7 +4434,7 @@ bool ProcessMessages(CNode* pfrom)
         unsigned int nMessageSize = hdr.nMessageSize;
 
         // Checksum
-        CDataStream& vRecv = msg.vRecv;
+        CDataStream& vRecv = msg.m_cDSRecv;
         uint256 hash = Hash(vRecv.begin(), vRecv.begin() + nMessageSize);
         unsigned int nChecksum = 0;
         memcpy(&nChecksum, &hash, sizeof(nChecksum));

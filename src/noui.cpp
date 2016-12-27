@@ -110,13 +110,13 @@ static bool noui_SyncTx()
 	AddMessageToDeque(write_string(Value(std::move(objMsg)),true));
 
 	while(pStartBlockIndex != NULL) {
-		if((pwalletMain->mapInBlockTx).count(pStartBlockIndex->GetBlockHash()) > 0)
+		if((g_pwalletMain->m_mapInBlockTx).count(pStartBlockIndex->GetBlockHash()) > 0)
 		{
 
 			Object objTx;
-			CAccountTx acctTx= pwalletMain->mapInBlockTx[pStartBlockIndex->GetBlockHash()];
-			map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx = acctTx.mapAccountTx.begin();
-			for(;iterTx != acctTx.mapAccountTx.end(); ++iterTx) {
+			CAccountTx acctTx= g_pwalletMain->m_mapInBlockTx[pStartBlockIndex->GetBlockHash()];
+			map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx = acctTx.m_mapAccountTx.begin();
+			for(;iterTx != acctTx.m_mapAccountTx.end(); ++iterTx) {
 				objTx = iterTx->second->ToJSON(*pAccountViewTip);
 				objTx.push_back(Pair("blockhash", iterTx->first.GetHex()));
 				objTx.push_back(Pair("confirmHeight", pStartBlockIndex->nHeight));
@@ -153,8 +153,8 @@ static bool noui_SyncTx()
 		}
 	}
 	*/
-	map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx =  pwalletMain->UnConfirmTx.begin();
-	for(; iterTx != pwalletMain->UnConfirmTx.end(); ++iterTx)
+	map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx =  g_pwalletMain->m_mapUnConfirmTx.begin();
+	for(; iterTx != g_pwalletMain->m_mapUnConfirmTx.end(); ++iterTx)
 	{
 		Object objTx = iterTx->second.get()->ToJSON(*pAccountViewTip);
 		arrayObj.push_back(objTx);
@@ -171,7 +171,7 @@ static void noui_InitMessage(const std::string &message)
 {
 	if(message =="initialize end")
 	{
-		CUIServer::IsInitalEnd = true;
+		CUIServer::m_bIsInitalEnd = true;
 	}
 	if("Sync Tx" == message)
 	{

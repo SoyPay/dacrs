@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DACRS_MRUSET_H
-#define DACRS_MRUSET_H
+#ifndef DACRS_MRUSET_H_
+#define DACRS_MRUSET_H_
 
 #include <deque>
 #include <set>
@@ -12,19 +12,14 @@ using namespace std;
 /** STL-like set container that only keeps the most recent N elements. */
 template <typename T> class mruset
 {
-public:
+ public:
     typedef T key_type;
     typedef T value_type;
     typedef typename set<T>::iterator iterator;
     typedef typename set<T>::const_iterator const_iterator;
     typedef typename set<T>::size_type size_type;
 
-protected:
-	std::set<T> set;
-	std::deque<T> queue;
-	size_type nMaxSize;
-
-public:
+ public:
     mruset(size_type nMaxSizeIn = 0) { nMaxSize = nMaxSizeIn; }
     iterator begin() const { return set.begin(); }
     iterator end() const { return set.end(); }
@@ -62,6 +57,11 @@ public:
         nMaxSize = s;
         return nMaxSize;
     }
+
+ protected:
+ 	std::set<T> set;
+ 	std::deque<T> queue;
+ 	size_type nMaxSize;
 };
 
 #endif

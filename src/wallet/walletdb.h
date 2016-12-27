@@ -2,9 +2,8 @@
 // Copyright (c) 2009-2013 The Dacrs developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef DACRS_WALLETDB_H
-#define DACRS_WALLETDB_H
-
+#ifndef DACRS_WALLET_WALLETDB_H
+#define DACRS_WALLET_WALLETDB_H
 
 #include "key.h"
 
@@ -18,7 +17,7 @@
 
 class CAccountInfo;
 class CAccountingEntry;
-struct CBlockLocator;
+struct ST_BlockLocator;
 class CKeyPool;
 class CMasterKey;
 class CWallet;
@@ -29,14 +28,13 @@ class CAccountTx;
 class CKeyCombi;
 
 /** Error statuses for the wallet database */
-enum DBErrors
-{
-    DB_LOAD_OK,
-    DB_CORRUPT,
-    DB_NONCRITICAL_ERROR,
-    DB_TOO_NEW,
-    DB_LOAD_FAIL,
-    DB_NEED_REWRITE
+enum emDBErrors {
+    EM_DB_LOAD_OK,
+    EM_DB_CORRUPT,
+    EM_DB_NONCRITICAL_ERROR,
+    EM_DB_TOO_NEW,
+    EM_DB_LOAD_FAIL,
+    EM_DB_NEED_REWRITE
 };
 
 /*class CKeyMetadata
@@ -72,44 +70,40 @@ public:
 
 
 /** Access to the wallet database (wallet.dat) */
-class CWalletDB : public CDB
-{
-
-public:
-	CWalletDB(const std::string& strFilename, const char* pszMode = "r+", bool fFlushOnClose = true) : CDB(strFilename, pszMode, fFlushOnClose)
-	{
+class CWalletDB: public CDB {
+ public:
+	CWalletDB(const std::string& strFilename, const char* pszMode = "r+", bool fFlushOnClose = true) :
+			CDB(strFilename, pszMode, fFlushOnClose) {
 	}
-private:
-    CWalletDB(const CWalletDB&);
-    void operator=(const CWalletDB&);
+
 public:
-    bool WriteCryptedKey(const CPubKey& pubkey, const std::vector<unsigned char>& vchCryptedSecret);
-    bool WriteKeyStoreValue(const CKeyID &keyId, const CKeyCombi& KeyStoreValue, int nVersion);
-    bool EraseKeyStoreValue(const CKeyID &keyId);
-    bool WriteBlockTx(const uint256 &hash, const CAccountTx& atx);
-    bool EraseBlockTx(const uint256& hash);
-    bool WriteUnComFirmedTx(const uint256 &hash, const std::shared_ptr<CBaseTransaction> &tx);
-    bool EraseUnComFirmedTx(const uint256& hash);
-    bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
-    bool EraseMasterKey(unsigned int nID);
-    bool WriteVersion(const int version) ;
-    bool WriteMinVersion(const int version) ;
-    int GetMinVersion(void);
+	bool WriteCryptedKey(const CPubKey& pubkey, const std::vector<unsigned char>& vchCryptedSecret);
+	bool WriteKeyStoreValue(const CKeyID &keyId, const CKeyCombi& KeyStoreValue, int nVersion);
+	bool EraseKeyStoreValue(const CKeyID &keyId);
+	bool WriteBlockTx(const uint256 &hash, const CAccountTx& atx);
+	bool EraseBlockTx(const uint256& hash);
+	bool WriteUnComFirmedTx(const uint256 &hash, const std::shared_ptr<CBaseTransaction> &tx);
+	bool EraseUnComFirmedTx(const uint256& hash);
+	bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
+	bool EraseMasterKey(unsigned int nID);
+	bool WriteVersion(const int version);
+	bool WriteMinVersion(const int version);
+	int  GetMinVersion(void);
+	int  GetVersion(void);
 
+	emDBErrors LoadWallet(CWallet* pwallet);
+	static unsigned int g_unWalletDBUpdated;
+	static bool Recover(CDBEnv& dbenv, string filename, bool fOnlyKeys);
+	static bool Recover(CDBEnv& dbenv, string filename);
 
-
-    int GetVersion(void);
-
-
-    DBErrors LoadWallet(CWallet* pwallet);
-    static unsigned int nWalletDBUpdated ;
-    static bool Recover(CDBEnv& dbenv, string filename, bool fOnlyKeys);
-    static bool Recover(CDBEnv& dbenv, string filename);
+private:
+	CWalletDB(const CWalletDB&);
+	void operator=(const CWalletDB&);
 };
 
 bool BackupWallet(const CWallet& wallet, const string& strDest);
 
-extern void ThreadFlushWalletDB(const string& strFile);
+extern void ThreadFlushWalletDB(const string& kstrWalletFile);
 
 extern void ThreadRelayTx(CWallet* pWallet);
-#endif // DACRS_WALLETDB_H
+#endif // DACRS_WALLET_WALLETDB_H

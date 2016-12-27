@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DACRS_LEVELDBWRAPPER_H
-#define DACRS_LEVELDBWRAPPER_H
+#ifndef DACRS_LEVELDBWRAPPER_H_
+#define DACRS_LEVELDBWRAPPER_H_
 
 #include "serialize.h"
 #include "util.h"
@@ -14,119 +14,98 @@
 #include <leveldb/write_batch.h>
 #include "json/json_spirit_value.h"
 using namespace json_spirit;
-class leveldb_error : public runtime_error
-{
-public:
-    leveldb_error(const string &msg) : runtime_error(msg) {}
+
+class leveldb_error: public runtime_error {
+ public:
+	leveldb_error(const string &msg) :
+			runtime_error(msg) {
+	}
 };
 
 void HandleError(const leveldb::Status &status) throw(leveldb_error);
 
 // Batch of changes queued to be written to a CLevelDBWrapper
-class CLevelDBBatch
-{
-    friend class CLevelDBWrapper;
+class CLevelDBBatch {
+ public:
+	template<typename K, typename V> void Write(const K& key, const V& value) {
+		leveldb::Slice cSliceKey;
+		CDataStream cDSKey(SER_DISK, CLIENT_VERSION);
+		cDSKey.reserve(cDSKey.GetSerializeSize(key));
+		cDSKey << key;
 
-private:
-    leveldb::WriteBatch batch;
-
-public:
-    template<typename K, typename V> void Write(const K& key, const V& value) {
-    	leveldb::Slice slKey;
-    	CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        ssKey.reserve(ssKey.GetSerializeSize(key));
-        ssKey << key;
 		if (typeid(key) == typeid(std::vector<unsigned char>)) {
-			CDataStream ssKeyTemp(ssKey.begin(), ssKey.end(), SER_DISK, CLIENT_VERSION);
-			vector<unsigned char> vKey;
-			ssKeyTemp >> vKey;
- 			int iStartPos = 0;
-			int nVKeySize = vKey.size();
-			iStartPos = GetSizeOfCompactSize(nVKeySize);
-			slKey = leveldb::Slice(&ssKey[iStartPos], ssKey.size() - iStartPos);
+			CDataStream cDSKeyTemp(cDSKey.begin(), cDSKey.end(), SER_DISK, CLIENT_VERSION);
+			vector<unsigned char> vchKey;
+			cDSKeyTemp >> vchKey;
+			int nStartPos = 0;
+			int nVKeySize = vchKey.size();
+			nStartPos = GetSizeOfCompactSize(nVKeySize);
+			cSliceKey = leveldb::Slice(&cDSKey[nStartPos], cDSKey.size() - nStartPos);
 		} else {
-			slKey = leveldb::Slice(&ssKey[0], ssKey.size());
+			cSliceKey = leveldb::Slice(&cDSKey[0], cDSKey.size());
 		}
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        ssValue.reserve(ssValue.GetSerializeSize(value));
-        ssValue << value;
-        leveldb::Slice slValue(&ssValue[0], ssValue.size());
-        batch.Put(slKey, slValue);
-    }
+		CDataStream cDSValue(SER_DISK, CLIENT_VERSION);
+		cDSValue.reserve(cDSValue.GetSerializeSize(value));
+		cDSValue << value;
+		leveldb::Slice slValue(&cDSValue[0], cDSValue.size());
+		m_Batch.Put(cSliceKey, slValue);
+	}
 
-    template<typename K> void Erase(const K& key) {
-    	leveldb::Slice slKey;
-    	CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        ssKey.reserve(ssKey.GetSerializeSize(key));
-        ssKey << key;
+	template<typename K> void Erase(const K& key) {
+		leveldb::Slice cSliceKey;
+		CDataStream cDSKey(SER_DISK, CLIENT_VERSION);
+		cDSKey.reserve(cDSKey.GetSerializeSize(key));
+		cDSKey << key;
 		if (typeid(key) == typeid(std::vector<unsigned char>)) {
-			CDataStream ssKeyTemp(ssKey.begin(), ssKey.end(), SER_DISK, CLIENT_VERSION);
-			vector<unsigned char> vKey;
-			ssKeyTemp >> vKey;
-			int iStartPos = 0;
-			int nVKeySize = vKey.size();
-			iStartPos = GetSizeOfCompactSize(nVKeySize);
-			slKey = leveldb::Slice(&ssKey[iStartPos], ssKey.size() - iStartPos);
+			CDataStream cDSKeyTemp(cDSKey.begin(), cDSKey.end(), SER_DISK, CLIENT_VERSION);
+			vector<unsigned char> vchKey;
+			cDSKeyTemp >> vchKey;
+			int nStartPos = 0;
+			int nVKeySize = vchKey.size();
+			nStartPos = GetSizeOfCompactSize(nVKeySize);
+			cSliceKey = leveldb::Slice(&cDSKey[nStartPos], cDSKey.size() - nStartPos);
 		} else {
-			slKey = leveldb::Slice(&ssKey[0], ssKey.size());
+			cSliceKey = leveldb::Slice(&cDSKey[0], cDSKey.size());
 		}
 
-        batch.Delete(slKey);
-    }
+		m_Batch.Delete(cSliceKey);
+	}
+	friend class CLevelDBWrapper;
+
+ private:
+ 	leveldb::WriteBatch m_Batch;
 };
 
-class CLevelDBWrapper
-{
-private:
-    // custom environment this database is using (may be NULL in case of default environment)
-    leveldb::Env *penv;
-
-    // database options used
-    leveldb::Options options;
-
-    // options used when reading from the database
-    leveldb::ReadOptions readoptions;
-
-    // options used when iterating over values of the database
-    leveldb::ReadOptions iteroptions;
-
-    // options used when writing to the database
-    leveldb::WriteOptions writeoptions;
-
-    // options used when sync writing to the database
-    leveldb::WriteOptions syncoptions;
-
-    // the database itself
-    leveldb::DB *pdb;
-
-public:
-    CLevelDBWrapper(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+class CLevelDBWrapper {
+ public:
+    CLevelDBWrapper(const boost::filesystem::path &path, size_t unCacheSize, bool bMemory = false, bool bWipe = false);
     ~CLevelDBWrapper();
 
     template<typename K, typename V> bool Read(const K& key, V& value) throw(leveldb_error) {
-    	leveldb::Slice slKey;
-    	CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+    	leveldb::Slice cSliceKey;
+    	CDataStream cDSKey(SER_DISK, CLIENT_VERSION);
 
-		ssKey.reserve(ssKey.GetSerializeSize(key));
-		ssKey << key;
-    	if(typeid(key) == typeid(std::vector<unsigned char>)) {
-    		CDataStream ssKeyTemp(ssKey.begin(), ssKey.end(), SER_DISK, CLIENT_VERSION);
-    		vector<unsigned char> vKey;
-    		ssKeyTemp >> vKey;
-    		int iStartPos = 0;
-    		int nVKeySize = vKey.size();
-			iStartPos = GetSizeOfCompactSize(nVKeySize);
-    		slKey = leveldb::Slice(&ssKey[iStartPos], ssKey.size()-iStartPos);
-        }else{
-        	slKey = leveldb::Slice(&ssKey[0], ssKey.size());
-        }
+		cDSKey.reserve(cDSKey.GetSerializeSize(key));
+		cDSKey << key;
+		if (typeid(key) == typeid(std::vector<unsigned char>)) {
+			CDataStream cDSKeyTemp(cDSKey.begin(), cDSKey.end(), SER_DISK, CLIENT_VERSION);
+			vector<unsigned char> vchKey;
+			cDSKeyTemp >> vchKey;
+			int nStartPos = 0;
+			int nVKeySize = vchKey.size();
+			nStartPos = GetSizeOfCompactSize(nVKeySize);
+			cSliceKey = leveldb::Slice(&cDSKey[nStartPos], cDSKey.size() - nStartPos);
+		} else {
+			cSliceKey = leveldb::Slice(&cDSKey[0], cDSKey.size());
+		}
         string strValue;
-        leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
-        if (!status.ok()) {
-            if (status.IsNotFound())
-                return false;
-            LogPrint("INFO","LevelDB read failure: %s\n", status.ToString().c_str());
-            HandleError(status);
+        leveldb::Status cStatus = m_pDb->Get(m_tReadoptions, cSliceKey, &strValue);
+        if (!cStatus.ok()) {
+            if (cStatus.IsNotFound()) {
+            	return false;
+            }
+            LogPrint("INFO","LevelDB read failure: %s\n", cStatus.ToString().c_str());
+            HandleError(cStatus);
         }
         try {
             CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
@@ -137,47 +116,48 @@ public:
         return true;
     }
 
-    template<typename K, typename V> bool Write(const K& key, const V& value, bool fSync = false) throw(leveldb_error) {
-        CLevelDBBatch batch;
-        batch.Write(key, value);
-        return WriteBatch(batch, fSync);
+    template<typename K, typename V> bool Write(const K& key, const V& value, bool bSync = false) throw(leveldb_error) {
+        CLevelDBBatch cBatch;
+        cBatch.Write(key, value);
+        return WriteBatch(cBatch, bSync);
     }
 
     template<typename K> bool Exists(const K& key) throw(leveldb_error) {
-    	leveldb::Slice slKey;
-    	CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        ssKey.reserve(ssKey.GetSerializeSize(key));
-        ssKey << key;
+    	leveldb::Slice cSliceKey;
+    	CDataStream cDSKey(SER_DISK, CLIENT_VERSION);
+        cDSKey.reserve(cDSKey.GetSerializeSize(key));
+        cDSKey << key;
 		if (typeid(key) == typeid(std::vector<unsigned char>)) {
-			CDataStream ssKeyTemp(ssKey.begin(), ssKey.end(), SER_DISK, CLIENT_VERSION);
-			vector<unsigned char> vKey;
-			ssKeyTemp >> vKey;
-			int iStartPos = 0;
-			int nVKeySize = vKey.size();
-			iStartPos = GetSizeOfCompactSize(nVKeySize);
-			slKey = leveldb::Slice(&ssKey[iStartPos], ssKey.size() - iStartPos);
+			CDataStream cDSKeyTemp(cDSKey.begin(), cDSKey.end(), SER_DISK, CLIENT_VERSION);
+			vector<unsigned char> vchKey;
+			cDSKeyTemp >> vchKey;
+			int nStartPos = 0;
+			int nVKeySize = vchKey.size();
+			nStartPos = GetSizeOfCompactSize(nVKeySize);
+			cSliceKey = leveldb::Slice(&cDSKey[nStartPos], cDSKey.size() - nStartPos);
 		} else {
-			slKey = leveldb::Slice(&ssKey[0], ssKey.size());
+			cSliceKey = leveldb::Slice(&cDSKey[0], cDSKey.size());
 		}
 
         string strValue;
-        leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
-        if (!status.ok()) {
-            if (status.IsNotFound())
-                return false;
-            LogPrint("INFO","LevelDB read failure: %s\n", status.ToString().c_str());
-            HandleError(status);
+        leveldb::Status nStatus = m_pDb->Get(m_tReadoptions, cSliceKey, &strValue);
+        if (!nStatus.ok()) {
+            if (nStatus.IsNotFound()) {
+            	return false;
+            }
+            LogPrint("INFO","LevelDB read failure: %s\n", nStatus.ToString().c_str());
+            HandleError(nStatus);
         }
         return true;
     }
 
-    template<typename K> bool Erase(const K& key, bool fSync = false) throw(leveldb_error) {
-        CLevelDBBatch batch;
-        batch.Erase(key);
-        return WriteBatch(batch, fSync);
+    template<typename K> bool Erase(const K& key, bool bSync = false) throw(leveldb_error) {
+        CLevelDBBatch cBatch;
+        cBatch.Erase(key);
+        return WriteBatch(cBatch, bSync);
     }
 
-    bool WriteBatch(CLevelDBBatch &batch, bool fSync = false) throw(leveldb_error);
+    bool WriteBatch(CLevelDBBatch &cBatch, bool bSync = false) throw(leveldb_error);
 
     // not available for LevelDB; provide for compatibility with BDB
     bool Flush() {
@@ -185,16 +165,39 @@ public:
     }
 
     bool Sync() throw(leveldb_error) {
-        CLevelDBBatch batch;
-        return WriteBatch(batch, true);
+        CLevelDBBatch cBatch;
+        return WriteBatch(cBatch, true);
     }
 
     // not exactly clean encapsulation, but it's easiest for now
     leveldb::Iterator *NewIterator() {
-        return pdb->NewIterator(iteroptions);
+        return m_pDb->NewIterator(m_tIteroptions);
     }
+
     int64_t GetDbCount();
    // Object ToJosnObj();
+
+ private:
+     // custom environment this database is using (may be NULL in case of default environment)
+     leveldb::Env *m_pEnv;
+
+     // database options used
+     leveldb::Options m_tOptions;
+
+     // options used when reading from the database
+     leveldb::ReadOptions m_tReadoptions;
+
+     // options used when iterating over values of the database
+     leveldb::ReadOptions m_tIteroptions;
+
+     // options used when writing to the database
+     leveldb::WriteOptions m_tWriteoptions;
+
+     // options used when sync writing to the database
+     leveldb::WriteOptions m_tSyncoptions;
+
+     // the database itself
+     leveldb::DB *m_pDb;
 };
 
-#endif // DACRS_LEVELDBWRAPPER_H
+#endif // DACRS_LEVELDBWRAPPER_H_
