@@ -30,8 +30,8 @@ Value getconnectioncount(const Array& params, bool bHelp)
             + HelpExampleRpc("getconnectioncount", "")
         );
     }
-    LOCK(cs_vNodes);
-    return (int)vNodes.size();
+    LOCK(g_cs_vNodes);
+    return (int)g_vNodes.size();
 }
 
 Value ping(const Array& params, bool bHelp)
@@ -46,7 +46,7 @@ Value ping(const Array& params, bool bHelp)
             + HelpExampleCli("ping", "")
             + HelpExampleRpc("ping", "")
         );
-
+    }
     // Request that each node send a ping during next message processing pass
     LOCK(g_cs_vNodes);
     for (auto pNode : g_vNodes) {
@@ -59,9 +59,9 @@ Value ping(const Array& params, bool bHelp)
 static void CopyNodeStats(vector<CNodeStats>& vstats)
 {
     vstats.clear();
-    LOCK(cs_vNodes);
-    vstats.reserve(vNodes.size());
-    for(auto pnode : vNodes) {
+    LOCK(g_cs_vNodes);
+    vstats.reserve(g_vNodes.size());
+    for(auto pnode : g_vNodes) {
         CNodeStats stats;
         pnode->copyStats(stats);
         vstats.push_back(stats);
@@ -123,7 +123,7 @@ Value getpeerinfo(const Array& params, bool bHelp)
 		obj.push_back(Pair("conntime", stats.m_llTimeConnected));
 		obj.push_back(Pair("pingtime", stats.m_dPingTime));
 		if (stats.m_dPingWait > 0.0) {
-			obj.push_back(Pair("m_dPingWait", stats.m_dPingWait));
+			obj.push_back(Pair("pingwait", stats.m_dPingWait));
 		}
 		obj.push_back(Pair("version", stats.m_nVersion));
 		// Use the sanitized form of subver here, to avoid tricksy remote peers from
@@ -142,6 +142,7 @@ Value getpeerinfo(const Array& params, bool bHelp)
 
 	return ret;
 }
+
 
 Value addnode(const Array& params, bool bHelp)
 {
@@ -172,8 +173,8 @@ Value addnode(const Array& params, bool bHelp)
 		return Value::null;
 	}
 
-    LOCK(cs_vAddedNodes);
-    vector<string>::iterator it = vAddedNodes.begin();
+    LOCK(g_cs_vAddedNodes);
+    vector<string>::iterator it = g_vAddedNodes.begin();
 	for (; it != g_vAddedNodes.end(); it++) {
 		if (strNode == *it) {
 			break;

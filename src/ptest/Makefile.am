@@ -23,7 +23,7 @@ dacrs_ptest_LDADD = $(LIBBITCOIN_SERVER) \
 dacrs_ptest_LDADD += $(BDB_LIBS)
 
 dacrs_ptest_SOURCES = \
-  P_test.cpp \
+  p_test.cpp \
   main_tests.cpp \
   UpdateAccount_tests.cpp \
   mining_tests.cpp	\
