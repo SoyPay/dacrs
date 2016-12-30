@@ -12,21 +12,21 @@
 // client versioning
 //
 
-static const int CLIENT_VERSION =
+static const int g_sClientVersion =
                            1000000 * CLIENT_VERSION_MAJOR
                          +   10000 * CLIENT_VERSION_MINOR
                          +     100 * CLIENT_VERSION_REVISION
                          +       1 * CLIENT_VERSION_BUILD;
 
 extern const std::string CLIENT_NAME;
-extern const std::string CLIENT_BUILD;
-extern const std::string CLIENT_DATE;
+extern const std::string g_strClientBuild;
+extern const std::string g_strClientDate;
 
 //
 // network protocol versioning
 //
 
-static const int PROTOCOL_VERSION = 10007;
+static const int g_sProtocolVersion = 10007;
 
 // intial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 10001;
@@ -45,7 +45,7 @@ static const int MIN_PEER_PROTO_VERSION = 10006;
 // BIP 0031, pong message, is enabled for all versions AFTER this one
 //static const int BIP0031_VERSION = 60000;
 
-// "mempool" command, enhanced "getdata" behavior starts with this version:
+// "g_cTxMemPool" command, enhanced "getdata" behavior starts with this version:
 //static const int MEMPOOL_GD_VERSION = 60002;
 
 #endif

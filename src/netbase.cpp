@@ -29,7 +29,7 @@ static proxyType proxyInfo[NET_MAX];
 static proxyType nameproxyInfo;
 static CCriticalSection cs_proxyInfos;
 //int nConnectTimeout = 5000;
-bool fNameLookup = false;
+bool g_bNameLookup = false;
 
 static const unsigned char pchIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
 
@@ -518,7 +518,7 @@ bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest
     proxyType nameproxy;
     GetNameProxy(nameproxy);
 
-    CService addrResolved(CNetAddr(strDest, fNameLookup && !nameproxy.second), port);
+    CService addrResolved(CNetAddr(strDest, g_bNameLookup && !nameproxy.second), port);
     if (addrResolved.IsValid()) {
         addr = addrResolved;
         return ConnectSocket(addr, hSocketRet, nTimeout);

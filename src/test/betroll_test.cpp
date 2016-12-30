@@ -15,7 +15,7 @@ using namespace std;
 #define random(x) (rand()%x)
 /*----The Length of This Array is 5843 Byte.----*/
 
-unsigned char TempArray[] = {
+unsigned char g_uchTempArray[] = {
 
 0x02, 0x00, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0xFB, 0x00, 0x00, 0x00,
 
@@ -789,7 +789,7 @@ unsigned char TempArray[] = {
 //	vscript.rule.vpreOutHeihgt = 100;
 //
 //	vector_unsigned_char vpscript;
-//	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
+//	CDataStream scriptData(SER_DISK, g_sClientVersion);
 //	scriptData << vscript;
 //	vpscript.assign(scriptData.begin(),scriptData.end());
 //
@@ -830,7 +830,7 @@ unsigned char TempArray[] = {
 //	betmoey = 51;
 //
 //	sprintf((char*) pcontact.money, "%d0000000", betmoey);
-//	CDataStream VmData(SER_DISK, CLIENT_VERSION);
+//	CDataStream VmData(SER_DISK, g_sClientVersion);
 //	VmData << pcontact;
 //	std::vector<unsigned char> scriptid;
 //
@@ -866,7 +866,7 @@ unsigned char TempArray[] = {
 //	int64_t bresult;
 //	int64_t betm;
 //	CTxBetRollScript() :
-//			view(*pAccountViewTip, true) {
+//			view(*g_pAccountViewTip, true) {
 //		tx = std::make_shared < CSecureTransaction > (CSecureTransaction());
 //		A2 = std::make_shared < CAppealTransaction > (CAppealTransaction());
 //		B2 = std::make_shared < CAppealTransaction > (CAppealTransaction());
@@ -1080,7 +1080,7 @@ unsigned char TempArray[] = {
 //}
 //BOOST_FIXTURE_TEST_CASE(betRoll_print,CTxBetRollScript)
 //{
-//	CDataStream VmData(SER_DISK, CLIENT_VERSION);
+//	CDataStream VmData(SER_DISK, g_sClientVersion);
 //	VmData << vscript;
 //	string strOutpud = "script:" + HexStr(VmData.str())+"\r\n"
 //	+"first:" +HexStr(tx.get()->vContract)+"\r\n"

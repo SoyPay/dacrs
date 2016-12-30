@@ -83,22 +83,22 @@ const static int g_snFrozenHeight = 100;
 
 const static int g_snMatureHeight = 100;
 
-struct AccState {
+struct ST_ACC_STATE {
 	int64_t lldUnmatureMoney;
 	int64_t lldFreeMoney;
 	int64_t lldFrozenMoney;
-	AccState() {
+	ST_ACC_STATE() {
 		lldUnmatureMoney = 0;
 		lldFreeMoney = 0;
 		lldFrozenMoney = 0;
 	}
-	AccState(int64_t a, int64_t b, int64_t c) {
+	ST_ACC_STATE(int64_t a, int64_t b, int64_t c) {
 		lldUnmatureMoney = a;
 		lldFreeMoney = b;
 		lldFrozenMoney = c;
 	}
 
-	bool operator==(AccState &a) {
+	bool operator==(ST_ACC_STATE &a) {
 		if (lldUnmatureMoney == a.lldUnmatureMoney && lldFreeMoney == a.lldFreeMoney
 				&& lldFrozenMoney == a.lldFrozenMoney) {
 			return true;
@@ -106,14 +106,14 @@ struct AccState {
 		return false;
 	}
 
-	bool SumEqual(AccState &a) {
+	bool SumEqual(ST_ACC_STATE &a) {
 		int64_t l = lldUnmatureMoney + lldFreeMoney + lldFrozenMoney;
 		int64_t r = a.lldUnmatureMoney + a.lldFreeMoney + a.lldFrozenMoney;
 
 		return l == r;
 	}
 
-	AccState& operator+=(AccState &a) {
+	ST_ACC_STATE& operator+=(ST_ACC_STATE &a) {
 		lldUnmatureMoney += a.lldUnmatureMoney;
 		lldFreeMoney += a.lldFreeMoney;
 		lldFrozenMoney += a.lldFrozenMoney;
@@ -121,12 +121,12 @@ struct AccState {
 	}
 };
 
-struct AccOperLog {
-	std::map<int, AccState> mapAccState;
-	AccOperLog() {
+struct ST_ACC_OPER_LOG {
+	std::map<int, ST_ACC_STATE> mapAccState;
+	ST_ACC_OPER_LOG() {
 		mapAccState.clear();
 	}
-	bool Add(int &nHeight, AccState &accstate) {
+	bool Add(int &nHeight, ST_ACC_STATE &accstate) {
 		mapAccState[nHeight] = accstate;
 		return true;
 	}
@@ -148,8 +148,8 @@ struct AccOperLog {
 
 class CMinerTest{
 public:
-	std::map<string,AccState> mapAccState;
-	std::map<string,AccOperLog> mapAccOperLog;
+	std::map<string,ST_ACC_STATE> mapAccState;
+	std::map<string,ST_ACC_OPER_LOG> m_mapAccOperLog;
 	int nCurHeight;
 	int64_t llCurMoney;
 	int64_t llCurFee;
@@ -212,7 +212,7 @@ public:
 		return false;
 	}
 
-	bool GetAccState(const std::string &strAddr, AccState &accstate) {
+	bool GetAccState(const std::string &strAddr, ST_ACC_STATE &accstate) {
 		//CommanRpc
 		char arrchTemp[64] = { 0 };
 		strncpy(arrchTemp, strAddr.c_str(), sizeof(arrchTemp) - 1);
@@ -552,12 +552,12 @@ public:
 public:
 	CMinerTest() {
 		mapAccState.clear();
-		mapAccOperLog.clear();
+		m_mapAccOperLog.clear();
 		nCurHeight = 0;
 	}
-	bool CheckAccState(const string &strAddr, AccState &tLastState, bool bAccurate = false) {
-		AccState tInitState = mapAccState[strAddr];
-		AccOperLog operlog = mapAccOperLog[strAddr];
+	bool CheckAccState(const string &strAddr, ST_ACC_STATE &tLastState, bool bAccurate = false) {
+		ST_ACC_STATE tInitState = mapAccState[strAddr];
+		ST_ACC_OPER_LOG operlog = m_mapAccOperLog[strAddr];
 		operlog.MergeAcc(nCurHeight);
 
 		for (auto & item : operlog.mapAccState) {
@@ -582,7 +582,7 @@ BOOST_FIXTURE_TEST_CASE(block_normaltx_and_regaccounttx,CMinerTest) {
 	string strDestAddr;
 	BOOST_REQUIRE(GetOneAddr(strSrcaddr, "1100000000000", "true"));
 
-	AccState tInitState;
+	ST_ACC_STATE tInitState;
 	BOOST_REQUIRE(GetAccState(strSrcaddr, tInitState));
 	mapAccState[strSrcaddr] = tInitState; //insert
 
@@ -596,10 +596,10 @@ BOOST_FIXTURE_TEST_CASE(block_normaltx_and_regaccounttx,CMinerTest) {
 		llTotalfee += llCurFee;
 		LogPrint("test_miners", "strSrcaddr:%s\r\ndestaddr:%s\r\nnCurFee:%I64d\r\n", strSrcaddr.c_str(),
 				strDestAddr.c_str(), llCurFee);
-		AccOperLog &tOperlog1 = mapAccOperLog[strSrcaddr];
-		AccOperLog &tOperlog2 = mapAccOperLog[strDestAddr];
-		AccState tAcc1(0, -(llCurMoney + llCurFee), 0);
-		AccState tAcc2(0, llCurMoney, 0);
+		ST_ACC_OPER_LOG &tOperlog1 = m_mapAccOperLog[strSrcaddr];
+		ST_ACC_OPER_LOG &tOperlog2 = m_mapAccOperLog[strDestAddr];
+		ST_ACC_STATE tAcc1(0, -(llCurMoney + llCurFee), 0);
+		ST_ACC_STATE tAcc2(0, llCurMoney, 0);
 		tOperlog1.Add(nHeight, tAcc1);
 		tOperlog2.Add(nHeight, tAcc2);
 	}
@@ -613,15 +613,15 @@ BOOST_FIXTURE_TEST_CASE(block_normaltx_and_regaccounttx,CMinerTest) {
 	BOOST_REQUIRE(GetBlockMinerAddr(strBlockhash, strMineraddr));
 
 	if (strMineraddr == strSrcaddr) {
-		AccState tAcc(llTotalfee, 0, 0);
-		mapAccOperLog[strMineraddr].Add(nHeight, tAcc);
+		ST_ACC_STATE tAcc(llTotalfee, 0, 0);
+		m_mapAccOperLog[strMineraddr].Add(nHeight, tAcc);
 	} else {
 		BOOST_REQUIRE(GetAccState(strMineraddr, tInitState));
 		mapAccState[strMineraddr] = tInitState; //insert
 	}
 
-	for (auto & item : mapAccOperLog) {
-		AccState tLastState;
+	for (auto & item : m_mapAccOperLog) {
+		ST_ACC_STATE tLastState;
 		BOOST_REQUIRE(GetAccState(item.first, tLastState));
 		BOOST_REQUIRE(CheckAccState(item.first, tLastState));
 	}
@@ -631,8 +631,8 @@ BOOST_FIXTURE_TEST_CASE(block_normaltx_and_regaccounttx,CMinerTest) {
 		nCurHeight = nHeight;
 		BOOST_REQUIRE(registaccounttx(strDestAddr, nHeight));
 		{
-			AccOperLog &operlog1 = mapAccOperLog[strDestAddr];
-			AccState acc1(0, -llCurFee, 0);
+			ST_ACC_OPER_LOG &operlog1 = m_mapAccOperLog[strDestAddr];
+			ST_ACC_STATE acc1(0, -llCurFee, 0);
 			operlog1.Add(nHeight, acc1);
 		}
 		BOOST_REQUIRE(GenerateOneBlock());
@@ -645,15 +645,15 @@ BOOST_FIXTURE_TEST_CASE(block_normaltx_and_regaccounttx,CMinerTest) {
 		BOOST_REQUIRE(GetBlockMinerAddr(strBlockhash, strMineraddr));
 
 		if (strMineraddr == strDestAddr) {
-			AccState tAcc(llCurFee, 0, 0);
-			mapAccOperLog[strMineraddr].Add(nHeight, tAcc);
+			ST_ACC_STATE tAcc(llCurFee, 0, 0);
+			m_mapAccOperLog[strMineraddr].Add(nHeight, tAcc);
 		} else {
 			BOOST_REQUIRE(GetAccState(strMineraddr, tInitState));
 			mapAccState[strMineraddr] = tInitState; //insert
 		}
 
-		for (auto & item : mapAccOperLog) {
-			AccState tLastState;
+		for (auto & item : m_mapAccOperLog) {
+			ST_ACC_STATE tLastState;
 			BOOST_REQUIRE(GetAccState(item.first, tLastState));
 			BOOST_REQUIRE(CheckAccState(item.first, tLastState));
 		}
@@ -664,7 +664,7 @@ BOOST_FIXTURE_TEST_CASE(block_regscripttx_and_contracttx,CMinerTest) {
 	string strSrcaddr;
 	BOOST_REQUIRE(GetOneAddr(strSrcaddr, "1100000000000", "true"));
 
-	AccState tInitState;
+	ST_ACC_STATE tInitState;
 	BOOST_REQUIRE(GetAccState(strSrcaddr, tInitState));
 	mapAccState[strSrcaddr] = tInitState; //insert
 
@@ -676,8 +676,8 @@ BOOST_FIXTURE_TEST_CASE(block_regscripttx_and_contracttx,CMinerTest) {
 		string strScript =
 				"fd3e0102001d000000000022220000000000000000222202011112013512013a75d0007581bf750900750a0f020017250910af08f509400c150a8008f5094002150ad2af222509c582c0e0e50a34ffc583c0e0e509c3958224f910af0885830a858209800885830a858209d2afcef0a3e520f0a37808e608f0a3defaeff0a3e58124fbf8e608f0a3e608f0a30808e608f0a3e608f0a315811581d0e0fed0e0f815811581e8c0e0eec0e022850a83850982e0a3fee0a3f5207808e0a3f608dffae0a3ffe0a3c0e0e0a3c0e0e0a3c0e0e0a3c0e010af0885820985830a800885820985830ad2afd083d0822274f8120042e990fbfef01200087f010200a8c082c083ea90fbfef0eba3f012001202010cd083d0822274f812004274fe12002ceafeebff850982850a83eef0a3eff0aa09ab0a790112013d80ea79010200e80200142200";
 		BOOST_REQUIRE(RegisterAppTx(strSrcaddr, strScript, nHeight));
-		AccOperLog &tOperlog1 = mapAccOperLog[strSrcaddr];
-		AccState tAcc1(0, -llCurFee, 0);
+		ST_ACC_OPER_LOG &tOperlog1 = m_mapAccOperLog[strSrcaddr];
+		ST_ACC_STATE tAcc1(0, -llCurFee, 0);
 		tOperlog1.Add(nHeight, tAcc1);
 
 		BOOST_REQUIRE(GenerateOneBlock());
@@ -690,15 +690,15 @@ BOOST_FIXTURE_TEST_CASE(block_regscripttx_and_contracttx,CMinerTest) {
 		BOOST_REQUIRE(GetBlockMinerAddr(strBlockhash, strMineraddr));
 
 		if (strMineraddr == strSrcaddr) {
-			AccState tAcc(llCurFee, 0, 0);
-			mapAccOperLog[strMineraddr].Add(nHeight, tAcc);
+			ST_ACC_STATE tAcc(llCurFee, 0, 0);
+			m_mapAccOperLog[strMineraddr].Add(nHeight, tAcc);
 		} else {
 			BOOST_REQUIRE(GetAccState(strMineraddr, tInitState));
 			mapAccState[strMineraddr] = tInitState; //insert
 		}
 
-		for (auto & item : mapAccOperLog) {
-			AccState tLastState;
+		for (auto & item : m_mapAccOperLog) {
+			ST_ACC_STATE tLastState;
 			BOOST_REQUIRE(GetAccState(item.first, tLastState));
 			BOOST_REQUIRE(CheckAccState(item.first, tLastState));
 		}
@@ -714,7 +714,7 @@ BOOST_FIXTURE_TEST_CASE(block_regscripttx_and_contracttx,CMinerTest) {
 		} while (strConaddr == strSrcaddr);
 		string strVconaddr = "[\"" + strConaddr + "\"] ";
 
-		AccState tInitState;
+		ST_ACC_STATE tInitState;
 		BOOST_REQUIRE(GetAccState(strConaddr, tInitState));
 		mapAccState[strConaddr] = tInitState; //insert
 
@@ -723,8 +723,8 @@ BOOST_FIXTURE_TEST_CASE(block_regscripttx_and_contracttx,CMinerTest) {
 
 		BOOST_REQUIRE(CreateContractTx(strScriptid, strVconaddr, "010203040506070809", nHeight));
 
-		AccOperLog &tOperlog1 = mapAccOperLog[strConaddr];
-		AccState tAcc1(0, -llCurFee, 0);
+		ST_ACC_OPER_LOG &tOperlog1 = m_mapAccOperLog[strConaddr];
+		ST_ACC_STATE tAcc1(0, -llCurFee, 0);
 		tOperlog1.Add(nHeight, tAcc1);
 
 		BOOST_REQUIRE(GenerateOneBlock());
@@ -737,15 +737,15 @@ BOOST_FIXTURE_TEST_CASE(block_regscripttx_and_contracttx,CMinerTest) {
 		BOOST_REQUIRE(GetBlockMinerAddr(strBlockhash, strMineraddr));
 
 		if (strMineraddr == strConaddr) {
-			AccState tAcc(llCurFee, 0, 0);
-			mapAccOperLog[strMineraddr].Add(nHeight, tAcc);
+			ST_ACC_STATE tAcc(llCurFee, 0, 0);
+			m_mapAccOperLog[strMineraddr].Add(nHeight, tAcc);
 		} else {
 			BOOST_REQUIRE(GetAccState(strMineraddr, tInitState));
 			mapAccState[strMineraddr] = tInitState; //insert
 		}
 
-		for (auto & item : mapAccOperLog) {
-			AccState tLastState;
+		for (auto & item : m_mapAccOperLog) {
+			ST_ACC_STATE tLastState;
 			BOOST_REQUIRE(GetAccState(item.first, tLastState));
 			BOOST_REQUIRE(CheckAccState(item.first, tLastState));
 		}
@@ -757,7 +757,7 @@ BOOST_FIXTURE_TEST_CASE(block_frozentx,CMinerTest) {
 	string strSrcaddr;
 	BOOST_REQUIRE(GetOneAddr(strSrcaddr, "1100000000000", "true"));
 
-	AccState tInitState;
+	ST_ACC_STATE tInitState;
 	BOOST_REQUIRE(GetAccState(strSrcaddr, tInitState));
 	mapAccState[strSrcaddr] = tInitState; //insert
 
@@ -768,8 +768,8 @@ BOOST_FIXTURE_TEST_CASE(block_frozentx,CMinerTest) {
 	{
 		BOOST_REQUIRE(CreateFreezeTx(strSrcaddr, nHeight));
 		llTotalfee += llCurFee;
-		AccOperLog &tOperlog1 = mapAccOperLog[strSrcaddr];
-		AccState tAcc(0, -(llCurMoney + llCurFee), llCurMoney);
+		ST_ACC_OPER_LOG &tOperlog1 = m_mapAccOperLog[strSrcaddr];
+		ST_ACC_STATE tAcc(0, -(llCurMoney + llCurFee), llCurMoney);
 		tOperlog1.Add(nHeight, tAcc);
 	}
 	BOOST_REQUIRE(GenerateOneBlock());
@@ -781,15 +781,15 @@ BOOST_FIXTURE_TEST_CASE(block_frozentx,CMinerTest) {
 	BOOST_REQUIRE(GetBlockMinerAddr(strBlockhash, strMineraddr));
 
 	if (strMineraddr == strSrcaddr) {
-		AccState tAcc(llTotalfee, 0, 0);
-		mapAccOperLog[strMineraddr].Add(nHeight, tAcc);
+		ST_ACC_STATE tAcc(llTotalfee, 0, 0);
+		m_mapAccOperLog[strMineraddr].Add(nHeight, tAcc);
 	} else {
 		BOOST_REQUIRE(GetAccState(strMineraddr, tInitState));
 		mapAccState[strMineraddr] = tInitState; //insert
 	}
 
-	for (auto & item : mapAccOperLog) {
-		AccState tLastState;
+	for (auto & item : m_mapAccOperLog) {
+		ST_ACC_STATE tLastState;
 		BOOST_REQUIRE(GetAccState(item.first, tLastState));
 		BOOST_REQUIRE(CheckAccState(item.first, tLastState));
 	}

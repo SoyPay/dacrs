@@ -17,14 +17,14 @@ class CVmRunEvn;
 
 class CVmlua {
 public:
-	CVmlua(const vector<unsigned char> & vRom,const vector<unsigned char> &InputData);
+	CVmlua(const vector<unsigned char> & vuchRom, const vector<unsigned char> &vuchInputData);
 	~CVmlua();
-	int64_t run(uint64_t maxstep,CVmRunEvn *pVmScriptRun);
-    static tuple<bool,string> syntaxcheck(bool bFile, const char* filePathOrContent, int len);
+	int64_t run(uint64_t ullMaxStep,CVmRunEvn *pcVmScriptRun);
+    static tuple<bool,string> syntaxcheck(bool bFile, const char* pszFilePathOrContent, int nLen);
    
 private:
-	unsigned char m_ExRam[65536];  //存放的是合约交易的contact内容
-	unsigned char m_ExeFile[65536];//可执行文件 IpboApp.lua
+	unsigned char m_arruchExRam[65536];  //存放的是合约交易的contact内容
+	unsigned char m_arruchExeFile[65536];//可执行文件 IpboApp.lua
 
 };
 

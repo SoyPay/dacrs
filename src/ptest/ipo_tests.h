@@ -5,8 +5,8 @@
  *      Author: frank.shi
  */
 
-#ifndef IPO_TESTS_H
-#define IPO_TESTS_H
+#ifndef IPO_TESTS_H_
+#define IPO_TESTS_H_
 
 #include "cycle_test_base.h"
 #include "../test/systestbase.h"

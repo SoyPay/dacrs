@@ -11,34 +11,34 @@
 #include <boost/assign/list_of.hpp>
 using namespace std;
 
-const unsigned int iTxCount = 6000;
-vector<std::shared_ptr<CBaseTransaction> > vTransactions;
-vector<string> vTransactionHash;
-deque<uint64_t> dFee;
-deque<uint64_t> dFuel;
+const unsigned int g_kunTxCount = 6000;
+vector<std::shared_ptr<CBaseTransaction> > g_vcTransactions;
+vector<string> g_vstrTransactionHash;
+deque<uint64_t> g_dFee;
+deque<uint64_t> g_dFuel;
 uint64_t llTotalFee(0);
 
-map<string, string> mapAddress =
+map<string, string> g_mapAddress =
         boost::assign::map_list_of
         ("000000000100",	"dggsWmQ7jH46dgtA5dEZ9bhFSAK1LASALw")
         ("000000000200",	"dtKsuK9HUvLLHtBQL8Psk5fUnTLTFC83GS")
         ("000000000300",	"dejEcGCsBkwsZaiUH1hgMapjbJqPdPNV9U");
 
-vector<std::tuple<int, uint64_t, string> > vFreezeItem;
-vector<pair<string, uint64_t> > vSendFee;
+vector<std::tuple<int, uint64_t, string> > g_vFreezeItem;
+vector<pair<string, uint64_t> > g_vSendFee;
 
-std::string regScriptId("");
+std::string g_strRegScriptId("");
 
 /**
  * 获取随机账户地址
  */
 map<string, string>::iterator GetRandAddress() {
 //	srand(time(NULL));
-	unsigned char cType;
-	RAND_bytes(&cType, sizeof(cType));
-	int iIndex = (cType % 3);
-	map<string, string>::iterator iterAddress = mapAddress.begin();
-	while(iIndex--) {
+	unsigned char uchType;
+	RAND_bytes(&uchType, sizeof(uchType));
+	int nIndex = (uchType % 3);
+	map<string, string>::iterator iterAddress = g_mapAddress.begin();
+	while (nIndex--) {
 		++iterAddress;
 	}
 	return iterAddress;
@@ -51,35 +51,35 @@ int GetRandTxType() {
 	unsigned char cType;
 	RAND_bytes(&cType, sizeof(cType));
 	//srand(time(NULL));
-	int iIndex = cType % 4;
-	return iIndex + 1;
+	int nIndex = cType % 4;
+	return nIndex + 1;
 }
 
 
 class PressureTest: public SysTestBase {
 public:
-	bool GetContractData(string regId, vector<unsigned char> &vContract) {
-		for(auto &addr : mapAddress) {
-			if(addr.first == regId)
+	bool GetContractData(string strRegId, vector<unsigned char> &vuchContract) {
+		for(auto &addr : g_mapAddress) {
+			if (addr.first == strRegId) {
 				continue;
-
-			uint64_t llmoney = GetRandomMoney() * COIN;
-			CRegID reg(addr.first);
-			vContract.insert(vContract.end(), reg.GetVec6().begin(), reg.GetVec6().end());
-			CDataStream ds(SER_DISK, CLIENT_VERSION);
-			ds << llmoney;
-			vector<unsigned char> temp(ds.begin(), ds.end());
-			vContract.insert(vContract.end(), temp.begin(), temp.end());
+			}
+			uint64_t ullmoney = GetRandomMoney() * COIN;
+			CRegID cReg(addr.first);
+			vuchContract.insert(vuchContract.end(), cReg.GetVec6().begin(), cReg.GetVec6().end());
+			CDataStream cDs(SER_DISK, g_sClientVersion);
+			cDs << ullmoney;
+			vector<unsigned char> vuchTemp(cDs.begin(), cDs.end());
+			vuchContract.insert(vuchContract.end(), vuchTemp.begin(), vuchTemp.end());
 		}
 		return true;
 	}
 
 	bool InitRegScript() {
 		ResetEnv();
-		string hash = "";
-		BOOST_CHECK(CreateRegScriptTx(false, hash,"doym966kgNUKr2M9P7CmjJeZdddqvoU5RZ"));
+		string strHash = "";
+		BOOST_CHECK(CreateRegScriptTx(false, strHash,"doym966kgNUKr2M9P7CmjJeZdddqvoU5RZ"));
 		BOOST_CHECK(SetBlockGenerte("doym966kgNUKr2M9P7CmjJeZdddqvoU5RZ"));
-		BOOST_CHECK(GetTxConfirmedRegID(hash,regScriptId));
+		BOOST_CHECK(GetTxConfirmedRegID(strHash,g_strRegScriptId));
 		return true;
 	}
 
@@ -88,29 +88,30 @@ public:
 	 * @return
 	 */
 	bool CreateCommonTx(string srcAddr, string desAddr) {
-		char fee[64] = {0};
-		int nfee = GetRandomFee();
-		sprintf(fee, "%d", nfee);
-		char money[64] = {0};
-		int nmoney = GetRandomMoney();
-		sprintf(money, "%d00000000", nmoney);
-		const char *argv[] = { "rpctest", "sendtoaddresswithfee", srcAddr.c_str(), desAddr.c_str(), money, fee};
+		char arrchFee[64] = { 0 };
+		int nFee = GetRandomFee();
+		sprintf(arrchFee, "%d", nFee);
+		char arrchMoney[64] = { 0 };
+		int nMoney = GetRandomMoney();
+		sprintf(arrchMoney, "%d00000000", nMoney);
+		const char *argv[] =
+				{ "rpctest", "sendtoaddresswithfee", srcAddr.c_str(), desAddr.c_str(), arrchMoney, arrchFee };
 		int argc = sizeof(argv) / sizeof(char*);
 		Value value;
 		if (!CommandLineRPC_GetValue(argc, argv, value)) {
 			return false;
 		}
 		const Value& result = find_value(value.get_obj(), "hash");
-		if(result == null_type) {
+		if (result == null_type) {
 			return false;
 		}
-		string txHash = result.get_str();
-		vTransactionHash.push_back(txHash);
-		if (mempool.mapTx.count(uint256(uint256S(txHash))) > 0) {
-			std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(uint256S(txHash))].GetTx();
-			vTransactions.push_back(tx);
+		string strTxHash = result.get_str();
+		g_vstrTransactionHash.push_back(strTxHash);
+		if (g_cTxMemPool.m_mapTx.count(uint256(uint256S(strTxHash))) > 0) {
+			std::shared_ptr<CBaseTransaction> cTx = g_cTxMemPool.m_mapTx[uint256(uint256S(strTxHash))].GetTx();
+			g_vcTransactions.push_back(cTx);
 		}
-		vSendFee.push_back(make_pair(txHash, nfee));
+		g_vSendFee.push_back(make_pair(strTxHash, nFee));
 		return true;
 	}
 	/**
@@ -120,34 +121,33 @@ public:
 	 */
 	bool CreateRegAcctTx() {
 		//获取一个新的地址
-		const char *argv[] = {"rpctest", "getnewaddress"};
-		int argc = sizeof(argv) /sizeof(char *);
+		const char *argv[] = { "rpctest", "getnewaddress" };
+		int argc = sizeof(argv) / sizeof(char *);
 		Value value;
-		if(!CommandLineRPC_GetValue(argc, argv, value))
-		{
+		if (!CommandLineRPC_GetValue(argc, argv, value)) {
 			return false;
 		}
 		const Value& retNewAddr = find_value(value.get_obj(), "addr");
-		if(retNewAddr.type() == null_type) {
+		if (retNewAddr.type() == null_type) {
 			return false;
 		}
-		string newAddress = retNewAddr.get_str();
-		map<string, string>::iterator iterSrcAddr = GetRandAddress();
+		string strNewAddress = retNewAddr.get_str();
+		map<string, string>::iterator mapIterSrcAddr = GetRandAddress();
 		//向新产生地址发送一笔钱
-		if(!CreateCommonTx(iterSrcAddr->second, newAddress))
+		if (!CreateCommonTx(mapIterSrcAddr->second, strNewAddress)) {
 			return false;
-
-		int nfee = GetRandomFee() + 100000000;
-		Value result = RegistAccountTx(newAddress, nfee);
-		string txHash = "";
-		BOOST_CHECK(GetHashFromCreatedTx(value, txHash));
-
-		vTransactionHash.push_back(txHash);
-		if (mempool.mapTx.count(uint256(uint256S(txHash))) > 0) {
-			std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(uint256S(txHash))].GetTx();
-			vTransactions.push_back(tx);
 		}
-		vSendFee.push_back(make_pair(txHash, nfee));
+		int nFee = GetRandomFee() + 100000000;
+		Value result = RegistAccountTx(strNewAddress, nFee);
+		string strTxHash = "";
+		BOOST_CHECK(GetHashFromCreatedTx(value, strTxHash));
+
+		g_vstrTransactionHash.push_back(strTxHash);
+		if (g_cTxMemPool.m_mapTx.count(uint256(uint256S(strTxHash))) > 0) {
+			std::shared_ptr<CBaseTransaction> tx = g_cTxMemPool.m_mapTx[uint256(uint256S(strTxHash))].GetTx();
+			g_vcTransactions.push_back(tx);
+		}
+		g_vSendFee.push_back(make_pair(strTxHash, nFee));
 		return true;
 	}
 
@@ -155,46 +155,46 @@ public:
 	 * 创建合约交易
 	 */
 	bool CreateContractTx() {
-		map<string, string>::iterator iterSrcAddr = GetRandAddress();
-		string srcAddr(iterSrcAddr->second);
+		map<string, string>::iterator mapIterSrcAddr = GetRandAddress();
+		string strSrcAddr(mapIterSrcAddr->second);
 
 		unsigned char cType;
 		RAND_bytes(&cType, sizeof(cType));
-		int iIndex = cType % 2;
-		iIndex +=20;
-		string contact =strprintf("%02x",iIndex);
+		int nIndex = cType % 2;
+		nIndex += 20;
+		string contact = strprintf("%02x",nIndex);
 
-		int nfee = GetRandomFee() + 100000;
-		uint64_t llmoney = GetRandomMoney() * COIN;
-		Value value = SysTestBase::CreateContractTx(regScriptId,srcAddr, contact,0,nfee, llmoney);
-		string txHash = "";
-		BOOST_CHECK(GetHashFromCreatedTx(value,txHash));
+		int nFee = GetRandomFee() + 100000;
+		uint64_t ullMoney = GetRandomMoney() * COIN;
+		Value value = SysTestBase::CreateContractTx(g_strRegScriptId, strSrcAddr, contact, 0, nFee, ullMoney);
+		string strTxHash = "";
+		BOOST_CHECK(GetHashFromCreatedTx(value, strTxHash));
 
-		vTransactionHash.push_back(txHash);
-		if (mempool.mapTx.count(uint256(uint256S(txHash))) > 0) {
-			std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(uint256S(txHash))].GetTx();
-			vTransactions.push_back(tx);
+		g_vstrTransactionHash.push_back(strTxHash);
+		if (g_cTxMemPool.m_mapTx.count(uint256(uint256S(strTxHash))) > 0) {
+			std::shared_ptr<CBaseTransaction> tx = g_cTxMemPool.m_mapTx[uint256(uint256S(strTxHash))].GetTx();
+			g_vcTransactions.push_back(tx);
 		}
-		vSendFee.push_back(make_pair(txHash, nfee));
+		g_vSendFee.push_back(make_pair(strTxHash, nFee));
 		return true;
 	}
 
-	bool CreateRegScriptTx(bool fFlag, string &hash,string regAddress="") {
-		if(regAddress=="") {
-			map<string, string>::iterator iterSrcAddr = GetRandAddress();
-			regAddress = iterSrcAddr->second;
+	bool CreateRegScriptTx(bool bFlag, string &strHash, string strRegAddress = "") {
+		if (strRegAddress == "") {
+			map<string, string>::iterator mapIterSrcAddr = GetRandAddress();
+			strRegAddress = mapIterSrcAddr->second;
 		}
 		uint64_t nFee = GetRandomFee() + 1 * COIN;
-		Value ret = RegisterAppTx(regAddress, "unit_test.bin", 100, nFee);
-		BOOST_CHECK(GetHashFromCreatedTx(ret,hash));
+		Value ret = RegisterAppTx(strRegAddress, "unit_test.bin", 100, nFee);
+		BOOST_CHECK(GetHashFromCreatedTx(ret, strHash));
 
-		if(fFlag) {
-			vTransactionHash.push_back(hash);
-			if (mempool.mapTx.count(uint256(uint256S(hash))) > 0) {
-				std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(uint256S(hash))].GetTx();
-				vTransactions.push_back(tx);
+		if (bFlag) {
+			g_vstrTransactionHash.push_back(strHash);
+			if (g_cTxMemPool.m_mapTx.count(uint256(uint256S(strHash))) > 0) {
+				std::shared_ptr<CBaseTransaction> tx = g_cTxMemPool.m_mapTx[uint256(uint256S(strHash))].GetTx();
+				g_vcTransactions.push_back(tx);
 			}
-			vSendFee.push_back(make_pair(hash, nFee));
+			g_vSendFee.push_back(make_pair(strHash, nFee));
 		}
 
 		return true;
@@ -204,100 +204,91 @@ public:
 	void CreateRandTx(int txCount) {
 		for (int i = 0; i < txCount; ++i) {
 			int nTxType = GetRandTxType();
-			switch(nTxType) {
-			case 1:
-//				{
-//					BOOST_CHECK(CreateRegAcctTx());
-//					++i;
-//				}
+			switch (nTxType) {
+			case 1: {
 				--i;
 				break;
-			case 2:
-				{
-					map<string, string>::iterator iterSrcAddr = GetRandAddress();
-					map<string, string>::iterator iterDesAddr = GetRandAddress();
-					while(iterDesAddr->first == iterSrcAddr->first) {
-						iterDesAddr = GetRandAddress();
-					}
-					BOOST_CHECK(CreateCommonTx(iterSrcAddr->second, iterDesAddr->second));
+			}
+			case 2: {
+				map<string, string>::iterator mapIterSrcAddr = GetRandAddress();
+				map<string, string>::iterator iterDesAddr = GetRandAddress();
+				while (iterDesAddr->first == mapIterSrcAddr->first) {
+					iterDesAddr = GetRandAddress();
 				}
+				BOOST_CHECK(CreateCommonTx(mapIterSrcAddr->second, iterDesAddr->second));
+			}
 				break;
-			case 3:
-				{
-					BOOST_CHECK(CreateContractTx());
-				}
+			case 3: {
+				BOOST_CHECK(CreateContractTx());
+			}
 				break;
-			case 4:
-//				{
-//					string hash ="";
-//					BOOST_CHECK(CreateRegScriptTx(true,hash));
-//				}
+			case 4: {
 				--i;
 				break;
+			}
 			default:
 				assert(0);
 			}
-//			cout << "create tx order:" << i << "type:" <<nTxType << endl;
-			//putchar('\b');	//将当前行全部清空，用以显示最新的进度条状态
-			if(0 != i) {
-				ShowProgress("create tx progress: ",(int)(((i+1)/(float)txCount) * 100));
+			if (0 != i) {
+				ShowProgress("create tx progress: ", (int) (((i + 1) / (float) txCount) * 100));
 			}
 		}
 	}
 
 	bool DetectionAccount(uint64_t llFuelValue, uint64_t llFees) {
-		uint64_t freeValue(0);
-		uint64_t totalValue(0);
-		uint64_t scriptaccValue(0);
-		for(auto & item : mapAddress) {
-			CRegID regId(item.first);
-			CUserID userId = regId;
+		uint64_t ullFreeValue(0);
+		uint64_t ullTotalValue(0);
+		uint64_t ullScriptaccValue(0);
+		for (auto & item : g_mapAddress) {
+			CRegID cRegId(item.first);
+			CUserID userId = cRegId;
 			{
-				LOCK(cs_main);
+				LOCK(g_cs_main);
 				CAccount account;
-				CAccountViewCache accView(*pAccountViewTip, true);
+				CAccountViewCache accView(*g_pAccountViewTip, true);
 				if (!accView.GetAccount(userId, account)) {
 					return false;
 				}
-				freeValue += account.GetRawBalance();
+				ullFreeValue += account.GetRawBalance();
 			}
 
 		}
 
-		if(regScriptId != ""){
-			CRegID regId(regScriptId);
+		if (g_strRegScriptId != "") {
+			CRegID regId(g_strRegScriptId);
 			CUserID userId = regId;
 			{
-				LOCK(cs_main);
+				LOCK(g_cs_main);
 				CAccount account;
-				CAccountViewCache accView(*pAccountViewTip, true);
+				CAccountViewCache accView(*g_pAccountViewTip, true);
 				if (!accView.GetAccount(userId, account)) {
 					return false;
 				}
-				scriptaccValue += account.GetRawBalance();
+				ullScriptaccValue += account.GetRawBalance();
 			}
 
 		}
-		totalValue += freeValue;
-		totalValue += scriptaccValue;
+		ullTotalValue += ullFreeValue;
+		ullTotalValue += ullScriptaccValue;
 
 		uint64_t uTotalRewardValue(0);
-		if (chainActive.Tip()->nHeight - 1 > COINBASE_MATURITY)  //height 1 is generate by another account
-			uTotalRewardValue = 10 * COIN * (chainActive.Tip()->nHeight - 101);
-		dFee.push_back(llFees);
-		dFuel.push_back(llFuelValue);
+		if (g_cChainActive.Tip()->m_nHeight - 1 > COINBASE_MATURITY) {
+			uTotalRewardValue = 10 * COIN * (g_cChainActive.Tip()->m_nHeight - 101);
+		}
+		g_dFee.push_back(llFees);
+		g_dFuel.push_back(llFuelValue);
 		llTotalFee += llFees;
 
-		if (dFee.size() > 100) {
-			uint64_t feeTemp = dFee.front();
-			uint64_t fuelTemp = dFuel.front();
-			llTotalFee -= feeTemp;
-			llTotalFee += fuelTemp;
-			dFee.pop_front();
-			dFuel.pop_front();
+		if (g_dFee.size() > 100) {
+			uint64_t ullFeeTemp = g_dFee.front();
+			uint64_t ullFuelTemp = g_dFuel.front();
+			llTotalFee -= ullFeeTemp;
+			llTotalFee += ullFuelTemp;
+			g_dFee.pop_front();
+			g_dFuel.pop_front();
 		}
 		//检查总账平衡
-		BOOST_CHECK(totalValue + llTotalFee == (3000000000 * COIN + uTotalRewardValue));
+		BOOST_CHECK(ullTotalValue + llTotalFee == (3000000000 * COIN + uTotalRewardValue));
 		return true;
 	}
 
@@ -318,21 +309,21 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 	for(int i=0; i<1; ++i) {
 		//随机创建6000个交易
 
-		CreateRandTx(iTxCount);
+		CreateRandTx(g_kunTxCount);
 		//检测mempool中是否有6000个交易
-		BOOST_CHECK(vTransactions.size()==iTxCount);
+		BOOST_CHECK(g_vcTransactions.size()==g_kunTxCount);
 		{
 			//LOCK(pwalletMain->cs_wallet);
 			//检测钱包未确认交易数量是否正确
-			BOOST_CHECK(pwalletMain->UnConfirmTx.size() == iTxCount);
+			BOOST_CHECK(pwalletMain->UnConfirmTx.size() == g_kunTxCount);
 			//检测钱包未确认交易hash是否正确
-			for(auto &item : vTransactionHash) {
+			for(auto &item : g_vstrTransactionHash) {
 				BOOST_CHECK(pwalletMain->UnConfirmTx.count(uint256(uint256S(item))) > 0);
 			}
 
 		}
 
-		unsigned int nSize = mempool.mapTx.size();
+		unsigned int nSize = g_cTxMemPool.m_mapTx.size();
 		int nConfirmTxCount(0);
 		uint64_t llRegAcctFee(0);
 		uint64_t llSendValue(0);
@@ -343,37 +334,37 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 			BOOST_CHECK(SetBlockGenerte(iterAddr->second.c_str()));
 			CBlock block;
 			{
-				LOCK(cs_main);
-				CBlockIndex *pindex = chainActive.Tip();
+				LOCK(g_cs_main);
+				CBlockIndex *pindex = g_cChainActive.Tip();
 				llFuelValue += pindex->nFuel;
 				BOOST_CHECK(ReadBlockFromDisk(block, pindex));
 			}
 
 			for(auto &item : block.vptx) {
 				{
-					LOCK2(cs_main, pwalletMain->cs_wallet);
+					LOCK2(g_cs_main, pwalletMain->cs_wallet);
 					//检测钱包未确认列表中没有block中交易
 					BOOST_CHECK(!pwalletMain->UnConfirmTx.count(item->GetHash()) > 0);
 					//检测block中交易是否都在钱包已确认列表中
 					BOOST_CHECK(pwalletMain->mapInBlockTx[block.GetHash()].mapAccountTx.count(item->GetHash())>0);
 					//检测mempool中没有了block已确认交易
-					BOOST_CHECK(!mempool.mapTx.count(item->GetHash()) > 0);
+					BOOST_CHECK(!g_cTxMemPool.m_mapTx.count(item->GetHash()) > 0);
 				}
 
 			}
 			{
-				LOCK2(cs_main, pwalletMain->cs_wallet);
+				LOCK2(g_cs_main, pwalletMain->cs_wallet);
 				//检测block中交易总数和钱包已确认列表中总数相等
 				BOOST_CHECK(pwalletMain->mapInBlockTx[block.GetHash()].mapAccountTx.size() == block.vptx.size());
 				nConfirmTxCount += block.vptx.size() - 1;
 				//检测剩余mempool中交易总数与已确认交易和等于总的产生的交易数
-				nSize = mempool.mapTx.size();
-				BOOST_CHECK((nSize + nConfirmTxCount) == vTransactions.size());
+				nSize = g_cTxMemPool.m_mapTx.size();
+				BOOST_CHECK((nSize + nConfirmTxCount) == g_vcTransactions.size());
 				//检测钱包中unconfirm交易和mempool中的相同
 				BOOST_CHECK((nSize == pwalletMain->UnConfirmTx.size()));
 			}
 			//检测Block最大值
-			BOOST_CHECK(block.GetSerializeSize(SER_DISK, CLIENT_VERSION) <= MAX_BLOCK_SIZE);
+			BOOST_CHECK(block.GetSerializeSize(SER_DISK, g_sClientVersion) <= MAX_BLOCK_SIZE);
 			for(auto & ptx : block.vptx) {
 				if(ptx->IsCoinBase()) {
 					continue;
@@ -381,7 +372,7 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 				if(REG_ACCT_TX == ptx->nTxType) {
 					llRegAcctFee += ptx->GetFee();
 				}
-				if(COMMON_TX == ptx->nTxType) {
+				if(EM_COMMON_TX == ptx->nTxType) {
 					std::shared_ptr<CTransaction> pTransaction(dynamic_pointer_cast<CTransaction>(ptx));
 					if(typeid(pTransaction->desUserId) == typeid(CKeyID)) {
 						llSendValue += pTransaction->llValues;				}
@@ -393,15 +384,15 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 			BOOST_CHECK(DetectionAccount(llFuelValue, block.GetFee()));
 		}
 		uint64_t totalFee(0);
-		for(auto &item : vSendFee) {
+		for(auto &item : g_vSendFee) {
 			totalFee += item.second;
 		}
 		//校验总的手续费是否正确
 		BOOST_CHECK(totalFee == llSendValue);
 
-		vTransactions.clear();
-		vTransactionHash.clear();
-		vSendFee.clear();
+		g_vcTransactions.clear();
+		g_vstrTransactionHash.clear();
+		g_vSendFee.clear();
 	}
 #endif //0
 }

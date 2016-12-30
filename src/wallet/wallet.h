@@ -329,9 +329,9 @@ class CAccountTx {
 	}
 
 	bool AddTx(const uint256 &hash, const CBaseTransaction*pTx) {
-		switch (pTx->nTxType) {
-		case COMMON_TX:
-		case CONTRACT_TX:
+		switch (pTx->m_chTxType) {
+		case EM_COMMON_TX:
+		case EM_CONTRACT_TX:
 			m_mapAccountTx[hash] = std::make_shared<CTransaction>(pTx);
 			break;
 		case REG_ACCT_TX:
@@ -369,8 +369,8 @@ class CAccountTx {
 		for (auto& item : m_mapAccountTx) {
 //			const uint256& txid = item.first;
 			CValidationState state;
-			if (item.second->nTxType != REWARD_TX) {
-				if (!::AcceptToMemoryPool(mempool, state, const_cast<CBaseTransaction*>(item.second.get()), false,
+			if (item.second->m_chTxType != REWARD_TX) {
+				if (!::AcceptToMemoryPool(g_cTxMemPool, state, const_cast<CBaseTransaction*>(item.second.get()), false,
 					false)) {
 					vhash.push_back(item.first);
 				}
@@ -387,7 +387,7 @@ class CAccountTx {
 
 	void RelayWalletTransaction() {
 		for (auto& item : m_mapAccountTx) {
-			if (item.second->nTxType != REWARD_TX) {
+			if (item.second->m_chTxType != REWARD_TX) {
 				::RelayTransaction(const_cast<CBaseTransaction*>(item.second.get()), item.first);
 			}
 		}

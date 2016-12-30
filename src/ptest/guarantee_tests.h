@@ -46,14 +46,14 @@ typedef struct {
 	unsigned char uchSysType;               //0xff
 	unsigned char uchType;            // 0x01 提?现?  02 充?值μ  03 提?现?一?定¨的?金e额?
 	unsigned char uchTypeAddr;            // 0x01 regid 0x02 base58
-	uint64_t     nMoney;
+	uint64_t     ullMoney;
 
 	IMPLEMENT_SERIALIZE
 	(
 		READWRITE(uchSysType);
 		READWRITE(uchType);
 		READWRITE(uchTypeAddr);
-		READWRITE(nMoney);
+		READWRITE(ullMoney);
 	)
 } STAPPACC_MONEY;
 

@@ -99,7 +99,7 @@ using namespace json_spirit;
 ////    if (!GetTransaction(hash, tx, hashBlock, true))
 ////        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
 //
-//    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+//    CDataStream ssTx(SER_NETWORK, g_sProtocolVersion);
 //    ssTx << tx;
 //    string strHex = HexStr(ssTx.begin(), ssTx.end());
 //
@@ -189,7 +189,7 @@ using namespace json_spirit;
 ////        rawtx.vout.push_back(out);
 //    }
 //
-//    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+//    CDataStream ss(SER_NETWORK, g_sProtocolVersion);
 //    ss << rawtx;
 //    return HexStr(ss.begin(), ss.end());
 //}
@@ -246,7 +246,7 @@ using namespace json_spirit;
 //        );
 //
 //    vector<unsigned char> txData(ParseHexV(params[0], "argument"));
-//    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+//    CDataStream ssData(txData, SER_NETWORK, g_sProtocolVersion);
 //    CTransaction tx;
 //    try {
 //        ssData >> tx;
@@ -353,7 +353,7 @@ using namespace json_spirit;
 //    RPCTypeCheck(params, list_of(str_type)(array_type)(array_type)(str_type), true);
 //
 //    vector<unsigned char> txData(ParseHexV(params[0], "argument 1"));
-//    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+//    CDataStream ssData(txData, SER_NETWORK, g_sProtocolVersion);
 //    vector<CTransaction> txVariants;
 //    while (!ssData.empty())
 //    {
@@ -379,10 +379,10 @@ using namespace json_spirit;
 ////    CCoinsView viewDummy;
 ////    CCoinsViewCache view(viewDummy);
 ////    {
-////        LOCK(mempool.cs);
+////        LOCK(g_cTxMemPool.cs);
 ////        CCoinsViewCache &viewChain = *pcoinsTip;
-////        CCoinsViewMemPool viewMempool(viewChain, mempool);
-////        view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
+////        CCoinsViewMemPool viewMempool(viewChain, g_cTxMemPool);
+////        view.SetBackend(viewMempool); // temporarily switch cache backend to db+g_cTxMemPool view
 ////
 ////        BOOST_FOREACH(const CTxIn& txin, mergedTx.vin) {
 ////            const uint256& prevHash = txin.prevout.hash;
@@ -390,7 +390,7 @@ using namespace json_spirit;
 ////            view.GetCoins(prevHash, coins); // this is certainly allowed to fail
 ////        }
 ////
-////        view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
+////        view.SetBackend(viewDummy); // switch back to avoid locking g_cTxMemPool for too long
 ////    }
 //
 //    bool fGivenKeys = false;
@@ -518,7 +518,7 @@ using namespace json_spirit;
 ////    }
 //
 //    Object result;
-//    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+//    CDataStream ssTx(SER_NETWORK, g_sProtocolVersion);
 //    ssTx << mergedTx;
 //    result.push_back(Pair("hex", HexStr(ssTx.begin(), ssTx.end())));
 //    result.push_back(Pair("complete", fComplete));
@@ -552,7 +552,7 @@ extern void SyncWithWallets(const uint256 &hash, const CBaseTransaction *pTx, co
 //
 //    // parse hex string from parameter
 ////    vector<unsigned char> txData(ParseHexV(params[0], "parameter"));
-////    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+////    CDataStream ssData(txData, SER_NETWORK, g_sProtocolVersion);
 ////    CTransaction tx;
 ////
 ////    bool fOverrideFees = false;
@@ -570,12 +570,12 @@ extern void SyncWithWallets(const uint256 &hash, const CBaseTransaction *pTx, co
 ////
 ////    CCoinsViewCache &view = *pcoinsTip;
 ////    CCoins existingCoins;
-////    bool fHaveMempool = mempool.exists(hashTx);
+////    bool fHaveMempool = g_cTxMemPool.exists(hashTx);
 ////    bool fHaveChain = view.GetCoins(hashTx, existingCoins) && existingCoins.nHeight < 1000000000;
 ////    if (!fHaveMempool && !fHaveChain) {
 ////        // push to local node and sync with wallets
 ////        CValidationState state;
-////        if (AcceptToMemoryPool(mempool, state, tx, false, NULL, !fOverrideFees))
+////        if (AcceptToMemoryPool(g_cTxMemPool, state, tx, false, NULL, !fOverrideFees))
 ////            SyncWithWallets(hashTx, (CBaseTransaction*)&tx, NULL);
 ////        else {
 ////            if(state.IsInvalid())

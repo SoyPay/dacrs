@@ -125,7 +125,7 @@ bool CTestBetTx::ASendP2PBet() {
 //		vector<unsigned char>temp2;
 //		temp2.assign(senddata.dhash,senddata.dhash + sizeof(senddata.dhash));
 
-	CDataStream cScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream cScriptData(SER_DISK, g_sClientVersion);
 	cScriptData << tSendData;
 	string strSendContract = HexStr(cScriptData);
 	//uint64_t sendfee = GetRandomBetfee();
@@ -165,7 +165,7 @@ bool CTestBetTx::BAcceptP2PBet(void) {
 	tAcceptData.uchData=uchGussnum;
 	memcpy(tAcceptData.uchTxhash, uint256S(m_strAsendHash).begin(), sizeof(tAcceptData.uchTxhash));
 
-	CDataStream cScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream cScriptData(SER_DISK, g_sClientVersion);
 	cScriptData << tAcceptData;
 
 	string strAcceptContract = HexStr(cScriptData);
@@ -218,7 +218,7 @@ bool CTestBetTx::AOpenP2PBet(void) {
 	tOpenA.uchType = 3;
 	memcpy(tOpenA.arruchTxhash, uint256S(m_strAsendHash).begin(), sizeof(tOpenA.arruchTxhash));
 	memcpy(tOpenA.arruchDhash, m_arrnchSdata, sizeof(m_arrnchSdata));
-	CDataStream cScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream cScriptData(SER_DISK, g_sClientVersion);
 	cScriptData << tOpenA;
 	string openAcontract = HexStr(cScriptData);
 

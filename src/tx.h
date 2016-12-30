@@ -37,8 +37,8 @@ typedef vector<unsigned char> vector_unsigned_char;
 enum TxType {
 	REWARD_TX = 1,    //!< reward tx
 	REG_ACCT_TX = 2,  //!< tx that used to register account
-	COMMON_TX = 3,    //!< transfer money from one account to another
-	CONTRACT_TX = 4,  //!< contract tx
+	EM_COMMON_TX = 3,    //!< transfer money from one account to another
+	EM_CONTRACT_TX = 4,  //!< contract tx
 	REG_APP_TX = 5,//!< register app
 	NULL_TX,          //!< NULL_TX
 };
@@ -169,13 +169,13 @@ class CBaseTransaction {
 protected:
 	static string txTypeArray[6];
 public:
-	static uint64_t nMinTxFee;
-	static int64_t nMinRelayTxFee;
+	static uint64_t m_sMinTxFee;
+	static int64_t m_sMinRelayTxFee;
 	static const int CURRENT_VERSION = nTxVersion2;
 
-	unsigned char nTxType;
+	unsigned char m_chTxType;
 	int nVersion;
-	int nValidHeight;
+	int m_nValidHeight;
 	uint64_t nRunStep;  //only in memory
 	int nFuelRate;      //only in memory
 public:
@@ -185,11 +185,11 @@ public:
 	}
 
 	CBaseTransaction(int _nVersion, unsigned char _nTxType) :
-			nTxType(_nTxType), nVersion(_nVersion), nValidHeight(0), nRunStep(0), nFuelRate(0){
+			m_chTxType(_nTxType), nVersion(_nVersion), m_nValidHeight(0), nRunStep(0), nFuelRate(0){
 	}
 
 	CBaseTransaction() :
-			nTxType(COMMON_TX), nVersion(CURRENT_VERSION), nValidHeight(0), nRunStep(0), nFuelRate(0){
+			m_chTxType(EM_COMMON_TX), nVersion(CURRENT_VERSION), m_nValidHeight(0), nRunStep(0), nFuelRate(0){
 	}
 
 	virtual ~CBaseTransaction() {
@@ -224,7 +224,7 @@ public:
 	virtual bool IsValidHeight(int nCurHeight, int nTxCacheHeight) const;
 
 	bool IsCoinBase() {
-		return (nTxType == REWARD_TX);
+		return (m_chTxType == REWARD_TX);
 	}
 
 	virtual bool ExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo,
@@ -243,28 +243,28 @@ public:
 class CRegisterAccountTx: public CBaseTransaction {
 
 public:
-	mutable CUserID userId;      //pubkey
-	mutable CUserID minerId;     //Miner pubkey
-	int64_t llFees;
-	vector<unsigned char> signature;
+	mutable CUserID m_cUserId;      //pubkey	
+	mutable CUserID m_cMinerId;     //Miner pubkey
+	int64_t m_llFees;
+	vector<unsigned char> m_vchSignature;
 
 public:
 	CRegisterAccountTx(const CBaseTransaction *pBaseTx) {
-		assert(REG_ACCT_TX == pBaseTx->nTxType);
+		assert(REG_ACCT_TX == pBaseTx->m_chTxType);
 		*this = *(CRegisterAccountTx *) pBaseTx;
 	}
 	CRegisterAccountTx(const CUserID &uId,const CUserID &minerID,int64_t fees,int height) {
-		nTxType = REG_ACCT_TX;
-		llFees = fees;
-		nValidHeight = height;
-		userId = uId;
-		minerId=minerID;
-		signature.clear();
+		m_chTxType = REG_ACCT_TX;
+		m_llFees = fees;
+		m_nValidHeight = height;
+		m_cUserId = uId;
+		m_cMinerId=minerID;
+		m_vchSignature.clear();
 	}
 	CRegisterAccountTx() {
-		nTxType = REG_ACCT_TX;
-		llFees = 0;
-		nValidHeight = 0;
+		m_chTxType = REG_ACCT_TX;
+		m_llFees = 0;
+		m_nValidHeight = 0;
 	}
 
 	~CRegisterAccountTx() {
@@ -274,27 +274,27 @@ public:
 	(
 		READWRITE(VARINT(this->nVersion));
 		nVersion = this->nVersion;
-		READWRITE(VARINT(nValidHeight));
-		CID id(userId);
+		READWRITE(VARINT(m_nValidHeight));
+		CID id(m_cUserId);
 		READWRITE(id);
-		CID mMinerid(minerId);
+		CID mMinerid(m_cMinerId);
 		READWRITE(mMinerid);
 		if(fRead) {
-			userId = id.GetUserId();
-			minerId = mMinerid.GetUserId();
+			m_cUserId = id.GetUserId();
+			m_cMinerId = mMinerid.GetUserId();
 		}
-		READWRITE(VARINT(llFees));
-		READWRITE(signature);
+		READWRITE(VARINT(m_llFees));
+		READWRITE(m_vchSignature);
 	)
 	uint64_t GetValue() const {return 0;}
 	uint64_t GetFee() const {
-		return llFees;
+		return m_llFees;
 	}
 
 	uint256 GetHash() const;
 
 	double GetPriority() const {
-		return llFees / GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
+		return m_llFees / GetSerializeSize(SER_NETWORK, g_sProtocolVersion);
 	}
 
 	uint256 SignatureHash() const;
@@ -320,16 +320,16 @@ public:
 
 class CTransaction : public CBaseTransaction {
 public:
-	mutable CUserID srcRegId;                   //src regid
-	mutable CUserID desUserId;                  //user regid or user key id or app regid
-	uint64_t llFees;
-	uint64_t llValues;                          //transfer amount
-	vector_unsigned_char vContract;
-	vector_unsigned_char signature;
+	mutable CUserID m_cSrcRegId;                   //src regid	
+	mutable CUserID m_cDesUserId;                  //user regid or user key id or app regid
+	uint64_t m_ullFees;
+	uint64_t m_ullValues;                          //transfer amount
+	vector_unsigned_char m_vchContract;
+	vector_unsigned_char m_vchSignature;
 
 public:
 	CTransaction(const CBaseTransaction *pBaseTx) {
-		assert(CONTRACT_TX == pBaseTx->nTxType || COMMON_TX == pBaseTx->nTxType);
+		assert(EM_CONTRACT_TX == pBaseTx->m_chTxType || EM_COMMON_TX == pBaseTx->m_chTxType);
 		*this = *(CTransaction *) pBaseTx;
 	}
 	CTransaction(const CUserID& in_UserRegId, CUserID in_desUserId, uint64_t Fee, uint64_t Value, int high, vector_unsigned_char& pContract)
@@ -340,38 +340,38 @@ public:
 		if (in_desUserId.type() == typeid(CRegID)) {
 			assert(!boost::get<CRegID>(in_desUserId).IsEmpty());
 		}
-		nTxType = CONTRACT_TX;
-		srcRegId = in_UserRegId;
-		desUserId = in_desUserId;
-		vContract = pContract;
-		nValidHeight = high;
-		llFees = Fee;
-		llValues = Value;
-		signature.clear();
+		m_chTxType = EM_CONTRACT_TX;
+		m_cSrcRegId = in_UserRegId;
+		m_cDesUserId = in_desUserId;
+		m_vchContract = pContract;
+		m_nValidHeight = high;
+		m_ullFees = Fee;
+		m_ullValues = Value;
+		m_vchSignature.clear();
 	}
 	CTransaction(const CUserID& in_UserRegId, CUserID in_desUserId, uint64_t Fee, uint64_t Value, int high)
 	{
-		nTxType = COMMON_TX;
+		m_chTxType = EM_COMMON_TX;
 		if (in_UserRegId.type() == typeid(CRegID)) {
 			assert(!boost::get<CRegID>(in_UserRegId).IsEmpty());
 		}
 		if (in_desUserId.type() == typeid(CRegID)) {
 			assert(!boost::get<CRegID>(in_desUserId).IsEmpty());
 		}
-		srcRegId = in_UserRegId;
-		desUserId = in_desUserId;
-		nValidHeight = high;
-		llFees = Fee;
-		llValues = Value;
-		signature.clear();
+		m_cSrcRegId = in_UserRegId;
+		m_cDesUserId = in_desUserId;
+		m_nValidHeight = high;
+		m_ullFees = Fee;
+		m_ullValues = Value;
+		m_vchSignature.clear();
 	}
 	CTransaction() {
-		nTxType = COMMON_TX;
-		llFees = 0;
-		vContract.clear();
-		nValidHeight = 0;
-		llValues = 0;
-		signature.clear();
+		m_chTxType = EM_COMMON_TX;
+		m_ullFees = 0;
+		m_vchContract.clear();
+		m_nValidHeight = 0;
+		m_ullValues = 0;
+		m_vchSignature.clear();
 	}
 
 	~CTransaction() {
@@ -382,29 +382,29 @@ public:
 	(
 			READWRITE(VARINT(this->nVersion));
 			nVersion = this->nVersion;
-			READWRITE(VARINT(nValidHeight));
-			CID srcId(srcRegId);
+			READWRITE(VARINT(m_nValidHeight));
+			CID srcId(m_cSrcRegId);
 			READWRITE(srcId);
-			CID desId(desUserId);
+			CID desId(m_cDesUserId);
 			READWRITE(desId);
-			READWRITE(VARINT(llFees));
-			READWRITE(VARINT(llValues));
-			READWRITE(vContract);
-			READWRITE(signature);
+			READWRITE(VARINT(m_ullFees));
+			READWRITE(VARINT(m_ullValues));
+			READWRITE(m_vchContract);
+			READWRITE(m_vchSignature);
 			if(fRead) {
-				srcRegId = srcId.GetUserId();
-				desUserId = desId.GetUserId();
+				m_cSrcRegId = srcId.GetUserId();
+				m_cDesUserId = desId.GetUserId();
 			}
 	)
 	uint64_t GetValue() const {return 0;}
 	uint256 GetHash() const;
 
 	uint64_t GetFee() const {
-		return llFees;
+		return m_ullFees;
 	}
 
 	double GetPriority() const {
-		return llFees / GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
+		return m_ullFees / GetSerializeSize(SER_NETWORK, g_sProtocolVersion);
 	}
 
 	uint256 SignatureHash() const;
@@ -420,7 +420,7 @@ public:
 	bool GetAddress(set<CKeyID> &vAddr, CAccountViewCache &view, CScriptDBViewCache &scriptDB);
 
 	const vector_unsigned_char& GetvContract() {
-		return vContract;
+		return m_vchContract;
 	}
 
 	bool ExecuteTx(int nIndex, CAccountViewCache &view, CValidationState &state, CTxUndo &txundo, int nHeight,
@@ -433,28 +433,28 @@ public:
 class CRewardTransaction: public CBaseTransaction {
 
 public:
-	mutable CUserID account;   // in genesis block are pubkey, otherwise are account id
+	mutable CUserID m_cAccount;   // in genesis block are pubkey, otherwise are m_cAccount id		
 	uint64_t rewardValue;
 	int nHeight;
 public:
 	CRewardTransaction(const CBaseTransaction *pBaseTx) {
-		assert(REWARD_TX == pBaseTx->nTxType);
+		assert(REWARD_TX == pBaseTx->m_chTxType);
 		*this = *(CRewardTransaction*) pBaseTx;
 	}
 
 	CRewardTransaction(const vector_unsigned_char &accountIn, const uint64_t rewardValueIn, const int _nHeight) {
-		nTxType = REWARD_TX;
+		m_chTxType = REWARD_TX;
 		if (accountIn.size() > 6) {
-			account = CPubKey(accountIn);
+			m_cAccount = CPubKey(accountIn);
 		} else {
-			account = CRegID(accountIn);
+			m_cAccount = CRegID(accountIn);
 		}
 		rewardValue = rewardValueIn;
 		nHeight = _nHeight;
 	}
 
 	CRewardTransaction() {
-		nTxType = REWARD_TX;
+		m_chTxType = REWARD_TX;
 		rewardValue = 0;
 		nHeight = 0;
 	}
@@ -466,10 +466,10 @@ public:
 	(
 		READWRITE(VARINT(this->nVersion));
 		nVersion = this->nVersion;
-		CID acctId(account);
+		CID acctId(m_cAccount);
 		READWRITE(acctId);
 		if(fRead) {
-			account = acctId.GetUserId();
+			m_cAccount = acctId.GetUserId();
 		}
 		READWRITE(VARINT(rewardValue));
 		READWRITE(VARINT(nHeight));
@@ -506,20 +506,20 @@ public:
 class CRegisterAppTx: public CBaseTransaction {
 
 public:
-	mutable CUserID regAcctId;         //regid
+	mutable CUserID m_cRegAcctId;         //regid
 	vector_unsigned_char script;          //script content
 	uint64_t llFees;
 	vector_unsigned_char signature;
 public:
 	CRegisterAppTx(const CBaseTransaction *pBaseTx) {
-		assert(REG_APP_TX == pBaseTx->nTxType);
+		assert(REG_APP_TX == pBaseTx->m_chTxType);
 		*this = *(CRegisterAppTx*) pBaseTx;
 	}
 
 	CRegisterAppTx() {
-		nTxType = REG_APP_TX;
+		m_chTxType = REG_APP_TX;
 		llFees = 0;
-		nValidHeight = 0;
+		m_nValidHeight = 0;
 	}
 
 	~CRegisterAppTx() {
@@ -529,11 +529,11 @@ public:
 	(
 		READWRITE(VARINT(this->nVersion));
 		nVersion = this->nVersion;
-		READWRITE(VARINT(nValidHeight));
-		CID regId(regAcctId);
+		READWRITE(VARINT(m_nValidHeight));
+		CID regId(m_cRegAcctId);
 		READWRITE(regId);
 		if(fRead) {
-			regAcctId = regId.GetUserId();
+			m_cRegAcctId = regId.GetUserId();
 		}
 		READWRITE(script);
 		READWRITE(VARINT(llFees));
@@ -553,7 +553,7 @@ public:
 	}
 
 	double GetPriority() const {
-		return llFees / GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
+		return llFees / GetSerializeSize(SER_NETWORK, g_sProtocolVersion);
 	}
 
 	string ToString(CAccountViewCache &view) const;
@@ -724,7 +724,7 @@ public:
 
 class CAccount {
 public:
-	CRegID regID;
+	CRegID m_cRegID;
 	CKeyID keyID;											//!< keyID of the account
 	CPubKey PublicKey;										//!< public key of the account
 	CPubKey MinerPKey;									    //!< public key of the account for miner
@@ -748,18 +748,18 @@ public:
 		llValues = 0;
 		MinerPKey =  CPubKey();
 		nHeight = 0;
-		regID.clean();
+		m_cRegID.clean();
 		nCoinDay = 0;
 	}
 	CAccount() :keyID(uint160()), llValues(0) {
 		PublicKey = CPubKey();
 		MinerPKey =  CPubKey();
 		nHeight = 0;
-		regID.clean();
+		m_cRegID.clean();
 		nCoinDay = 0;
 	}
 	CAccount(const CAccount & other) {
-		this->regID = other.regID;
+		this->m_cRegID = other.m_cRegID;
 		this->keyID = other.keyID;
 		this->PublicKey = other.PublicKey;
 		this->MinerPKey = other.MinerPKey;
@@ -770,7 +770,7 @@ public:
 	CAccount &operator=(const CAccount & other) {
 		if(this == &other)
 			return *this;
-		this->regID = other.regID;
+		this->m_cRegID = other.m_cRegID;
 		this->keyID = other.keyID;
 		this->PublicKey = other.PublicKey;
 		this->MinerPKey = other.MinerPKey;
@@ -792,8 +792,8 @@ public:
 	bool IsRegister() const {
 		return (PublicKey.IsFullyValid() && PublicKey.GetKeyID() == keyID);
 	}
-	bool SetRegId(const CRegID &regID){this->regID = regID;return true;};
-	bool GetRegId(CRegID &regID)const {regID = this->regID;return !regID.IsEmpty();};
+	bool SetRegId(const CRegID &regID){this->m_cRegID = regID;return true;};
+	bool GetRegId(CRegID &regID)const {regID = this->m_cRegID;return !regID.IsEmpty();};
 	uint64_t GetRawBalance();
 	void ClearAccPos(int nCurHeight);
 	uint64_t GetAccountPos(int prevBlockHeight);
@@ -804,7 +804,7 @@ public:
 	}
 	uint256 GetHash(){
 		CHashWriter ss(SER_GETHASH, 0);
-		ss << regID << keyID << PublicKey << MinerPKey << VARINT(llValues)
+		ss << m_cRegID << keyID << PublicKey << MinerPKey << VARINT(llValues)
 		   << VARINT(nHeight) << VARINT(nCoinDay);
 		return ss.GetHash();
 	}
@@ -815,7 +815,7 @@ public:
 	bool UpDateCoinDay(int nCurHeight);
 	IMPLEMENT_SERIALIZE
 	(
-		READWRITE(regID);
+		READWRITE(m_cRegID);
 		READWRITE(keyID);
 		READWRITE(PublicKey);
 		READWRITE(MinerPKey);
@@ -876,21 +876,21 @@ inline unsigned int GetSerializeSize(const std::shared_ptr<CBaseTransaction> &pa
 
 template<typename Stream>
 void Serialize(Stream& os, const std::shared_ptr<CBaseTransaction> &pa, int nType, int nVersion) {
-	unsigned char ntxType = pa->nTxType;
+	unsigned char ntxType = pa->m_chTxType;
 	Serialize(os, ntxType, nType, nVersion);
-	if (pa->nTxType == REG_ACCT_TX) {
+	if (pa->m_chTxType == REG_ACCT_TX) {
 		Serialize(os, *((CRegisterAccountTx *) (pa.get())), nType, nVersion);
 	}
-	else if (pa->nTxType == COMMON_TX) {
+	else if (pa->m_chTxType == EM_COMMON_TX) {
 		Serialize(os, *((CTransaction *) (pa.get())), nType, nVersion);
 	}
-	else if (pa->nTxType == CONTRACT_TX) {
+	else if (pa->m_chTxType == EM_CONTRACT_TX) {
 		Serialize(os, *((CTransaction *) (pa.get())), nType, nVersion);
 	}
-	else if (pa->nTxType == REWARD_TX) {
+	else if (pa->m_chTxType == REWARD_TX) {
 		Serialize(os, *((CRewardTransaction *) (pa.get())), nType, nVersion);
 	}
-	else if (pa->nTxType == REG_APP_TX) {
+	else if (pa->m_chTxType == REG_APP_TX) {
 		Serialize(os, *((CRegisterAppTx *) (pa.get())), nType, nVersion);
 	}
 	else {
@@ -907,11 +907,11 @@ void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, i
 		pa = std::make_shared<CRegisterAccountTx>();
 		Unserialize(is, *((CRegisterAccountTx *) (pa.get())), nType, nVersion);
 	}
-	else if (nTxType == COMMON_TX) {
+	else if (nTxType == EM_COMMON_TX) {
 		pa = std::make_shared<CTransaction>();
 		Unserialize(is, *((CTransaction *) (pa.get())), nType, nVersion);
 	}
-	else if (nTxType == CONTRACT_TX) {
+	else if (nTxType == EM_CONTRACT_TX) {
 		pa = std::make_shared<CTransaction>();
 		Unserialize(is, *((CTransaction *) (pa.get())), nType, nVersion);
 	}
@@ -926,7 +926,7 @@ void Unserialize(Stream& is, std::shared_ptr<CBaseTransaction> &pa, int nType, i
 	else {
 		throw ios_base::failure("unseiralize tx type value error, must be ranger(1...5)");
 	}
-	pa->nTxType = nTxType;
+	pa->m_chTxType = nTxType;
 }
 
 

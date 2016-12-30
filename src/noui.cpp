@@ -95,15 +95,15 @@ static bool noui_ThreadSafeMessageBox(const std::string& message, const std::str
 static bool noui_SyncTx()
 {
 	Array arrayObj;
-	int nTipHeight = chainActive.Tip()->nHeight;
+	int nTipHeight = g_cChainActive.Tip()->m_nHeight;
 	int nSyncTxDeep = SysCfg().GetArg("-synctxdeep", 100);
 	if(nSyncTxDeep >= nTipHeight) {
 		nSyncTxDeep = nTipHeight;
 	}
-	CBlockIndex *pStartBlockIndex = chainActive[nTipHeight-nSyncTxDeep];
+	CBlockIndex *pStartBlockIndex = g_cChainActive[nTipHeight-nSyncTxDeep];
 
 	Object objStartHeight;
-	objStartHeight.push_back(Pair("syncheight", pStartBlockIndex->nHeight));
+	objStartHeight.push_back(Pair("syncheight", pStartBlockIndex->m_nHeight));
 	Object objMsg;
 	objMsg.push_back(Pair("type",     "SyncTxHight"));
 	objMsg.push_back(Pair("msg",  objStartHeight));
@@ -117,9 +117,9 @@ static bool noui_SyncTx()
 			CAccountTx acctTx= g_pwalletMain->m_mapInBlockTx[pStartBlockIndex->GetBlockHash()];
 			map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx = acctTx.m_mapAccountTx.begin();
 			for(;iterTx != acctTx.m_mapAccountTx.end(); ++iterTx) {
-				objTx = iterTx->second->ToJSON(*pAccountViewTip);
+				objTx = iterTx->second->ToJSON(*g_pAccountViewTip);
 				objTx.push_back(Pair("blockhash", iterTx->first.GetHex()));
-				objTx.push_back(Pair("confirmHeight", pStartBlockIndex->nHeight));
+				objTx.push_back(Pair("confirmHeight", pStartBlockIndex->m_nHeight));
 				objTx.push_back(Pair("confirmedtime", (int)pStartBlockIndex->nTime));
 				Object obj;
 				obj.push_back(Pair("type",     "SyncTx"));
@@ -127,7 +127,7 @@ static bool noui_SyncTx()
 				AddMessageToDeque(write_string(Value(std::move(obj)),true));
 			}
 		}
-		pStartBlockIndex = chainActive.Next(pStartBlockIndex);
+		pStartBlockIndex = g_cChainActive.Next(pStartBlockIndex);
 	}
 	/*
 	map<uint256, CAccountTx>::iterator iterAccountTx = pwalletMain->mapInBlockTx.begin();
@@ -136,11 +136,11 @@ static bool noui_SyncTx()
 		Object objTx;
 		map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx = iterAccountTx->second.mapAccountTx.begin();
 		for(;iterTx != iterAccountTx->second.mapAccountTx.end(); ++iterTx) {
-			objTx = iterTx->second.get()->ToJSON(*pAccountViewTip);
+			objTx = iterTx->second.get()->ToJSON(*g_pAccountViewTip);
 			objTx.push_back(Pair("blockhash", iterAccountTx->first.GetHex()));
-			if(mapBlockIndex.count(iterAccountTx->first) && chainActive.Contains(mapBlockIndex[iterAccountTx->first])) {
-				objTx.push_back(Pair("confirmHeight", mapBlockIndex[iterAccountTx->first]->nHeight));
-				objTx.push_back(Pair("confirmedtime", (int)mapBlockIndex[iterAccountTx->first]->nTime));
+			if(g_mapBlockIndex.count(iterAccountTx->first) && g_cChainActive.Contains(g_mapBlockIndex[iterAccountTx->first])) {
+				objTx.push_back(Pair("confirmHeight", g_mapBlockIndex[iterAccountTx->first]->nHeight));
+				objTx.push_back(Pair("confirmedtime", (int)g_mapBlockIndex[iterAccountTx->first]->nTime));
 			}
 			else {
 				LogPrint("NOUI", "block hash=%s in wallet map invalid\n", iterAccountTx->first.GetHex());
@@ -156,7 +156,7 @@ static bool noui_SyncTx()
 	map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx =  g_pwalletMain->m_mapUnConfirmTx.begin();
 	for(; iterTx != g_pwalletMain->m_mapUnConfirmTx.end(); ++iterTx)
 	{
-		Object objTx = iterTx->second.get()->ToJSON(*pAccountViewTip);
+		Object objTx = iterTx->second.get()->ToJSON(*g_pAccountViewTip);
 		arrayObj.push_back(objTx);
 
 		Object obj;
@@ -193,7 +193,7 @@ static void noui_BlockChanged(int64_t time,int64_t high,const uint256 &hash) {
 	obj.push_back(Pair("time",     (int)time));
 	obj.push_back(Pair("hash",     hash.ToString()));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
-    obj.push_back(Pair("fuelrate", GetElementForBurn(chainActive.Tip())));
+    obj.push_back(Pair("fuelrate", GetElementForBurn(g_cChainActive.Tip())));
     AddMessageToDeque(write_string(Value(std::move(obj)),true));
 }
 
@@ -210,7 +210,7 @@ static bool noui_RevTransaction(const uint256 &hash){
 static bool noui_RevAppTransaction(const CBlock *pBlock ,int nIndex){
 	Object obj;
 	obj.push_back(Pair("type",     "rev_app_transaction"));
-	Object objTx = pBlock->vptx[nIndex].get()->ToJSON(*pAccountViewTip);
+	Object objTx = pBlock->vptx[nIndex].get()->ToJSON(*g_pAccountViewTip);
 	objTx.push_back(Pair("blockhash", pBlock->GetHash().GetHex()));
 	objTx.push_back(Pair("confirmHeight", (int) pBlock->GetHeight()));
 	objTx.push_back(Pair("confirmedtime", (int) pBlock->GetTime()));
@@ -246,12 +246,12 @@ static bool noui_RemoveTransaction(const uint256 &hash) {
 void noui_connect()
 {
     // Connect Dacrsd signal handlers
-	uiInterface.RevTransaction.connect(noui_RevTransaction);
-	uiInterface.RevAppTransaction.connect(noui_RevAppTransaction);
-    uiInterface.ThreadSafeMessageBox.connect(noui_ThreadSafeMessageBox);
-    uiInterface.InitMessage.connect(noui_InitMessage);
-    uiInterface.NotifyBlocksChanged.connect(noui_BlockChanged);
-    uiInterface.NotifyMessage.connect(noui_NotifyMessage);
-    uiInterface.ReleaseTransaction.connect(noui_ReleaseTransaction);
-    uiInterface.RemoveTransaction.connect(noui_RemoveTransaction);
+	g_cUIInterface.RevTransaction.connect(noui_RevTransaction);
+	g_cUIInterface.RevAppTransaction.connect(noui_RevAppTransaction);
+    g_cUIInterface.ThreadSafeMessageBox.connect(noui_ThreadSafeMessageBox);
+    g_cUIInterface.InitMessage.connect(noui_InitMessage);
+    g_cUIInterface.NotifyBlocksChanged.connect(noui_BlockChanged);
+    g_cUIInterface.NotifyMessage.connect(noui_NotifyMessage);
+    g_cUIInterface.ReleaseTransaction.connect(noui_ReleaseTransaction);
+    g_cUIInterface.RemoveTransaction.connect(noui_RemoveTransaction);
 }

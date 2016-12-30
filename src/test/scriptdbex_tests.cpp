@@ -7,169 +7,164 @@
 #include  "boost/filesystem/path.hpp"
 using namespace std;
 
-class CScriptDBTest
-{
+class CScriptDBTest {
 public:
 	CScriptDBTest();
 	~CScriptDBTest();
 	void Init();
-	void InsertData(CScriptDBViewCache* pViewCache);
-	void CheckRecordCount(CScriptDBViewCache* pViewCache,size_t nComparCount);
-	void CheckReadData(CScriptDBViewCache* pViewCache);
-	void Flush(CScriptDBViewCache* pViewCache1,CScriptDBViewCache* pViewCache2,CScriptDBViewCache* pViewCache3);
-	void Flush(CScriptDBViewCache* pViewCache);
-	void EraseData(CScriptDBViewCache* pViewCache);
-	void GetScriptData(CScriptDBViewCache* pViewCache);
+	void InsertData(CScriptDBViewCache* pcViewCache);
+	void CheckRecordCount(CScriptDBViewCache* pcViewCache, size_t unComparCount);
+	void CheckReadData(CScriptDBViewCache* pcViewCache);
+	void Flush(CScriptDBViewCache* pViewCache1, CScriptDBViewCache* pcViewCache2, CScriptDBViewCache* pcViewCache3);
+	void Flush(CScriptDBViewCache* pcViewCache);
+	void EraseData(CScriptDBViewCache* pcViewCache);
+	void GetScriptData(CScriptDBViewCache* pcViewCache);
 protected:
-	static const int TEST_SIZE=10000;
-	CScriptDB* pTestDB;
-	CScriptDBViewCache* pTestView;
-	map<vector<unsigned char>,vector<unsigned char> > mapScript;
+	static const int TEST_SIZE = 10000;
+	CScriptDB* m_pcTestDB;
+	CScriptDBViewCache* m_pcTestView;
+	map<vector<unsigned char>, vector<unsigned char> > m_mapScript;
 };
 
 CScriptDBTest::CScriptDBTest() {
-	 Init();
+	Init();
 }
 
 
 CScriptDBTest::~CScriptDBTest() {
-	if (pTestView != NULL) {
-		delete pTestView;
-		pTestView = NULL;
+	if (m_pcTestView != NULL) {
+		delete m_pcTestView;
+		m_pcTestView = NULL;
 	}
-	if (pTestDB != NULL) {
-		delete pTestDB;
-		pTestDB = NULL;
+	if (m_pcTestDB != NULL) {
+		delete m_pcTestDB;
+		m_pcTestDB = NULL;
 	}
 	const boost::filesystem::path p = GetDataDir() / "blocks" / "testdb";
 	boost::filesystem::remove_all(p);
 }
 
 void CScriptDBTest::Init() {
-	pTestDB = new CScriptDB("testdb", size_t(4 << 20), false, true);
-	pTestView = new CScriptDBViewCache(*pTestDB, false);
+	m_pcTestDB = new CScriptDB("testdb", size_t(4 << 20), false, true);
+	m_pcTestView = new CScriptDBViewCache(*m_pcTestDB, false);
 
-	vector<unsigned char> vScriptBase = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-				0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
+	vector<unsigned char> vScriptBase = { 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+			0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01 };
 
 	for (int i = 0; i < TEST_SIZE; ++i) {
-		CRegID regID(i,1);
-		vector<unsigned char> vScriptData(vScriptBase.begin(),vScriptBase.end());
-		vector<unsigned char> vRegV6 = regID.GetVec6();
-		vScriptData.insert(vScriptData.end(),vRegV6.begin(),vRegV6.end());
-		mapScript.insert(std::make_pair(vRegV6,vScriptData));
+		CRegID regID(i, 1);
+		vector<unsigned char> vcScriptData(vScriptBase.begin(), vScriptBase.end());
+		vector<unsigned char> vcRegV6 = regID.GetVec6();
+		vcScriptData.insert(vcScriptData.end(), vcRegV6.begin(), vcRegV6.end());
+		m_mapScript.insert(std::make_pair(vcRegV6, vcScriptData));
 	}
 }
 
-void CScriptDBTest::CheckReadData(CScriptDBViewCache* pViewCache) {
-	BOOST_CHECK(pViewCache);
+void CScriptDBTest::CheckReadData(CScriptDBViewCache* pcViewCache) {
+	BOOST_CHECK(pcViewCache);
 	vector<unsigned char> vScriptContent;
-	for (const auto& item : mapScript) {
+	for (const auto& item : m_mapScript) {
 		CRegID regID(item.first);
-		BOOST_CHECK(pViewCache->HaveScript(regID));
-		BOOST_CHECK(pViewCache->GetScript(regID, vScriptContent));
+		BOOST_CHECK(pcViewCache->HaveScript(regID));
+		BOOST_CHECK(pcViewCache->GetScript(regID, vScriptContent));
 		BOOST_CHECK(vScriptContent == item.second);
 	}
 }
 
-void CScriptDBTest::InsertData(CScriptDBViewCache* pViewCache) {
-	BOOST_CHECK(pViewCache);
-	for (const auto& item : mapScript) {
+void CScriptDBTest::InsertData(CScriptDBViewCache* pcViewCache) {
+	BOOST_CHECK(pcViewCache);
+	for (const auto& item : m_mapScript) {
 		CRegID regID(item.first);
-		BOOST_CHECK(pViewCache->SetScript(regID, item.second));
+		BOOST_CHECK(pcViewCache->SetScript(regID, item.second));
 	}
 }
 
-void CScriptDBTest::CheckRecordCount(CScriptDBViewCache* pViewCache,size_t nComparCount) {
-	BOOST_CHECK(pViewCache);
+void CScriptDBTest::CheckRecordCount(CScriptDBViewCache* pcViewCache, size_t unComparCount) {
+	BOOST_CHECK(pcViewCache);
 	int nCount = 0;
-	if( 0 == nComparCount) {
-		BOOST_CHECK(!pViewCache->GetScriptCount(nCount));
+	if (0 == unComparCount) {
+		BOOST_CHECK(!pcViewCache->GetScriptCount(nCount));
 	} else {
-		BOOST_CHECK(pViewCache->GetScriptCount(nCount));
-		BOOST_CHECK((unsigned int)nCount == nComparCount);
+		BOOST_CHECK(pcViewCache->GetScriptCount(nCount));
+		BOOST_CHECK((unsigned int )nCount == unComparCount);
 	}
 }
 
-void CScriptDBTest::Flush(CScriptDBViewCache* pViewCache1, CScriptDBViewCache* pViewCache2,
-		CScriptDBViewCache* pViewCache3) {
-	BOOST_CHECK(pViewCache1 && pViewCache2 && pViewCache3);
+void CScriptDBTest::Flush(CScriptDBViewCache* pViewCache1, CScriptDBViewCache* pcViewCache2,CScriptDBViewCache* pcViewCache3) {
+	BOOST_CHECK(pViewCache1 && pcViewCache2 && pcViewCache3);
 	BOOST_CHECK(pViewCache1->Flush());
-	BOOST_CHECK(pViewCache2->Flush());
-	BOOST_CHECK(pViewCache3->Flush());
+	BOOST_CHECK(pcViewCache2->Flush());
+	BOOST_CHECK(pcViewCache3->Flush());
 }
 
-void CScriptDBTest::Flush(CScriptDBViewCache* pViewCache) {
-	BOOST_CHECK(pViewCache);
-	BOOST_CHECK(pViewCache->Flush());
+void CScriptDBTest::Flush(CScriptDBViewCache* pcViewCache) {
+	BOOST_CHECK(pcViewCache);
+	BOOST_CHECK(pcViewCache->Flush());
 }
 
-void CScriptDBTest::EraseData(CScriptDBViewCache* pViewCache) {
-	BOOST_CHECK(pViewCache);
-	for (const auto& item:mapScript) {
+void CScriptDBTest::EraseData(CScriptDBViewCache* pcViewCache) {
+	BOOST_CHECK(pcViewCache);
+	for (const auto& item : m_mapScript) {
 		CRegID regID(item.first);
-		BOOST_CHECK(pViewCache->EraseScript(regID));
+		BOOST_CHECK(pcViewCache->EraseScript(regID));
 	}
 }
 
-void CScriptDBTest::GetScriptData(CScriptDBViewCache* pViewCache) {
-	BOOST_CHECK(pViewCache);
+void CScriptDBTest::GetScriptData(CScriptDBViewCache* pcViewCache) {
+	BOOST_CHECK(pcViewCache);
 	int nCount = 0;
 //	int nHeight = 0;
 	int nCurHeight = TEST_SIZE / 2;
-	vector<unsigned char> vScriptData;
-	vector<unsigned char> vScriptKey;
+	vector<unsigned char> vcScriptData;
+	vector<unsigned char> vcScriptKey;
 	set<CScriptDBOperLog> setOperLog;
-	auto it = mapScript.begin();
-	BOOST_CHECK(it != mapScript.end());
+	auto it = m_mapScript.begin();
+	BOOST_CHECK(it != m_mapScript.end());
 
-	BOOST_CHECK(pViewCache->GetScriptDataCount(CRegID(it->first), nCount));
-	bool ret = pViewCache->GetScriptData(nCurHeight, CRegID(it->first), 0, vScriptKey, vScriptData);
+	BOOST_CHECK(pcViewCache->GetScriptDataCount(CRegID(it->first), nCount));
+	bool bRet = pcViewCache->GetScriptData(nCurHeight, CRegID(it->first), 0, vcScriptKey, vcScriptData);
 
-	while (ret) {
-		if (++it == mapScript.end()) {
+	while (bRet) {
+		if (++it == m_mapScript.end()) {
 			break;
 		}
-		ret = pViewCache->GetScriptData(nCurHeight, CRegID(it->first), 1, vScriptKey, vScriptData);
-		pViewCache->GetScriptDataCount(CRegID(it->first), nCount);
+		bRet = pcViewCache->GetScriptData(nCurHeight, CRegID(it->first), 1, vcScriptKey, vcScriptData);
+		pcViewCache->GetScriptDataCount(CRegID(it->first), nCount);
 	}
 }
 
-
 BOOST_FIXTURE_TEST_SUITE(scriptdbex_test,CScriptDBTest)
-BOOST_AUTO_TEST_CASE(add_erase)
-{
-	CScriptDBViewCache cache2(*pTestView,true);
-	CScriptDBViewCache cache3(cache2,true);
-	InsertData(&cache3);
+BOOST_AUTO_TEST_CASE(add_erase) {
+	CScriptDBViewCache cCache2(*m_pcTestView, true);
+	CScriptDBViewCache cCache3(cCache2, true);
+	InsertData(&cCache3);
 
-	Flush(&cache3,&cache2,pTestView);
+	Flush(&cCache3, &cCache2, m_pcTestView);
 
-	CheckRecordCount(pTestView,mapScript.size());
+	CheckRecordCount(m_pcTestView, m_mapScript.size());
 
-	CheckReadData(pTestView);
+	CheckReadData(m_pcTestView);
 
 	//test erase data
-	EraseData(&cache3);
+	EraseData(&cCache3);
 
-	Flush(&cache3,&cache2,pTestView);
+	Flush(&cCache3, &cCache2, m_pcTestView);
 
-	CheckRecordCount(pTestView,0);
+	CheckRecordCount(m_pcTestView, 0);
 }
 
-BOOST_AUTO_TEST_CASE(overtime)
-{
-//	CScriptDBViewCache cache2(*pTestView,true);
-//	CScriptDBViewCache cache3(cache2,true);
-//	InsertData(&cache3);
+BOOST_AUTO_TEST_CASE(overtime) {
+//	CScriptDBViewCache cCache2(*m_pcTestView,true);
+//	CScriptDBViewCache cCache3(cCache2,true);
+//	InsertData(&cCache3);
 //
-//	Flush(&cache3,&cache2,pTestView);
+//	Flush(&cCache3,&cCache2,m_pcTestView);
 //
-//	GetScriptData(&cache3);
+//	GetScriptData(&cCache3);
 //
-//	Flush(&cache3,&cache2,pTestView);
+//	Flush(&cCache3,&cCache2,m_pcTestView);
 //
-//	CheckRecordCount(pTestView,TEST_SIZE/2);
+//	CheckRecordCount(m_pcTestView,TEST_SIZE/2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

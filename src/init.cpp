@@ -129,34 +129,34 @@ void Shutdown() {
 	}
 
 	RenameThread("Dacrs-shutoff");
-	mempool.AddTransactionsUpdated(1);
+	g_cTxMemPool.AddTransactionsUpdated(1);
 	StopRPCThreads();
 	ShutdownRPCMining();
 	GenerateDacrsBlock(false, NULL, 0);
 	StopNode();
 	UnregisterNodeSignals(GetNodeSignals());
 	{
-		LOCK(cs_main);
+		LOCK(g_cs_main);
 
 		if (g_pwalletMain) {
-			g_pwalletMain->SetBestChain(chainActive.GetLocator());
+			g_pwalletMain->SetBestChain(g_cChainActive.GetLocator());
 			g_cDacrsDbEnv.Flush(true);
 		}
 		if (pblocktree) {
 			pblocktree->Flush();
 		}
-		if (pAccountViewTip) {
-			pAccountViewTip->Flush();
+		if (g_pAccountViewTip) {
+			g_pAccountViewTip->Flush();
 		}
 		if (pTxCacheTip) {
 			pTxCacheTip->Flush();
 		}
-		if (pScriptDBTip) {
-			pScriptDBTip->Flush();
+		if (g_pScriptDBTip) {
+			g_pScriptDBTip->Flush();
 		}
 
-		delete pAccountViewTip;
-		pAccountViewTip = NULL;
+		delete g_pAccountViewTip;
+		g_pAccountViewTip = NULL;
 		delete pAccountViewDB;
 		pAccountViewDB = NULL;
 		delete pblocktree;
@@ -167,8 +167,8 @@ void Shutdown() {
 		pScriptDB = NULL;
 		delete pTxCacheTip;
 		pTxCacheTip = NULL;
-		delete pScriptDBTip;
-		pScriptDBTip = NULL;
+		delete g_pScriptDBTip;
+		g_pScriptDBTip = NULL;
 	}
 
 	boost::filesystem::remove(GetPidFile());
@@ -193,12 +193,12 @@ void HandleSIGHUP(int) {
 }
 
 bool static InitError(const string &str) {
-	uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_ERROR | CClientUIInterface::NOSHOWGUI);
+	g_cUIInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_ERROR | CClientUIInterface::NOSHOWGUI);
 	return false;
 }
 
 bool static InitWarning(const string &str) {
-	uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING | CClientUIInterface::NOSHOWGUI);
+	g_cUIInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING | CClientUIInterface::NOSHOWGUI);
 	return true;
 }
 
@@ -297,7 +297,7 @@ string HelpMessage(emHelpMessageMode hmm)
     strUsage += "  -debug=<category>      " + _("Output debugging information (default: 0, supplying <category> is optional)") + "\n";
     strUsage += "                         " + _("If <category> is not supplied, output all debugging information.") + "\n";
     strUsage += "                         " + _("<category> can be:");
-    strUsage +=                                 " addrman, alert, coindb, db, lock, rand, rpc, selectcoins, mempool, net"; // Don't translate these and qt below
+    strUsage +=                                 " addrman, alert, coindb, db, lock, rand, rpc, selectcoins, g_cTxMemPool, net"; // Don't translate these and qt below
     if (hmm == EM_HMM_COIN_QT) {
     	strUsage += ", qt";
     }
@@ -310,8 +310,8 @@ string HelpMessage(emHelpMessageMode hmm)
         strUsage += "  -limitfreerelay=<n>    " + _("Continuously rate-limit free transactions to <n>*1000 bytes per minute (default:15)") + "\n";
         strUsage += "  -maxsigcachesize=<n>   " + _("Limit size of signature cache to <n> entries (default: 50000)") + "\n";
     }
-    strUsage += "  -mintxfee=<amt>        " + _("Fees smaller than this are considered zero fee (for transaction creation) (default:") + " " + FormatMoney(CTransaction::nMinTxFee) + ")" + "\n";
-    strUsage += "  -minrelaytxfee=<amt>   " + _("Fees smaller than this are considered zero fee (for relaying) (default:") + " " + FormatMoney(CTransaction::nMinRelayTxFee) + ")" + "\n";
+    strUsage += "  -mintxfee=<amt>        " + _("Fees smaller than this are considered zero fee (for transaction creation) (default:") + " " + FormatMoney(CTransaction::m_sMinTxFee) + ")" + "\n";
+    strUsage += "  -minrelaytxfee=<amt>   " + _("Fees smaller than this are considered zero fee (for relaying) (default:") + " " + FormatMoney(CTransaction::m_sMinRelayTxFee) + ")" + "\n";
     strUsage += "  -printtoconsole        " + _("Send trace/debug info to console instead of debug.log file") + "\n";
 	if (SysCfg().GetBoolArg("-help-debug", false)) {
         strUsage += "  -printblock=<hash>     " + _("Print block on startup, if found in block index") + "\n";
@@ -539,7 +539,7 @@ bool AppInit2(boost::thread_group& threadGroup) {
 //        InitWarning(_("Warning: Deprecated argument -debugnet ignored, use -debug=net"));
 
     SysCfg().SetBenchMark(SysCfg().GetBoolArg("-benchmark", false));
-    mempool.setSanityCheck(SysCfg().GetBoolArg("-checkmempool", RegTest()));
+    g_cTxMemPool.setSanityCheck(SysCfg().GetBoolArg("-checkmempool", RegTest()));
     Checkpoints::bEnabled = SysCfg().GetBoolArg("-checkpoints", true);
 
 //    fServer = GetBoolArg("-server", false);
@@ -569,7 +569,7 @@ bool AppInit2(boost::thread_group& threadGroup) {
 	if (SysCfg().IsArgCount("-mintxfee")) {
 		int64_t n = 0;
 		if (ParseMoney(SysCfg().GetArg("-mintxfee", ""), n) && n > 0) {
-			CTransaction::nMinTxFee = n;
+			CTransaction::m_sMinTxFee = n;
 		} else {
 			return InitError(strprintf(_("Invalid amount for -mintxfee=<amount>: '%s'"), SysCfg().GetArg("-mintxfee", "")));
 		}
@@ -577,7 +577,7 @@ bool AppInit2(boost::thread_group& threadGroup) {
 	if (SysCfg().IsArgCount("-minrelaytxfee")) {
 		int64_t n = 0;
 		if (ParseMoney(SysCfg().GetArg("-minrelaytxfee", ""), n) && n > 0) {
-			CTransaction::nMinRelayTxFee = n;
+			CTransaction::m_sMinRelayTxFee = n;
 		} else {
 			return InitError(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), SysCfg().GetArg("-minrelaytxfee", "")));
 		}
@@ -604,8 +604,8 @@ bool AppInit2(boost::thread_group& threadGroup) {
 //        ShrinkDebugFile();
 
     LogPrint("INFO","\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    LogPrint("INFO","Dacrs version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE);
-    printf("Dacrs version %s (%s)\n", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
+    LogPrint("INFO","Dacrs version %s (%s)\n", FormatFullVersion().c_str(), g_strClientDate);
+    printf("Dacrs version %s (%s)\n", FormatFullVersion().c_str(), g_strClientDate.c_str());
     LogPrint("INFO","Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
     printf("Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
 #ifdef USE_LUA
@@ -712,7 +712,7 @@ bool AppInit2(boost::thread_group& threadGroup) {
     // see Step 2: parameter interactions for more information about these
     fNoListen = !SysCfg().GetBoolArg("-listen", true);
     g_bDiscover = SysCfg().GetBoolArg("-discover", true);
-    fNameLookup = SysCfg().GetBoolArg("-dns", true);
+    g_bNameLookup = SysCfg().GetBoolArg("-dns", true);
 
     bool bBound = false;
     if (!fNoListen) {
@@ -738,11 +738,11 @@ bool AppInit2(boost::thread_group& threadGroup) {
 	if (SysCfg().IsArgCount("-externalip")) {
 		vector<string> tmp = SysCfg().GetMultiArgs("-externalip");
 		for (const auto& strAddr : tmp) {
-			CService addrLocal(strAddr, GetListenPort(), fNameLookup);
+			CService addrLocal(strAddr, GetListenPort(), g_bNameLookup);
 			if (!addrLocal.IsValid()) {
 				return InitError(strprintf(_("Cannot resolve -externalip address: '%s'"), strAddr));
 			}
-			AddLocal(CService(strAddr, GetListenPort(), fNameLookup), LOCAL_MANUAL);
+			AddLocal(CService(strAddr, GetListenPort(), g_bNameLookup), LOCAL_MANUAL);
 		}
 	}
 
@@ -823,39 +823,39 @@ bool AppInit2(boost::thread_group& threadGroup) {
     while (!bLoaded) {
         bool bReset = SysCfg().IsReindex();
         string strLoadError;
-        uiInterface.InitMessage(_("Loading block index..."));
+        g_cUIInterface.InitMessage(_("Loading block index..."));
         nStart = GetTimeMillis();
         do {
             try {
                 UnloadBlockIndex();
                 delete pAccountViewDB;
                 delete pblocktree;
-                delete pAccountViewTip;
+                delete g_pAccountViewTip;
                 delete pTxCacheDB;
                 delete pTxCacheTip;
                 delete pScriptDB;
-                delete pScriptDBTip;
+                delete g_pScriptDBTip;
 
                 pblocktree 		= new CBlockTreeDB(unBlockTreeDBCache, false, SysCfg().IsReindex());
                 pAccountViewDB 	= new CAccountViewDB(unAccountDBCache, false, SysCfg().IsReindex());
-                pAccountViewTip =  new CAccountViewCache(*pAccountViewDB,true);
+                g_pAccountViewTip =  new CAccountViewCache(*pAccountViewDB,true);
                 pTxCacheDB 		= new CTransactionDB(unTxCacheSize, false, SysCfg().IsReindex());
                 pTxCacheTip 	= new CTransactionDBCache(*pTxCacheDB,true);
                 pScriptDB 		= new CScriptDB(unScriptCacheSize, false , SysCfg().IsReindex());
-                pScriptDBTip 	= new CScriptDBViewCache(*pScriptDB,true);
+                g_pScriptDBTip 	= new CScriptDBViewCache(*pScriptDB,true);
 
                 if (SysCfg().IsReindex()) {
                 	pblocktree->WriteReindexing(true);
                 }
-				mempool.SetAccountViewDB(pAccountViewTip);
-				mempool.SetScriptDBViewDB(pScriptDBTip);
+				g_cTxMemPool.SetAccountViewDB(g_pAccountViewTip);
+				g_cTxMemPool.SetScriptDBViewDB(g_pScriptDBTip);
                 if (!LoadBlockIndex()) {
                     strLoadError = _("Error loading block database");
                     break;
                 }
                 // If the loaded chain has a wrong genesis, bail out immediately
                 // (we're likely using a testnet datadir, or the other way around).
-                if (!mapBlockIndex.empty() && chainActive.Genesis() == NULL)
+                if (!g_mapBlockIndex.empty() && g_cChainActive.Genesis() == NULL)
                     return InitError(_("Incorrect or no genesis block found. Wrong datadir for network?"));
 
                 // Initialize the block index (no-op if non-empty database was already loaded)
@@ -871,7 +871,7 @@ bool AppInit2(boost::thread_group& threadGroup) {
 				if (!pTxCacheTip->LoadTransaction()) {
 					strLoadError = _("Error loading transaction cache database");
 				}
-                uiInterface.InitMessage(_("Verifying blocks..."));
+                g_cUIInterface.InitMessage(_("Verifying blocks..."));
 				if (!VerifyDB(SysCfg().GetArg("-checklevel", 3), SysCfg().GetArg("-checkblocks", 288))) {
 					strLoadError = _("Corrupted block database detected");
 					break;
@@ -884,12 +884,12 @@ bool AppInit2(boost::thread_group& threadGroup) {
             bLoaded = true;
         } while(false);
 
-        uiInterface.InitMessage(_("Verifying Finished"));
-        uiInterface.InitMessage(_("Sync Tx"));
+        g_cUIInterface.InitMessage(_("Verifying Finished"));
+        g_cUIInterface.InitMessage(_("Sync Tx"));
         if (!bLoaded) {
             // first suggest a reindex
             if (!bReset) {
-                bool bRet = uiInterface.ThreadSafeMessageBox(
+                bool bRet = g_cUIInterface.ThreadSafeMessageBox(
                     strLoadError + ".\n\n" + _("Do you want to rebuild the block database now?"),
                     "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
                 if (bRet) {
@@ -919,14 +919,14 @@ bool AppInit2(boost::thread_group& threadGroup) {
 	if (SysCfg().IsArgCount("-printblock")) {
 		string strMatch = SysCfg().GetArg("-printblock", "");
 		int nFound = 0;
-		for (map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.begin(); mi != mapBlockIndex.end(); ++mi) {
+		for (map<uint256, CBlockIndex*>::iterator mi = g_mapBlockIndex.begin(); mi != g_mapBlockIndex.end(); ++mi) {
 			uint256 cHash = (*mi).first;
 			if (strncmp(cHash.ToString().c_str(), strMatch.c_str(), strMatch.size()) == 0) {
 				CBlockIndex* pBlockIndex = (*mi).second;
 				CBlock cBlock;
 				ReadBlockFromDisk(cBlock, pBlockIndex);
 				cBlock.BuildMerkleTree();
-				cBlock.print(*pAccountViewTip);
+				cBlock.print(*g_pAccountViewTip);
 				LogPrint("INFO", "\n");
 				nFound++;
 			}
@@ -943,9 +943,9 @@ bool AppInit2(boost::thread_group& threadGroup) {
     	strErrors << "Failed to connect best block";
     }
     // check current chain according to checkpoint
-    CBlockIndex* pCheckPoint = Checkpoints::GetLastCheckpoint(mapBlockIndex);
+    CBlockIndex* pCheckPoint = Checkpoints::GetLastCheckpoint(g_mapBlockIndex);
     if(NULL != pCheckPoint) {
-    	CheckActiveChain(pCheckPoint->nHeight, pCheckPoint->GetBlockHash());
+    	CheckActiveChain(pCheckPoint->m_nHeight, pCheckPoint->GetBlockHash());
     }
     vector<boost::filesystem::path> vImportFiles;
 	if (SysCfg().IsArgCount("-loadblock")) {
@@ -956,7 +956,7 @@ bool AppInit2(boost::thread_group& threadGroup) {
     threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));
 
     // ********************************************************* Step 10: load peers
-    uiInterface.InitMessage(_("Loading addresses..."));
+    g_cUIInterface.InitMessage(_("Loading addresses..."));
     nStart = GetTimeMillis();
 
     {
@@ -979,8 +979,8 @@ bool AppInit2(boost::thread_group& threadGroup) {
     RandAddSeedPerfmon();
 
     //// debug print
-    LogPrint("INFO","mapBlockIndex.size() = %u\n",   mapBlockIndex.size());
-    LogPrint("INFO","nBestHeight = %d\n",            chainActive.Height());
+    LogPrint("INFO","g_mapBlockIndex.size() = %u\n",   g_mapBlockIndex.size());
+    LogPrint("INFO","nBestHeight = %d\n",            g_cChainActive.Height());
 
     StartNode(threadGroup);
     // InitRPCMining is needed here so getwork/getblocktemplate in the GUI debug console works properly.
@@ -998,7 +998,7 @@ bool AppInit2(boost::thread_group& threadGroup) {
 		threadGroup.create_thread(boost::bind(&ThreadRelayTx, g_pwalletMain));
 	}
     // ********************************************************* Step 12: finished
-    uiInterface.InitMessage("initialize end");
+    g_cUIInterface.InitMessage("initialize end");
 
     return !g_bRequestShutdown;
 }

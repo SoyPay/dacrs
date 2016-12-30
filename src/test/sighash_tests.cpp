@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_SUITE(sighash_tests)
 //        sho = SignatureHashOld(scriptCode, txTo, nIn, nHashType);
 //        sh = SignatureHash(scriptCode, txTo, nIn, nHashType);
 //        #if defined(PRINT_SIGHASH_JSON)
-//        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+//        CDataStream ss(SER_NETWORK, g_sProtocolVersion);
 //        ss << txTo;
 //
 //        std::cout << "\t[\"" ;
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_SUITE(sighash_tests)
 //          sigHashHex = test[4].get_str();
 //
 //          uint256 sh;
-//          CDataStream stream(ParseHex(raw_tx), SER_NETWORK, PROTOCOL_VERSION);
+//          CDataStream stream(ParseHex(raw_tx), SER_NETWORK, g_sProtocolVersion);
 //          stream >> tx;
 //
 //          CValidationState state;

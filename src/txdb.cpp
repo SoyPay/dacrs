@@ -63,13 +63,13 @@ bool CBlockTreeDB::ReadLastBlockFile(int &nFile) {
 	return Read('l', nFile);
 }
 
-//bool CBlockTreeDB::ReadTxIndex(const uint256 &txid, CDiskTxPos &pos) {
+//bool CBlockTreeDB::ReadTxIndex(const uint256 &txid, ST_DiskTxPos &pos) {
 //	return Read(make_pair('t', txid), pos);
 //}
 //
-//bool CBlockTreeDB::WriteTxIndex(const vector<pair<uint256, CDiskTxPos> >&vect) {
+//bool CBlockTreeDB::WriteTxIndex(const vector<pair<uint256, ST_DiskTxPos> >&vect) {
 //	CLevelDBBatch batch;
-//	for (vector<pair<uint256, CDiskTxPos> >::const_iterator it = vect.begin(); it != vect.end(); it++){
+//	for (vector<pair<uint256, ST_DiskTxPos> >::const_iterator it = vect.begin(); it != vect.end(); it++){
 //		LogPrint("txindex", "txhash:%s dispos: nFile=%d, nPos=%d nTxOffset=%d\n", it->first.GetHex(), it->second.nFile, it->second.nPos, it->second.nTxOffset);
 //		batch.Write(make_pair('t', it->first), it->second);
 //	}
@@ -91,28 +91,28 @@ bool CBlockTreeDB::ReadFlag(const string &name, bool &fValue) {
 bool CBlockTreeDB::LoadBlockIndexGuts() {
 	leveldb::Iterator *pcursor = NewIterator();
 
-	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+	CDataStream ssKeySet(SER_DISK, g_sClientVersion);
 	ssKeySet << make_pair('b', uint256());
 	pcursor->Seek(ssKeySet.str());
 
-	// Load mapBlockIndex
+	// Load g_mapBlockIndex
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
 		try {
 			leveldb::Slice slKey = pcursor->key();
-			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, g_sClientVersion);
 			char chType;
 			ssKey >> chType;
 			if (chType == 'b') {
 				leveldb::Slice slValue = pcursor->value();
-				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, g_sClientVersion);
 				CDiskBlockIndex diskindex;
 				ssValue >> diskindex;
 
 				// Construct block index object
 				CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
-				pindexNew->pprev = InsertBlockIndex(diskindex.hashPrev);
-				pindexNew->nHeight = diskindex.nHeight;
+				pindexNew->m_pPrevBlockIndex = InsertBlockIndex(diskindex.hashPrev);
+				pindexNew->m_nHeight = diskindex.m_nHeight;
 				pindexNew->nFile = diskindex.nFile;
 				pindexNew->nDataPos = diskindex.nDataPos;
 				pindexNew->nUndoPos = diskindex.nUndoPos;
@@ -120,12 +120,12 @@ bool CBlockTreeDB::LoadBlockIndexGuts() {
 				pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
 				pindexNew->hashPos = diskindex.hashPos;
 				pindexNew->nTime = diskindex.nTime;
-				pindexNew->nBits = diskindex.nBits;
+				pindexNew->m_unBits = diskindex.m_unBits;
 				pindexNew->nNonce = diskindex.nNonce;
 				pindexNew->nStatus = diskindex.nStatus;
-				pindexNew->nTx = diskindex.nTx;
-				pindexNew->nFuel = diskindex.nFuel;
-				pindexNew->nFuelRate = diskindex.nFuelRate;
+				pindexNew->m_unTx = diskindex.m_unTx;
+				pindexNew->m_llFuel = diskindex.m_llFuel;
+				pindexNew->m_nFuelRate = diskindex.m_nFuelRate;
 				pindexNew->vSignature = diskindex.vSignature;
 				pindexNew->dFeePerKb = diskindex.dFeePerKb;
 
@@ -255,21 +255,21 @@ uint64_t CAccountViewDB::TraverseAccount() {
 	leveldb::Iterator *pcursor = db.NewIterator();
 
 	uint64_t uTotalCoin(0);
-	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+	CDataStream ssKeySet(SER_DISK, g_sClientVersion);
 	ssKeySet << make_pair('k', CKeyID());
 	pcursor->Seek(ssKeySet.str());
 
-	// Load mapBlockIndex
+	// Load g_mapBlockIndex
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
 		try {
 			leveldb::Slice slKey = pcursor->key();
-			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, g_sClientVersion);
 			char chType;
 			ssKey >> chType;
 			if (chType == 'k') {
 				leveldb::Slice slValue = pcursor->value();
-				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, g_sClientVersion);
 				CAccount account;
 				ssValue >> account;
 				uTotalCoin += account.llValues;
@@ -314,21 +314,21 @@ bool CTransactionDB::LoadTransaction(map<uint256, vector<uint256> > &mapTxHashBy
 
 	leveldb::Iterator *pcursor = db.NewIterator();
 
-	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+	CDataStream ssKeySet(SER_DISK, g_sClientVersion);
 	ssKeySet << make_pair('h', uint256());
 	pcursor->Seek(ssKeySet.str());
 
-	// Load mapBlockIndex
+	// Load g_mapBlockIndex
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
 		try {
 			leveldb::Slice slKey = pcursor->key();
-			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, g_sClientVersion);
 			char chType;
 			ssKey >> chType;
 			if (chType == 'h') {
 				leveldb::Slice slValue = pcursor->value();
-				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, g_sClientVersion);
 				vector<uint256> vTxhash;
 				uint256 blockHash;
 				ssValue >> vTxhash;
@@ -379,7 +379,7 @@ bool CScriptDB::HaveData(const vector<unsigned char> &vKey) {
 bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue) {
 	assert(nIndex >= 0 && nIndex <=1);
 	leveldb::Iterator* pcursor = db.NewIterator();
-	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+	CDataStream ssKeySet(SER_DISK, g_sClientVersion);
 	string strPrefixTemp("def");
 	//ssKeySet.insert(ssKeySet.end(), 9);
 	ssKeySet.insert(ssKeySet.end(), &strPrefixTemp[0], &strPrefixTemp[3]);
@@ -405,14 +405,14 @@ bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vScriptId, v
 		boost::this_thread::interruption_point();
 		try {
 			leveldb::Slice slKey = pcursor->key();
-//			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+//			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, g_sClientVersion);
 			string strScriptKey(slKey.data(), 0, slKey.size());
 //			ssKey >> strScriptKey;
 			string strPrefix = strScriptKey.substr(0,3);
 			if (strPrefix == "def") {
 				if(-1 == i) {
 					leveldb::Slice slValue = pcursor->value();
-					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, g_sClientVersion);
 					ssValue >> vValue;
 					vScriptId.clear();
 					vScriptId.insert(vScriptId.end(), slKey.data()+3, slKey.data()+slKey.size());
@@ -440,7 +440,7 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 	const int iSpaceLen = 1;
 	assert(nIndex >= 0 && nIndex <=1);
 	leveldb::Iterator* pcursor = db.NewIterator();
-	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+	CDataStream ssKeySet(SER_DISK, g_sClientVersion);
 
 	string strPrefixTemp("data");
 	ssKeySet.insert(ssKeySet.end(), &strPrefixTemp[0], &strPrefixTemp[4]);
@@ -469,11 +469,11 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 		boost::this_thread::interruption_point();
 		try {
 			leveldb::Slice slKey = pcursor->key();
-			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, g_sClientVersion);
 			if (0 == memcmp((char *)&ssKey[0], (char *)&ssKeySet[0], 11)) {
 				if (-1 == i) {
 					leveldb::Slice slValue = pcursor->value();
-					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, g_sClientVersion);
 					ssValue >> vScriptData;
 					vScriptKey.clear();
 					vScriptKey.insert(vScriptKey.end(), slKey.data() + iPrefixLen + iScriptIdLen + iSpaceLen,
@@ -497,7 +497,7 @@ bool CScriptDB::GetScriptData(const int curBlockHeight, const vector<unsigned ch
 bool CScriptDB::GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<unsigned char>, vector<unsigned char> > &mapTxHash)
 {
 	leveldb::Iterator* pcursor = db.NewIterator();
-	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+	CDataStream ssKeySet(SER_DISK, g_sClientVersion);
 
 	string strPrefixTemp("ADDR");
 	ssKeySet.insert(ssKeySet.end(), &strPrefixTemp[0], &strPrefixTemp[4]);
@@ -510,11 +510,11 @@ bool CScriptDB::GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<
 		try {
 			leveldb::Slice slKey = pcursor->key();
 			leveldb::Slice slValue = pcursor->value();
-			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, g_sClientVersion);
 			if (0 == memcmp((char *)&ssKey[0], (char *)&ssKeySet[0], 24)) {
 				vector<unsigned char> vValue;
 				vector<unsigned char> vKey;
-				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+				CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, g_sClientVersion);
 				ssValue >> vValue;
 				vKey.insert(vKey.end(), slKey.data(), slKey.data() + slKey.size());
 				mapTxHash.insert(make_pair(vKey, vValue));
@@ -535,7 +535,7 @@ Object CScriptDB::ToJosnObj(string Prefix) {
 	Array arrayObj;
 
 	leveldb::Iterator *pcursor = db.NewIterator();
-	CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+	CDataStream ssKeySet(SER_DISK, g_sClientVersion);
 	ssKeySet.insert(ssKeySet.end(), &Prefix[0], &Prefix[Prefix.length()]);
 	pcursor->Seek(ssKeySet.str());
 
@@ -543,11 +543,11 @@ Object CScriptDB::ToJosnObj(string Prefix) {
 		boost::this_thread::interruption_point();
 		try {
 			leveldb::Slice slKey = pcursor->key();
-			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, g_sClientVersion);
 			string strScriptKey(slKey.data(), 0, slKey.size());
 			string strPrefix = strScriptKey.substr(0,Prefix.length());
 			leveldb::Slice slValue = pcursor->value();
-			CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+			CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, g_sClientVersion);
 			Object obj;
 			if (strPrefix == Prefix) {
 				if(Prefix == "def"){
@@ -585,7 +585,7 @@ Object CAccountViewDB::ToJosnObj(char Prefix) {
 		Object obj;
 		Array arrayObj;
 		leveldb::Iterator *pcursor =db.NewIterator();
-		CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+		CDataStream ssKeySet(SER_DISK, g_sClientVersion);
 		if(Prefix == 'a'){
 			vector<unsigned char>account;
 			ssKeySet << make_pair('a',account);
@@ -594,17 +594,17 @@ Object CAccountViewDB::ToJosnObj(char Prefix) {
 			ssKeySet << make_pair('k',keyid);
 		}
 		pcursor->Seek(ssKeySet.str());
-		// Load mapBlockIndex
+		// Load g_mapBlockIndex
 		while (pcursor->Valid()) {
 			boost::this_thread::interruption_point();
 			try {
 				leveldb::Slice slKey = pcursor->key();
-				CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+				CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, g_sClientVersion);
 				char chType;
 				ssKey >> chType;
 				if (chType == Prefix) {
 					leveldb::Slice slValue = pcursor->value();
-					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, g_sClientVersion);
 					Object obj;
 					if(Prefix == 'a'){
 						obj.push_back(Pair("accountid:", HexStr(ssKey)));

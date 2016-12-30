@@ -93,12 +93,12 @@ static const unsigned char REJECT_CHECKPOINT = 0x43;
 static const unsigned char UPDATE_ACCOUNT_FAIL = 0X50;
 
 //extern CScript COINBASE_FLAGS;
-extern CCriticalSection cs_main;
-extern CTxMemPool mempool;
-extern map<uint256, CBlockIndex*> mapBlockIndex;
+extern CCriticalSection g_cs_main;
+extern CTxMemPool g_cTxMemPool;
+extern map<uint256, CBlockIndex*> g_mapBlockIndex;
 extern uint64_t g_ullLastBlockTx;
 extern uint64_t g_ullLastBlockSize;
-extern const string strMessageMagic;
+extern const string g_strMessageMagic;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t nMinDiskSpace = 52428800;
@@ -121,7 +121,7 @@ struct CDiskBlockPos;
 class CTxUndo;
 class CValidationState;
 class CWalletInterface;
-struct CNodeStateStats;
+struct ST_NodeStateStats;
 class CAccountViewDB;
 class CTransactionDB;
 class CScriptDB;
@@ -205,7 +205,7 @@ CBlockIndex * InsertBlockIndex(uint256 hash);
 /** Abort with a message */
 bool AbortNode(const string &msg);
 /** Get statistics from node state */
-bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);
+bool GetNodeStateStats(NodeId nodeid, ST_NodeStateStats &stats);
 /** Increase a node's misbehavior score. */
 void Misbehaving(NodeId nodeid, int howmuch);
 
@@ -220,7 +220,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, CBaseTransact
 
 std::shared_ptr<CBaseTransaction> CreateNewEmptyTransaction(unsigned char uType);
 
-struct CNodeStateStats {
+struct ST_NodeStateStats {
     int nMisbehavior;
 };
 
@@ -255,25 +255,25 @@ struct CDiskBlockPos
     bool IsNull() const { return (nFile == -1); }
 };
 
-struct CDiskTxPos : public CDiskBlockPos
+struct ST_DiskTxPos : public CDiskBlockPos
 {
-    unsigned int nTxOffset; // after header
+    unsigned int m_unTxOffset; // after header
 
     IMPLEMENT_SERIALIZE(
         READWRITE(*(CDiskBlockPos*)this);
-        READWRITE(VARINT(nTxOffset));
+        READWRITE(VARINT(m_unTxOffset));
     )
 
-    CDiskTxPos(const CDiskBlockPos &blockIn, unsigned int nTxOffsetIn) : CDiskBlockPos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn) {
+    ST_DiskTxPos(const CDiskBlockPos &blockIn, unsigned int nTxOffsetIn) : CDiskBlockPos(blockIn.nFile, blockIn.nPos), m_unTxOffset(nTxOffsetIn) {
     }
 
-    CDiskTxPos() {
+    ST_DiskTxPos() {
         SetNull();
     }
 
     void SetNull() {
         CDiskBlockPos::SetNull();
-        nTxOffset = 0;
+        m_unTxOffset = 0;
     }
 };
 
@@ -326,7 +326,7 @@ public:
     bool WriteToDisk(CDiskBlockPos &pos, const uint256 &hashBlock)
     {
         // Open history file to append
-        CAutoFile fileout = CAutoFile(OpenUndoFile(pos), SER_DISK, CLIENT_VERSION);
+        CAutoFile fileout = CAutoFile(OpenUndoFile(pos), SER_DISK, g_sClientVersion);
         if (!fileout)
             return ERRORMSG("CBlockUndo::WriteToDisk : OpenUndoFile failed");
 
@@ -342,7 +342,7 @@ public:
         fileout << *this;
 
         // calculate & write checksum
-        CHashWriter hasher(SER_GETHASH, PROTOCOL_VERSION);
+        CHashWriter hasher(SER_GETHASH, g_sProtocolVersion);
         hasher << hashBlock;
         hasher << *this;
         fileout << hasher.GetHash();
@@ -358,7 +358,7 @@ public:
     bool ReadFromDisk(const CDiskBlockPos &pos, const uint256 &hashBlock)
     {
         // Open history file to read
-        CAutoFile filein = CAutoFile(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION);
+        CAutoFile filein = CAutoFile(OpenUndoFile(pos, true), SER_DISK, g_sClientVersion);
         if (!filein)
             return ERRORMSG("CBlockUndo::ReadFromDisk : OpenBlockFile failed");
 
@@ -373,7 +373,7 @@ public:
         }
 
         // Verify checksum
-        CHashWriter hasher(SER_GETHASH, PROTOCOL_VERSION);
+        CHashWriter hasher(SER_GETHASH, g_sProtocolVersion);
         hasher << hashBlock;
         hasher << *this;
         if (hashChecksum != hasher.GetHash())
@@ -665,10 +665,10 @@ public:
     const uint256* phashBlock;
 
     // pointer to the index of the predecessor of this block
-    CBlockIndex* pprev;
+    CBlockIndex* m_pPrevBlockIndex;
 
     // height of the entry in the chain. The genesis block has height 0
-    int nHeight;
+    int m_nHeight;
 
     // Which # file this block is stored in (blk?????.dat)
     int nFile;
@@ -680,11 +680,11 @@ public:
     unsigned int nUndoPos;
 
     // (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
-    arith_uint256 nChainWork;
+    arith_uint256 m_cChainWork;
 
     // Number of transactions in this block.
     // Note: in a potential headers-first mode, this number cannot be relied upon
-    unsigned int nTx;
+    unsigned int m_unTx;
 
     // (memory only) Number of transactions in the chain up to and including this block
     unsigned int nChainTx; // change to 64-bit type when necessary; won't happen before 2030
@@ -700,10 +700,10 @@ public:
     uint256 hashMerkleRoot;
     uint256 hashPos;
     unsigned int nTime;
-    unsigned int nBits;
+    unsigned int m_unBits;
     unsigned int nNonce;
-    int64_t nFuel;
-    int nFuelRate;
+    int64_t m_llFuel;
+    int m_nFuelRate;
     vector<unsigned char> vSignature;
 
     double dFeePerKb;
@@ -713,13 +713,13 @@ public:
     CBlockIndex()
     {
         phashBlock = NULL;
-        pprev = NULL;
-        nHeight = 0;
+        m_pPrevBlockIndex = NULL;
+        m_nHeight = 0;
         nFile = 0;
         nDataPos = 0;
         nUndoPos = 0;
-        nChainWork = 0;
-        nTx = 0;
+        m_cChainWork = 0;
+        m_unTx = 0;
         nChainTx = 0;
         nStatus = 0;
         nSequenceId = 0;
@@ -730,23 +730,23 @@ public:
         hashMerkleRoot = uint256();
         hashPos        = uint256();
         nTime          = 0;
-        nBits          = 0;
+        m_unBits          = 0;
         nNonce         = 0;
-        nFuel          = 0;
-        nFuelRate      = INIT_FUEL_RATES;
+        m_llFuel          = 0;
+        m_nFuelRate      = INIT_FUEL_RATES;
         vSignature.clear();
     }
 
     CBlockIndex(CBlock& block)
     {
         phashBlock = NULL;
-        pprev = NULL;
-        nHeight = 0;
+        m_pPrevBlockIndex = NULL;
+        m_nHeight = 0;
         nFile = 0;
         nDataPos = 0;
         nUndoPos = 0;
-        nChainWork = 0;
-        nTx = 0;
+        m_cChainWork = 0;
+        m_unTx = 0;
         nChainTx = 0;
         nStatus = 0;
         nSequenceId = 0;
@@ -754,7 +754,7 @@ public:
 
         int64_t nTxSize(0);
         for(auto & pTx : block.vptx) {
-        	nTxSize += pTx->GetSerializeSize(SER_DISK, PROTOCOL_VERSION);
+        	nTxSize += pTx->GetSerializeSize(SER_DISK, g_sProtocolVersion);
         }
 
 		dFeePerKb = double((nblockfee - block.GetFuel())) / (double(nTxSize / 1000.0));
@@ -763,10 +763,10 @@ public:
         hashMerkleRoot = block.GetHashMerkleRoot();
         hashPos        = block.GetHashPos();
         nTime          = block.GetTime();
-        nBits          = block.GetBits();
+        m_unBits          = block.GetBits();
         nNonce         = block.GetNonce();
-        nFuel          = block.GetFuel();
-        nFuelRate      = block.GetFuelRate();
+        m_llFuel          = block.GetFuel();
+        m_nFuelRate      = block.GetFuelRate();
         vSignature     = block.GetSignature();
     }
 
@@ -792,14 +792,14 @@ public:
     {
         CBlockHeader block;
         block.SetVersion(nVersion);
-        if (pprev)
-        	block.SetHashPrevBlock(pprev->GetBlockHash());
+        if (m_pPrevBlockIndex)
+        	block.SetHashPrevBlock(m_pPrevBlockIndex->GetBlockHash());
         block.SetHashMerkleRoot(hashMerkleRoot);
         block.SetHashPos(hashPos);
         block.SetTime(nTime);
-        block.SetBits(nBits);
+        block.SetBits(m_unBits);
         block.SetNonce(nNonce);
-        block.SetHeight(nHeight);
+        block.SetHeight(m_nHeight);
         block.SetSignature(vSignature);
         return block;
     }
@@ -821,7 +821,7 @@ public:
     CBigNum GetBlockWork() const
     {
         CBigNum bnTarget;
-        bnTarget.SetCompact(nBits);
+        bnTarget.SetCompact(m_unBits);
         if (bnTarget <= 0)
             return 0;
         return (CBigNum(1)<<256) / (bnTarget+1);
@@ -829,7 +829,7 @@ public:
 
     bool CheckIndex() const
     {
-        return CheckProofOfWork(GetBlockHash(), nBits);
+        return CheckProofOfWork(GetBlockHash(), m_unBits);
     }
 
     enum { nMedianTimeSpan=11 };
@@ -841,7 +841,7 @@ public:
         int64_t* pend = &pmedian[nMedianTimeSpan];
 
         const CBlockIndex* pindex = this;
-        for (int i = 0; i < nMedianTimeSpan && pindex; i++, pindex = pindex->pprev)
+        for (int i = 0; i < nMedianTimeSpan && pindex; i++, pindex = pindex->m_pPrevBlockIndex)
             *(--pbegin) = pindex->GetBlockTime();
 
         sort(pbegin, pend);
@@ -859,8 +859,8 @@ public:
 
     string ToString() const
     {
-        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s, blockfee=%d, chainWork=%s, feePerKb=%lf)",
-            pprev, nHeight, hashMerkleRoot.ToString().c_str(), GetBlockHash().ToString().c_str(), nblockfee, nChainWork.ToString().c_str(), dFeePerKb);
+        return strprintf("CBlockIndex(m_pPrevBlockIndex=%p, m_nHeight=%d, merkle=%s, hashBlock=%s, blockfee=%d, chainWork=%s, feePerKb=%lf)",
+            m_pPrevBlockIndex, m_nHeight, hashMerkleRoot.ToString().c_str(), GetBlockHash().ToString().c_str(), nblockfee, m_cChainWork.ToString().c_str(), dFeePerKb);
     }
 
     void print() const
@@ -879,7 +879,7 @@ public:
     CDiskBlockIndex() :hashPrev (uint256()) {}
 
     explicit CDiskBlockIndex(CBlockIndex* pindex) : CBlockIndex(*pindex) {
-        hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
+        hashPrev = (m_pPrevBlockIndex ? m_pPrevBlockIndex->GetBlockHash() : uint256());
     }
 
     IMPLEMENT_SERIALIZE
@@ -888,9 +888,9 @@ public:
             READWRITE(VARINT(nVersion));
 
     	READWRITE(nblockfee);
-        READWRITE(VARINT(nHeight));
+        READWRITE(VARINT(m_nHeight));
         READWRITE(VARINT(nStatus));
-        READWRITE(VARINT(nTx));
+        READWRITE(VARINT(m_unTx));
         if (nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO))
             READWRITE(VARINT(nFile));
         if (nStatus & BLOCK_HAVE_DATA)
@@ -904,10 +904,10 @@ public:
         READWRITE(hashMerkleRoot);
         READWRITE(hashPos);
         READWRITE(nTime);
-        READWRITE(nBits);
+        READWRITE(m_unBits);
         READWRITE(nNonce);
-        READWRITE(nFuel);
-        READWRITE(nFuelRate);
+        READWRITE(m_llFuel);
+        READWRITE(m_nFuelRate);
         READWRITE(vSignature);
         READWRITE(dFeePerKb);
     )
@@ -920,11 +920,11 @@ public:
         block.SetHashMerkleRoot(hashMerkleRoot);
         block.SetHashPos(hashPos);
         block.SetTime(nTime);
-        block.SetBits(nBits);
+        block.SetBits(m_unBits);
         block.SetNonce(nNonce);
-        block.SetHeight(nHeight);
-        block.SetFuel(nFuel);
-        block.SetFuelRate(nFuelRate);
+        block.SetHeight(m_nHeight);
+        block.SetFuel(m_llFuel);
+        block.SetFuelRate(m_nFuelRate);
         block.SetSignature(vSignature);
         return block.GetHash();
     }
@@ -1040,13 +1040,13 @@ public:
 
     /** Efficiently check whether a block is present in this chain. */
     bool Contains(const CBlockIndex *pindex) const {
-        return (*this)[pindex->nHeight] == pindex;
+        return (*this)[pindex->m_nHeight] == pindex;
     }
 
     /** Find the successor of a block in this chain, or NULL if the given index is not found or is the tip. */
     CBlockIndex *Next(const CBlockIndex *pindex) const {
         if (Contains(pindex))
-            return (*this)[pindex->nHeight + 1];
+            return (*this)[pindex->m_nHeight + 1];
         else
             return NULL;
     }
@@ -1067,16 +1067,16 @@ public:
 };
 
 /** The currently-connected chain of blocks. */
-extern CChain chainActive;
+extern CChain g_cChainActive;
 
 /** The currently best known chain of headers (some of which may be invalid). */
 extern CChain chainMostWork;
 
-/** Global variable that points to the active block tree (protected by cs_main) */
+/** Global variable that points to the active block tree (protected by g_cs_main) */
 extern CBlockTreeDB *pblocktree;
 
 /** account db cache*/
-extern CAccountViewCache *pAccountViewTip;
+extern CAccountViewCache *g_pAccountViewTip;
 
 /** account db */
 extern CAccountViewDB *pAccountViewDB;
@@ -1091,7 +1091,7 @@ extern CScriptDB *pScriptDB;
 extern CTransactionDBCache *pTxCacheTip;
 
 /** contract script db cache */
-extern CScriptDBViewCache *pScriptDBTip;
+extern CScriptDBViewCache *g_pScriptDBTip;
 
 /** nSyncTipHight  */
 extern int g_nSyncTipHeight;

@@ -33,7 +33,7 @@ enum Network
 };
 
 
-extern bool fNameLookup;
+extern bool g_bNameLookup;
 
 /** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */
 class CNetAddr

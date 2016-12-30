@@ -17,63 +17,61 @@ using namespace std;
 class CVmScript {
 
 public:
-	vector<unsigned char> Rom;      		//!< Binary code
-	vector<unsigned char> ScriptExplain;	// !<explain the binary code action
-	int  scriptType = 0;                    //!<脚本的类型 0:8051,1:lua
+	
+	vector<unsigned char> vuchRom;      		//!< Binary code
+	vector<unsigned char> vuchScriptExplain;	// !<explain the binary code action
+	int  m_nScriptType = 0;                    //!<脚本的类型 0:8051,1:lua
 
 public:
 	/**
 	 * @brief
 	 * @return
 	 */
-	bool IsValid()
-	{
+	bool IsValid() {
 		///Binary code'size less 64k
-		if((Rom.size() > 64*1024) || (Rom.size() <= 0))
+		if ((vuchRom.size() > 64 * 1024) || (vuchRom.size() <= 0)) {
 			return false;
-		if(Rom[0] != 0x02){
-			if(!memcmp(&Rom[0],"mylib = require",strlen("mylib = require"))){
-				scriptType = 1;//lua脚本
-				return true;//lua脚本，直接返回
-			}else{
+		}
+		if (vuchRom[0] != 0x02) {
+			if (!memcmp(&vuchRom[0], "mylib = require", strlen("mylib = require"))) {
+				m_nScriptType = 1;                    //lua脚本
+				return true;                    //lua脚本，直接返回
+			} else {
 				return false;
 			}
-		}else{
-			scriptType = 0;//8051脚本
+		} else {
+			m_nScriptType = 0;                    //8051脚本
 		}
-
 		//!<指定版本的SDK以上，才去校验 账户平衡开关的取值
-		if(memcmp(&Rom[0x0004],"\x00\x02\x02",3) >= 0){
-           if(!((Rom[0x0014] == 0x00) || (Rom[0x0014] == 0x01))){
-        	   return false;
-           }
+		if (memcmp(&vuchRom[0x0004], "\x00\x02\x02", 3) >= 0) {
+			if (!((vuchRom[0x0014] == 0x00) || (vuchRom[0x0014] == 0x01))) {
+				return false;
+			}
 		}
-
 		return true;
 	}
 
-	bool IsCheckAccount(void){
-		if(scriptType){
-			return false;//lua脚本，直接返回(关掉账户平衡)
+	bool IsCheckAccount(void) {
+		if (m_nScriptType) {
+			return false;                    //lua脚本，直接返回(关掉账户平衡)
 		}
 
 		//!<指定版本的SDK以上，才去读取 账户平衡开关的取值
-		if(memcmp(&Rom[0x0004],"\x00\x02\x02",3) >= 0)
-		{
-	        if(Rom[0x0014] == 0x01){
-	        	return true;
-	        }
+		if (memcmp(&vuchRom[0x0004], "\x00\x02\x02", 3) >= 0) {
+			if (vuchRom[0x0014] == 0x01) {
+				return true;
+			}
 		}
-        return false;
+		return false;
 	}
 	CVmScript();
-    int getScriptType(){
-    	return scriptType;
-    }
-	 IMPLEMENT_SERIALIZE
+	int getScriptType() {
+		return m_nScriptType;
+	}
+	IMPLEMENT_SERIALIZE
 	(
-		READWRITE(Rom);
-		READWRITE(ScriptExplain);
+			READWRITE(vuchRom);
+			READWRITE(vuchScriptExplain);
 	)
 	virtual ~CVmScript();
 };

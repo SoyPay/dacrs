@@ -21,8 +21,8 @@ bool CheckBlock(int nHeight, const uint256& cHash);
 // Return conservative estimate of total number of blocks, 0 if unknown
 int GetTotalBlocksEstimate();
 
-// Returns last CBlockIndex* in mapBlockIndex that is a checkpoint
-CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& mapBlockIndex);
+// Returns last CBlockIndex* in g_mapBlockIndex that is a checkpoint
+CBlockIndex* GetLastCheckpoint(const std::map<uint256, CBlockIndex*>& g_mapBlockIndex);
 
 double GuessVerificationProgress(CBlockIndex *pBlockIndex, bool bSigchecks = true);
 

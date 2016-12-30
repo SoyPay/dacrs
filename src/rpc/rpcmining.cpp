@@ -58,27 +58,27 @@ void ShutdownRPCMining()
 // or from the last difficulty change if 'lookup' is nonpositive.
 // If 'height' is nonnegative, compute the estimate at the time when a given block was found.
 Value GetNetworkHashPS(int nLookup, int nHeight) {
-    CBlockIndex *pb = chainActive.Tip();
+    CBlockIndex *pb = g_cChainActive.Tip();
 
-    if (nHeight >= 0 && nHeight < chainActive.Height()){
-        pb = chainActive[nHeight];
+    if (nHeight >= 0 && nHeight < g_cChainActive.Height()){
+        pb = g_cChainActive[nHeight];
     }
-    if (pb == NULL || !pb->nHeight){
+    if (pb == NULL || !pb->m_nHeight){
         return 0;
     }
     // If lookup is -1, then use blocks since last difficulty change.
     if (nLookup <= 0){
-        nLookup = pb->nHeight % 2016 + 1;
+        nLookup = pb->m_nHeight % 2016 + 1;
     }
     // If lookup is larger than chain, then set it to chain length.
-    if (nLookup > pb->nHeight){
-        nLookup = pb->nHeight;
+    if (nLookup > pb->m_nHeight){
+        nLookup = pb->m_nHeight;
     }
     CBlockIndex *pcB0 = pb;
     int64_t llMinTime = pcB0->GetBlockTime();
     int64_t llMaxTime = llMinTime;
     for (int i = 0; i < nLookup; i++) {
-        pcB0 = pcB0->pprev;
+        pcB0 = pcB0->m_pPrevBlockIndex;
         int64_t time = pcB0->GetBlockTime();
         llMinTime = min(time, llMinTime);
         llMaxTime = max(time, llMaxTime);
@@ -88,7 +88,7 @@ Value GetNetworkHashPS(int nLookup, int nHeight) {
     if (llMinTime == llMaxTime){
         return 0;
     }
-    arith_uint256 workDiff = pb->nChainWork - pcB0->nChainWork;
+    arith_uint256 workDiff = pb->m_cChainWork - pcB0->m_cChainWork;
     int64_t llTimeDiff = llMaxTime - llMinTime;
 
     return (int64_t)(workDiff.getdouble() / llTimeDiff);
@@ -147,7 +147,7 @@ Value setgenerate(const Array& params, bool bHelp) {
 	for (auto & keyId : setKeyId) {
 		CUserID cUserId(keyId);
 		CAccount cAcctInfo;
-		if (pAccountViewTip->GetAccount(cUserId, cAcctInfo)) {
+		if (g_pAccountViewTip->GetAccount(cUserId, cAcctInfo)) {
 			bSetEmpty = false;
 			break;
 		}
@@ -200,14 +200,14 @@ Value getmininginfo(const Array& params, bool bHelp) {
 						"\nExamples:\n" + HelpExampleCli("getmininginfo", "") + HelpExampleRpc("getmininginfo", ""));
 	}
 	Object obj;
-	obj.push_back(Pair("blocks", (int) chainActive.Height()));
+	obj.push_back(Pair("blocks", (int) g_cChainActive.Height()));
     obj.push_back(Pair("currentblocksize", (uint64_t)g_ullLastBlockSize));
     obj.push_back(Pair("currentblocktx",   (uint64_t)g_ullLastBlockTx));
 	obj.push_back(Pair("difficulty", (double) GetDifficulty()));
 	obj.push_back(Pair("errors", GetWarnings("statusbar")));
 	obj.push_back(Pair("genproclimit", 1));
 	obj.push_back(Pair("networkhashps", getnetworkhashps(params, false)));
-	obj.push_back(Pair("pooledtx", (uint64_t) mempool.size()));
+	obj.push_back(Pair("pooledtx", (uint64_t) g_cTxMemPool.size()));
 	static const string name[] = { "MAIN", "TESTNET", "REGTEST" };
 	obj.push_back(Pair("nettype", name[SysCfg().NetworkID()]));
 	obj.push_back(Pair("posmaxnonce", SysCfg().GetBlockMaxNonce()));
@@ -237,7 +237,7 @@ Value submitblock(const Array& params, bool bHelp) {
 						+ HelpExampleRpc("submitblock", "\"mydata\""));
 	}
 	vector<unsigned char> vchBlockData(ParseHex(params[0].get_str()));
-	CDataStream cSsBlock(vchBlockData, SER_NETWORK, PROTOCOL_VERSION);
+	CDataStream cSsBlock(vchBlockData, SER_NETWORK, g_sProtocolVersion);
 	CBlock pblock;
 	try {
 		cSsBlock >> pblock;

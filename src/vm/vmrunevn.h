@@ -58,8 +58,8 @@ class CVmRunEvn {
 	CScriptDBViewCache *m_ScriptDBTip;
 	CAccountViewCache *m_view;
 	vector<CVmOperate> m_output;   //保存操作结果
-    bool  isCheckAccount;  //校验账户平衡开关
-    int  scriptType;       //脚本的类型 0:8051,1:lua
+    bool  m_bIsCheckAccount;  //校验账户平衡开关
+    int  m_nScriptType;       //脚本的类型 0:8051,1:lua
 
 	map<vector<unsigned char >,vector<CAppFundOperate> > MapAppOperate;  //vector<unsigned char > 存的是accountId
 	shared_ptr<vector<CScriptDBOperLog> > m_dblog;
@@ -138,8 +138,8 @@ public:
 	 * @return: tuple<bool,uint64_t,string>  bool represent the script run success
 	 * uint64_t if the script run sucess Run the script calls the money ,string represent run the failed's  Reason
 	 */
-	tuple<bool,uint64_t,string> run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& view,CScriptDBViewCache& VmDB,
-			int nheight,uint64_t nBurnFactor, uint64_t &uRunStep);
+	tuple<bool,uint64_t,string> run(shared_ptr<CBaseTransaction>& Tx, CAccountViewCache& cView, CScriptDBViewCache& cVmDB, int nHeight,
+			uint64_t ullBurnFactor, uint64_t &ullRunStep);
 	/**
 	 * @brief just for test
 	 * @return:
@@ -153,47 +153,50 @@ public:
 	CAccountViewCache * GetCatchView();
 	int GetComfirHeight();
 	uint256 GetCurTxHash();
-	bool InsertOutputData(const vector<CVmOperate> &source);
-	void InsertOutAPPOperte(const vector<unsigned char>& userId,const CAppFundOperate &source);
+	bool InsertOutputData(const vector<CVmOperate>& vcSource);
+	void InsertOutAPPOperte(const vector<unsigned char>& vuchUserId, const CAppFundOperate &vcSource);
 	shared_ptr<vector<CScriptDBOperLog> > GetDbLog();
 
-	bool GetAppUserAccout(const vector<unsigned char> &id,shared_ptr<CAppUserAccout> &sptrAcc);
-	bool CheckAppAcctOperate(CTransaction* tx);
+	bool GetAppUserAccout(const vector<unsigned char> &vuchAppUserId, shared_ptr<CAppUserAccout> &sptrAcc);
+	bool CheckAppAcctOperate(CTransaction* pcTx);
 	void SetCheckAccount(bool bCheckAccount);
 	virtual ~CVmRunEvn();
 };
 
-enum ACCOUNT_TYPE {
+enum emACCOUNT_TYPE {
 	// account type
-	regid = 0x01,			//!< Registration accountid
-	base58addr = 0x02,			    //!< pulickey
+	EM_REGID = 0x01,			//!< Registration accountid
+	EM_BASE_58_ADDR = 0x02,			    //!< pulickey
 };
 /**
  * @brief after run the script,the script output the code
  */
 class CVmOperate{
-public:
-	unsigned char nacctype;      	//regid or base58addr
-	unsigned char accountid[34];	//!< accountid
-	unsigned char opeatortype;		//!OperType
-	unsigned int  outheight;		//!< the transacion Timeout height
-	unsigned char money[8];			//!<The transfer amount
+ public:
+	unsigned char m_uchNaccType;      	//EM_REGID or EM_BASE_58_ADDR
+	unsigned char m_arruchAccountId[34];	//!< m_arruchAccountId
+	unsigned char m_uchOpeatorType;		//!OperType
+	unsigned int m_unOutHeight;		//!< the transacion Timeout height
+	unsigned char m_arruchMoney[8];			//!<The transfer amount
+
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(nacctype);
-			for(int i = 0;i < 34;i++)
-			READWRITE(accountid[i]);
-			READWRITE(opeatortype);
-			READWRITE(outheight);
-			for(int i = 0;i < 8;i++)
-			READWRITE(money[i]);
+			READWRITE(m_uchNaccType);
+			for(int i = 0;i < 34;i++) {
+				READWRITE(m_arruchAccountId[i]);
+			}
+			READWRITE(m_uchOpeatorType);
+			READWRITE(m_unOutHeight);
+			for(int i = 0;i < 8;i++) {
+				READWRITE(m_arruchMoney[i]);
+			}
 	)
 	CVmOperate() {
-		nacctype = regid;
-		memset(accountid, 0, 34);
-		opeatortype = ADD_FREE;
-		outheight = 0;
-		memset(money, 0, 8);
+		m_uchNaccType = EM_REGID;
+		memset(m_arruchAccountId, 0, 34);
+		m_uchOpeatorType = ADD_FREE;
+		m_unOutHeight = 0;
+		memset(m_arruchMoney, 0, 8);
 	}
 	Object ToJson();
 

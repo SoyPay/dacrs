@@ -227,7 +227,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 		monitoring_appid = SysCfg().GetMultiArgsMap("-appid");
 	}
 
-	LOCK2(cs_main, m_cs_wallet);
+	LOCK2(g_cs_main, m_cs_wallet);
 
 	assert(pTx != NULL || pblock != NULL);
 
@@ -253,19 +253,19 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 			int i=0;
 			for (const auto &sptx : pblock->vptx) {
 				uint256 hashtx = sptx->GetHash();
-				if(sptx->nTxType == CONTRACT_TX) {
-					string thisapp = boost::get<CRegID>(static_cast<CTransaction const*>(sptx.get())->desUserId).ToString();
+				if(sptx->m_chTxType == EM_CONTRACT_TX) {
+					string thisapp = boost::get<CRegID>(static_cast<CTransaction const*>(sptx.get())->m_cDesUserId).ToString();
 					auto it = find_if(monitoring_appid->begin(), monitoring_appid->end(), [&](const string& appid) {
 						return appid ==  thisapp;});
 			        if(monitoring_appid->end() != it) {
-			        	uiInterface.RevAppTransaction(pblock, i);
+			        	g_cUIInterface.RevAppTransaction(pblock, i);
 			        }
 				}
 				//confirm the tx is mine
 				if (IsMine(sptx.get())) {
-					if (sptx->nTxType == REG_ACCT_TX) {
+					if (sptx->m_chTxType == REG_ACCT_TX) {
 						//fIsNeedUpDataRegID = true;
-					} else if (sptx->nTxType == CONTRACT_TX) {
+					} else if (sptx->m_chTxType == EM_CONTRACT_TX) {
 					  /*vector<CAccountOperLog> Log;
 						if (GetTxOperLog(hashtx, Log) == true) {
 							assert(newtx.AddOperLog(hashtx, Log));
@@ -274,7 +274,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 						}*/
 					}
 					newtx.AddTx(hashtx,sptx.get());
-					uiInterface.RevTransaction(sptx.get()->GetHash());
+					g_cUIInterface.RevTransaction(sptx.get()->GetHash());
 				}
 				if (m_mapUnConfirmTx.count(hashtx)> 0) {
 					CWalletDB(m_strWalletFile).EraseUnComFirmedTx(hashtx);
@@ -309,7 +309,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 
 		// test is connect or disconct
 		auto IsConnect = [&]() {
-			return mapBlockIndex.count(blockhash) && chainActive.Contains(mapBlockIndex[blockhash]);
+			return g_mapBlockIndex.count(blockhash) && g_cChainActive.Contains(g_mapBlockIndex[blockhash]);
 		};
 		// GenesisBlock progress
 		if (SysCfg().HashGenesisBlock() == blockhash) {
@@ -323,7 +323,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 		}
 	}
 	else if (pTx != NULL) {
-		LogPrint("todo","acept in mempool tx %s\r\n",pTx->GetHash().ToString());
+		LogPrint("todo","acept in g_cTxMemPool tx %s\r\n",pTx->GetHash().ToString());
     }
 }
 
@@ -352,16 +352,16 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool bUpdate) {
 //
 //	CBlockIndex* pindex = pindexStart;
 //	{
-//		LOCK2(cs_main, cs_wallet);
+//		LOCK2(g_cs_main, cs_wallet);
 //
 //		// no need to read and scan block, if block was created before
 //		// our wallet birthday (as adjusted for block time variability)
 //		while (pindex && nTimeFirstKey && (pindex->nTime < (nTimeFirstKey - 7200)))
-//			pindex = chainActive.Next(pindex);
+//			pindex = g_cChainActive.Next(pindex);
 //
 //		ShowProgress(_("Rescanning..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
 //		double dProgressStart = Checkpoints::GuessVerificationProgress(pindex, false);
-//		double dProgressTip = Checkpoints::GuessVerificationProgress(chainActive.Tip(), false);
+//		double dProgressTip = Checkpoints::GuessVerificationProgress(g_cChainActive.Tip(), false);
 //		while (pindex) {
 //			if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0)
 //				ShowProgress(_("Rescanning..."),
@@ -375,7 +375,7 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool bUpdate) {
 //
 //			SyncWithWallets(0, NULL, &block);
 //
-//			pindex = chainActive.Next(pindex);
+//			pindex = g_cChainActive.Next(pindex);
 //			if (GetTime() >= nNow + 60) {
 //				nNow = GetTime();
 //				LogPrint("INFO","Still rescanning. At block %d. Progress=%f\n", pindex->nHeight,
@@ -388,7 +388,7 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool bUpdate) {
 }
 
 //void CWallet::ReacceptWalletTransactions() {
-//	LOCK2(cs_main, cs_wallet);
+//	LOCK2(g_cs_main, cs_wallet);
 //
 //	mapWalletTx[uint256(0)].AcceptToMemoryPool();
 //}
@@ -396,30 +396,30 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool bUpdate) {
 void CWallet::ResendWalletTransactions() {
 	vector<uint256> erase;
 	for (auto &te : m_mapUnConfirmTx) {
-		if (mempool.exists(te.first)) { 	//如果已经存在mempool 了那就不要再提交了
+		if (g_cTxMemPool.exists(te.first)) { 	//如果已经存在mempool 了那就不要再提交了
 			continue;
 		}
 		std::shared_ptr<CBaseTransaction> pBaseTx = te.second->GetNewInstance();
 		auto ret = CommitTransaction(&(*pBaseTx.get()));
 		if (!std::get<0>(ret)) {
 			erase.push_back(te.first);
-			LogPrint("CWallet","abort inavlibal tx %s reason:%s\r\n",te.second.get()->ToString(*pAccountViewTip),std::get<1>(ret));
+			LogPrint("CWallet","abort inavlibal tx %s reason:%s\r\n",te.second.get()->ToString(*g_pAccountViewTip),std::get<1>(ret));
 		}
 	}
 	for (auto const & tee : erase) {
 		CWalletDB(m_strWalletFile).EraseUnComFirmedTx(tee);
-		uiInterface.RemoveTransaction(tee);
+		g_cUIInterface.RemoveTransaction(tee);
 		m_mapUnConfirmTx.erase(tee);
 	}
 }
 
 //// Call after CreateTransaction unless you want to abort
 std::tuple<bool, string> CWallet::CommitTransaction(CBaseTransaction *pTx) {
-	LOCK2(cs_main, m_cs_wallet);
-	LogPrint("INFO", "CommitTransaction:\n%s", pTx->ToString(*pAccountViewTip));
+	LOCK2(g_cs_main, m_cs_wallet);
+	LogPrint("INFO", "CommitTransaction:\n%s", pTx->ToString(*g_pAccountViewTip));
 	{
 		CValidationState state;
-		if (!::AcceptToMemoryPool(mempool, state, pTx, true, NULL)) {
+		if (!::AcceptToMemoryPool(g_cTxMemPool, state, pTx, true, NULL)) {
 			// This must not fail. The transaction has already been signed and recorded.
 			LogPrint("INFO", "CommitTransaction() : Error: Transaction not valid %s \n",state.GetRejectReason());
 			return std::make_tuple (false,state.GetRejectReason());
@@ -440,14 +440,14 @@ emDBErrors CWallet::LoadWallet(bool bFirstRunRet) {
 int64_t CWallet::GetRawBalance(bool bIsConfirmed) const {
 	int64_t ret = 0;
 	{
-		LOCK2(cs_main, m_cs_wallet);
+		LOCK2(g_cs_main, m_cs_wallet);
 		set<CKeyID> setKeyId;
 		GetKeys(setKeyId);
 		for (auto &keyId :setKeyId) {
 			if (!bIsConfirmed) {
-				ret += mempool.pAccountViewCache->GetRawBalance(keyId);
+				ret += g_cTxMemPool.m_pAccountViewCache->GetRawBalance(keyId);
 			} else {
-				ret += pAccountViewTip->GetRawBalance(keyId);
+				ret += g_pAccountViewTip->GetRawBalance(keyId);
 			}
 		}
 	}
@@ -460,7 +460,7 @@ int64_t CWallet::GetRawBalance(bool bIsConfirmed) const {
 //
 //	CTransaction tx;
 //	{
-//		LOCK2(cs_main, cs_wallet);
+//		LOCK2(g_cs_main, cs_wallet);
 //		tx.srcUserId = send;
 //		tx.desUserId = rsv;
 //		tx.llValues = nValue;
@@ -468,11 +468,11 @@ int64_t CWallet::GetRawBalance(bool bIsConfirmed) const {
 //			tx.llFees = SysCfg().GetTxFee();
 //		}else
 //			tx.llFees = nFee;
-//		tx.nValidHeight = chainActive.Tip()->nHeight;
+//		tx.nValidHeight = g_cChainActive.Tip()->nHeight;
 //	}
 //
 //	CKeyID keID;
-//	if(!pAccountViewTip->GetKeyId(send,keID)){
+//	if(!g_pAccountViewTip->GetKeyId(send,keID)){
 //		return std::make_tuple (false,"key or keID failed");
 //	}
 //
@@ -611,12 +611,12 @@ void CWallet::UpdatedTransaction(const uint256 &hashTx) {
 bool CWallet::StartUp(string &strWalletFile) {
 	//	[](int i) { return i+4; };
 	auto InitError = [] (const string &str) {
-		uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING | CClientUIInterface::NOSHOWGUI);
+		g_cUIInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING | CClientUIInterface::NOSHOWGUI);
 		return true;
 	};
 
 	auto InitWarning = [](const string &str) {
-		uiInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING | CClientUIInterface::NOSHOWGUI);
+		g_cUIInterface.ThreadSafeMessageBox(str, "", CClientUIInterface::MSG_WARNING | CClientUIInterface::NOSHOWGUI);
 		return true;
 	};
 
@@ -633,7 +633,7 @@ bool CWallet::StartUp(string &strWalletFile) {
 		strWalletFile = m_stadefaultFilename;
 	}
 	LogPrint("INFO", "Using wallet %s\n", strWalletFile);
-	uiInterface.InitMessage(_("Verifying wallet..."));
+	g_cUIInterface.InitMessage(_("Verifying wallet..."));
 
 	if (!g_cDacrsDbEnv.Open(GetDataDir())) {
 		// try moving the database env out of the way
@@ -694,7 +694,7 @@ Object CAccountTx::ToJosnObj(CKeyID const  &key) const {
 	obj.push_back(Pair("blockHash",  m_cBlockHash.ToString()));
 	obj.push_back(Pair("blockhigh",  m_nBlockhigh));
 	Array Tx;
-	CAccountViewCache view(*pAccountViewTip, true);
+	CAccountViewCache view(*g_pAccountViewTip, true);
 	for (auto const &re : m_mapAccountTx) {
 	//		if (!key.IsEmpty()) {
 	//			auto find = mapOperLog.find(re.first);
@@ -717,15 +717,15 @@ Object CAccountTx::ToJosnObj(CKeyID const  &key) const {
 }
 
 uint256 CWallet::GetCheckSum() const {
-	CHashWriter ss(SER_GETHASH, CLIENT_VERSION);
+	CHashWriter ss(SER_GETHASH, g_sClientVersion);
 	ss << m_nWalletVersion << m_cBestBlock << m_mapMasterKeys  << m_mapInBlockTx << m_mapUnConfirmTx;
 	return ss.GetHash();
 }
 
 bool CWallet::IsMine(CBaseTransaction* pTx) const {
 	set<CKeyID> vaddr;
-	CAccountViewCache view(*pAccountViewTip, true);
-	CScriptDBViewCache scriptDB(*pScriptDBTip, true);
+	CAccountViewCache view(*g_pAccountViewTip, true);
+	CScriptDBViewCache scriptDB(*g_pScriptDBTip, true);
 	if (!pTx->GetAddress(vaddr, view, scriptDB)) {
 		return false;
 	}

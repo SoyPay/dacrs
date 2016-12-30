@@ -20,16 +20,16 @@ double GetDifficulty(const CBlockIndex* pcBlockIndex) {
 	// Floating point number that is a multiple of the minimum difficulty,
 	// minimum difficulty = 1.0.
 	if (pcBlockIndex == NULL) {
-		if (chainActive.Tip() == NULL) {
+		if (g_cChainActive.Tip() == NULL) {
 			return 1.0;
 		} else {
-			pcBlockIndex = chainActive.Tip();
+			pcBlockIndex = g_cChainActive.Tip();
 		}
 	}
 
-	int nShift = (pcBlockIndex->nBits >> 24) & 0xff;
+	int nShift = (pcBlockIndex->m_unBits >> 24) & 0xff;
 
-	double dDiff = (double) 0x0000ffff / (double) (pcBlockIndex->nBits & 0x00ffffff);
+	double dDiff = (double) 0x0000ffff / (double) (pcBlockIndex->m_unBits & 0x00ffffff);
 
 	while (nShift < 29) {
 		dDiff *= 256.0;
@@ -48,8 +48,8 @@ Object blockToJSON(const CBlock& cBlock, const CBlockIndex* cBlockIndex) {
 	CMerkleTx txGen(cBlock.vptx[0]);
 	txGen.SetMerkleBranch(&cBlock);
 	result.push_back(Pair("confirmations", (int) txGen.GetDepthInMainChain()));
-	result.push_back(Pair("size", (int) ::GetSerializeSize(cBlock, SER_NETWORK, PROTOCOL_VERSION)));
-	result.push_back(Pair("height", cBlockIndex->nHeight));
+	result.push_back(Pair("size", (int) ::GetSerializeSize(cBlock, SER_NETWORK, g_sProtocolVersion)));
+	result.push_back(Pair("height", cBlockIndex->m_nHeight));
 	result.push_back(Pair("version", cBlock.GetVersion()));
 	result.push_back(Pair("merkleroot", cBlock.GetHashMerkleRoot().GetHex()));
 	result.push_back(Pair("txnumber", (int) cBlock.vptx.size()));
@@ -62,13 +62,13 @@ Object blockToJSON(const CBlock& cBlock, const CBlockIndex* cBlockIndex) {
 	result.push_back(Pair("nonce", (uint64_t) cBlock.GetNonce()));
 	result.push_back(Pair("bits", HexBits(cBlock.GetBits())));
 	result.push_back(Pair("difficulty", GetDifficulty(cBlockIndex)));
-	result.push_back(Pair("chainwork", cBlockIndex->nChainWork.GetHex()));
-	result.push_back(Pair("fuel", cBlockIndex->nFuel));
-	result.push_back(Pair("fuelrate", cBlockIndex->nFuelRate));
-	if (cBlockIndex->pprev) {
-		result.push_back(Pair("previousblockhash", cBlockIndex->pprev->GetBlockHash().GetHex()));
+	result.push_back(Pair("chainwork", cBlockIndex->m_cChainWork.GetHex()));
+	result.push_back(Pair("fuel", cBlockIndex->m_llFuel));
+	result.push_back(Pair("fuelrate", cBlockIndex->m_nFuelRate));
+	if (cBlockIndex->m_pPrevBlockIndex) {
+		result.push_back(Pair("previousblockhash", cBlockIndex->m_pPrevBlockIndex->GetBlockHash().GetHex()));
 	}
-	CBlockIndex *pnext = chainActive.Next(cBlockIndex);
+	CBlockIndex *pnext = g_cChainActive.Next(cBlockIndex);
 	if (pnext) {
 		result.push_back(Pair("nextblockhash", pnext->GetBlockHash().GetHex()));
 	}
@@ -84,7 +84,7 @@ Value getblockcount(const Array& params, bool bHelp) {
 				"\nExamples:\n" + HelpExampleCli("getblockcount", "") + HelpExampleRpc("getblockcount", ""));
 	}
 
-	return chainActive.Height();
+	return g_cChainActive.Height();
 }
 
 Value getbestblockhash(const Array& params, bool bHelp) {
@@ -95,7 +95,7 @@ Value getbestblockhash(const Array& params, bool bHelp) {
 				"\"hex\"      (string) the block hash hex encoded\n"
 				"\nExamples\n" + HelpExampleCli("getbestblockhash", "") + HelpExampleRpc("getbestblockhash", ""));
 	}
-	return chainActive.Tip()->GetBlockHash().GetHex();
+	return g_cChainActive.Tip()->GetBlockHash().GetHex();
 }
 
 Value getdifficulty(const Array& params, bool bHelp) {
@@ -146,9 +146,9 @@ Value getrawmempool(const Array& params, bool bHelp) {
 	}
 
 	if (bFVerbose) {
-		LOCK(mempool.cs);
+		LOCK(g_cTxMemPool.m_cs);
 		Object o;
-		for (const auto& entry : mempool.mapTx) {
+		for (const auto& entry : g_cTxMemPool.m_mapTx) {
 			const uint256& hash = entry.first;
 			const CTxMemPoolEntry& e = entry.second;
 			Object info;
@@ -157,12 +157,12 @@ Value getrawmempool(const Array& params, bool bHelp) {
 			info.push_back(Pair("time", e.GetTime()));
 			info.push_back(Pair("height", (int) e.GetHeight()));
 			info.push_back(Pair("startingpriority", e.GetPriority(e.GetHeight())));
-			info.push_back(Pair("currentpriority", e.GetPriority(chainActive.Height())));
+			info.push_back(Pair("currentpriority", e.GetPriority(g_cChainActive.Height())));
 //            const CTransaction& tx = e.GetTx();
 			set<string> setDepends;
 //            BOOST_FOREACH(const CTxIn& txin, tx.vin)
 //            {
-//                if (mempool.exists(txin.prevout.hash))
+//                if (g_cTxMemPool.exists(txin.prevout.hash))
 //                    setDepends.insert(txin.prevout.hash.ToString());
 //            }
 			Array depends(setDepends.begin(), setDepends.end());
@@ -172,7 +172,7 @@ Value getrawmempool(const Array& params, bool bHelp) {
 		return o;
 	} else {
 		vector<uint256> vtxid;
-		mempool.queryHashes(vtxid);
+		g_cTxMemPool.queryHashes(vtxid);
 
 		Array a;
 		for (const auto& hash : vtxid)
@@ -193,10 +193,10 @@ Value getblockhash(const Array& params, bool bHelp) {
 				"\nExamples:\n" + HelpExampleCli("getblockhash", "1000") + HelpExampleRpc("getblockhash", "1000"));
 	}
 	int nHeight = params[0].get_int();
-	if (nHeight < 0 || nHeight > chainActive.Height())
+	if (nHeight < 0 || nHeight > g_cChainActive.Height())
 		throw runtime_error("Block number out of range.");
 
-	CBlockIndex* pblockindex = chainActive[nHeight];
+	CBlockIndex* pblockindex = g_cChainActive[nHeight];
 	Object result;
 	result.push_back(Pair("hash", pblockindex->GetBlockHash().GetHex()));
 	return result;
@@ -241,10 +241,10 @@ Value getblock(const Array& params, bool bHelp) {
 	std::string strHash;
 	if (int_type == params[0].type()) {
 		int nHeight = params[0].get_int();
-		if (nHeight < 0 || nHeight > chainActive.Height()){
+		if (nHeight < 0 || nHeight > g_cChainActive.Height()){
 			throw runtime_error("Block number out of range.");}
 
-		CBlockIndex* pcBlockIndex = chainActive[nHeight];
+		CBlockIndex* pcBlockIndex = g_cChainActive[nHeight];
 		strHash = pcBlockIndex->GetBlockHash().GetHex();
 	} else {
 		strHash = params[0].get_str();
@@ -255,15 +255,15 @@ Value getblock(const Array& params, bool bHelp) {
 	if (params.size() > 1)
 		bFVerbose = params[1].get_bool();
 
-	if (mapBlockIndex.count(hash) == 0)
+	if (g_mapBlockIndex.count(hash) == 0)
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
 	CBlock cBlock;
-	CBlockIndex* pcBlockindex = mapBlockIndex[hash];
+	CBlockIndex* pcBlockindex = g_mapBlockIndex[hash];
 	ReadBlockFromDisk(cBlock, pcBlockindex);
 
 	if (!bFVerbose) {
-		CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
+		CDataStream ssBlock(SER_NETWORK, g_sProtocolVersion);
 		ssBlock << cBlock;
 		std::string strHex = HexStr(ssBlock.begin(), ssBlock.end());
 		return strHex;
@@ -324,11 +324,11 @@ Value getblockchaininfo(const Array& params, bool bHelp) {
 		strChain = "main";
 	}
 	obj.push_back(Pair("chain", strChain));
-	obj.push_back(Pair("blocks", (int) chainActive.Height()));
-	obj.push_back(Pair("bestblockhash", chainActive.Tip()->GetBlockHash().GetHex()));
+	obj.push_back(Pair("blocks", (int) g_cChainActive.Height()));
+	obj.push_back(Pair("bestblockhash", g_cChainActive.Tip()->GetBlockHash().GetHex()));
 	obj.push_back(Pair("difficulty", (double) GetDifficulty()));
-	obj.push_back(Pair("verificationprogress", Checkpoints::GuessVerificationProgress(chainActive.Tip())));
-	obj.push_back(Pair("chainwork", chainActive.Tip()->nChainWork.GetHex()));
+	obj.push_back(Pair("verificationprogress", Checkpoints::GuessVerificationProgress(g_cChainActive.Tip())));
+	obj.push_back(Pair("chainwork", g_cChainActive.Tip()->m_cChainWork.GetHex()));
 	return obj;
 }
 
@@ -361,13 +361,13 @@ Value getscriptid(const Array& params, bool bHelp) {
 	uint256 cTxhash(uint256S(params[0].get_str()));
 
 	int nIndex = 0;
-	int nBlockHeight = GetTxComfirmHigh(cTxhash, *pScriptDBTip);
-	if (nBlockHeight > chainActive.Height()) {
+	int nBlockHeight = GetTxComfirmHigh(cTxhash, *g_pScriptDBTip);
+	if (nBlockHeight > g_cChainActive.Height()) {
 		throw runtime_error("height larger than tip block \n");
 	} else if (nBlockHeight == -1) {
 		throw runtime_error("tx hash unconfirmed \n");
 	}
-	CBlockIndex* pcIndex = chainActive[nBlockHeight];
+	CBlockIndex* pcIndex = g_cChainActive[nBlockHeight];
 	CBlock cBlock;
 	if (!ReadBlockFromDisk(cBlock, pcIndex)) {
 		return false;

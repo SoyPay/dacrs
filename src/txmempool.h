@@ -61,9 +61,9 @@ private:
     bool fSanityCheck; // Normally false, true if -checkmempool or -regtest
     unsigned int nTransactionsUpdated;  //TODO meaning
 public:
-    mutable CCriticalSection cs;
-    map<uint256, CTxMemPoolEntry > mapTx;
-    std::shared_ptr<CAccountViewCache> pAccountViewCache;
+    mutable CCriticalSection m_cs;
+    map<uint256, CTxMemPoolEntry > m_mapTx;
+    std::shared_ptr<CAccountViewCache> m_pAccountViewCache;
     std::shared_ptr<CScriptDBViewCache> pScriptDBViewCache;
 
     CTxMemPool();
@@ -81,14 +81,14 @@ public:
 
     unsigned long size()
     {
-        LOCK(cs);
-        return mapTx.size();
+        LOCK(m_cs);
+        return m_mapTx.size();
     }
 
     bool exists(uint256 hash)
     {
-        LOCK(cs);
-		return ((mapTx.count(hash) != 0));
+        LOCK(m_cs);
+		return ((m_mapTx.count(hash) != 0));
     }
 
     std::shared_ptr<CBaseTransaction> lookup(uint256 hash) const;

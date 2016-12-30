@@ -388,7 +388,7 @@ emTEST_STATE CIpoTest::Run(){
 		m_cBasetest.CreateNormalTx(des,money);
 	}
 
-	 cout<<"end mempool"<<endl;
+	 cout<<"end g_cTxMemPool"<<endl;
 	while(true)
 	{
 		if(m_cBasetest.IsMemoryPoolEmpty())
@@ -442,7 +442,7 @@ void CIpoTest::RunIpo(unsigned char uchType) {
 //		m_cBasetest.CreateNormalTx(des,money);
 //	}
 //
-//	 cout<<"end mempool"<<endl;
+//	 cout<<"end g_cTxMemPool"<<endl;
 //	while(true)
 //	{
 //		if(m_cBasetest.IsMemoryPoolEmpty())
@@ -512,7 +512,7 @@ bool CIpoTest::SendIpoTx(unsigned char uchType) {
 		int64_t llMoney = arrtUserarray[i].llMoney;   //领币的总金额
 		Object obj;
 
-		CDataStream cScriptData(SER_DISK, CLIENT_VERSION);
+		CDataStream cScriptData(SER_DISK, g_sClientVersion);
 		cScriptData << arrtUserarray[i];
 		string strSendContract = HexStr(cScriptData);
 		if(CreateIpoTx(strSendContract,arrtUserarray[i].llMoney)) {
@@ -586,14 +586,14 @@ bool CIpoTest::SendIpoTx(unsigned char uchType) {
 void CIpoTest::SendErrorIopTx() { /*利用一个地址给自己账户充值，从脚本账户 50725-1 把钱取出来*/
 	m_strAppRegId = "50725-1";
 	IPO_USER tUserIpo;
-	char *szDess = "DhxrQ9hsvo3fVVSy6By8bePt8cmPtts88R";
-	memcpy((char*) tUserIpo.arruchAddress, szDess, sizeof(tUserIpo.arruchAddress));
+	char *pszDess = "DhxrQ9hsvo3fVVSy6By8bePt8cmPtts88R";
+	memcpy((char*) tUserIpo.arruchAddress, pszDess, sizeof(tUserIpo.arruchAddress));
 	tUserIpo.llMoney = 1;
 	tUserIpo.llFreemoney = totalSendMoney + 1;
 	tUserIpo.llFreeMothmoney = 0;
 	Object obj;
 
-	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream scriptData(SER_DISK, g_sClientVersion);
 	scriptData << tUserIpo;
 	string sendcontract = HexStr(scriptData);
 	if (CreateIpoTx(sendcontract, tUserIpo.llMoney)) {

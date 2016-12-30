@@ -48,9 +48,8 @@ BOOST_AUTO_TEST_SUITE(bignum_tests)
 // Let's force this code not to be inlined, in order to actually
 // test a generic version of the function. This increases the chance
 // that -ftrapv will detect overflows.
-NOINLINE void mysetint64(CBigNum& num, int64_t n)
-{
-    num.setint64(n);
+NOINLINE void mysetint64(CBigNum& num, int64_t n) {
+	num.setint64(n);
 }
 
 // For each number, we do 2 tests: one with inline code, then we reset the
@@ -58,7 +57,6 @@ NOINLINE void mysetint64(CBigNum& num, int64_t n)
 BOOST_AUTO_TEST_CASE(bignum_setint64)
 {
     int64_t n;
-
     {
         n = 0;
         CBigNum num(n);
@@ -215,10 +213,10 @@ BOOST_AUTO_TEST_CASE(bignum_SetCompact)
 
 BOOST_AUTO_TEST_CASE(bignum_SetHex)
 {
-    std::string hexStr = "deecf97fd890808b9cc0f1b6a3e7a60b400f52710e6ad075b1340755bfa58cc9";
-    CBigNum num;
-    num.SetHex(hexStr);
-    BOOST_CHECK_EQUAL(num.GetHex(), hexStr);
+    std::string strHexStr = "deecf97fd890808b9cc0f1b6a3e7a60b400f52710e6ad075b1340755bfa58cc9";
+    CBigNum cNum;
+    cNum.SetHex(strHexStr);
+    BOOST_CHECK_EQUAL(cNum.GetHex(), strHexStr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

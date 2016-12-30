@@ -180,15 +180,15 @@ bool CGuaranteeTest::Recharge()
 	tSenddata.uchSysType = 0xff;
 	tSenddata.uchType = 0x02;
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSenddata;
 	string strSendContract = HexStr(CScriptData);
-	uint64_t nTempSend = COIN;//20 * COIN;
-	//	uint64_t nTempSend = (10000 + 5) * COIN;
+	uint64_t ullTempSend = COIN;//20 * COIN;
+	//	uint64_t ullTempSend = (10000 + 5) * COIN;
 
     cout<<"Recharge data:"<<strSendContract<<endl;
     cout<<"Recharge strAppRegId:"<<m_strAppRegId<<endl;
-	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SEND_A,strSendContract,0,0,nTempSend);
+	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SEND_A,strSendContract,0,0,ullTempSend);
 //   ADDR_DeveloperAccount  //RegID = "0-20"
 //   ADDR_SEND_A   //	Id = "1826-1437";
 //   ADDR_ACCEPT_B   //	Id = "1826-1285";
@@ -223,12 +223,12 @@ bool CGuaranteeTest::Withdraw()
 	tSendData.uchType = 0x01;
 	tSendData.uchTypeAddr = EM_TX_REGID;
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSendData;
 	string strSendContract = HexStr(CScriptData);
-	uint64_t nTempSend = 0;
+	uint64_t ullTempSend = 0;
     cout<<"Withdraw data:"<<strSendContract<<endl;
-	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SEND_A,strSendContract,0,0,nTempSend);
+	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SEND_A,strSendContract,0,0,ullTempSend);
            //ADDR_DeveloperAccount  ADDR_ARBITRATION_C
 	if (m_cBasetest.GetHashFromCreatedTx(retValue, m_strTxHash)) {
 		m_nStep++;
@@ -260,15 +260,15 @@ bool CGuaranteeTest::WithdrawSomemoney()
 	tSendData.uchSysType = 0xff;
 	tSendData.uchType = 0x03;
 	tSendData.uchTypeAddr = EM_TX_REGID;
-	tSendData.nMoney = 10000 * COIN;
+	tSendData.ullMoney = 10000 * COIN;
 //	senddata.money = COIN;
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSendData;
 	string strSendContract = HexStr(CScriptData);
-	uint64_t nTempSend = 0;
+	uint64_t ullTempSend = 0;
     cout<<"WithdrawwSomemoney data:"<<strSendContract<<endl;
-	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_DeveloperAccount,strSendContract,0,0,nTempSend);
+	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_DeveloperAccount,strSendContract,0,0,ullTempSend);
            //ADDR_DeveloperAccount  ADDR_ARBITRATION_C
 	if (m_cBasetest.GetHashFromCreatedTx(retValue, m_strTxHash)) {
 		m_nStep++;
@@ -310,13 +310,13 @@ bool CGuaranteeTest::Register(unsigned char uchType)
 	tSendData.nOvertimeheightT = ARBITER_OVER_TIME_HEIGHTT;
     strcpy(tSendData.arrchComment,"联系电话:13418656754");
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSendData;
 	string strSendContract = HexStr(CScriptData);
-	uint64_t nTempSend = 0;
+	uint64_t ullTempSend = 0;
     cout<<"Register data:"<<strSendContract<<endl;
     cout<<"Register strAppRegId:"<<m_strAppRegId.c_str()<<endl;
-	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_DeveloperAccount,strSendContract,0,0,nTempSend);
+	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_DeveloperAccount,strSendContract,0,0,ullTempSend);
 
 	if (m_cBasetest.GetHashFromCreatedTx(retValue, m_strTxHash)) {
 		m_nStep++;
@@ -343,12 +343,12 @@ bool CGuaranteeTest::UnRegister()
 
 	unsigned char uchSendData = TX_UNREGISTER;
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << uchSendData;
 	string strSendContract = HexStr(CScriptData);
-	uint64_t nTempSend = 0;
+	uint64_t ullTempSend = 0;
 	cout<<"UnRegister data:"<<strSendContract.c_str()<<endl;
-	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_ARBITRATION_C,strSendContract,0,0,nTempSend);
+	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_ARBITRATION_C,strSendContract,0,0,ullTempSend);
 
 	if (m_cBasetest.GetHashFromCreatedTx(retValue, m_strTxHash)) {
 		m_nStep++;
@@ -380,12 +380,12 @@ bool CGuaranteeTest::ArbitONOrOFF(unsigned char uchType)
 	}else{
 	   uchSendData = TX_ARBIT_OFF;
 	}
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << uchSendData;
 	string strSendContract = HexStr(CScriptData);
-	uint64_t nTempSend = 0;
+	uint64_t ullTempSend = 0;
 	cout<<"ArbitONOrOFF data:"<<strSendContract.c_str()<<endl;
-	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_ARBITRATION_C,strSendContract,0,0,nTempSend);
+	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_ARBITRATION_C,strSendContract,0,0,ullTempSend);
 
 	if (m_cBasetest.GetHashFromCreatedTx(retValue, m_strTxHash)) {
 		m_nStep++;
@@ -428,17 +428,17 @@ bool CGuaranteeTest::SendStartTrade()
 	strcpy(tSendData.arrchGoods,"小米3手机");
 	strcpy(tSendData.arrchComment,"1个币买.联系电话:13418656754");
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSendData;
 	string strSendContract = HexStr(CScriptData);
-	uint64_t nTempSend = 0;
+	uint64_t ullTempSend = 0;
 	cout<<"SendStartTrade data:"<<strSendContract.c_str()<<endl;
 	Value sendret;
     if(tSendData.uchSendType == SEND_TYPE_BUY)
     {
-    	sendret= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SEND_A,strSendContract,0,0,nTempSend); // 待填写
+    	sendret= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SEND_A,strSendContract,0,0,ullTempSend); // 待填写
     }else{
-    	sendret= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_ACCEPT_B,strSendContract,0,0,nTempSend); // 待填写
+    	sendret= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_ACCEPT_B,strSendContract,0,0,ullTempSend); // 待填写
     }
 
 	if (m_cBasetest.GetHashFromCreatedTx(sendret, m_strTxHash)) {
@@ -473,13 +473,13 @@ bool CGuaranteeTest::SendCancelTrade()
 	memcpy(tSendData.arruchTxhash,HASH_sendhash, sizeof(tSendData.arruchTxhash)); //待填交易HASH
 	tSendData.nHeight = SEND_HEIGHT;
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSendData;
 	string strSendContract = HexStr(CScriptData);
-	uint64_t nTempSend = 0;
+	uint64_t ullTempSend = 0;
 	cout<<"SendCancelTrade data:"<<strSendContract.c_str()<<endl;
-	Value  sendret= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SEND_A,strSendContract,0,0,nTempSend); // 取消挂买单
-//    Value  sendret= m_cBasetest.CreateContractTx(strAppRegId,ADDR_ACCEPT_B,sendcontract,0,0,nTempSend); //取消挂卖单
+	Value  sendret= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SEND_A,strSendContract,0,0,ullTempSend); // 取消挂买单
+//    Value  sendret= m_cBasetest.CreateContractTx(strAppRegId,ADDR_ACCEPT_B,sendcontract,0,0,ullTempSend); //取消挂卖单
 	if (m_cBasetest.GetHashFromCreatedTx(sendret, m_strTxHash)) {
 		m_nStep++;
 	}
@@ -510,13 +510,13 @@ bool CGuaranteeTest::AcceptTrade()
 	memcpy(tSendData.arruchTxhash,HASH_sendhash, sizeof(tSendData.arruchTxhash)); //待填交易HASH
 	tSendData.nHeight = SEND_HEIGHT;
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSendData;
 	string strSendContract = HexStr(CScriptData);
-	uint64_t nTempSend = 0;
+	uint64_t ullTempSend = 0;
 	cout<<"AcceptTrade data:"<<strSendContract.c_str()<<endl;
-//	Value  sendret= m_cBasetest.CreateContractTx(strAppRegId,ADDR_ACCEPT_B,sendcontract,0,0,nTempSend);//卖家接单
-	Value  sendret= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SEND_A,strSendContract,0,0,nTempSend);//买家接单
+//	Value  sendret= m_cBasetest.CreateContractTx(strAppRegId,ADDR_ACCEPT_B,sendcontract,0,0,ullTempSend);//卖家接单
+	Value  sendret= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SEND_A,strSendContract,0,0,ullTempSend);//买家接单
 
 	if (m_cBasetest.GetHashFromCreatedTx(sendret, m_strTxHash)) {
 		m_nStep++;
@@ -546,12 +546,12 @@ bool  CGuaranteeTest::DeliveryTrade(){
 	memcpy(tSendData.arruchTxhash,HASH_sendhash, sizeof(tSendData.arruchTxhash)); //待填交易HASH
 	tSendData.nHeight = SEND_HEIGHT;
 
-	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream scriptData(SER_DISK, g_sClientVersion);
 	scriptData << tSendData;
 	string strSendContract = HexStr(scriptData);
-	uint64_t nTempSend = 0;
+	uint64_t ullTempSend = 0;
 	cout<<"DeliveryTrade data:"<<strSendContract.c_str()<<endl;
-	Value  sendret= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_ACCEPT_B,strSendContract,0,0,nTempSend);//卖家发货
+	Value  sendret= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_ACCEPT_B,strSendContract,0,0,ullTempSend);//卖家发货
 
 	if (m_cBasetest.GetHashFromCreatedTx(sendret, m_strTxHash)) {
 		m_nStep++;
@@ -583,12 +583,12 @@ bool CGuaranteeTest::BuyerConfirm()
 	memcpy(tSendData.arruchTxhash,HASH_sendhash, sizeof(tSendData.arruchTxhash)); //待填交易HASH
 	tSendData.nHeight = SEND_HEIGHT;
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSendData;
 	string strSendContract = HexStr(CScriptData);
-	uint64_t nTempSend = 0;
+	uint64_t ullTempSend = 0;
 	cout<<"BuyerConfirm data:"<<strSendContract.c_str()<<endl;
-	Value  sendret= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SEND_A,strSendContract,0,0,nTempSend); //待填写
+	Value  sendret= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SEND_A,strSendContract,0,0,ullTempSend); //待填写
 
 	if (m_cBasetest.GetHashFromCreatedTx(sendret, m_strTxHash)) {
 		m_nStep++;
@@ -626,12 +626,12 @@ bool CGuaranteeTest::Arbitration()
 	memcpy(&tSendData.arrchArbitationID[0],&nHeight,4);
 	memcpy(&tSendData.arrchArbitationID[4],&usIndex,2);
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSendData;
 	string strSendContract = HexStr(CScriptData);
-	uint64_t nTempSend = 0;
+	uint64_t ullTempSend = 0;
 	cout<<"Arbitration data:"<<strSendContract.c_str()<<endl;
-	Value  sendret= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SEND_A,strSendContract,0,0,nTempSend);// 待填写 ADDR_ARBITRATION_C
+	Value  sendret= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SEND_A,strSendContract,0,0,ullTempSend);// 待填写 ADDR_ARBITRATION_C
 
 	if (m_cBasetest.GetHashFromCreatedTx(sendret, m_strTxHash)) {
 		m_nStep++;
@@ -677,12 +677,12 @@ bool CGuaranteeTest::RunFinalResult()
     memcpy(&tSendData.arrchLoser[4],&usIndex,2);
 	tSendData.nLoserMoney = SEND_MONEYM - ARBITER_WINNER_MONEY;  //  交易金额M - 赢家分配的钱  待填写
 
-	CDataStream cScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream cScriptData(SER_DISK, g_sClientVersion);
 	cScriptData << tSendData;
 	string strSendContract = HexStr(cScriptData);
-	uint64_t nTempSend = 0;
+	uint64_t ullTempSend = 0;
 	cout<<"RunFinalResult data:"<<strSendContract.c_str()<<endl;
-	Value  sendret= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_ARBITRATION_C,strSendContract,0,0,nTempSend);//ADDR_ARBITRATION_C
+	Value  sendret= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_ARBITRATION_C,strSendContract,0,0,ullTempSend);//ADDR_ARBITRATION_C
 
 	if (m_cBasetest.GetHashFromCreatedTx(sendret, m_strTxHash)) {
 		m_nStep++;

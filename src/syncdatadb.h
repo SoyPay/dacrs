@@ -24,7 +24,7 @@ class CSyncCheckPoint
 		CSyncCheckPoint():m_version(1), m_height(0),m_hashCheckpoint(){}
 		void SetData(const CSyncData& data)
 		{
-			CDataStream sstream(data.GetMessageData(), SER_NETWORK, PROTOCOL_VERSION);
+			CDataStream sstream(data.GetMessageData(), SER_NETWORK, g_sProtocolVersion);
 			sstream>>*this;
 		}
 		IMPLEMENT_SERIALIZE

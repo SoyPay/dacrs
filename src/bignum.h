@@ -471,17 +471,17 @@ class CBigNum: public BIGNUM {
 		return ToString(16);
 	}
 
-	unsigned int GetSerializeSize(int nType = 0, int nVersion = PROTOCOL_VERSION) const {
+	unsigned int GetSerializeSize(int nType = 0, int nVersion = g_sProtocolVersion) const {
 		return ::GetSerializeSize(getvch(), nType, nVersion);
 	}
 
 	template<typename Stream>
-	void Serialize(Stream& s, int nType = 0, int nVersion = PROTOCOL_VERSION) const {
+	void Serialize(Stream& s, int nType = 0, int nVersion = g_sProtocolVersion) const {
 		::Serialize(s, getvch(), nType, nVersion);
 	}
 
 	template<typename Stream>
-	void Unserialize(Stream& s, int nType = 0, int nVersion = PROTOCOL_VERSION) {
+	void Unserialize(Stream& s, int nType = 0, int nVersion = g_sProtocolVersion) {
 		vector<unsigned char> vch;
 		::Unserialize(s, vch, nType, nVersion);
 		setvch(vch);

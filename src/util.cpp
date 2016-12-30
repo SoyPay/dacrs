@@ -73,8 +73,8 @@ string strMiscWarning;
 bool fNoListen = false;
 volatile bool fReopenDebugLog = false;
 
-CClientUIInterface uiInterface;
-CClientUIInterface * pUIInterface = &uiInterface;
+CClientUIInterface g_cUIInterface;
+CClientUIInterface * pUIInterface = &g_cUIInterface;
 
 // Init OpenSSL library multithreading support
 static CCriticalSection** ppmutexOpenSSL;
@@ -1173,7 +1173,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nTime) {
 							"are correct! If your clock is wrong Dacrs will not work properly.");
 					strMiscWarning = strMessage;
 					LogPrint("INFO", "*** %s\n", strMessage);
-					uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_WARNING);
+					g_cUIInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_WARNING);
 				}
 			}
 		}
@@ -1213,7 +1213,7 @@ string FormatVersion(int nVersion) {
 	}
 
 string FormatFullVersion() {
-	return CLIENT_BUILD;
+	return g_strClientBuild;
 }
 
 // Format the subversion field according to BIP 14 spec (https://en.Dacrs.it/wiki/BIP_0014)

@@ -108,13 +108,13 @@ public:
     /** release transaction from block  */
     boost::signals2::signal<bool (const uint256 &hash) > ReleaseTransaction;
 
-    /** remove transaction from mempool */
+    /** remove transaction from g_cTxMemPool */
     boost::signals2::signal<bool (const uint256 &hash) > RemoveTransaction;
 
 
 };
 
-extern CClientUIInterface uiInterface;
+extern CClientUIInterface g_cUIInterface;
 
 /**
  * Translation function: Call Translate signal on UI interface, which returns a boost::optional result.
@@ -122,7 +122,7 @@ extern CClientUIInterface uiInterface;
  */
 inline string _(const char* psz)
 {
-    boost::optional<string> rv = uiInterface.Translate(psz);
+    boost::optional<string> rv = g_cUIInterface.Translate(psz);
     return rv ? (*rv) : psz;
 }
 

@@ -58,7 +58,7 @@ bool CSyncDataDb::LoadCheckPoint(std::map<int, uint256>& values)
 	if (m_dbPoint)
 	{
 		leveldb::Iterator *pcursor = m_dbPoint->NewIterator();
-		CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
+		CDataStream ssKeySet(SER_DISK, g_sClientVersion);
 		ssKeySet << std::make_pair('c', 0);
 		pcursor->Seek(ssKeySet.str());
 
@@ -67,7 +67,7 @@ bool CSyncDataDb::LoadCheckPoint(std::map<int, uint256>& values)
 			try
 			{
 				leveldb::Slice slKey = pcursor->key();
-				CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, CLIENT_VERSION);
+				CDataStream ssKey(slKey.data(), slKey.data()+slKey.size(), SER_DISK, g_sClientVersion);
 				char chType = 0;
 				int height = 0;
 				ssKey >> chType;
@@ -75,7 +75,7 @@ bool CSyncDataDb::LoadCheckPoint(std::map<int, uint256>& values)
 				{
 					ssKey >> height;
 					leveldb::Slice slValue = pcursor->value();
-					CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, CLIENT_VERSION);
+					CDataStream ssValue(slValue.data(), slValue.data()+slValue.size(), SER_DISK, g_sClientVersion);
 					CSyncData data;
 					ssValue >> data;
 					CSyncCheckPoint point;

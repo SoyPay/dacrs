@@ -116,7 +116,7 @@ bool CAlert::AppliesTo(int nVersion, string strSubVerIn) const {
 }
 
 bool CAlert::AppliesToMe() const {
-	return AppliesTo(PROTOCOL_VERSION, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, vector<string>()));
+	return AppliesTo(g_sProtocolVersion, FormatSubVersion(CLIENT_NAME, g_sClientVersion, vector<string>()));
 }
 
 bool CAlert::RelayTo(CNode* pnode) const {
@@ -141,7 +141,7 @@ bool CAlert::CheckSignature() const {
 	}
 
 	// Now unserialize the data
-	CDataStream sMsg(m_vchMsg, SER_NETWORK, PROTOCOL_VERSION);
+	CDataStream sMsg(m_vchMsg, SER_NETWORK, g_sProtocolVersion);
 	sMsg >> *(CUnsignedAlert*) this;
 	return true;
 }
@@ -189,11 +189,11 @@ bool CAlert::ProcessAlert(bool fThread) {
 			const CAlert& alert = (*mi).second;
 			if (Cancels(alert)) {
 				LogPrint("alert", "cancelling alert %d\n", alert.m_nID);
-				uiInterface.NotifyAlertChanged((*mi).first, CT_DELETED);
+				g_cUIInterface.NotifyAlertChanged((*mi).first, CT_DELETED);
 				g_mapAlerts.erase(mi++);
 			} else if (!alert.IsInEffect()) {
 				LogPrint("alert", "expiring alert %d\n", alert.m_nID);
-				uiInterface.NotifyAlertChanged((*mi).first, CT_DELETED);
+				g_cUIInterface.NotifyAlertChanged((*mi).first, CT_DELETED);
 				g_mapAlerts.erase(mi++);
 			} else {
 				mi++;
@@ -213,7 +213,7 @@ bool CAlert::ProcessAlert(bool fThread) {
 		g_mapAlerts.insert(make_pair(GetHash(), *this));
 		// Notify UI and -alertnotify if it applies to me
 		if (AppliesToMe()) {
-			uiInterface.NotifyAlertChanged(GetHash(), CT_NEW);
+			g_cUIInterface.NotifyAlertChanged(GetHash(), CT_NEW);
 			string strCmd = SysCfg().GetArg("-alertnotify", "");
 			if (!strCmd.empty()) {
 				// Alert text should be plain ascii coming from a trusted source, but to

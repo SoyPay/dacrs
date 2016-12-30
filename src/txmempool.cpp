@@ -22,7 +22,7 @@ CTxMemPoolEntry::CTxMemPoolEntry(CBaseTransaction *pBaseTx, int64_t _nFee, int64
 		unsigned int _nHeight) :
 		nFee(_nFee), nTime(_nTime), dPriority(_dPriority), nHeight(_nHeight) {
 	pTx = pBaseTx->GetNewInstance();
-	nTxSize = ::GetSerializeSize(*pTx, SER_NETWORK, PROTOCOL_VERSION);
+	nTxSize = ::GetSerializeSize(*pTx, SER_NETWORK, g_sProtocolVersion);
 }
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTxMemPoolEntry& other) {
@@ -50,7 +50,7 @@ CTxMemPool::CTxMemPool() {
 }
 
 void CTxMemPool::SetAccountViewDB(CAccountViewCache *pAccountViewCacheIn) {
-	pAccountViewCache = std::make_shared<CAccountViewCache>(*pAccountViewCacheIn, false);
+	m_pAccountViewCache = std::make_shared<CAccountViewCache>(*pAccountViewCacheIn, false);
 }
 
 void CTxMemPool::SetScriptDBViewDB(CScriptDBViewCache *pScriptDBViewCacheIn) {
@@ -58,17 +58,17 @@ void CTxMemPool::SetScriptDBViewDB(CScriptDBViewCache *pScriptDBViewCacheIn) {
 }
 
 void CTxMemPool::ReScanMemPoolTx(CAccountViewCache *pAccountViewCacheIn, CScriptDBViewCache *pScriptDBViewCacheIn) {
-	pAccountViewCache.reset(new CAccountViewCache(*pAccountViewCacheIn, true));
+	m_pAccountViewCache.reset(new CAccountViewCache(*pAccountViewCacheIn, true));
 	pScriptDBViewCache.reset(new CScriptDBViewCache(*pScriptDBViewCacheIn, true));
 	{
-		LOCK(cs);
+		LOCK(m_cs);
 		CValidationState state;
 		list<std::shared_ptr<CBaseTransaction> > removed;
-		for(map<uint256, CTxMemPoolEntry >::iterator iterTx = mapTx.begin(); iterTx != mapTx.end(); ) {
+		for(map<uint256, CTxMemPoolEntry >::iterator iterTx = m_mapTx.begin(); iterTx != m_mapTx.end(); ) {
 			if (!CheckTxInMemPool(iterTx->first, iterTx->second, state, true)) {
 				uint256 hash = iterTx->first;
-				iterTx = mapTx.erase(iterTx++);
-				uiInterface.RemoveTransaction(hash);
+				iterTx = m_mapTx.erase(iterTx++);
+				g_cUIInterface.RemoveTransaction(hash);
 				EraseTransaction(hash);
 				continue;
 			}
@@ -79,28 +79,28 @@ void CTxMemPool::ReScanMemPoolTx(CAccountViewCache *pAccountViewCacheIn, CScript
 }
 
 unsigned int CTxMemPool::GetTransactionsUpdated() const {
-	LOCK(cs);
+	LOCK(m_cs);
 	return nTransactionsUpdated;
 }
 
 void CTxMemPool::AddTransactionsUpdated(unsigned int n) {
-	LOCK(cs);
+	LOCK(m_cs);
 	nTransactionsUpdated += n;
 }
 
 void CTxMemPool::remove(CBaseTransaction *pBaseTx, list<std::shared_ptr<CBaseTransaction> >& removed, bool fRecursive) {
 	// Remove transaction from memory pool
 	{
-		LOCK(cs);
+		LOCK(m_cs);
 		uint256 hash = pBaseTx->GetHash();
-//        if(COMMON_TX == pTx->nTxType ){
+//        if(EM_COMMON_TX == pTx->nTxType ){
 //        	CTransaction *pNormalTx = (CTransaction *)pTx;//dynamic_pointer_cast<CTransaction>(pTx);
 //			}
 //        }
-		if (mapTx.count(hash)) {
-			removed.push_front(std::shared_ptr<CBaseTransaction>(mapTx[hash].GetTx()));
-			mapTx.erase(hash);
-			uiInterface.RemoveTransaction(hash);
+		if (m_mapTx.count(hash)) {
+			removed.push_front(std::shared_ptr<CBaseTransaction>(m_mapTx[hash].GetTx()));
+			m_mapTx.erase(hash);
+			g_cUIInterface.RemoveTransaction(hash);
 			EraseTransaction(hash);
 			nTransactionsUpdated++;
 		}
@@ -110,22 +110,22 @@ void CTxMemPool::remove(CBaseTransaction *pBaseTx, list<std::shared_ptr<CBaseTra
 bool CTxMemPool::CheckTxInMemPool(const uint256& hash, const CTxMemPoolEntry &entry, CValidationState &state, bool bExcute) {
 	CTxUndo txundo;
 	CTransactionDBCache txCacheTemp(*pTxCacheTip, true);
-	CAccountViewCache acctViewTemp(*pAccountViewCache, true);
+	CAccountViewCache acctViewTemp(*m_pAccountViewCache, true);
 	CScriptDBViewCache scriptDBViewTemp(*pScriptDBViewCache, true);
 
 	// is it already confirmed in block
 	if(uint256() != pTxCacheTip->IsContainTx(hash))
 		return state.Invalid(ERRORMSG("CheckTxInMemPool() : tx hash %s has been confirmed", hash.GetHex()), REJECT_INVALID, "tx-duplicate-confirmed");
 	// is it in valid height
-	if (!entry.GetTx()->IsValidHeight(chainActive.Tip()->nHeight, SysCfg().GetTxCacheHeight())) {
+	if (!entry.GetTx()->IsValidHeight(g_cChainActive.Tip()->m_nHeight, SysCfg().GetTxCacheHeight())) {
 		return state.Invalid(ERRORMSG("CheckTxInMemPool() : txhash=%s beyond the scope of valid height ", hash.GetHex()),
 				REJECT_INVALID, "tx-invalid-height");
 	}
-	if (CONTRACT_TX == entry.GetTx()->nTxType) {
+	if (EM_CONTRACT_TX == entry.GetTx()->m_chTxType) {
 		LogPrint("vm", "tx hash=%s CheckTxInMemPool run contract\n", entry.GetTx()->GetHash().GetHex());
 	}
 	if(bExcute) {
-		if (!entry.GetTx()->ExecuteTx(0, acctViewTemp, state, txundo, chainActive.Tip()->nHeight + 1,
+		if (!entry.GetTx()->ExecuteTx(0, acctViewTemp, state, txundo, g_cChainActive.Tip()->m_nHeight + 1,
 				txCacheTemp, scriptDBViewTemp)) {
 			return false;
 		}
@@ -138,12 +138,12 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
 	// Add to memory pool without checking anything.
 	// Used by main.cpp AcceptToMemoryPool(), which DOES do
 	// all the appropriate checks.
-	LOCK(cs);
+	LOCK(m_cs);
 	{
 		if(!CheckTxInMemPool(hash, entry, state)) {
 			return false;
 		}
-		mapTx.insert(make_pair(hash, entry));
+		m_mapTx.insert(make_pair(hash, entry));
 		LogPrint("addtomempool", "add tx hash:%s time:%ld\n", hash.GetHex(), GetTime());
 		nTransactionsUpdated++;
 	}
@@ -151,25 +151,25 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
 }
 
 void CTxMemPool::clear() {
-	LOCK(cs);
-	mapTx.clear();
-	pAccountViewCache.reset(new CAccountViewCache(*pAccountViewTip, false));
+	LOCK(m_cs);
+	m_mapTx.clear();
+	m_pAccountViewCache.reset(new CAccountViewCache(*g_pAccountViewTip, false));
 	++nTransactionsUpdated;
 }
 
 void CTxMemPool::queryHashes(vector<uint256>& vtxid) {
 	vtxid.clear();
 
-	LOCK(cs);
-	vtxid.reserve(mapTx.size());
-	for (typename map<uint256, CTxMemPoolEntry>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
+	LOCK(m_cs);
+	vtxid.reserve(m_mapTx.size());
+	for (typename map<uint256, CTxMemPoolEntry>::iterator mi = m_mapTx.begin(); mi != m_mapTx.end(); ++mi)
 		vtxid.push_back((*mi).first);
 }
 
 std::shared_ptr<CBaseTransaction> CTxMemPool::lookup(uint256 hash) const {
-	LOCK(cs);
-	typename map<uint256, CTxMemPoolEntry>::const_iterator i = mapTx.find(hash);
-	if (i == mapTx.end())
+	LOCK(m_cs);
+	typename map<uint256, CTxMemPoolEntry>::const_iterator i = m_mapTx.find(hash);
+	if (i == m_mapTx.end())
 		return std::shared_ptr<CBaseTransaction>();
 	return i->second.GetTx();
 }

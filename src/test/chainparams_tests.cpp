@@ -18,17 +18,17 @@
 BOOST_AUTO_TEST_SUITE(chainparam_tests)
 
 static void ResetArgs(const std::string& strArg) {
-	std::vector<std::string> vecArg;
-	boost::split(vecArg, strArg, boost::is_space(), boost::token_compress_on);
+	std::vector<std::string> vstrArg;
+	boost::split(vstrArg, strArg, boost::is_space(), boost::token_compress_on);
 
 	// Insert dummy executable name:
-	vecArg.insert(vecArg.begin(), "testbitcoin");
+	vstrArg.insert(vstrArg.begin(), "testbitcoin");
 
 	// Convert to char*:
 	std::vector<const char*> vecChar;
-	for (auto& s : vecArg)
+	for (auto& s : vstrArg) {
 		vecChar.push_back(s.c_str());
-
+	}
 	CBaseParams::IntialParams(vecChar.size(), &vecChar[0]);
 }
 

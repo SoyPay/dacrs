@@ -27,11 +27,11 @@ BOOST_AUTO_TEST_SUITE(cvir8051_tests)
 
 BOOST_AUTO_TEST_CASE(cvir8051_test2)
 {
-	std::vector<unsigned char> m_ROM;
+	std::vector<unsigned char> vuchROM;
 
 	string reslut = "";
 	vector<unsigned char> InputData;
-	CVm8051 mcu(m_ROM,InputData);
+	CVm8051 mcu(vuchROM,InputData);
 	CTestMcu test(&mcu);
 
 	struct __Map map[] = {
@@ -149,18 +149,20 @@ BOOST_AUTO_TEST_CASE(cvir8051_test2)
 
 	srand((int)time(NULL));
 
-	int start = 0;int end = 0;int space = 30000 + rand()%20000;
+	int nStart = 0;
+	int nEnd = 0;
+	int nSpace = 30000 + rand() % 20000;
 
-	end =  (sizeof(map) / sizeof(map[0]));
+	nEnd = (sizeof(map) / sizeof(map[0]));
 
-	(test.*(map[101].fun))(space);
+	(test.*(map[101].fun))(nSpace);
 	BOOST_TEST_MESSAGE("test ok:function->" + map[101].fname);
-	for (int index = start; index < end; index+=(rand()%40)) {
-		string ret = (test.*(map[index].fun))(space);
+	for (int index = nStart; index < nEnd; index += (rand() % 40)) {
+		string ret = (test.*(map[index].fun))(nSpace);
 		if (ret != "OK") {
 			char temp[512];
 			sprintf(temp, "No.%d-", map[index].index);
-			reslut +=  (string(temp) + "ERROR:function->" + map[index].fname + " info:\r\n" + ret + "\r\n");
+			reslut += (string(temp) + "ERROR:function->" + map[index].fname + " info:\r\n" + ret + "\r\n");
 		}
 		BOOST_TEST_MESSAGE("test ok:function->" + map[index].fname);
 	}
