@@ -203,12 +203,12 @@ Value getinfo(const Array& params, bool bHelp)
 
 	obj.push_back(Pair("blocks", (int) g_cChainActive.Height()));
 	obj.push_back(Pair("timeoffset", GetTimeOffset()));
-	obj.push_back(Pair("connections", (int) vNodes.size()));
+	obj.push_back(Pair("connections", (int) g_vNodes.size()));
 	obj.push_back(Pair("proxy", (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
 	obj.push_back(Pair("difficulty", (double) GetDifficulty()));
 	obj.push_back(Pair("nettype", strName[SysCfg().NetworkID()]));
 	obj.push_back(Pair("chainwork", g_cChainActive.Tip()->m_cChainWork.GetHex()));
-	obj.push_back(Pair("tipblocktime", (int) g_cChainActive.Tip()->nTime));
+	obj.push_back(Pair("tipblocktime", (int) g_cChainActive.Tip()->m_unTime));
 	if (g_pwalletMain && g_pwalletMain->IsCrypted()) {
 		obj.push_back(Pair("unlocked_until", g_llWalletUnlockTime));
 	}

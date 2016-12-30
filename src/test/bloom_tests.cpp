@@ -132,36 +132,36 @@ c38bd52715bd94bc7505c28ffdb4b0d0"), SER_NETWORK, g_sProtocolVersion);
 	//cFilter.insert(uint256S("0xfbadf1682488087592fb8f48c2b3cb22a23273409d64bbb3e35469c6e9125da3"));
 	cFilter.insert(uint256S("0xb09135750f39e4ccb81c39ace2820f8eabecf0ee8e4138427091130ffe45c13c"));
 	CMerkleBlock cMerkleBlock(cBlock, cFilter);
-	BOOST_CHECK(cMerkleBlock.header.GetHash() == cBlock.GetHash());
+	BOOST_CHECK(cMerkleBlock.m_cBlockHeader.GetHash() == cBlock.GetHash());
 
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn.size() == 1);
-	pair<unsigned int, uint256> pair = cMerkleBlock.vMatchedTxn[0];
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn.size() == 1);
+	pair<unsigned int, uint256> pair = cMerkleBlock.m_vMatchedTxn[0];
 
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn[0].second == uint256S("0xb09135750f39e4ccb81c39ace2820f8eabecf0ee8e4138427091130ffe45c13c"));
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn[0].first == 1);
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn[0].second == uint256S("0xb09135750f39e4ccb81c39ace2820f8eabecf0ee8e4138427091130ffe45c13c"));
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn[0].first == 1);
 
 	vector<uint256> vcMatched;
-	BOOST_CHECK(cMerkleBlock.txn.ExtractMatches(vcMatched) == cBlock.GetHashMerkleRoot());
-	BOOST_CHECK(vcMatched.size() == cMerkleBlock.vMatchedTxn.size());
+	BOOST_CHECK(cMerkleBlock.m_cTxNum.ExtractMatches(vcMatched) == cBlock.GetHashMerkleRoot());
+	BOOST_CHECK(vcMatched.size() == cMerkleBlock.m_vMatchedTxn.size());
 	for (unsigned int i = 0; i < vcMatched.size(); i++)
-	BOOST_CHECK(vcMatched[i] == cMerkleBlock.vMatchedTxn[i].second);
+	BOOST_CHECK(vcMatched[i] == cMerkleBlock.m_vMatchedTxn[i].second);
 
 	// Also match the 8th transaction
 	cFilter.insert(uint256S("0x9eeed094d4dc4327ae5af54ba92b991ae545840d2fa882eb90c0f62d0885f5b9"));
 	cMerkleBlock = CMerkleBlock(cBlock, cFilter);
-	BOOST_CHECK(cMerkleBlock.header.GetHash() == cBlock.GetHash());
+	BOOST_CHECK(cMerkleBlock.m_cBlockHeader.GetHash() == cBlock.GetHash());
 
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn.size() == 2);
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn.size() == 2);
 
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn[0] == pair);
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn[0] == pair);
 
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn[1].second == uint256S("0x9eeed094d4dc4327ae5af54ba92b991ae545840d2fa882eb90c0f62d0885f5b9"));
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn[1].first == 2);
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn[1].second == uint256S("0x9eeed094d4dc4327ae5af54ba92b991ae545840d2fa882eb90c0f62d0885f5b9"));
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn[1].first == 2);
 
-	BOOST_CHECK(cMerkleBlock.txn.ExtractMatches(vcMatched) == cBlock.GetHashMerkleRoot());
-	BOOST_CHECK(vcMatched.size() == cMerkleBlock.vMatchedTxn.size());
+	BOOST_CHECK(cMerkleBlock.m_cTxNum.ExtractMatches(vcMatched) == cBlock.GetHashMerkleRoot());
+	BOOST_CHECK(vcMatched.size() == cMerkleBlock.m_vMatchedTxn.size());
 	for (unsigned int i = 0; i < vcMatched.size(); i++) {
-		BOOST_CHECK(vcMatched[i] == cMerkleBlock.vMatchedTxn[i].second);
+		BOOST_CHECK(vcMatched[i] == cMerkleBlock.m_vMatchedTxn[i].second);
 	}
 }
 
@@ -192,18 +192,18 @@ c38bd52715bd94bc7505c28ffdb4b0d0"), SER_NETWORK, g_sProtocolVersion);
 	cFilter.insert(uint256S("0xed525c5920c8f353a1d6a080f5f6e1c3bb12fa5100efe8cce44ed6f04682b61b"));
 
 	CMerkleBlock cMerkleBlock(cBlock, cFilter);
-	BOOST_CHECK(cMerkleBlock.header.GetHash() == cBlock.GetHash());
+	BOOST_CHECK(cMerkleBlock.m_cBlockHeader.GetHash() == cBlock.GetHash());
 
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn.size() == 1);
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn.size() == 1);
 
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn[0].second == uint256S("0xed525c5920c8f353a1d6a080f5f6e1c3bb12fa5100efe8cce44ed6f04682b61b"));
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn[0].first == 0);
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn[0].second == uint256S("0xed525c5920c8f353a1d6a080f5f6e1c3bb12fa5100efe8cce44ed6f04682b61b"));
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn[0].first == 0);
 
 	vector<uint256> vcMatched;
-	BOOST_CHECK(cMerkleBlock.txn.ExtractMatches(vcMatched) == cBlock.GetHashMerkleRoot());
-	BOOST_CHECK(vcMatched.size() == cMerkleBlock.vMatchedTxn.size());
+	BOOST_CHECK(cMerkleBlock.m_cTxNum.ExtractMatches(vcMatched) == cBlock.GetHashMerkleRoot());
+	BOOST_CHECK(vcMatched.size() == cMerkleBlock.m_vMatchedTxn.size());
 	for (unsigned int i = 0; i < vcMatched.size(); i++) {
-		BOOST_CHECK(vcMatched[i] == cMerkleBlock.vMatchedTxn[i].second);
+		BOOST_CHECK(vcMatched[i] == cMerkleBlock.m_vMatchedTxn[i].second);
 	}
 }
 
@@ -234,18 +234,18 @@ c38bd52715bd94bc7505c28ffdb4b0d0"), SER_NETWORK, g_sProtocolVersion);
 	cFilter.insert(uint256S("0xed525c5920c8f353a1d6a080f5f6e1c3bb12fa5100efe8cce44ed6f04682b61b"));
 
 	CMerkleBlock cMerkleBlock(cBlock, cFilter);
-	BOOST_CHECK(cMerkleBlock.header.GetHash() == cBlock.GetHash());
+	BOOST_CHECK(cMerkleBlock.m_cBlockHeader.GetHash() == cBlock.GetHash());
 
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn.size() == 1);
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn.size() == 1);
 
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn[0].second == uint256S("0xed525c5920c8f353a1d6a080f5f6e1c3bb12fa5100efe8cce44ed6f04682b61b"));
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn[0].first == 0);
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn[0].second == uint256S("0xed525c5920c8f353a1d6a080f5f6e1c3bb12fa5100efe8cce44ed6f04682b61b"));
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn[0].first == 0);
 
 	vector<uint256> vcMatched;
-	BOOST_CHECK(cMerkleBlock.txn.ExtractMatches(vcMatched) == cBlock.GetHashMerkleRoot());
-	BOOST_CHECK(vcMatched.size() == cMerkleBlock.vMatchedTxn.size());
+	BOOST_CHECK(cMerkleBlock.m_cTxNum.ExtractMatches(vcMatched) == cBlock.GetHashMerkleRoot());
+	BOOST_CHECK(vcMatched.size() == cMerkleBlock.m_vMatchedTxn.size());
 	for (unsigned int i = 0; i < vcMatched.size(); i++) {
-		BOOST_CHECK(vcMatched[i] == cMerkleBlock.vMatchedTxn[i].second);
+		BOOST_CHECK(vcMatched[i] == cMerkleBlock.m_vMatchedTxn[i].second);
 	}
 
 }
@@ -269,18 +269,18 @@ dbea9300876c"), SER_NETWORK, g_sProtocolVersion);//CDataStream cStream(ParseHex(
 	cFilter.insert(uint256S("0x3c342dc28981ce6e41a247cc0a4f3d8ceeac5854f518dfc3eca43d11e4705f17"));
 
 	CMerkleBlock cMerkleBlock(cBlock, cFilter);
-	BOOST_CHECK(cMerkleBlock.header.GetHash() == cBlock.GetHash());
+	BOOST_CHECK(cMerkleBlock.m_cBlockHeader.GetHash() == cBlock.GetHash());
 
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn.size() == 1);
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn.size() == 1);
 
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn[0].second == uint256S("0x3c342dc28981ce6e41a247cc0a4f3d8ceeac5854f518dfc3eca43d11e4705f17"));
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn[0].first == 0);
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn[0].second == uint256S("0x3c342dc28981ce6e41a247cc0a4f3d8ceeac5854f518dfc3eca43d11e4705f17"));
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn[0].first == 0);
 
 	vector<uint256> vcMatched;
-	BOOST_CHECK(cMerkleBlock.txn.ExtractMatches(vcMatched) == cBlock.GetHashMerkleRoot());
-	BOOST_CHECK(vcMatched.size() == cMerkleBlock.vMatchedTxn.size());
+	BOOST_CHECK(cMerkleBlock.m_cTxNum.ExtractMatches(vcMatched) == cBlock.GetHashMerkleRoot());
+	BOOST_CHECK(vcMatched.size() == cMerkleBlock.m_vMatchedTxn.size());
 	for (unsigned int i = 0; i < vcMatched.size(); i++)
-	BOOST_CHECK(vcMatched[i] == cMerkleBlock.vMatchedTxn[i].second);
+	BOOST_CHECK(vcMatched[i] == cMerkleBlock.m_vMatchedTxn[i].second);
 
 	CDataStream merkleStream(SER_NETWORK, g_sProtocolVersion);
 	merkleStream << cMerkleBlock;
@@ -322,36 +322,36 @@ BOOST_AUTO_TEST_CASE(merkle_block_4) {
 	cFilter.insert(uint256S("0x9eeed094d4dc4327ae5af54ba92b991ae545840d2fa882eb90c0f62d0885f5b9"));
 
 	CMerkleBlock cMerkleBlock(cBlock, cFilter);
-	BOOST_CHECK(cMerkleBlock.header.GetHash() == cBlock.GetHash());
+	BOOST_CHECK(cMerkleBlock.m_cBlockHeader.GetHash() == cBlock.GetHash());
 
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn.size() == 1);
-	pair<unsigned int, uint256> pair = cMerkleBlock.vMatchedTxn[0];
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn.size() == 1);
+	pair<unsigned int, uint256> pair = cMerkleBlock.m_vMatchedTxn[0];
 
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn[0].second == uint256S("0x9eeed094d4dc4327ae5af54ba92b991ae545840d2fa882eb90c0f62d0885f5b9"));
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn[0].first == 2);
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn[0].second == uint256S("0x9eeed094d4dc4327ae5af54ba92b991ae545840d2fa882eb90c0f62d0885f5b9"));
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn[0].first == 2);
 
 	vector<uint256> vcMatched;
-	BOOST_CHECK(cMerkleBlock.txn.ExtractMatches(vcMatched) == cBlock.GetHashMerkleRoot());
-	BOOST_CHECK(vcMatched.size() == cMerkleBlock.vMatchedTxn.size());
+	BOOST_CHECK(cMerkleBlock.m_cTxNum.ExtractMatches(vcMatched) == cBlock.GetHashMerkleRoot());
+	BOOST_CHECK(vcMatched.size() == cMerkleBlock.m_vMatchedTxn.size());
 	for (unsigned int i = 0; i < vcMatched.size(); i++)
-	BOOST_CHECK(vcMatched[i] == cMerkleBlock.vMatchedTxn[i].second);
+	BOOST_CHECK(vcMatched[i] == cMerkleBlock.m_vMatchedTxn[i].second);
 
 	// Also match the 4th transaction
 	cFilter.insert(uint256S("0xb09135750f39e4ccb81c39ace2820f8eabecf0ee8e4138427091130ffe45c13c"));
 	cMerkleBlock = CMerkleBlock(cBlock, cFilter);
-	BOOST_CHECK(cMerkleBlock.header.GetHash() == cBlock.GetHash());
+	BOOST_CHECK(cMerkleBlock.m_cBlockHeader.GetHash() == cBlock.GetHash());
 
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn.size() == 2);
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn.size() == 2);
 
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn[0].second == uint256S("0xb09135750f39e4ccb81c39ace2820f8eabecf0ee8e4138427091130ffe45c13c"));
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn[0].first == 1);
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn[0].second == uint256S("0xb09135750f39e4ccb81c39ace2820f8eabecf0ee8e4138427091130ffe45c13c"));
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn[0].first == 1);
 
-	BOOST_CHECK(cMerkleBlock.vMatchedTxn[1] == pair);
+	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn[1] == pair);
 
-	BOOST_CHECK(cMerkleBlock.txn.ExtractMatches(vcMatched) == cBlock.GetHashMerkleRoot());
-	BOOST_CHECK(vcMatched.size() == cMerkleBlock.vMatchedTxn.size());
+	BOOST_CHECK(cMerkleBlock.m_cTxNum.ExtractMatches(vcMatched) == cBlock.GetHashMerkleRoot());
+	BOOST_CHECK(vcMatched.size() == cMerkleBlock.m_vMatchedTxn.size());
 	for (unsigned int i = 0; i < vcMatched.size(); i++) {
-		BOOST_CHECK(vcMatched[i] == cMerkleBlock.vMatchedTxn[i].second);
+		BOOST_CHECK(vcMatched[i] == cMerkleBlock.m_vMatchedTxn[i].second);
 	}
 }
 

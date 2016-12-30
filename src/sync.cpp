@@ -6,7 +6,6 @@
 
 #include "util.h"
 
-
 #ifdef DEBUG_LOCKCONTENTION
 void PrintLockContention(const char* pszName, const char* pszFile, int nLine)
 {
@@ -27,8 +26,7 @@ void PrintLockContention(const char* pszName, const char* pszFile, int nLine)
 // Complain if any thread tries to lock in a different order.
 //
 
-struct CLockLocation
-{
+struct CLockLocation {
     CLockLocation(const char* pszName, const char* pszFile, int nLine)
     {
         mutexName = pszName;
@@ -36,14 +34,13 @@ struct CLockLocation
         sourceLine = nLine;
     }
 
-    string ToString() const
-    {
+    string ToString() const {
         return mutexName+"  "+sourceFile+":"+itostr(sourceLine);
     }
 
     string MutexName() const { return mutexName; }
 
-private:
+ private:
     string mutexName;
     string sourceFile;
     int sourceLine;

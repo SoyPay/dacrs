@@ -195,7 +195,7 @@ shared_ptr<CAccount> CVmRunEvn::GetNewAccount(shared_ptr<CAccount>& vOldAccount)
 	vector<shared_ptr<CAccount> >::iterator Iter;
 	for (Iter = NewAccont.begin(); Iter != NewAccont.end(); Iter++) {
 		shared_ptr<CAccount> temp = *Iter;
-		if (temp.get()->keyID == vOldAccount.get()->keyID) {
+		if (temp.get()->m_cKeyID == vOldAccount.get()->m_cKeyID) {
 			NewAccont.erase(Iter);
 			return temp;
 		}
@@ -209,7 +209,7 @@ shared_ptr<CAccount> CVmRunEvn::GetAccount(shared_ptr<CAccount>& Account) {
 	vector<shared_ptr<CAccount> >::iterator Iter;
 	for (Iter = RawAccont.begin(); Iter != RawAccont.end(); Iter++) {
 		shared_ptr<CAccount> temp = *Iter;
-		if (Account.get()->keyID == temp.get()->keyID) {
+		if (Account.get()->m_cKeyID == temp.get()->m_cKeyID) {
 			return temp;
 		}
 	}
@@ -259,7 +259,7 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 		if (it.m_uchNaccType != EM_REGID && it.m_uchNaccType != EM_BASE_58_ADDR) {
 			return false;
 		}
-		if (it.m_uchOpeatorType == ADD_FREE) {
+		if (it.m_uchOpeatorType == EM_ADD_FREE) {
 			memcpy(&ullOperValue, it.m_arruchMoney, sizeof(it.m_arruchMoney));
 			/*
 			 uint64_t temp = ullAddMoney;
@@ -273,7 +273,7 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 				return false;
 			}
 			ullAddMoney = ullTemp;
-		} else if (it.m_uchOpeatorType == MINUS_FREE) {
+		} else if (it.m_uchOpeatorType == EM_MINUS_FREE) {
 
 			//vector<unsigned char > accountid(it.accountid,it.accountid+sizeof(it.accountid));
 			vector_unsigned_char accountid = GetAccountID(it);
@@ -303,7 +303,7 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 			if (cRegid.IsEmpty() || cRegid.getKeyID(*m_view) == uint160())
 				return false;
 			//  app only be allowed minus self m_arruchMoney
-			if (!m_ScriptDBTip->HaveScript(cRegid) && it.m_uchOpeatorType == MINUS_FREE) {
+			if (!m_ScriptDBTip->HaveScript(cRegid) && it.m_uchOpeatorType == EM_MINUS_FREE) {
 				return false;
 			}
 		}
@@ -362,7 +362,7 @@ bool CVmRunEvn::CheckAppAcctOperate(CTransaction* pcTx) {
 	uint64_t sysContractAcct(0);
 	for(auto item : m_output) {
 		vector_unsigned_char vAccountId = GetAccountID(item);
-		if(vAccountId == boost::get<CRegID>(pcTx->m_cDesUserId).GetVec6() && item.m_uchOpeatorType == MINUS_FREE) {
+		if(vAccountId == boost::get<CRegID>(pcTx->m_cDesUserId).GetVec6() && item.m_uchOpeatorType == EM_MINUS_FREE) {
 			uint64_t value;
 			memcpy(&value, item.m_arruchMoney, sizeof(item.m_arruchMoney));
 			int64_t temp = value;
@@ -432,7 +432,7 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 			string strAddr(accountid.begin(), accountid.end());
 			cUserkeyId = CKeyID(strAddr);
 			if (!view.GetAccount(CUserID(cUserkeyId), *tem.get())) {
-				tem->keyID = cUserkeyId;
+				tem->m_cKeyID = cUserkeyId;
 				//return false;                                           /// 未产生过交易记录的账户
 			}
 		}
@@ -449,7 +449,7 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 		//todolist
 //		if(IsSignatureAccount(vmAccount.get()->cRegid) || vmAccount.get()->cRegid == boost::get<CRegID>(tx->appRegId))
 		{
-			bRet = vmAccount.get()->OperateAccount((OperType) it.m_uchOpeatorType, value, nCurHeight);
+			bRet = vmAccount.get()->OperateAccount((emOperType) it.m_uchOpeatorType, value, nCurHeight);
 		}
 //		else{
 //			ret = vmAccount.get()->OperateAccount((OperType)it.m_uchOpeatorType, fund, *m_ScriptDBTip, vAuthorLog,  height, &GetScriptRegID().GetVec6(), true);
@@ -604,9 +604,9 @@ Object CVmOperate::ToJson() {
 		string strAddr(m_arruchAccountId, m_arruchAccountId + sizeof(m_arruchAccountId));
 		obj.push_back(Pair("addr", strAddr));
 	}
-	if (m_uchOpeatorType == ADD_FREE) {
+	if (m_uchOpeatorType == EM_ADD_FREE) {
 		obj.push_back(Pair("opertype", "add"));
-	} else if (m_uchOpeatorType == MINUS_FREE) {
+	} else if (m_uchOpeatorType == EM_MINUS_FREE) {
 		obj.push_back(Pair("opertype", "minus"));
 	}
 	if (m_unOutHeight > 0)

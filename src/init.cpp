@@ -142,33 +142,33 @@ void Shutdown() {
 			g_pwalletMain->SetBestChain(g_cChainActive.GetLocator());
 			g_cDacrsDbEnv.Flush(true);
 		}
-		if (pblocktree) {
-			pblocktree->Flush();
+		if (g_pblocktree) {
+			g_pblocktree->Flush();
 		}
 		if (g_pAccountViewTip) {
 			g_pAccountViewTip->Flush();
 		}
-		if (pTxCacheTip) {
-			pTxCacheTip->Flush();
+		if (g_pTxCacheTip) {
+			g_pTxCacheTip->Flush();
 		}
 		if (g_pScriptDBTip) {
 			g_pScriptDBTip->Flush();
 		}
 
 		delete g_pAccountViewTip;
-		g_pAccountViewTip = NULL;
-		delete pAccountViewDB;
-		pAccountViewDB = NULL;
-		delete pblocktree;
-		pblocktree = NULL;
-		delete pTxCacheDB;
-		pTxCacheDB = NULL;
-		delete pScriptDB;
-		pScriptDB = NULL;
-		delete pTxCacheTip;
-		pTxCacheTip = NULL;
+		g_pAccountViewTip 	= NULL;
+		delete g_pAccountViewDB;
+		g_pAccountViewDB	= NULL;
+		delete g_pblocktree;
+		g_pblocktree 		= NULL;
+		delete g_pTxCacheDB;
+		g_pTxCacheDB 		= NULL;
+		delete g_pScriptDB;
+		g_pScriptDB 		= NULL;
+		delete g_pTxCacheTip;
+		g_pTxCacheTip 		= NULL;
 		delete g_pScriptDBTip;
-		g_pScriptDBTip = NULL;
+		g_pScriptDBTip 		= NULL;
 	}
 
 	boost::filesystem::remove(GetPidFile());
@@ -189,7 +189,7 @@ void HandleSIGTERM(int) {
 }
 
 void HandleSIGHUP(int) {
-	fReopenDebugLog = true;
+	g_bReopenDebugLog = true;
 }
 
 bool static InitError(const string &str) {
@@ -233,7 +233,7 @@ string HelpMessage(emHelpMessageMode hmm)
 #endif
 	}
     strUsage += "  -datadir=<dir>         " + _("Specify data directory") + "\n";
-    strUsage += "  -dbcache=<n>           " + strprintf(_("Set database cache size in megabytes (%d to %d, default: %d)"), nMinDbCache, nMaxDbCache, nDefaultDbCache) + "\n";
+    strUsage += "  -dbcache=<n>           " + strprintf(_("Set database cache size in megabytes (%d to %d, default: %d)"), g_sMinDbCache, g_sMaxDbCache, g_sDefaultDbCache) + "\n";
     strUsage += "  -keypool=<n>           " + _("Set key pool size to <n> (default: 100)") + "\n";
     strUsage += "  -loadblock=<file>      " + _("Imports blocks from external blk000??.dat file") + " " + _("on startup") + "\n";
     strUsage += "  -par=<n>               " + strprintf(_("Set the number of script verification threads (%u to %d, 0 = auto, <0 = leave that many cores free, default: %d)"), -(int)boost::thread::hardware_concurrency(), MAX_SCRIPTCHECK_THREADS, DEFAULT_SCRIPTCHECK_THREADS) + "\n";
@@ -297,7 +297,7 @@ string HelpMessage(emHelpMessageMode hmm)
     strUsage += "  -debug=<category>      " + _("Output debugging information (default: 0, supplying <category> is optional)") + "\n";
     strUsage += "                         " + _("If <category> is not supplied, output all debugging information.") + "\n";
     strUsage += "                         " + _("<category> can be:");
-    strUsage +=                                 " addrman, alert, coindb, db, lock, rand, rpc, selectcoins, g_cTxMemPool, net"; // Don't translate these and qt below
+    strUsage +=                                 " addrman, alert, coindb, db, lock, rand, rpc, selectcoins, mempool, net"; // Don't translate these and qt below
     if (hmm == EM_HMM_COIN_QT) {
     	strUsage += ", qt";
     }
@@ -366,7 +366,7 @@ void ThreadImport(vector<boost::filesystem::path> vImportFiles) {
 		ST_ImportingNow tImportingNow;
 		int nFile = 0;
 		while (true) {
-			CDiskBlockPos pos(nFile, 0);
+			ST_DiskBlockPos pos(nFile, 0);
 			FILE *pFile = OpenBlockFile(pos, true);
 			if (!pFile) {
 				break;
@@ -375,7 +375,7 @@ void ThreadImport(vector<boost::filesystem::path> vImportFiles) {
 			LoadExternalBlockFile(pFile, &pos);
 			nFile++;
 		}
-		pblocktree->WriteReindexing(false);
+		g_pblocktree->WriteReindexing(false);
 		SysCfg().SetReIndex(false);
 		LogPrint("INFO", "Reindexing finished\n");
 		// To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
@@ -517,14 +517,14 @@ bool AppInit2(boost::thread_group& threadGroup) {
     }
     // Make sure enough file descriptors are available
     int nBind = max((int)SysCfg().IsArgCount("-bind"), 1);
-    nMaxConnections = SysCfg().GetArg("-maxconnections", 125);
-    nMaxConnections = max(min(nMaxConnections, (int)(FD_SETSIZE - nBind - MIN_CORE_FILEDESCRIPTORS)), 0);
-    int nFD = RaiseFileDescriptorLimit(nMaxConnections + MIN_CORE_FILEDESCRIPTORS);
+    g_nMaxConnections = SysCfg().GetArg("-maxconnections", 125);
+    g_nMaxConnections = max(min(g_nMaxConnections, (int)(FD_SETSIZE - nBind - MIN_CORE_FILEDESCRIPTORS)), 0);
+    int nFD = RaiseFileDescriptorLimit(g_nMaxConnections + MIN_CORE_FILEDESCRIPTORS);
     if (nFD < MIN_CORE_FILEDESCRIPTORS) {
     	return InitError(_("Not enough file descriptors available."));
     }
-    if (nFD - MIN_CORE_FILEDESCRIPTORS < nMaxConnections) {
-    	nMaxConnections = nFD - MIN_CORE_FILEDESCRIPTORS;
+    if (nFD - MIN_CORE_FILEDESCRIPTORS < g_nMaxConnections) {
+    	g_nMaxConnections = nFD - MIN_CORE_FILEDESCRIPTORS;
     }
     // ********************************************************* Step 3: parameter-to-internal-flags
 
@@ -633,8 +633,8 @@ bool AppInit2(boost::thread_group& threadGroup) {
     printf("Default data directory %s\n", GetDefaultDataDir().string().c_str());
     LogPrint("INFO","Using data directory %s\n", strDataDir);
     printf("Using data directory %s\n", strDataDir.c_str());
-    LogPrint("INFO","Using at most %i connections (%i file descriptors available)\n", nMaxConnections, nFD);
-    printf("Using at most %i connections (		%i file descriptors available)\n", nMaxConnections, nFD);
+    LogPrint("INFO","Using at most %i connections (%i file descriptors available)\n", g_nMaxConnections, nFD);
+    printf("Using at most %i connections (		%i file descriptors available)\n", g_nMaxConnections, nFD);
     ostringstream strErrors;
 
     int64_t nStart;
@@ -710,12 +710,12 @@ bool AppInit2(boost::thread_group& threadGroup) {
 	}
 
     // see Step 2: parameter interactions for more information about these
-    fNoListen = !SysCfg().GetBoolArg("-listen", true);
+    g_bNoListen = !SysCfg().GetBoolArg("-listen", true);
     g_bDiscover = SysCfg().GetBoolArg("-discover", true);
     g_bNameLookup = SysCfg().GetBoolArg("-dns", true);
 
     bool bBound = false;
-    if (!fNoListen) {
+    if (!g_bNoListen) {
 		if (SysCfg().IsArgCount("-bind")) {
 			vector<string> tmp = SysCfg().GetMultiArgs("-bind");
 			for (const auto& strBind : tmp) {
@@ -783,11 +783,11 @@ bool AppInit2(boost::thread_group& threadGroup) {
     }
 
     // cache size calculations
-    size_t unTotalCache = (SysCfg().GetArg("-dbcache", nDefaultDbCache) << 20);
-    if (unTotalCache < (nMinDbCache << 20)) {
-    	unTotalCache = (nMinDbCache << 20); // total cache cannot be less than nMinDbCache
-    } else if (unTotalCache > (nMaxDbCache << 20)) {
-    	unTotalCache = (nMaxDbCache << 20); // total cache cannot be greater than nMaxDbCache
+    size_t unTotalCache = (SysCfg().GetArg("-dbcache", g_sDefaultDbCache) << 20);
+    if (unTotalCache < (g_sMinDbCache << 20)) {
+    	unTotalCache = (g_sMinDbCache << 20); // total cache cannot be less than nMinDbCache
+    } else if (unTotalCache > (g_sMaxDbCache << 20)) {
+    	unTotalCache = (g_sMaxDbCache << 20); // total cache cannot be greater than nMaxDbCache
     }
     size_t unBlockTreeDBCache = unTotalCache / 8;
     if (unBlockTreeDBCache > (1 << 21) && !SysCfg().GetBoolArg("-txindex", false)) {
@@ -828,24 +828,24 @@ bool AppInit2(boost::thread_group& threadGroup) {
         do {
             try {
                 UnloadBlockIndex();
-                delete pAccountViewDB;
-                delete pblocktree;
+                delete g_pAccountViewDB;
+                delete g_pblocktree;
                 delete g_pAccountViewTip;
-                delete pTxCacheDB;
-                delete pTxCacheTip;
-                delete pScriptDB;
+                delete g_pTxCacheDB;
+                delete g_pTxCacheTip;
+                delete g_pScriptDB;
                 delete g_pScriptDBTip;
 
-                pblocktree 		= new CBlockTreeDB(unBlockTreeDBCache, false, SysCfg().IsReindex());
-                pAccountViewDB 	= new CAccountViewDB(unAccountDBCache, false, SysCfg().IsReindex());
-                g_pAccountViewTip =  new CAccountViewCache(*pAccountViewDB,true);
-                pTxCacheDB 		= new CTransactionDB(unTxCacheSize, false, SysCfg().IsReindex());
-                pTxCacheTip 	= new CTransactionDBCache(*pTxCacheDB,true);
-                pScriptDB 		= new CScriptDB(unScriptCacheSize, false , SysCfg().IsReindex());
-                g_pScriptDBTip 	= new CScriptDBViewCache(*pScriptDB,true);
+                g_pblocktree 		= new CBlockTreeDB(unBlockTreeDBCache, false, SysCfg().IsReindex());
+                g_pAccountViewDB	= new CAccountViewDB(unAccountDBCache, false, SysCfg().IsReindex());
+                g_pAccountViewTip 	=  new CAccountViewCache(*g_pAccountViewDB,true);
+                g_pTxCacheDB 		= new CTransactionDB(unTxCacheSize, false, SysCfg().IsReindex());
+                g_pTxCacheTip 		= new CTransactionDBCache(*g_pTxCacheDB,true);
+                g_pScriptDB 		= new CScriptDB(unScriptCacheSize, false , SysCfg().IsReindex());
+                g_pScriptDBTip 		= new CScriptDBViewCache(*g_pScriptDB,true);
 
                 if (SysCfg().IsReindex()) {
-                	pblocktree->WriteReindexing(true);
+                	g_pblocktree->WriteReindexing(true);
                 }
 				g_cTxMemPool.SetAccountViewDB(g_pAccountViewTip);
 				g_cTxMemPool.SetScriptDBViewDB(g_pScriptDBTip);
@@ -868,7 +868,7 @@ bool AppInit2(boost::thread_group& threadGroup) {
                     strLoadError = _("You need to rebuild the database using -reindex to change -txindex");
                     break;
                 }
-				if (!pTxCacheTip->LoadTransaction()) {
+				if (!g_pTxCacheTip->LoadTransaction()) {
 					strLoadError = _("Error loading transaction cache database");
 				}
                 g_cUIInterface.InitMessage(_("Verifying blocks..."));
@@ -961,12 +961,12 @@ bool AppInit2(boost::thread_group& threadGroup) {
 
     {
         CAddrDB adb;
-        if (!adb.Read(addrman))
+        if (!adb.Read(g_cAddrman))
             LogPrint("INFO","Invalid or missing peers.dat; recreating\n");
     }
 
     LogPrint("INFO","Loaded %i addresses from peers.dat  %dms\n",
-           addrman.size(), GetTimeMillis() - nStart);
+           g_cAddrman.size(), GetTimeMillis() - nStart);
 
     // ********************************************************* Step 11: start node
 
@@ -979,7 +979,7 @@ bool AppInit2(boost::thread_group& threadGroup) {
     RandAddSeedPerfmon();
 
     //// debug print
-    LogPrint("INFO","g_mapBlockIndex.size() = %u\n",   g_mapBlockIndex.size());
+    LogPrint("INFO","mapBlockIndex.size() = %u\n",   g_mapBlockIndex.size());
     LogPrint("INFO","nBestHeight = %d\n",            g_cChainActive.Height());
 
     StartNode(threadGroup);

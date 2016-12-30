@@ -818,9 +818,9 @@ static int ExGetAccountPublickeyFunc(lua_State *L) {
 	}
 	CDataStream cTep(SER_DISK, g_sClientVersion);
 	vector<char> vchTe;
-	cTep << cAccount.PublicKey;
+	cTep << cAccount.m_cPublicKey;
 //    assert(cAccount.PublicKey.IsFullyValid());
-	if (false == cAccount.PublicKey.IsFullyValid()) {
+	if (false == cAccount.m_cPublicKey.IsFullyValid()) {
 		return RetFalse("ExGetAccountPublickeyFunc PublicKey invalid");
 	}
 	cTep >> vchTe;
@@ -1815,7 +1815,7 @@ static int ExWriteOutAppOperateFunc(lua_State *L) {
 	int64_t llStep = -1;
 	while (nCount--) {
 		cSs >> cTemp;
-		if (pcVmRunEvn->GetComfirHeight() > nFreezeBlackAcctHeight && cTemp.m_llMoney < 0) //不能小于0,防止 上层传错金额小于20150904
+		if (pcVmRunEvn->GetComfirHeight() > g_sFreezeBlackAcctHeight && cTemp.m_llMoney < 0) //不能小于0,防止 上层传错金额小于20150904
 				{
 			return RetFalse("ExWriteOutAppOperateFunc para err2");
 		}
@@ -2061,7 +2061,7 @@ static int ExGetBlockTimestamp(lua_State *L) {
 	}
 
 	if (lua_checkstack(L, sizeof(lua_Integer))) {
-		lua_pushinteger(L, (lua_Integer) pcIndex->nTime);
+		lua_pushinteger(L, (lua_Integer) pcIndex->m_unTime);
 		return 1;
 	}
 

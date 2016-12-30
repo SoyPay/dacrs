@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DACRS_SYNC_H
-#define DACRS_SYNC_H
+#ifndef DACRS_SYNC_H_
+#define DACRS_SYNC_H_
 
 #include "threadsafety.h"
 
@@ -12,7 +12,6 @@
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/recursive_mutex.hpp>
-
 
 ////////////////////////////////////////////////
 //                                            //
@@ -47,8 +46,6 @@ LEAVE_CRITICAL_SECTION(mutex); // no RAII
  
  */
 
-
-
 ///////////////////////////////
 //                           //
 // THE ACTUAL IMPLEMENTATION //
@@ -58,30 +55,29 @@ LEAVE_CRITICAL_SECTION(mutex); // no RAII
 // Template mixin that adds -Wthread-safety locking annotations to a
 // subset of the mutex API.
 template <typename PARENT>
-class LOCKABLE AnnotatedMixin : public PARENT
-{
-public:
-    void lock() EXCLUSIVE_LOCK_FUNCTION()
-    {
-      PARENT::lock();
-    }
+class LOCKABLE AnnotatedMixin: public PARENT {
+ public:
+	void lock() EXCLUSIVE_LOCK_FUNCTION()
+	{
+		PARENT::lock();
+	}
 
-    void unlock() UNLOCK_FUNCTION()
-    {
-      PARENT::unlock();
-    }
+	void unlock() UNLOCK_FUNCTION()
+	{
+		PARENT::unlock();
+	}
 
-    bool try_lock() EXCLUSIVE_TRYLOCK_FUNCTION(true)
-    {
-      return PARENT::try_lock();
-    }
+	bool try_lock() EXCLUSIVE_TRYLOCK_FUNCTION(true)
+	{
+		return PARENT::try_lock();
+	}
 };
 
-/** Wrapped boost mutex: supports recursive locking, but no waiting  */
+/** Wrapped boost m_mutex: supports recursive locking, but no waiting  */
 // TODO: We should move away from using the recursive lock by default.
 typedef AnnotatedMixin<boost::recursive_mutex> CCriticalSection;
 
-/** Wrapped boost mutex: supports waiting but not recursive locking */
+/** Wrapped boost m_mutex: supports waiting but not recursive locking */
 typedef AnnotatedMixin<boost::mutex> CWaitableCriticalSection;
 
 #ifdef DEBUG_LOCKORDER
@@ -169,93 +165,101 @@ typedef CMutexLock<CCriticalSection> CCriticalBlock;
         LeaveCritical(); \
     }
 
-class CSemaphore
-{
-private:
-    boost::condition_variable condition;
-    boost::mutex mutex;
-    int value;
+class CSemaphore {
+ public:
+	CSemaphore(int init) :
+			m_nValue(init) {
+	}
 
-public:
-    CSemaphore(int init) : value(init) {}
+	void wait() {
+		boost::unique_lock<boost::mutex> lock(m_mutex);
+		while (m_nValue < 1) {
+			m_condition.wait(lock);
+		}
+		m_nValue--;
+	}
 
-    void wait() {
-        boost::unique_lock<boost::mutex> lock(mutex);
-        while (value < 1) {
-            condition.wait(lock);
-        }
-        value--;
-    }
+	bool try_wait() {
+		boost::unique_lock<boost::mutex> lock(m_mutex);
+		if (m_nValue < 1) {
+			return false;
+		}
+		m_nValue--;
+		return true;
+	}
 
-    bool try_wait() {
-        boost::unique_lock<boost::mutex> lock(mutex);
-        if (value < 1)
-            return false;
-        value--;
-        return true;
-    }
+	void post() {
+		{
+			boost::unique_lock<boost::mutex> lock(m_mutex);
+			m_nValue++;
+		}
+		m_condition.notify_one();
+	}
 
-    void post() {
-        {
-            boost::unique_lock<boost::mutex> lock(mutex);
-            value++;
-        }
-        condition.notify_one();
-    }
+ private:
+	boost::condition_variable m_condition;
+	boost::mutex m_mutex;
+	int m_nValue;
 };
 
 /** RAII-style semaphore lock */
-class CSemaphoreGrant
-{
-private:
-    CSemaphore *sem;
-    bool fHaveGrant;
+class CSemaphoreGrant {
+ public:
+	void Acquire() {
+		if (m_bHaveGrant) {
+			return;
+		}
+		m_cSemaphore->wait();
+		m_bHaveGrant = true;
+	}
 
-public:
-    void Acquire() {
-        if (fHaveGrant)
-            return;
-        sem->wait();
-        fHaveGrant = true;
-    }
+	void Release() {
+		if (!m_bHaveGrant) {
+			return;
+		}
+		m_cSemaphore->post();
+		m_bHaveGrant = false;
+	}
 
-    void Release() {
-        if (!fHaveGrant)
-            return;
-        sem->post();
-        fHaveGrant = false;
-    }
+	bool TryAcquire() {
+		if (!m_bHaveGrant && m_cSemaphore->try_wait()) {
+			m_bHaveGrant = true;
+		}
+		return m_bHaveGrant;
+	}
 
-    bool TryAcquire() {
-        if (!fHaveGrant && sem->try_wait())
-            fHaveGrant = true;
-        return fHaveGrant;
-    }
+	void MoveTo(CSemaphoreGrant &grant) {
+		grant.Release();
+		grant.m_cSemaphore = m_cSemaphore;
+		grant.m_bHaveGrant = m_bHaveGrant;
+		m_cSemaphore = NULL;
+		m_bHaveGrant = false;
+	}
 
-    void MoveTo(CSemaphoreGrant &grant) {
-        grant.Release();
-        grant.sem = sem;
-        grant.fHaveGrant = fHaveGrant;
-        sem = NULL;
-        fHaveGrant = false;
-    }
+	CSemaphoreGrant() :
+			m_cSemaphore(NULL), m_bHaveGrant(false) {
+	}
 
-    CSemaphoreGrant() : sem(NULL), fHaveGrant(false) {}
+	CSemaphoreGrant(CSemaphore &sema, bool fTry = false) :
+			m_cSemaphore(&sema), m_bHaveGrant(false) {
+		if (fTry) {
+			TryAcquire();
+		} else {
+			Acquire();
+		}
+	}
 
-    CSemaphoreGrant(CSemaphore &sema, bool fTry = false) : sem(&sema), fHaveGrant(false) {
-        if (fTry)
-            TryAcquire();
-        else
-            Acquire();
-    }
+	~CSemaphoreGrant() {
+		Release();
+	}
 
-    ~CSemaphoreGrant() {
-        Release();
-    }
+	operator bool() {
+		return m_bHaveGrant;
+	}
 
-    operator bool() {
-        return fHaveGrant;
-    }
+ private:
+ 	CSemaphore *m_cSemaphore;
+ 	bool m_bHaveGrant;
 };
 #endif
 

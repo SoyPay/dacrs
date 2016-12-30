@@ -22,8 +22,8 @@
 // Tests this internal-to-main.cpp method:
 extern bool AddOrphanTx(const CTransaction& tx);
 extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
-extern std::map<uint256, CTransaction> mapOrphanTransactions;
-extern std::map<uint256, std::set<uint256> > mapOrphanTransactionsByPrev;
+extern std::map<uint256, CTransaction> g_mapOrphanTransactions;
+extern std::map<uint256, std::set<uint256> > g_mapOrphanTransactionsByPrev;
 
 CService ip(uint32_t i) {
 	struct in_addr s;
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning) {
 	CNode::ClearBanned();
 	CAddress cAddr1(ip(0xa0b0c001));
 	CNode cDummyNode1(INVALID_SOCKET, cAddr1, "", true);
-	cDummyNode1.nVersion = 1;
+	cDummyNode1.m_nVersion = 1;
 	Misbehaving(cDummyNode1.GetId(), 100); // Should get banned
 	SendMessages(&cDummyNode1, false);
 	BOOST_CHECK(CNode::IsBanned(cAddr1));
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning) {
 
 	CAddress cAddr2(ip(0xa0b0c002));
 	CNode cDummyNode2(INVALID_SOCKET, cAddr2, "", true);
-	cDummyNode2.nVersion = 1;
+	cDummyNode2.m_nVersion = 1;
 	Misbehaving(cDummyNode2.GetId(), 50);
 	SendMessages(&cDummyNode2, false);
 	BOOST_CHECK(!CNode::IsBanned(cAddr2)); // 2 not banned yet...
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore) {
 	SysCfg().SoftSetArgCover("-banscore", "111"); // because 11 is my favorite number
 	CAddress cAddr1(ip(0xa0b0c001));
 	CNode cDummyNode1(INVALID_SOCKET, cAddr1, "", true);
-	cDummyNode1.nVersion = 1;
+	cDummyNode1.m_nVersion = 1;
 	Misbehaving(cDummyNode1.GetId(), 100);
 	SendMessages(&cDummyNode1, false);
 	BOOST_CHECK(!CNode::IsBanned(cAddr1));
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime) {
 
 	CAddress cAddr(ip(0xa0b0c001));
 	CNode cDummyNode(INVALID_SOCKET, cAddr, "", true);
-	cDummyNode.nVersion = 1;
+	cDummyNode.m_nVersion = 1;
 
 	Misbehaving(cDummyNode.GetId(), 100);
 	SendMessages(&cDummyNode, false);
@@ -149,9 +149,9 @@ BOOST_AUTO_TEST_CASE(DoS_checknbits) {
 
 CTransaction RandomOrphan() {
 	std::map<uint256, CTransaction>::iterator it;
-	it = mapOrphanTransactions.lower_bound(GetRandHash());
-	if (it == mapOrphanTransactions.end()) {
-		it = mapOrphanTransactions.begin();
+	it = g_mapOrphanTransactions.lower_bound(GetRandHash());
+	if (it == g_mapOrphanTransactions.end()) {
+		it = g_mapOrphanTransactions.begin();
 	}
 	return it->second;
 }

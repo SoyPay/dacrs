@@ -30,7 +30,7 @@ class CAddrInfo : public CAddress {
 
     void Init() {
     	m_llLastSuccess = 0;
-        nLastTry = 0;
+    	m_llLastTry = 0;
         m_nAttempts = 0;
         m_nRefCount = 0;
         m_bInTried = false;

@@ -17,7 +17,7 @@ uint256 CBlockHeader::GetHash() const {
 }
 
 void CBlockHeader::SetHeight(unsigned int height) {
-	if (height < nUpdateBlockVersionHeight && height > 0) {
+	if (height < g_sUpdateBlockVersionHeight && height > 0) {
 		SetVersion(g_sBlockVersion2);
 	}
 	this->m_unHeight = height;

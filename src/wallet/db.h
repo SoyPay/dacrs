@@ -182,7 +182,7 @@ class CDB {
     }
 
     template <typename K, typename T>
-    bool Write(const K& key, const T& value, bool fOverwrite = true, int nVersion=g_sClientVersion) {
+    bool Write(const K& key, const T& value, bool fOverwrite = true, int nVersion = g_sClientVersion) {
         if (!m_pdb) {
         	return false;
         }

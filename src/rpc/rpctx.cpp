@@ -452,15 +452,15 @@ Value registerapptx(const Array& params, bool bHelp) {
 		};
 
 		cTx.m_cRegAcctId = GetUserId(ckeyid);
-		cTx.script = vchScript;
-		cTx.llFees = ullFee;
-		cTx.nRunStep = vchScript.size();
+		cTx.m_vchScript = vchScript;
+		cTx.m_ullFees = ullFee;
+		cTx.m_ullRunStep = vchScript.size();
 		if (0 == nHeight) {
 			nHeight = g_cChainActive.Tip()->m_nHeight;
 		}
 		cTx.m_nValidHeight = nHeight;
 
-		if (!g_pwalletMain->Sign(ckeyid, cTx.SignatureHash(), cTx.signature)) {
+		if (!g_pwalletMain->Sign(ckeyid, cTx.SignatureHash(), cTx.m_vchSignature)) {
 			throw JSONRPCError(RPC_WALLET_ERROR, "registerapptx Error: Sign failed.");
 		}
 	}
@@ -674,15 +674,15 @@ Value getaccountinfo(const Array& params, bool bHelp) {
 
 		CAccountViewCache cAccView(*g_pAccountViewTip, true);
 		if (cAccView.GetAccount(userId, cAccount)) {
-			if (!cAccount.PublicKey.IsValid()) {
+			if (!cAccount.m_cPublicKey.IsValid()) {
 				CPubKey cPk;
 				CPubKey cMinerpk;
 				if (g_pwalletMain->GetPubKey(ckeyid, cPk)) {
 					g_pwalletMain->GetPubKey(ckeyid, cMinerpk, true);
-					cAccount.PublicKey = cPk;
-					cAccount.keyID = std::move(cPk.GetKeyID());
-					if (cPk != cMinerpk && !cAccount.MinerPKey.IsValid()) {
-						cAccount.MinerPKey = cMinerpk;
+					cAccount.m_cPublicKey = cPk;
+					cAccount.m_cKeyID = std::move(cPk.GetKeyID());
+					if (cPk != cMinerpk && !cAccount.m_cMinerPKey.IsValid()) {
+						cAccount.m_cMinerPKey = cMinerpk;
 					}
 				}
 			}
@@ -693,10 +693,10 @@ Value getaccountinfo(const Array& params, bool bHelp) {
 			CPubKey cMinerpk;
 			if (g_pwalletMain->GetPubKey(ckeyid, cPk)) {
 				g_pwalletMain->GetPubKey(ckeyid, cMinerpk, true);
-				cAccount.PublicKey = cPk;
-				cAccount.keyID = cPk.GetKeyID();
+				cAccount.m_cPublicKey = cPk;
+				cAccount.m_cKeyID = cPk.GetKeyID();
 				if (cMinerpk != cPk) {
-					cAccount.MinerPKey = cMinerpk;
+					cAccount.m_cMinerPKey = cMinerpk;
 				}
 				obj = std::move(cAccount.ToJosnObj());
 				obj.push_back(Pair("postion", "inwallet"));
@@ -842,10 +842,10 @@ Value sign(const Array& params, bool bHelp) {
 
 static Value AccountLogToJson(const CAccountLog &accoutLog) {
 	Object obj;
-	obj.push_back(Pair("cKeyId", accoutLog.keyID.ToString()));
-	obj.push_back(Pair("llValues", accoutLog.llValues));
-	obj.push_back(Pair("nHeight", accoutLog.nHeight));
-	obj.push_back(Pair("nCoinDay", accoutLog.nCoinDay));
+	obj.push_back(Pair("cKeyId", accoutLog.m_cKeyID.ToString()));
+	obj.push_back(Pair("llValues", accoutLog.m_ullValues));
+	obj.push_back(Pair("nHeight", accoutLog.m_nHeight));
+	obj.push_back(Pair("nCoinDay", accoutLog.m_ullCoinDay));
 
 	return obj;
 }
@@ -878,7 +878,7 @@ Value gettxoperationlog(const Array& params, bool bHelp) {
 		Array arrayvLog;
 		for (auto const &te : vLog) {
 			Object obj;
-			obj.push_back(Pair("addr", te.keyID.ToAddress()));
+			obj.push_back(Pair("addr", te.m_cKeyID.ToAddress()));
 			Array array;
 			array.push_back(AccountLogToJson(te));
 			arrayvLog.push_back(obj);
@@ -907,11 +907,11 @@ static Value TestDisconnectBlock(int number) {
 			if (!DisconnectBlockFromTip(cState)) {
 				return false;
 			}
-			chainMostWork.SetTip(pTipIndex->m_pPrevBlockIndex);
+			g_cChainMostWork.SetTip(pTipIndex->m_pPrevBlockIndex);
 			if (!EraseBlockIndexFromSet(pTipIndex)) {
 				return false;
 			}
-			if (!pblocktree->EraseBlockIndex(pTipIndex->GetBlockHash())) {
+			if (!g_pblocktree->EraseBlockIndex(pTipIndex->GetBlockHash())) {
 				return false;
 			}
 			g_mapBlockIndex.erase(pTipIndex->GetBlockHash());
@@ -970,11 +970,11 @@ Value resetclient(const Array& params, bool bHelp) {
 		}
 		g_pAccountViewTip->Flush();
 		g_pScriptDBTip->Flush();
-		pTxCacheTip->Flush();
+		g_pTxCacheTip->Flush();
 
-		assert(pAccountViewDB->GetDbCount() == 43);
-		assert(pScriptDB->GetDbCount() == 0 || pScriptDB->GetDbCount() == 1);
-		assert(pTxCacheTip->GetSize() == 0);
+		assert(g_pAccountViewDB->GetDbCount() == 43);
+		assert(g_pScriptDB->GetDbCount() == 0 || g_pScriptDB->GetDbCount() == 1);
+		assert(g_pTxCacheTip->GetSize() == 0);
 
 		CBlock cFirs = SysCfg().GenesisBlock();
 		g_pwalletMain->SyncTransaction(uint256(), NULL, &cFirs);
@@ -1147,7 +1147,7 @@ Value listtxcache(const Array& params, bool bHelp) {
 				"\"txcache\"  (string) \n"
 				"\nExamples:\n" + HelpExampleCli("listtxcache", "")+ HelpExampleRpc("listtxcache", ""));
 	}
-	const map<uint256, vector<uint256> > &mapTxHashByBlockHash = pTxCacheTip->GetTxHashCache();
+	const map<uint256, vector<uint256> > &mapTxHashByBlockHash = g_pTxCacheTip->GetTxHashCache();
 
 	Array retTxHashArray;
 	for (auto &item : mapTxHashByBlockHash) {
@@ -1174,7 +1174,7 @@ Value reloadtxcache(const Array& params, bool bHelp) {
 				+ HelpExampleCli("reloadtxcache", "")
 				+ HelpExampleRpc("reloadtxcache", ""));
 	}
-	pTxCacheTip->Clear();
+	g_pTxCacheTip->Clear();
 	CBlockIndex *pIndex = g_cChainActive.Tip();
 	if ((g_cChainActive.Tip()->m_nHeight - SysCfg().GetTxCacheHeight()) >= 0) {
 		pIndex = g_cChainActive[(g_cChainActive.Tip()->m_nHeight - SysCfg().GetTxCacheHeight())];
@@ -1186,7 +1186,7 @@ Value reloadtxcache(const Array& params, bool bHelp) {
 		if (!ReadBlockFromDisk(cBlock, pIndex))
 			return ERRORMSG("reloadtxcache() : *** ReadBlockFromDisk failed at %d, hash=%s", pIndex->m_nHeight,
 					pIndex->GetBlockHash().ToString());
-		pTxCacheTip->AddBlockToCache(cBlock);
+		g_pTxCacheTip->AddBlockToCache(cBlock);
 		pIndex = g_cChainActive.Next(pIndex);
 	} while (NULL != pIndex);
 
@@ -1307,7 +1307,7 @@ Value getscriptvalidedata(const Array& params, bool bHelp) {
 	}
 	std::shared_ptr<CScriptDBViewCache> pAccountViewCache;
 	if(4 == params.size() && 0==params[3].get_int()) {
-		pAccountViewCache.reset(new CScriptDBViewCache(*g_cTxMemPool.pScriptDBViewCache, true));
+		pAccountViewCache.reset(new CScriptDBViewCache(*g_cTxMemPool.m_pScriptDBViewCache, true));
 	}else {
 		pAccountViewCache.reset(new CScriptDBViewCache(*g_pScriptDBTip, true));
 	}
@@ -1685,8 +1685,8 @@ Value registerscripttxraw(const Array& params, bool bHelp) {
 	};
 	std::shared_ptr<CRegisterAppTx> tx = std::make_shared<CRegisterAppTx>();
 	tx.get()->m_cRegAcctId = GetUserId(cKeyId);
-	tx.get()->script = vchScript;
-	tx.get()->llFees = ullFee;
+	tx.get()->m_vchScript = vchScript;
+	tx.get()->m_ullFees = ullFee;
 
 	uint32_t nHeight = g_cChainActive.Tip()->m_nHeight;
 	if (params.size() > 4) {
@@ -1742,7 +1742,7 @@ Value sigstr(const Array& params, bool bHelp) {
 		obj.push_back(Pair("rawtx", HexStr(cDs.begin(), cDs.end())));
 	}
 		break;
-	case REG_ACCT_TX: {
+	case EM_REG_ACCT_TX: {
 		std::shared_ptr<CRegisterAccountTx> tx = std::make_shared<CRegisterAccountTx>(pBaseTx.get());
 		if (!g_pwalletMain->Sign(cKeyId, tx.get()->SignatureHash(), tx.get()->m_vchSignature)) {
 			throw JSONRPCError(RPC_INVALID_PARAMETER, "Sign failed");
@@ -1764,12 +1764,12 @@ Value sigstr(const Array& params, bool bHelp) {
 		obj.push_back(Pair("rawtx", HexStr(cDs.begin(), cDs.end())));
 	}
 		break;
-	case REWARD_TX: {
+	case EM_REWARD_TX: {
 		break;
 	}
-	case REG_APP_TX: {
+	case EM_REG_APP_TX: {
 		std::shared_ptr<CRegisterAppTx> tx = std::make_shared<CRegisterAppTx>(pBaseTx.get());
-		if (!g_pwalletMain->Sign(cKeyId, tx.get()->SignatureHash(), tx.get()->signature)) {
+		if (!g_pwalletMain->Sign(cKeyId, tx.get()->SignatureHash(), tx.get()->m_vchSignature)) {
 			throw JSONRPCError(RPC_INVALID_PARAMETER, "Sign failed");
 		}
 		CDataStream cDs(SER_DISK, g_sClientVersion);
@@ -1888,7 +1888,7 @@ Value getappaccinfo(const Array& params, bool bHelp) {
 	std::shared_ptr<CAppUserAccout> tem = std::make_shared<CAppUserAccout>();
 	if (params.size() == 3 && 0 == params[2].get_int()) {
 
-		CScriptDBViewCache cContractScriptTemp(*g_cTxMemPool.pScriptDBViewCache, true);
+		CScriptDBViewCache cContractScriptTemp(*g_cTxMemPool.m_pScriptDBViewCache, true);
 		if (!cContractScriptTemp.GetScriptAcc(script, key, *tem.get())) {
 			tem = std::make_shared<CAppUserAccout>(key);
 		}
@@ -2105,12 +2105,12 @@ Value setcheckpoint(const Array& params, bool bHelp)
 	Checkpoints::AddCheckpoint(point.m_height, point.m_hashCheckpoint);
 	CheckActiveChain(point.m_height, point.m_hashCheckpoint);
 	vdata.push_back(cData);
-	LOCK(cs_vNodes);
-	BOOST_FOREACH(CNode* pnode, vNodes)
+	LOCK(g_cs_vNodes);
+	BOOST_FOREACH(CNode* pnode, g_vNodes)
 	{
-		if (pnode->setcheckPointKnown.count(point.m_height) == 0)
+		if (pnode->m_setcheckPointKnown.count(point.m_height) == 0)
 		{
-			pnode->setcheckPointKnown.insert(point.m_height);
+			pnode->m_setcheckPointKnown.insert(point.m_height);
 			pnode->PushMessage("checkpoint", vdata);
 		}
 	}
@@ -2279,9 +2279,9 @@ Value getrawtx(const Array& params, bool bHelp) {
 	std::shared_ptr<CBaseTransaction> pa;
 	stream >> pa;
 	streamRawTx << pa->m_chTxType;
-	if (pa->m_chTxType == REG_ACCT_TX) {
+	if (pa->m_chTxType == EM_REG_ACCT_TX) {
 		CRegisterAccountTx *pRegAcctTx = (CRegisterAccountTx *) pa.get();
-		streamRawTx << pRegAcctTx->nVersion;
+		streamRawTx << pRegAcctTx->m_nVersion;
 		streamRawTx << pRegAcctTx->m_nValidHeight;
 		CID id(pRegAcctTx->m_cUserId);
 		streamRawTx << id;
@@ -2291,7 +2291,7 @@ Value getrawtx(const Array& params, bool bHelp) {
 		streamRawTx << pRegAcctTx->m_vchSignature;
 	} else if (pa->m_chTxType == EM_COMMON_TX || pa->m_chTxType == EM_CONTRACT_TX) {
 		CTransaction * pTx = (CTransaction *) pa.get();
-		streamRawTx << pTx->nVersion;
+		streamRawTx << pTx->m_nVersion;
 		streamRawTx << pTx->m_nValidHeight;
 		CID srcId(pTx->m_cSrcRegId);
 		streamRawTx << srcId;
@@ -2301,22 +2301,22 @@ Value getrawtx(const Array& params, bool bHelp) {
 		streamRawTx << pTx->m_ullValues;
 		streamRawTx << pTx->m_vchContract;
 		streamRawTx << pTx->m_vchSignature;
-	}  else if (pa->m_chTxType == REWARD_TX) {
+	}  else if (pa->m_chTxType == EM_REWARD_TX) {
 		CRewardTransaction * pRewardTx = (CRewardTransaction *) pa.get();
-		streamRawTx << pRewardTx->nVersion;
+		streamRawTx << pRewardTx->m_nVersion;
 		CID acctId(pRewardTx->m_cAccount);
 		streamRawTx << acctId;
-		streamRawTx << pRewardTx->rewardValue;
-		streamRawTx << pRewardTx->nHeight;
-	} else if (pa->m_chTxType == REG_APP_TX) {
+		streamRawTx << pRewardTx->m_ullRewardValue;
+		streamRawTx << pRewardTx->m_nHeight;
+	} else if (pa->m_chTxType == EM_REG_APP_TX) {
 		CRegisterAppTx * pRegAppTx = (CRegisterAppTx *) pa.get();
-		streamRawTx << pRegAppTx->nVersion;
+		streamRawTx << pRegAppTx->m_nVersion;
 		streamRawTx << pRegAppTx->m_nValidHeight;
 		CID regId(pRegAppTx->m_cRegAcctId);
 		streamRawTx	<< regId;
-		streamRawTx << pRegAppTx->script;
-		streamRawTx << pRegAppTx->llFees;
-		streamRawTx << pRegAppTx->signature;
+		streamRawTx << pRegAppTx->m_vchScript;
+		streamRawTx << pRegAppTx->m_ullFees;
+		streamRawTx << pRegAppTx->m_vchSignature;
 
 	} else {
 		 throw runtime_error("seiralize tx type value error, must be ranger(1...5)\n");

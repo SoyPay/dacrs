@@ -47,11 +47,11 @@ BOOST_AUTO_TEST_CASE(compactsize) {
 	CDataStream cSs(SER_DISK, 0);
 	vector<char>::size_type i, j;
 
-	for (i = 1; i <= MAX_SIZE; i *= 2) {
+	for (i = 1; i <= g_sMaxSize; i *= 2) {
 		WriteCompactSize(cSs, i - 1);
 		WriteCompactSize(cSs, i);
 	}
-	for (i = 1; i <= MAX_SIZE; i *= 2) {
+	for (i = 1; i <= g_sMaxSize; i *= 2) {
 		j = ReadCompactSize(cSs);
 		BOOST_CHECK_MESSAGE((i - 1) == j, "decoded:" << j << " expected:" << (i-1));
 		j = ReadCompactSize(cSs);

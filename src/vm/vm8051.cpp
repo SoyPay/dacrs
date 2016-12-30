@@ -572,8 +572,8 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 	auto tem =  std::make_shared<std::vector< vector<unsigned char> > >();
     CDataStream tep(SER_DISK, g_sClientVersion);
     vector<char> te;
-    tep << aAccount.PublicKey;
-    assert(aAccount.PublicKey.IsFullyValid());
+    tep << aAccount.m_cPublicKey;
+    assert(aAccount.m_cPublicKey.IsFullyValid());
     tep >>te;
     vector<unsigned char> tep1(te.begin(),te.end());
     (*tem.get()).push_back(tep1);
@@ -1289,7 +1289,7 @@ static RET_DEFINE ExWriteOutAppOperateFunc(unsigned char * ipara,void * pVmEvn)
 	while(count--)
 	{
 		ss >> temp;
-		if(pVmRunEvn->GetComfirHeight() > nFreezeBlackAcctHeight && temp.m_llMoney < 0) //不能小于0,防止 上层传错金额小于20150904
+		if(pVmRunEvn->GetComfirHeight() > g_sFreezeBlackAcctHeight && temp.m_llMoney < 0) //不能小于0,防止 上层传错金额小于20150904
 		{
 			return RetFalse("para err");
 		}

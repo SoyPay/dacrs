@@ -263,7 +263,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 				}
 				//confirm the tx is mine
 				if (IsMine(sptx.get())) {
-					if (sptx->m_chTxType == REG_ACCT_TX) {
+					if (sptx->m_chTxType == EM_REG_ACCT_TX) {
 						//fIsNeedUpDataRegID = true;
 					} else if (sptx->m_chTxType == EM_CONTRACT_TX) {
 					  /*vector<CAccountOperLog> Log;
@@ -323,7 +323,7 @@ void CWallet::SyncTransaction(const uint256 &hash, CBaseTransaction*pTx, const C
 		}
 	}
 	else if (pTx != NULL) {
-		LogPrint("todo","acept in g_cTxMemPool tx %s\r\n",pTx->GetHash().ToString());
+		LogPrint("todo","acept in mempool tx %s\r\n",pTx->GetHash().ToString());
     }
 }
 
@@ -352,16 +352,16 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool bUpdate) {
 //
 //	CBlockIndex* pindex = pindexStart;
 //	{
-//		LOCK2(g_cs_main, cs_wallet);
+//		LOCK2(cs_main, cs_wallet);
 //
 //		// no need to read and scan block, if block was created before
 //		// our wallet birthday (as adjusted for block time variability)
 //		while (pindex && nTimeFirstKey && (pindex->nTime < (nTimeFirstKey - 7200)))
-//			pindex = g_cChainActive.Next(pindex);
+//			pindex = chainActive.Next(pindex);
 //
 //		ShowProgress(_("Rescanning..."), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
 //		double dProgressStart = Checkpoints::GuessVerificationProgress(pindex, false);
-//		double dProgressTip = Checkpoints::GuessVerificationProgress(g_cChainActive.Tip(), false);
+//		double dProgressTip = Checkpoints::GuessVerificationProgress(chainActive.Tip(), false);
 //		while (pindex) {
 //			if (pindex->nHeight % 100 == 0 && dProgressTip - dProgressStart > 0.0)
 //				ShowProgress(_("Rescanning..."),
@@ -375,7 +375,7 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool bUpdate) {
 //
 //			SyncWithWallets(0, NULL, &block);
 //
-//			pindex = g_cChainActive.Next(pindex);
+//			pindex = chainActive.Next(pindex);
 //			if (GetTime() >= nNow + 60) {
 //				nNow = GetTime();
 //				LogPrint("INFO","Still rescanning. At block %d. Progress=%f\n", pindex->nHeight,
@@ -388,7 +388,7 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool bUpdate) {
 }
 
 //void CWallet::ReacceptWalletTransactions() {
-//	LOCK2(g_cs_main, cs_wallet);
+//	LOCK2(cs_main, cs_wallet);
 //
 //	mapWalletTx[uint256(0)].AcceptToMemoryPool();
 //}
@@ -460,7 +460,7 @@ int64_t CWallet::GetRawBalance(bool bIsConfirmed) const {
 //
 //	CTransaction tx;
 //	{
-//		LOCK2(g_cs_main, cs_wallet);
+//		LOCK2(cs_main, cs_wallet);
 //		tx.srcUserId = send;
 //		tx.desUserId = rsv;
 //		tx.llValues = nValue;
@@ -468,11 +468,11 @@ int64_t CWallet::GetRawBalance(bool bIsConfirmed) const {
 //			tx.llFees = SysCfg().GetTxFee();
 //		}else
 //			tx.llFees = nFee;
-//		tx.nValidHeight = g_cChainActive.Tip()->nHeight;
+//		tx.nValidHeight = chainActive.Tip()->nHeight;
 //	}
 //
 //	CKeyID keID;
-//	if(!g_pAccountViewTip->GetKeyId(send,keID)){
+//	if(!pAccountViewTip->GetKeyId(send,keID)){
 //		return std::make_tuple (false,"key or keID failed");
 //	}
 //

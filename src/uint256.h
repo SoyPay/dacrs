@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DACRS_UINT256_H
-#define DACRS_UINT256_H
+#ifndef DACRS_UINT256_H_
+#define DACRS_UINT256_H_
 
 #include <assert.h>
 #include <cstring>
@@ -13,11 +13,10 @@
 #include <string>
 #include <vector>
 
-extern const signed char p_util_hexdigit[256]; // defined in util.cpp
+extern const signed char g_util_hexdigit[256]; // defined in util.cpp
 
-inline signed char HexDigit(char c)
-{
-    return p_util_hexdigit[(unsigned char)c];
+inline signed char HexDigit(char c) {
+	return g_util_hexdigit[(unsigned char) c];
 }
 
 /** Template base class for fixed-sized opaque blobs. */
@@ -177,4 +176,4 @@ inline uint256 uint256S(const std::string& str)
 }
 
 
-#endif // DACRS_UINT256_H
+#endif

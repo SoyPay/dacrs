@@ -146,7 +146,7 @@ CAccountViewCache::CAccountViewCache(CAccountView &cAccountView, bool bDummy) :
 
 bool CAccountViewCache::GetAccount(const CKeyID &cKeyId, CAccount &cAccount) {
 	if (m_mapCacheAccounts.count(cKeyId)) {
-		if (m_mapCacheAccounts[cKeyId].keyID != uint160()) {
+		if (m_mapCacheAccounts[cKeyId].m_cKeyID != uint160()) {
 			cAccount = m_mapCacheAccounts[cKeyId];
 			return true;
 		} else {
@@ -204,7 +204,7 @@ bool CAccountViewCache::SetBestBlock(const uint256 &cHashBlockIn) {
 bool CAccountViewCache::BatchWrite(const map<CKeyID, CAccount> &mapAccounts,
 		const map<vector<unsigned char>, CKeyID> &mapKeyIds, const uint256 &cHashBlockIn) {
 	for (map<CKeyID, CAccount>::const_iterator it = mapAccounts.begin(); it != mapAccounts.end(); ++it) {
-		if (uint160() == it->second.keyID) {
+		if (uint160() == it->second.m_cKeyID) {
 			m_pBaseAccountView->EraseAccount(it->first);
 			m_mapCacheAccounts.erase(it->first);
 		} else {
@@ -224,10 +224,10 @@ bool CAccountViewCache::BatchWrite(const map<CKeyID, CAccount> &mapAccounts,
 bool CAccountViewCache::BatchWrite(const vector<CAccount> &vcAccounts) {
 	for (vector<CAccount>::const_iterator it = vcAccounts.begin(); it != vcAccounts.end(); ++it) {
 		if (it->IsEmptyValue() && !it->IsRegister()) {
-			m_mapCacheAccounts[it->keyID] = *it;
-			m_mapCacheAccounts[it->keyID].keyID = uint160();
+			m_mapCacheAccounts[it->m_cKeyID] = *it;
+			m_mapCacheAccounts[it->m_cKeyID].m_cKeyID = uint160();
 		} else {
-			m_mapCacheAccounts[it->keyID] = *it;
+			m_mapCacheAccounts[it->m_cKeyID] = *it;
 		}
 	}
 	return true;
@@ -235,12 +235,12 @@ bool CAccountViewCache::BatchWrite(const vector<CAccount> &vcAccounts) {
 
 bool CAccountViewCache::EraseAccount(const CKeyID &cKeyId) {
 	if (m_mapCacheAccounts.count(cKeyId)) {
-		m_mapCacheAccounts[cKeyId].keyID = uint160();
+		m_mapCacheAccounts[cKeyId].m_cKeyID = uint160();
 	}
 	else {
 		CAccount account;
 		if (m_pBaseAccountView->GetAccount(cKeyId, account)) {
-			account.keyID = uint160();
+			account.m_cKeyID = uint160();
 			m_mapCacheAccounts[cKeyId] = account;
 		}
 	}
@@ -302,7 +302,7 @@ bool CAccountViewCache::GetAccount(const vector<unsigned char> &vchAccountId, CA
 		if (keyId != uint160()) {
 			if (m_mapCacheAccounts.count(keyId)) {
 				cAccount = m_mapCacheAccounts[keyId];
-				if (cAccount.keyID != uint160()) {  // 判断此帐户是否被删除了
+				if (cAccount.m_cKeyID != uint160()) {  // 判断此帐户是否被删除了
 					return true;
 				} else {
 					return false;   //已删除返回false
@@ -319,7 +319,7 @@ bool CAccountViewCache::GetAccount(const vector<unsigned char> &vchAccountId, CA
 			m_mapCacheKeyIds[vchAccountId] = keyId;
 			if (m_mapCacheAccounts.count(keyId) > 0) {
 				cAccount = m_mapCacheAccounts[keyId];
-				if (cAccount.keyID != uint160()) { // 判断此帐户是否被删除了
+				if (cAccount.m_cKeyID != uint160()) { // 判断此帐户是否被删除了
 					return true;
 				} else {
 					return false;   //已删除返回false
@@ -1008,7 +1008,7 @@ bool CScriptDBViewCache::WriteTxIndex(const vector<pair<uint256, ST_DiskTxPos> >
 		vector<CScriptDBOperLog> &vTxIndexOperDB) {
 	for (vector<pair<uint256, ST_DiskTxPos> >::const_iterator it = list.begin(); it != list.end(); it++) {
 		LogPrint("txindex", "txhash:%s dispos: nFile=%d, nPos=%d nTxOffset=%d\n", it->first.GetHex(), it->second.nFile,
-				it->second.nPos, it->second.m_unTxOffset);
+				it->second.unPos, it->second.m_unTxOffset);
 		CDataStream cDS(SER_DISK, g_sClientVersion);
 		cDS << it->first;
 		vector<unsigned char> vchTxHash = { 'T' };
@@ -1018,8 +1018,8 @@ bool CScriptDBViewCache::WriteTxIndex(const vector<pair<uint256, ST_DiskTxPos> >
 		cDSPos << it->second;
 		vchTxPos.insert(vchTxPos.end(), cDSPos.begin(), cDSPos.end());
 		CScriptDBOperLog cTxIndexOper;
-		cTxIndexOper.vKey = vchTxHash;
-		GetData(vchTxHash, cTxIndexOper.vValue);
+		cTxIndexOper.m_vchKey = vchTxHash;
+		GetData(vchTxHash, cTxIndexOper.m_vchValue);
 		vTxIndexOperDB.push_back(cTxIndexOper);
 		if (!SetData(vchTxHash, vchTxPos)) {
 			return false;
@@ -1057,7 +1057,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 		return false;
 	}
 	vchScriptData = vchValue;
-//	CDataStream ds(vValue, SER_DISK, g_sClientVersion);
+//	CDataStream ds(vValue, SER_DISK, CLIENT_VERSION);
 //	ds >> vScriptData;
 
 	return true;
@@ -1112,7 +1112,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 //					vScriptKey.clear();
 //					vScriptData.clear();
 //					vScriptKey.insert(vScriptKey.end(), vDataKey.begin() + 11, vDataKey.end());
-//					CDataStream ds(vDataValue, SER_DISK, g_sClientVersion);
+//					CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
 //					ds >> nHeight;
 //					ds >> vScriptData;
 //					return true;
@@ -1124,7 +1124,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 //					vScriptKey.clear();
 //					vScriptData.clear();
 //					vScriptKey.insert(vScriptKey.end(), vDataKey.begin() + 11, vDataKey.end());
-//					CDataStream ds(vDataValue, SER_DISK, g_sClientVersion);
+//					CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
 //					ds >> nHeight;
 //					ds >> vScriptData;
 //					return true;
@@ -1132,7 +1132,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 //			}
 			if (vchDataKey.empty()) {   //缓存中没有符合条件的key，直接返回上级的查询结果
 				if (m_mapDatas.count(dataKeyTemp) <= 0) {
-//					CDataStream ds(vScriptData, SER_DISK, g_sClientVersion);
+//					CDataStream ds(vScriptData, SER_DISK, CLIENT_VERSION);
 //					ds >> vScriptData;
 					return true;
 				} else {
@@ -1156,7 +1156,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 					vchScriptData.clear();
 					vchScriptKey.insert(vchScriptKey.end(), vchDataKey.begin() + 11, vchDataKey.end());
 					vchScriptData = vDataValue;
-//					CDataStream ds(vDataValue, SER_DISK, g_sClientVersion);
+//					CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
 //					ds >> vScriptData;
 					return true;
 				}
@@ -1173,7 +1173,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 					return false;
 				}
 				vchScriptData = vDataValue;
-//				CDataStream ds(vDataValue, SER_DISK, g_sClientVersion);
+//				CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
 //				ds >> vScriptData;
 				return true;
 			}
@@ -1225,7 +1225,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 //					vScriptKey.clear();
 //					vScriptData.clear();
 //					vScriptKey.insert(vScriptKey.end(), vDataKey.begin() + 11, vDataKey.end());
-//					CDataStream ds(vDataValue, SER_DISK, g_sClientVersion);
+//					CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
 //					ds >> nHeight;
 //					ds >> vScriptData;
 //					return true;
@@ -1237,7 +1237,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 //					vScriptKey.clear();
 //					vScriptData.clear();
 //					vScriptKey.insert(vScriptKey.end(), vDataKey.begin() + 11, vDataKey.end());
-//					CDataStream ds(vDataValue, SER_DISK, g_sClientVersion);
+//					CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
 //					ds >> nHeight;
 //					ds >> vScriptData;
 //					return true;
@@ -1245,7 +1245,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 //			}
 			if (vDataKey.empty()) {   //缓存中没有符合条件的key，直接返回上级的查询结果
 				if (m_mapDatas.count(dataKeyTemp) <= 0) {
-//					CDataStream ds(vScriptData, SER_DISK, g_sClientVersion);
+//					CDataStream ds(vScriptData, SER_DISK, CLIENT_VERSION);
 //					ds >> vScriptData;
 					return true;
 				} else {
@@ -1269,7 +1269,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 					vchScriptData.clear();
 					vchScriptKey.insert(vchScriptKey.end(), vDataKey.begin() + 11, vDataKey.end());
 					vchScriptData = vDataValue;
-//					CDataStream ds(vDataValue, SER_DISK, g_sClientVersion);
+//					CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
 //					ds >> vScriptData;
 					return true;
 				}
@@ -1286,7 +1286,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 					return false;
 				}
 				vchScriptData = vDataValue;
-//				CDataStream ds(vDataValue, SER_DISK, g_sClientVersion);
+//				CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
 //				ds >> vScriptData;
 				return true;
 			}
@@ -1311,7 +1311,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 //				}
 //				vDataKey = item.first;
 //				vDataValue = item.second;
-//				CDataStream ds(vDataValue, SER_DISK, g_sClientVersion);
+//				CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
 //				ds >> nHeight;
 //				if(nHeight <= nCurBlockHeight) { //若找到的key对应的数据保存时间已经超时，则需要删除该数据项，继续找下一个符合条件的key
 //					CScriptDBOperLog operLog(vDataKey, vDataValue);
@@ -1340,7 +1340,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 //				} else {
 //					vDataKey = iterFindKey->first;
 //					vDataValue = iterFindKey->second;
-//					CDataStream ds(vDataValue, SER_DISK, g_sClientVersion);
+//					CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
 //					ds >> nHeight;
 //					if (nHeight <= nCurBlockHeight) { //若找到的key对应的数据保存时间已经超时，则需要删除该数据项，继续找下一个符合条件的key
 //						CScriptDBOperLog operLog(vDataKey, iterFindKey->second);
@@ -1397,7 +1397,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 //				vScriptKey.clear();
 //				vScriptData.clear();
 //				vScriptKey.insert(vScriptKey.end(), vDataKey.begin() + 11, vDataKey.end());
-//				CDataStream ds(vDataValue, SER_DISK, g_sClientVersion);
+//				CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
 //				ds >> nHeight;
 //				ds >> vScriptData;
 //				return true;
@@ -1409,7 +1409,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 //				vScriptKey.clear();
 //				vScriptData.clear();
 //				vScriptKey.insert(vScriptKey.end(), vDataKey.begin() + 11, vDataKey.end());
-//				CDataStream ds(vDataValue, SER_DISK, g_sClientVersion);
+//				CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
 //				ds >> nHeight;
 //				ds >> vScriptData;
 //				return true;
@@ -1434,7 +1434,7 @@ bool CScriptDBViewCache::GetScriptData(const int nCurBlockHeight, const vector<u
 //				if (vDataValue.empty()) {
 //					return false;
 //				}
-//				CDataStream ds(vDataValue, SER_DISK, g_sClientVersion);
+//				CDataStream ds(vDataValue, SER_DISK, CLIENT_VERSION);
 //				ds >> nHeight;
 //				ds >> vScriptData;
 //				return true;
@@ -1451,7 +1451,7 @@ bool CScriptDBViewCache::SetScriptData(const vector<unsigned char> &vchScriptId,
 	vchKey.push_back('_');
 	vchKey.insert(vchKey.end(), vchScriptKey.begin(), vchScriptKey.end());
 	//  LogPrint("vm","add data:%s",HexStr(vScriptKey).c_str());
-//	CDataStream ds(SER_DISK, g_sClientVersion);
+//	CDataStream ds(SER_DISK, CLIENT_VERSION);
 //	ds << vScriptData;
 	vector<unsigned char> vchValue(vchScriptData.begin(), vchScriptData.end());
 	if (!HaveScriptData(vchScriptId, vchScriptKey)) {
@@ -1800,7 +1800,7 @@ bool CTransactionDBCache::AddBlockToCache(const CBlock &cBlock) {
 //	map<int, uint256> mapTxCacheBlockHash;
 //	mapTxCacheBlockHash.clear();
 //	for (auto &item : mapTxHashByBlockHash) {
-//		mapTxCacheBlockHash.insert(make_pair(g_mapBlockIndex[item.first]->nHeight, item.first));
+//		mapTxCacheBlockHash.insert(make_pair(mapBlockIndex[item.first]->nHeight, item.first));
 //	}
 //	for(auto &item1 : mapTxCacheBlockHash) {
 //		LogPrint("txcache", "block height:%d, hash:%s\n", item1.first, item1.second.GetHex());
@@ -1969,9 +1969,9 @@ bool CScriptDBViewCache::SetScriptAcc(const CRegID &cRegId, const CAppUserAccout
 	vchScriptKey.push_back('_');
 	vchScriptKey.insert(vchScriptKey.end(), vchAccKey.begin(), vchAccKey.end());
 	vector<unsigned char> vValue;
-	cScriptDBOperLog.vKey = vchScriptKey;
+	cScriptDBOperLog.m_vchKey = vchScriptKey;
 	if (GetData(vchScriptKey, vValue)) {
-		cScriptDBOperLog.vValue = vValue;
+		cScriptDBOperLog.m_vchValue = vValue;
 	}
 	CDataStream cDS(SER_DISK, g_sClientVersion);
 	cDS << cAppUserAccIn;

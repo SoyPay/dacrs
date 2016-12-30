@@ -123,8 +123,8 @@ void CAccountViewTest::Init() {
 
 	for (int k = 0; k < VECTOR_SIZE; k++) {
 		CAccount account;
-		account.llValues = k + 1;
-		account.keyID = vcRandomKeyID.at(k);
+		account.m_ullValues = k + 1;
+		account.m_cKeyID = vcRandomKeyID.at(k);
 		vcAccount.push_back(account);
 	}
 }

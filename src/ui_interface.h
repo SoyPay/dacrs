@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DACRS_UI_INTERFACE_H
-#define DACRS_UI_INTERFACE_H
+#ifndef DACRS_UI_INTERFACE_H_
+#define DACRS_UI_INTERFACE_H_
 
 #include <stdint.h>
 #include <string>
@@ -18,17 +18,15 @@ class uint256;
 class CBlock;
 
 /** General change type (added, updated, removed). */
-enum ChangeType
-{
-    CT_NEW,
-    CT_UPDATED,
-    CT_DELETED
+enum ChangeType {
+	CT_NEW,
+	CT_UPDATED,
+	CT_DELETED
 };
 
 /** Signals for UI communication. */
-class CClientUIInterface
-{
-public:
+class CClientUIInterface {
+ public:
     /** Flags for CClientUIInterface::ThreadSafeMessageBox */
     enum MessageBoxFlags
     {
@@ -75,7 +73,6 @@ public:
     /** Show message box. */
     boost::signals2::signal<bool (const string& message, const string& caption, unsigned int style), boost::signals2::last_value<bool> > ThreadSafeMessageBox;
 
-
     /** rev tran box. */
      boost::signals2::signal<bool (const uint256 &hash) > RevTransaction;
 
@@ -108,10 +105,8 @@ public:
     /** release transaction from block  */
     boost::signals2::signal<bool (const uint256 &hash) > ReleaseTransaction;
 
-    /** remove transaction from g_cTxMemPool */
+    /** remove transaction from mempool */
     boost::signals2::signal<bool (const uint256 &hash) > RemoveTransaction;
-
-
 };
 
 extern CClientUIInterface g_cUIInterface;
@@ -120,10 +115,9 @@ extern CClientUIInterface g_cUIInterface;
  * Translation function: Call Translate signal on UI interface, which returns a boost::optional result.
  * If no translation slot is registered, nothing is returned, and simply return the input.
  */
-inline string _(const char* psz)
-{
-    boost::optional<string> rv = g_cUIInterface.Translate(psz);
-    return rv ? (*rv) : psz;
+inline string _(const char* psz) {
+	boost::optional<string> rv = g_cUIInterface.Translate(psz);
+	return rv ? (*rv) : psz;
 }
 
 #endif

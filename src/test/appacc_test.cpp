@@ -40,7 +40,7 @@ bool CheckAppAcct(int64_t arrllOpValue[]) {
 	CRegID cDesUser1RegId(100, 3);
 	CRegID cDesUser2RegId(100, 4);
 	CAccount cContractAcct;
-	cContractAcct.llValues = 100 * COIN;  //这里将TX中100 COIN先充值到合约账户中，扮演系统操作账户角色
+	cContractAcct.m_ullValues = 100 * COIN;  //这里将TX中100 COIN先充值到合约账户中，扮演系统操作账户角色
 	cContractAcct.m_cRegID = cDesRegId;
 
 	CUserID srcUserId = cSrcRegId;
@@ -55,7 +55,7 @@ bool CheckAppAcct(int64_t arrllOpValue[]) {
 	int64_t llTemp = arrllOpValue[1];  //10 * COIN
 	CVmOperate cAcctAddOper;
 	cAcctAddOper.m_uchNaccType = EM_REGID;
-	cAcctAddOper.m_uchOpeatorType = ADD_FREE;
+	cAcctAddOper.m_uchOpeatorType = EM_ADD_FREE;
 	memcpy(cAcctAddOper.m_arruchAccountId, &vDesUser1RegId[0], 6);
 	memcpy(cAcctAddOper.m_arruchMoney, &llTemp, sizeof(llTemp));
 	vAcctOper.push_back(cAcctAddOper);
@@ -63,7 +63,7 @@ bool CheckAppAcct(int64_t arrllOpValue[]) {
 	vector_unsigned_char vDesUser2RegId = cDesUser2RegId.GetVec6();
 	llTemp = arrllOpValue[2];   //20 * COIN
 	cAcctAddOper.m_uchNaccType = EM_REGID;
-	cAcctAddOper.m_uchOpeatorType = ADD_FREE;
+	cAcctAddOper.m_uchOpeatorType = EM_ADD_FREE;
 	memcpy(cAcctAddOper.m_arruchAccountId, &vDesUser2RegId[0], 6);
 	memcpy(cAcctAddOper.m_arruchMoney, &llTemp, sizeof(llTemp));
 	vAcctOper.push_back(cAcctAddOper);
@@ -71,7 +71,7 @@ bool CheckAppAcct(int64_t arrllOpValue[]) {
 	vector_unsigned_char vDesRegId = cDesRegId.GetVec6();
 	llTemp = arrllOpValue[3];  //30 * COIN
 	cAcctAddOper.m_uchNaccType = EM_REGID;
-	cAcctAddOper.m_uchOpeatorType = MINUS_FREE;
+	cAcctAddOper.m_uchOpeatorType = EM_MINUS_FREE;
 	memcpy(cAcctAddOper.m_arruchAccountId, &vDesRegId[0], 6);
 	memcpy(cAcctAddOper.m_arruchMoney, &llTemp, sizeof(llTemp));
 	vAcctOper.push_back(cAcctAddOper);

@@ -194,7 +194,7 @@ class CVmOperate{
 	CVmOperate() {
 		m_uchNaccType = EM_REGID;
 		memset(m_arruchAccountId, 0, 34);
-		m_uchOpeatorType = ADD_FREE;
+		m_uchOpeatorType = EM_ADD_FREE;
 		m_unOutHeight = 0;
 		memset(m_arruchMoney, 0, 8);
 	}
