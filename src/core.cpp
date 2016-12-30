@@ -12,19 +12,19 @@ uint256 CBlockHeader::GetHash() const {
 	if (m_nVersion >= g_sBlockVersion3) {
 		return SignatureHash();
 	} else {
-		return SerializeHash(*this, SER_GETHASH, CLIENT_VERSION);
+		return SerializeHash(*this, SER_GETHASH, g_sClientVersion);
 	}
 }
 
 void CBlockHeader::SetHeight(unsigned int height) {
-	if (height < nUpdateBlockVersionHeight && height > 0) {
+	if (height < g_sUpdateBlockVersionHeight && height > 0) {
 		SetVersion(g_sBlockVersion2);
 	}
 	this->m_unHeight = height;
 }
 
 uint256 CBlockHeader::SignatureHash() const {
-	CHashWriter ss(SER_GETHASH, CLIENT_VERSION);
+	CHashWriter ss(SER_GETHASH, g_sClientVersion);
 	ss << m_nVersion << m_cHashPrevBlock << m_cHashMerkleRoot << m_cHashPos << m_unTime << m_unBits << m_unNonce
 			<< m_unHeight << m_llFuel << m_nFuelRate;
 	return ss.GetHash();

@@ -39,17 +39,17 @@ int CAddrInfo::GetNewBucket(const vector<unsigned char> &nKey, const CNetAddr& s
 
 bool CAddrInfo::IsTerrible(int64_t nNow) const {
 	// never remove things tried the last minute
-	if (nLastTry && nLastTry >= nNow - 60) {
+	if (m_llLastTry && m_llLastTry >= nNow - 60) {
 		return false;
 	}
 
 	// came in a flying DeLorean
-	if (nTime > nNow + 10 * 60) {
+	if (m_ullTime > nNow + 10 * 60) {
 		return true;
 	}
 
 	// not seen in over a month
-	if (nTime == 0 || nNow - nTime > ADDRMAN_HORIZON_DAYS * 86400) {
+	if (m_ullTime == 0 || nNow - m_ullTime > ADDRMAN_HORIZON_DAYS * 86400) {
 		return true;
 	}
 
@@ -69,8 +69,8 @@ bool CAddrInfo::IsTerrible(int64_t nNow) const {
 double CAddrInfo::GetChance(int64_t nNow) const {
 	double dChance = 1.0;
 
-	int64_t llSinceLastSeen = nNow - nTime;
-	int64_t llSinceLastTry = nNow - nLastTry;
+	int64_t llSinceLastSeen = nNow - m_ullTime;
+	int64_t llSinceLastTry = nNow - m_llLastTry;
 
 	if (llSinceLastSeen < 0) {
 		llSinceLastSeen = 0;
@@ -194,7 +194,7 @@ int CAddrMan::ShrinkNew(int nUBucket) {
 	for (set<int>::iterator it = vNew.begin(); it != vNew.end(); it++) {
 		if (nValue == nRandom[0] || nValue == nRandom[1] || nValue == nRandom[2] || nValue == nRandom[3]) {
 			assert(nOldest == -1 || m_mapInfo.count(*it) == 1);
-			if (nOldest == -1 || m_mapInfo[*it].nTime < m_mapInfo[nOldest].nTime)
+			if (nOldest == -1 || m_mapInfo[*it].m_ullTime < m_mapInfo[nOldest].m_ullTime)
 				nOldest = *it;
 		}
 		nValue++;
@@ -286,8 +286,8 @@ void CAddrMan::Good_(const CService &addr, int64_t nTime)
 
     // update info
     cAddrInfo.m_llLastSuccess = nTime;
-    cAddrInfo.nLastTry = nTime;
-    cAddrInfo.nTime = nTime;
+    cAddrInfo.m_llLastTry = nTime;
+    cAddrInfo.m_ullTime = nTime;
     cAddrInfo.m_nAttempts = 0;
 
     // if it is already in the tried set, don't do anything else
@@ -330,17 +330,17 @@ bool CAddrMan::Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimeP
 
 	if (pAddrInfo) {
 		// periodically update nTime
-		bool bCurrentlyOnline = (GetAdjustedTime() - addr.nTime < 24 * 60 * 60);
+		bool bCurrentlyOnline = (GetAdjustedTime() - addr.m_ullTime < 24 * 60 * 60);
 		int64_t llUpdateInterval = (bCurrentlyOnline ? 60 * 60 : 24 * 60 * 60);
-		if (addr.nTime && (!pAddrInfo->nTime || pAddrInfo->nTime < addr.nTime - llUpdateInterval - nTimePenalty)) {
-			pAddrInfo->nTime = max((int64_t) 0, addr.nTime - nTimePenalty);
+		if (addr.m_ullTime && (!pAddrInfo->m_ullTime || pAddrInfo->m_ullTime < addr.m_ullTime - llUpdateInterval - nTimePenalty)) {
+			pAddrInfo->m_ullTime = max((int64_t) 0, addr.m_ullTime - nTimePenalty);
 		}
 
 		// add services
-		pAddrInfo->nServices |= addr.nServices;
+		pAddrInfo->m_ullServices |= addr.m_ullServices;
 
 		// do not update if no new information is present
-		if (!addr.nTime || (pAddrInfo->nTime && addr.nTime <= pAddrInfo->nTime)) {
+		if (!addr.m_ullTime || (pAddrInfo->m_ullTime && addr.m_ullTime <= pAddrInfo->m_ullTime)) {
 			return false;
 		}
 
@@ -365,7 +365,7 @@ bool CAddrMan::Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimeP
 		}
 	} else {
 		pAddrInfo = Create(addr, source, &nId);
-		pAddrInfo->nTime = max((int64_t) 0, (int64_t) pAddrInfo->nTime - nTimePenalty);
+		pAddrInfo->m_ullTime = max((int64_t) 0, (int64_t) pAddrInfo->m_ullTime - nTimePenalty);
 		m_nNew++;
 		bNew = true;
 	}
@@ -398,7 +398,7 @@ void CAddrMan::Attempt_(const CService &addr, int64_t nTime) {
 	}
 
 	// update info
-	cAddrInfo.nLastTry = nTime;
+	cAddrInfo.m_llLastTry = nTime;
 	cAddrInfo.m_nAttempts++;
 }
 
@@ -544,7 +544,7 @@ void CAddrMan::Connected_(const CService &addr, int64_t nTime) {
 
 	// update info
 	int64_t llUpdateInterval = 20 * 60;
-	if (nTime - cAddrInfo.nTime > llUpdateInterval) {
-		cAddrInfo.nTime = nTime;
+	if (nTime - cAddrInfo.m_ullTime > llUpdateInterval) {
+		cAddrInfo.m_ullTime = nTime;
 	}
 }

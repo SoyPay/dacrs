@@ -274,7 +274,7 @@ public:
 
 	bool CheckScriptDB(int nheigh,string srcipt,string hash,int flag)
 	{
-		int curtiph = chainActive.Height();
+		int curtiph = g_cChainActive.Height();
 
 		string  hash2 = "hash";
 
@@ -283,7 +283,7 @@ public:
 			return false;
 		}
 
-		CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+		CScriptDBViewCache contractScriptTemp(*g_pScriptDBTip, true);
 		if (!contractScriptTemp.HaveScript(regid)) {
 			return false;
 		}
@@ -344,12 +344,12 @@ public:
 			if (regid.IsEmpty() == true) {
 				return false;
 			}
-			CScriptDBViewCache contractScriptTemp(*pScriptDBTip, true);
+			CScriptDBViewCache contractScriptTemp(*g_pScriptDBTip, true);
 			if (!contractScriptTemp.HaveScript(regid)) {
 				return false;
 			}
 			vector<unsigned char> value;
-			int tipH = chainActive.Height();
+			int tipH = g_cChainActive.Height();
 			CScriptDBOperLog operLog;
 			if (!contractScriptTemp.GetScriptData(tipH,regid,key, value)) {
 				return false;
@@ -363,11 +363,11 @@ public:
 				return 0;
 			}
 
-			if (!pScriptDBTip->HaveScript(regid)) {
+			if (!g_pScriptDBTip->HaveScript(regid)) {
 				return 0;
 			}
 			int dbsize;
-			pScriptDBTip->GetScriptDataCount(regid, dbsize);
+			g_pScriptDBTip->GetScriptDataCount(regid, dbsize);
 			return dbsize;
 	}
 	string CreatWriteTx(string &hash)
@@ -378,7 +378,7 @@ public:
 		BOOST_CHECK(scriptid !="");
 		//// first tx
 		string phash = CreateContactTx(15);
-		int  height = chainActive.Height();
+		int  height = g_cChainActive.Height();
 
 		BOOST_CHECK(CheckScriptDB(height,scriptid,phash,false));
 
@@ -389,7 +389,7 @@ public:
 	{
 		string phash = "";
 		string scriptid =  CreatWriteTx(phash);
-		int height = chainActive.Height();
+		int height = g_cChainActive.Height();
 		int circle = 4;
 		while(circle--)
 		{
@@ -431,7 +431,7 @@ public:
 	{
 		string  writetxhash= "";
 		string scriptid =  CreatWriteTx(writetxhash);
-		int height = chainActive.Height();
+		int height = g_cChainActive.Height();
 
 		///// ÐÞ¸ÄÉ¾³ý°ü
 		int param =17;
@@ -443,7 +443,7 @@ public:
 		key.insert(key.begin(),key1, key1 + strlen(key1) +1);
 		BOOST_CHECK(!GetScriptData(scriptid,key));
 		CheckScriptDB(height,scriptid,writetxhash,true);
-		int modHeight = chainActive.Height();
+		int modHeight = g_cChainActive.Height();
 
 	//	cout<<"end:"<<endl;
 		//// ±éÀú
@@ -465,7 +465,7 @@ public:
 		{
 			DisConnectBlock(1);
 			count = GetScriptSize(scriptid);
-			if(chainActive.Height() > modHeight){
+			if(g_cChainActive.Height() > modHeight){
 			CheckScriptDB(height,scriptid,writetxhash,true);
 			}else{
 				CheckScriptDB(height,scriptid,writetxhash,false);
@@ -495,7 +495,7 @@ public:
 		while (!IsMemoryPoolEmpty()) {
 			BOOST_CHECK(GenerateOneBlock());
 		}
-		cout << "new transation have been confirmed, current height:" << chainActive.Height() << endl;
+		cout << "new transation have been confirmed, current height:" << g_cChainActive.Height() << endl;
 		for(size_t i=0; i < vNewAddress.size(); i++) {
 			int nfee = GetRandomFee();
 			Value value1 = RegistAccountTx(vNewAddress[i], nfee);
@@ -508,9 +508,9 @@ public:
 			BOOST_CHECK(GenerateOneBlock());
 		}
        int totalhigh = 20;
-		while(chainActive.Height() != totalhigh) {
+		while(g_cChainActive.Height() != totalhigh) {
 			BOOST_CHECK(GenerateOneBlock());
-			ShowProgress("GenerateOneBlock progress: ",((float)chainActive.Height()/(float)totalhigh)*100);
+			ShowProgress("GenerateOneBlock progress: ",((float)g_cChainActive.Height()/(float)totalhigh)*100);
 			MilliSleep(15);
 		}
 

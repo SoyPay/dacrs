@@ -174,7 +174,7 @@ int ReadHTTPMessage(basic_istream<char>& stream, map<string, string>& mapHeaders
 
 	// Read header
 	int nLen = ReadHTTPHeaders(stream, mapHeadersRet);
-	if (nLen < 0 || nLen > (int) MAX_SIZE) {
+	if (nLen < 0 || nLen > (int) g_sMaxSize) {
 		return HTTP_INTERNAL_SERVER_ERROR;
 	}
 	// Read message

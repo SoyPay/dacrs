@@ -53,7 +53,7 @@ Value dropprivkey(const Array& params, bool bHelp) {
 				"\nExamples:\n" + HelpExampleCli("dropprivkey", "") + HelpExampleRpc("dropprivkey", ""));
 
 	EnsureWalletIsUnlocked();
-	if (!g_pwalletMain->IsReadyForCoolMiner(*pAccountViewTip)) {
+	if (!g_pwalletMain->IsReadyForCoolMiner(*g_pAccountViewTip)) {
 		throw runtime_error("there is no cool miner key  or miner key in on regist to blockchain\n");
 	}
 
@@ -111,7 +111,7 @@ Value importprivkey(const Array& params, bool bHelp) {
 
 	CPubKey pubkey = key.GetPubKey();
 	{
-		LOCK2(cs_main, g_pwalletMain->m_cs_wallet);
+		LOCK2(g_cs_main, g_pwalletMain->m_cs_wallet);
 
 		if (!g_pwalletMain->AddKey(key))
 			throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
@@ -139,7 +139,7 @@ Value importwallet(const Array& params, bool bHelp)
             + HelpExampleRpc("importwallet", "\"test\"")
         );
 
-    LOCK2(cs_main, g_pwalletMain->m_cs_wallet);
+    LOCK2(g_cs_main, g_pwalletMain->m_cs_wallet);
 
     EnsureWalletIsUnlocked();
 
@@ -179,7 +179,7 @@ Value importwallet(const Array& params, bool bHelp)
     file.close();
     g_pwalletMain->ShowProgress("", 100); // hide progress dialog in GUI
 
-    g_pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+    g_pwalletMain->ScanForWalletTransactions(g_cChainActive.Genesis(), true);
 
 
     Object reply2;
@@ -246,10 +246,10 @@ Value dumpwallet(const Array& params, bool bHelp) {
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 	}
 	Object reply;
-	reply.push_back(Pair("created by Dacrs", CLIENT_BUILD + CLIENT_DATE));
+	reply.push_back(Pair("created by Dacrs", g_strClientBuild + g_strClientDate));
 	reply.push_back(Pair("Created Time ", EncodeDumpTime(GetTime())));
-	reply.push_back(Pair("Best block index hight ", chainActive.Height()));
-	reply.push_back(Pair("Best block hash ", chainActive.Tip()->GetBlockHash().ToString()));
+	reply.push_back(Pair("Best block index hight ", g_cChainActive.Height()));
+	reply.push_back(Pair("Best block hash ", g_cChainActive.Tip()->GetBlockHash().ToString()));
 
 	set<CKeyID> setKeyId;
 	g_pwalletMain->GetKeys(setKeyId);

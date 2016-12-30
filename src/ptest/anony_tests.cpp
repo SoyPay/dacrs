@@ -80,7 +80,7 @@ bool CAnonyTest::CreateAnonyTx(){
 			return false;
 	}
 	ST_ACCOUNT_INFO tAccountInfo;
-	int nAccountInfoSize = ::GetSerializeSize(tAccountInfo, SER_NETWORK, PROTOCOL_VERSION);
+	int nAccountInfoSize = ::GetSerializeSize(tAccountInfo, SER_NETWORK, g_sProtocolVersion);
 	unsigned short usLength = (nNum-1) * nAccountInfoSize;
 
 	ST_ACCOUNT_INFO arrtAccountInfo[nNum-1];
@@ -100,7 +100,7 @@ bool CAnonyTest::CreateAnonyTx(){
 	memcpy(tHead.arruchSender, &vecSendRegId.at(0), vecSendRegId.size());
 	tHead.llPayMoney = llSendTotalMoney;
 	tHead.usLen = usLength;
-	CDataStream CDs(SER_DISK, CLIENT_VERSION);
+	CDataStream CDs(SER_DISK, g_sClientVersion);
 	CDs<<tHead;
 	for (int i=1; i<nNum; ++i) {
 		CDs<<arrtAccountInfo[i-1];

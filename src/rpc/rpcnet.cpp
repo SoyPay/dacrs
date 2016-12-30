@@ -109,7 +109,7 @@ Value getpeerinfo(const Array& params, bool bHelp)
 
 	for (const CNodeStats& stats : vcStats) {
 		Object obj;
-		CNodeStateStats cStatestats;
+		ST_NodeStateStats cStatestats;
 		bool bStateStats = GetNodeStateStats(stats.m_nNodeId, cStatestats);
 		obj.push_back(Pair("addr", stats.m_strAddrName));
 		if (!(stats.m_strAddrLocal.empty())) {
@@ -263,7 +263,7 @@ Value getaddednodeinfo(const Array& params, bool bHelp)
 	list<pair<string, vector<CService> > > laddedAddreses(0);
 	for (auto& strAddNode : laddedNodes) {
 		vector<CService> vservNode(0);
-		if (Lookup(strAddNode.c_str(), vservNode, SysCfg().GetDefaultPort(), fNameLookup, 0)) {
+		if (Lookup(strAddNode.c_str(), vservNode, SysCfg().GetDefaultPort(), g_bNameLookup, 0)) {
 			laddedAddreses.push_back(make_pair(strAddNode, vservNode));
 		} else {
 			Object obj;
@@ -360,12 +360,12 @@ Value getnetworkinfo(const Array& params, bool bHelp)
     GetProxy(NET_IPV4, proxy);
 
 	Object obj;
-	obj.push_back(Pair("version", (int) CLIENT_VERSION));
-	obj.push_back(Pair("protocolversion", (int) PROTOCOL_VERSION));
+	obj.push_back(Pair("version", (int) g_sClientVersion));
+	obj.push_back(Pair("protocolversion", (int) g_sProtocolVersion));
 	obj.push_back(Pair("timeoffset", GetTimeOffset()));
 	obj.push_back(Pair("connections", (int) g_vNodes.size()));
 	obj.push_back(Pair("proxy", (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
-	obj.push_back(Pair("relayfee", ValueFromAmount(CTransaction::nMinRelayTxFee)));
+	obj.push_back(Pair("relayfee", ValueFromAmount(CTransaction::m_sMinRelayTxFee)));
 	Array localAddresses;
 	{
 		LOCK(g_cs_mapLocalHost);
@@ -411,11 +411,11 @@ Value getdacrsstate(const Array& params, bool bHelp)
 		if (nHeight < 1) {
 			throw runtime_error("Block number out of range.");
 		}
-		if (nHeight > chainActive.Height()) {   //防止超过最大高度
-			nHeight = chainActive.Height();
+		if (nHeight > g_cChainActive.Height()) {   //防止超过最大高度
+			nHeight = g_cChainActive.Height();
 		}
 	}
-	CBlockIndex * pBlockIndex = chainActive.Tip();
+	CBlockIndex * pBlockIndex = g_cChainActive.Tip();
 	CBlock cBlock;
 	Array blocktime;
 	Array difficulty;
@@ -426,14 +426,14 @@ Value getdacrsstate(const Array& params, bool bHelp)
 	for (i = 0; (i < nHeight) && (pBlockIndex != NULL); i++) {
 		blocktime.push_back(pBlockIndex->GetBlockTime());
 		difficulty.push_back(GetDifficulty(pBlockIndex));
-		transactions.push_back((int) pBlockIndex->nTx);
-		fuel.push_back(pBlockIndex->nFuel);
+		transactions.push_back((int) pBlockIndex->m_unTx);
+		fuel.push_back(pBlockIndex->m_llFuel);
 		cBlock.SetNull();
 		if (ReadBlockFromDisk(cBlock, pBlockIndex)) {
-			string miner(boost::get<CRegID>(dynamic_pointer_cast<CRewardTransaction>(cBlock.vptx[0])->account).ToString());
+			string miner(boost::get<CRegID>(dynamic_pointer_cast<CRewardTransaction>(cBlock.vptx[0])->m_cAccount).ToString());
 			blockminer.push_back(move(miner));
 		}
-		pBlockIndex = pBlockIndex->pprev;
+		pBlockIndex = pBlockIndex->m_pPrevBlockIndex;
 	}
 	Object obj;
 	obj.push_back(Pair("blocktime", blocktime));

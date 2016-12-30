@@ -11,7 +11,7 @@ using namespace std;
 class CAccount;
 class CKeyID;
 class uint256;
-class CDiskTxPos;
+class ST_DiskTxPos;
 class CVmOperate;
 
 class CAccountView {
@@ -121,8 +121,8 @@ class CScriptDBView {
 	virtual bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vchScriptId, const int &nIndex,
 			vector<unsigned char> &vchScriptKey, vector<unsigned char> &vchScriptData);
 	virtual Object ToJosnObj(string strPrefix);
-	virtual bool ReadTxIndex(const uint256 &cTxId, CDiskTxPos &cDiskTxPos);
-	virtual bool WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB);
+	virtual bool ReadTxIndex(const uint256 &cTxId, ST_DiskTxPos &cDiskTxPos);
+	virtual bool WriteTxIndex(const vector<pair<uint256, ST_DiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB);
 	virtual bool WriteTxOutPut(const uint256 &cTxId, const vector<CVmOperate> &vcOutput, CScriptDBOperLog &cScriptDBOperLog);
 	virtual bool ReadTxOutPut(const uint256 &cTxId, vector<CVmOperate> &vcOutput);
 	virtual bool GetTxHashByAddress(const CKeyID &cKeyId, int nHeight,
@@ -146,8 +146,8 @@ class CScriptDBViewBacked: public CScriptDBView {
 	bool GetScript(const int &nIndex, vector<unsigned char> &vchScriptId, vector<unsigned char> &vchValue);
 	bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vchScriptId, const int &nIndex,
 			vector<unsigned char> &vchScriptKey, vector<unsigned char> &vchScriptData);
-	bool ReadTxIndex(const uint256 &cTxId, CDiskTxPos &cDiskTxPos);
-	bool WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB);
+	bool ReadTxIndex(const uint256 &cTxId, ST_DiskTxPos &tDiskTxPos);
+	bool WriteTxIndex(const vector<pair<uint256, ST_DiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB);
 	bool WriteTxOutPut(const uint256 &cTxId, const vector<CVmOperate> &vOutput, CScriptDBOperLog &cScriptDBOperLog);
 	bool ReadTxOutPut(const uint256 &cTxId, vector<CVmOperate> &vOutput);
 	bool GetTxHashByAddress(const CKeyID &cKeyId, int nHeight,
@@ -203,8 +203,8 @@ class CScriptDBViewCache: public CScriptDBViewBacked {
 	CScriptDBView * GetBaseScriptDB() {
 		return m_pBase;
 	}
-	bool ReadTxIndex(const uint256 &cTxId, CDiskTxPos &cDiskTxPos);
-	bool WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB);
+	bool ReadTxIndex(const uint256 &cTxId, ST_DiskTxPos &tDiskTxPos);
+	bool WriteTxIndex(const vector<pair<uint256, ST_DiskTxPos> > &list, vector<CScriptDBOperLog> &vTxIndexOperDB);
 	void SetBaseData(CScriptDBView *pNewBase);
 	string ToString();
 	bool WriteTxOutPut(const uint256 &cTxId, const vector<CVmOperate> &vcOutput, CScriptDBOperLog &cScriptDBOperLog);

@@ -18,7 +18,7 @@
 
 class CBlock;
 class CBlockIndex;
-struct CBlockTemplate;
+struct ST_BlockTemplate;
 class CWallet;
 class CBaseTransaction;
 class COrphan;
@@ -57,7 +57,7 @@ void GenerateDacrsBlock(bool bGenerate, CWallet* pWallet, int nThreads);
 /** Generate a new block, without valid proof-of-work */
 //CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn);
 //CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey);
-CBlockTemplate* CreateNewBlock(CAccountViewCache &cAccViewCache, CTransactionDBCache &cTxCache, CScriptDBViewCache &cScriptCache);
+ST_BlockTemplate* CreateNewBlock(CAccountViewCache &cAccViewCache, CTransactionDBCache &cTxCache, CScriptDBViewCache &cScriptCache);
 
 /** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pBlock, CBlockIndex* pBlockIndexPrev, unsigned int& unExtraNonce);

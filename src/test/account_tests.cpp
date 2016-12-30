@@ -61,7 +61,7 @@ struct CTxTest :public SysTestBase{
 		ResetEnv();
 
 
-		accOperate.keyID.SetNull();
+		accOperate.m_cKeyID.SetNull();
 		accBeforOperate = accOperate;
 		Init();
 	}
@@ -92,10 +92,10 @@ struct CTxTest :public SysTestBase{
 
 		CKeyID keyID;
 		keyID.SetHex(strKeyID);
-		accOperate.keyID = keyID;
+		accOperate.m_cKeyID = keyID;
 
 
-		accOperate.llValues = TEST_SIZE*5;
+		accOperate.m_ullValues = TEST_SIZE*5;
 
 		InitFund();
 	}
@@ -115,8 +115,8 @@ BOOST_FIXTURE_TEST_SUITE(tx_tests,CTxTest)
 BOOST_FIXTURE_TEST_CASE(tx_add_free,CTxTest) {
 	//invalid data
 //	CFund fund(1, CHAIN_HEIGHT + 1);
-	int nHeight = chainActive.Tip()->nHeight;
-	BOOST_CHECK(accOperate.OperateAccount(ADD_FREE, 1, nHeight));
+	int nHeight = g_cChainActive.Tip()->m_nHeight;
+	BOOST_CHECK(accOperate.OperateAccount(EM_ADD_FREE, 1, nHeight));
 //	fund.value = MAX_MONEY;
 
 
@@ -126,11 +126,11 @@ BOOST_FIXTURE_TEST_CASE(tx_add_free,CTxTest) {
 	//	uint64_t nOld = accOperate.GetRewardAmount(CHAIN_HEIGHT)+accOperate.GetRawBalance(CHAIN_HEIGHT);
 		uint64_t randValue = random(10);
 	//	CFund fundReward(randValue, CHAIN_HEIGHT - 1);
-		BOOST_CHECK(accOperate.OperateAccount(ADD_FREE, randValue, nHeight));
+		BOOST_CHECK(accOperate.OperateAccount(EM_ADD_FREE, randValue, nHeight));
 		//BOOST_CHECK(accOperate.GetRewardAmount(CHAIN_HEIGHT)+accOperate.GetRawBalance(CHAIN_HEIGHT) == nOld + randValue);
 
 	}
-	BOOST_CHECK(!accOperate.OperateAccount(ADD_FREE, GetMaxMoney(), nHeight));
+	BOOST_CHECK(!accOperate.OperateAccount(EM_ADD_FREE, GetMaxMoney(), nHeight));
 
 	CheckAccountEqual();
 }

@@ -12,7 +12,7 @@ class CAccountViewTest {
 public:
 	CAccountViewTest() {
 //		pAccountViewDB = new CAccountViewDB("test",500, false, false);
-		pViewTip1 = new CAccountViewCache(*pAccountViewTip,true);
+		pViewTip1 = new CAccountViewCache(*g_pAccountViewTip,true);
 		pViewTip2 = new CAccountViewCache(*pViewTip1,true);
 		Init();
 	}
@@ -125,8 +125,8 @@ void CAccountViewTest::Init() {
 
 	for (int k = 0; k < VECTOR_SIZE; k++) {
 		CAccount account;
-		account.llValues = k + 1;
-		account.keyID = vRandomKeyID.at(k);
+		account.m_ullValues = k + 1;
+		account.m_cKeyID = vRandomKeyID.at(k);
 		vAccount.push_back(account);
 	}
 }

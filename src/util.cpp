@@ -62,54 +62,56 @@
 #include <shlobj.h>
 #endif
 
-#include <boost/algorithm/string/case_conv.hpp> // for to_lower()#include <boost/algorithm/string/join.hpp>#include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()#include <boost/filesystem.hpp>#include <boost/filesystem/fstream.hpp>#include <boost/program_options/detail/config_file.hpp>#include <boost/program_options/parsers.hpp>#include <openssl/crypto.h>#include <openssl/rand.h>// Work around clang compilation problem in Boost 1.46:// /usr/include/boost/program_options/detail/config_file.hpp:163:17: error: call to function 'to_internal' that is neither visible in the template definition nor found by argument-dependent lookup// See also: http://stackoverflow.com/questions/10020179/compilation-fail-in-boost-librairies-program-options//           http://clang.debian.net/status.php?version=3.0&key=CANNOT_FIND_FUNCTIONnamespace boost {namespace program_options {string to_internal(const string&);
-}
+#include <boost/algorithm/string/case_conv.hpp> // for to_lower()#include <boost/algorithm/string/join.hpp>#include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()#include <boost/filesystem.hpp>#include <boost/filesystem/fstream.hpp>#include <boost/program_options/detail/config_file.hpp>#include <boost/program_options/parsers.hpp>#include <openssl/crypto.h>#include <openssl/rand.h>// Work around clang compilation problem in Boost 1.46:// /usr/include/boost/program_options/detail/config_file.hpp:163:17: error: call to function 'to_internal' that is neither visible in the template definition nor found by argument-dependent lookup// See also: http://stackoverflow.com/questions/10020179/compilation-fail-in-boost-librairies-program-options//           http://clang.debian.net/status.php?version=3.0&key=CANNOT_FIND_FUNCTIONnamespace boost {namespace program_options {string to_internal(const string&);}
 }
 
 using namespace std;
 
-bool fDaemon = false;
-string strMiscWarning;
-bool fNoListen = false;
-volatile bool fReopenDebugLog = false;
+bool g_bDaemon = false;
+string g_strMiscWarning;
+bool g_bNoListen = false;
+volatile bool g_bReopenDebugLog = false;
 
-CClientUIInterface uiInterface;
-CClientUIInterface * pUIInterface = &uiInterface;
+CClientUIInterface g_cUIInterface;
+CClientUIInterface * g_pUIInterface = &g_cUIInterface;
 
 // Init OpenSSL library multithreading support
-static CCriticalSection** ppmutexOpenSSL;
+static CCriticalSection** m_sppMutexOpenSSL;
 void locking_callback(int mode, int i, const char* file, int line) {
 if (mode & CRYPTO_LOCK) {
-ENTER_CRITICAL_SECTION(*ppmutexOpenSSL[i]);
+ENTER_CRITICAL_SECTION(*m_sppMutexOpenSSL[i]);
 } else {
-LEAVE_CRITICAL_SECTION(*ppmutexOpenSSL[i]);
+LEAVE_CRITICAL_SECTION(*m_sppMutexOpenSSL[i]);
 }
 }
 
 // Init
 class CInit {
-public:
-CInit() {
-// Init OpenSSL library multithreading support
-ppmutexOpenSSL = (CCriticalSection**) OPENSSL_malloc(CRYPTO_num_locks() * sizeof(CCriticalSection*));
-for (int i = 0; i < CRYPTO_num_locks(); i++)
-	ppmutexOpenSSL[i] = new CCriticalSection();
-CRYPTO_set_locking_callback(locking_callback);
+ public:
+	CInit() {
+		// Init OpenSSL library multithreading support
+		m_sppMutexOpenSSL = (CCriticalSection**) OPENSSL_malloc(CRYPTO_num_locks() * sizeof(CCriticalSection*));
+		for (int i = 0; i < CRYPTO_num_locks(); i++) {
+		m_sppMutexOpenSSL[i] = new CCriticalSection();
+		}
+	CRYPTO_set_locking_callback(locking_callback);
 
 #ifdef WIN32
 // Seed random number generator with screen scrape and other hardware sources
-RAND_screen();
+	RAND_screen();
 #endif
 
-// Seed random number generator with performance counter
-RandAddSeed();
+	// Seed random number generator with performance counter
+	RandAddSeed();
 }
-~CInit() {
-// Shutdown OpenSSL library multithreading support
-CRYPTO_set_locking_callback(NULL);
-for (int i = 0; i < CRYPTO_num_locks(); i++)
-	delete ppmutexOpenSSL[i];
-OPENSSL_free(ppmutexOpenSSL);
+
+	~CInit() {
+		// Shutdown OpenSSL library multithreading support
+		CRYPTO_set_locking_callback(NULL);
+		for (int i = 0; i < CRYPTO_num_locks(); i++) {
+			delete m_sppMutexOpenSSL[i];
+		}
+		OPENSSL_free(m_sppMutexOpenSSL);
 }
 } instance_of_cinit;
 
@@ -178,102 +180,99 @@ OPENSSL_free(ppmutexOpenSSL);
 // maybe indirectly, and you get a core dump at shutdown trying to lock
 // the mutex).
 
-static boost::once_flag debugPrintInitFlag = BOOST_ONCE_INIT;
+static boost::once_flag g_tDebugPrintInitFlag = BOOST_ONCE_INIT;
 // We use boost::call_once() to make sure these are initialized in
 // in a thread-safe manner the first time it is called:
 //static FILE* fileout = NULL;
 //static boost::mutex* mutexDebugLog = NULL;
 
-struct DebugLogFile
-{
-DebugLogFile():m_newLine(true), m_fileout(NULL), m_mutexDebugLog(NULL) {}
-~DebugLogFile()
-	{
-		if(m_fileout)
-		{
-			fclose(m_fileout);
-			m_fileout = NULL;
+struct ST_DebugLogFile {
+	ST_DebugLogFile():bNewLine(true), pFileout(NULL), MutexDebugLog(NULL) {}
+	~ST_DebugLogFile() {
+		if(pFileout) {
+			fclose(pFileout);
+			pFileout = NULL;
 		}
-		if(m_mutexDebugLog)
-		{
-			delete m_mutexDebugLog;
-			m_mutexDebugLog = NULL;
+		if(MutexDebugLog) {
+			delete MutexDebugLog;
+			MutexDebugLog = NULL;
 		}
 	}
-bool m_newLine;
-FILE* m_fileout;
-boost::mutex* m_mutexDebugLog;
+	bool bNewLine;
+	FILE* pFileout;
+	boost::mutex* MutexDebugLog;
 };
 
-static map<string,DebugLogFile> g_DebugLogs;
-
+static map<string,ST_DebugLogFile> g_DebugLogs;
 
 static void DebugPrintInit() {
-	shared_ptr<vector<string>> te = SysCfg().GetMultiArgsMap("-debug");
-	const vector<string>& categories = *(te.get());
-	set<string> logfiles(categories.begin(), categories.end());
+	shared_ptr<vector<string>> ptrTemp = SysCfg().GetMultiArgsMap("-debug");
+	const vector<string>& vstrCategories = *(ptrTemp.get());
+	set<string> vstrLogfiles(vstrCategories.begin(), vstrCategories.end());
 
-	shared_ptr<vector<string>> tmp = SysCfg().GetMultiArgsMap("-nodebug");
-	const vector<string>& nocategories = *(tmp.get());
-	set<string> nologfiles(nocategories.begin(), nocategories.end());
+	shared_ptr<vector<string>> ptrTemp1 = SysCfg().GetMultiArgsMap("-nodebug");
+	const vector<string>& vstrNoCategories = *(ptrTemp1.get());
+	set<string> vstrNoLogfiles(vstrNoCategories.begin(), vstrNoCategories.end());
 
 	if (SysCfg().IsDebugAll()) {
-		logfiles.clear();
-		logfiles = nologfiles;
-		logfiles.insert("debug");
+		vstrLogfiles.clear();
+		vstrLogfiles = vstrNoLogfiles;
+		vstrLogfiles.insert("debug");
 
-		for (auto& tmp : logfiles) {
+		for (auto& tmp : vstrLogfiles) {
 			g_DebugLogs[tmp];
 		}
 
 		{
-			FILE* fileout = NULL;
-			boost::filesystem::path pathDebug;
-			string file = "debug.log";
-			pathDebug = GetDataDir() / file;
-			fileout = fopen(pathDebug.string().c_str(), "a");
-			if (fileout) {
-				DebugLogFile& log = g_DebugLogs["debug"];
-				setbuf(fileout, NULL); // unbuffered
-				log.m_fileout = fileout;
-				log.m_mutexDebugLog = new boost::mutex();
+			FILE* pFileout = NULL;
+			boost::filesystem::path cPathDebug;
+			string strFile = "debug.log";
+			cPathDebug = GetDataDir() / strFile;
+			pFileout = fopen(cPathDebug.string().c_str(), "a");
+			if (pFileout) {
+				ST_DebugLogFile& log = g_DebugLogs["debug"];
+				setbuf(pFileout, NULL); // unbuffered
+				log.pFileout = pFileout;
+				log.MutexDebugLog = new boost::mutex();
 			}
 		}
 
 	} else {
-		for (auto& tmp : nologfiles) {
-			logfiles.erase(tmp);
+		for (auto& auTemp : vstrNoLogfiles) {
+			vstrLogfiles.erase(auTemp);
 		}
-		logfiles.insert("debug");
+		vstrLogfiles.insert("debug");
 
-		for (auto& cat : logfiles) {
-			FILE* fileout = NULL;
+		for (auto& auCat : vstrLogfiles) {
+			FILE* pFileout = NULL;
 			boost::filesystem::path pathDebug;
-			string file = cat + ".log";
-			pathDebug = GetDataDir() / file;
-			fileout = fopen(pathDebug.string().c_str(), "a");
-			if (fileout) {
-				DebugLogFile& log = g_DebugLogs[cat];
-				setbuf(fileout, NULL); // unbuffered
-				log.m_fileout = fileout;
-				log.m_mutexDebugLog = new boost::mutex();
+			string strFile = auCat + ".log";
+			pathDebug = GetDataDir() / strFile;
+			pFileout = fopen(pathDebug.string().c_str(), "a");
+			if (pFileout) {
+				ST_DebugLogFile& tDebugLogFile = g_DebugLogs[auCat];
+				setbuf(pFileout, NULL); // unbuffered
+				tDebugLogFile.pFileout = pFileout;
+				tDebugLogFile.MutexDebugLog = new boost::mutex();
 			}
 		}
 	}
 }
 
-int LogPrintStr(const string &str) {
-	return LogPrintStr(NULL, str);
+int LogPrintStr(const string &strLog) {
+	return LogPrintStr(NULL, strLog);
 }
 
-string GetLogHead(int line, const char* file, const char* category) {
-	string te(category != NULL ? category : "");
+string GetLogHead(int nLine, const char* pszFile, const char* pszCategory) {
+	string strTemp(pszCategory != NULL ? pszCategory : "");
 	if (SysCfg().IsDebug()) {
-		if (SysCfg().IsLogPrintLine())
-			return tfm::format("[%s:%d]%s: ", file, line, te);
+		if (SysCfg().IsLogPrintLine()) {
+			return tfm::format("[%s:%d]%s: ", pszFile, nLine, strTemp);
+		}
 	}
 	return string("");
 }
+
 /**
  *  日志文件预处理。写日志文件前被调用，检测文件A是否超长。
  *  当超长则先将原文件A重命名为Abak，再打开并创建A文件，删除重命名文件Abak，返回。
@@ -282,169 +281,169 @@ string GetLogHead(int line, const char* file, const char* category) {
  * @param stream  文件的句柄
  * @return
  */
-int LogFilePreProcess(const char *path,size_t len, FILE** stream)
-{
-    if((NULL == path) || (len <= 0) || (NULL == *stream) )
-    {
-//    	assert(0);
-    	return -1;
-    }
-    int lSize = ftell(*stream); //当前文件长度
-    if(lSize + len > (size_t)SysCfg().GetLogMaxSize())
-    {   //文件超长，关闭，删除，再创建
-        FILE *fileout = NULL;
-//      cout<<"file name:" << path <<"free point:"<< static_cast<const void*>(*stream)<< "lSize: "<< lSize << "len: " << len<<endl;
-        fclose(*stream);
-
-        string bkFile = strprintf("%sbak", path);
-        rename(path, bkFile.c_str());  //原文件重命名
-		fileout = fopen(path, "a+");   //重新打开， 类似于删除文件.
-		if (fileout) {
-//		    cout << "file new:" <<static_cast<const void*>(fileout) << endl;
-			*stream = fileout;
-			 if(remove(bkFile.c_str()) != 0)   //删除重命名文件
-			 {
-//				 assert(0);
-				 return -1;
-			 }
+int LogFilePreProcess(const char *pszPath, size_t unLength, FILE** ppStream) {
+	if ((NULL == pszPath) || (unLength <= 0) || (NULL == *ppStream)) {
+		return -1;
+	}
+	int nSize = ftell(*ppStream); 									//当前文件长度
+	if (nSize + unLength > (size_t) SysCfg().GetLogMaxSize()) {   	//文件超长，关闭，删除，再创建
+		FILE *pFileout = NULL;
+		fclose(*ppStream);
+		string strBkFile = strprintf("%sbak", pszPath);
+		rename(pszPath, strBkFile.c_str());  						//原文件重命名
+		pFileout = fopen(pszPath, "a+");   							//重新打开， 类似于删除文件.
+		if (pFileout) {
+			*ppStream = pFileout;
+			if (remove(strBkFile.c_str()) != 0) {  					//删除重命名文件
+				return -1;
+			}
+		} else {
+			return -1;
 		}
-		else{
-//         cout<<"LogFilePreProcess create new file err"<<endl;
-           return -1;
-		}
-    }
-    return 1;
+	}
+	return 1;
 }
-int LogPrintStr(const char* category, const string &str) {
 
-	if (!SysCfg().IsDebug())
+int LogPrintStr(const char* pszCategory, const string &strLog) {
+	if (!SysCfg().IsDebug()) {
 		return 0;
+	}
+	int nRet = 0; 													// Returns total number of characters written
+	boost::call_once(&DebugPrintInit, g_tDebugPrintInitFlag);
 
-	int ret = 0; // Returns total number of characters written
-
-	boost::call_once(&DebugPrintInit, debugPrintInitFlag);
-
-	map<string, DebugLogFile>::iterator it;
-
+	map<string, ST_DebugLogFile>::iterator it;
 	if (SysCfg().IsDebugAll()) {
-		if (NULL != category) {
-			it = g_DebugLogs.find(category);
+		if (NULL != pszCategory) {
+			it = g_DebugLogs.find(pszCategory);
 			if (it != g_DebugLogs.end()) {
 				return 0;
 			}
 		}
 		it = g_DebugLogs.find("debug");
 	} else {
-		it = g_DebugLogs.find((NULL == category) ? ("debug") : (category));
+		it = g_DebugLogs.find((NULL == pszCategory) ? ("debug") : (pszCategory));
 		if (it == g_DebugLogs.end()) {
 			return 0;
 		}
 	}
 
 	if (SysCfg().IsPrint2Console()) {
-		// print to console
-		ret = fwrite(str.data(), 1, str.size(), stdout);
+		nRet = fwrite(strLog.data(), 1, strLog.size(), stdout);
 	}
 	if (SysCfg().IsPrintToFile()) {
-		DebugLogFile& log = it->second;
-		boost::mutex::scoped_lock scoped_lock(*log.m_mutexDebugLog);
+		ST_DebugLogFile& tLog = it->second;
+		boost::mutex::scoped_lock scoped_lock(*tLog.MutexDebugLog);
 
-		boost::filesystem::path pathDebug;
-		string file = it->first + ".log";  //  it->first.c_str() = "INFO"
-		pathDebug = GetDataDir() / file;   // /home/share/bille/dacrs_test/regtest/INFO.log
+		boost::filesystem::path cPathDebug;
+		string strFile = it->first + ".tLog";
+		cPathDebug = GetDataDir() / strFile;   // /home/share/bille/dacrs_test/regtest/INFO.log
 		// Debug print useful for profiling
-		if (SysCfg().IsLogTimestamps() && log.m_newLine) {
-            string  timeFormat = DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime());
-     		LogFilePreProcess(pathDebug.string().c_str(),timeFormat.length() + 1 + str.size(), &log.m_fileout);
-			ret += fprintf(log.m_fileout, "%s ", timeFormat.c_str());
-//			ret += fprintf(log.m_fileout, "%s ", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()).c_str());
+		if (SysCfg().IsLogTimestamps() && tLog.bNewLine) {
+			string strTimeFormat = DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime());
+			LogFilePreProcess(cPathDebug.string().c_str(), strTimeFormat.length() + 1 + strLog.size(), &tLog.pFileout);
+			nRet += fprintf(tLog.pFileout, "%s ", strTimeFormat.c_str());
 		}
-		if (!str.empty() && str[str.size() - 1] == '\n') {
-			log.m_newLine = true;
+		if (!strLog.empty() && strLog[strLog.size() - 1] == '\n') {
+			tLog.bNewLine = true;
 		} else {
-			log.m_newLine = false;
+			tLog.bNewLine = false;
 		}
-		LogFilePreProcess(pathDebug.string().c_str(),str.size(), &log.m_fileout);
-		ret = fwrite(str.data(), 1, str.size(), log.m_fileout);
+		LogFilePreProcess(cPathDebug.string().c_str(), strLog.size(), &tLog.pFileout);
+		nRet = fwrite(strLog.data(), 1, strLog.size(), tLog.pFileout);
 	}
-	return ret;
+	return nRet;
 }
 
-string FormatMoney(int64_t n, bool fPlus) {
+string FormatMoney(int64_t llFormat, bool bPlus) {
 	// Note: not using straight sprintf here because we do NOT want
 	// localized number formatting.
-	int64_t n_abs = (n > 0 ? n : -n);
-	int64_t quotient = n_abs / COIN;
-	int64_t remainder = n_abs % COIN;
-	string str = strprintf("%d.%08d", quotient, remainder);
+	int64_t llAbs = (llFormat > 0 ? llFormat : -llFormat);
+	int64_t llQuotient = llAbs / COIN;
+	int64_t llRemainder = llAbs % COIN;
+	string strString = strprintf("%d.%08d", llQuotient, llRemainder);
 
 	// Right-trim excess zeros before the decimal point:
 	int nTrim = 0;
-	for (int i = str.size() - 1; (str[i] == '0' && isdigit(str[i - 2])); --i)
+	for (int i = strString.size() - 1; (strString[i] == '0' && isdigit(strString[i - 2])); --i) {
 		++nTrim;
-	if (nTrim)
-		str.erase(str.size() - nTrim, nTrim);
-
-	if (n < 0)
-		str.insert((unsigned int) 0, 1, '-');
-	else if (fPlus && n > 0)
-		str.insert((unsigned int) 0, 1, '+');
-	return str;
+	}
+	if (nTrim) {
+		strString.erase(strString.size() - nTrim, nTrim);
+	}
+	if (llFormat < 0) {
+		strString.insert((unsigned int) 0, 1, '-');
+	} else if (bPlus && llFormat > 0) {
+		strString.insert((unsigned int) 0, 1, '+');
+	}
+	return strString;
 }
 
-bool ParseMoney(const string& str, int64_t& nRet) {
-	return ParseMoney(str.c_str(), nRet);
+bool ParseMoney(const string& strContent, int64_t& llRet) {
+	return ParseMoney(strContent.c_str(), llRet);
 }
 
-bool ParseMoney(const char* pszIn, int64_t& nRet) {
+bool ParseMoney(const char* pszIn, int64_t& llRet) {
 	string strWhole;
-	int64_t nUnits = 0;
-	const char* p = pszIn;
-	while (isspace(*p))
-		p++;
-	for (; *p; p++) {
-		if (*p == '.') {
-			p++;
-			int64_t nMult = CENT * 10;
-			while (isdigit(*p) && (nMult > 0)) {
-				nUnits += nMult * (*p++ - '0');
-				nMult /= 10;
+	int64_t llUnits = 0;
+	const char* pTemp = pszIn;
+
+	while (isspace(*pTemp)) {
+		pTemp++;
+	}
+
+	for (; *pTemp; pTemp++) {
+		if (*pTemp == '.') {
+			pTemp++;
+			int64_t llMult = CENT * 10;
+			while (isdigit(*pTemp) && (llMult > 0)) {
+				llUnits += llMult * (*pTemp++ - '0');
+				llMult /= 10;
 			}
 			break;
 		}
-		if (isspace(*p))
+		if (isspace(*pTemp)) {
 			break;
-		if (!isdigit(*p))
+		}
+		if (!isdigit(*pTemp)) {
 			return false;
-		strWhole.insert(strWhole.end(), *p);
-	}
-	for (; *p; p++)
-		if (!isspace(*p))
-			return false;
-	if (strWhole.size() > 10) // guard against 63 bit overflow
-		return false;
-	if (nUnits < 0 || nUnits > COIN)
-		return false;
-	int64_t nWhole = atoi64(strWhole);
-	int64_t nValue = nWhole * COIN + nUnits;
+		}
 
-	nRet = nValue;
+		strWhole.insert(strWhole.end(), *pTemp);
+	}
+	for (; *pTemp; pTemp++) {
+		if (!isspace(*pTemp)) {
+			return false;
+		}
+	}
+
+	if (strWhole.size() > 10) {				// guard against 63 bit overflow
+		return false;
+	}
+	if (llUnits < 0 || llUnits > COIN) {
+		return false;
+	}
+
+	int64_t llWhole = atoi64(strWhole);
+	int64_t llValue = llWhole * COIN + llUnits;
+	llRet = llValue;
+
 	return true;
 }
 
 // safeChars chosen to allow simple messages/URLs/email addresses, but avoid anything
 // even possibly remotely dangerous like & or >
 static string safeChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890 .,;_/:?@");
-string SanitizeString(const string& str) {
+string SanitizeString(const string& strContent) {
 	string strResult;
-	for (string::size_type i = 0; i < str.size(); i++) {
-		if (safeChars.find(str[i]) != string::npos)
-			strResult.push_back(str[i]);
+	for (string::size_type i = 0; i < strContent.size(); i++) {
+		if (safeChars.find(strContent[i]) != string::npos) {
+			strResult.push_back(strContent[i]);
+		}
 	}
 	return strResult;
 }
 
-const signed char p_util_hexdigit[256] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+const signed char g_util_hexdigit[256] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 		-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, -1, -1, -1, -1, -1, -1, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf, -1, -1, -1, -1, -1,
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0xa, 0xb, 0xc, 0xd, 0xe,
@@ -455,96 +454,98 @@ const signed char p_util_hexdigit[256] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, };
 
-bool IsHex(const string& str) {
-	for (char c : str) {
-		if (HexDigit(c) < 0)
+bool IsHex(const string& strContent) {
+	for (char c : strContent) {
+		if (HexDigit(c) < 0) {
 			return false;
+		}
 	}
-	return (str.size() > 0) && (str.size() % 2 == 0);
+	return (strContent.size() > 0) && (strContent.size() % 2 == 0);
 }
 
-vector<unsigned char> ParseHex(const char* psz) {
+vector<unsigned char> ParseHex(const char* pszContent) {
 	// convert hex dump to vector
-	vector<unsigned char> vch;
+	vector<unsigned char> vchContent;
 	while (true) {
-		while (isspace(*psz))
-			psz++;
-		signed char c = HexDigit(*psz++);
-		if (c == (signed char) -1)
+		while (isspace(*pszContent)) {
+			pszContent++;
+		}
+		signed char chValue = HexDigit(*pszContent++);
+		if (chValue == (signed char) -1) {
 			break;
-		unsigned char n = (c << 4);
-		c = HexDigit(*psz++);
-		if (c == (signed char) -1)
+		}
+		unsigned char uchValue = (chValue << 4);
+		chValue = HexDigit(*pszContent++);
+		if (chValue == (signed char) -1) {
 			break;
-		n |= c;
-		vch.push_back(n);
+		}
+		uchValue |= chValue;
+		vchContent.push_back(uchValue);
 	}
-	return vch;
+	return vchContent;
 }
 
-vector<unsigned char> ParseHex(const string& str) {
-	return ParseHex(str.c_str());
+vector<unsigned char> ParseHex(const string& strContent) {
+	return ParseHex(strContent.c_str());
 }
 
-static void InterpretNegativeSetting(string name, map<string, string>& mapSettingsRet) {
+static void InterpretNegativeSetting(string strName, map<string, string>& mapSettingsRet) {
 	// interpret -nofoo as -foo=0 (and -nofoo=0 as -foo=1) as long as -foo not set
-	if (name.find("-no") == 0) {
-		string positive("-");
-		positive.append(name.begin() + 3, name.end());
-		if (mapSettingsRet.count(positive) == 0) {
-			bool value = !SysCfg().GetBoolArg(name, false);
-			mapSettingsRet[positive] = (value ? "1" : "0");
+	if (strName.find("-no") == 0) {
+		string strPositive("-");
+		strPositive.append(strName.begin() + 3, strName.end());
+		if (mapSettingsRet.count(strPositive) == 0) {
+			bool bValue = !SysCfg().GetBoolArg(strName, false);
+			mapSettingsRet[strPositive] = (bValue ? "1" : "0");
 		}
 	}
 }
 
-string EncodeBase64(const unsigned char* pch, size_t len) {
-	static const char *pbase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
+string EncodeBase64(const unsigned char* pszContent, size_t unLength) {
+	static const char *pBase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 	string strRet = "";
-	strRet.reserve((len + 2) / 3 * 4);
+	strRet.reserve((unLength + 2) / 3 * 4);
 
-	int mode = 0, left = 0;
-	const unsigned char *pchEnd = pch + len;
+	int nMode = 0, nLeft = 0;
+	const unsigned char *pchEnd = pszContent + unLength;
 
-	while (pch < pchEnd) {
-		int enc = *(pch++);
-		switch (mode) {
+	while (pszContent < pchEnd) {
+		int nEnc = *(pszContent++);
+		switch (nMode) {
 		case 0: // we have no bits
-			strRet += pbase64[enc >> 2];
-			left = (enc & 3) << 4;
-			mode = 1;
+			strRet += pBase64[nEnc >> 2];
+			nLeft = (nEnc & 3) << 4;
+			nMode = 1;
 			break;
-
 		case 1: // we have two bits
-			strRet += pbase64[left | (enc >> 4)];
-			left = (enc & 15) << 2;
-			mode = 2;
+			strRet += pBase64[nLeft | (nEnc >> 4)];
+			nLeft = (nEnc & 15) << 2;
+			nMode = 2;
 			break;
-
 		case 2: // we have four bits
-			strRet += pbase64[left | (enc >> 6)];
-			strRet += pbase64[enc & 63];
-			mode = 0;
+			strRet += pBase64[nLeft | (nEnc >> 6)];
+			strRet += pBase64[nEnc & 63];
+			nMode = 0;
 			break;
 		}
 	}
 
-	if (mode) {
-		strRet += pbase64[left];
+	if (nMode) {
+		strRet += pBase64[nLeft];
 		strRet += '=';
-		if (mode == 1)
+		if (nMode == 1) {
 			strRet += '=';
+		}
 	}
 
 	return strRet;
 }
 
-string EncodeBase64(const string& str) {
-	return EncodeBase64((const unsigned char*) str.c_str(), str.size());
+string EncodeBase64(const string& strContent) {
+	return EncodeBase64((const unsigned char*) strContent.c_str(), strContent.size());
 }
 
-vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid) {
+vector<unsigned char> DecodeBase64(const char* pszContent, bool* pbInvalid) {
 	static const int decode64_table[256] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1,
 			-1, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
@@ -556,134 +557,126 @@ vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid) {
 			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
-	if (pfInvalid)
-		*pfInvalid = false;
+	if (pbInvalid) {
+		*pbInvalid = false;
+	}
 
 	vector<unsigned char> vchRet;
-	vchRet.reserve(strlen(p) * 3 / 4);
+	vchRet.reserve(strlen(pszContent) * 3 / 4);
 
-	int mode = 0;
-	int left = 0;
-
+	int nMode = 0;
+	int nLeft = 0;
 	while (1) {
-		int dec = decode64_table[(unsigned char) *p];
-		if (dec == -1)
+		int nDec = decode64_table[(unsigned char) *pszContent];
+		if (nDec == -1) {
 			break;
-		p++;
-		switch (mode) {
+		}
+		pszContent++;
+		switch (nMode) {
 		case 0: // we have no bits and get 6
-			left = dec;
-			mode = 1;
+			nLeft = nDec;
+			nMode = 1;
 			break;
-
 		case 1: // we have 6 bits and keep 4
-			vchRet.push_back((left << 2) | (dec >> 4));
-			left = dec & 15;
-			mode = 2;
+			vchRet.push_back((nLeft << 2) | (nDec >> 4));
+			nLeft = nDec & 15;
+			nMode = 2;
 			break;
-
 		case 2: // we have 4 bits and get 6, we keep 2
-			vchRet.push_back((left << 4) | (dec >> 2));
-			left = dec & 3;
-			mode = 3;
+			vchRet.push_back((nLeft << 4) | (nDec >> 2));
+			nLeft = nDec & 3;
+			nMode = 3;
 			break;
-
 		case 3: // we have 2 bits and get 6
-			vchRet.push_back((left << 6) | dec);
-			mode = 0;
+			vchRet.push_back((nLeft << 6) | nDec);
+			nMode = 0;
 			break;
 		}
 	}
 
-	if (pfInvalid)
-		switch (mode) {
+	if (pbInvalid)
+		switch (nMode) {
 		case 0: // 4n base64 characters processed: ok
 			break;
-
 		case 1: // 4n+1 base64 character processed: impossible
-			*pfInvalid = true;
+			*pbInvalid = true;
 			break;
-
 		case 2: // 4n+2 base64 characters processed: require '=='
-			if (left || p[0] != '=' || p[1] != '=' || decode64_table[(unsigned char) p[2]] != -1)
-				*pfInvalid = true;
+			if (nLeft || pszContent[0] != '=' || pszContent[1] != '=' || decode64_table[(unsigned char) pszContent[2]] != -1) {
+				*pbInvalid = true;
+			}
 			break;
-
 		case 3: // 4n+3 base64 characters processed: require '='
-			if (left || p[0] != '=' || decode64_table[(unsigned char) p[1]] != -1)
-				*pfInvalid = true;
+			if (nLeft || pszContent[0] != '=' || decode64_table[(unsigned char) pszContent[1]] != -1) {
+				*pbInvalid = true;
+			}
 			break;
 		}
-
 	return vchRet;
 }
 
-string DecodeBase64(const string& str) {
-	vector<unsigned char> vchRet = DecodeBase64(str.c_str());
+string DecodeBase64(const string& strContent) {
+	vector<unsigned char> vchRet = DecodeBase64(strContent.c_str());
 	return string((const char*) &vchRet[0], vchRet.size());
 }
 
-string EncodeBase32(const unsigned char* pch, size_t len) {
-	static const char *pbase32 = "abcdefghijklmnopqrstuvwxyz234567";
+string EncodeBase32(const unsigned char* pszContent, size_t unlength) {
+	static const char *pBase32 = "abcdefghijklmnopqrstuvwxyz234567";
 
 	string strRet = "";
-	strRet.reserve((len + 4) / 5 * 8);
+	strRet.reserve((unlength + 4) / 5 * 8);
 
-	int mode = 0, left = 0;
-	const unsigned char *pchEnd = pch + len;
+	int nMode = 0, nLeft = 0;
+	const unsigned char *pchEnd = pszContent + unlength;
 
-	while (pch < pchEnd) {
-		int enc = *(pch++);
-		switch (mode) {
+	while (pszContent < pchEnd) {
+		int nEnc = *(pszContent++);
+		switch (nMode) {
 		case 0: // we have no bits
-			strRet += pbase32[enc >> 3];
-			left = (enc & 7) << 2;
-			mode = 1;
+			strRet += pBase32[nEnc >> 3];
+			nLeft = (nEnc & 7) << 2;
+			nMode = 1;
 			break;
-
 		case 1: // we have three bits
-			strRet += pbase32[left | (enc >> 6)];
-			strRet += pbase32[(enc >> 1) & 31];
-			left = (enc & 1) << 4;
-			mode = 2;
+			strRet += pBase32[nLeft | (nEnc >> 6)];
+			strRet += pBase32[(nEnc >> 1) & 31];
+			nLeft = (nEnc & 1) << 4;
+			nMode = 2;
 			break;
-
 		case 2: // we have one bit
-			strRet += pbase32[left | (enc >> 4)];
-			left = (enc & 15) << 1;
-			mode = 3;
+			strRet += pBase32[nLeft | (nEnc >> 4)];
+			nLeft = (nEnc & 15) << 1;
+			nMode = 3;
 			break;
-
 		case 3: // we have four bits
-			strRet += pbase32[left | (enc >> 7)];
-			strRet += pbase32[(enc >> 2) & 31];
-			left = (enc & 3) << 3;
-			mode = 4;
+			strRet += pBase32[nLeft | (nEnc >> 7)];
+			strRet += pBase32[(nEnc >> 2) & 31];
+			nLeft = (nEnc & 3) << 3;
+			nMode = 4;
 			break;
-
 		case 4: // we have two bits
-			strRet += pbase32[left | (enc >> 5)];
-			strRet += pbase32[enc & 31];
-			mode = 0;
+			strRet += pBase32[nLeft | (nEnc >> 5)];
+			strRet += pBase32[nEnc & 31];
+			nMode = 0;
 		}
 	}
 
 	static const int nPadding[5] = { 0, 6, 4, 3, 1 };
-	if (mode) {
-		strRet += pbase32[left];
-		for (int n = 0; n < nPadding[mode]; n++)
+	if (nMode) {
+		strRet += pBase32[nLeft];
+		for (int n = 0; n < nPadding[nMode]; n++) {
 			strRet += '=';
+		}
 	}
-
 	return strRet;
 }
 
-string EncodeBase32(const string& str) {
-	return EncodeBase32((const unsigned char*) str.c_str(), str.size());
+string EncodeBase32(const string& strContent) {
+	return EncodeBase32((const unsigned char*) strContent.c_str(), strContent.size());
 }
 
-vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid) {
-	static const int decode32_table[256] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+vector<unsigned char> DecodeBase32(const char* pszContent, bool* pbInvalid) {
+	static const int g_nDecode32_table[256] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 			-1, -1, -1, -1, 26, 27, 28, 29, 30, 31, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
 			10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, 0, 1, 2, 3, 4, 5, 6,
@@ -694,160 +687,155 @@ vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid) {
 			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 			-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
-	if (pfInvalid)
-		*pfInvalid = false;
+	if (pbInvalid) {
+		*pbInvalid = false;
+	}
 
 	vector<unsigned char> vchRet;
-	vchRet.reserve((strlen(p)) * 5 / 8);
+	vchRet.reserve((strlen(pszContent)) * 5 / 8);
 
-	int mode = 0;
-	int left = 0;
+	int nMode = 0;
+	int nLeft = 0;
 
 	while (1) {
-		int dec = decode32_table[(unsigned char) *p];
-		if (dec == -1)
+		int nDec = g_nDecode32_table[(unsigned char) *pszContent];
+		if (nDec == -1) {
 			break;
-		p++;
-		switch (mode) {
+		}
+		pszContent++;
+		switch (nMode) {
 		case 0: // we have no bits and get 5
-			left = dec;
-			mode = 1;
+			nLeft = nDec;
+			nMode = 1;
 			break;
-
 		case 1: // we have 5 bits and keep 2
-			vchRet.push_back((left << 3) | (dec >> 2));
-			left = dec & 3;
-			mode = 2;
+			vchRet.push_back((nLeft << 3) | (nDec >> 2));
+			nLeft = nDec & 3;
+			nMode = 2;
 			break;
-
 		case 2: // we have 2 bits and keep 7
-			left = left << 5 | dec;
-			mode = 3;
+			nLeft = nLeft << 5 | nDec;
+			nMode = 3;
 			break;
-
 		case 3: // we have 7 bits and keep 4
-			vchRet.push_back((left << 1) | (dec >> 4));
-			left = dec & 15;
-			mode = 4;
+			vchRet.push_back((nLeft << 1) | (nDec >> 4));
+			nLeft = nDec & 15;
+			nMode = 4;
 			break;
-
 		case 4: // we have 4 bits, and keep 1
-			vchRet.push_back((left << 4) | (dec >> 1));
-			left = dec & 1;
-			mode = 5;
+			vchRet.push_back((nLeft << 4) | (nDec >> 1));
+			nLeft = nDec & 1;
+			nMode = 5;
 			break;
-
 		case 5: // we have 1 bit, and keep 6
-			left = left << 5 | dec;
-			mode = 6;
+			nLeft = nLeft << 5 | nDec;
+			nMode = 6;
 			break;
-
 		case 6: // we have 6 bits, and keep 3
-			vchRet.push_back((left << 2) | (dec >> 3));
-			left = dec & 7;
-			mode = 7;
+			vchRet.push_back((nLeft << 2) | (nDec >> 3));
+			nLeft = nDec & 7;
+			nMode = 7;
 			break;
-
 		case 7: // we have 3 bits, and keep 0
-			vchRet.push_back((left << 5) | dec);
-			mode = 0;
+			vchRet.push_back((nLeft << 5) | nDec);
+			nMode = 0;
 			break;
 		}
 	}
 
-	if (pfInvalid)
-		switch (mode) {
+	if (pbInvalid)
+		switch (nMode) {
 		case 0: // 8n base32 characters processed: ok
 			break;
-
 		case 1: // 8n+1 base32 characters processed: impossible
 		case 3: //   +3
 		case 6: //   +6
-			*pfInvalid = true;
+			*pbInvalid = true;
 			break;
-
 		case 2: // 8n+2 base32 characters processed: require '======'
-			if (left || p[0] != '=' || p[1] != '=' || p[2] != '=' || p[3] != '=' || p[4] != '=' || p[5] != '='
-					|| decode32_table[(unsigned char) p[6]] != -1)
-				*pfInvalid = true;
+			if (nLeft || pszContent[0] != '=' || pszContent[1] != '=' || pszContent[2] != '=' || pszContent[3] != '='
+					|| pszContent[4] != '=' || pszContent[5] != '='
+					|| g_nDecode32_table[(unsigned char) pszContent[6]] != -1) {
+				*pbInvalid = true;
+			}
 			break;
-
 		case 4: // 8n+4 base32 characters processed: require '===='
-			if (left || p[0] != '=' || p[1] != '=' || p[2] != '=' || p[3] != '='
-					|| decode32_table[(unsigned char) p[4]] != -1)
-				*pfInvalid = true;
+			if (nLeft || pszContent[0] != '=' || pszContent[1] != '=' || pszContent[2] != '=' || pszContent[3] != '='
+					|| g_nDecode32_table[(unsigned char) pszContent[4]] != -1) {
+				*pbInvalid = true;
+			}
 			break;
-
 		case 5: // 8n+5 base32 characters processed: require '==='
-			if (left || p[0] != '=' || p[1] != '=' || p[2] != '=' || decode32_table[(unsigned char) p[3]] != -1)
-				*pfInvalid = true;
+			if (nLeft || pszContent[0] != '=' || pszContent[1] != '=' || pszContent[2] != '='
+					|| g_nDecode32_table[(unsigned char) pszContent[3]] != -1) {
+				*pbInvalid = true;
+			}
 			break;
-
 		case 7: // 8n+7 base32 characters processed: require '='
-			if (left || p[0] != '=' || decode32_table[(unsigned char) p[1]] != -1)
-				*pfInvalid = true;
+			if (nLeft || pszContent[0] != '=' || g_nDecode32_table[(unsigned char) pszContent[1]] != -1) {
+				*pbInvalid = true;
+			}
 			break;
 		}
-
 	return vchRet;
 }
 
-string DecodeBase32(const string& str) {
-	vector<unsigned char> vchRet = DecodeBase32(str.c_str());
+string DecodeBase32(const string& strContent) {
+	vector<unsigned char> vchRet = DecodeBase32(strContent.c_str());
 	return string((const char*) &vchRet[0], vchRet.size());
 }
 
-bool WildcardMatch(const char* psz, const char* mask) {
+bool WildcardMatch(const char* pszContent, const char* pszMask) {
 	while (true) {
-		switch (*mask) {
+		switch (*pszMask) {
 		case '\0':
-			return (*psz == '\0');
+			return (*pszContent == '\0');
 		case '*':
-			return WildcardMatch(psz, mask + 1) || (*psz && WildcardMatch(psz + 1, mask));
+			return WildcardMatch(pszContent, pszMask + 1) || (*pszContent && WildcardMatch(pszContent + 1, pszMask));
 		case '?':
-			if (*psz == '\0')
+			if (*pszContent == '\0')
 				return false;
 			break;
 		default:
-			if (*psz != *mask)
+			if (*pszContent != *pszMask)
 				return false;
 			break;
 		}
-		psz++;
-		mask++;
+		pszContent++;
+		pszMask++;
 	}
 	return false;
 }
 
-bool WildcardMatch(const string& str, const string& mask) {
-	return WildcardMatch(str.c_str(), mask.c_str());
+bool WildcardMatch(const string& strContent, const string& strMask) {
+	return WildcardMatch(strContent.c_str(), strMask.c_str());
 }
 
-static string FormatException(exception* pex, const char* pszThread) {
+static string FormatException(exception* pExcep, const char* pszThread) {
 #ifdef WIN32
 	char pszModule[MAX_PATH] = "";
 	GetModuleFileNameA(NULL, pszModule, sizeof(pszModule));
 #else
 	const char* pszModule = "Dacrs";
 #endif
-	if (pex)
+	if (pExcep)
 		return strprintf(
-		"EXCEPTION: %s       \n%s       \n%s in %s       \n", typeid(*pex).name(), pex->what(), pszModule, pszThread);
+		"EXCEPTION: %s       \n%s       \n%s in %s       \n", typeid(*pExcep).name(), pExcep->what(), pszModule, pszThread);
 		else
 		return strprintf(
 		"UNKNOWN EXCEPTION       \n%s in %s       \n", pszModule, pszThread);
 	}
 
-void LogException(exception* pex, const char* pszThread) {
-	string message = FormatException(pex, pszThread);
+void LogException(exception* pExcep, const char* pszThread) {
+	string message = FormatException(pExcep, pszThread);
 	LogPrint("INFO", "\n%s", message);
 }
 
-void PrintExceptionContinue(exception* pex, const char* pszThread) {
-	string message = FormatException(pex, pszThread);
-	LogPrint("INFO", "\n\n************************\n%s\n", message);
-	fprintf(stderr, "\n\n************************\n%s\n", message.c_str());
-	strMiscWarning = message;
+void PrintExceptionContinue(exception* pExcep, const char* pszThread) {
+	string strMessage = FormatException(pExcep, pszThread);
+	LogPrint("INFO", "\n\n************************\n%s\n", strMessage);
+	fprintf(stderr, "\n\n************************\n%s\n", strMessage.c_str());
+	g_strMiscWarning = strMessage;
 }
 
 boost::filesystem::path GetDefaultDataDir() {
@@ -878,61 +866,64 @@ boost::filesystem::path GetDefaultDataDir() {
 #endif
 }
 
-static boost::filesystem::path pathCached[CBaseParams::EM_MAX_NETWORK_TYPES + 1];
-static CCriticalSection csPathCached;
+static boost::filesystem::path g_sPathCached[CBaseParams::EM_MAX_NETWORK_TYPES + 1];
+static CCriticalSection g_sCSPathCached;
 
-const boost::filesystem::path &GetDataDir(bool fNetSpecific) {
+const boost::filesystem::path &GetDataDir(bool bNetSpecific) {
 	namespace fs = boost::filesystem;
 
-	LOCK(csPathCached);
+	LOCK(g_sCSPathCached);
 
 	int nNet = CBaseParams::EM_MAX_NETWORK_TYPES;
-	if (fNetSpecific)
+	if (bNetSpecific) {
 		nNet = SysCfg().NetworkID();
+	}
 
-	fs::path &path = pathCached[nNet];
+	fs::path &cPath = g_sPathCached[nNet];
 
 	// This can be called during exceptions by LogPrint("INFO",), so we cache the
 	// value so we don't have to do memory allocations after that.
-	if (!path.empty())
-		return path;
-
+	if (!cPath.empty()) {
+		return cPath;
+	}
 	if (CBaseParams::IsArgCount("-datadir")) {
 		std::string strCfgDataDir = CBaseParams::GetArg("-datadir", "");
 		if("cur" == strCfgDataDir) {
 			strCfgDataDir = fs::initial_path<boost::filesystem::path>().string();
 		}
-		path = fs::system_complete(strCfgDataDir);
-		if (!fs::is_directory(path)) {
-			path = "";
-			return path;
+		cPath = fs::system_complete(strCfgDataDir);
+		if (!fs::is_directory(cPath)) {
+			cPath = "";
+			return cPath;
 		}
 	} else {
-		path = GetDefaultDataDir();
+		cPath = GetDefaultDataDir();
 	}
-	if (fNetSpecific)
-		path /= SysCfg().DataDir();
+	if (bNetSpecific) {
+		cPath /= SysCfg().DataDir();
+	}
+	fs::create_directories(cPath);
 
-	fs::create_directories(path);
-
-	return path;
+	return cPath;
 }
 
 void ClearDatadirCache() {
-	fill(&pathCached[0], &pathCached[CBaseParams::EM_MAX_NETWORK_TYPES + 1], boost::filesystem::path());
+	fill(&g_sPathCached[0], &g_sPathCached[CBaseParams::EM_MAX_NETWORK_TYPES + 1], boost::filesystem::path());
 }
 
 boost::filesystem::path GetConfigFile() {
-	boost::filesystem::path pathConfigFile(CBaseParams::GetArg("-conf", "Dacrs.conf"));
-	if (!pathConfigFile.is_complete())
-		pathConfigFile = GetDataDir(false) / pathConfigFile;
-	return pathConfigFile;
+	boost::filesystem::path cPathConfigFile(CBaseParams::GetArg("-conf", "Dacrs.conf"));
+	if (!cPathConfigFile.is_complete()) {
+		cPathConfigFile = GetDataDir(false) / cPathConfigFile;
+	}
+	return cPathConfigFile;
 }
 
 void ReadConfigFile(map<string, string>& mapSettingsRet, map<string, vector<string> >& mapMultiSettingsRet) {
 	boost::filesystem::ifstream streamConfig(GetConfigFile());
-	if (!streamConfig.good())
+	if (!streamConfig.good()) {
 		return; // No Dacrs.conf file is OK
+	}
 
 	set<string> setOptions;
 	setOptions.insert("*");
@@ -953,10 +944,11 @@ void ReadConfigFile(map<string, string>& mapSettingsRet, map<string, vector<stri
 }
 
 boost::filesystem::path GetPidFile() {
-	boost::filesystem::path pathPidFile(SysCfg().GetArg("-pid", "bitcoind.pid"));
-	if (!pathPidFile.is_complete())
-		pathPidFile = GetDataDir() / pathPidFile;
-	return pathPidFile;
+	boost::filesystem::path cPathPidFile(SysCfg().GetArg("-pid", "bitcoind.pid"));
+	if (!cPathPidFile.is_complete()) {
+		cPathPidFile = GetDataDir() / cPathPidFile;
+	}
+	return cPathPidFile;
 }
 
 #ifndef WIN32
@@ -971,23 +963,23 @@ void CreatePidFile(const boost::filesystem::path &path, pid_t pid)
 }
 #endif
 
-bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest) {
+bool RenameOver(boost::filesystem::path cSrc, boost::filesystem::path cDest) {
 #ifdef WIN32
-	return MoveFileExA(src.string().c_str(), dest.string().c_str(),
+	return MoveFileExA(cSrc.string().c_str(), cDest.string().c_str(),
 	MOVEFILE_REPLACE_EXISTING);
 #else
-	int rc = rename(src.string().c_str(), dest.string().c_str());
+	int rc = rename(cSrc.string().c_str(), cDest.string().c_str());
 	return (rc == 0);
 #endif /* WIN32 */
 }
 
 // Ignores exceptions thrown by boost's create_directory if the requested directory exists.
 //   Specifically handles case where path p exists, but it wasn't possible for the user to write to the parent directory.
-bool TryCreateDirectory(const boost::filesystem::path& p) {
+bool TryCreateDirectory(const boost::filesystem::path& cPath) {
 	try {
-		return boost::filesystem::create_directory(p);
+		return boost::filesystem::create_directory(cPath);
 	} catch (boost::filesystem::filesystem_error) {
-		if (!boost::filesystem::exists(p) || !boost::filesystem::is_directory(p))
+		if (!boost::filesystem::exists(cPath) || !boost::filesystem::is_directory(cPath))
 			throw;
 	}
 
@@ -995,14 +987,14 @@ bool TryCreateDirectory(const boost::filesystem::path& p) {
 	return false;
 }
 
-void FileCommit(FILE *fileout) {
-	fflush(fileout); // harmless if redundantly called
+void FileCommit(FILE *pFileout) {
+	fflush(pFileout); // harmless if redundantly called
 #ifdef WIN32
-	HANDLE hFile = (HANDLE) _get_osfhandle(_fileno(fileout));
+	HANDLE hFile = (HANDLE) _get_osfhandle(_fileno(pFileout));
 	FlushFileBuffers(hFile);
 #else
 #if defined(__linux__) || defined(__NetBSD__)
-	fdatasync(fileno(fileout));
+	fdatasync(fileno(pFileout));
 #elif defined(__APPLE__) && defined(F_FULLFSYNC)
 	fcntl(fileno(fileout), F_FULLFSYNC, 0);
 #else
@@ -1011,11 +1003,11 @@ void FileCommit(FILE *fileout) {
 #endif
 }
 
-bool TruncateFile(FILE *file, unsigned int length) {
+bool TruncateFile(FILE *pFile, unsigned int unLength) {
 #if defined(WIN32)
-	return _chsize(_fileno(file), length) == 0;
+	return _chsize(_fileno(pFile), unLength) == 0;
 #else
-	return ftruncate(fileno(file), length) == 0;
+	return ftruncate(fileno(pFile), unLength) == 0;
 #endif
 }
 
@@ -1042,12 +1034,12 @@ int RaiseFileDescriptorLimit(int nMinFD) {
 
 // this function tries to make a particular range of a file allocated (corresponding to disk space)
 // it is advisory, and the range specified in the arguments will never contain live data
-void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length) {
+void AllocateFileRange(FILE *pFile, unsigned int unOffset, unsigned int unLength) {
 #if defined(WIN32)
 	// Windows-specific version
-	HANDLE hFile = (HANDLE) _get_osfhandle(_fileno(file));
+	HANDLE hFile = (HANDLE) _get_osfhandle(_fileno(pFile));
 	LARGE_INTEGER nFileSize;
-	int64_t nEndPos = (int64_t) offset + length;
+	int64_t nEndPos = (int64_t) unOffset + unLength;
 	nFileSize.u.LowPart = nEndPos & 0xFFFFFFFF;
 	nFileSize.u.HighPart = nEndPos >> 32;
 	SetFilePointerEx(hFile, nFileSize, 0, FILE_BEGIN);
@@ -1060,15 +1052,15 @@ void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length) {
 	fst.fst_offset = 0;
 	fst.fst_length = (off_t)offset + length;
 	fst.fst_bytesalloc = 0;
-	if (fcntl(fileno(file), F_PREALLOCATE, &fst) == -1) {
+	if (fcntl(fileno(pFile), F_PREALLOCATE, &fst) == -1) {
 		fst.fst_flags = F_ALLOCATEALL;
-		fcntl(fileno(file), F_PREALLOCATE, &fst);
+		fcntl(fileno(pFile), F_PREALLOCATE, &fst);
 	}
-	ftruncate(fileno(file), fst.fst_length);
+	ftruncate(fileno(pFile), fst.fst_length);
 #elif defined(__linux__)
 	// Version using posix_fallocate
-	off_t nEndPos = (off_t)offset + length;
-	posix_fallocate(fileno(file), 0, nEndPos);
+	off_t nEndPos = (off_t)unOffset + unLength;
+	posix_fallocate(fileno(pFile), 0, nEndPos);
 #else
 	// Fallback version
 	// TODO: just write one byte per block
@@ -1114,75 +1106,78 @@ void ShrinkDebugFile() {
 static int64_t nMockTime = 0;  // For unit testing
 
 int64_t GetTime() {
-	if (nMockTime)
+	if (nMockTime) {
 		return nMockTime;
-
+	}
 	return time(NULL);
 }
 
-void SetMockTime(int64_t nMockTimeIn) {
-	nMockTime = nMockTimeIn;
+void SetMockTime(int64_t llMockTimeIn) {
+	nMockTime = llMockTimeIn;
 }
 
-static CCriticalSection cs_nTimeOffset;
-static int64_t nTimeOffset = 0;
+static CCriticalSection g_cs_nTimeOffset;
+static int64_t g_sllTimeOffset = 0;
 
 int64_t GetTimeOffset() {
-	LOCK(cs_nTimeOffset);
-	return nTimeOffset;
+	LOCK(g_cs_nTimeOffset);
+	return g_sllTimeOffset;
 }
 
 int64_t GetAdjustedTime() {
 	return GetTime() + GetTimeOffset();
 }
 
-void AddTimeData(const CNetAddr& ip, int64_t nTime) {
-	int64_t nOffsetSample = nTime - GetTime();
+void AddTimeData(const CNetAddr& cIp, int64_t llTime) {
+	int64_t llOffsetSample = llTime - GetTime();
 
-	LOCK(cs_nTimeOffset);
+	LOCK(g_cs_nTimeOffset);
 	// Ignore duplicates
 	static set<CNetAddr> setKnown;
-	if (!setKnown.insert(ip).second)
+	if (!setKnown.insert(cIp).second) {
 		return;
+	}
 
 	// Add data
 	static CMedianFilter<int64_t> vTimeOffsets(200, 0);
-	vTimeOffsets.input(nOffsetSample);
-	LogPrint("INFO", "Added time data, samples %d, offset %+d (%+d minutes)\n", vTimeOffsets.size(), nOffsetSample,
-			nOffsetSample / 60);
+	vTimeOffsets.input(llOffsetSample);
+	LogPrint("INFO", "Added time data, samples %d, offset %+d (%+d minutes)\n", vTimeOffsets.size(), llOffsetSample,
+			llOffsetSample / 60);
 	if (vTimeOffsets.size() >= 5 && vTimeOffsets.size() % 2 == 1) {
-		int64_t nMedian = vTimeOffsets.median();
-		vector<int64_t> vSorted = vTimeOffsets.sorted();
+		int64_t llMedian = vTimeOffsets.median();
+		vector<int64_t> vllSorted = vTimeOffsets.sorted();
 		// Only let other nodes change our time by so much
-		if (abs64(nMedian) < 70 * 60) {
-			nTimeOffset = nMedian;
+		if (abs64(llMedian) < 70 * 60) {
+			g_sllTimeOffset = llMedian;
 		} else {
-			nTimeOffset = 0;
+			g_sllTimeOffset = 0;
 
-			static bool fDone;
-			if (!fDone) {
+			static bool bDone;
+			if (!bDone) {
 				// If nobody has a time different than ours but within 5 minutes of ours, give a warning
-				bool fMatch = false;
-				for (int64_t nOffset : vSorted)
-					if (nOffset != 0 && abs64(nOffset) < 5 * 60)
-						fMatch = true;
+				bool bMatch = false;
+				for (int64_t llOffset : vllSorted)
+					if (llOffset != 0 && abs64(llOffset) < 5 * 60) {
+						bMatch = true;
+					}
 
-				if (!fMatch) {
-					fDone = true;
+				if (!bMatch) {
+					bDone = true;
 					string strMessage = _("Warning: Please check that your computer's date and time "
 							"are correct! If your clock is wrong Dacrs will not work properly.");
-					strMiscWarning = strMessage;
+					g_strMiscWarning = strMessage;
 					LogPrint("INFO", "*** %s\n", strMessage);
-					uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_WARNING);
+					g_cUIInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_WARNING);
 				}
 			}
 		}
 		if (SysCfg().IsDebug()) {
-			for (int64_t n : vSorted)
-				LogPrint("INFO", "%+d  ", n);
+			for (int64_t llValue : vllSorted) {
+				LogPrint("INFO", "%+d  ", llValue);
+			}
 			LogPrint("INFO", "|  ");
 		}
-		LogPrint("INFO", "nTimeOffset = %+d  (%+d minutes)\n", nTimeOffset, nTimeOffset / 60);
+		LogPrint("INFO", "nTimeOffset = %+d  (%+d minutes)\n", g_sllTimeOffset, g_sllTimeOffset / 60);
 	}
 }
 
@@ -1206,47 +1201,47 @@ void AddTimeData(const CNetAddr& ip, int64_t nTime) {
 //}
 
 string FormatVersion(int nVersion) {
-	if (nVersion % 100 == 0)
+	if (nVersion % 100 == 0) {
 		return strprintf("%d.%d.%d", nVersion/1000000, (nVersion/10000)%100, (nVersion/100)%100);
-		else
+	} else {
 		return strprintf("%d.%d.%d.%d", nVersion/1000000, (nVersion/10000)%100, (nVersion/100)%100, nVersion%100);
 	}
+}
 
 string FormatFullVersion() {
-	return CLIENT_BUILD;
+	return g_strClientBuild;
 }
 
 // Format the subversion field according to BIP 14 spec (https://en.Dacrs.it/wiki/BIP_0014)
-string FormatSubVersion(const string& name, int nClientVersion, const vector<string>& comments) {
+string FormatSubVersion(const string& strName, int nClientVersion, const vector<string>& vstrComments) {
 	ostringstream ss;
 	ss << "/";
-	ss << name << ":" << FormatVersion(nClientVersion);
-	if (!comments.empty())
-		ss << ":" << "(" << boost::algorithm::join(comments, "; ") << ")";
+	ss << strName << ":" << FormatVersion(nClientVersion);
+	if (!vstrComments.empty()) {
+		ss << ":" << "(" << boost::algorithm::join(vstrComments, "; ") << ")";
+	}
 	ss << "/";
 	return ss.str();
 }
 
-void StringReplace(string &strBase, string strSrc, string strDes)
-{
-	string::size_type pos = 0;
-	string::size_type srcLen = strSrc.size();
-	string::size_type desLen = strDes.size();
-	pos=strBase.find(strSrc, pos);
-	while ((pos != string::npos))
-	{
-		strBase.replace(pos, srcLen, strDes);
-		pos=strBase.find(strSrc, (pos+desLen));
+void StringReplace(string &strBase, string strSrc, string strDes) {
+	string::size_type nPos = 0;
+	string::size_type nSrcLen = strSrc.size();
+	string::size_type nDesLen = strDes.size();
+	nPos = strBase.find(strSrc, nPos);
+	while ((nPos != string::npos)) {
+		strBase.replace(nPos, nSrcLen, strDes);
+		nPos = strBase.find(strSrc, (nPos + nDesLen));
 	}
 }
 
 #ifdef WIN32
-boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate) {
+boost::filesystem::path GetSpecialFolderPath(int nFolder, bool bCreate) {
 	namespace fs = boost::filesystem;
 
 	char pszPath[MAX_PATH] = "";
 
-	if (SHGetSpecialFolderPathA(NULL, pszPath, nFolder, fCreate)) {
+	if (SHGetSpecialFolderPathA(NULL, pszPath, nFolder, bCreate)) {
 		return fs::path(pszPath);
 	}
 
@@ -1279,19 +1274,20 @@ boost::filesystem::path GetTempPath() {
 
 void runCommand(string strCommand) {
 	int nErr = ::system(strCommand.c_str());
-	if (nErr)
+	if (nErr) {
 		LogPrint("INFO", "runCommand error: system(%s) returned %d\n", strCommand, nErr);
+	}
 }
 
-void RenameThread(const char* name) {
+void RenameThread(const char* pszName) {
 #if defined(PR_SET_NAME)
 	// Only the first 15 characters are used (16 - NUL terminator)
-	::prctl(PR_SET_NAME, name, 0, 0, 0);
+	::prctl(PR_SET_NAME, pszName, 0, 0, 0);
 #elif 0 && (defined(__FreeBSD__) || defined(__OpenBSD__))
 	// TODO: This is currently disabled because it needs to be verified to work
 	//       on FreeBSD or OpenBSD first. When verified the '0 &&' part can be
 	//       removed.
-	pthread_set_name_np(pthread_self(), name);
+	pthread_set_name_np(pthread_self(), pszName);
 
 #elif defined(MAC_OSX) && defined(__MAC_OS_X_VERSION_MAX_ALLOWED)
 
@@ -1302,7 +1298,7 @@ void RenameThread(const char* name) {
 
 #else
 	// Prevent warnings for unused parameters...
-	(void) name;
+	(void) pszName;
 #endif
 }
 

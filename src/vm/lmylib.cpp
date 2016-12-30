@@ -434,7 +434,7 @@ static bool GetDataTableDes(lua_State *L, vector<std::shared_ptr < std::vector<u
     		return false;
     	}else{
     		nFlag = (unsigned int)doubleValue;
-    		CDataStream tep(SER_DISK, CLIENT_VERSION);
+    		CDataStream tep(SER_DISK, g_sClientVersion);
     		tep << (nFlag == 0 ? 0 : 1);
     		ret.push_back(std::make_shared<vector<unsigned char>>(tep.begin(), tep.end()));
     }
@@ -536,7 +536,7 @@ static int ExSha256Func(lua_State *L) {
 
 	uint256 rslt = Hash(&retdata.at(0).get()->at(0), &retdata.at(0).get()->at(0) + retdata.at(0).get()->size());
 
-	CDataStream tep(SER_DISK, CLIENT_VERSION);
+	CDataStream tep(SER_DISK, g_sClientVersion);
 	tep << rslt;
 	vector<unsigned char> tep1(tep.begin(), tep.end());
 	return RetRstToLua(L,tep1);
@@ -696,7 +696,7 @@ static int ExGetTxContractsFunc(lua_State *L) {
     }
 
     vector<unsigned char> vec_hash(retdata.at(0).get()->rbegin(), retdata.at(0).get()->rend());
-	CDataStream tep1(vec_hash, SER_DISK, CLIENT_VERSION);
+	CDataStream tep1(vec_hash, SER_DISK, g_sClientVersion);
 	uint256 hash1;
 	tep1 >>hash1;
 
@@ -704,7 +704,7 @@ static int ExGetTxContractsFunc(lua_State *L) {
 
 	if (GetTransaction(pBaseTx, hash1, *pVmRunEvn->GetScriptDB(), false)) {
 		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
-		 return RetRstToLua(L, tx->vContract);
+		 return RetRstToLua(L, tx->m_vchContract);
 	}
 
 	return 0;
@@ -722,7 +722,7 @@ static int ExLogPrintFunc(lua_State *L) {
     {
     	return RetFalse("ExLogPrintFunc para err1");
     }
-	CDataStream tep1(*retdata.at(0), SER_DISK, CLIENT_VERSION);
+	CDataStream tep1(*retdata.at(0), SER_DISK, g_sClientVersion);
 	bool flag ;
 	tep1 >> flag;
 	string pdata((*retdata[1]).begin(), (*retdata[1]).end());
@@ -758,7 +758,7 @@ static int ExGetTxAccountsFunc(lua_State *L) {
 
     vector<unsigned char> vec_hash(retdata.at(0).get()->rbegin(), retdata.at(0).get()->rend());
 
-	CDataStream tep1(vec_hash, SER_DISK, CLIENT_VERSION);
+	CDataStream tep1(vec_hash, SER_DISK, g_sClientVersion);
 	uint256 hash1;
 	tep1 >>hash1;
 //	LogPrint("vm","ExGetTxAccountsFunc:%s",hash1.GetHex().c_str());
@@ -768,7 +768,7 @@ static int ExGetTxAccountsFunc(lua_State *L) {
     int len = 0;
 	if (GetTransaction(pBaseTx, hash1, *pVmRunEvn->GetScriptDB(), false)) {
 		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
-		vector<unsigned char> item = boost::get<CRegID>(tx->srcRegId).GetVec6();
+		vector<unsigned char> item = boost::get<CRegID>(tx->m_cSrcRegId).GetVec6();
 		len = RetRstToLua(L,item);
 	}
 	return len;
@@ -784,7 +784,7 @@ static int ExByteToIntegerFunc(lua_State *L) {
 
     //将数据反向
     vector<unsigned char>  vValue(retdata.at(0).get()->begin(), retdata.at(0).get()->end());
-    CDataStream tep1(vValue, SER_DISK, CLIENT_VERSION);
+    CDataStream tep1(vValue, SER_DISK, g_sClientVersion);
 
     if(retdata.at(0).get()->size() == 4)
     {
@@ -817,7 +817,7 @@ static int ExIntegerToByte4Func(lua_State *L) {
     if(!GetDataInt(L,height)){
     	return RetFalse("ExGetBlockHashFunc para err1");
     }
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << height;
     vector<unsigned char> TMP(tep.begin(),tep.end());
     return RetRstToLua(L,TMP);
@@ -834,7 +834,7 @@ static int ExIntegerToByte8Func(lua_State *L) {
 //		LogPrint("vm", "ExIntegerToByte8Func:%lld\n", llValue);
 	}
 
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << llValue;
     vector<unsigned char> TMP(tep.begin(),tep.end());
     return RetRstToLua(L,TMP);
@@ -867,11 +867,11 @@ static int ExGetAccountPublickeyFunc(lua_State *L) {
 	if (!pVmRunEvn->GetCatchView()->GetAccount(userid, aAccount)) {
 		return RetFalse("ExGetAccountPublickeyFunc para err3");
 	}
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     vector<char> te;
-    tep << aAccount.PublicKey;
+    tep << aAccount.m_cPublicKey;
 //    assert(aAccount.PublicKey.IsFullyValid());
-    if(false == aAccount.PublicKey.IsFullyValid()){
+    if(false == aAccount.m_cPublicKey.IsFullyValid()){
     	return RetFalse("ExGetAccountPublickeyFunc PublicKey invalid");
     }
     tep >>te;
@@ -912,7 +912,7 @@ static int ExQueryAccountBalanceFunc(lua_State *L) {
 	else
 	{
 		uint64_t nbalance = aAccount.GetRawBalance();
-		CDataStream tep(SER_DISK, CLIENT_VERSION);
+		CDataStream tep(SER_DISK, g_sClientVersion);
 		tep << nbalance;
 		vector<unsigned char> TMP(tep.begin(),tep.end());
 		len = RetRstToLua(L,TMP);
@@ -979,14 +979,14 @@ static int ExGetBlockHashFunc(lua_State *L) {
 		return RetFalse("ExGetBlockHashFunc para err2");
 	}
 
-	if(chainActive.Height() < height){	         //获取比当前高度高的数据是不可以的
+	if(g_cChainActive.Height() < height){	         //获取比当前高度高的数据是不可以的
 		return RetFalse("ExGetBlockHashFunc para err3");
 	}
-	CBlockIndex *pindex = chainActive[height];
+	CBlockIndex *pindex = g_cChainActive[height];
 	uint256 blockHash = pindex->GetBlockHash();
 
 //	LogPrint("vm","ExGetBlockHashFunc:%s",HexStr(blockHash).c_str());
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << blockHash;
     vector<unsigned char> TMP(tep.begin(),tep.end());
     return RetRstToLua(L,TMP);
@@ -1257,7 +1257,7 @@ static int ExGetCurTxHash(lua_State *L) {
     	return RetFalse("pVmRunEvn is NULL");
     }
 	uint256 hash = pVmRunEvn->GetCurTxHash();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << hash;
     vector<unsigned char> tep1(tep.begin(),tep.end());
 
@@ -1359,7 +1359,7 @@ static bool GetDataTableWriteOutput(lua_State *L, vector<std::shared_ptr < std::
 		memcpy(temp.money,&vBuf[0],sizeof(temp.money));
 	}
 
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << temp;
     vector<unsigned char> tep1(tep.begin(),tep.end());
 	ret.insert(ret.end(),std::make_shared<vector<unsigned char>>(tep1.begin(), tep1.end()));
@@ -1385,7 +1385,7 @@ static int ExWriteOutputFunc(lua_State *L)
     }
 	vector<CVmOperate> source;
 	CVmOperate temp;
-	int Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
+	int Size = ::GetSerializeSize(temp, SER_NETWORK, g_sProtocolVersion);
 	int datadsize = retdata.at(0)->size();
 	int count = datadsize/Size;
 	if(datadsize%Size != 0)
@@ -1393,7 +1393,7 @@ static int ExWriteOutputFunc(lua_State *L)
 //	  assert(0);
 	 return RetFalse("para err1");
 	}
-	CDataStream ss(*retdata.at(0),SER_DISK, CLIENT_VERSION);
+	CDataStream ss(*retdata.at(0),SER_DISK, g_sClientVersion);
 
 	while(count--)
 	{
@@ -1655,7 +1655,7 @@ static RET_DEFINE ExDeCompressContactFunc(unsigned char *ipara,void *pVmEvn){
 	if (GetTransaction(pBaseTx, hash1, *pVmScript->GetScriptDB(), false)) {
 		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
 		 std::vector<unsigned char> outContact;
-		if (!Decompress(*retdata.at(0), tx->vContract, outContact)) {
+		if (!Decompress(*retdata.at(0), tx->m_vchContract, outContact)) {
 			return RetFalse(string(__FUNCTION__) + "para  err !");
 		}
 		 (*tem.get()).push_back(outContact);
@@ -1676,7 +1676,7 @@ static int GetCurTxPayAmountFunc(lua_State *L){
     }
 	uint64_t lvalue =pVmRunEvn->GetValue();
 
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << lvalue;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     int len = RetRstToLua(L,tep1);
@@ -1740,7 +1740,7 @@ static int GetUserAppAccValue(lua_State *L){
 	{
    		valueData = sptrAcc->getllValues();
 
-		CDataStream tep(SER_DISK, CLIENT_VERSION);
+		CDataStream tep(SER_DISK, g_sClientVersion);
 		tep << valueData;
 		vector<unsigned char> TMP(tep.begin(),tep.end());
 		len = RetRstToLua(L,TMP);
@@ -1811,7 +1811,7 @@ static bool GetDataTableOutAppOperate(lua_State *L, vector<std::shared_ptr < std
 			memcpy(temp.vFundTag,&vBuf[0],temp.FundTaglen);
 		}
     }
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << temp;
     vector<unsigned char> tep1(tep.begin(),tep.end());
 	ret.insert(ret.end(),std::make_shared<vector<unsigned char>>(tep1.begin(), tep1.end()));
@@ -1821,7 +1821,7 @@ static int GetUserAppAccFoudWithTag(lua_State *L){
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 	unsigned int Size(0);
 	CAppFundOperate temp;
-	Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
+	Size = ::GetSerializeSize(temp, SER_NETWORK, g_sProtocolVersion);
 
     if(!GetDataTableOutAppOperate(L,retdata) ||retdata.size() != 1
     	|| retdata.at(0).get()->size() !=Size)
@@ -1835,7 +1835,7 @@ static int GetUserAppAccFoudWithTag(lua_State *L){
     	return RetFalse("pVmRunEvn is NULL");
     }
 
-    CDataStream ss(*retdata.at(0),SER_DISK, CLIENT_VERSION);
+    CDataStream ss(*retdata.at(0),SER_DISK, g_sClientVersion);
     CAppFundOperate userfund;
     ss>>userfund;
 
@@ -1847,7 +1847,7 @@ static int GetUserAppAccFoudWithTag(lua_State *L){
 		if(!sptrAcc->GetAppCFund(fund,userfund.GetFundTagV(),userfund.outheight))	{
 			return RetFalse("GetUserAppAccFoudWithTag get fail");
 		}
-		CDataStream tep(SER_DISK, CLIENT_VERSION);
+		CDataStream tep(SER_DISK, g_sClientVersion);
 		tep << fund.getvalue() ;
 		vector<unsigned char> TMP(tep.begin(),tep.end());
 		len = RetRstToLua(L,TMP);
@@ -1905,7 +1905,7 @@ static bool GetDataTableAssetOperate(lua_State *L, int nIndex, vector<std::share
 			memcpy(temp.vFundTag,&vBuf[0],temp.FundTaglen);
 		}
     }
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << temp;
     vector<unsigned char> tep1(tep.begin(),tep.end());
 	ret.insert(ret.end(),std::make_shared<vector<unsigned char>>(tep1.begin(), tep1.end()));
@@ -1923,7 +1923,7 @@ static int ExWriteOutAppOperateFunc(lua_State *L)
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
 	CAppFundOperate temp;
-	unsigned int Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
+	unsigned int Size = ::GetSerializeSize(temp, SER_NETWORK, g_sProtocolVersion);
 
 	if(!GetDataTableOutAppOperate(L,retdata) ||retdata.size() != 1 || (retdata.at(0).get()->size()%Size) != 0 )
     {
@@ -1937,13 +1937,13 @@ static int ExWriteOutAppOperateFunc(lua_State *L)
     }
 
 	int count = retdata.at(0).get()->size()/Size;
-	CDataStream ss(*retdata.at(0),SER_DISK, CLIENT_VERSION);
+	CDataStream ss(*retdata.at(0),SER_DISK, g_sClientVersion);
 
 	int64_t step =-1;
 	while(count--)
 	{
 		ss >> temp;
-		if(pVmRunEvn->GetComfirHeight() > nFreezeBlackAcctHeight && temp.mMoney < 0) //不能小于0,防止 上层传错金额小于20150904
+		if(pVmRunEvn->GetComfirHeight() > g_sFreezeBlackAcctHeight && temp.mMoney < 0) //不能小于0,防止 上层传错金额小于20150904
 		{
 			return RetFalse("ExWriteOutAppOperateFunc para err2");
 		}
@@ -2026,7 +2026,7 @@ static int ExTransferContactAsset(lua_State *L) {
 		return RetFalse(string(__FUNCTION__)+"para  err3 !");
 	}
 
-	temp.get()->AutoMergeFreezeToFree(script.getHight(), chainActive.Tip()->nHeight);
+	temp.get()->AutoMergeFreezeToFree(script.getHight(), g_cChainActive.Tip()->m_nHeight);
 
 	uint64_t nMoney = temp.get()->getllValues();
 
@@ -2089,7 +2089,7 @@ static int ExTransferSomeAsset(lua_State *L) {
 
 	unsigned int Size(0);
 	CAssetOperate tempAsset;
-	Size = ::GetSerializeSize(tempAsset, SER_NETWORK, PROTOCOL_VERSION);
+	Size = ::GetSerializeSize(tempAsset, SER_NETWORK, g_sProtocolVersion);
 
     if(!GetDataTableAssetOperate(L, -1, retdata) ||retdata.size() != 2|| (retdata.at(1).get()->size()%Size) != 0 || retdata.at(0).get()->size() != 34)
     {
@@ -2101,7 +2101,7 @@ static int ExTransferSomeAsset(lua_State *L) {
     	return RetFalse("pVmRunEvn is NULL");
     }
 
-    CDataStream ss(*retdata.at(1),SER_DISK, CLIENT_VERSION);
+    CDataStream ss(*retdata.at(1),SER_DISK, g_sClientVersion);
     CAssetOperate assetOp;
     ss>>assetOp;
 
@@ -2186,20 +2186,19 @@ static int ExGetBlockTimestamp(lua_State *L) {
     }
 
     if(height <= 0) {
-    	height = chainActive.Height() + height;
+    	height = g_cChainActive.Height() + height;
         if(height < 0) {
         	return RetFalse("ExGetBlcokTimestamp para err2");
         }
     }
 
-
-	CBlockIndex *pindex = chainActive[height];
+	CBlockIndex *pindex = g_cChainActive[height];
 	if(!pindex) {
 		return RetFalse("ExGetBlcokTimestamp get time stamp error");
 	}
 
 	if (lua_checkstack(L, sizeof(lua_Integer))) {
-		lua_pushinteger(L, (lua_Integer) pindex->nTime);
+		lua_pushinteger(L, (lua_Integer) pindex->m_unTime);
 		return 1;
 	}
 

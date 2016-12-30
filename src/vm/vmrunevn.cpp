@@ -51,7 +51,7 @@ bool CVmRunEvn::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& vie
 	m_view = &view;
 	vector<unsigned char> vScript;
 
-	if (Tx.get()->nTxType != CONTRACT_TX) {
+	if (Tx.get()->m_chTxType != EM_CONTRACT_TX) {
 		LogPrint("ERROR", "%s\r\n", "err param");
 //		assert(0);
 		return false;
@@ -59,12 +59,12 @@ bool CVmRunEvn::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& vie
 
 	CTransaction* secure = static_cast<CTransaction*>(Tx.get());
 	
-	if (!m_ScriptDBTip->GetScript(boost::get<CRegID>(secure->desUserId), vScript)) {
-		LogPrint("ERROR", "Script is not Registed %s\r\n", boost::get<CRegID>(secure->desUserId).ToString());
+	if (!m_ScriptDBTip->GetScript(boost::get<CRegID>(secure->m_cDesUserId), vScript)) {
+		LogPrint("ERROR", "Script is not Registed %s\r\n", boost::get<CRegID>(secure->m_cDesUserId).ToString());
 		return false;
 	}
 
-	CDataStream stream(vScript, SER_DISK, CLIENT_VERSION);
+	CDataStream stream(vScript, SER_DISK, g_sClientVersion);
 	try {
 		stream >> vmScript;
 	} catch (exception& e) {
@@ -79,16 +79,16 @@ bool CVmRunEvn::intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& vie
 	}
 	isCheckAccount = vmScript.IsCheckAccount();
 	scriptType = vmScript.getScriptType();//初始化脚本类型
-	if(secure->vContract.size() >= 4*1024 ){
+	if(secure->m_vchContract.size() >= 4*1024 ){
 		LogPrint("ERROR", "%s\r\n", "CVmScriptRun::intial() vContract context size lager 4096");
 		return false;
 	}
 	try {
 		if (0 == scriptType) {
-			pMcu = std::make_shared<CVm8051>(vmScript.Rom, secure->vContract);
+			pMcu = std::make_shared<CVm8051>(vmScript.Rom, secure->m_vchContract);
 			LogPrint("vm", "%s\r\n", "CVmScriptRun::intial() MCU");
 		} else {
-			pLua = std::make_shared<CVmlua>(vmScript.Rom, secure->vContract);
+			pLua = std::make_shared<CVmlua>(vmScript.Rom, secure->m_vchContract);
 			//pVmRunEvn = this; //传CVmRunEvn对象指针给lmylib.cpp库使用
 			LogPrint("vm", "%s\r\n", "CVmScriptRun::intial() LUA");
 		}
@@ -114,15 +114,15 @@ tuple<bool, uint64_t, string> CVmRunEvn::run(shared_ptr<CBaseTransaction>& Tx, C
 	m_ScriptDBTip = &VmDB;
 
 	CTransaction* tx = static_cast<CTransaction*>(Tx.get());
-	if(tx->llFees <= CBaseTransaction::nMinTxFee) {
+	if(tx->m_ullFees <= CBaseTransaction::m_sMinTxFee) {
 		return std::make_tuple (false, 0, string("vm run evn fee too litter\n"));
 	}
-	uint64_t maxstep = ((tx->llFees-CBaseTransaction::nMinTxFee)/ nBurnFactor) * 100;
+	uint64_t maxstep = ((tx->m_ullFees-CBaseTransaction::m_sMinTxFee)/ nBurnFactor) * 100;
 	
 	if(maxstep > MAX_BLOCK_RUN_STEP){
 		maxstep = MAX_BLOCK_RUN_STEP;
 	}
-	LogPrint("vm", "tx hash:%s fees=%lld fuelrate=%lld maxstep:%d\n", Tx->GetHash().GetHex(), tx->llFees, nBurnFactor, maxstep);
+	LogPrint("vm", "tx hash:%s fees=%lld fuelrate=%lld maxstep:%d\n", Tx->GetHash().GetHex(), tx->m_ullFees, nBurnFactor, maxstep);
 	if (!intial(Tx, view, nHeight)) {
 		return std::make_tuple (false, 0, string("VmScript inital Failed\n"));
 	}
@@ -194,7 +194,7 @@ shared_ptr<CAccount> CVmRunEvn::GetNewAccount(shared_ptr<CAccount>& vOldAccount)
 	vector<shared_ptr<CAccount> >::iterator Iter;
 	for (Iter = NewAccont.begin(); Iter != NewAccont.end(); Iter++) {
 		shared_ptr<CAccount> temp = *Iter;
-		if (temp.get()->keyID == vOldAccount.get()->keyID) {
+		if (temp.get()->m_cKeyID == vOldAccount.get()->m_cKeyID) {
 			NewAccont.erase(Iter);
 			return temp;
 		}
@@ -207,7 +207,7 @@ shared_ptr<CAccount> CVmRunEvn::GetAccount(shared_ptr<CAccount>& Account) {
 	vector<shared_ptr<CAccount> >::iterator Iter;
 	for (Iter = RawAccont.begin(); Iter != RawAccont.end(); Iter++) {
 		shared_ptr<CAccount> temp = *Iter;
-		if (Account.get()->keyID == temp.get()->keyID) {
+		if (Account.get()->m_cKeyID == temp.get()->m_cKeyID) {
 			return temp;
 		}
 	}
@@ -256,7 +256,7 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 		if(it.nacctype != regid && it.nacctype != base58addr)
 			return false;
 
-		if (it.opeatortype == ADD_FREE ) {
+		if (it.opeatortype == EM_ADD_FREE ) {
 			memcpy(&operValue,it.money,sizeof(it.money));
 			/*
 			uint64_t temp = addmoey;
@@ -270,7 +270,7 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 				return false;
 			}
 			addmoey = temp;
-		}else if (it.opeatortype == MINUS_FREE) {
+		}else if (it.opeatortype == EM_MINUS_FREE) {
 
 			//vector<unsigned char > accountid(it.accountid,it.accountid+sizeof(it.accountid));
 			vector_unsigned_char accountid = GetAccountID(it);
@@ -279,7 +279,7 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 			CRegID regId(accountid);
 			CTransaction* tx = static_cast<CTransaction*>(listTx.get());
 			/// current tx's script cant't mius other script's regid
-			if(m_ScriptDBTip->HaveScript(regId) && regId != boost::get<CRegID>(tx->desUserId))
+			if(m_ScriptDBTip->HaveScript(regId) && regId != boost::get<CRegID>(tx->m_cDesUserId))
 			{
 				return false;
 			}
@@ -310,7 +310,7 @@ bool CVmRunEvn::CheckOperate(const vector<CVmOperate> &listoperate) {
 			if(regId.IsEmpty() || regId.getKeyID( *m_view) == uint160())
 				return false;
 			//  app only be allowed minus self money
-			if (!m_ScriptDBTip->HaveScript(regId) && it.opeatortype == MINUS_FREE) {
+			if (!m_ScriptDBTip->HaveScript(regId) && it.opeatortype == EM_MINUS_FREE) {
 				return false;
 			}
 		}
@@ -370,7 +370,7 @@ bool CVmRunEvn::CheckAppAcctOperate(CTransaction* tx) {
 	uint64_t sysContractAcct(0);
 	for(auto item : m_output) {
 		vector_unsigned_char vAccountId = GetAccountID(item);
-		if(vAccountId == boost::get<CRegID>(tx->desUserId).GetVec6() && item.opeatortype == MINUS_FREE) {
+		if(vAccountId == boost::get<CRegID>(tx->m_cDesUserId).GetVec6() && item.opeatortype == EM_MINUS_FREE) {
 			uint64_t value;
 			memcpy(&value, item.money, sizeof(item.money));
 			int64_t temp = value;
@@ -398,12 +398,12 @@ bool CVmRunEvn::CheckAppAcctOperate(CTransaction* tx) {
 	 }
 	*/
 	int64_t sysAcctSum = 0;
-	if (!SafeSubtract((int64_t)tx->llValues, (int64_t)sysContractAcct, sysAcctSum)) {
+	if (!SafeSubtract((int64_t)tx->m_ullValues, (int64_t)sysContractAcct, sysAcctSum)) {
 		return false;
 	}
 
 	if(sumValue != (int64_t)sysAcctSum){
-		LogPrint("vm", "CheckAppAcctOperate:addValue=%lld, minusValue=%lld, txValue=%lld, sysContractAcct=%lld sumValue=%lld, sysAcctSum=%lld\n", addValue, minusValue, tx->llValues, sysContractAcct,sumValue, sysAcctSum);
+		LogPrint("vm", "CheckAppAcctOperate:addValue=%lld, minusValue=%lld, txValue=%lld, sysContractAcct=%lld sumValue=%lld, sysAcctSum=%lld\n", addValue, minusValue, tx->m_ullValues, sysContractAcct,sumValue, sysAcctSum);
 		return false;
 	}
 	return true;
@@ -450,7 +450,7 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 			userkeyid = CKeyID(addr);
 			 if(!view.GetAccount(CUserID(userkeyid), *tem.get()))
 			 {
-				 tem->keyID = userkeyid;
+				 tem->m_cKeyID = userkeyid;
 				//return false;                                           /// 未产生过交易记录的账户
 			 }
 		}
@@ -467,7 +467,7 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 		//todolist
 //		if(IsSignatureAccount(vmAccount.get()->regID) || vmAccount.get()->regID == boost::get<CRegID>(tx->appRegId))
 		{
-			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype, value, nCurHeight);
+			ret = vmAccount.get()->OperateAccount((emOperType)it.opeatortype, value, nCurHeight);
 		}
 //		else{
 //			ret = vmAccount.get()->OperateAccount((OperType)it.opeatortype, fund, *m_ScriptDBTip, vAuthorLog,  height, &GetScriptRegID().GetVec6(), true);
@@ -487,21 +487,21 @@ bool CVmRunEvn::OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountVi
 const CRegID& CVmRunEvn::GetScriptRegID()
 {   //获取目的账户ID
 	CTransaction* tx = static_cast<CTransaction*>(listTx.get());
-	return boost::get<CRegID>(tx->desUserId);
+	return boost::get<CRegID>(tx->m_cDesUserId);
 }
 
 const CRegID &CVmRunEvn::GetTxAccount() {
 	CTransaction* tx = static_cast<CTransaction*>(listTx.get());
-	return boost::get<CRegID>(tx->srcRegId);
+	return boost::get<CRegID>(tx->m_cSrcRegId);
 }
 uint64_t CVmRunEvn::GetValue() const{
 	CTransaction* tx = static_cast<CTransaction*>(listTx.get());
-		return tx->llValues;
+		return tx->m_ullValues;
 }
 const vector<unsigned char>& CVmRunEvn::GetTxContact()
 {
 	CTransaction* tx = static_cast<CTransaction*>(listTx.get());
-		return tx->vContract;
+		return tx->m_vchContract;
 }
 int CVmRunEvn::GetComfirHeight()
 {
@@ -624,9 +624,9 @@ Object CVmOperate::ToJson() {
 		string addr(accountid,accountid+sizeof(accountid));
 		obj.push_back(Pair("addr", addr));
 	}
-	if(opeatortype == ADD_FREE) {
+	if(opeatortype == EM_ADD_FREE) {
 		obj.push_back(Pair("opertype", "add"));
-	}else if(opeatortype == MINUS_FREE) {
+	}else if(opeatortype == EM_MINUS_FREE) {
 		obj.push_back(Pair("opertype", "minus"));
 	}
 	if(outheight > 0)

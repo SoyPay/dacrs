@@ -119,12 +119,12 @@ uint64_t CAppUserAccout::GetAllFreezedValues()
 bool CAppUserAccout::AutoMergeFreezeToFree(uint32_t appHeight, int height) {
 
 	int nHeightOrTime = height;
-	if (appHeight >= nBlockTime4AppAccountHeight) {
-		if (height >= nBlockTime4AppAccountHeight) {
-			if (height <= chainActive.Tip()->nHeight) {
-				nHeightOrTime = chainActive[height]->nTime;
+	if (appHeight >= g_sBlockTime4AppAccountHeight) {
+		if (height >= g_sBlockTime4AppAccountHeight) {
+			if (height <= g_cChainActive.Tip()->m_nHeight) {
+				nHeightOrTime = g_cChainActive[height]->m_unTime;
 			} else {
-				nHeightOrTime = chainActive.Tip()->nTime;
+				nHeightOrTime = g_cChainActive.Tip()->m_unTime;
 			}
 		}
 	}

@@ -29,12 +29,12 @@ class CLevelDBBatch {
  public:
 	template<typename K, typename V> void Write(const K& key, const V& value) {
 		leveldb::Slice cSliceKey;
-		CDataStream cDSKey(SER_DISK, CLIENT_VERSION);
+		CDataStream cDSKey(SER_DISK, g_sClientVersion);
 		cDSKey.reserve(cDSKey.GetSerializeSize(key));
 		cDSKey << key;
 
 		if (typeid(key) == typeid(std::vector<unsigned char>)) {
-			CDataStream cDSKeyTemp(cDSKey.begin(), cDSKey.end(), SER_DISK, CLIENT_VERSION);
+			CDataStream cDSKeyTemp(cDSKey.begin(), cDSKey.end(), SER_DISK, g_sClientVersion);
 			vector<unsigned char> vchKey;
 			cDSKeyTemp >> vchKey;
 			int nStartPos = 0;
@@ -44,7 +44,7 @@ class CLevelDBBatch {
 		} else {
 			cSliceKey = leveldb::Slice(&cDSKey[0], cDSKey.size());
 		}
-		CDataStream cDSValue(SER_DISK, CLIENT_VERSION);
+		CDataStream cDSValue(SER_DISK, g_sClientVersion);
 		cDSValue.reserve(cDSValue.GetSerializeSize(value));
 		cDSValue << value;
 		leveldb::Slice slValue(&cDSValue[0], cDSValue.size());
@@ -53,11 +53,11 @@ class CLevelDBBatch {
 
 	template<typename K> void Erase(const K& key) {
 		leveldb::Slice cSliceKey;
-		CDataStream cDSKey(SER_DISK, CLIENT_VERSION);
+		CDataStream cDSKey(SER_DISK, g_sClientVersion);
 		cDSKey.reserve(cDSKey.GetSerializeSize(key));
 		cDSKey << key;
 		if (typeid(key) == typeid(std::vector<unsigned char>)) {
-			CDataStream cDSKeyTemp(cDSKey.begin(), cDSKey.end(), SER_DISK, CLIENT_VERSION);
+			CDataStream cDSKeyTemp(cDSKey.begin(), cDSKey.end(), SER_DISK, g_sClientVersion);
 			vector<unsigned char> vchKey;
 			cDSKeyTemp >> vchKey;
 			int nStartPos = 0;
@@ -83,12 +83,12 @@ class CLevelDBWrapper {
 
     template<typename K, typename V> bool Read(const K& key, V& value) throw(leveldb_error) {
     	leveldb::Slice cSliceKey;
-    	CDataStream cDSKey(SER_DISK, CLIENT_VERSION);
+    	CDataStream cDSKey(SER_DISK, g_sClientVersion);
 
 		cDSKey.reserve(cDSKey.GetSerializeSize(key));
 		cDSKey << key;
 		if (typeid(key) == typeid(std::vector<unsigned char>)) {
-			CDataStream cDSKeyTemp(cDSKey.begin(), cDSKey.end(), SER_DISK, CLIENT_VERSION);
+			CDataStream cDSKeyTemp(cDSKey.begin(), cDSKey.end(), SER_DISK, g_sClientVersion);
 			vector<unsigned char> vchKey;
 			cDSKeyTemp >> vchKey;
 			int nStartPos = 0;
@@ -108,7 +108,7 @@ class CLevelDBWrapper {
             HandleError(cStatus);
         }
         try {
-            CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
+            CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, g_sClientVersion);
             ssValue >> value;
         } catch(std::exception &e) {
             return false;
@@ -124,11 +124,11 @@ class CLevelDBWrapper {
 
     template<typename K> bool Exists(const K& key) throw(leveldb_error) {
     	leveldb::Slice cSliceKey;
-    	CDataStream cDSKey(SER_DISK, CLIENT_VERSION);
+    	CDataStream cDSKey(SER_DISK, g_sClientVersion);
         cDSKey.reserve(cDSKey.GetSerializeSize(key));
         cDSKey << key;
 		if (typeid(key) == typeid(std::vector<unsigned char>)) {
-			CDataStream cDSKeyTemp(cDSKey.begin(), cDSKey.end(), SER_DISK, CLIENT_VERSION);
+			CDataStream cDSKeyTemp(cDSKey.begin(), cDSKey.end(), SER_DISK, g_sClientVersion);
 			vector<unsigned char> vchKey;
 			cDSKeyTemp >> vchKey;
 			int nStartPos = 0;

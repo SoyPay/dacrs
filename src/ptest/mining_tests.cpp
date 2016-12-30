@@ -93,12 +93,12 @@ bool readblock(const string &filePath) {
 	}
 	fseek(fp, 8, SEEK_SET); // skip msgheader/size
 
-	CAutoFile filein = CAutoFile(fp, SER_DISK, CLIENT_VERSION);
+	CAutoFile filein = CAutoFile(fp, SER_DISK, g_sClientVersion);
 	if (!filein){
 		return false;}
 	while (!feof(fp)) {
 		filein >> block;
-		CDataStream cDs(SER_DISK, CLIENT_VERSION);
+		CDataStream cDs(SER_DISK, g_sClientVersion);
 		cDs << block;
 		vector<string> param;
 		param.push_back(HexStr(cDs));
@@ -135,7 +135,7 @@ public:
 		CRegID reg(m_strRegId);
 		vContranct.insert(vContranct.end(), reg.GetVec6().begin(), reg.GetVec6().end());
 		//temp.clear();
-		CDataStream ds(SER_DISK, CLIENT_VERSION);
+		CDataStream ds(SER_DISK, g_sClientVersion);
 		ds << m_llSendValue;
 		vector<unsigned char> temp(ds.begin(), ds.end());
 		//string strSendValue = HexStr(temp);

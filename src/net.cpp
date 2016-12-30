@@ -98,7 +98,7 @@ unsigned short GetListenPort() {
 
 // find 'best' local address for a particular peer
 bool GetLocal(CService &cServiceAddr, const CNetAddr *pAddrPeer) {
-	if (fNoListen) {
+	if (g_bNoListen) {
 		return false;
 	}
 	int nBestScore = -1;
@@ -124,8 +124,8 @@ CAddress GetLocalAddress(const CNetAddr *pAddrPeer) {
 	CService cServiceAddr;
 	if (GetLocal(cServiceAddr, pAddrPeer)) {
 		cAddresRet = CAddress(cServiceAddr);
-		cAddresRet.nServices = g_ullLocalServices;
-		cAddresRet.nTime = GetAdjustedTime();
+		cAddresRet.m_ullServices = g_ullLocalServices;
+		cAddresRet.m_ullTime = GetAdjustedTime();
 	}
 	return cAddresRet;
 }
@@ -447,7 +447,7 @@ CNode* ConnectNode(CAddress cAddrConnect, const char *pszDest) {
 
 	/// debug print
 	LogPrint("net", "trying connection %s lastseen=%.1fhrs\n", pszDest ? pszDest : cAddrConnect.ToString(),
-			pszDest ? 0 : (double )(GetAdjustedTime() - cAddrConnect.nTime) / 3600.0);
+			pszDest ? 0 : (double )(GetAdjustedTime() - cAddrConnect.m_ullTime) / 3600.0);
 
 	// Connect
 	SOCKET hSocket;
@@ -521,10 +521,10 @@ void CNode::PushVersion() {
 	CAddress cAddrYou = (m_cAddress.IsRoutable() && !IsProxy(m_cAddress) ? m_cAddress : CAddress(CService("0.0.0.0", 0)));
 	CAddress cAddrMe = GetLocalAddress(&m_cAddress);
 	RAND_bytes((unsigned char*) &g_ullLocalHostNonce, sizeof(g_ullLocalHostNonce));
-	LogPrint("net", "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%s\n", PROTOCOL_VERSION,
+	LogPrint("net", "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%s\n", g_sProtocolVersion,
 			nBestHeight, cAddrMe.ToString(), cAddrYou.ToString(), m_cAddress.ToString());
-	PushMessage("version", PROTOCOL_VERSION, g_ullLocalServices, llTime, cAddrYou, cAddrMe, g_ullLocalHostNonce,
-			FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, vstrComments), nBestHeight, true);
+	PushMessage("version", g_sProtocolVersion, g_ullLocalServices, llTime, cAddrYou, cAddrMe, g_ullLocalHostNonce,
+			FormatSubVersion(g_strClientName, g_sClientVersion, vstrComments), nBestHeight, true);
 }
 
 map<CNetAddr, int64_t> CNode::m_sBanned;
@@ -644,18 +644,18 @@ int CNetMessage::readHeader(const char *pch, unsigned int nBytes) {
 	}
 
 	// reject messages larger than MAX_SIZE
-	if (m_cMessageHeader.nMessageSize > MAX_SIZE) {
+	if (m_cMessageHeader.m_unMessageSize > g_sMaxSize) {
 		return -1;
 	}
 	// switch state to reading message data
 	m_bInData = true;
-	m_cDSRecv.resize(m_cMessageHeader.nMessageSize);
+	m_cDSRecv.resize(m_cMessageHeader.m_unMessageSize);
 
 	return nCopy;
 }
 
 int CNetMessage::readData(const char *pch, unsigned int nBytes) {
-	unsigned int nRemaining = m_cMessageHeader.nMessageSize - m_unDataPos;
+	unsigned int nRemaining = m_cMessageHeader.m_unMessageSize - m_unDataPos;
 	unsigned int nCopy = min(nRemaining, nBytes);
 
 	memcpy(&m_cDSRecv[m_unDataPos], pch, nCopy);
@@ -765,8 +765,8 @@ void ThreadSocketHandler() {
 		}
 		if (g_vNodes.size() != unPrevNodeCount) {
 			unPrevNodeCount = g_vNodes.size();
-			uiInterface.NotifyNumConnectionsChanged(unPrevNodeCount);
-			uiInterface.NotifyMessage(strprintf("connections=%d", unPrevNodeCount));
+			g_cUIInterface.NotifyNumConnectionsChanged(unPrevNodeCount);
+			g_cUIInterface.NotifyMessage(strprintf("connections=%d", unPrevNodeCount));
 		}
 
 		//
@@ -1096,7 +1096,7 @@ void ThreadDNSAddressSeed() {
 				for (auto & ip : vcIPs) {
 					int nOneDay = 24 * 3600;
 					CAddress cAddr = CAddress(CService(ip, SysCfg().GetDefaultPort()));
-					cAddr.nTime = GetTime() - 3 * nOneDay - GetRand(4 * nOneDay); // use a random age between 3 and 7 days old
+					cAddr.m_ullTime = GetTime() - 3 * nOneDay - GetRand(4 * nOneDay); // use a random age between 3 and 7 days old
 					vcAdd.push_back(cAddr);
 					nFound++;
 				}
@@ -1212,7 +1212,7 @@ void ThreadOpenConnections() {
 				continue;
 			}
 			// only consider very recently tried nodes after 30 failed attempts
-			if (llANow - cAddr.nLastTry < 600 && nTries < 30) {
+			if (llANow - cAddr.m_llLastTry < 600 && nTries < 30) {
 				continue;
 			}
 
@@ -1267,7 +1267,7 @@ void ThreadOpenAddedConnections() {
 		list<vector<CService> > lservAddressesToAdd(0);
 		for (auto& strAddNode : lAddresses) {
 			vector<CService> vservNode(0);
-			if (Lookup(strAddNode.c_str(), vservNode, SysCfg().GetDefaultPort(), fNameLookup, 0)) {
+			if (Lookup(strAddNode.c_str(), vservNode, SysCfg().GetDefaultPort(), g_bNameLookup, 0)) {
 				lservAddressesToAdd.push_back(vservNode);
 				{
 					LOCK(g_cs_setservAddNodeAddresses);
@@ -1724,7 +1724,7 @@ void CNode::Fuzz(int nChance) {
 }
 
 void RelayTransaction(CBaseTransaction *pBaseTx, const uint256& cHash) {
-	CDataStream cDS(SER_NETWORK, PROTOCOL_VERSION);
+	CDataStream cDS(SER_NETWORK, g_sProtocolVersion);
 	cDS.reserve(10000);
 	std::shared_ptr<CBaseTransaction> pTx = pBaseTx->GetNewInstance();
 	cDS << pTx;
@@ -1753,11 +1753,11 @@ void RelayTransaction(CBaseTransaction *pBaseTx, const uint256& cHash, const CDa
 		if (pnode->m_pBloomFilter) {
 			if (pnode->m_pBloomFilter->IsRelevantAndUpdate(pBaseTx, cHash)) {
 				pnode->PushInventory(inv);
-				LogPrint("sendtx", "hash:%s time:%ld\n", inv.hash.GetHex(), GetTime());
+				LogPrint("sendtx", "hash:%s time:%ld\n", inv.m_cHash.GetHex(), GetTime());
 			}
 		} else {
 			pnode->PushInventory(inv);
-			LogPrint("sendtx", "hash:%s time:%ld\n", inv.hash.GetHex(), GetTime());
+			LogPrint("sendtx", "hash:%s time:%ld\n", inv.m_cHash.GetHex(), GetTime());
 		}
 	}
 }
@@ -1774,7 +1774,7 @@ bool CAddrDB::Write(const CAddrMan& cAddr) {
 	string strTempFileName = strprintf("peers.dat.%04x", randv);
 
 	// serialize addresses, checksum data up to that point, then append csum
-	CDataStream cDSPeers(SER_DISK, CLIENT_VERSION);
+	CDataStream cDSPeers(SER_DISK, g_sClientVersion);
 	cDSPeers << FLATDATA(SysCfg().MessageStart());
 	cDSPeers << cAddr;
 	uint256 cHash = Hash(cDSPeers.begin(), cDSPeers.end());
@@ -1783,7 +1783,7 @@ bool CAddrDB::Write(const CAddrMan& cAddr) {
 	// open temp output file, and associate with CAutoFile
 	boost::filesystem::path tempPath = GetDataDir() / strTempFileName;
 	FILE *pFile = fopen(tempPath.string().c_str(), "wb");
-	CAutoFile cAutoFileout = CAutoFile(pFile, SER_DISK, CLIENT_VERSION);
+	CAutoFile cAutoFileout = CAutoFile(pFile, SER_DISK, g_sClientVersion);
 	if (!cAutoFileout) {
 		return ERRORMSG("%s : Failed to open file %s", __func__, tempPath.string());
 	}
@@ -1807,7 +1807,7 @@ bool CAddrDB::Write(const CAddrMan& cAddr) {
 bool CAddrDB::Read(CAddrMan& cAddr) {
 	// open input file, and associate with CAutoFile
 	FILE *PFile = fopen(m_pathAddr.string().c_str(), "rb");
-	CAutoFile cAutoFilein = CAutoFile(PFile, SER_DISK, CLIENT_VERSION);
+	CAutoFile cAutoFilein = CAutoFile(PFile, SER_DISK, g_sClientVersion);
 	if (!cAutoFilein) {
 		return ERRORMSG("%s : Failed to open file %s", __func__, m_pathAddr.string());
 	}
@@ -1832,7 +1832,7 @@ bool CAddrDB::Read(CAddrMan& cAddr) {
 	}
 	cAutoFilein.fclose();
 
-	CDataStream cDSPeers(vchData, SER_DISK, CLIENT_VERSION);
+	CDataStream cDSPeers(vchData, SER_DISK, g_sClientVersion);
 	// verify stored checksum matches input data
 	uint256 hashTmp = Hash(cDSPeers.begin(), cDSPeers.end());
 	if (cHashIn != hashTmp) {

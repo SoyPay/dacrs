@@ -91,16 +91,16 @@ double GuessVerificationProgress(CBlockIndex *pBlockIndex, bool bSigchecks) {
 	// fSigcheckVerificationFactor per transaction after.
 	const CCheckPointData &cCheckPointData = Checkpoints();
 
-	if (pBlockIndex->nChainTx <= cCheckPointData.llTransactionsLastCheckpoint) {
-		double dCheapBefore = pBlockIndex->nChainTx;
-		double dCheapAfter 	= cCheckPointData.llTransactionsLastCheckpoint - pBlockIndex->nChainTx;
+	if (pBlockIndex->m_unChainTx <= cCheckPointData.llTransactionsLastCheckpoint) {
+		double dCheapBefore = pBlockIndex->m_unChainTx;
+		double dCheapAfter 	= cCheckPointData.llTransactionsLastCheckpoint - pBlockIndex->m_unChainTx;
 		double dExpensiveAfter = (llNow - cCheckPointData.llTimeLastCheckpoint) / 86400.0 * cCheckPointData.dTransactionsPerDay;
 		dWorkBefore = dCheapBefore;
 		dWorkAfter 	= dCheapAfter + dExpensiveAfter * dSigcheckVerificationFactor;
 	} else {
 		double dCheapBefore 	= cCheckPointData.llTransactionsLastCheckpoint;
-		double dExpensiveBefore = pBlockIndex->nChainTx - cCheckPointData.llTransactionsLastCheckpoint;
-		double dExpensiveAfter 	= (llNow - pBlockIndex->nTime) / 86400.0 * cCheckPointData.dTransactionsPerDay;
+		double dExpensiveBefore = pBlockIndex->m_unChainTx - cCheckPointData.llTransactionsLastCheckpoint;
+		double dExpensiveAfter 	= (llNow - pBlockIndex->m_unTime) / 86400.0 * cCheckPointData.dTransactionsPerDay;
 		dWorkBefore = dCheapBefore + dExpensiveBefore * dSigcheckVerificationFactor;
 		dWorkAfter 	= dExpensiveAfter * dSigcheckVerificationFactor;
 	}

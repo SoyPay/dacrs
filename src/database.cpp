@@ -146,7 +146,7 @@ CAccountViewCache::CAccountViewCache(CAccountView &cAccountView, bool bDummy) :
 
 bool CAccountViewCache::GetAccount(const CKeyID &cKeyId, CAccount &cAccount) {
 	if (m_mapCacheAccounts.count(cKeyId)) {
-		if (m_mapCacheAccounts[cKeyId].keyID != uint160()) {
+		if (m_mapCacheAccounts[cKeyId].m_cKeyID != uint160()) {
 			cAccount = m_mapCacheAccounts[cKeyId];
 			return true;
 		} else {
@@ -204,7 +204,7 @@ bool CAccountViewCache::SetBestBlock(const uint256 &cHashBlockIn) {
 bool CAccountViewCache::BatchWrite(const map<CKeyID, CAccount> &mapAccounts,
 		const map<vector<unsigned char>, CKeyID> &mapKeyIds, const uint256 &cHashBlockIn) {
 	for (map<CKeyID, CAccount>::const_iterator it = mapAccounts.begin(); it != mapAccounts.end(); ++it) {
-		if (uint160() == it->second.keyID) {
+		if (uint160() == it->second.m_cKeyID) {
 			m_pBaseAccountView->EraseAccount(it->first);
 			m_mapCacheAccounts.erase(it->first);
 		} else {
@@ -224,10 +224,10 @@ bool CAccountViewCache::BatchWrite(const map<CKeyID, CAccount> &mapAccounts,
 bool CAccountViewCache::BatchWrite(const vector<CAccount> &vcAccounts) {
 	for (vector<CAccount>::const_iterator it = vcAccounts.begin(); it != vcAccounts.end(); ++it) {
 		if (it->IsEmptyValue() && !it->IsRegister()) {
-			m_mapCacheAccounts[it->keyID] = *it;
-			m_mapCacheAccounts[it->keyID].keyID = uint160();
+			m_mapCacheAccounts[it->m_cKeyID] = *it;
+			m_mapCacheAccounts[it->m_cKeyID].m_cKeyID = uint160();
 		} else {
-			m_mapCacheAccounts[it->keyID] = *it;
+			m_mapCacheAccounts[it->m_cKeyID] = *it;
 		}
 	}
 	return true;
@@ -235,12 +235,12 @@ bool CAccountViewCache::BatchWrite(const vector<CAccount> &vcAccounts) {
 
 bool CAccountViewCache::EraseAccount(const CKeyID &cKeyId) {
 	if (m_mapCacheAccounts.count(cKeyId)) {
-		m_mapCacheAccounts[cKeyId].keyID = uint160();
+		m_mapCacheAccounts[cKeyId].m_cKeyID = uint160();
 	}
 	else {
 		CAccount account;
 		if (m_pBaseAccountView->GetAccount(cKeyId, account)) {
-			account.keyID = uint160();
+			account.m_cKeyID = uint160();
 			m_mapCacheAccounts[cKeyId] = account;
 		}
 	}
@@ -302,7 +302,7 @@ bool CAccountViewCache::GetAccount(const vector<unsigned char> &vchAccountId, CA
 		if (keyId != uint160()) {
 			if (m_mapCacheAccounts.count(keyId)) {
 				cAccount = m_mapCacheAccounts[keyId];
-				if (cAccount.keyID != uint160()) {  // 判断此帐户是否被删除了
+				if (cAccount.m_cKeyID != uint160()) {  // 判断此帐户是否被删除了
 					return true;
 				} else {
 					return false;   //已删除返回false
@@ -319,7 +319,7 @@ bool CAccountViewCache::GetAccount(const vector<unsigned char> &vchAccountId, CA
 			m_mapCacheKeyIds[vchAccountId] = keyId;
 			if (m_mapCacheAccounts.count(keyId) > 0) {
 				cAccount = m_mapCacheAccounts[keyId];
-				if (cAccount.keyID != uint160()) { // 判断此帐户是否被删除了
+				if (cAccount.m_cKeyID != uint160()) { // 判断此帐户是否被删除了
 					return true;
 				} else {
 					return false;   //已删除返回false
@@ -454,7 +454,7 @@ bool CAccountViewCache::GetRegId(const CUserID& cUserId, CRegID& cRegId) const {
 		return true;
 	}
 	if (tempView.GetAccount(cUserId, account)) {
-		cRegId = account.regID;
+		cRegId = account.m_cRegID;
 		return !cRegId.IsEmpty();
 	}
 
@@ -473,8 +473,8 @@ int64_t CAccountViewCache::GetRawBalance(const CUserID& cUserId) const {
 }
 
 unsigned int CAccountViewCache::GetCacheSize() {
-	return ::GetSerializeSize(m_mapCacheAccounts, SER_DISK, CLIENT_VERSION)
-			+ ::GetSerializeSize(m_mapCacheKeyIds, SER_DISK, CLIENT_VERSION);
+	return ::GetSerializeSize(m_mapCacheAccounts, SER_DISK, g_sClientVersion)
+			+ ::GetSerializeSize(m_mapCacheKeyIds, SER_DISK, g_sClientVersion);
 }
 
 Object CAccountViewCache::ToJosnObj() const {
@@ -537,11 +537,11 @@ bool CScriptDBView::GetScriptData(const int nCurBlockHeight, const vector<unsign
 	return false;
 }
 
-bool CScriptDBView::ReadTxIndex(const uint256 &cTxId, CDiskTxPos &cDiskTxPos) {
+bool CScriptDBView::ReadTxIndex(const uint256 &cTxId, ST_DiskTxPos &cDiskTxPos) {
 	return false;
 }
 
-bool CScriptDBView::WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list,
+bool CScriptDBView::WriteTxIndex(const vector<pair<uint256, ST_DiskTxPos> > &list,
 		vector<CScriptDBOperLog> &vTxIndexOperDB) {
 	return false;
 }
@@ -608,11 +608,11 @@ bool CScriptDBViewBacked::GetScriptData(const int nCurBlockHeight, const vector<
 	return m_pBase->GetScriptData(nCurBlockHeight, vchScriptId, nIndex, vchScriptKey, vchScriptData);
 }
 
-bool CScriptDBViewBacked::ReadTxIndex(const uint256 &cTxId, CDiskTxPos &cDiskTxPos) {
+bool CScriptDBViewBacked::ReadTxIndex(const uint256 &cTxId, ST_DiskTxPos &cDiskTxPos) {
 	return m_pBase->ReadTxIndex(cTxId, cDiskTxPos);
 }
 
-bool CScriptDBViewBacked::WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list,
+bool CScriptDBViewBacked::WriteTxIndex(const vector<pair<uint256, ST_DiskTxPos> > &list,
 		vector<CScriptDBOperLog> &vTxIndexOperDB) {
 	return m_pBase->WriteTxIndex(list, vTxIndexOperDB);
 }
@@ -685,7 +685,7 @@ bool CScriptDBViewCache::UndoScriptData(const vector<unsigned char> &vchKey, con
 			GetData(vchKey, vOldValue);
 		}
 		vScriptCountKey.insert(vScriptCountKey.end(), vScriptId.begin(), vScriptId.end());
-		CDataStream ds(SER_DISK, CLIENT_VERSION);
+		CDataStream ds(SER_DISK, g_sClientVersion);
 
 		int nCount(0);
 		if (vchValue.empty()) {   //key所对应的值由非空设置为空，计数减1
@@ -888,18 +888,18 @@ bool CScriptDBViewCache::Flush() {
 }
 
 unsigned int CScriptDBViewCache::GetCacheSize() {
-	return ::GetSerializeSize(m_mapDatas, SER_DISK, CLIENT_VERSION);
+	return ::GetSerializeSize(m_mapDatas, SER_DISK, g_sClientVersion);
 }
 
 bool CScriptDBViewCache::WriteTxOutPut(const uint256 &cTxId, const vector<CVmOperate> &vcOutput,
 		CScriptDBOperLog &cScriptDBOperLog) {
 	vector<unsigned char> vchKey = { 'o', 'u', 't', 'p', 'u', 't' };
-	CDataStream cDS1(SER_DISK, CLIENT_VERSION);
+	CDataStream cDS1(SER_DISK, g_sClientVersion);
 	cDS1 << cTxId;
 	vchKey.insert(vchKey.end(), cDS1.begin(), cDS1.end());
 
 	vector<unsigned char> vchValue;
-	CDataStream cDS(SER_DISK, CLIENT_VERSION);
+	CDataStream cDS(SER_DISK, g_sClientVersion);
 	cDS << vcOutput;
 	vchValue.assign(cDS.begin(), cDS.end());
 
@@ -919,7 +919,7 @@ bool CScriptDBViewCache::SetTxHashByAddress(const CKeyID &keyId, int nHeight, in
 	GetData(vchKey, vchOldValue);
 	cScriptDBOperLog = CScriptDBOperLog(vchKey, vchOldValue);
 
-	CDataStream cDS1(SER_DISK, CLIENT_VERSION);
+	CDataStream cDS1(SER_DISK, g_sClientVersion);
 	cDS1 << keyId;
 	cDS1 << nHeight;
 	cDS1 << nIndex;
@@ -934,7 +934,7 @@ bool CScriptDBViewCache::GetTxHashByAddress(const CKeyID &cKeyId, int nHeight,
 	m_pBase->GetTxHashByAddress(cKeyId, nHeight, mapTxHash);
 
 	vector<unsigned char> vchPreKey = { 'A', 'D', 'D', 'R' };
-	CDataStream cDataStream(SER_DISK, CLIENT_VERSION);
+	CDataStream cDataStream(SER_DISK, g_sClientVersion);
 	cDataStream << cKeyId;
 	cDataStream << nHeight;
 	vchPreKey.insert(vchPreKey.end(), cDataStream.begin(), cDataStream.end());
@@ -964,7 +964,7 @@ bool CScriptDBViewCache::GetAllScriptAcc(const CRegID& cRegId,
 
 bool CScriptDBViewCache::ReadTxOutPut(const uint256 &cTxId, vector<CVmOperate> &vcOutput) {
 	vector<unsigned char> vchKey = { 'o', 'u', 't', 'p', 'u', 't' };
-	CDataStream cDataStream(SER_DISK, CLIENT_VERSION);
+	CDataStream cDataStream(SER_DISK, g_sClientVersion);
 	cDataStream << cTxId;
 	vchKey.insert(vchKey.end(), cDataStream.begin(), cDataStream.end());
 	vector<unsigned char> vValue;
@@ -972,15 +972,15 @@ bool CScriptDBViewCache::ReadTxOutPut(const uint256 &cTxId, vector<CVmOperate> &
 		return false;
 	}
 
-	CDataStream cDS(vValue, SER_DISK, CLIENT_VERSION);
+	CDataStream cDS(vValue, SER_DISK, g_sClientVersion);
 	cDS >> vcOutput;
 
 	return true;
 }
 
 
-bool CScriptDBViewCache::ReadTxIndex(const uint256 &cTxId, CDiskTxPos &cDiskTxPos) {
-	CDataStream cDS(SER_DISK, CLIENT_VERSION);
+bool CScriptDBViewCache::ReadTxIndex(const uint256 &cTxId, ST_DiskTxPos &cDiskTxPos) {
+	CDataStream cDS(SER_DISK, g_sClientVersion);
 	cDS << cTxId;
 	vector<unsigned char> vchTxHash = { 'T' };
 	vchTxHash.insert(vchTxHash.end(), cDS.begin(), cDS.end());
@@ -991,35 +991,35 @@ bool CScriptDBViewCache::ReadTxIndex(const uint256 &cTxId, CDiskTxPos &cDiskTxPo
 			return false;
 		}
 		vTxPos = m_mapDatas[vchTxHash];
-		CDataStream dsPos(vTxPos, SER_DISK, CLIENT_VERSION);
+		CDataStream dsPos(vTxPos, SER_DISK, g_sClientVersion);
 		dsPos >> cDiskTxPos;
 	} else {
 		if (!GetData(vchTxHash, vTxPos)) {
 			return false;
 		}
-		CDataStream dsPos(vTxPos, SER_DISK, CLIENT_VERSION);
+		CDataStream dsPos(vTxPos, SER_DISK, g_sClientVersion);
 		dsPos >> cDiskTxPos;
 	}
 
 	return true;
 }
 
-bool CScriptDBViewCache::WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list,
+bool CScriptDBViewCache::WriteTxIndex(const vector<pair<uint256, ST_DiskTxPos> > &list,
 		vector<CScriptDBOperLog> &vTxIndexOperDB) {
-	for (vector<pair<uint256, CDiskTxPos> >::const_iterator it = list.begin(); it != list.end(); it++) {
+	for (vector<pair<uint256, ST_DiskTxPos> >::const_iterator it = list.begin(); it != list.end(); it++) {
 		LogPrint("txindex", "txhash:%s dispos: nFile=%d, nPos=%d nTxOffset=%d\n", it->first.GetHex(), it->second.nFile,
-				it->second.nPos, it->second.nTxOffset);
-		CDataStream cDS(SER_DISK, CLIENT_VERSION);
+				it->second.unPos, it->second.m_unTxOffset);
+		CDataStream cDS(SER_DISK, g_sClientVersion);
 		cDS << it->first;
 		vector<unsigned char> vchTxHash = { 'T' };
 		vchTxHash.insert(vchTxHash.end(), cDS.begin(), cDS.end());
 		vector<unsigned char> vchTxPos;
-		CDataStream cDSPos(SER_DISK, CLIENT_VERSION);
+		CDataStream cDSPos(SER_DISK, g_sClientVersion);
 		cDSPos << it->second;
 		vchTxPos.insert(vchTxPos.end(), cDSPos.begin(), cDSPos.end());
 		CScriptDBOperLog cTxIndexOper;
-		cTxIndexOper.vKey = vchTxHash;
-		GetData(vchTxHash, cTxIndexOper.vValue);
+		cTxIndexOper.m_vchKey = vchTxHash;
+		GetData(vchTxHash, cTxIndexOper.m_vchValue);
 		vTxIndexOperDB.push_back(cTxIndexOper);
 		if (!SetData(vchTxHash, vchTxPos)) {
 			return false;
@@ -1482,7 +1482,7 @@ bool CScriptDBViewCache::GetScriptCount(int &nCount) {
 	if (!GetData(vchScriptKey, vchValue)) {
 		return false;
 	}
-	CDataStream cDS(vchValue, SER_DISK, CLIENT_VERSION);
+	CDataStream cDS(vchValue, SER_DISK, g_sClientVersion);
 	cDS >> nCount;
 
 	return true;
@@ -1493,7 +1493,7 @@ bool CScriptDBViewCache::SetScriptCount(const int nCount) {
 	vector<unsigned char> vchValue;
 	vchValue.clear();
 	if (nCount > 0) {
-		CDataStream cDS(SER_DISK, CLIENT_VERSION);
+		CDataStream cDS(SER_DISK, g_sClientVersion);
 		cDS << nCount;
 		vchValue.insert(vchValue.end(), cDS.begin(), cDS.end());
 	} else if (nCount < 0) {
@@ -1529,7 +1529,7 @@ bool CScriptDBViewCache::GetScriptDataCount(const vector<unsigned char> &vchScri
 	if (!GetData(vchScriptKey, vchValue)) {
 		return false;
 	}
-	CDataStream cDS(vchValue, SER_DISK, CLIENT_VERSION);
+	CDataStream cDS(vchValue, SER_DISK, g_sClientVersion);
 	cDS >> nCount;
 
 	return true;
@@ -1540,7 +1540,7 @@ bool CScriptDBViewCache::SetScriptDataCount(const vector<unsigned char> &vchScri
 	vector<unsigned char> vchValue;
 	vchValue.clear();
 	if (nCount > 0) {
-		CDataStream cDS(SER_DISK, CLIENT_VERSION);
+		CDataStream cDS(SER_DISK, g_sClientVersion);
 		cDS << nCount;
 		vchValue.insert(vchValue.end(), cDS.begin(), cDS.end());
 	} else if (nCount < 0) {
@@ -1658,7 +1658,7 @@ bool CScriptDBViewCache::SetScriptData(const CRegID &cRegID, const vector<unsign
 bool CScriptDBViewCache::SetTxRelAccout(const uint256 &cTxHash, const set<CKeyID> &RelAccount) {
 	vector<unsigned char> vchKey = { 't', 'x' };
 	vector<unsigned char> vchValue;
-	CDataStream cDS(SER_DISK, CLIENT_VERSION);
+	CDataStream cDS(SER_DISK, g_sClientVersion);
 	cDS << cTxHash;
 	vchKey.insert(vchKey.end(), cDS.begin(), cDS.end());
 	cDS.clear();
@@ -1671,7 +1671,7 @@ bool CScriptDBViewCache::SetTxRelAccout(const uint256 &cTxHash, const set<CKeyID
 bool CScriptDBViewCache::GetTxRelAccount(const uint256 &cTxHash, set<CKeyID> &RelAccount) {
 	vector<unsigned char> vchKey = { 't', 'x' };
 	vector<unsigned char> vchValue;
-	CDataStream cDS(SER_DISK, CLIENT_VERSION);
+	CDataStream cDS(SER_DISK, g_sClientVersion);
 	cDS << cTxHash;
 	vchKey.insert(vchKey.end(), cDS.begin(), cDS.end());
 	if (!GetData(vchKey, vchValue)) {
@@ -1690,7 +1690,7 @@ bool CScriptDBViewCache::EraseTxRelAccout(const uint256 &cTxHash) {
 	vector<unsigned char> vchKey = { 't', 'x' };
 	vector<unsigned char> vchValue;
 	vchValue.clear();
-	CDataStream cDS(SER_DISK, CLIENT_VERSION);
+	CDataStream cDS(SER_DISK, g_sClientVersion);
 	cDS << cTxHash;
 	vchKey.insert(vchKey.end(), cDS.begin(), cDS.end());
 	SetData(vchKey, vchValue);
@@ -1954,7 +1954,7 @@ bool CScriptDBViewCache::GetScriptAcc(const CRegID &cRegId, const vector<unsigne
 	if (!GetData(vchScriptKey, vchValue)) {
 		return false;
 	}
-	CDataStream cDS(vchValue, SER_DISK, CLIENT_VERSION);
+	CDataStream cDS(vchValue, SER_DISK, g_sClientVersion);
 	cDS >> cAppUserAccOut;
 
 	return true;
@@ -1969,11 +1969,11 @@ bool CScriptDBViewCache::SetScriptAcc(const CRegID &cRegId, const CAppUserAccout
 	vchScriptKey.push_back('_');
 	vchScriptKey.insert(vchScriptKey.end(), vchAccKey.begin(), vchAccKey.end());
 	vector<unsigned char> vValue;
-	cScriptDBOperLog.vKey = vchScriptKey;
+	cScriptDBOperLog.m_vchKey = vchScriptKey;
 	if (GetData(vchScriptKey, vValue)) {
-		cScriptDBOperLog.vValue = vValue;
+		cScriptDBOperLog.m_vchValue = vValue;
 	}
-	CDataStream cDS(SER_DISK, CLIENT_VERSION);
+	CDataStream cDS(SER_DISK, g_sClientVersion);
 	cDS << cAppUserAccIn;
 	vValue.clear();
 	vValue.insert(vValue.end(), cDS.begin(), cDS.end());

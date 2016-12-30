@@ -135,7 +135,7 @@ Value signmessage(const Array& params, bool bHelp)
 		throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
 	}
 	CHashWriter cSs(SER_GETHASH, 0);
-	cSs << strMessageMagic;
+	cSs << g_strMessageMagic;
 	cSs << strMessage;
 
 	vector<unsigned char> vchSig;
@@ -197,7 +197,7 @@ Value sendtoaddresswithfee(const Array& params, bool bHelp)
 		}
 
 		llAmount = AmountToRawValue(params[2]);
-		if (pAccountViewTip->GetRawBalance(cSendKeyId) <= llAmount + SysCfg().GetTxFee()) {
+		if (g_pAccountViewTip->GetRawBalance(cSendKeyId) <= llAmount + SysCfg().GetTxFee()) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM address not enough coins");
 		}
 		llFee = AmountToRawValue(params[3]);
@@ -216,7 +216,7 @@ Value sendtoaddresswithfee(const Array& params, bool bHelp)
 		}
 		llFee = AmountToRawValue(params[2]);
 		for (auto &te : sKeyid) {
-			if (pAccountViewTip->GetRawBalance(te) >= llAmount + SysCfg().GetTxFee()) {
+			if (g_pAccountViewTip->GetRawBalance(te) >= llAmount + SysCfg().GetTxFee()) {
 				cSendKeyId = te;
 				break;
 			}
@@ -229,22 +229,22 @@ Value sendtoaddresswithfee(const Array& params, bool bHelp)
 
 	auto SendMoney = [&](const CRegID &send, const CUserID &rsv, int64_t nValue, int64_t llFee) {
 		CTransaction cTx;
-		cTx.srcRegId = send;
-		cTx.desUserId = rsv;
-		cTx.llValues = nValue;
+		cTx.m_cSrcRegId = send;
+		cTx.m_cDesUserId = rsv;
+		cTx.m_ullValues = nValue;
 		if (0 == llFee) {
-			cTx.llFees = SysCfg().GetTxFee();
+			cTx.m_ullFees = SysCfg().GetTxFee();
 		} else {
-			cTx.llFees = llFee;
+			cTx.m_ullFees = llFee;
 		}
-		cTx.nValidHeight = chainActive.Tip()->nHeight;
+		cTx.m_nValidHeight = g_cChainActive.Tip()->m_nHeight;
 
 		CKeyID keID;
-		if(!pAccountViewTip->GetKeyId(send,keID)) {
+		if(!g_pAccountViewTip->GetKeyId(send,keID)) {
 			return std::make_tuple (false,"key or keID failed");
 		}
 
-		if (!g_pwalletMain->Sign(keID,cTx.SignatureHash(), cTx.signature)) {
+		if (!g_pwalletMain->Sign(keID,cTx.SignatureHash(), cTx.m_vchSignature)) {
 			return std::make_tuple (false,"Sign failed");
 		}
 		std::tuple<bool,string> ret = g_pwalletMain->CommitTransaction((CBaseTransaction *) &cTx);
@@ -258,12 +258,12 @@ Value sendtoaddresswithfee(const Array& params, bool bHelp)
 	CRegID cSendReg;
 	CRegID cRevReg;
 
-	if (!pAccountViewTip->GetRegId(CUserID(cSendKeyId), cSendReg)) {
+	if (!g_pAccountViewTip->GetRegId(CUserID(cSendKeyId), cSendReg)) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 	}
 
 	std::tuple<bool, string> ret;
-	if (pAccountViewTip->GetRegId(CUserID(cRevKeyId), cRevReg)) {
+	if (g_pAccountViewTip->GetRegId(CUserID(cRevKeyId), cRevReg)) {
 		ret = SendMoney(cSendReg, cRevReg, llAmount, llFee);
 	} else {
 		ret = SendMoney(cSendReg, CUserID(cRevKeyId), llAmount, llFee);
@@ -333,12 +333,12 @@ Value sendtoaddressraw(const Array& params, bool bHelp)
 	if (!GetUserID(params[2].get_str(), send)) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM Invalid send address");
 	}
-	if (!pAccountViewTip->GetKeyId(send, cSendKeyId)) {
+	if (!g_pAccountViewTip->GetKeyId(send, cSendKeyId)) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Get CKeyID failed from CUserID");
 	}
 	if (send.type() == typeid(CKeyID)) {
 		CRegID cRegId;
-		if (!pAccountViewTip->GetRegId(send, cRegId)) {
+		if (!g_pAccountViewTip->GetRegId(send, cRegId)) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "CKeyID is not registed ");
 		}
 		send = cRegId;
@@ -350,24 +350,24 @@ Value sendtoaddressraw(const Array& params, bool bHelp)
 
 	if (rev.type() == typeid(CKeyID)) {
 		CRegID cRegId;
-		if (pAccountViewTip->GetRegId(rev, cRegId)) {
+		if (g_pAccountViewTip->GetRegId(rev, cRegId)) {
 			rev = cRegId;
 		}
 	}
 	bool bIsSign = params[4].get_bool();
 
-	int nHight = chainActive.Tip()->nHeight;
+	int nHight = g_cChainActive.Tip()->m_nHeight;
 	if (params.size() > 5) {
 		nHight = params[5].get_int();
 	}
 
 	std::shared_ptr<CTransaction> tx = std::make_shared<CTransaction>(send, rev, llFee, llAmount, nHight);
 	if (bIsSign) {
-		if (!g_pwalletMain->Sign(cSendKeyId, tx->SignatureHash(), tx->signature)) {
+		if (!g_pwalletMain->Sign(cSendKeyId, tx->SignatureHash(), tx->m_vchSignature)) {
 			throw JSONRPCError(RPC_INVALID_PARAMETER, "Sign failed");
 		}
 	}
-	CDataStream cDs(SER_DISK, CLIENT_VERSION);
+	CDataStream cDs(SER_DISK, g_sClientVersion);
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 	cDs << pBaseTx;
 	Object obj;
@@ -435,8 +435,8 @@ Value notionalpoolingbalance(const Array& params, bool bHelp)
 	for (auto &te : sKeyid) {
 		if (te.ToString() == cRevKeyId.ToString())
 			continue;
-		if (pAccountViewTip->GetRawBalance(te) >= llAmount) {
-			if (pAccountViewTip->GetRegId(CUserID(te), cSendReg)) {
+		if (g_pAccountViewTip->GetRawBalance(te) >= llAmount) {
+			if (g_pAccountViewTip->GetRegId(CUserID(te), cSendReg)) {
 				sResultKeyid.insert(te);
 			}
 		}
@@ -455,20 +455,20 @@ Value notionalpoolingbalance(const Array& params, bool bHelp)
 		CRegID cRevReg;
 		CUserID rev;
 
-		if (!pAccountViewTip->GetRegId(CUserID(cSendKeyId), cSendReg)) {
+		if (!g_pAccountViewTip->GetRegId(CUserID(cSendKeyId), cSendReg)) {
 			continue;
 		}
 
-		if (pAccountViewTip->GetRegId(CUserID(cRevKeyId), cRevReg)) {
+		if (g_pAccountViewTip->GetRegId(CUserID(cRevKeyId), cRevReg)) {
 			rev = cRevReg;
 		} else {
 			rev = cRevKeyId;
 		}
 
 		CTransaction tx(cSendReg, rev, SysCfg().GetTxFee(),
-				pAccountViewTip->GetRawBalance(cSendReg) - SysCfg().GetTxFee(), chainActive.Height());
+				g_pAccountViewTip->GetRawBalance(cSendReg) - SysCfg().GetTxFee(), g_cChainActive.Height());
 
-		if (!g_pwalletMain->Sign(cSendKeyId, tx.SignatureHash(), tx.signature)) {
+		if (!g_pwalletMain->Sign(cSendKeyId, tx.SignatureHash(), tx.m_vchSignature)) {
 			continue;
 		}
 
@@ -524,7 +524,7 @@ Value dispersebalance(const Array& params, bool bHelp)
 
 	CRegID cSendReg;
 
-	if (!pAccountViewTip->GetRegId(CUserID(cSendKeyId), cSendReg)) {
+	if (!g_pAccountViewTip->GetRegId(CUserID(cSendKeyId), cSendReg)) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "send address not activated  ");
 	}
 
@@ -558,19 +558,19 @@ Value dispersebalance(const Array& params, bool bHelp)
 		CRegID cRevReg;
 		CUserID rev;
 
-		if (pAccountViewTip->GetRegId(CUserID(cRevKeyId), cRevReg)) {
+		if (g_pAccountViewTip->GetRegId(CUserID(cRevKeyId), cRevReg)) {
 			rev = cRevReg;
 		} else {
 			rev = cRevKeyId;
 		}
 
-		if (pAccountViewTip->GetRawBalance(cSendReg) < llAmount + SysCfg().GetTxFee()) {
+		if (g_pAccountViewTip->GetRawBalance(cSendReg) < llAmount + SysCfg().GetTxFee()) {
 			break;
 		}
 
-		CTransaction cTx(cSendReg, rev, SysCfg().GetTxFee(), llAmount, chainActive.Height());
+		CTransaction cTx(cSendReg, rev, SysCfg().GetTxFee(), llAmount, g_cChainActive.Height());
 
-		if (!g_pwalletMain->Sign(cSendKeyId, cTx.SignatureHash(), cTx.signature)) {
+		if (!g_pwalletMain->Sign(cSendKeyId, cTx.SignatureHash(), cTx.m_vchSignature)) {
 			continue;
 		}
 
@@ -622,7 +622,7 @@ Value notionalpoolingasset(const Array& params, bool bHelp)
 		throw runtime_error("in notionalpoolingasset :scriptid size is error!\n");
 	}
 
-	if (!pScriptDBTip->HaveScript(cRegId)) {
+	if (!g_pScriptDBTip->HaveScript(cRegId)) {
 		throw runtime_error("in notionalpoolingasset :scriptid  is not exist!\n");
 	}
 
@@ -661,7 +661,7 @@ Value notionalpoolingasset(const Array& params, bool bHelp)
 	for (auto &te : sKeyid) {
 		if(te.ToString() == cRevKeyId.ToString())
 			continue;
-		if (pAccountViewTip->GetRawBalance(te) >= llAmount)
+		if (g_pAccountViewTip->GetRawBalance(te) >= llAmount)
 			sResultKeyid.insert(te);
 	}
 
@@ -680,7 +680,7 @@ Value notionalpoolingasset(const Array& params, bool bHelp)
 		}
 
 		CRegID cSendReg;
-		if (!pAccountViewTip->GetRegId(CUserID(cSendKeyId), cSendReg)) {
+		if (!g_pAccountViewTip->GetRegId(CUserID(cSendKeyId), cSendReg)) {
 			continue;
 		}
 
@@ -690,7 +690,7 @@ Value notionalpoolingasset(const Array& params, bool bHelp)
 		tTu.uchType = 0x03;
 		memcpy(&tTu.arruchAddress, strRevAddr.c_str(), 34);
 
-		CDataStream cScriptData(SER_DISK, CLIENT_VERSION);
+		CDataStream cScriptData(SER_DISK, g_sClientVersion);
 		cScriptData << tTu;
 		string sendcontract = HexStr(cScriptData);
 
@@ -699,16 +699,16 @@ Value notionalpoolingasset(const Array& params, bool bHelp)
 		vector_unsigned_char pContract;
 		pContract = ParseHex(sendcontract);
 
-		int nFuelRate = GetElementForBurn(chainActive.Tip());
+		int nFuelRate = GetElementForBurn(g_cChainActive.Tip());
 		const int STEP = 645;
 
 		int64_t llFee = (STEP / 100 + 1) * nFuelRate + SysCfg().GetTxFee();
 
 		LogPrint("vm", "nFuelRate=%d, llFee=%lld\n", nFuelRate, llFee);
 
-		CTransaction tx(cSendReg, cRegId, llFee, 0, chainActive.Height(), pContract);
+		CTransaction tx(cSendReg, cRegId, llFee, 0, g_cChainActive.Height(), pContract);
 
-		if (!g_pwalletMain->Sign(cSendKeyId, tx.SignatureHash(), tx.signature)) {
+		if (!g_pwalletMain->Sign(cSendKeyId, tx.SignatureHash(), tx.m_vchSignature)) {
 			continue;
 		}
 		std::tuple<bool, string> ret = g_pwalletMain->CommitTransaction((CBaseTransaction *) &tx);
@@ -739,7 +739,7 @@ Value getassets(const Array& params, bool bHelp)
 		throw runtime_error("in getassets :scriptid size is error!\n");
 	}
 
-	if (!pScriptDBTip->HaveScript(cRegId)) {
+	if (!g_pScriptDBTip->HaveScript(cRegId)) {
 		throw runtime_error("in getassets :scriptid  is not exist!\n");
 	}
 
@@ -766,11 +766,11 @@ Value getassets(const Array& params, bool bHelp)
 		vchKey.assign(strAddr.c_str(), strAddr.c_str() + strAddr.length());
 
 		std::shared_ptr<CAppUserAccout> temp = std::make_shared<CAppUserAccout>();
-		if (!pScriptDBTip->GetScriptAcc(cRegId, vchKey, *temp.get())) {
+		if (!g_pScriptDBTip->GetScriptAcc(cRegId, vchKey, *temp.get())) {
 			continue;
 		}
 
-		temp.get()->AutoMergeFreezeToFree(cRegId.getHight(), chainActive.Tip()->nHeight);
+		temp.get()->AutoMergeFreezeToFree(cRegId.getHight(), g_cChainActive.Tip()->m_nHeight);
 		uint64_t ullFreeValues = temp.get()->getllValues();
 		uint64_t ullFreezeValues = temp.get()->GetAllFreezedValues();
 		ullTotalAssets += ullFreeValues;
@@ -841,7 +841,7 @@ Value sendtoaddress(const Array& params, bool bHelp)
 		}
 
 		llAmount = AmountToRawValue(params[2]);
-		if (pAccountViewTip->GetRawBalance(cSendKeyId) <= llAmount + SysCfg().GetTxFee()) {
+		if (g_pAccountViewTip->GetRawBalance(cSendKeyId) <= llAmount + SysCfg().GetTxFee()) {
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "FROM address not enough coins");
 		}
 	} else {
@@ -857,8 +857,8 @@ Value sendtoaddress(const Array& params, bool bHelp)
 			throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No Key In wallet \n");
 		}
 		for (auto &te : sKeyid) {
-			if (pAccountViewTip->GetRawBalance(te) >= llAmount + SysCfg().GetTxFee()) {
-				if (pAccountViewTip->GetRegId(CUserID(te), cSendReg)) {
+			if (g_pAccountViewTip->GetRawBalance(te) >= llAmount + SysCfg().GetTxFee()) {
+				if (g_pAccountViewTip->GetRegId(CUserID(te), cSendReg)) {
 					cSendKeyId = te;
 					break;
 				}
@@ -873,19 +873,19 @@ Value sendtoaddress(const Array& params, bool bHelp)
 	CRegID cRevReg;
 	CUserID rev;
 
-	if (!pAccountViewTip->GetRegId(CUserID(cSendKeyId), cSendReg)) {
+	if (!g_pAccountViewTip->GetRegId(CUserID(cSendKeyId), cSendReg)) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 	}
 
-	if (pAccountViewTip->GetRegId(CUserID(cRevKeyId), cRevReg)) {
+	if (g_pAccountViewTip->GetRegId(CUserID(cRevKeyId), cRevReg)) {
 		rev = cRevReg;
 	} else {
 		rev = cRevKeyId;
 	}
 
-	CTransaction tx(cSendReg, rev, SysCfg().GetTxFee(), llAmount, chainActive.Height());
+	CTransaction tx(cSendReg, rev, SysCfg().GetTxFee(), llAmount, g_cChainActive.Height());
 
-	if (!g_pwalletMain->Sign(cSendKeyId, tx.SignatureHash(), tx.signature)) {
+	if (!g_pwalletMain->Sign(cSendKeyId, tx.SignatureHash(), tx.m_vchSignature)) {
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "Sign failed");
 	}
 
@@ -946,7 +946,7 @@ Value walletpassphrase(const Array& params, bool bHelp)
             + HelpExampleRpc("walletpassphrase", "\"my pass phrase\", 60")
         );
     }
-	LOCK2(cs_main, g_pwalletMain->m_cs_wallet);
+	LOCK2(g_cs_main, g_pwalletMain->m_cs_wallet);
 
 	if (bHelp) {
 		return true;
@@ -1084,7 +1084,7 @@ Value encryptwallet(const Array& params, bool bHelp)
             + HelpExampleRpc("encryptwallet", "\"my pass phrase\"")
         );
     }
-	LOCK2(cs_main, g_pwalletMain->m_cs_wallet);
+	LOCK2(g_cs_main, g_pwalletMain->m_cs_wallet);
 
 	if (bHelp) {
 		return true;

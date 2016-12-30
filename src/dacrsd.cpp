@@ -43,7 +43,7 @@ void DetectShutdownThread(boost::thread_group* threadGroup) {
 		threadGroup->interrupt_all();
 		threadGroup->join_all();
 	}
-	uiInterface.NotifyMessage("server closed");
+	g_cUIInterface.NotifyMessage("server closed");
 	CUIServer::StopServer();
 }
 

@@ -101,7 +101,7 @@ bool CBlackHalo::SendBuyerPackage() {
 	CRegID CSellerregid(strRegid);
 	memcpy(tSenddata.arruchSeller, &CSellerregid.GetVec6().at(0), sizeof(tSenddata.arruchSeller));
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSenddata;
 	string strSendContract = HexStr(CScriptData);
 	m_llSendMonye = GetPayMoney();
@@ -132,7 +132,7 @@ bool CBlackHalo::SendSellerPackage() {
 	tSeller.uchDnType = 0x02;
 	memcpy(tSeller.arruchHash, uint256S(m_strBuyerhash).begin(), sizeof(tSeller.arruchHash));
 
-	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream scriptData(SER_DISK, g_sClientVersion);
 	scriptData << tSeller;
 	string strSendContract = HexStr(scriptData);
 
@@ -163,7 +163,7 @@ bool CBlackHalo::SendBuyerConfirmedPackage() {
 	tSeller.uchDnType = 0x03;
 	memcpy(tSeller.arruchHash, uint256S(m_strBuyerhash).begin(), sizeof(tSeller.arruchHash));
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSeller;
 	string strSendContract = HexStr(CScriptData);
 	Value Sellerpack = m_cBasetest.CreateContractTx(m_strScriptid, BUYER_A, strSendContract, 0);
@@ -194,7 +194,7 @@ bool CBlackHalo::SendBuyerCancelPackage() {
 	tSeller.uchDnType = 0x04;
 	memcpy(tSeller.arruchHash, uint256S(m_strBuyerhash).begin(), sizeof(tSeller.arruchHash));
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSeller;
 	string strSendContract = HexStr(CScriptData);
 	Value Sellerpack = m_cBasetest.CreateContractTx(m_strScriptid, BUYER_A, strSendContract, 0);

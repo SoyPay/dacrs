@@ -180,7 +180,7 @@ bool CGuaranteeTest::Recharge()
 	tSenddata.uchSysType = 0xff;
 	tSenddata.uchType = 0x02;
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSenddata;
 	string strSendContract = HexStr(CScriptData);
 	uint64_t nTempSend = COIN;//20 * COIN;
@@ -223,7 +223,7 @@ bool CGuaranteeTest::Withdraw()
 	tSendData.uchType = 0x01;
 	tSendData.uchTypeAddr = EM_TX_REGID;
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSendData;
 	string strSendContract = HexStr(CScriptData);
 	uint64_t nTempSend = 0;
@@ -263,7 +263,7 @@ bool CGuaranteeTest::WithdrawSomemoney()
 	tSendData.nMoney = 10000 * COIN;
 //	senddata.money = COIN;
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSendData;
 	string strSendContract = HexStr(CScriptData);
 	uint64_t nTempSend = 0;
@@ -310,7 +310,7 @@ bool CGuaranteeTest::Register(unsigned char uchType)
 	tSendData.nOvertimeheightT = ARBITER_OVER_TIME_HEIGHTT;
     strcpy(tSendData.arrchComment,"联系电话:13418656754");
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSendData;
 	string strSendContract = HexStr(CScriptData);
 	uint64_t nTempSend = 0;
@@ -343,7 +343,7 @@ bool CGuaranteeTest::UnRegister()
 
 	unsigned char uchSendData = TX_UNREGISTER;
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << uchSendData;
 	string strSendContract = HexStr(CScriptData);
 	uint64_t nTempSend = 0;
@@ -380,7 +380,7 @@ bool CGuaranteeTest::ArbitONOrOFF(unsigned char uchType)
 	}else{
 	   uchSendData = TX_ARBIT_OFF;
 	}
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << uchSendData;
 	string strSendContract = HexStr(CScriptData);
 	uint64_t nTempSend = 0;
@@ -428,7 +428,7 @@ bool CGuaranteeTest::SendStartTrade()
 	strcpy(tSendData.arrchGoods,"小米3手机");
 	strcpy(tSendData.arrchComment,"1个币买.联系电话:13418656754");
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSendData;
 	string strSendContract = HexStr(CScriptData);
 	uint64_t nTempSend = 0;
@@ -473,7 +473,7 @@ bool CGuaranteeTest::SendCancelTrade()
 	memcpy(tSendData.arruchTxhash,HASH_sendhash, sizeof(tSendData.arruchTxhash)); //待填交易HASH
 	tSendData.nHeight = SEND_HEIGHT;
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSendData;
 	string strSendContract = HexStr(CScriptData);
 	uint64_t nTempSend = 0;
@@ -510,7 +510,7 @@ bool CGuaranteeTest::AcceptTrade()
 	memcpy(tSendData.arruchTxhash,HASH_sendhash, sizeof(tSendData.arruchTxhash)); //待填交易HASH
 	tSendData.nHeight = SEND_HEIGHT;
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSendData;
 	string strSendContract = HexStr(CScriptData);
 	uint64_t nTempSend = 0;
@@ -546,7 +546,7 @@ bool  CGuaranteeTest::DeliveryTrade(){
 	memcpy(tSendData.arruchTxhash,HASH_sendhash, sizeof(tSendData.arruchTxhash)); //待填交易HASH
 	tSendData.nHeight = SEND_HEIGHT;
 
-	CDataStream scriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream scriptData(SER_DISK, g_sClientVersion);
 	scriptData << tSendData;
 	string strSendContract = HexStr(scriptData);
 	uint64_t nTempSend = 0;
@@ -583,7 +583,7 @@ bool CGuaranteeTest::BuyerConfirm()
 	memcpy(tSendData.arruchTxhash,HASH_sendhash, sizeof(tSendData.arruchTxhash)); //待填交易HASH
 	tSendData.nHeight = SEND_HEIGHT;
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSendData;
 	string strSendContract = HexStr(CScriptData);
 	uint64_t nTempSend = 0;
@@ -626,7 +626,7 @@ bool CGuaranteeTest::Arbitration()
 	memcpy(&tSendData.arrchArbitationID[0],&nHeight,4);
 	memcpy(&tSendData.arrchArbitationID[4],&usIndex,2);
 
-	CDataStream CScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSendData;
 	string strSendContract = HexStr(CScriptData);
 	uint64_t nTempSend = 0;
@@ -677,7 +677,7 @@ bool CGuaranteeTest::RunFinalResult()
     memcpy(&tSendData.arrchLoser[4],&usIndex,2);
 	tSendData.nLoserMoney = SEND_MONEYM - ARBITER_WINNER_MONEY;  //  交易金额M - 赢家分配的钱  待填写
 
-	CDataStream cScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream cScriptData(SER_DISK, g_sClientVersion);
 	cScriptData << tSendData;
 	string strSendContract = HexStr(cScriptData);
 	uint64_t nTempSend = 0;

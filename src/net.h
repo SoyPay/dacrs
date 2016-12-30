@@ -157,7 +157,7 @@ class CNetMessage {
 		if (!m_bInData) {
 			return false;
 		}
-		return (m_cMessageHeader.nMessageSize == m_unDataPos);
+		return (m_cMessageHeader.m_unMessageSize == m_unDataPos);
 	}
 
 	void SetVersion(int nVersionIn) {
@@ -258,10 +258,10 @@ class CNode {
 	bool 							m_bPingQueued;
 
 	CNode(SOCKET hSocketIn, CAddress cAddrIn, string strAddrNameIn = "", bool bInboundIn = false) :
-			m_cDSSend(SER_NETWORK, INIT_PROTO_VERSION), m_cAddrKnown(5000) {
+			m_cDSSend(SER_NETWORK, g_sInitProtoVersion), m_cAddrKnown(5000) {
 		m_ullServices 				= 0;
 		m_hSocket 					= hSocketIn;
-		m_nRecvVersion 				= INIT_PROTO_VERSION;
+		m_nRecvVersion 				= g_sInitProtoVersion;
 		m_llLastSend 				= 0;
 		m_llLastRecv 				= 0;
 		m_ullSendBytes 				= 0;

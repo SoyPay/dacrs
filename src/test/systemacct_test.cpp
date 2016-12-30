@@ -24,7 +24,7 @@ BOOST_FIXTURE_TEST_SUITE(sysacct_test, CSysAccountTest)
 BOOST_FIXTURE_TEST_CASE(transfer_test, CSysAccountTest)
 {
 	ResetEnv();
-	BOOST_CHECK(0==chainActive.Height());
+	BOOST_CHECK(0==g_cChainActive.Height());
 	//转账
 	string strRegAddr = "dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr";
 	string strSrcRegID = "000000000400";
@@ -67,7 +67,7 @@ BOOST_FIXTURE_TEST_CASE(transfer_test, CSysAccountTest)
 BOOST_FIXTURE_TEST_CASE(register_test,CSysAccountTest)
  {
 	ResetEnv();
-	BOOST_CHECK(0==chainActive.Height());
+	BOOST_CHECK(0==g_cChainActive.Height());
 	string strTxHash;
 	CRegID regID;
 	string strRegAddr1("dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr");
@@ -154,7 +154,7 @@ BOOST_FIXTURE_TEST_CASE(register_test,CSysAccountTest)
 
 	//检查日志记录是否正确
 //	BOOST_CHECK(1 == vLog.size() && 1 == vLog[0].vOperFund.size() && 1 == vLog[0].vOperFund[0].vFund.size());
-	BOOST_CHECK(strRegAddr1 == vLog[0].keyID.ToAddress());
+	BOOST_CHECK(strRegAddr1 == vLog[0].m_cKeyID.ToAddress());
 //	BOOST_CHECK(vLog[0].vOperFund[0].operType == MINUS_FREE && vLog[0].vOperFund[0].vFund[0].value == nFee);
 }
 

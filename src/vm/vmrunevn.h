@@ -191,7 +191,7 @@ public:
 	CVmOperate() {
 		nacctype = regid;
 		memset(accountid, 0, 34);
-		opeatortype = ADD_FREE;
+		opeatortype = EM_ADD_FREE;
 		outheight = 0;
 		memset(money, 0, 8);
 	}

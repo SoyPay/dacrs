@@ -66,7 +66,7 @@ public:
 			uint64_t llmoney = GetRandomMoney() * COIN;
 			CRegID reg(addr.first);
 			vContract.insert(vContract.end(), reg.GetVec6().begin(), reg.GetVec6().end());
-			CDataStream ds(SER_DISK, CLIENT_VERSION);
+			CDataStream ds(SER_DISK, g_sClientVersion);
 			ds << llmoney;
 			vector<unsigned char> temp(ds.begin(), ds.end());
 			vContract.insert(vContract.end(), temp.begin(), temp.end());
@@ -106,8 +106,8 @@ public:
 		}
 		string txHash = result.get_str();
 		vTransactionHash.push_back(txHash);
-		if (mempool.mapTx.count(uint256(uint256S(txHash))) > 0) {
-			std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(uint256S(txHash))].GetTx();
+		if (g_cTxMemPool.m_mapTx.count(uint256(uint256S(txHash))) > 0) {
+			std::shared_ptr<CBaseTransaction> tx = g_cTxMemPool.m_mapTx[uint256(uint256S(txHash))].GetTx();
 			vTransactions.push_back(tx);
 		}
 		vSendFee.push_back(make_pair(txHash, nfee));
@@ -143,8 +143,8 @@ public:
 		BOOST_CHECK(GetHashFromCreatedTx(value, txHash));
 
 		vTransactionHash.push_back(txHash);
-		if (mempool.mapTx.count(uint256(uint256S(txHash))) > 0) {
-			std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(uint256S(txHash))].GetTx();
+		if (g_cTxMemPool.m_mapTx.count(uint256(uint256S(txHash))) > 0) {
+			std::shared_ptr<CBaseTransaction> tx = g_cTxMemPool.m_mapTx[uint256(uint256S(txHash))].GetTx();
 			vTransactions.push_back(tx);
 		}
 		vSendFee.push_back(make_pair(txHash, nfee));
@@ -171,8 +171,8 @@ public:
 		BOOST_CHECK(GetHashFromCreatedTx(value,txHash));
 
 		vTransactionHash.push_back(txHash);
-		if (mempool.mapTx.count(uint256(uint256S(txHash))) > 0) {
-			std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(uint256S(txHash))].GetTx();
+		if (g_cTxMemPool.m_mapTx.count(uint256(uint256S(txHash))) > 0) {
+			std::shared_ptr<CBaseTransaction> tx = g_cTxMemPool.m_mapTx[uint256(uint256S(txHash))].GetTx();
 			vTransactions.push_back(tx);
 		}
 		vSendFee.push_back(make_pair(txHash, nfee));
@@ -190,8 +190,8 @@ public:
 
 		if(fFlag) {
 			vTransactionHash.push_back(hash);
-			if (mempool.mapTx.count(uint256(uint256S(hash))) > 0) {
-				std::shared_ptr<CBaseTransaction> tx = mempool.mapTx[uint256(uint256S(hash))].GetTx();
+			if (g_cTxMemPool.m_mapTx.count(uint256(uint256S(hash))) > 0) {
+				std::shared_ptr<CBaseTransaction> tx = g_cTxMemPool.m_mapTx[uint256(uint256S(hash))].GetTx();
 				vTransactions.push_back(tx);
 			}
 			vSendFee.push_back(make_pair(hash, nFee));
@@ -253,9 +253,9 @@ public:
 			CRegID regId(item.first);
 			CUserID userId = regId;
 			{
-				LOCK(cs_main);
+				LOCK(g_cs_main);
 				CAccount account;
-				CAccountViewCache accView(*pAccountViewTip, true);
+				CAccountViewCache accView(*g_pAccountViewTip, true);
 				if (!accView.GetAccount(userId, account)) {
 					return false;
 				}
@@ -268,9 +268,9 @@ public:
 			CRegID regId(regScriptId);
 			CUserID userId = regId;
 			{
-				LOCK(cs_main);
+				LOCK(g_cs_main);
 				CAccount account;
-				CAccountViewCache accView(*pAccountViewTip, true);
+				CAccountViewCache accView(*g_pAccountViewTip, true);
 				if (!accView.GetAccount(userId, account)) {
 					return false;
 				}
@@ -282,8 +282,8 @@ public:
 		totalValue += scriptaccValue;
 
 		uint64_t uTotalRewardValue(0);
-		if (chainActive.Tip()->nHeight - 1 > COINBASE_MATURITY)  //height 1 is generate by another account
-			uTotalRewardValue = 10 * COIN * (chainActive.Tip()->nHeight - 101);
+		if (g_cChainActive.Tip()->m_nHeight - 1 > COINBASE_MATURITY)  //height 1 is generate by another account
+			uTotalRewardValue = 10 * COIN * (g_cChainActive.Tip()->m_nHeight - 101);
 		dFee.push_back(llFees);
 		dFuel.push_back(llFuelValue);
 		llTotalFee += llFees;
@@ -332,7 +332,7 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 
 		}
 
-		unsigned int nSize = mempool.mapTx.size();
+		unsigned int nSize = g_cTxMemPool.m_mapTx.size();
 		int nConfirmTxCount(0);
 		uint64_t llRegAcctFee(0);
 		uint64_t llSendValue(0);
@@ -357,7 +357,7 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 					//检测block中交易是否都在钱包已确认列表中
 					BOOST_CHECK(pwalletMain->mapInBlockTx[block.GetHash()].mapAccountTx.count(item->GetHash())>0);
 					//检测mempool中没有了block已确认交易
-					BOOST_CHECK(!mempool.mapTx.count(item->GetHash()) > 0);
+					BOOST_CHECK(!g_cTxMemPool.m_mapTx.count(item->GetHash()) > 0);
 				}
 
 			}
@@ -367,7 +367,7 @@ BOOST_FIXTURE_TEST_CASE(tests, PressureTest)
 				BOOST_CHECK(pwalletMain->mapInBlockTx[block.GetHash()].mapAccountTx.size() == block.vptx.size());
 				nConfirmTxCount += block.vptx.size() - 1;
 				//检测剩余mempool中交易总数与已确认交易和等于总的产生的交易数
-				nSize = mempool.mapTx.size();
+				nSize = g_cTxMemPool.m_mapTx.size();
 				BOOST_CHECK((nSize + nConfirmTxCount) == vTransactions.size());
 				//检测钱包中unconfirm交易和mempool中的相同
 				BOOST_CHECK((nSize == pwalletMain->UnConfirmTx.size()));

@@ -147,13 +147,13 @@ class CDB {
 
  protected:
     template <typename K, typename T>
-    bool Read(const K& key, T& value, int nVersion = CLIENT_VERSION) {
+    bool Read(const K& key, T& value, int nVersion = g_sClientVersion) {
         if (!m_pdb) {
         	return false;
         }
 
         // Key
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        CDataStream ssKey(SER_DISK, g_sClientVersion);
         ssKey.reserve(1000);
         ssKey << key;
         Dbt datKey(&ssKey[0], ssKey.size());
@@ -182,7 +182,7 @@ class CDB {
     }
 
     template <typename K, typename T>
-    bool Write(const K& key, const T& value, bool fOverwrite = true, int nVersion=CLIENT_VERSION) {
+    bool Write(const K& key, const T& value, bool fOverwrite = true, int nVersion = g_sClientVersion) {
         if (!m_pdb) {
         	return false;
         }
@@ -191,7 +191,7 @@ class CDB {
         }
 
         // Key
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        CDataStream ssKey(SER_DISK, g_sClientVersion);
         ssKey.reserve(1000);
         ssKey << key;
         Dbt datKey(&ssKey[0], ssKey.size());
@@ -221,7 +221,7 @@ class CDB {
         }
 
         // Key
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        CDataStream ssKey(SER_DISK, g_sClientVersion);
         ssKey.reserve(1000);
         ssKey << key;
         Dbt datKey(&ssKey[0], ssKey.size());
@@ -241,7 +241,7 @@ class CDB {
         }
 
         // Key
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        CDataStream ssKey(SER_DISK, g_sClientVersion);
         ssKey.reserve(1000);
         ssKey << key;
         Dbt datKey(&ssKey[0], ssKey.size());

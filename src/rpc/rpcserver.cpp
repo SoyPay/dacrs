@@ -494,7 +494,7 @@ void StartRPCThreads()
 		} else if (SysCfg().IsArgCount("-daemon")) {
 			strWhatAmI = strprintf(_("To use the %s option"), "\"-daemon\"");
 		}
-        uiInterface.ThreadSafeMessageBox(strprintf(
+        g_cUIInterface.ThreadSafeMessageBox(strprintf(
             _("%s, you must set a rpcpassword in the configuration file:\n"
               "%s\n"
               "It is recommended you use the following random password:\n"
@@ -596,7 +596,7 @@ void StartRPCThreads()
 	}
 
 	if (!bListening) {
-		uiInterface.ThreadSafeMessageBox(strErr, "", CClientUIInterface::MSG_ERROR);
+		g_cUIInterface.ThreadSafeMessageBox(strErr, "", CClientUIInterface::MSG_ERROR);
 		StartShutdown();
 		return;
 	}
@@ -820,10 +820,10 @@ json_spirit::Value CRPCTable::execute(const string &strMethod, const json_spirit
 			if (pcmd->m_bThreadSafe) {
 				result = pcmd->m_Actor(params, false);
 			} else if (!g_pwalletMain) {
-				LOCK(cs_main);
+				LOCK(g_cs_main);
 				result = pcmd->m_Actor(params, false);
 			} else {
-				LOCK2(cs_main, g_pwalletMain->m_cs_wallet);
+				LOCK2(g_cs_main, g_pwalletMain->m_cs_wallet);
 				result = pcmd->m_Actor(params, false);
 			}
 		}

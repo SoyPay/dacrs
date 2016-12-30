@@ -61,7 +61,7 @@ Value getbalance(const Array& params, bool bHelp) {
 			}
 			if (g_pwalletMain->HaveKey(ckeyid)) {
 				CAccount cAccount;
-				CAccountViewCache cAccView(*pAccountViewTip, true);
+				CAccountViewCache cAccView(*g_pAccountViewTip, true);
 				if (cAccView.GetAccount(CUserID(ckeyid), cAccount)) {
 					obj.push_back(Pair("balance", ValueFromAmount(cAccount.GetRawBalance())));
 					return std::move(obj);
@@ -79,25 +79,25 @@ Value getbalance(const Array& params, bool bHelp) {
 		}
 		if (strAddr == "*") {
 			if (0 != nConf) {
-				CBlockIndex *pBlockIndex = chainActive.Tip();
+				CBlockIndex *pBlockIndex = g_cChainActive.Tip();
 				int64_t llValue(0);
 				while (nConf) {
 					if (g_pwalletMain->m_mapInBlockTx.count(pBlockIndex->GetBlockHash()) > 0) {
 						map<uint256, std::shared_ptr<CBaseTransaction> > mapTx =
 								g_pwalletMain->m_mapInBlockTx[pBlockIndex->GetBlockHash()].m_mapAccountTx;
 						for (auto &item : mapTx) {
-							if (COMMON_TX == item.second->nTxType) {
+							if (EM_COMMON_TX == item.second->m_chTxType) {
 								CTransaction *pTx = (CTransaction *) item.second.get();
 								CKeyID cSrcKeyId, cDesKeyId;
-								pAccountViewTip->GetKeyId(pTx->srcRegId, cSrcKeyId);
-								pAccountViewTip->GetKeyId(pTx->desUserId, cDesKeyId);
+								g_pAccountViewTip->GetKeyId(pTx->m_cSrcRegId, cSrcKeyId);
+								g_pAccountViewTip->GetKeyId(pTx->m_cDesUserId, cDesKeyId);
 								if (!g_pwalletMain->HaveKey(cSrcKeyId) && g_pwalletMain->HaveKey(cDesKeyId)) {
-									llValue = pTx->llValues;
+									llValue = pTx->m_ullValues;
 								}
 							}
 						}
 					}
-					pBlockIndex = pBlockIndex->pprev;
+					pBlockIndex = pBlockIndex->m_pPrevBlockIndex;
 					--nConf;
 				}
 				obj.push_back(Pair("balance", ValueFromAmount(g_pwalletMain->GetRawBalance() - llValue)));
@@ -113,30 +113,30 @@ Value getbalance(const Array& params, bool bHelp) {
 			}
 			if (g_pwalletMain->HaveKey(ckeyid)) {
 				if (0 != nConf) {
-					CBlockIndex *pBlockIndex = chainActive.Tip();
+					CBlockIndex *pBlockIndex = g_cChainActive.Tip();
 					int64_t llValue(0);
 					while (nConf) {
 						if (g_pwalletMain->m_mapInBlockTx.count(pBlockIndex->GetBlockHash()) > 0) {
 							map<uint256, std::shared_ptr<CBaseTransaction> > mapTx =
 									g_pwalletMain->m_mapInBlockTx[pBlockIndex->GetBlockHash()].m_mapAccountTx;
 							for (auto &item : mapTx) {
-								if (COMMON_TX == item.second->nTxType) {
+								if (EM_COMMON_TX == item.second->m_chTxType) {
 									CTransaction *pTx = (CTransaction *) item.second.get();
 									CKeyID srcKeyId, desKeyId;
-									pAccountViewTip->GetKeyId(pTx->desUserId, desKeyId);
+									g_pAccountViewTip->GetKeyId(pTx->m_cDesUserId, desKeyId);
 									if (ckeyid == desKeyId) {
-										llValue = pTx->llValues;
+										llValue = pTx->m_ullValues;
 									}
 								}
 							}
 						}
-						pBlockIndex = pBlockIndex->pprev;
+						pBlockIndex = pBlockIndex->m_pPrevBlockIndex;
 						--nConf;
 					}
-					obj.push_back(Pair("balance", ValueFromAmount(pAccountViewTip->GetRawBalance(ckeyid) - llValue)));
+					obj.push_back(Pair("balance", ValueFromAmount(g_pAccountViewTip->GetRawBalance(ckeyid) - llValue)));
 					return std::move(obj);
 				} else {
-					obj.push_back(Pair("balance", ValueFromAmount(mempool.pAccountViewCache->GetRawBalance(ckeyid))));
+					obj.push_back(Pair("balance", ValueFromAmount(g_cTxMemPool.m_pAccountViewCache->GetRawBalance(ckeyid))));
 					return std::move(obj);
 				}
 			} else {
@@ -190,10 +190,10 @@ Value getinfo(const Array& params, bool bHelp)
 	GetProxy(NET_IPV4, proxy);
 
 	Object obj;
-	obj.push_back(Pair("version", (int) CLIENT_VERSION));
-	string fullersion = strprintf("%s (%s)", FormatFullVersion().c_str(), CLIENT_DATE.c_str());
+	obj.push_back(Pair("version", (int) g_sClientVersion));
+	string fullersion = strprintf("%s (%s)", FormatFullVersion().c_str(), g_strClientDate.c_str());
 	obj.push_back(Pair("fullversion", fullersion));
-	obj.push_back(Pair("protocolversion", (int) PROTOCOL_VERSION));
+	obj.push_back(Pair("protocolversion", (int) g_sProtocolVersion));
 
 	if (g_pwalletMain) {
 		obj.push_back(Pair("walletversion", g_pwalletMain->GetVersion()));
@@ -201,25 +201,25 @@ Value getinfo(const Array& params, bool bHelp)
 	}
 	static const string strName[] = { "MAIN", "TESTNET", "REGTEST" };
 
-	obj.push_back(Pair("blocks", (int) chainActive.Height()));
+	obj.push_back(Pair("blocks", (int) g_cChainActive.Height()));
 	obj.push_back(Pair("timeoffset", GetTimeOffset()));
 	obj.push_back(Pair("connections", (int) g_vNodes.size()));
 	obj.push_back(Pair("proxy", (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
 	obj.push_back(Pair("difficulty", (double) GetDifficulty()));
 	obj.push_back(Pair("nettype", strName[SysCfg().NetworkID()]));
-	obj.push_back(Pair("chainwork", chainActive.Tip()->nChainWork.GetHex()));
-	obj.push_back(Pair("tipblocktime", (int) chainActive.Tip()->nTime));
+	obj.push_back(Pair("chainwork", g_cChainActive.Tip()->m_cChainWork.GetHex()));
+	obj.push_back(Pair("tipblocktime", (int) g_cChainActive.Tip()->m_unTime));
 	if (g_pwalletMain && g_pwalletMain->IsCrypted()) {
 		obj.push_back(Pair("unlocked_until", g_llWalletUnlockTime));
 	}
 	obj.push_back(Pair("paytxfee", ValueFromAmount(SysCfg().GetTxFee())));
 
-	obj.push_back(Pair("relayfee", ValueFromAmount(CTransaction::nMinRelayTxFee)));
-	obj.push_back(Pair("fuelrate", chainActive.Tip()->nFuelRate));
-	obj.push_back(Pair("fuel", chainActive.Tip()->nFuel));
+	obj.push_back(Pair("relayfee", ValueFromAmount(CTransaction::m_sMinRelayTxFee)));
+	obj.push_back(Pair("fuelrate", g_cChainActive.Tip()->m_nFuelRate));
+	obj.push_back(Pair("fuel", g_cChainActive.Tip()->m_llFuel));
 	obj.push_back(Pair("data directory", GetDataDir().string().c_str()));
 //    obj.push_back(Pair("block high",    chainActive.Tip()->nHeight));
-	obj.push_back(Pair("tip block hash", chainActive.Tip()->GetBlockHash().ToString()));
+	obj.push_back(Pair("tip block hash", g_cChainActive.Tip()->GetBlockHash().ToString()));
 	obj.push_back(Pair("errors", GetWarnings("statusbar")));
 	return obj;
 }
@@ -287,7 +287,7 @@ Value verifymessage(const Array& params, bool bHelp)
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
 	}
 	CHashWriter cSs(SER_GETHASH, 0);
-	cSs << strMessageMagic;
+	cSs << g_strMessageMagic;
 	cSs << strMessage;
 
 	CPubKey pubkey;

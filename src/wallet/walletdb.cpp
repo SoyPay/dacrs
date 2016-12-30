@@ -116,7 +116,7 @@ emDBErrors CWalletDB::LoadWallet(CWallet* pwallet) {
 			LOCK(pwallet->m_cs_wallet);
 	        int nMinVersion = 0;
 			if (Read((string)"minversion", nMinVersion)) {
-				 if (nMinVersion > CLIENT_VERSION) {
+				 if (nMinVersion > g_sClientVersion) {
 					 return EM_DB_TOO_NEW;
 				 }
 				 pwallet->LoadMinVersion(nMinVersion);
@@ -131,8 +131,8 @@ emDBErrors CWalletDB::LoadWallet(CWallet* pwallet) {
 
 	        while (true) {
 	            // Read next record
-	            CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-	            CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+	            CDataStream ssKey(SER_DISK, g_sClientVersion);
+	            CDataStream ssValue(SER_DISK, g_sClientVersion);
 	            int ret = ReadAtCursor(pcursor, ssKey, ssValue);
 	            if (ret == DB_NOTFOUND) {
 	            	break;
@@ -195,7 +195,7 @@ emDBErrors CWalletDB::LoadWallet(CWallet* pwallet) {
 //	    if (wss.fIsEncrypted && (wss.nFileVersion == 40000 || wss.nFileVersion == 50000))
 //	        return DB_NEED_REWRITE;
 
-	    if ( GetMinVersion()< CLIENT_VERSION) {
+	    if ( GetMinVersion()< g_sClientVersion) {
 	    	WriteVersion( GetMinVersion());
 	    }
 
@@ -257,8 +257,8 @@ bool CWalletDB::Recover(CDBEnv& dbenv, string filename, bool fOnlyKeys) {
     DbTxn* ptxn = dbenv.TxnBegin();
     for (auto& row : salvagedData) {
         if (fOnlyKeys) {
-            CDataStream ssKey(row.first, SER_DISK, CLIENT_VERSION);
-            CDataStream ssValue(row.second, SER_DISK, CLIENT_VERSION);
+            CDataStream ssKey(row.first, SER_DISK, g_sClientVersion);
+            CDataStream ssValue(row.second, SER_DISK, g_sClientVersion);
             string strType, strErr;
             bool fReadOK = ReadKeyValue(NULL, ssKey, ssValue, strType, strErr, -1);
             if (strType != "keystore") {
@@ -427,7 +427,7 @@ void ThreadRelayTx(CWallet* pWallet) {
 		MilliSleep(60*1000);
 		map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx =  pWallet->m_mapUnConfirmTx.begin();
 		for ( ; iterTx != pWallet->m_mapUnConfirmTx.end(); ++iterTx) {
-			if (mempool.exists(iterTx->first)) {
+			if (g_cTxMemPool.exists(iterTx->first)) {
 				RelayTransaction(iterTx->second.get(), iterTx->first);
 				LogPrint("sendtx", "ThreadRelayTx resend tx hash:%s time:%ld\n", iterTx->first.GetHex(), GetTime());
 			}

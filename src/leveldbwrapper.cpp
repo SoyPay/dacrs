@@ -91,8 +91,8 @@ int64_t CLevelDBWrapper::GetDbCount() {
 			llRet++;
 			leveldb::Slice slKey = pCursor->key();
 			leveldb::Slice slValue = pCursor->value();
-			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
-			CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+			CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, g_sClientVersion);
+			CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, g_sClientVersion);
 			LogPrint("db", "Key:%s\n value:%s\n", HexStr(ssKey), HexStr(ssValue));
 			pCursor->Next();
 		} catch (std::exception &e) {

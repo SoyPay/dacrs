@@ -87,7 +87,7 @@ public:
 	}
 
 	bool GetTxIndexInBlock(const uint256& txHash, int& nIndex) {
-		CBlockIndex* pindex = chainActive.Tip();
+		CBlockIndex* pindex = g_cChainActive.Tip();
 		CBlock block;
 		if (!ReadBlockFromDisk(block, pindex))
 			return false;
@@ -106,23 +106,23 @@ public:
 		CRegID regId;
 		vector<unsigned char> vScript;
 
-		if (pScriptDBTip == nullptr)
+		if (g_pScriptDBTip == nullptr)
 			return false;
 
-		assert(pScriptDBTip->Flush());
+		assert(g_pScriptDBTip->Flush());
 
 		int nCount(0);
-		if (!pScriptDBTip->GetScriptCount(nCount))
+		if (!g_pScriptDBTip->GetScriptCount(nCount))
 			return false;
 
-		if (!pScriptDBTip->GetScript(0, regId, vScript))
+		if (!g_pScriptDBTip->GetScript(0, regId, vScript))
 			return false;
 
 		string strRegID = HexStr(regId.GetVec6());
 		string strScript = HexStr(vScript.begin(), vScript.end());
 		mapRegScript.insert(make_pair(strRegID, strScript));
 
-		while (pScriptDBTip->GetScript(1, regId, vScript)) {
+		while (g_pScriptDBTip->GetScript(1, regId, vScript)) {
 			strRegID = HexStr(regId.GetVec6());
 			strScript = HexStr(vScript.begin(), vScript.end());
 			mapRegScript.insert(make_pair(strRegID, strScript));
@@ -180,7 +180,7 @@ public:
 		vmScript.Rom.insert(vmScript.Rom.end(), buffer, buffer + lSize);
 		string desp("this is description");
 		vmScript.ScriptExplain.assign(desp.begin(), desp.end());
-		CDataStream ds(SER_DISK, CLIENT_VERSION);
+		CDataStream ds(SER_DISK, g_sClientVersion);
 		ds << vmScript;
 
 		vector<unsigned char> vscript;

@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DACRS_TXDB_LEVELDB_H
-#define DACRS_TXDB_LEVELDB_H
+#ifndef DACRS_TXDB_H_
+#define DACRS_TXDB_H_
 
 #include "leveldbwrapper.h"
 #include "main.h"
@@ -20,114 +20,119 @@ class uint256;
 class CKeyID;
 class CTransactionDBCache;
 // -dbcache default (MiB)
-static const int64_t nDefaultDbCache = 100;
+static const int64_t g_sDefaultDbCache = 100;
 // max. -dbcache in (MiB)
-static const int64_t nMaxDbCache = sizeof(void*) > 4 ? 4096 : 1024;
+static const int64_t g_sMaxDbCache = sizeof(void*) > 4 ? 4096 : 1024;
 // min. -dbcache in (MiB)
-static const int64_t nMinDbCache = 4;
+static const int64_t g_sMinDbCache = 4;
 
 /** Access to the block database (blocks/index/) */
-class CBlockTreeDB : public CLevelDBWrapper
-{
-public:
-    CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
-private:
-    CBlockTreeDB(const CBlockTreeDB&);
-    void operator=(const CBlockTreeDB&);
-public:
-    bool WriteBlockIndex(const CDiskBlockIndex& blockindex);
-    bool EraseBlockIndex(const uint256 &blockHash);
-    bool WriteBestInvalidWork(const uint256& bnBestInvalidWork);
-    bool ReadBlockFileInfo(int nFile, CBlockFileInfo &fileinfo);
-    bool WriteBlockFileInfo(int nFile, const CBlockFileInfo &fileinfo);
-    bool ReadLastBlockFile(int &nFile);
-    bool WriteLastBlockFile(int nFile);
-    bool WriteReindexing(bool fReindex);
-    bool ReadReindexing(bool &fReindex);
-//  bool ReadTxIndex(const uint256 &txid, CDiskTxPos &pos);
-//  bool WriteTxIndex(const vector<pair<uint256, CDiskTxPos> > &list);
-    bool WriteFlag(const string &name, bool fValue);
-    bool ReadFlag(const string &name, bool &fValue);
-    bool LoadBlockIndexGuts();
+class CBlockTreeDB: public CLevelDBWrapper {
+ public:
+	CBlockTreeDB(size_t unCacheSize, bool bMemory = false, bool bWipe = false);
+
+ public:
+	bool WriteBlockIndex(const CDiskBlockIndex& cBlockindex);
+	bool EraseBlockIndex(const uint256 &cBlockHash);
+	bool WriteBestInvalidWork(const uint256& cBestInvalidWork);
+	bool ReadBlockFileInfo(int nFile, CBlockFileInfo &cFileinfo);
+	bool WriteBlockFileInfo(int nFile, const CBlockFileInfo &cFileinfo);
+	bool ReadLastBlockFile(int &nFile);
+	bool WriteLastBlockFile(int nFile);
+	bool WriteReindexing(bool bReindex);
+	bool ReadReindexing(bool &bReindex);
+	bool WriteFlag(const string &strName, bool bValue);
+	bool ReadFlag(const string &strName, bool &bValue);
+	bool LoadBlockIndexGuts();
+
+ private:
+ 	CBlockTreeDB(const CBlockTreeDB&);
+ 	void operator=(const CBlockTreeDB&);
 };
 
+class CAccountViewDB: public CAccountView {
+ public:
+	CAccountViewDB(size_t unCacheSize, bool bMemory = false, bool bWipe = false);
+	CAccountViewDB(const string& strName, size_t unCacheSize, bool bMemory, bool bWipe);
 
-class CAccountViewDB : public CAccountView
-{
-private:
-	CLevelDBWrapper db;
-public:
-	CAccountViewDB(size_t nCacheSize, bool fMemory=false, bool fWipe = false);
-	CAccountViewDB(const string& name,size_t nCacheSize, bool fMemory, bool fWipe);
-private:
+ public:
+	bool GetAccount(const CKeyID &cKeyId, CAccount &cSecureAccount);
+	bool SetAccount(const CKeyID &cKeyId, const CAccount &cSecureAccount);
+	bool SetAccount(const vector<unsigned char> &vchAccountId, const CAccount &cSecureAccount);
+	bool HaveAccount(const CKeyID &cKeyId);
+	uint256 GetBestBlock();
+	bool SetBestBlock(const uint256 &cHashBlock);
+	bool BatchWrite(const map<CKeyID, CAccount> &mapAccounts, const map<vector<unsigned char>, CKeyID> &mapKeyIds,
+			const uint256 &cHashBlock);
+	bool BatchWrite(const vector<CAccount> &vcAccounts);
+	bool EraseAccount(const CKeyID &cKeyId);
+	bool SetKeyId(const vector<unsigned char> &vchAccountId, const CKeyID &cKeyId);
+	bool GetKeyId(const vector<unsigned char> &vchAccountId, CKeyID &cKeyId);
+	bool EraseKeyId(const vector<unsigned char> &vchAccountId);
+	bool GetAccount(const vector<unsigned char> &vchAccountId, CAccount &cSecureAccount);
+	bool SaveAccountInfo(const vector<unsigned char> &vchAccountId, const CKeyID &cKeyId, const CAccount &cSecureAccount);
+	uint64_t TraverseAccount();
+	int64_t GetDbCount() {
+		return m_cLevelDBWrapper.GetDbCount();
+	}
+	Object ToJosnObj(char chPrefix);
+
+ private:
 	CAccountViewDB(const CAccountViewDB&);
 	void operator=(const CAccountViewDB&);
-public:
-	bool GetAccount(const CKeyID &keyId, CAccount &secureAccount);
-	bool SetAccount(const CKeyID &keyId, const CAccount &secureAccount);
-	bool SetAccount(const vector<unsigned char> &accountId, const CAccount &secureAccount);
-	bool HaveAccount(const CKeyID &keyId);
-	uint256 GetBestBlock();
-	bool SetBestBlock(const uint256 &hashBlock);
-	bool BatchWrite(const map<CKeyID, CAccount> &mapAccounts, const map<vector<unsigned char>, CKeyID> &mapKeyIds, const uint256 &hashBlock);
-	bool BatchWrite(const vector<CAccount> &vAccounts);
-	bool EraseAccount(const CKeyID &keyId);
-	bool SetKeyId(const vector<unsigned char> &accountId, const CKeyID &keyId);
-	bool GetKeyId(const vector<unsigned char> &accountId, CKeyID &keyId);
-	bool EraseKeyId(const vector<unsigned char> &accountId);
-	bool GetAccount(const vector<unsigned char> &accountId, CAccount &secureAccount);
-	bool SaveAccountInfo(const vector<unsigned char> &accountId, const CKeyID &keyId, const CAccount &secureAccount);
-	uint64_t TraverseAccount();
-	int64_t GetDbCount()
-	{
-		return db.GetDbCount();
-	}
-	Object ToJosnObj(char Prefix);
+
+ private:
+	CLevelDBWrapper m_cLevelDBWrapper;
 };
 
-class CTransactionDB: public CTransactionDBView{
-private:
-	CLevelDBWrapper db;
-public:
-	CTransactionDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
-private:
-	CTransactionDB(const CTransactionDB&);
-	void operator=(const CTransactionDB&);
-public:
-	bool SetTxCache(const uint256 &blockHash, const vector<uint256> &hashTxSet);
-	bool GetTxCache(const uint256 &hashblock, vector<uint256> &hashTx);
+class CTransactionDB: public CTransactionDBView {
+ public:
+	CTransactionDB(size_t unCacheSize, bool bMemory = false, bool bWipe = false);
+
+ public:
+	bool SetTxCache(const uint256 &cBlockHash, const vector<uint256> &vcHashTxSet);
+	bool GetTxCache(const uint256 &cHashblock, vector<uint256> &vcHashTx);
 	bool LoadTransaction(map<uint256, vector<uint256> > &mapTxHashByBlockHash);
 	bool BatchWrite(const map<uint256, vector<uint256> > &mapTxHashByBlockHash);
-	int64_t GetDbCount()
-	{
-		return db.GetDbCount();
+	int64_t GetDbCount() {
+		return m_LevelDBWrapper.GetDbCount();
 	}
 
+ private:
+	CTransactionDB(const CTransactionDB&);
+	void operator=(const CTransactionDB&);
+
+ private:
+	CLevelDBWrapper m_LevelDBWrapper;
 };
 
-class CScriptDB: public CScriptDBView
-{
-private:
-	CLevelDBWrapper db;
-public:
-	CScriptDB(const string&name,size_t nCacheSize,  bool fMemory=false, bool fWipe = false);
-	CScriptDB(size_t nCacheSize, bool fMemory=false, bool fWipe = false);
-private:
+class CScriptDB: public CScriptDBView {
+ public:
+	CScriptDB(const string& strName, size_t unCacheSize, bool bMemory = false, bool bWipe = false);
+	CScriptDB(size_t unCacheSize, bool bMemory = false, bool bWipe = false);
+
+ public:
+	bool GetData(const vector<unsigned char> &vchKey, vector<unsigned char> &vchValue);
+	bool SetData(const vector<unsigned char> &vchKey, const vector<unsigned char> &vchValue);
+	bool BatchWrite(const map<vector<unsigned char>, vector<unsigned char> > &mapDatas);
+	bool EraseKey(const vector<unsigned char> &vchKey);
+	bool HaveData(const vector<unsigned char> &vchKey);
+	bool GetScript(const int &nIndex, vector<unsigned char> &vchScriptId, vector<unsigned char> &vchValue);
+	bool GetScriptData(const int nCurBlockHeight, const vector<unsigned char> &vchScriptId, const int &nIndex,
+			vector<unsigned char> &vchScriptKey, vector<unsigned char> &vchScriptData);
+	int64_t GetDbCount() {
+		return m_LevelDBWrapper.GetDbCount();
+	}
+	bool GetTxHashByAddress(const CKeyID &cKeyId, int nHeight,
+			map<vector<unsigned char>, vector<unsigned char> > &mapTxHash);
+	Object ToJosnObj(string strPrefix);
+
+ private:
 	CScriptDB(const CScriptDB&);
 	void operator=(const CScriptDB&);
-public:
-	bool GetData(const vector<unsigned char> &vKey, vector<unsigned char> &vValue);
-	bool SetData(const vector<unsigned char> &vKey, const vector<unsigned char> &vValue);
-	bool BatchWrite(const map<vector<unsigned char>, vector<unsigned char> > &mapDatas);
-	bool EraseKey(const vector<unsigned char> &vKey);
-	bool HaveData(const vector<unsigned char> &vKey);
-	bool GetScript(const int &nIndex, vector<unsigned char> &vScriptId, vector<unsigned char> &vValue);
-	bool GetScriptData(const int curBlockHeight, const vector<unsigned char> &vScriptId, const int &nIndex, vector<unsigned char> &vScriptKey, vector<unsigned char> &vScriptData);
-	int64_t GetDbCount()
-	{
-		return db.GetDbCount();
-	}
-	bool GetTxHashByAddress(const CKeyID &keyId, int nHeight, map<vector<unsigned char>, vector<unsigned char> > &mapTxHash);
-	Object ToJosnObj(string Prefix);
+
+ private:
+	CLevelDBWrapper m_LevelDBWrapper;
 };
-#endif // DACRS_TXDB_LEVELDB_H
+
+#endif // DACRS_TXDB_H_

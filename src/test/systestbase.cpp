@@ -695,7 +695,7 @@ bool SysTestBase::GetKeyId(string const &addr,CKeyID &cKeyId) {
 };
 
 bool SysTestBase::IsTxInMemorypool(const uint256& txHash) {
-	for (const auto& entry : mempool.mapTx) {
+	for (const auto& entry : g_cTxMemPool.m_mapTx) {
 		if (entry.first == txHash)
 			return true;
 	}
@@ -720,7 +720,7 @@ bool SysTestBase::GetRegID(string& strAddr,string& regID){
 }
 
 bool SysTestBase::IsTxInTipBlock(const uint256& txHash) {
-		CBlockIndex* pindex = chainActive.Tip();
+		CBlockIndex* pindex = g_cChainActive.Tip();
 		CBlock block;
 		if (!ReadBlockFromDisk(block, pindex))
 			return false;
@@ -743,17 +743,17 @@ bool SysTestBase::GetRegID(string& strAddr,CRegID& regID) {
 
 	CUserID userId = keyid;
 
-	LOCK(cs_main);
-	CAccountViewCache accView(*pAccountViewTip, true);
+	LOCK(g_cs_main);
+	CAccountViewCache accView(*g_pAccountViewTip, true);
 	if (!accView.GetAccount(userId, account)) {
 		return false;
 	}
-	if((!account.IsRegister())||account.regID.IsEmpty())
+	if((!account.IsRegister())||account.m_cRegID.IsEmpty())
 	{
 		return false;
 	}
 
-	regID = account.regID;
+	regID = account.m_cRegID;
 	return true;
 }
 

@@ -180,7 +180,7 @@ class CMainParams: public CBaseParams {
 			struct in_addr ip;
 			memcpy(&ip, &pnSeed[i], sizeof(ip));
 			CAddress addr(CService(ip, GetDefaultPort()));
-			addr.nTime = GetTime() - GetRand(nOneWeek) - nOneWeek;
+			addr.m_ullTime = GetTime() - GetRand(nOneWeek) - nOneWeek;
 			vFixedSeeds.push_back(addr);
 		}
 	}
@@ -539,7 +539,7 @@ bool CBaseParams::CreateGenesisRewardTx(vector<std::shared_ptr<CBaseTransaction>
 			money = 1000000000 * COIN;
 		}
 		shared_ptr<CRewardTransaction> pRewardTx = std::make_shared<CRewardTransaction>(ParseHex(vInitPubKey[i].c_str()), money, 0);
-		pRewardTx->nVersion = nTxVersion1;
+		pRewardTx->m_nVersion = g_sTxVersion1;
 		if (pRewardTx.get())
 			vRewardTx.push_back(pRewardTx);
 		else

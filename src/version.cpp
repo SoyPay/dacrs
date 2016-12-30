@@ -9,7 +9,7 @@
 // Name of client reported in the 'version' message. Report the same name
 // for both Dacrsd and Dacrs-qt, to make it harder for attackers to
 // target servers or GUI users specifically.
-const std::string CLIENT_NAME("dacrs");
+const std::string g_strClientName("dacrs");
 
 #ifdef WIN32
 // Client version number
@@ -72,5 +72,5 @@ const std::string CLIENT_NAME("dacrs");
 #    endif
 #endif
 
-const std::string CLIENT_BUILD(BUILD_DESC CLIENT_VERSION_SUFFIX);
-const std::string CLIENT_DATE(BUILD_DATE);
+const std::string g_strClientBuild(BUILD_DESC CLIENT_VERSION_SUFFIX);
+const std::string g_strClientDate(BUILD_DATE);

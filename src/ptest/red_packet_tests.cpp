@@ -143,7 +143,7 @@ bool CRedPacketTest::WithDraw() {
 	memset(&tAccData,0,sizeof(ST_APPACC));
 	tAccData.uchSysType = 0xff;
 	tAccData.uchType = 0x02;  /// 0xff 表示提现 或者充值 0x01 提现 0x02 充值
-	CDataStream cScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream cScriptData(SER_DISK, g_sClientVersion);
 	cScriptData << tAccData;
 	string strSendContract = HexStr(cScriptData);
 
@@ -171,7 +171,7 @@ bool CRedPacketTest::SendRedPacketTx() {
 	tRedPacket.uchDnType = EM_TX_COMM_SENDREDPACKET;
 	tRedPacket.llMoney = 100000000;
 	tRedPacket.nNumber = 2;
-	CDataStream cScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream cScriptData(SER_DISK, g_sClientVersion);
 	cScriptData << tRedPacket;
 	string strSendContract = HexStr(cScriptData);
 	Value  buyerpack= m_cBasetest.CreateContractTx(m_strAppRegId,m_strAppAddr,strSendContract,0,100000000,tRedPacket.llMoney);
@@ -191,7 +191,7 @@ bool CRedPacketTest::AcceptRedPacketTx() {
 	Acceptredpacket.uchDnType = EM_TX_COMM_ACCEPTREDPACKET;
 	memcpy(Acceptredpacket.arruchRedHash, uint256S(m_strRedHash).begin(), sizeof(Acceptredpacket.arruchRedHash));
 
-	CDataStream cScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream cScriptData(SER_DISK, g_sClientVersion);
 	cScriptData << Acceptredpacket;
 	string strSendContract = HexStr(cScriptData);
 	string strRegAddr="";
@@ -231,7 +231,7 @@ bool CRedPacketTest::SendSpecailRedPacketTx() {
 	redpacket.uchDnType = EM_TX_SPECIAL_SENDREDPACKET;
 	redpacket.llMoney = 2000000000;
 	redpacket.nNumber = 2;
-	CDataStream cScriptData(SER_DISK, CLIENT_VERSION);
+	CDataStream cScriptData(SER_DISK, g_sClientVersion);
 	cScriptData << redpacket;
 	string strSendContract = HexStr(cScriptData);
 	Value  Specailbuyerpack= m_cBasetest.CreateContractTx(m_strAppRegId,m_strAppAddr,strSendContract,0,100000000,redpacket.llMoney);
@@ -254,7 +254,7 @@ bool CRedPacketTest::AcceptSpecailRedPacketTx() {
 		tAcceptredpacket.uchDnType = EM_TX_SPECIAL_ACCEPTREDPACKET;
 		memcpy(tAcceptredpacket.arruchRedHash, uint256S(m_strRedHash).begin(), sizeof(tAcceptredpacket.arruchRedHash));
 
-		CDataStream cScriptData(SER_DISK, CLIENT_VERSION);
+		CDataStream cScriptData(SER_DISK, g_sClientVersion);
 		cScriptData << tAcceptredpacket;
 		string strSendContract = HexStr(cScriptData);
 
