@@ -396,7 +396,7 @@ public:
 				desUserId = desId.GetUserId();
 			}
 	)
-	uint64_t GetValue() const {return 0;}
+	uint64_t GetValue() const {return llValues;}
 	uint256 GetHash() const;
 
 	uint64_t GetFee() const {
