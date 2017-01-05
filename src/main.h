@@ -113,7 +113,7 @@ static const int g_sUpdateTxVersion2Height 		= 196000;  		//主链在此高度后不再接
 static const int g_sUpdateBlockVersionHeight 	= 209000;   	//主链在此高度后，block版本升级
 static const int g_sLimite8051AppHeight 		= 160000;    	//在此高度后，不能注册8051脚本
 static const int g_sBlockTime4AppAccountHeight 	= 600000;  		//在此高度后，改用block时间取代高度操作脚本应用账户
-static const int g_sBlockRemainCoinDayHeight 	= 700000;  		//此高度之后，用新的剩余币龄算法
+static const int g_sBlockRemainCoinDayHeight 	= 900000;  		//此高度之后，用新的剩余币龄算法
 
 class CCoinsDB;
 class CBlockTreeDB;
