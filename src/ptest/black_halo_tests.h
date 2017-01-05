@@ -1,12 +1,12 @@
 /*
- * CBlackHalo_tests.h
+ * Black_Halo_tests.h
  *
  *  Created on: 2014Äê12ÔÂ30ÈÕ
  *      Author: ranger.shi
  */
 
-#ifndef BLACK_HALO_PTEST_H_
-#define BLACK_HALO_PTEST_H_
+#ifndef DACRS_PTEST_BLACK_HALO_TEST_H_
+#define DACRS_PTEST_BLACK_HALO_TEST_H_
 
 #include "cycle_test_base.h"
 #include <stdlib.h>
@@ -62,9 +62,8 @@ typedef struct {
 //	TX_BUYERCONFIM = 0x03,
 //	TX_BUYERCANCEL = 0x04,
 //};
-#define BUYER_A    "dk2NNjraSvquD9b4SQbysVRQeFikA55HLi"
+#define BUYER_A    	"dk2NNjraSvquD9b4SQbysVRQeFikA55HLi"
 #define SELLER_B    "dggsWmQ7jH46dgtA5dEZ9bhFSAK1LASALw"
-
 
 class CBlackHalo: public CycleTestBase {
  public:
@@ -76,17 +75,19 @@ class CBlackHalo: public CycleTestBase {
 		return nR;
 	}
 	virtual emTEST_STATE Run();
+
 	uint64_t GetPayMoney() {
 		uint64_t ullR = 0;
 		while (true) {
 			srand(time(NULL));
 			ullR = (rand() % 1000002) + 100000000;
-			if (ullR % 2 == 0 && ullR != 0)
+			if (ullR % 2 == 0 && ullR != 0) {
 				break;
+			}
 		}
-
 		return ullR;
 	}
+
 	bool RegistScript();
 	bool SendBuyerPackage();
 	bool SendSellerPackage();
@@ -108,4 +109,4 @@ class CBlackHalo: public CycleTestBase {
 	uint64_t m_ullSendMonye;
 };
 
-#endif /* CBLACKHALO_TESTS_H_ */
+#endif /* DACRS_PTEST_BLACK_HALO_TEST_H_ */

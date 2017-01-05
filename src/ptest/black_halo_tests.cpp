@@ -1,5 +1,5 @@
 /*
- * CBlackHalo_tests.cpp
+ * Black_Halo_tests.cpp
  *
  *  Created on: 2014Äê12ÔÂ30ÈÕ
  *      Author: ranger.shi
@@ -98,12 +98,12 @@ bool CBlackHalo::SendBuyerPackage() {
 	string strRegid = "";
 	string strSellerAddr = SELLER_B;
 	BOOST_CHECK(m_cBasetest.GetRegID(strSellerAddr, strRegid));
-	CRegID CSellerregid(strRegid);
-	memcpy(tSenddata.arruchSeller, &CSellerregid.GetVec6().at(0), sizeof(tSenddata.arruchSeller));
+	CRegID cSellerRegId(strRegid);
+	memcpy(tSenddata.arruchSeller, &cSellerRegId.GetVec6().at(0), sizeof(tSenddata.arruchSeller));
 
-	CDataStream CScriptData(SER_DISK, g_sClientVersion);
-	CScriptData << tSenddata;
-	string strSendContract = HexStr(CScriptData);
+	CDataStream cScriptData(SER_DISK, g_sClientVersion);
+	cScriptData << tSenddata;
+	string strSendContract = HexStr(cScriptData);
 	m_ullSendMonye = GetPayMoney();
 	Value buyerpack = m_cBasetest.CreateContractTx(m_strScriptid, BUYER_A, strSendContract, 0, 0, m_ullSendMonye);
 
@@ -124,17 +124,18 @@ bool CBlackHalo::WaitSendBuyerPackage() {
 }
 
 bool CBlackHalo::SendSellerPackage() {
-	if (m_strScriptid == "")
+	if (m_strScriptid == "") {
 		return false;
+	}
 
 	ST_NEXT_CONTRACT tSeller;
 
 	tSeller.uchDnType = 0x02;
 	memcpy(tSeller.arruchHash, uint256S(m_strBuyerhash).begin(), sizeof(tSeller.arruchHash));
 
-	CDataStream scriptData(SER_DISK, g_sClientVersion);
-	scriptData << tSeller;
-	string strSendContract = HexStr(scriptData);
+	CDataStream cScriptData(SER_DISK, g_sClientVersion);
+	cScriptData << tSeller;
+	string strSendContract = HexStr(cScriptData);
 
 	Value Sellerpack = m_cBasetest.CreateContractTx(m_strScriptid, SELLER_B, strSendContract, 0, 0, m_ullSendMonye / 2);
 
@@ -146,11 +147,11 @@ bool CBlackHalo::SendSellerPackage() {
 	return true;
 }
 
-bool CBlackHalo::WaitSendSellerPackage(){
+bool CBlackHalo::WaitSendSellerPackage() {
 	string strIndex = "";
 	if (m_cBasetest.GetTxConfirmedRegID(m_strSellerhash, strIndex)) {
 		m_nStep++;
-			return true;
+		return true;
 	}
 	return true;
 }
@@ -163,9 +164,9 @@ bool CBlackHalo::SendBuyerConfirmedPackage() {
 	tSeller.uchDnType = 0x03;
 	memcpy(tSeller.arruchHash, uint256S(m_strBuyerhash).begin(), sizeof(tSeller.arruchHash));
 
-	CDataStream CScriptData(SER_DISK, g_sClientVersion);
-	CScriptData << tSeller;
-	string strSendContract = HexStr(CScriptData);
+	CDataStream cScriptData(SER_DISK, g_sClientVersion);
+	cScriptData << tSeller;
+	string strSendContract = HexStr(cScriptData);
 	Value Sellerpack = m_cBasetest.CreateContractTx(m_strScriptid, BUYER_A, strSendContract, 0);
 
 	if (m_cBasetest.GetHashFromCreatedTx(Sellerpack, m_strBuyerconfiredhash)) {
@@ -187,16 +188,17 @@ bool CBlackHalo::WaitSendBuyerConfirmedPackage() {
 }
 
 bool CBlackHalo::SendBuyerCancelPackage() {
-	if (m_strScriptid == "")
+	if (m_strScriptid == "") {
 		return false;
+	}
 
 	ST_NEXT_CONTRACT tSeller;
 	tSeller.uchDnType = 0x04;
 	memcpy(tSeller.arruchHash, uint256S(m_strBuyerhash).begin(), sizeof(tSeller.arruchHash));
 
-	CDataStream CScriptData(SER_DISK, g_sClientVersion);
-	CScriptData << tSeller;
-	string strSendContract = HexStr(CScriptData);
+	CDataStream cScriptData(SER_DISK, g_sClientVersion);
+	cScriptData << tSeller;
+	string strSendContract = HexStr(cScriptData);
 	Value Sellerpack = m_cBasetest.CreateContractTx(m_strScriptid, BUYER_A, strSendContract, 0);
 
 	if (m_cBasetest.GetHashFromCreatedTx(Sellerpack, m_strBuyercancelhash)) {

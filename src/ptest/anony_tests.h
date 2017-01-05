@@ -1,12 +1,12 @@
 /*
- * CBlackHalo_tests.h
+ * anony_tests.h
  *
  *  Created on: 2015-04-24
  *      Author: frank.shi
  */
 
-#ifndef ANONY_PTEST_H_
-#define ANONY_PTEST_H_
+#ifndef DACRS_PTEST_ANONY_TEST_H_
+#define DACRS_PTEST_ANONY_TEST_H_
 
 #include "cycle_test_base.h"
 #include "../test/systestbase.h"
@@ -19,7 +19,7 @@ using namespace json_spirit;
 
 
 typedef struct  {
-	unsigned char arruchSender[6];						//!<转账人ID（采用6字节的账户ID）
+	unsigned char arruchSender[6];					//!<转账人ID（采用6字节的账户ID）
 	int64_t llPayMoney;								//!<转账的人支付的金额
 	unsigned short usLen;             		        //!<接受钱账户信息长度
 	IMPLEMENT_SERIALIZE
@@ -62,4 +62,4 @@ class CAnonyTest: public CycleTestBase {
 	string m_strRegId;
 };
 
-#endif /* CANONY_TESTS_H */
+#endif /* DACRS_PTEST_ANONY_TEST_H_ */
