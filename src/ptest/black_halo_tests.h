@@ -105,7 +105,7 @@ class CBlackHalo: public CycleTestBase {
 	string m_strBuyerconfiredhash;
 	string m_strBuyercancelhash;
 	string m_strScriptid;
-	uint64_t m_llSendMonye;
+	uint64_t m_ullSendMonye;
 };
 
 #endif /* CBLACKHALO_TESTS_H_ */

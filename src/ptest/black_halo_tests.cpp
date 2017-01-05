@@ -15,7 +15,7 @@ CBlackHalo::CBlackHalo() {
 	m_strBuyerconfiredhash = "";
 	m_strBuyercancelhash = "";
 	m_strScriptid = "";
-	m_llSendMonye = 0;
+	m_ullSendMonye = 0;
 }
 
 CBlackHalo::~CBlackHalo() {
@@ -104,8 +104,8 @@ bool CBlackHalo::SendBuyerPackage() {
 	CDataStream CScriptData(SER_DISK, g_sClientVersion);
 	CScriptData << tSenddata;
 	string strSendContract = HexStr(CScriptData);
-	m_llSendMonye = GetPayMoney();
-	Value buyerpack = m_cBasetest.CreateContractTx(m_strScriptid, BUYER_A, strSendContract, 0, 0, m_llSendMonye);
+	m_ullSendMonye = GetPayMoney();
+	Value buyerpack = m_cBasetest.CreateContractTx(m_strScriptid, BUYER_A, strSendContract, 0, 0, m_ullSendMonye);
 
 	if (m_cBasetest.GetHashFromCreatedTx(buyerpack, m_strBuyerhash)) {
 		m_nStep++;
@@ -136,7 +136,7 @@ bool CBlackHalo::SendSellerPackage() {
 	scriptData << tSeller;
 	string strSendContract = HexStr(scriptData);
 
-	Value Sellerpack = m_cBasetest.CreateContractTx(m_strScriptid, SELLER_B, strSendContract, 0, 0, m_llSendMonye / 2);
+	Value Sellerpack = m_cBasetest.CreateContractTx(m_strScriptid, SELLER_B, strSendContract, 0, 0, m_ullSendMonye / 2);
 
 	if (m_cBasetest.GetHashFromCreatedTx(Sellerpack, m_strSellerhash)) {
 		m_nStep++;

@@ -5,17 +5,17 @@
 #define  BOOST_NO_CXX11_SCOPED_ENUMS
 #include "walletdb.h"
 
-#include <fstream>
-#include <algorithm>
-#include <iterator>
-#include <boost/filesystem.hpp>
-
 #include "base58.h"
 #include "protocol.h"
 #include "serialize.h"
 #include "sync.h"
 #include "wallet.h"
 #include "tx.h"
+
+#include <fstream>
+#include <algorithm>
+#include <iterator>
+#include <boost/filesystem.hpp>
 
 using namespace std;
 using namespace boost;
@@ -34,13 +34,13 @@ bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,str
 		ssKey >> strType;
 
 		if (strType == "tx") {
-			uint256 hash;
-			ssKey >> hash;
+			uint256 cHash;
+			ssKey >> cHash;
 			std::shared_ptr<CBaseTransaction> pBaseTx; //= make_shared<CContractTransaction>();
 			ssValue >> pBaseTx;
-			if (pBaseTx->GetHash() == hash) {
+			if (pBaseTx->GetHash() == cHash) {
 				if (pwallet != NULL) {
-					pwallet->m_mapUnConfirmTx[hash] = pBaseTx->GetNewInstance();
+					pwallet->m_mapUnConfirmTx[cHash] = pBaseTx->GetNewInstance();
 				}
 			} else {
 				strErr = "Error reading wallet database: tx corrupt";
@@ -52,18 +52,18 @@ bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,str
 				ssKey.SetVersion(MinVersion);
 				ssValue.SetVersion(MinVersion);
 			}
-			CKeyCombi keyCombi;
+			CKeyCombi cKeyCombi;
 			CKeyID cKeyid;
 			ssKey >> cKeyid;
-			ssValue >> keyCombi;
-			if(keyCombi.IsContainMainKey()) {
-				if (cKeyid != keyCombi.GetCKeyID()) {
+			ssValue >> cKeyCombi;
+			if(cKeyCombi.IsContainMainKey()) {
+				if (cKeyid != cKeyCombi.GetCKeyID()) {
 					strErr = "Error reading wallet database: keystore corrupt";
 					return false;
 				}
 			}
 			if (pwallet != NULL) {
-				pwallet->LoadKeyCombi(cKeyid, keyCombi);
+				pwallet->LoadKeyCombi(cKeyid, cKeyCombi);
 			}
 		} else if (strType == "ckey") {
 			CPubKey pubKey;
@@ -84,13 +84,13 @@ bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,str
 			}
 		}
 		else if (strType == "blocktx") {
-			uint256 hash;
-			CAccountTx atx;
+			uint256 cHash;
+			CAccountTx cAtx;
 			CKeyID cKeyid;
-			ssKey >> hash;
-			ssValue >> atx;
+			ssKey >> cHash;
+			ssValue >> cAtx;
 			if (pwallet != NULL) {
-				pwallet->m_mapInBlockTx[hash] = std::move(atx);
+				pwallet->m_mapInBlockTx[cHash] = std::move(cAtx);
 			}
 		} else if (strType == "defaultkey") {
 			if (pwallet != NULL) {
@@ -110,7 +110,7 @@ bool ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,str
 emDBErrors CWalletDB::LoadWallet(CWallet* pwallet) {
 	pwallet->m_vchDefaultKey = CPubKey();
 	bool bNoncriticalErrors = false;
-	emDBErrors result = EM_DB_LOAD_OK;
+	emDBErrors eResult = EM_DB_LOAD_OK;
 
 	try {
 			LOCK(pwallet->m_cs_wallet);
@@ -123,8 +123,8 @@ emDBErrors CWalletDB::LoadWallet(CWallet* pwallet) {
 			}
 
 	        // Get cursor
-	        Dbc* pcursor = GetCursor();
-	        if (!pcursor) {
+	        Dbc* pCursor = GetCursor();
+	        if (!pCursor) {
 	            LogPrint("INFO","Error getting wallet database cursor\n");
 	            return EM_DB_CORRUPT;
 	        }
@@ -133,11 +133,11 @@ emDBErrors CWalletDB::LoadWallet(CWallet* pwallet) {
 	            // Read next record
 	            CDataStream ssKey(SER_DISK, g_sClientVersion);
 	            CDataStream ssValue(SER_DISK, g_sClientVersion);
-	            int ret = ReadAtCursor(pcursor, ssKey, ssValue);
-	            if (ret == DB_NOTFOUND) {
+	            int nRet = ReadAtCursor(pCursor, ssKey, ssValue);
+	            if (nRet == DB_NOTFOUND) {
 	            	break;
 	            }
-	            else if (ret != 0) {
+	            else if (nRet != 0) {
 	                LogPrint("INFO","Error reading next record from wallet database\n");
 	                return EM_DB_CORRUPT;
 	            }
@@ -163,23 +163,23 @@ emDBErrors CWalletDB::LoadWallet(CWallet* pwallet) {
 	            	LogPrint("INFO","%s\n", strErr);
 	            }
 	        }
-	        pcursor->close();
+	        pCursor->close();
 	    }
 	    catch (boost::thread_interrupted) {
 	        throw;
 	    }
 	    catch (...) {
-	        result = EM_DB_CORRUPT;
+	        eResult = EM_DB_CORRUPT;
 	    }
 
-	    if (bNoncriticalErrors && result == EM_DB_LOAD_OK) {
-	    	result = EM_DB_NONCRITICAL_ERROR;
+	    if (bNoncriticalErrors && eResult == EM_DB_LOAD_OK) {
+	    	eResult = EM_DB_NONCRITICAL_ERROR;
 	    }
 
 	    // Any wallet corruption at all: skip any rewriting or
 	    // upgrading, we don't want to make it worse.
-	    if (result != EM_DB_LOAD_OK) {
-	    	return result;
+	    if (eResult != EM_DB_LOAD_OK) {
+	    	return eResult;
 	    }
 
 	    LogPrint("INFO","nFileVersion = %d\n", GetMinVersion());
@@ -207,7 +207,7 @@ emDBErrors CWalletDB::LoadWallet(CWallet* pwallet) {
 	    	}
 	    }
 
-	    return result;
+	    return eResult;
 }
 
 
@@ -222,8 +222,8 @@ bool CWalletDB::Recover(CDBEnv& dbenv, string filename, bool fOnlyKeys) {
     // Rewrite salvaged data to wallet.dat
     // Set -rescan so any missing transactions will be
     // found.
-    int64_t now = GetTime();
-    string newFilename = strprintf("wallet.%d.bak", now);
+    int64_t llNow = GetTime();
+    string newFilename = strprintf("wallet.%d.bak", llNow);
 
     int nResult = dbenv.m_pDbEnv->dbrename(NULL, filename.c_str(), NULL,
                                       newFilename.c_str(), DB_AUTO_COMMIT);
@@ -244,13 +244,13 @@ bool CWalletDB::Recover(CDBEnv& dbenv, string filename, bool fOnlyKeys) {
 
     bool bSuccess = bAllOK;
     boost::scoped_ptr<Db> pdbCopy(new Db(dbenv.m_pDbEnv, 0));
-    int ret = pdbCopy->open(NULL,               // Txn pointer
+    int nRet = pdbCopy->open(NULL,               // Txn pointer
                             filename.c_str(),   // Filename
                             "main",             // Logical db name
                             DB_BTREE,           // Database type
                             DB_CREATE,          // Flags
                             0);
-    if (ret > 0) {
+    if (nRet > 0) {
         LogPrint("INFO","Cannot create database file %s\n", filename);
         return false;
     }
@@ -269,10 +269,10 @@ bool CWalletDB::Recover(CDBEnv& dbenv, string filename, bool fOnlyKeys) {
             	                continue;
             }
         }
-        Dbt datKey(&row.first[0], row.first.size());
-        Dbt datValue(&row.second[0], row.second.size());
-        int ret2 = pdbCopy->put(ptxn, &datKey, &datValue, DB_NOOVERWRITE);
-        if (ret2 > 0) {
+        Dbt cDatKey(&row.first[0], row.first.size());
+        Dbt cDatValue(&row.second[0], row.second.size());
+        int nRet2 = pdbCopy->put(ptxn, &cDatKey, &cDatValue, DB_NOOVERWRITE);
+        if (nRet2 > 0) {
         	bSuccess = false;
         }
     }
@@ -312,14 +312,14 @@ bool CWalletDB::WriteCryptedKey(const CPubKey& pubkey, const std::vector<unsigne
 	if (!Write(std::make_pair(std::string("ckey"), pubkey), vchCryptedSecret, true)) {
 		return false;
 	}
-	CKeyCombi keyCombi;
-	CKeyID keyId = pubkey.GetKeyID();
+	CKeyCombi cKeyCombi;
+	CKeyID cKeyId = pubkey.GetKeyID();
 	int nVersion(0);
 	Read(string("minversion"), nVersion);
-	if(Read(make_pair(string("keystore"), keyId), keyCombi, nVersion))
+	if(Read(make_pair(string("keystore"), cKeyId), cKeyCombi, nVersion))
 	{
-		keyCombi.CleanMainKey();
-		if(!Write(make_pair(string("keystore"), keyId), keyCombi, true)) {
+		cKeyCombi.CleanMainKey();
+		if(!Write(make_pair(string("keystore"), cKeyId), cKeyCombi, true)) {
 			return false;
 		}
 	}
@@ -342,8 +342,8 @@ bool CWalletDB::WriteVersion(const int version) {
 }
 
 int CWalletDB::GetVersion(void) {
-	int verion;
-	return Read(string("version"),verion);
+	int nVerion;
+	return Read(string("version"),nVerion);
 }
 
 bool CWalletDB::WriteMinVersion(const int version) {
@@ -352,8 +352,8 @@ bool CWalletDB::WriteMinVersion(const int version) {
 }
 
 int CWalletDB::GetMinVersion(void) {
-	int verion;
-	return Read(string("minversion"),verion);
+	int nVerion;
+	return Read(string("minversion"),nVerion);
 }
 
 bool CWalletDB::WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey) {
@@ -370,11 +370,11 @@ bool CWalletDB::EraseMasterKey(unsigned int nID) {
 void ThreadFlushWalletDB(const string& kstrWalletFile) {
     // Make this thread recognisable as the wallet flushing thread
     RenameThread("dacrs-wallet");
-    static bool fOneThread;
-    if (fOneThread) {
+    static bool bOneThread;
+    if (bOneThread) {
     	return;
     }
-    fOneThread = true;
+    bOneThread = true;
     if (!SysCfg().GetBoolArg("-flushwallet", true)) {
     	return;
     }

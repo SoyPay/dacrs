@@ -2,6 +2,14 @@
 // Copyright (c) 2009-2014 The Dacrs developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#include "txdb.h"
+#include "wallet.h"
+
+#include "base58.h"
+#include "checkpoints.h"
+#include "random.h"
+#include "net.h"
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
@@ -12,15 +20,6 @@
 #include "json/json_spirit_writer_template.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <openssl/rand.h>
-
-#include "txdb.h"
-#include "wallet.h"
-
-#include "base58.h"
-#include "checkpoints.h"
-#include "random.h"
-#include "net.h"
-
 using namespace json_spirit;
 using namespace boost::assign;
 
@@ -438,20 +437,20 @@ emDBErrors CWallet::LoadWallet(bool bFirstRunRet) {
 }
 
 int64_t CWallet::GetRawBalance(bool bIsConfirmed) const {
-	int64_t ret = 0;
+	int64_t llRet = 0;
 	{
 		LOCK2(g_cs_main, m_cs_wallet);
 		set<CKeyID> setKeyId;
 		GetKeys(setKeyId);
 		for (auto &keyId :setKeyId) {
 			if (!bIsConfirmed) {
-				ret += g_cTxMemPool.m_pAccountViewCache->GetRawBalance(keyId);
+				llRet += g_cTxMemPool.m_pAccountViewCache->GetRawBalance(keyId);
 			} else {
-				ret += g_pAccountViewTip->GetRawBalance(keyId);
+				llRet += g_pAccountViewTip->GetRawBalance(keyId);
 			}
 		}
 	}
-	return ret;
+	return llRet;
 }
 
 
@@ -498,37 +497,37 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase) {
     vMasterKey.resize(g_kWalletCryptoKeySize);
     GetRandBytes(&vMasterKey[0], g_kWalletCryptoKeySize);
 
-    CMasterKey kMasterKey;
+    CMasterKey cKMasterKey;
     RandAddSeedPerfmon();
 
-    kMasterKey.m_vchSalt.resize(g_kWalletCryptoSaltSize);
-    GetRandBytes(&kMasterKey.m_vchSalt[0], g_kWalletCryptoSaltSize);
+    cKMasterKey.m_vchSalt.resize(g_kWalletCryptoSaltSize);
+    GetRandBytes(&cKMasterKey.m_vchSalt[0], g_kWalletCryptoSaltSize);
 
     CCrypter crypter;
     int64_t llStartTime = GetTimeMillis();
-    crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.m_vchSalt, 25000, kMasterKey.m_unDerivationMethod);
-    kMasterKey.m_unDeriveIterations = 2500000 / ((double)(GetTimeMillis() - llStartTime));
+    crypter.SetKeyFromPassphrase(strWalletPassphrase, cKMasterKey.m_vchSalt, 25000, cKMasterKey.m_unDerivationMethod);
+    cKMasterKey.m_unDeriveIterations = 2500000 / ((double)(GetTimeMillis() - llStartTime));
 
     llStartTime = GetTimeMillis();
-    crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.m_vchSalt, kMasterKey.m_unDeriveIterations, kMasterKey.m_unDerivationMethod);
-    kMasterKey.m_unDeriveIterations = (kMasterKey.m_unDeriveIterations + kMasterKey.m_unDeriveIterations * 100 / ((double)(GetTimeMillis() - llStartTime))) / 2;
+    crypter.SetKeyFromPassphrase(strWalletPassphrase, cKMasterKey.m_vchSalt, cKMasterKey.m_unDeriveIterations, cKMasterKey.m_unDerivationMethod);
+    cKMasterKey.m_unDeriveIterations = (cKMasterKey.m_unDeriveIterations + cKMasterKey.m_unDeriveIterations * 100 / ((double)(GetTimeMillis() - llStartTime))) / 2;
 
-    if (kMasterKey.m_unDeriveIterations < 25000) {
-    	kMasterKey.m_unDeriveIterations = 25000;
+    if (cKMasterKey.m_unDeriveIterations < 25000) {
+    	cKMasterKey.m_unDeriveIterations = 25000;
     }
 
-    LogPrint("INFO", "Encrypting Wallet with an nDeriveIterations of %i\n", kMasterKey.m_unDeriveIterations);
+    LogPrint("INFO", "Encrypting Wallet with an nDeriveIterations of %i\n", cKMasterKey.m_unDeriveIterations);
 
-    if (!crypter.SetKeyFromPassphrase(strWalletPassphrase, kMasterKey.m_vchSalt, kMasterKey.m_unDeriveIterations, kMasterKey.m_unDerivationMethod)) {
+    if (!crypter.SetKeyFromPassphrase(strWalletPassphrase, cKMasterKey.m_vchSalt, cKMasterKey.m_unDeriveIterations, cKMasterKey.m_unDerivationMethod)) {
     	return false;
     }
-    if (!crypter.Encrypt(vMasterKey, kMasterKey.m_vchCryptedKey)) {
+    if (!crypter.Encrypt(vMasterKey, cKMasterKey.m_vchCryptedKey)) {
     	return false;
     }
 
     {
         LOCK(m_cs_wallet);
-        m_mapMasterKeys[++m_unMasterKeyMaxID] = kMasterKey;
+        m_mapMasterKeys[++m_unMasterKeyMaxID] = cKMasterKey;
         if (m_bFileBacked) {
             assert(!m_pWalletdbEncryption);
             m_pWalletdbEncryption = new CWalletDB(m_strWalletFile);
@@ -537,7 +536,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase) {
                 m_pWalletdbEncryption = NULL;
                 return false;
             }
-            m_pWalletdbEncryption->WriteMasterKey(m_unMasterKeyMaxID, kMasterKey);
+            m_pWalletdbEncryption->WriteMasterKey(m_unMasterKeyMaxID, cKMasterKey);
         }
 
         if (!EncryptKeys(vMasterKey)) {
@@ -764,13 +763,13 @@ bool CWallet::CleanAll() {
 }
 
 bool CWallet::Sign(const CKeyID& keyId, const uint256& hash, vector<unsigned char> &vchSignature,bool bIsMiner) const {
-	CKey key;
-	if (GetKey(keyId, key, bIsMiner)) {
+	CKey cKey;
+	if (GetKey(keyId, cKey, bIsMiner)) {
 		if(bIsMiner == true) {
 		//	cout <<"Sign miner key PubKey:"<< key.GetPubKey().ToString()<< endl;
 		//	cout <<"Sign miner hash:"<< hash.ToString()<< endl;
 		}
-		return(key.Sign(hash, vchSignature));
+		return(cKey.Sign(hash, vchSignature));
 	}
 	return false;
 }
@@ -836,9 +835,9 @@ bool CWallet::AddKey(const CKey& key) {
 }
 
 bool CWallet::IsReadyForCoolMiner(const CAccountViewCache& view) const {
-	CRegID regId;
+	CRegID cRegId;
 	for (auto const &item : mapKeys) {
-		if (item.second.IsContainMinerKey()&&view.GetRegId(item.first,regId)) {
+		if (item.second.IsContainMinerKey()&&view.GetRegId(item.first,cRegId)) {
 			return true;
 		}
 	}
