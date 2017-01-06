@@ -10,7 +10,8 @@ using namespace std;
 using namespace boost;
 using namespace json_spirit;
 #include "../test/systestbase.h"
-map<string, string> mapDesAddress[] = {
+
+map<string, string> g_mapDesAddress[] = {
         boost::assign::map_list_of
         ("000000000900",	"dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem")
         ("000000000500",	"dsGb9GyDGYnnHdjSvRfYbj9ox2zPbtgtpo")
@@ -67,8 +68,8 @@ map<string, string> mapDesAddress[] = {
         ("010000003000",	"mvqUh3LR4R7cDWfw4AW7mRUSxfZbvonQ8v")};
 
 
-int64_t llSendValues[] = {1000000000, 2000000000, 3000000000, 4000000000, 5000000000, 6000000000, 7000000000, 8000000000, 9000000000, 10000000000};
-
+int64_t g_llSendValues[] = { 1000000000, 2000000000, 3000000000, 4000000000, 5000000000, 6000000000, 7000000000,
+		8000000000, 9000000000, 10000000000 };
 
 void SubmitBlock(vector<string> &vstrParam) {
 	if (1 != vstrParam.size()) {
@@ -86,20 +87,21 @@ void SubmitBlock(vector<string> &vstrParam) {
 }
 
 bool readblock(const string &filePath) {
-	CBlock block;
-	FILE* fp = fopen(filePath.c_str(), "rb");
-	if (!fp){
+	CBlock cBlock;
+	FILE* pFile = fopen(filePath.c_str(), "rb");
+	if (!pFile) {
 		return false;
 	}
-	fseek(fp, 8, SEEK_SET); // skip msgheader/size
+	fseek(pFile, 8, SEEK_SET); // skip msgheader/size
 
-	CAutoFile filein = CAutoFile(fp, SER_DISK, g_sClientVersion);
-	if (!filein){
-		return false;}
-	while (!feof(fp)) {
-		filein >> block;
+	CAutoFile cFileIn = CAutoFile(pFile, SER_DISK, g_sClientVersion);
+	if (!cFileIn) {
+		return false;
+	}
+	while (!feof(pFile)) {
+		cFileIn >> cBlock;
 		CDataStream cDs(SER_DISK, g_sClientVersion);
-		cDs << block;
+		cDs << cBlock;
 		vector<string> param;
 		param.push_back(HexStr(cDs));
 		SubmitBlock(param);
@@ -108,51 +110,52 @@ bool readblock(const string &filePath) {
 }
 
 class CMiningTest {
-public:
+ public:
 	//初始化运行环境，导入Block信息
 	CMiningTest() {
 	}
+
 	~CMiningTest() {
-	}
-	;
+	};
 
 };
 
-
-class CSendItem:public SysTestBase{
-
-public:
-	CSendItem(){
+class CSendItem : public SysTestBase {
+ public:
+	CSendItem() {
 	};
-	CSendItem(const string &strRegId, const string &strDesAddr, const int64_t &llSendValue)
-	{
+
+	CSendItem(const string &strRegId, const string &strDesAddr, const int64_t &llSendValue) {
 		m_strRegId = strRegId;
 		m_strAddress = strDesAddr;
 		m_llSendValue = llSendValue;
 	}
-	void GetContranctData(vector<unsigned char> &vContranct ) {
+
+	void GetContranctData(vector<unsigned char> &vuchContranct ) {
 		//vector<unsigned char> temp = ParseHex(m_strRegId);
-		CRegID reg(m_strRegId);
-		vContranct.insert(vContranct.end(), reg.GetVec6().begin(), reg.GetVec6().end());
+		CRegID cRegID(m_strRegId);
+		vuchContranct.insert(vuchContranct.end(), cRegID.GetVec6().begin(), cRegID.GetVec6().end());
 		//temp.clear();
-		CDataStream ds(SER_DISK, g_sClientVersion);
-		ds << m_llSendValue;
-		vector<unsigned char> temp(ds.begin(), ds.end());
+		CDataStream cDataStream(SER_DISK, g_sClientVersion);
+		cDataStream << m_llSendValue;
+		vector<unsigned char> temp(cDataStream.begin(), cDataStream.end());
 		//string strSendValue = HexStr(temp);
-		vContranct.insert(vContranct.end(), temp.begin(), temp.end());
+		vuchContranct.insert(vuchContranct.end(), temp.begin(), temp.end());
 	}
+
 	//nIndex 取值范围1~5，表示1~5个客户端
 	static CSendItem GetRandomSendItem(int nIndex) {
-		int randAddr = std::rand() % 9;
-		int randSendValue = std::rand() % 10;
-		map<string, string>::iterator iterAddr = mapDesAddress[nIndex - 1].begin();
-		map<string, string>::iterator iterLast = mapDesAddress[nIndex - 1].end();
+		int nRandAddr = std::rand() % 9;
+		int nRandSendValue = std::rand() % 10;
+		map<string, string>::iterator iterAddr = g_mapDesAddress[nIndex - 1].begin();
+		map<string, string>::iterator iterLast = g_mapDesAddress[nIndex - 1].end();
 		--iterLast;
 		do {
 			iterAddr++;
-		} while (--randAddr > 0 && iterAddr != iterLast);
-		return CSendItem(iterAddr->first, iterAddr->second, llSendValues[randSendValue]);
+		} while (--nRandAddr > 0 && iterAddr != iterLast);
+		return CSendItem(iterAddr->first, iterAddr->second, g_llSendValues[nRandSendValue]);
 	}
+
 	string GetRegID() {
 		return m_strRegId;
 	}
@@ -162,18 +165,19 @@ public:
 	}
 
 	uint64_t GetSendValue() {
-		char cSendValue[12] = {0};
-		sprintf(&cSendValue[0], "%ld", m_llSendValue);
-		string strSendValue(cSendValue);
+		char chSendValue[12] = {0};
+		sprintf(&chSendValue[0], "%ld", m_llSendValue);
+		string strSendValue(chSendValue);
 		cout << "GetSendValue:" << strSendValue << endl;
 		return m_llSendValue;
 	}
 
-private:
+ private:
 	string m_strRegId;
 	string m_strAddress;
 	int64_t m_llSendValue;
 };
+
 /**
  *构建普通交易
  * @param param
@@ -217,7 +221,6 @@ void CreateContractTx(vector<string> &vstrParam) {
 	}
 	CommandLineRPC(vstrParam.size(), argv);
 }
-
 
 /**
  * 构建注册脚本交易
@@ -266,6 +269,7 @@ time_t string2time(const char * str, const char * formatStr) {
 	tTm1.tm_sec = sec;
 	return mktime(&tTm1);
 }
+
 BOOST_FIXTURE_TEST_SUITE(auto_mining_test, CSendItem)
 BOOST_FIXTURE_TEST_CASE(regscript,CSendItem) {
 	//注册脚本交易

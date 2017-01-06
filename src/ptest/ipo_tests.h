@@ -1,12 +1,12 @@
 /*
- * CBlackHalo_tests.h
+ * ipo_tests.h
  *
  *  Created on: 2015-04-24
  *      Author: frank.shi
  */
 
-#ifndef IPO_TESTS_H_
-#define IPO_TESTS_H_
+#ifndef DACRS_PTEST_IPO_TESTS_H_
+#define DACRS_PTEST_IPO_TESTS_H_
 
 #include "cycle_test_base.h"
 #include "../test/systestbase.h"
@@ -36,7 +36,7 @@ class CIpoTest: public CycleTestBase {
 	int m_nNum;
 	int m_nStep;
 	string m_strTxHash;
-	string m_strAppRegId;//注册应用后的Id
+	string m_strAppRegId;	//注册应用后的Id
 };
 
-#endif /* CANONY_TESTS_H */
+#endif /* DACRS_PTEST_IPO_TESTS_H_ */

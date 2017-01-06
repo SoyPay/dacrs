@@ -5,8 +5,8 @@
  *      Author: ranger.shi
  */
 
-#ifndef LASHOU_TESTS_H_
-#define LASHOU_TESTS_H_
+#ifndef DACRS_PTEST_LASHOU_TESTS_H_
+#define DACRS_PTEST_LASHOU_TESTS_H_
 
 #include "cycle_test_base.h"
 #include "../test/systestbase.h"
@@ -29,85 +29,76 @@ using namespace json_spirit;
 #define TX_IMPORT_DATA   0X08//--导入用户数据
 #define TX_MODIFIED_TIME 0X09//--修改加入时间
 
-typedef struct
-{
-	unsigned char type;    //!<交易类型
-	uint32_t  WatchDay;//!观察期天数
-	uint32_t  MinBalance;//!余额最低限值
-	char SuperAcc[35];//!超级用户
+typedef struct {
+	unsigned char uchType;  	//!<交易类型
+	uint32_t  uWatchDay;		//!观察期天数
+	uint32_t  uMinBalance;		//!余额最低限值
+	char arrchSuperAcc[35];		//!超级用户
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(type);
-			READWRITE(WatchDay);
-			READWRITE(MinBalance);
-			for(int i = 0; i < 35; i++)
-			{
-				READWRITE(SuperAcc[i]);
+			READWRITE(uchType);
+			READWRITE(uWatchDay);
+			READWRITE(uMinBalance);
+			for (int i = 0; i < 35; i++) {
+				READWRITE(arrchSuperAcc[i]);
 			}
 	)
 }CONFIG_ST;  //!<注册配置信息
 
-//
 typedef struct {
-	unsigned char type;            //!<交易类型
-	char  ModityAcc[35];//!<交易金额
+	unsigned char uchType;            	//!<交易类型
+	char  arrchModityAcc[35];			//!<交易金额
 
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(type);
-			for(int i = 0; i < 35; i++)
-			{
-				READWRITE(ModityAcc[i]);
+			READWRITE(uchType);
+			for (int i = 0; i < 35; i++) {
+				READWRITE(arrchModityAcc[i]);
 			}
 	)
 }MODIFIED_ST;//!<修改帐户信息
 
 
-typedef struct
-{
-	unsigned char type;    //!<交易类型
-	uint32_t  RegMoney;//!注册金额
-	char UserID[35];//!用户ID
+typedef struct {
+	unsigned char uchType;    	//!<交易类型
+	uint32_t  uRegMoney;		//!注册金额
+	char arrchUserID[35];		//!用户ID
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(type);
-			READWRITE(RegMoney);
-			for(int i = 0; i < 35; i++)
-			{
-				READWRITE(UserID[i]);
+			READWRITE(uchType);
+			READWRITE(uRegMoney);
+			for (int i = 0; i < 35; i++) {
+				READWRITE(arrchUserID[i]);
 			}
 	)
 }REGISTER_ST;  //!<注册用户信息
 
 
-typedef struct
-{
-	unsigned char type;    //!<交易类型
-	uint32_t  Money;//!充值金额
-	char UserID[35];//!用户ID
+typedef struct {
+	unsigned char uchType;    	//!<交易类型
+	uint32_t  uMoney;			//!充值金额
+	char arrchUserID[35];		//!用户ID
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(type);
-			READWRITE(Money);
-			for(int i = 0; i < 35; i++)
-			{
-				READWRITE(UserID[i]);
+			READWRITE(uchType);
+			READWRITE(uMoney);
+			for (int i = 0; i < 35; i++) {
+				READWRITE(arrchUserID[i]);
 			}
 	)
 }RECHARGE_ST;  //!<充值，提现
 
 
-typedef struct
-{
-	unsigned char type;    //!<交易类型
-	char UserID[34];//!用户ID
+typedef struct {
+	unsigned char uchType;    //!<交易类型
+	char arrchUserID[34];//!用户ID
 	char ApplyHash[35];//!申请的HASH
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(type);
+			READWRITE(uchType);
 			for(int i = 0; i < 34; i++)
 			{
-				READWRITE(UserID[i]);
+				READWRITE(arrchUserID[i]);
 			}
 
 			for(int i = 0; i < 35; i++)
@@ -118,61 +109,50 @@ typedef struct
 	)
 }APPLY_ST;  //!<理赔申请
 
-
-
-typedef struct
-{
-	unsigned char type;    //!<交易类型
-	uint32_t  Money;//!充值金额
-	char UserID[34];//!用户ID
-	uint32_t  Number;//!个数
-	char ApplyHash[34*3+1];//!申请的HASH
+typedef struct {
+	unsigned char uchType;    		//!<交易类型
+	uint32_t  uMoney;				//!充值金额
+	char arrchUserID[34];			//!用户ID
+	uint32_t  uNumber;				//!个数
+	char arrchApplyHash[34*3+1];	//!申请的HASH
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(type);
-			READWRITE(Money);
-			for(int i = 0; i < 34; i++)
-			{
-				READWRITE(UserID[i]);
+			READWRITE(uchType);
+			READWRITE(uMoney);
+			for (int i = 0; i < 34; i++) {
+				READWRITE(arrchUserID[i]);
 			}
-			READWRITE(Number);
-			for(int i = 0; i < (34*3+1); i++)
-			{
-				READWRITE(ApplyHash[i]);
+			READWRITE(uNumber);
+			for (int i = 0; i < (34*3+1); i++) {
+				READWRITE(arrchApplyHash[i]);
 			}
 
 	)
 }CLAIMS_ST;  //!<理赔操作
 
 #define IMPORT_DATA_NNNN	90
-typedef struct
-{
-	unsigned char type; //!<交易类型
-	uint32_t  Number;	//!充值金额
-	struct
-	{//!<插入数据结构
-		char UserID[34];//!用户ID
-		uint32_t ImportMoney;//!注册金额
-		uint32_t ImportHight;//!注册高度
+
+typedef struct {
+	unsigned char uchType; 			//!<交易类型
+	uint32_t  uNumber;				//!充值金额
+	struct {						//!<插入数据结构
+		char arrchUserID[34];		//!用户ID
+		uint32_t uImportMoney;		//!注册金额
+		uint32_t uImportHight;		//!注册高度
 	} ImportDataSt[IMPORT_DATA_NNNN];
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(type);
-			READWRITE(Number);
-			for(int i = 0; i < IMPORT_DATA_NNNN; i++)
-			{
-				for(int j = 0; j < 34; j++)
-				{
-					READWRITE(ImportDataSt[i].UserID[j]);
+			READWRITE(uchType);
+			READWRITE(uNumber);
+			for (int i = 0; i < IMPORT_DATA_NNNN; i++) {
+				for (int j = 0; j < 34; j++) {
+					READWRITE(ImportDataSt[i].arrchUserID[j]);
 				}
-				READWRITE(ImportDataSt[i].ImportMoney);
-				READWRITE(ImportDataSt[i].ImportHight);
+				READWRITE(ImportDataSt[i].uImportMoney);
+				READWRITE(ImportDataSt[i].uImportHight);
 			}
 	)
 }IMPORT_ST;  //!<插入操作
-
-
-
 
 //======================================================================
 //======================================================================
@@ -184,73 +164,66 @@ enum GETDAWEL{
 };
 
 typedef struct {
-	unsigned char type;            //!<交易类型
-	uint64_t maxMoneyByTime;       //!<每次限额
-	uint64_t maxMoneyByDay;        //!<每日限额
-	char  address[35];             //!<备注说明 字符串以\0结束，长度不足后补0
+	unsigned char uchType;           	//!<交易类型
+	uint64_t ullMaxMoneyByTime;       	//!<每次限额
+	uint64_t ullMaxMoneyByDay;        	//!<每日限额
+	char  arrchAddress[35];             //!<备注说明 字符串以\0结束，长度不足后补0
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(type);
-			READWRITE(maxMoneyByTime);
-			READWRITE(maxMoneyByDay);
-			for(int i = 0; i < 35; i++)
-			{
-				READWRITE(address[i]);
+			READWRITE(uchType);
+			READWRITE(ullMaxMoneyByTime);
+			READWRITE(ullMaxMoneyByDay);
+			for (int i = 0; i < 35; i++) {
+				READWRITE(arrchAddress[i]);
 			}
 	)
 }COMPANY_CONFIG;  //!<注册企业配置信息
+
 typedef struct {
-	unsigned char type;            //!<交易类型
-	uint64_t maxMoneyByTime;       //!<每次限额
-	uint64_t maxMoneyByDay;        //!<每日限额
-//	char  address[35];             //!<备注说明 字符串以\0结束，长度不足后补0
+	unsigned char uchType;            //!<交易类型
+	uint64_t ullMaxMoneyByTime;       //!<每次限额
+	uint64_t ullMaxMoneyByDay;        //!<每日限额
+	// char  address[35];             //!<备注说明 字符串以\0结束，长度不足后补0
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(type);
-			READWRITE(maxMoneyByTime);
-			READWRITE(maxMoneyByDay);
-//			for(int i = 0; i < 220; i++)
-//			{
-//				READWRITE(address[i]);
-//			}
+			READWRITE(uchType);
+			READWRITE(ullMaxMoneyByTime);
+			READWRITE(ullMaxMoneyByDay);
+	// for(int i = 0; i < 220; i++)
+	// {
+	// 		READWRITE(address[i]);
+	// }
 	)
 }COMPANY_CONFIG_MODIFY;  //!<修改企业配置信息
 
 typedef struct {
-	unsigned char type;            //!<交易类型
-//	uint64_t moneyM;                   //!<交易金额
+	unsigned char uchType;            		//!<交易类型
+	// uint64_t moneyM;                   	//!<交易金额
 
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(type);
+			READWRITE(uchType);
 //			READWRITE(moneyM);
 	)
-}COMPANY_RECHARGE;                  //!<企业批发币
-
+}COMPANY_RECHARGE;                  		//!<企业批发币
 
 typedef struct {
-	unsigned char type;            //!<交易类型
-	char  address[35];             //!<备注说明 字符串以\0结束，长度不足后补0
-	uint64_t moneyM;               //!<交易金额
+	unsigned char uchType;            		//!<交易类型
+	char  arrchAddress[35];             	//!<备注说明 字符串以\0结束，长度不足后补0
+	uint64_t ullMoneyM;               		//!<交易金额
 
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(type);
-			for(int i = 0; i < 35; i++)
-			{
-				READWRITE(address[i]);
+			READWRITE(uchType);
+			for (int i = 0; i < 35; i++) {
+				READWRITE(arrchAddress[i]);
 			}
-			READWRITE(moneyM);
+			READWRITE(ullMoneyM);
 	)
 } COMPANY_WITHDRAW;
 
-
-class CLashouTest: public CycleTestBase {
-	int nNum;
-	int nStep;
-	string strTxHash;
-	string strAppRegId;//注册应用后的Id
-public:
+class CLashouTest : public CycleTestBase {
+ public:
 	CLashouTest();
 	~CLashouTest(){};
 	virtual emTEST_STATE Run() ;
@@ -266,11 +239,14 @@ public:
 	bool ImportDate(void);
 	bool ImportDateNN(void);
 	bool CodeTest(void);
+
+ private:
+	int m_nNum;
+	int m_nStep;
+	string m_strTxHash;
+	string m_strAppRegId;               		//注册应用后的Id
 };
+
 #endif
 
-
-
-
-
-#endif /* LASHOU_TESTS_H_ */
+#endif /* DACRS_PTEST_LASHOU_TESTS_H_ */

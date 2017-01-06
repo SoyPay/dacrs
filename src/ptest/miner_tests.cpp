@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2014 The Dacrs Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <stdlib.h>
@@ -36,8 +36,8 @@ int CommandLineRPC_GetValue(int nArgc, const char *szArgv[], Value &value) {
 		string strMethod = szArgv[1];
 
 		// Parameters default to strings
-		std::vector<std::string> strParams(&szArgv[2], &szArgv[nArgc]);
-		Array params = RPCConvertValues(strMethod, strParams);
+		std::vector<std::string> vstrParams(&szArgv[2], &szArgv[nArgc]);
+		Array params = RPCConvertValues(strMethod, vstrParams);
 
 		// Execute
 		Object reply = CallRPC(strMethod, params);
@@ -49,8 +49,8 @@ int CommandLineRPC_GetValue(int nArgc, const char *szArgv[], Value &value) {
 		if (error.type() != null_type) {
 			// Error
 			strPrint = "error: " + write_string(error, false);
-			int code = find_value(error.get_obj(), "code").get_int();
-			nRet = abs(code);
+			int nCode = find_value(error.get_obj(), "code").get_int();
+			nRet = abs(nCode);
 		} else {
 			value = result;
 			// Result
@@ -73,7 +73,7 @@ int CommandLineRPC_GetValue(int nArgc, const char *szArgv[], Value &value) {
 	}
 
 	if (strPrint != "") {
-//      fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
+		// fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
 	}
 
 	return nRet;
@@ -109,7 +109,6 @@ struct ST_ACC_STATE {
 	bool SumEqual(ST_ACC_STATE &a) {
 		int64_t l = lldUnmatureMoney + lldFreeMoney + lldFrozenMoney;
 		int64_t r = a.lldUnmatureMoney + a.lldFreeMoney + a.lldFrozenMoney;
-
 		return l == r;
 	}
 
@@ -126,6 +125,7 @@ struct ST_ACC_OPER_LOG {
 	ST_ACC_OPER_LOG() {
 		mapAccState.clear();
 	}
+
 	bool Add(int &nHeight, ST_ACC_STATE &accstate) {
 		mapAccState[nHeight] = accstate;
 		return true;
@@ -137,7 +137,6 @@ struct ST_ACC_OPER_LOG {
 				item.second.lldFreeMoney += item.second.lldFrozenMoney;
 				item.second.lldFrozenMoney = 0.0;
 			}
-
 			if (nHeight > item.first + g_snMatureHeight) {
 				item.second.lldFreeMoney += item.second.lldUnmatureMoney;
 				item.second.lldUnmatureMoney = 0.0;
@@ -146,26 +145,28 @@ struct ST_ACC_OPER_LOG {
 	}
 };
 
-class CMinerTest{
-public:
-	std::map<string,ST_ACC_STATE> mapAccState;
-	std::map<string,ST_ACC_OPER_LOG> m_mapAccOperLog;
-	int nCurHeight;
-	int64_t llCurMoney;
-	int64_t llCurFee;
-private:
+class CMinerTest {
+ public:
+	std::map<string, ST_ACC_STATE> m_mapAccState;
+	std::map<string, ST_ACC_OPER_LOG> m_mapAccOperLog;
+	int m_nCurHeight;
+	int64_t m_llCurMoney;
+	int64_t m_llCurFee;
+
+ private:
 	int GetRandomFee() {
 		srand(time(NULL));
 		int r = (rand() % 1000000) + 1000000;
 		return r;
 	}
+
 	int GetRandomMoney() {
 		srand(time(NULL));
 		int r = (rand() % 1000) + 1000;
 		return r;
 	}
-public:
 
+ public:
 	bool GetOneAddr(std::string &strAddr, const char *pStrMinMoney, const char *bpBoolReg) {
 		//CommanRpc
 		const char *pszArgv[] = { "rpctest", "getoneaddr", pStrMinMoney, bpBoolReg };
@@ -264,12 +265,12 @@ public:
 		char arrchMoney[64] = { 0 };
 		int nMoney = GetRandomMoney();
 		sprintf(arrchMoney, "%d00000000", nMoney);
-		llCurMoney = nMoney * COIN;
+		m_llCurMoney = nMoney * COIN;
 
 		char arrchFee[64] = { 0 };
 		int nFee = GetRandomFee();
 		sprintf(arrchFee, "%d", nFee);
-		llCurFee = nFee;
+		m_llCurFee = nFee;
 
 		char arrchHeight[16] = { 0 };
 		sprintf(arrchHeight, "%d", nHeight);
@@ -294,12 +295,12 @@ public:
 		char arrchMoney[64] = { 0 };
 		int nMoney = GetRandomMoney();
 		sprintf(arrchMoney, "%d00000000", nMoney);
-		llCurMoney = nMoney * COIN;
+		m_llCurMoney = nMoney * COIN;
 
 		char arrchFee[64] = { 0 };
 		int nFee = GetRandomFee();
 		sprintf(arrchFee, "%d", nFee);
-		llCurFee = nFee;
+		m_llCurFee = nFee;
 
 		char arrchHeight[16] = { 0 };
 		sprintf(arrchHeight, "%d", nHeight);
@@ -320,36 +321,33 @@ public:
 		return false;
 	}
 
-	bool registaccounttx(const std::string &strAddr,const int nHeight)
-	{
+	bool registaccounttx(const std::string &strAddr, const int nHeight) {
 		//CommanRpc
 		char arrchAddr[64] = { 0 };
-		strncpy(arrchAddr, strAddr.c_str(), sizeof(arrchAddr)-1);
+		strncpy(arrchAddr, strAddr.c_str(), sizeof(arrchAddr) - 1);
 
 		char arrchFee[64] = { 0 };
 		int nFee = GetRandomFee();
 		sprintf(arrchFee, "%d", nFee);
-		llCurFee = nFee;
+		m_llCurFee = nFee;
 
-		char arrchHeight[16] = {0};
-		sprintf(arrchHeight,"%d",nHeight);
+		char arrchHeight[16] = { 0 };
+		sprintf(arrchHeight, "%d", nHeight);
 
-
-		const char *argv[] = { "rpctest", "registaccounttx", arrchAddr, arrchFee, arrchHeight};
-		int argc = sizeof(argv)/sizeof(char*);
+		const char *argv[] = { "rpctest", "registaccounttx", arrchAddr, arrchFee, arrchHeight };
+		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
 		int nRet = CommandLineRPC_GetValue(argc, argv, value);
-		if (!nRet)
-		{
-			LogPrint("test_miners","RegisterSecureTx:%s\r\n",value.get_str().c_str());
+		if (!nRet) {
+			LogPrint("test_miners", "RegisterSecureTx:%s\r\n", value.get_str().c_str());
 			return true;
 		}
 		return false;
 	}
 
-	bool CreateContractTx(const std::string &strScriptid, const std::string &strAddrs, const std::string &strContract, const int nHeight)
-	{
+	bool CreateContractTx(const std::string &strScriptid, const std::string &strAddrs, const std::string &strContract,
+			const int nHeight) {
 //		char cscriptid[1024] = { 0 };
 //		vector<char> te(strScriptid.begin(),strScriptid.end());
 //		&te[0]
@@ -364,74 +362,69 @@ public:
 		char arrchFee[64] = { 0 };
 		int nFee = GetRandomFee();
 		sprintf(arrchFee, "%d", nFee);
-		llCurFee = nFee;
+		m_llCurFee = nFee;
 
-		char arrchHeight[16] = {0};
-		sprintf(arrchHeight,"%d",nHeight);
+		char arrchHeight[16] = { 0 };
+		sprintf(arrchHeight, "%d", nHeight);
 
-		 const char *argv[] = { "rpctest", "createcontracttx", (char *)(strScriptid.c_str()), (char *)(strAddrs.c_str()), (char *)(strContract.c_str()), arrchFee, arrchHeight};
-		int argc = sizeof(argv)/sizeof(char*);
+		const char *argv[] = { "rpctest", "createcontracttx", (char *) (strScriptid.c_str()),
+				(char *) (strAddrs.c_str()), (char *) (strContract.c_str()), arrchFee, arrchHeight };
+		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
 		int nRet = CommandLineRPC_GetValue(argc, argv, value);
-		if (!nRet)
-		{
-			LogPrint("test_miners","createcontracttx:%s\r\n",value.get_str().c_str());
+		if (!nRet) {
+			LogPrint("test_miners", "createcontracttx:%s\r\n", value.get_str().c_str());
 			return true;
 		}
 		return false;
 	}
 
-	bool RegisterAppTx(const std::string &strAddr, const std::string &strScript, const int nHeight)
-	{
+	bool RegisterAppTx(const std::string &strAddr, const std::string &strScript, const int nHeight) {
 		//CommanRpc
 		char arrchAddr[64] = { 0 };
-		strncpy(arrchAddr, strAddr.c_str(), sizeof(arrchAddr)-1);
+		strncpy(arrchAddr, strAddr.c_str(), sizeof(arrchAddr) - 1);
 
-		char arrchCsript[128*1024] = {0};
-		strncpy(arrchCsript, strScript.c_str(), sizeof(arrchCsript)-1);
+		char arrchCsript[128 * 1024] = { 0 };
+		strncpy(arrchCsript, strScript.c_str(), sizeof(arrchCsript) - 1);
 
 		char arrchFee[64] = { 0 };
 		int nFee = GetRandomFee();
 		sprintf(arrchFee, "%d", nFee);
-		llCurFee = nFee;
+		m_llCurFee = nFee;
 
-		char arrchHeight[16] = {0};
-		sprintf(arrchHeight,"%d",nHeight);
+		char arrchHeight[16] = { 0 };
+		sprintf(arrchHeight, "%d", nHeight);
 
-
-		const char *argv[] = { "rpctest", "registerapptx", arrchAddr, arrchCsript, arrchFee, arrchHeight};
-		int argc = sizeof(argv)/sizeof(char*);
+		const char *argv[] = { "rpctest", "registerapptx", arrchAddr, arrchCsript, arrchFee, arrchHeight };
+		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
 		int nRet = CommandLineRPC_GetValue(argc, argv, value);
-		if (!nRet)
-		{
-			LogPrint("test_miners","RegisterSecureTx:%s\r\n",value.get_str().c_str());
+		if (!nRet) {
+			LogPrint("test_miners", "RegisterSecureTx:%s\r\n", value.get_str().c_str());
 			return true;
 		}
 		return false;
 	}
 
-	bool CreateSecureTx(const string &strScriptid,const vector<string> &vstrObaddrs,
-			const vector<string> &strAddrs,const string&strContract,const int nHeight)
-	{
+	bool CreateSecureTx(const string &strScriptid, const vector<string> &vstrObaddrs, const vector<string> &strAddrs,
+			const string&strContract, const int nHeight) {
 		//CommanRpc
 		char arrchCscriptid[64] = { 0 };
-		strncpy(arrchCscriptid, strScriptid.c_str(), sizeof(arrchCscriptid)-1);
+		strncpy(arrchCscriptid, strScriptid.c_str(), sizeof(arrchCscriptid) - 1);
 
-		char arrchCobstr[512] = {0};
+		char arrchCobstr[512] = { 0 };
 		{
 			Array array;
 			array.clear();
-			for (const auto &str : vstrObaddrs)
-			{
+			for (const auto &str : vstrObaddrs) {
 				array.push_back(str);
 			}
-			string arraystr = write_string(Value(array),false);
-			strncpy(arrchCobstr, arraystr.c_str(), sizeof(arrchCobstr)-1);
+			string arraystr = write_string(Value(array), false);
+			strncpy(arrchCobstr, arraystr.c_str(), sizeof(arrchCobstr) - 1);
 		}
-		char arrchAddrstr[512] = {0};
+		char arrchAddrstr[512] = { 0 };
 		{
 			Array array;
 			array.clear();
@@ -442,48 +435,43 @@ public:
 			strncpy(arrchAddrstr, strArraystr.c_str(), sizeof(arrchAddrstr) - 1);
 		}
 
-		char arrchContract[10*1024] = { 0 };
-		strncpy(arrchContract, strContract.c_str(), sizeof(arrchContract)-1);
+		char arrchContract[10 * 1024] = { 0 };
+		strncpy(arrchContract, strContract.c_str(), sizeof(arrchContract) - 1);
 
-		char arrchHeight[16] = {0};
-		sprintf(arrchHeight,"%d",nHeight);
+		char arrchHeight[16] = { 0 };
+		sprintf(arrchHeight, "%d", nHeight);
 
-
-		const char *argv[] = { "rpctest", "createsecuretx", arrchCscriptid,arrchCobstr,arrchAddrstr,arrchContract,"1000000",arrchHeight};
-		int argc = sizeof(argv)/sizeof(char*);
+		const char *argv[] = { "rpctest", "createsecuretx", arrchCscriptid, arrchCobstr, arrchAddrstr, arrchContract,
+				"1000000", arrchHeight };
+		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
 		int nRet = CommandLineRPC_GetValue(argc, argv, value);
-		if (!nRet)
-		{
-			LogPrint("test_miners","CreateSecureTx:%s\r\n",value.get_str().c_str());
+		if (!nRet) {
+			LogPrint("test_miners", "CreateSecureTx:%s\r\n", value.get_str().c_str());
 			return true;
 		}
 		return false;
 	}
 
-	bool SignSecureTx(const string &securetx)
-	{
+	bool SignSecureTx(const string &securetx) {
 		//CommanRpc
-		char arrchCsecuretx[10*1024] = { 0 };
-		strncpy(arrchCsecuretx, securetx.c_str(), sizeof(arrchCsecuretx)-1);
+		char arrchCsecuretx[10 * 1024] = { 0 };
+		strncpy(arrchCsecuretx, securetx.c_str(), sizeof(arrchCsecuretx) - 1);
 
-
-		const char *argv[] = { "rpctest", "signsecuretx", arrchCsecuretx};
-		int argc = sizeof(argv)/sizeof(char*);
+		const char *argv[] = { "rpctest", "signsecuretx", arrchCsecuretx };
+		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
 		int nRet = CommandLineRPC_GetValue(argc, argv, value);
-		if (!nRet)
-		{
-			LogPrint("test_miners","SignSecureTx:%s\r\n",value.get_str().c_str());
+		if (!nRet) {
+			LogPrint("test_miners", "SignSecureTx:%s\r\n", value.get_str().c_str());
 			return true;
 		}
 		return false;
 	}
 
-	bool IsAllTxInBlock()
-	{
+	bool IsAllTxInBlock() {
 		const char *argv[] = { "rpctest", "listunconfirmedtx" };
 		int argc = sizeof(argv) / sizeof(char*);
 
@@ -491,54 +479,49 @@ public:
 		int nRet = CommandLineRPC_GetValue(argc, argv, value);
 		if (!nRet) {
 			Array array = value.get_array();
-			if(array.size() == 0)
-			return true;
+			if (array.size() == 0)
+				return true;
 		}
 		return false;
 	}
 
-	bool GetBlockHash(const int nHeight,std::string &strBlockhash)
-	{
-		char arrchHeight[16] = {0};
-		sprintf(arrchHeight,"%d",nHeight);
+	bool GetBlockHash(const int nHeight, std::string &strBlockhash) {
+		char arrchHeight[16] = { 0 };
+		sprintf(arrchHeight, "%d", nHeight);
 
-		const char *argv[] = {"rpctest", "getblockhash",arrchHeight};
+		const char *argv[] = { "rpctest", "getblockhash", arrchHeight };
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
 		int nRet = CommandLineRPC_GetValue(argc, argv, value);
-		if (!nRet)
-		{
+		if (!nRet) {
 			strBlockhash = value.get_str();
-			LogPrint("test_miners","GetBlockHash:%s\r\n",strBlockhash.c_str());
+			LogPrint("test_miners", "GetBlockHash:%s\r\n", strBlockhash.c_str());
 			return true;
 		}
 		return false;
 	}
 
-	bool GetBlockMinerAddr(const std::string &strBlockhash,std::string &strAddr)
-	{
-		char cblockhash[80] = {0};
-		strncpy(cblockhash,strBlockhash.c_str(),sizeof(cblockhash)-1);
+	bool GetBlockMinerAddr(const std::string &strBlockhash, std::string &strAddr) {
+		char cblockhash[80] = { 0 };
+		strncpy(cblockhash, strBlockhash.c_str(), sizeof(cblockhash) - 1);
 
-		const char *argv[] = {"rpctest", "getblock",cblockhash};
+		const char *argv[] = { "rpctest", "getblock", cblockhash };
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
 		int nRet = CommandLineRPC_GetValue(argc, argv, value);
-		if (!nRet)
-		{
-			Array txs = find_value(value.get_obj(),"tx").get_array();
-			strAddr = find_value(txs[0].get_obj(),"strAddr").get_str();
-			LogPrint("test_miners","GetBlockMinerAddr:%s\r\n",strAddr.c_str());
+		if (!nRet) {
+			Array txs = find_value(value.get_obj(), "tx").get_array();
+			strAddr = find_value(txs[0].get_obj(), "strAddr").get_str();
+			LogPrint("test_miners", "GetBlockMinerAddr:%s\r\n", strAddr.c_str());
 			return true;
 		}
 		return false;
 	}
 
-	bool GenerateOneBlock()
-	{
-		const char *argv[] = {"rpctest", "setgenerate","true"};
+	bool GenerateOneBlock() {
+		const char *argv[] = { "rpctest", "setgenerate", "true" };
 		int argc = sizeof(argv) / sizeof(char*);
 
 		Value value;
@@ -551,16 +534,16 @@ public:
 
 public:
 	CMinerTest() {
-		mapAccState.clear();
+		m_mapAccState.clear();
 		m_mapAccOperLog.clear();
-		nCurHeight = 0;
+		m_nCurHeight = 0;
 	}
 	bool CheckAccState(const string &strAddr, ST_ACC_STATE &tLastState, bool bAccurate = false) {
-		ST_ACC_STATE tInitState = mapAccState[strAddr];
-		ST_ACC_OPER_LOG operlog = m_mapAccOperLog[strAddr];
-		operlog.MergeAcc(nCurHeight);
+		ST_ACC_STATE tInitState = m_mapAccState[strAddr];
+		ST_ACC_OPER_LOG tOperlog = m_mapAccOperLog[strAddr];
+		tOperlog.MergeAcc(m_nCurHeight);
 
-		for (auto & item : operlog.mapAccState) {
+		for (auto & item : tOperlog.mapAccState) {
 			tInitState += item.second;
 		}
 
@@ -570,6 +553,7 @@ public:
 		} else {
 			b = tLastState.SumEqual(tInitState);
 		}
+
 		return b;
 	}
 };
@@ -584,22 +568,22 @@ BOOST_FIXTURE_TEST_CASE(block_normaltx_and_regaccounttx,CMinerTest) {
 
 	ST_ACC_STATE tInitState;
 	BOOST_REQUIRE(GetAccState(strSrcaddr, tInitState));
-	mapAccState[strSrcaddr] = tInitState; //insert
+	m_mapAccState[strSrcaddr] = tInitState; //insert
 
 	int nHeight = 0;
 	BOOST_REQUIRE(GetBlockHeight(nHeight));
-	nCurHeight = nHeight;
+	m_nCurHeight = nHeight;
 	uint64_t llTotalfee = 0;
 	{
 		BOOST_REQUIRE(GetNewAddr(strDestAddr));
 		BOOST_REQUIRE(CreateNormalTx(strSrcaddr, strDestAddr, nHeight));
-		llTotalfee += llCurFee;
+		llTotalfee += m_llCurFee;
 		LogPrint("test_miners", "strSrcaddr:%s\r\ndestaddr:%s\r\nnCurFee:%I64d\r\n", strSrcaddr.c_str(),
-				strDestAddr.c_str(), llCurFee);
+				strDestAddr.c_str(), m_llCurFee);
 		ST_ACC_OPER_LOG &tOperlog1 = m_mapAccOperLog[strSrcaddr];
 		ST_ACC_OPER_LOG &tOperlog2 = m_mapAccOperLog[strDestAddr];
-		ST_ACC_STATE tAcc1(0, -(llCurMoney + llCurFee), 0);
-		ST_ACC_STATE tAcc2(0, llCurMoney, 0);
+		ST_ACC_STATE tAcc1(0, -(m_llCurMoney + m_llCurFee), 0);
+		ST_ACC_STATE tAcc2(0, m_llCurMoney, 0);
 		tOperlog1.Add(nHeight, tAcc1);
 		tOperlog2.Add(nHeight, tAcc2);
 	}
@@ -617,7 +601,7 @@ BOOST_FIXTURE_TEST_CASE(block_normaltx_and_regaccounttx,CMinerTest) {
 		m_mapAccOperLog[strMineraddr].Add(nHeight, tAcc);
 	} else {
 		BOOST_REQUIRE(GetAccState(strMineraddr, tInitState));
-		mapAccState[strMineraddr] = tInitState; //insert
+		m_mapAccState[strMineraddr] = tInitState; //insert
 	}
 
 	for (auto & item : m_mapAccOperLog) {
@@ -628,11 +612,11 @@ BOOST_FIXTURE_TEST_CASE(block_normaltx_and_regaccounttx,CMinerTest) {
 
 	//test reg account
 	{
-		nCurHeight = nHeight;
+		m_nCurHeight = nHeight;
 		BOOST_REQUIRE(registaccounttx(strDestAddr, nHeight));
 		{
 			ST_ACC_OPER_LOG &operlog1 = m_mapAccOperLog[strDestAddr];
-			ST_ACC_STATE acc1(0, -llCurFee, 0);
+			ST_ACC_STATE acc1(0, -m_llCurFee, 0);
 			operlog1.Add(nHeight, acc1);
 		}
 		BOOST_REQUIRE(GenerateOneBlock());
@@ -645,11 +629,11 @@ BOOST_FIXTURE_TEST_CASE(block_normaltx_and_regaccounttx,CMinerTest) {
 		BOOST_REQUIRE(GetBlockMinerAddr(strBlockhash, strMineraddr));
 
 		if (strMineraddr == strDestAddr) {
-			ST_ACC_STATE tAcc(llCurFee, 0, 0);
+			ST_ACC_STATE tAcc(m_llCurFee, 0, 0);
 			m_mapAccOperLog[strMineraddr].Add(nHeight, tAcc);
 		} else {
 			BOOST_REQUIRE(GetAccState(strMineraddr, tInitState));
-			mapAccState[strMineraddr] = tInitState; //insert
+			m_mapAccState[strMineraddr] = tInitState; //insert
 		}
 
 		for (auto & item : m_mapAccOperLog) {
@@ -666,7 +650,7 @@ BOOST_FIXTURE_TEST_CASE(block_regscripttx_and_contracttx,CMinerTest) {
 
 	ST_ACC_STATE tInitState;
 	BOOST_REQUIRE(GetAccState(strSrcaddr, tInitState));
-	mapAccState[strSrcaddr] = tInitState; //insert
+	m_mapAccState[strSrcaddr] = tInitState; //insert
 
 	int nHeight = 0;
 	BOOST_REQUIRE(GetBlockHeight(nHeight));
@@ -677,7 +661,7 @@ BOOST_FIXTURE_TEST_CASE(block_regscripttx_and_contracttx,CMinerTest) {
 				"fd3e0102001d000000000022220000000000000000222202011112013512013a75d0007581bf750900750a0f020017250910af08f509400c150a8008f5094002150ad2af222509c582c0e0e50a34ffc583c0e0e509c3958224f910af0885830a858209800885830a858209d2afcef0a3e520f0a37808e608f0a3defaeff0a3e58124fbf8e608f0a3e608f0a30808e608f0a3e608f0a315811581d0e0fed0e0f815811581e8c0e0eec0e022850a83850982e0a3fee0a3f5207808e0a3f608dffae0a3ffe0a3c0e0e0a3c0e0e0a3c0e0e0a3c0e010af0885820985830a800885820985830ad2afd083d0822274f8120042e990fbfef01200087f010200a8c082c083ea90fbfef0eba3f012001202010cd083d0822274f812004274fe12002ceafeebff850982850a83eef0a3eff0aa09ab0a790112013d80ea79010200e80200142200";
 		BOOST_REQUIRE(RegisterAppTx(strSrcaddr, strScript, nHeight));
 		ST_ACC_OPER_LOG &tOperlog1 = m_mapAccOperLog[strSrcaddr];
-		ST_ACC_STATE tAcc1(0, -llCurFee, 0);
+		ST_ACC_STATE tAcc1(0, -m_llCurFee, 0);
 		tOperlog1.Add(nHeight, tAcc1);
 
 		BOOST_REQUIRE(GenerateOneBlock());
@@ -690,11 +674,11 @@ BOOST_FIXTURE_TEST_CASE(block_regscripttx_and_contracttx,CMinerTest) {
 		BOOST_REQUIRE(GetBlockMinerAddr(strBlockhash, strMineraddr));
 
 		if (strMineraddr == strSrcaddr) {
-			ST_ACC_STATE tAcc(llCurFee, 0, 0);
+			ST_ACC_STATE tAcc(m_llCurFee, 0, 0);
 			m_mapAccOperLog[strMineraddr].Add(nHeight, tAcc);
 		} else {
 			BOOST_REQUIRE(GetAccState(strMineraddr, tInitState));
-			mapAccState[strMineraddr] = tInitState; //insert
+			m_mapAccState[strMineraddr] = tInitState; //insert
 		}
 
 		for (auto & item : m_mapAccOperLog) {
@@ -716,7 +700,7 @@ BOOST_FIXTURE_TEST_CASE(block_regscripttx_and_contracttx,CMinerTest) {
 
 		ST_ACC_STATE tInitState;
 		BOOST_REQUIRE(GetAccState(strConaddr, tInitState));
-		mapAccState[strConaddr] = tInitState; //insert
+		m_mapAccState[strConaddr] = tInitState; //insert
 
 		string strScriptid;
 		BOOST_REQUIRE(GetOneScriptId(strScriptid));
@@ -724,7 +708,7 @@ BOOST_FIXTURE_TEST_CASE(block_regscripttx_and_contracttx,CMinerTest) {
 		BOOST_REQUIRE(CreateContractTx(strScriptid, strVconaddr, "010203040506070809", nHeight));
 
 		ST_ACC_OPER_LOG &tOperlog1 = m_mapAccOperLog[strConaddr];
-		ST_ACC_STATE tAcc1(0, -llCurFee, 0);
+		ST_ACC_STATE tAcc1(0, -m_llCurFee, 0);
 		tOperlog1.Add(nHeight, tAcc1);
 
 		BOOST_REQUIRE(GenerateOneBlock());
@@ -737,11 +721,11 @@ BOOST_FIXTURE_TEST_CASE(block_regscripttx_and_contracttx,CMinerTest) {
 		BOOST_REQUIRE(GetBlockMinerAddr(strBlockhash, strMineraddr));
 
 		if (strMineraddr == strConaddr) {
-			ST_ACC_STATE tAcc(llCurFee, 0, 0);
+			ST_ACC_STATE tAcc(m_llCurFee, 0, 0);
 			m_mapAccOperLog[strMineraddr].Add(nHeight, tAcc);
 		} else {
 			BOOST_REQUIRE(GetAccState(strMineraddr, tInitState));
-			mapAccState[strMineraddr] = tInitState; //insert
+			m_mapAccState[strMineraddr] = tInitState; //insert
 		}
 
 		for (auto & item : m_mapAccOperLog) {
@@ -759,17 +743,17 @@ BOOST_FIXTURE_TEST_CASE(block_frozentx,CMinerTest) {
 
 	ST_ACC_STATE tInitState;
 	BOOST_REQUIRE(GetAccState(strSrcaddr, tInitState));
-	mapAccState[strSrcaddr] = tInitState; //insert
+	m_mapAccState[strSrcaddr] = tInitState; //insert
 
 	int nHeight = 0;
 	BOOST_REQUIRE(GetBlockHeight(nHeight));
-	nCurHeight = nHeight;
+	m_nCurHeight = nHeight;
 	uint64_t llTotalfee = 0;
 	{
 		BOOST_REQUIRE(CreateFreezeTx(strSrcaddr, nHeight));
-		llTotalfee += llCurFee;
+		llTotalfee += m_llCurFee;
 		ST_ACC_OPER_LOG &tOperlog1 = m_mapAccOperLog[strSrcaddr];
-		ST_ACC_STATE tAcc(0, -(llCurMoney + llCurFee), llCurMoney);
+		ST_ACC_STATE tAcc(0, -(m_llCurMoney + m_llCurFee), m_llCurMoney);
 		tOperlog1.Add(nHeight, tAcc);
 	}
 	BOOST_REQUIRE(GenerateOneBlock());
@@ -785,7 +769,7 @@ BOOST_FIXTURE_TEST_CASE(block_frozentx,CMinerTest) {
 		m_mapAccOperLog[strMineraddr].Add(nHeight, tAcc);
 	} else {
 		BOOST_REQUIRE(GetAccState(strMineraddr, tInitState));
-		mapAccState[strMineraddr] = tInitState; //insert
+		m_mapAccState[strMineraddr] = tInitState; //insert
 	}
 
 	for (auto & item : m_mapAccOperLog) {
@@ -794,7 +778,5 @@ BOOST_FIXTURE_TEST_CASE(block_frozentx,CMinerTest) {
 		BOOST_REQUIRE(CheckAccState(item.first, tLastState));
 	}
 }
-
-
 
 BOOST_AUTO_TEST_SUITE_END()

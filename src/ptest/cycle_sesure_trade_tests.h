@@ -1,5 +1,5 @@
-#ifndef CYCLE_SESURE_TRADE_H_
-#define CYCLE_SESURE_TRADE_H_
+#ifndef DACRS_PTEST_CYCLE_SESURE_TRADE_TESTS_H_
+#define DACRS_PTEST_CYCLE_SESURE_TRADE_TESTS_H_
 
 #include "../test/systestbase.h"
 #include "create_tx_tests.h"
@@ -61,7 +61,7 @@ typedef struct {
 #pragma pack(pop)
 
 class CSesureTradeHelp: public SysTestBase {
-public:
+ public:
 	string GetReverseHash(const string& strTxHash);
 
 	string PutDataIntoString(char* pData, int nDateLen);
@@ -73,20 +73,17 @@ public:
 	void PacketNextContract(unsigned char uchStep, unsigned char* pHash, ST_NEXT_TRADE_CONTRACT* pNextContract);
 	void PacketLastContract(unsigned char* pHash, int nFine, ST_ARBIT_RES_CONTRACT* pLastContract);
 
-protected:
+ protected:
 	string m_strRegScriptID;
 };
 
-class CTestSesureTrade: public CycleTestBase,
-						public CSesureTradeHelp
-{
-
-public:
+class CTestSesureTrade: public CycleTestBase, public CSesureTradeHelp {
+ public:
 	CTestSesureTrade();
 	virtual emTEST_STATE Run();
 	~CTestSesureTrade();
 
-private:
+ private:
 	int m_nCurStep;
 	string m_strStep1RegHash;
 	string m_strStep1ModifyHash;
@@ -108,8 +105,6 @@ private:
 	bool Step4ModifyAuthor();
 	bool Step4SendContract();
 	bool CheckLastSendTx();
-
-
 };
 
 #endif

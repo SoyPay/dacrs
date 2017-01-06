@@ -1,5 +1,5 @@
 /*
- * CycleTestBase.cpp
+ * cycle_test_base.cpp
  *
  *  Created on: 2014Äê12ÔÂ30ÈÕ
  *      Author: ranger.shi
@@ -9,10 +9,9 @@
 #include <ctype.h>
 
 int CycleTestBase::m_snTotalsend = 0;
-vector<string> CycleTestBase::svstrAccount;
+vector<string> CycleTestBase::m_vstrAccount;
 
 CycleTestBase::CycleTestBase() {
-
 }
 
 emTEST_STATE CycleTestBase::Run() {
@@ -20,9 +19,7 @@ emTEST_STATE CycleTestBase::Run() {
 }
 
 CycleTestBase::~CycleTestBase() {
-
 }
-
 
 bool CycleTestBase::SelectAccounts(vector<string> &vstrAccount) {
 	const char *pkArgv[] = { "rpctest", "listaddr" };
@@ -48,25 +45,25 @@ bool CycleTestBase::SelectAccounts(vector<string> &vstrAccount) {
 
 bool CycleTestBase::SelectOneAccount(string &strSelectAddr, bool bFalg) {
 	srand(time(NULL));
-	if (svstrAccount.empty() || (bFalg && svstrAccount.size() < 2)) {
-		if (!SelectAccounts(svstrAccount)) {
+	if (m_vstrAccount.empty() || (bFalg && m_vstrAccount.size() < 2)) {
+		if (!SelectAccounts(m_vstrAccount)) {
 			return false;
 		}
 	}
 
-	int nR = (rand() % svstrAccount.size());
+	int nR = (rand() % m_vstrAccount.size());
 	if (bFalg) {
 		string strAddr("");
 		while (true) {
-			strAddr = svstrAccount.at(nR);
+			strAddr = m_vstrAccount.at(nR);
 			if (strSelectAddr != strAddr) {
 				break;
 			}
-			nR = (rand() % svstrAccount.size());
+			nR = (rand() % m_vstrAccount.size());
 		}
 		strSelectAddr = strAddr;
 	} else {
-		strSelectAddr = svstrAccount.at(nR);
+		strSelectAddr = m_vstrAccount.at(nR);
 	}
 	return true;
 }

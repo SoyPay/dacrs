@@ -44,7 +44,7 @@ using namespace json_spirit;
 
 
 #define ID_strAppRegId  "258-1"    //121006-1 139429-1
-CLashouTest::CLashouTest():nNum(0), nStep(0), strTxHash(""), strAppRegId(ID_strAppRegId) {
+CLashouTest::CLashouTest():m_nNum(0), m_nStep(0), m_strTxHash(""), m_strAppRegId(ID_strAppRegId) {
 
 }
 
@@ -137,7 +137,7 @@ bool CLashouTest::RegistScript(){
 	string regAddr="pHoFvGYVtyLm5Zb3TwNPsjxqXy6ncs4A7m";
 	//reg anony app
 	Value regscript = m_cBasetest.RegisterAppTx(regAddr, strFileName, nCurHight, nFee + 1 *COIN);// + 20 *COIN
-	if(m_cBasetest.GetHashFromCreatedTx(regscript, strTxHash)){
+	if(m_cBasetest.GetHashFromCreatedTx(regscript, m_strTxHash)){
 
 		return true;
 	}
@@ -154,10 +154,10 @@ bool CLashouTest::Config(void)
 
 	memset(&senddata,0,sizeof(senddata));
 
-	senddata.type = TX_CONFIG;
-	senddata.WatchDay = 1;//!观察期天数
-	senddata.MinBalance = 9;//!余额最低限值,元
-	strcpy(senddata.SuperAcc,ADDR_USER_A);//!超级用户
+	senddata.uchType = TX_CONFIG;
+	senddata.uWatchDay = 1;//!观察期天数
+	senddata.uMinBalance = 9;//!余额最低限值,元
+	strcpy(senddata.arrchSuperAcc,ADDR_USER_A);//!超级用户
 
 
 	CDataStream scriptData(SER_DISK, g_sClientVersion);
@@ -166,10 +166,10 @@ bool CLashouTest::Config(void)
 	uint64_t nTempSend = 0;//20 * COIN;
 
 	cout<<"Config data:"<<sendcontract<<endl;
-	cout<<"Config strAppRegId:"<<strAppRegId<<endl;
-	Value  retValue= m_cBasetest.CreateContractTx(strAppRegId,ADDR_SUPER,sendcontract,0,0.1 * COIN,nTempSend);
-	if (m_cBasetest.GetHashFromCreatedTx(retValue, strTxHash)) {
-		nStep++;
+	cout<<"Config strAppRegId:"<<m_strAppRegId<<endl;
+	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SUPER,sendcontract,0,0.1 * COIN,nTempSend);
+	if (m_cBasetest.GetHashFromCreatedTx(retValue, m_strTxHash)) {
+		m_nStep++;
 	}else{
 		cout<<"Config err end"<<endl;
 		return false;
@@ -179,7 +179,7 @@ bool CLashouTest::Config(void)
 	/// 等待交易被确认到block中
 	while(true)
 	{
-		if(WaitComfirmed(strTxHash, strAppRegId)) {
+		if(WaitComfirmed(m_strTxHash, m_strAppRegId)) {
 					break;
 				}
 	}
@@ -197,8 +197,8 @@ bool CLashouTest::Modify(void)
    MODIFIED_ST senddata;
 
 	memset(&senddata,0,sizeof(senddata));
-	senddata.type = TX_MODIFIED;
-	strcpy(senddata.ModityAcc,ADDR_USER_A);//!普通管理员用户
+	senddata.uchType = TX_MODIFIED;
+	strcpy(senddata.arrchModityAcc,ADDR_USER_A);//!普通管理员用户
 
 	CDataStream scriptData(SER_DISK, g_sClientVersion);
 	scriptData << senddata;
@@ -206,10 +206,10 @@ bool CLashouTest::Modify(void)
 	uint64_t nTempSend = 0;
 
 	cout<<"Modify data:"<<sendcontract<<endl;
-	cout<<"Modify strAppRegId:"<<strAppRegId<<endl;
-	Value  retValue= m_cBasetest.CreateContractTx(strAppRegId,ADDR_SUPER,sendcontract,0,0.001 * COIN,nTempSend);
-	if (m_cBasetest.GetHashFromCreatedTx(retValue, strTxHash)) {
-		nStep++;
+	cout<<"Modify strAppRegId:"<<m_strAppRegId<<endl;
+	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SUPER,sendcontract,0,0.001 * COIN,nTempSend);
+	if (m_cBasetest.GetHashFromCreatedTx(retValue, m_strTxHash)) {
+		m_nStep++;
 	}else{
 		cout<<"Modify err end"<<endl;
 		return false;
@@ -219,7 +219,7 @@ bool CLashouTest::Modify(void)
 	/// 等待交易被确认到block中
 	while(true)
 	{
-		if(WaitComfirmed(strTxHash, strAppRegId)) {
+		if(WaitComfirmed(m_strTxHash, m_strAppRegId)) {
 					break;
 				}
 	}
@@ -238,9 +238,9 @@ bool CLashouTest::Register(void)
 
 	memset(&senddata,0,sizeof(senddata));
 
-	senddata.type = TX_REGISTER;
-	senddata.RegMoney = 10;//!注册金额
-	strcpy(senddata.UserID,ADDR_USER_A);//!用户A
+	senddata.uchType = TX_REGISTER;
+	senddata.uRegMoney = 10;//!注册金额
+	strcpy(senddata.arrchUserID,ADDR_USER_A);//!用户A
 //	strcpy(senddata.UserID,ADDR_USER_B);//!用户B
 //	strcpy(senddata.UserID,ADDR_SUPER);//!用户B
 
@@ -252,10 +252,10 @@ bool CLashouTest::Register(void)
 	uint64_t nTempSend = 0;// 20 * COIN
 
 	cout<<"Register data:"<<sendcontract<<endl;
-	cout<<"Register strAppRegId:"<<strAppRegId<<endl;
-	Value  retValue= m_cBasetest.CreateContractTx(strAppRegId,ADDR_SUPER,sendcontract,0,0.01 * COIN,nTempSend);
-	if (m_cBasetest.GetHashFromCreatedTx(retValue, strTxHash)) {
-		nStep++;
+	cout<<"Register strAppRegId:"<<m_strAppRegId<<endl;
+	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SUPER,sendcontract,0,0.01 * COIN,nTempSend);
+	if (m_cBasetest.GetHashFromCreatedTx(retValue, m_strTxHash)) {
+		m_nStep++;
 	}else{
 		cout<<"Register err end"<<endl;
 		return false;
@@ -265,7 +265,7 @@ bool CLashouTest::Register(void)
 	/// 等待交易被确认到block中
 	while(true)
 	{
-		if(WaitComfirmed(strTxHash, strAppRegId)) {
+		if(WaitComfirmed(m_strTxHash, m_strAppRegId)) {
 					break;
 				}
 	}
@@ -283,9 +283,9 @@ bool CLashouTest::Recharge()
    RECHARGE_ST senddata;
 
 	memset(&senddata,0,sizeof(senddata));
-	senddata.type = TX_RECHARGE;
-	senddata.Money=12;
-	strcpy(senddata.UserID,ADDR_USER_A);//!用户ID
+	senddata.uchType = TX_RECHARGE;
+	senddata.uMoney=12;
+	strcpy(senddata.arrchUserID,ADDR_USER_A);//!用户ID
 
 ////测试修改时间
 //	senddata.type = TX_MODIFIED_TIME;
@@ -302,9 +302,9 @@ bool CLashouTest::Recharge()
 	uint64_t nTempSend = 1 * COIN;
 
     cout<<"Recharge data:"<<sendcontract<<endl;
-	Value  retValue= m_cBasetest.CreateContractTx(strAppRegId,ADDR_SUPER,sendcontract,0,0.001 * COIN,nTempSend);
-	if (m_cBasetest.GetHashFromCreatedTx(retValue, strTxHash)) {
-		nStep++;
+	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SUPER,sendcontract,0,0.001 * COIN,nTempSend);
+	if (m_cBasetest.GetHashFromCreatedTx(retValue, m_strTxHash)) {
+		m_nStep++;
 
 	}else{
 	    cout<<"Recharge err end"<<endl;
@@ -315,7 +315,7 @@ bool CLashouTest::Recharge()
 	/// 等待交易被确认到block中
 	while(true)
 	{
-		if(WaitComfirmed(strTxHash, strAppRegId)) {
+		if(WaitComfirmed(m_strTxHash, m_strAppRegId)) {
 				break;
 			}
 	}
@@ -333,9 +333,9 @@ bool CLashouTest::Withdraw()
    RECHARGE_ST senddata;
 
 	memset(&senddata,0,sizeof(senddata));
-	senddata.type = TX_WITHDRAW;
-	senddata.Money=57;
-	strcpy(senddata.UserID,ADDR_USER_A);//!用户ID
+	senddata.uchType = TX_WITHDRAW;
+	senddata.uMoney=57;
+	strcpy(senddata.arrchUserID,ADDR_USER_A);//!用户ID
 
 	CDataStream scriptData(SER_DISK, g_sClientVersion);
 	scriptData << senddata;
@@ -343,9 +343,9 @@ bool CLashouTest::Withdraw()
 	uint64_t nTempSend = 1 * COIN;
 
     cout<<"Recharge data:"<<sendcontract<<endl;
-	Value  retValue= m_cBasetest.CreateContractTx(strAppRegId,ADDR_SUPER,sendcontract,0,0.01 * COIN,nTempSend);
-	if (m_cBasetest.GetHashFromCreatedTx(retValue, strTxHash)) {
-		nStep++;
+	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SUPER,sendcontract,0,0.01 * COIN,nTempSend);
+	if (m_cBasetest.GetHashFromCreatedTx(retValue, m_strTxHash)) {
+		m_nStep++;
 
 	}else{
 	    cout<<"Recharge err end"<<endl;
@@ -356,7 +356,7 @@ bool CLashouTest::Withdraw()
 	/// 等待交易被确认到block中
 	while(true)
 	{
-		if(WaitComfirmed(strTxHash, strAppRegId)) {
+		if(WaitComfirmed(m_strTxHash, m_strAppRegId)) {
 				break;
 			}
 	}
@@ -374,9 +374,9 @@ bool CLashouTest::ApplyForClaims()
    APPLY_ST senddata;
 
 	memset(&senddata,0,sizeof(senddata));
-	senddata.type = TX_CLAIM_APPLY;
+	senddata.uchType = TX_CLAIM_APPLY;
 
-	strcpy(senddata.UserID,ADDR_USER_TESTB);//!用户ID
+	strcpy(senddata.arrchUserID,ADDR_USER_TESTB);//!用户ID
 	strcpy(senddata.ApplyHash,ADDR_APPLY_HASH);//!理赔HASH
 
 	CDataStream scriptData(SER_DISK, g_sClientVersion);
@@ -385,9 +385,9 @@ bool CLashouTest::ApplyForClaims()
 	uint64_t nTempSend = 1 * COIN;
 
     cout<<"ApplyForClaims data:"<<sendcontract<<endl;
-	Value  retValue= m_cBasetest.CreateContractTx(strAppRegId,ADDR_SUPER,sendcontract,0,0.1 * COIN,nTempSend);
-	if (m_cBasetest.GetHashFromCreatedTx(retValue, strTxHash)) {
-		nStep++;
+	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SUPER,sendcontract,0,0.1 * COIN,nTempSend);
+	if (m_cBasetest.GetHashFromCreatedTx(retValue, m_strTxHash)) {
+		m_nStep++;
 
 	}else{
 	    cout<<"ApplyForClaims err end"<<endl;
@@ -398,7 +398,7 @@ bool CLashouTest::ApplyForClaims()
 	/// 等待交易被确认到block中
 	while(true)
 	{
-		if(WaitComfirmed(strTxHash, strAppRegId))
+		if(WaitComfirmed(m_strTxHash, m_strAppRegId))
 		{
 			break;
 		}
@@ -418,11 +418,11 @@ bool CLashouTest::ClaimsOperate()
    CLAIMS_ST senddata;
 
 	memset(&senddata,0,sizeof(senddata));
-	senddata.type = TX_CLAIM_OPERATE;
-	senddata.Money =7;//!理赔金额
-	strcpy(senddata.UserID,ADDR_USER_TESTB);//!获理赔用户ID
-	senddata.Number =3;//!个数
-	strcpy(senddata.ApplyHash,ADDR_CLAIMS_TEST);//!申请的HASH
+	senddata.uchType = TX_CLAIM_OPERATE;
+	senddata.uMoney =7;//!理赔金额
+	strcpy(senddata.arrchUserID,ADDR_USER_TESTB);//!获理赔用户ID
+	senddata.uNumber =3;//!个数
+	strcpy(senddata.arrchApplyHash,ADDR_CLAIMS_TEST);//!申请的HASH
 
 	CDataStream scriptData(SER_DISK, g_sClientVersion);
 	scriptData << senddata;
@@ -430,9 +430,9 @@ bool CLashouTest::ClaimsOperate()
 	uint64_t nTempSend = 1 * COIN;
 
     cout<<"ClaimsOperate data:"<<sendcontract<<endl;
-	Value  retValue= m_cBasetest.CreateContractTx(strAppRegId,ADDR_SUPER,sendcontract,0,0.001 * COIN,nTempSend);
-	if (m_cBasetest.GetHashFromCreatedTx(retValue, strTxHash)) {
-		nStep++;
+	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SUPER,sendcontract,0,0.001 * COIN,nTempSend);
+	if (m_cBasetest.GetHashFromCreatedTx(retValue, m_strTxHash)) {
+		m_nStep++;
 
 	}else{
 	    cout<<"ClaimsOperate err end"<<endl;
@@ -443,7 +443,7 @@ bool CLashouTest::ClaimsOperate()
 	/// 等待交易被确认到block中
 	while(true)
 	{
-		if(WaitComfirmed(strTxHash, strAppRegId))
+		if(WaitComfirmed(m_strTxHash, m_strAppRegId))
 		{
 			break;
 		}
@@ -464,20 +464,20 @@ bool CLashouTest::ImportDate()
 	IMPORT_ST senddata;
 
 	memset(&senddata,0,sizeof(senddata));
-	senddata.type = TX_IMPORT_DATA;
-	senddata.Number =3;//!个数
+	senddata.uchType = TX_IMPORT_DATA;
+	senddata.uNumber =3;//!个数
 
-	strcpy(senddata.ImportDataSt[0].UserID,ADDR_USER_B);//!用户ID
-	senddata.ImportDataSt[0].ImportMoney=135;
-	senddata.ImportDataSt[0].ImportHight=0x5812B046;//改为时间了
+	strcpy(senddata.ImportDataSt[0].arrchUserID,ADDR_USER_B);//!用户ID
+	senddata.ImportDataSt[0].uImportMoney=135;
+	senddata.ImportDataSt[0].uImportHight=0x5812B046;//改为时间了
 
-	strcpy(senddata.ImportDataSt[1].UserID,ADDR_USER_TESTA);//!用户ID
-	senddata.ImportDataSt[1].ImportMoney=520;
-	senddata.ImportDataSt[1].ImportHight=0x5812B046;//改为时间了0X46b01258差1天
+	strcpy(senddata.ImportDataSt[1].arrchUserID,ADDR_USER_TESTA);//!用户ID
+	senddata.ImportDataSt[1].uImportMoney=520;
+	senddata.ImportDataSt[1].uImportHight=0x5812B046;//改为时间了0X46b01258差1天
 
-	strcpy(senddata.ImportDataSt[2].UserID,ADDR_USER_TESTB);//!用户ID
-	senddata.ImportDataSt[2].ImportMoney=135;
-	senddata.ImportDataSt[2].ImportHight=0x5812B046;//改为时间了
+	strcpy(senddata.ImportDataSt[2].arrchUserID,ADDR_USER_TESTB);//!用户ID
+	senddata.ImportDataSt[2].uImportMoney=135;
+	senddata.ImportDataSt[2].uImportHight=0x5812B046;//改为时间了
 
 	CDataStream scriptData(SER_DISK, g_sClientVersion);
 	scriptData << senddata;
@@ -485,9 +485,9 @@ bool CLashouTest::ImportDate()
 	uint64_t nTempSend = 1 * COIN;
 
     cout<<"ApplyForClaims data:"<<sendcontract<<endl;
-	Value  retValue= m_cBasetest.CreateContractTx(strAppRegId,ADDR_SUPER,sendcontract,0,0.1 * COIN,nTempSend);
-	if (m_cBasetest.GetHashFromCreatedTx(retValue, strTxHash)) {
-		nStep++;
+	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SUPER,sendcontract,0,0.1 * COIN,nTempSend);
+	if (m_cBasetest.GetHashFromCreatedTx(retValue, m_strTxHash)) {
+		m_nStep++;
 
 	}else{
 	    cout<<"ApplyForClaims err end"<<endl;
@@ -498,7 +498,7 @@ bool CLashouTest::ImportDate()
 	/// 等待交易被确认到block中
 	while(true)
 	{
-		if(WaitComfirmed(strTxHash, strAppRegId))
+		if(WaitComfirmed(m_strTxHash, m_strAppRegId))
 		{
 			break;
 		}
@@ -524,22 +524,22 @@ jj++;
 	IMPORT_ST senddata;
 
 	memset(&senddata,0,sizeof(senddata));
-	senddata.type = TX_IMPORT_DATA;
-	senddata.Number =IMPORT_DATA_NNNN;//!个数IMPORT_DATA_NNNN
+	senddata.uchType = TX_IMPORT_DATA;
+	senddata.uNumber =IMPORT_DATA_NNNN;//!个数IMPORT_DATA_NNNN
 
 
 
 
-	for(uint32_t ii=0;ii<senddata.Number;ii++)
+	for(uint32_t ii=0;ii<senddata.uNumber;ii++)
 	{
-		strcpy(senddata.ImportDataSt[ii].UserID,ADDR_USER_TESTN);//!用户ID
-		senddata.ImportDataSt[ii].UserID[0]=0x30+jj;
-		senddata.ImportDataSt[ii].UserID[1]=0x30+jj;
-		senddata.ImportDataSt[ii].UserID[34-3]=0x30+ii/100+jj;
-		senddata.ImportDataSt[ii].UserID[34-2]=0x30+(ii%100)/10;
-		senddata.ImportDataSt[ii].UserID[34-1]=0x30+ii%10;
-		senddata.ImportDataSt[ii].ImportMoney=100;
-		senddata.ImportDataSt[ii].ImportHight=0x58176A80;//改为时间了0X46b01258差1天
+		strcpy(senddata.ImportDataSt[ii].arrchUserID,ADDR_USER_TESTN);//!用户ID
+		senddata.ImportDataSt[ii].arrchUserID[0]=0x30+jj;
+		senddata.ImportDataSt[ii].arrchUserID[1]=0x30+jj;
+		senddata.ImportDataSt[ii].arrchUserID[34-3]=0x30+ii/100+jj;
+		senddata.ImportDataSt[ii].arrchUserID[34-2]=0x30+(ii%100)/10;
+		senddata.ImportDataSt[ii].arrchUserID[34-1]=0x30+ii%10;
+		senddata.ImportDataSt[ii].uImportMoney=100;
+		senddata.ImportDataSt[ii].uImportHight=0x58176A80;//改为时间了0X46b01258差1天
 	}
 
 
@@ -549,9 +549,9 @@ jj++;
 	uint64_t nTempSend = 1 * COIN;
 
     cout<<"BIG DATA TEST data:"<<sendcontract<<endl;
-	Value  retValue= m_cBasetest.CreateContractTx(strAppRegId,ADDR_SUPER,sendcontract,0,0.001 * COIN,nTempSend);
-	if (m_cBasetest.GetHashFromCreatedTx(retValue, strTxHash)) {
-		nStep++;
+	Value  retValue= m_cBasetest.CreateContractTx(m_strAppRegId,ADDR_SUPER,sendcontract,0,0.001 * COIN,nTempSend);
+	if (m_cBasetest.GetHashFromCreatedTx(retValue, m_strTxHash)) {
+		m_nStep++;
 
 	}else{
 	    cout<<"BIG DATA TEST err end"<<endl;
@@ -562,7 +562,7 @@ jj++;
 	/// 等待交易被确认到block中
 	while(true)
 	{
-		if(WaitComfirmed(strTxHash, strAppRegId))
+		if(WaitComfirmed(m_strTxHash, m_strAppRegId))
 		{
 			break;
 		}

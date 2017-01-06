@@ -1,5 +1,5 @@
 /*
- * CAnony_tests.cpp
+ * ipo_tests.cpp
  *
  *  Created on: 2015-04-24
  *      Author: frank
@@ -24,13 +24,13 @@ typedef struct user{
 	user()
 	{
 		memset(arruchAddress,0,35);
-		llMoney = 0;
-		llFreemoney = 0;
+		llMoney 		= 0;
+		llFreemoney 	= 0;
 		llFreeMothmoney = 0;
 	}
 	IMPLEMENT_SERIALIZE
 	(
-			for(int i = 0;i < 35;i++){
+			for (int i = 0;i < 35;i++) {
 				READWRITE(arruchAddress[i]);
 			}
 			READWRITE(llMoney);
@@ -44,14 +44,14 @@ typedef struct tagdddd{
 	int64_t llMoney;
 }IPO_DATA;
 
-//const int64_t totalSendMoney = 10825192381120926; //二期IPO第一批发币总额
-//const int64_t totalSendMoney =  2711374031363492; //二期IPO第二批发币总额
-//const int64_t totalSendMoney =  2677621584404177; //二期IPO第三批发币总额
-//const int64_t totalSendMoney = 19164400000000000;   //一期IPO第一批总额
-//const int64_t totalSendMoney =    4913960000000000;   //一期IPO第二批总额
-//const int64_t totalSendMoney =    17567366666666608;     /// 一期IPO11个月冻结金额的钱
-//const int64_t totalSendMoney =    20000000000000000;     /// 官方冻结金额总额
-const int64_t totalSendMoney = 16696666666666610;   //一期IPO10个月冻结金额的钱
+//const int64_t totalSendMoney = 10825192381120926; 		//二期IPO第一批发币总额
+//const int64_t totalSendMoney =  2711374031363492; 		//二期IPO第二批发币总额
+//const int64_t totalSendMoney =  2677621584404177; 		//二期IPO第三批发币总额
+//const int64_t totalSendMoney = 19164400000000000;   		//一期IPO第一批总额
+//const int64_t totalSendMoney =    4913960000000000;   	//一期IPO第二批总额
+//const int64_t totalSendMoney =    17567366666666608;     	//一期IPO11个月冻结金额的钱
+//const int64_t totalSendMoney =    20000000000000000;     	//官方冻结金额总额
+const int64_t g_llTotalSendMoney = 16696666666666610;   		//一期IPO10个月冻结金额的钱
 IPO_DATA arrtData[]=
 {
 
@@ -334,44 +334,39 @@ IPO_DATA arrtData[]=
 		{"dztCKNQ7j6JuDS3CydRtB3iL9Cf369fqDS",	10002720000000          } */
 };
 
-
-
 #define MAX_USER   300 //100
 
-
 static IPO_USER arrtUserarray[MAX_USER];
+
 CIpoTest::CIpoTest():m_nNum(0), m_nStep(0), m_strTxHash(""), m_strAppRegId("") {
 }
 
-emTEST_STATE CIpoTest::Run(){
+emTEST_STATE CIpoTest::Run() {
 	int64_t llMoneySend(0);
-	size_t t_num = sizeof(arrtData) / sizeof(arrtData[0]);
-	BOOST_CHECK(t_num <= MAX_USER);         //防止越界
+	size_t unNum = sizeof(arrtData) / sizeof(arrtData[0]);
+	BOOST_CHECK(unNum <= MAX_USER);         //防止越界
 	//初始化地址表
-	for (size_t i = 0; i < t_num; i++) {
+	for (size_t i = 0; i < unNum; i++) {
 		memcpy((char*)arrtUserarray[i].arruchAddress,(char*)arrtData[i].pkAddress,sizeof(arrtUserarray[i].arruchAddress));
 		arrtUserarray[i].llMoney = arrtData[i].llMoney;
 		arrtUserarray[i].llFreeMothmoney = arrtData[i].llMoney / 12;
 		arrtUserarray[i].llFreemoney = arrtUserarray[i].llMoney - arrtUserarray[i].llFreeMothmoney * (12 - 1);
 		llMoneySend += arrtUserarray[i].llMoney;  //统计总金额
-
-//		cout<<"newaddr"<<i<<"address="<<arrtUserarray[i].address<<endl;
-//		cout<<"newaddr"<<i<<"money="<<arrtUserarray[i].money<<endl;
-//		cout<<"newaddr"<<i<<"freemoney="<<arrtUserarray[i].freemoney<<endl;
-//		cout<<"newaddr"<<i<<"freeMothmoney="<<arrtUserarray[i].freeMothmoney<<endl;
+	// cout<<"newaddr"<<i<<"address="<<arrtUserarray[i].address<<endl;
+	// cout<<"newaddr"<<i<<"money="<<arrtUserarray[i].money<<endl;
+	// cout<<"newaddr"<<i<<"freemoney="<<arrtUserarray[i].freemoney<<endl;
+	// cout<<"newaddr"<<i<<"freeMothmoney="<<arrtUserarray[i].freeMothmoney<<endl;
 	}
-	BOOST_CHECK(llMoneySend == totalSendMoney);
+	BOOST_CHECK(llMoneySend == g_llTotalSendMoney);
 
 #if 0
     // 注册ipo脚本
 	RegistScript();
-
 	/// 等待ipo脚本被确认到block中
-	while(true)
-	{
+	while (true) {
 		if(WaitComfirmed(m_strTxHash, m_strAppRegId)) {
-					break;
-				}
+			break;
+		}
 	}
 #else
 	m_strAppRegId = "50725-1";  //"2-1"
@@ -379,20 +374,19 @@ emTEST_STATE CIpoTest::Run(){
 
 #if 0
 	/// 给每个地址转一定的金额
-	int64_t money = COIN;
-	size_t t_num = sizeof(arrtData) / sizeof(arrtData[0]);
-	BOOST_CHECK(t_num <= MAX_USER);         //防止越界
-	for(int i=0;i <t_num;i++)
-	{
+	int64_t llMoney = COIN;
+	size_t unNum = sizeof(arrtData) / sizeof(arrtData[0]);
+	BOOST_CHECK(unNum <= MAX_USER);         //防止越界
+	for (int i=0;i <unNum;i++) {
 		string des =strprintf("%s", arrtUserarray[i].arruchAddress);
-		m_cBasetest.CreateNormalTx(des,money);
+		m_cBasetest.CreateNormalTx(des,llMoney);
 	}
 
-	 cout<<"end g_cTxMemPool"<<endl;
-	while(true)
-	{
-		if(m_cBasetest.IsMemoryPoolEmpty())
+	cout<<"end g_cTxMemPool"<<endl;
+	while (true) {
+		if(m_cBasetest.IsMemoryPoolEmpty()) {
 			break;
+		}
 		MilliSleep(100);
 	}
 #endif
@@ -403,11 +397,11 @@ emTEST_STATE CIpoTest::Run(){
 }
 
 void CIpoTest::RunIpo(unsigned char uchType) {
-	int64_t nMoneySend(0);
-	size_t t_num = sizeof(arrtData) / sizeof(arrtData[0]);
-	BOOST_CHECK(t_num <= MAX_USER);         //防止越界
+	int64_t llMoneySend(0);
+	size_t unNum = sizeof(arrtData) / sizeof(arrtData[0]);
+	BOOST_CHECK(unNum <= MAX_USER);         //防止越界
 	//初始化地址表
-	for (size_t i = 0; i < t_num; i++) {
+	for (size_t i = 0; i < unNum; i++) {
 		memcpy((char*) arrtUserarray[i].arruchAddress, (char*) arrtData[i].pkAddress,
 				sizeof(arrtUserarray[i].arruchAddress));
 		if (!strcmp((char *) arrtUserarray[i].arruchAddress, "DnKUZMvwXfprFCKhnsWRsbJTNnRZg88T2F")
@@ -422,35 +416,35 @@ void CIpoTest::RunIpo(unsigned char uchType) {
 		}
 		//16696666666666610
 		arrtUserarray[i].llFreeMothmoney = arrtData[i].llMoney;
-		if (uchType == 1) {  //冻结1次
+		if (uchType == 1) {  	//冻结1次
 			arrtUserarray[i].llMoney = arrtData[i].llMoney;
-		} else { // 冻结11次 改为冻结10次
+		} else { 				// 冻结11次 改为冻结10次
 			arrtUserarray[i].llMoney = arrtUserarray[i].llFreeMothmoney * 10 + arrtUserarray[i].llFreemoney;
 		}
-		nMoneySend += arrtUserarray[i].llMoney;  //统计总金额
+		llMoneySend += arrtUserarray[i].llMoney;  //统计总金额
 	}
-	BOOST_CHECK(nMoneySend == totalSendMoney);
+	BOOST_CHECK(llMoneySend == g_llTotalSendMoney);
 
-//	//// main网络不用
-//	/// 给每个地址转一定的金额
-//	int64_t money = COIN;
-//	t_num = sizeof(arrtData) / sizeof(arrtData[0]);
-//	BOOST_CHECK(t_num <= MAX_USER);         //防止越界
-//	for(int i=0;i <t_num;i++)
-//	{
-//		string des =strprintf("%s", arrtUserarray[i].address);
-//		m_cBasetest.CreateNormalTx(des,money);
-//	}
-//
-//	 cout<<"end g_cTxMemPool"<<endl;
-//	while(true)
-//	{
-//		if(m_cBasetest.IsMemoryPoolEmpty())
-//			break;
-//		MilliSleep(100);
-//	}
+	//	main网络不用
+	//	给每个地址转一定的金额
+	//	int64_t money = COIN;
+	//	t_num = sizeof(arrtData) / sizeof(arrtData[0]);
+	//	BOOST_CHECK(t_num <= MAX_USER);         //防止越界
+	//	for(int i=0;i <t_num;i++)
+	//	{
+	//		string des =strprintf("%s", arrtUserarray[i].address);
+	//		m_cBasetest.CreateNormalTx(des,money);
+	//	}
+	//
+	//	 cout<<"end g_cTxMemPool"<<endl;
+	//	while(true)
+	//	{
+	//		if(m_cBasetest.IsMemoryPoolEmpty())
+	//			break;
+	//		MilliSleep(100);
+	//	}
 
-//	m_strAppRegId = "97792-1";  //"2-1"
+	//	m_strAppRegId = "97792-1";  //"2-1"
 
 	cout << "SendIpoTx start" << endl;
 	SendIpoTx(uchType);
@@ -458,7 +452,6 @@ void CIpoTest::RunIpo(unsigned char uchType) {
 }
 
 bool CIpoTest::RegistScript() {
-
 	const char* pKey[] = { "cNcJkU44oG3etbWoEvY46i5qWPeE8jVb7K44keXxEQxsXUZ85MKU",
 			"cNcJkU44oG3etbWoEvY46i5qWPeE8jVb7K44keXxEQxsXUZ85MKU" };
 	int nCount = sizeof(pKey) / sizeof(char*);
@@ -481,11 +474,11 @@ bool CIpoTest::RegistScript() {
 bool CIpoTest::CreateIpoTx(string strContact, int64_t llSendTotal) {
 	int nPre = 0xff;
 	int nType = 2;
-	string buffer = strprintf("%02x%02x", nPre,nType);
+	string strBuffer = strprintf("%02x%02x", nPre,nType);
 
-	buffer += strContact;
+	strBuffer += strContact;
 
-	Value retValue = m_cBasetest.CreateContractTx(m_strAppRegId, SEND_A, buffer, 0, COIN, llSendTotal);
+	Value retValue = m_cBasetest.CreateContractTx(m_strAppRegId, SEND_A, strBuffer, 0, COIN, llSendTotal);
 	if (m_cBasetest.GetHashFromCreatedTx(retValue, m_strTxHash)) {
 		return true;
 	}
@@ -505,9 +498,9 @@ bool CIpoTest::SendIpoTx(unsigned char uchType) {
 	}
 
 	map<string, string> mapTxHash;
-	size_t t_num = sizeof(arrtData) / sizeof(arrtData[0]);
-	BOOST_CHECK(t_num <= MAX_USER);         //防止越界
-	for (size_t i = 0; i < t_num; i++) {
+	size_t unNum = sizeof(arrtData) / sizeof(arrtData[0]);
+	BOOST_CHECK(unNum <= MAX_USER);         //防止越界
+	for (size_t i = 0; i < unNum; i++) {
 		string strDes = strprintf("%s", arrtUserarray[i].arruchAddress);
 		int64_t llMoney = arrtUserarray[i].llMoney;   //领币的总金额
 		Object obj;
@@ -515,7 +508,7 @@ bool CIpoTest::SendIpoTx(unsigned char uchType) {
 		CDataStream cScriptData(SER_DISK, g_sClientVersion);
 		cScriptData << arrtUserarray[i];
 		string strSendContract = HexStr(cScriptData);
-		if(CreateIpoTx(strSendContract,arrtUserarray[i].llMoney)) {
+		if (CreateIpoTx(strSendContract,arrtUserarray[i].llMoney)) {
 			mapTxHash[strDes]= m_strTxHash;
 			obj.push_back(Pair("addr", strDes));
 			obj.push_back(Pair("amount", llMoney));
@@ -553,68 +546,68 @@ bool CIpoTest::SendIpoTx(unsigned char uchType) {
 
 	cout << "after SendIpoTx,check the balance of every address " << endl;
 	//校验发币后，各个地址的账户金额和冻结金额
-	for (size_t i = 0; i < t_num; ++i) {
-		uint64_t llAcctValue = m_cBasetest.GetBalance(arrtData[i].pkAddress);
-		cout << "SendIpoTx addr:" << arrtData[i].pkAddress << " balance=" << llAcctValue << " freemoney="
+	for (size_t i = 0; i < unNum; ++i) {
+		uint64_t ullAcctValue = m_cBasetest.GetBalance(arrtData[i].pkAddress);
+		cout << "SendIpoTx addr:" << arrtData[i].pkAddress << " balance=" << ullAcctValue << " freemoney="
 				<< arrtUserarray[i].llFreemoney << endl;
-		BOOST_CHECK(llAcctValue >= (uint64_t )arrtUserarray[i].llFreemoney);
+		BOOST_CHECK(ullAcctValue >= (uint64_t )arrtUserarray[i].llFreemoney);
 
 		// 校验每个月的冻结金额
 		Value retValue = m_cBasetest.GetAppAccountInfo(m_strAppRegId, arrtData[i].pkAddress);
 		Value result = find_value(retValue.get_obj(), "vFreezedFund");
 		Array array = result.get_array();
-//		int64_t nMoneySend(0);
+		// int64_t nMoneySend(0);
 		size_t j = 0;
 		cout << "SendIpoTx freeMonthNum=" << array.size() << endl;
 		for (j = 0; j < array.size(); j++) {
 			int64_t llFreedMoney = find_value(array[j].get_obj(), "value").get_int64();
 			cout << "after SendIpoTx src=" << arrtUserarray[i].llFreeMothmoney << " dest=" << llFreedMoney << endl;
 			BOOST_CHECK(llFreedMoney == arrtUserarray[i].llFreeMothmoney);
-//        	nMoneySend += freedmoney;
+			// nMoneySend += freedmoney;
 		}
 		if (uchType == 1) {  //冻结1次
-
 		} else {
-//            BOOST_CHECK(j == (12 - 1)); //11个冻结金额
+			// BOOST_CHECK(j == (12 - 1)); //11个冻结金额
 			BOOST_CHECK(j == (11 - 1)); //10个冻结金额
 		}
 	}
-
 	return true;
 }
 
-void CIpoTest::SendErrorIopTx() { /*利用一个地址给自己账户充值，从脚本账户 50725-1 把钱取出来*/
+void CIpoTest::SendErrorIopTx() { 	/*利用一个地址给自己账户充值，从脚本账户 50725-1 把钱取出来*/
 	m_strAppRegId = "50725-1";
 	IPO_USER tUserIpo;
 	char *pszDess = "DhxrQ9hsvo3fVVSy6By8bePt8cmPtts88R";
 	memcpy((char*) tUserIpo.arruchAddress, pszDess, sizeof(tUserIpo.arruchAddress));
 	tUserIpo.llMoney = 1;
-	tUserIpo.llFreemoney = totalSendMoney + 1;
+	tUserIpo.llFreemoney = g_llTotalSendMoney + 1;
 	tUserIpo.llFreeMothmoney = 0;
 	Object obj;
 
-	CDataStream scriptData(SER_DISK, g_sClientVersion);
-	scriptData << tUserIpo;
-	string sendcontract = HexStr(scriptData);
-	if (CreateIpoTx(sendcontract, tUserIpo.llMoney)) {
+	CDataStream cScriptData(SER_DISK, g_sClientVersion);
+	cScriptData << tUserIpo;
+	string strSendcontract = HexStr(cScriptData);
+	if (CreateIpoTx(strSendcontract, tUserIpo.llMoney)) {
 		cout << "after SendIpoTx m_strTxHash=" << m_strTxHash << endl;
 	} else {
 		cout << "after SendIpoTx m_strTxHash err" << endl;
 	}
 }
+
 BOOST_FIXTURE_TEST_SUITE(CreateIpoTxTest,CIpoTest)
 
 BOOST_FIXTURE_TEST_CASE(Test,CIpoTest) {
-//	Run();
+	// Run();
 	RunIpo(0); //冻结11次
-//	RunIpo(1); //冻结1次
-			//SendErrorIopTx();
+	// RunIpo(1); //冻结1次
+	// SendErrorIopTx();
 }
 
 typedef struct _IPOCON {
 	unsigned char arruchAddress[35];
 	int64_t llMoney;
 } IPO_COIN;
+
 #define MAX_2IPO_USER 100
 
 BOOST_FIXTURE_TEST_CASE(get_coin,CIpoTest) {
@@ -634,7 +627,7 @@ BOOST_FIXTURE_TEST_CASE(get_coin,CIpoTest) {
 	for (size_t i = 0; i < t_num; ++i) {
 		llMoneySend += arrtData[i].llMoney;
 	}
-	BOOST_CHECK(llMoneySend == totalSendMoney);
+	BOOST_CHECK(llMoneySend == g_llTotalSendMoney);
 	for (size_t i = 0; i < t_num; ++i) {
 		string strDes = strprintf("%s", arrtData[i].pkAddress);
 		int64_t llMoney = arrtData[i].llMoney;

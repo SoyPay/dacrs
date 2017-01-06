@@ -31,7 +31,6 @@ using namespace std;
 using namespace boost;
 using namespace json_spirit;
 
-
 typedef struct {
 	unsigned char uchDnType;					//!<类型
 	unsigned char arruchSeller[6];			    //!<卖家ID（采用6字节的账户ID）

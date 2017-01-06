@@ -1,5 +1,5 @@
-#ifndef RED_PACKET_TESTS_H_
-#define RED_PACKET_TESTS_H_
+#ifndef DACRS_PTEST_RED_PACKET_TESTS_H_
+#define DACRS_PTEST_RED_PACKET_TESTS_H_
 
 #include "cycle_test_base.h"
 #include <stdlib.h>
@@ -24,13 +24,13 @@ using namespace std;
 using namespace boost;
 using namespace json_spirit;
 
-
-
 class CRedPacketTest: public CycleTestBase {
  public:
 	CRedPacketTest();
-	~CRedPacketTest(){};
-	virtual emTEST_STATE Run() ;
+	~CRedPacketTest() {
+	}
+	;
+	virtual emTEST_STATE Run();
 	bool RegistScript();
 	bool WaitRegistScript();
 	bool WithDraw();
@@ -48,7 +48,7 @@ class CRedPacketTest: public CycleTestBase {
 	string m_strAppRegId;
 	string m_strRedHash;
 	string m_strAppAddr;
-	uint64_t m_llSpecailmM;
+	uint64_t m_ullSpecailmM;
 	string m_srtRchangeAddr;
 };
 

@@ -4,8 +4,6 @@
 
 #define BOOST_TEST_MODULE Process Test Suite
 
-
-
 #include "main.h"
 #include "txdb.h"
 #include "ui_interface.h"
@@ -13,7 +11,6 @@
 #include <string>
 
 #include "./wallet/wallet.h"
-
 
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
@@ -66,7 +63,6 @@ struct TestingSetup {
 		}
 	}
 	~TestingSetup() {
-
 	}
 };
 

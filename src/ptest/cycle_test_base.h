@@ -1,20 +1,20 @@
 /*
- * CycleTestBase.h
+ * cycle_test_base.h
  *
  *  Created on: 2014Äê12ÔÂ30ÈÕ
  *      Author: ranger.shi
  */
 
-#ifndef CYCLE_TEST_BASE_H_
-#define CYCLE_TEST_BASE_H_
+#ifndef DACRS_PTEST_CYCLE_TEST_BASE_H_
+#define DACRS_PTEST_CYCLE_TEST_BASE_H_
 #include "../test/systestbase.h"
+
 enum emTEST_STATE {
 	EM_THES_STATE, EM_NEXT_STATE, EM_END_STATE,
 };
 
 class CycleTestBase {
-
-public:
+ public:
 	CycleTestBase();
 	bool IncSentTotal() {
 		m_cBasetest.ShowProgressTotal("Send Cycle:", ++m_snTotalsend);
@@ -27,13 +27,11 @@ public:
 	virtual emTEST_STATE Run();
 	virtual ~CycleTestBase();
 
-protected:
+ protected:
 	SysTestBase m_cBasetest;
 	static int m_snTotalsend;
-	static vector<string> svstrAccount;
+	static vector<string> m_vstrAccount;
 
 };
 
-
-
-#endif /* CYCLETESTBASE_H_ */
+#endif /* DACRS_PTEST_CYCLE_TEST_BASE_H_ */

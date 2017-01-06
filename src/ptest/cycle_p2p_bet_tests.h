@@ -1,12 +1,12 @@
 /*
- * CycleP2PBet_test.h
+ * cycle_p2p_bet_tests.h
  *
  *  Created on: 2015年1月15日
  *      Author: spark.huang
  */
 
-#ifndef CYCLE_P2P_BET_TEST_H_
-#define CYCLE_P2P_BET_TEST_H_
+#ifndef DACRS_PTEST_CYCLE_P2P_BET_TEST_H_
+#define DACRS_PTEST_CYCLE_P2P_BET_TEST_H_
 
 #include "../test/systestbase.h"
 #include "cycle_test_base.h"
@@ -15,16 +15,16 @@
 #pragma pack(1)
 
 typedef struct {
-	unsigned char uchType;  /*TX_SENDBET = 0x01,TX_ACCEPTBET = 0x02,TX_OPENBET = 0x03*/
-	unsigned char uchNoperateType;   //竞猜类型值0 -1
-	uint64_t llMoney;
-	unsigned short usHight;  //超时高度 20
+	unsigned char uchType;  			/*TX_SENDBET = 0x01,TX_ACCEPTBET = 0x02,TX_OPENBET = 0x03*/
+	unsigned char uchNoperateType;   	//竞猜类型值0 -1
+	uint64_t ullMoney;
+	unsigned short usHight;  			//超时高度 20
 	unsigned char arruchDhash[32];
 	IMPLEMENT_SERIALIZE
 	(
 			READWRITE(uchType);
 			READWRITE(uchNoperateType);
-			READWRITE(llMoney);
+			READWRITE(ullMoney);
 			READWRITE(usHight);
 			for(int i = 0; i < 32; i++) {
 				READWRITE(arruchDhash[i]);
@@ -35,14 +35,14 @@ typedef struct {
 typedef struct {
 	unsigned char uchType;
 	unsigned char uchNoperateType;
-	uint64_t llMoney;
+	uint64_t ullMoney;
 	unsigned char uchData;
 	unsigned char uchTxhash[32];		//发起对赌的哈希，也是对赌数据的关键字
 	IMPLEMENT_SERIALIZE
 	(
 			READWRITE(uchType);
 			READWRITE(uchNoperateType);
-			READWRITE(llMoney);
+			READWRITE(ullMoney);
 			READWRITE(uchData);
 			for(int i = 0; i < 32; i++)	{
 				READWRITE(uchTxhash[i]);
@@ -70,14 +70,14 @@ typedef struct {
 
 #pragma pack(pop)
 
-#define ADDR_A    "doym966kgNUKr2M9P7CmjJeZdddqvoU5RZ"   // 0-6
+#define ADDR_A    "doym966kgNUKr2M9P7CmjJeZdddqvoU5RZ"   		// 0-6
 #define VADDR_A   "[\"doym966kgNUKr2M9P7CmjJeZdddqvoU5RZ\"]"
 #define ADDR_B    "dd936HZcwj9dQkefHPqZpxzUuKZZ2QEsbN"
-#define VADDR_B   "[\"dd936HZcwj9dQkefHPqZpxzUuKZZ2QEsbN\"]"  //0-7
+#define VADDR_B   "[\"dd936HZcwj9dQkefHPqZpxzUuKZZ2QEsbN\"]"  	//0-7
 
 
-class CTestBetTx:public CycleTestBase,public SysTestBase
-{
+
+class CTestBetTx: public CycleTestBase, public SysTestBase {
  public:
 	CTestBetTx();
 	virtual emTEST_STATE Run();
@@ -97,17 +97,17 @@ class CTestBetTx:public CycleTestBase,public SysTestBase
 		unsigned char uchBuf;
 		RAND_bytes(&uchBuf, 1);
 		int nNum = uchBuf;
-		if(nNum>0&&nNum<=6) {
+		if (nNum > 0 && nNum <= 6) {
 			return nNum;
 		}
-		nNum = nNum%6 +1;
+		nNum = nNum % 6 + 1;
 		return nNum;
 	}
 
 	unsigned char GetRanOpType() {
 		unsigned char uchType;
 		RAND_bytes(&uchType, sizeof(uchType));
-		unsigned char  uchGussnum = uchType % 2;
+		unsigned char uchGussnum = uchType % 2;
 		return uchGussnum;
 	}
 
@@ -129,7 +129,6 @@ class CTestBetTx:public CycleTestBase,public SysTestBase
 	bool WaitBAcceptP2PBet(void);
 	bool AOpenP2PBet(void);
 	bool WaitAOpenP2PBet(void);
-
 };
 
-#endif /* CYCLEP2PBET_TEST_H_ */
+#endif /* DACRS_PTEST_CYCLE_P2P_BET_TEST_H_ */

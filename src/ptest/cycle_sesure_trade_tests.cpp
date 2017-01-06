@@ -58,9 +58,7 @@ emTEST_STATE CTestSesureTrade::Run() {
 }
 
 bool CTestSesureTrade::Step1RegisterScript() {
-
-	const char* pkKey[] = {
-			"cSu84vACzZkWqnP2LUdJQLX3M1PYYXo2gEDDCEKLWNWfM7B4zLiP", // addr:  dtKsuK9HUvLLHtBQL8Psk5fUnTLTFC83GS
+	const char* pkKey[] = { "cSu84vACzZkWqnP2LUdJQLX3M1PYYXo2gEDDCEKLWNWfM7B4zLiP", // addr:  dtKsuK9HUvLLHtBQL8Psk5fUnTLTFC83GS
 			"cSVY69D9aUo4MugzUG9rM14DtV21cBAbZUVXmgAC2RpJwtZRUbsM", // addr:  dejEcGCsBkwsZaiUH1hgMapjbJqPdPNV9U
 			"cTCcDyQvX6ucP9NEjhyHfTixamKQHQkFiSyfupm4CGZZYV7YYnf8", // addr:  dkoEsWuW3aoKaGduFbmjVDbvhmjxFnSbyL
 			};
@@ -138,9 +136,9 @@ bool CTestSesureTrade::Step3ModifyAuthor() {
 bool CTestSesureTrade::Step3SendContract() {
 	if (VerifyTxInBlock(m_strStep3ModifyHash)) {
 		string strReversFirstTxHash = GetReverseHash(m_strStep2SendHash);
-		ST_NEXT_TRADE_CONTRACT thirdContract;
-		PacketNextContract(3, (unsigned char*) strReversFirstTxHash.c_str(), &thirdContract);
-		string strData = PutDataIntoString((char*) &thirdContract, sizeof(thirdContract));
+		ST_NEXT_TRADE_CONTRACT tThirdContract;
+		PacketNextContract(3, (unsigned char*) strReversFirstTxHash.c_str(), &tThirdContract);
+		string strData = PutDataIntoString((char*) &tThirdContract, sizeof(tThirdContract));
 
 		Value valueRes = CreateContractTx(m_strRegScriptID, VADDR_ARBIT, strData, 0, 100000);
 		if (GetHashFromCreatedTx(valueRes, m_strStep3SendHash)) {
@@ -187,7 +185,6 @@ bool CTestSesureTrade::CheckLastSendTx() {
 
 void CSesureTradeHelp::PacketFirstContract(const char* pBuyID, const char* pSellID, const char* pArID, int nHeight,
 		int nFine, int nPay, int nFee, int ndeposit, ST_FIRST_TRADE_CONTRACT* pContract) {
-
 	BOOST_CHECK(pContract);
 	memset(pContract, 0, sizeof(ST_FIRST_TRADE_CONTRACT));
 	pContract->uchType = 1;
@@ -195,14 +192,14 @@ void CSesureTradeHelp::PacketFirstContract(const char* pBuyID, const char* pSell
 	pContract->lHeight = nHeight;
 
 	unsigned char uchSize = sizeof(int);
-	vector<unsigned char> v = ParseHex(pBuyID);
-	memcpy(pContract->tBuyer.arrchAccounid, &v[0], ACCOUNT_ID_SIZE);
+	vector<unsigned char> vuchBuyID = ParseHex(pBuyID);
+	memcpy(pContract->tBuyer.arrchAccounid, &vuchBuyID[0], ACCOUNT_ID_SIZE);
 
-	v = ParseHex(pSellID);
-	memcpy(pContract->tSeller.arrchAccounid, &v[0], ACCOUNT_ID_SIZE);
+	vuchBuyID = ParseHex(pSellID);
+	memcpy(pContract->tSeller.arrchAccounid, &vuchBuyID[0], ACCOUNT_ID_SIZE);
 
-	v = ParseHex(pArID);
-	memcpy(pContract->arrtArbitrator[0].arrchAccounid, &v[0], ACCOUNT_ID_SIZE);
+	vuchBuyID = ParseHex(pArID);
+	memcpy(pContract->arrtArbitrator[0].arrchAccounid, &vuchBuyID[0], ACCOUNT_ID_SIZE);
 
 	memcpy(&pContract->tFineMoney, (const char*) &nFine, uchSize); //100
 	memcpy(&pContract->tPayMoney, (const char*) &nPay, uchSize); //80
@@ -218,8 +215,9 @@ bool CSesureTradeHelp::VerifyTxInBlock(const string& strTxHash, bool bTryForever
 	string strScriptID;
 	do {
 		if (GetTxConfirmedRegID(strTxHash, strScriptID)) {
-			if (!strScriptID.empty())
+			if (!strScriptID.empty()) {
 				return true;
+			}
 		}
 	} while (bTryForever);
 
@@ -233,10 +231,10 @@ string CSesureTradeHelp::PutDataIntoString(char* pData, int nDateLen) {
 }
 
 string CSesureTradeHelp::GetReverseHash(const string& strTxHash) {
-	vector<unsigned char> vHash = ParseHex(strTxHash);
-	reverse(vHash.begin(), vHash.end());
+	vector<unsigned char> vuchHash = ParseHex(strTxHash);
+	reverse(vuchHash.begin(), vuchHash.end());
 	string strHash;
-	strHash.assign(vHash.begin(), vHash.end());
+	strHash.assign(vuchHash.begin(), vuchHash.end());
 	return strHash;
 }
 
