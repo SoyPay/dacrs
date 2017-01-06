@@ -39,8 +39,10 @@ string HTTPPost(const string& strMsg, const map<string, string>& mapRequestHeade
       << "Content-Length: " << strMsg.size() << "\r\n"
       << "Connection: close\r\n"
       << "Accept: application/json\r\n";
-    for (const auto& item : mapRequestHeaders)
-        s << item.first << ": " << item.second << "\r\n";
+    for (const auto& item : mapRequestHeaders) {
+    	s << item.first << ": " << item.second << "\r\n";
+    }
+
     s << "\r\n" << strMsg;
 
     return s.str();
@@ -50,8 +52,7 @@ static string rfc1123Time() {
 	return DateTimeStrFormat("%a, %d %b %Y %H:%M:%S +0000", GetTime());
 }
 
-string HTTPReply(int nStatus, const string& strMsg, bool bKeepalive)
-{
+string HTTPReply(int nStatus, const string& strMsg, bool bKeepalive) {
     if (nStatus == HTTP_UNAUTHORIZED) {
         return strprintf("HTTP/1.0 401 Authorization Required\r\n"
             "Date: %s\r\n"
@@ -71,12 +72,12 @@ string HTTPReply(int nStatus, const string& strMsg, bool bKeepalive)
             "</HTML>\r\n", rfc1123Time(), FormatFullVersion());
     }
     const char *cStatus;
-         if (nStatus == HTTP_OK) cStatus = "OK";
-    else if (nStatus == HTTP_BAD_REQUEST) cStatus = "Bad Request";
-    else if (nStatus == HTTP_FORBIDDEN) cStatus = "Forbidden";
-    else if (nStatus == HTTP_NOT_FOUND) cStatus = "Not Found";
-    else if (nStatus == HTTP_INTERNAL_SERVER_ERROR) cStatus = "Internal Server Error";
-    else cStatus = "";
+	if (nStatus == HTTP_OK) cStatus = "OK";
+	else if (nStatus == HTTP_BAD_REQUEST) cStatus = "Bad Request";
+	else if (nStatus == HTTP_FORBIDDEN) cStatus = "Forbidden";
+	else if (nStatus == HTTP_NOT_FOUND) cStatus = "Not Found";
+	else if (nStatus == HTTP_INTERNAL_SERVER_ERROR) cStatus = "Internal Server Error";
+	else cStatus = "";
     return strprintf(
             "HTTP/1.1 %d %s\r\n"
             "Date: %s\r\n"
@@ -95,30 +96,30 @@ string HTTPReply(int nStatus, const string& strMsg, bool bKeepalive)
         strMsg);
 }
 
-bool ReadHTTPRequestLine(basic_istream<char>& stream, int &nProto, string& strHttp_method, string& strHttp_uri) {
+bool ReadHTTPRequestLine(basic_istream<char>& stream, int &nProto, string& strHttpMethod, string& strHttpUri) {
     string str;
     getline(stream, str);
 
     // HTTP request line is space-delimited
-    vector<string> vWords;
-    boost::split(vWords, str, boost::is_any_of(" "));
-	if (vWords.size() < 2) {
+    vector<string> vstrWords;
+    boost::split(vstrWords, str, boost::is_any_of(" "));
+	if (vstrWords.size() < 2) {
 		return false;
 	}
 	// HTTP methods permitted: GET, POST
-	strHttp_method = vWords[0];
-	if (strHttp_method != "GET" && strHttp_method != "POST") {
+	strHttpMethod = vstrWords[0];
+	if (strHttpMethod != "GET" && strHttpMethod != "POST") {
 		return false;
 	}
 	// HTTP URI must be an absolute path, relative to current host
-	strHttp_uri = vWords[1];
-	if (strHttp_uri.size() == 0 || strHttp_uri[0] != '/') {
+	strHttpUri = vstrWords[1];
+	if (strHttpUri.size() == 0 || strHttpUri[0] != '/') {
 		return false;
 	}
 	// parse proto, if present
 	string strProto = "";
-	if (vWords.size() > 2) {
-		strProto = vWords[2];
+	if (vstrWords.size() > 2) {
+		strProto = vstrWords[2];
 	}
 	nProto = 0;
 	const char *ver = strstr(strProto.c_str(), "HTTP/1.");
@@ -131,9 +132,9 @@ bool ReadHTTPRequestLine(basic_istream<char>& stream, int &nProto, string& strHt
 int ReadHTTPStatus(basic_istream<char>& stream, int &nProto) {
 	string str;
 	getline(stream, str);
-	vector<string> vWords;
-	boost::split(vWords, str, boost::is_any_of(" "));
-	if (vWords.size() < 2) {
+	vector<string> vstrWords;
+	boost::split(vstrWords, str, boost::is_any_of(" "));
+	if (vstrWords.size() < 2) {
 		return HTTP_INTERNAL_SERVER_ERROR;
 	}
 	nProto = 0;
@@ -141,7 +142,7 @@ int ReadHTTPStatus(basic_istream<char>& stream, int &nProto) {
 	if (ver != NULL) {
 		nProto = atoi(ver + 7);
 	}
-	return atoi(vWords[1].c_str());
+	return atoi(vstrWords[1].c_str());
 }
 
 int ReadHTTPHeaders(basic_istream<char>& stream, map<string, string>& mapHeadersRet) {
@@ -184,9 +185,9 @@ int ReadHTTPMessage(basic_istream<char>& stream, map<string, string>& mapHeaders
 		strMessageRet = string(vch.begin(), vch.end());
 	}
 
-	string sConHdr = mapHeadersRet["connection"];
+	string strConHdr = mapHeadersRet["connection"];
 
-	if ((sConHdr != "close") && (sConHdr != "keep-alive")) {
+	if ((strConHdr != "close") && (strConHdr != "keep-alive")) {
 		if (nProto >= 1) {
 			mapHeadersRet["connection"] = "keep-alive";
 		} else {
@@ -227,16 +228,14 @@ Object JSONRPCReplyObj(const Value& result, const Value& error, const Value& id)
 	return reply;
 }
 
-string JSONRPCReply(const Value& result, const Value& error, const Value& id)
-{
-    Object reply = JSONRPCReplyObj(result, error, id);
-    return write_string(Value(reply), false) + "\n";
+string JSONRPCReply(const Value& result, const Value& error, const Value& id) {
+	Object reply = JSONRPCReplyObj(result, error, id);
+	return write_string(Value(reply), false) + "\n";
 }
 
-Object JSONRPCError(int code, const string& message)
-{
-    Object error;
-    error.push_back(Pair("code", code));
-    error.push_back(Pair("message", message));
-    return error;
+Object JSONRPCError(int nCode, const string& strMessage) {
+	Object error;
+	error.push_back(Pair("code", nCode));
+	error.push_back(Pair("message", strMessage));
+	return error;
 }

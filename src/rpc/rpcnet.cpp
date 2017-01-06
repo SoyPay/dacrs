@@ -53,14 +53,14 @@ Value ping(const Array& params, bool bHelp) {
 	return Value::null;
 }
 
-static void CopyNodeStats(vector<CNodeStats>& vstats) {
-	vstats.clear();
+static void CopyNodeStats(vector<CNodeStats>& vcNodeStats) {
+	vcNodeStats.clear();
     LOCK(g_cs_vNodes);
-    vstats.reserve(g_vNodes.size());
-    for(auto pnode : g_vNodes) {
-		CNodeStats stats;
-		pnode->copyStats(stats);
-		vstats.push_back(stats);
+    vcNodeStats.reserve(g_vNodes.size());
+    for(auto pNode : g_vNodes) {
+		CNodeStats cNodeStats;
+		pNode->copyStats(cNodeStats);
+		vcNodeStats.push_back(cNodeStats);
 	}
 }
 
@@ -104,8 +104,8 @@ Value getpeerinfo(const Array& params, bool bHelp) {
 
 	for (const CNodeStats& stats : vcStats) {
 		Object obj;
-		ST_NodeStateStats cStatestats;
-		bool bStateStats = GetNodeStateStats(stats.m_nNodeId, cStatestats);
+		ST_NodeStateStats tStatestats;
+		bool bStateStats = GetNodeStateStats(stats.m_nNodeId, tStatestats);
 		obj.push_back(Pair("addr", stats.m_strAddrName));
 		if (!(stats.m_strAddrLocal.empty())) {
 			obj.push_back(Pair("addrlocal", stats.m_strAddrLocal));
@@ -128,7 +128,7 @@ Value getpeerinfo(const Array& params, bool bHelp) {
 		obj.push_back(Pair("inbound", stats.m_bInbound));
 		obj.push_back(Pair("startingheight", stats.m_nStartingHeight));
 		if (bStateStats) {
-			obj.push_back(Pair("banscore", cStatestats.nMisbehavior));
+			obj.push_back(Pair("banscore", tStatestats.nMisbehavior));
 		}
 		obj.push_back(Pair("syncnode", stats.m_bSyncNode));
 
@@ -161,8 +161,8 @@ Value addnode(const Array& params, bool bHelp) {
 	string strNode = params[0].get_str();
 
 	if (strCommand == "onetry") {
-		CAddress addr;
-		ConnectNode(addr, strNode.c_str());
+		CAddress cAddr;
+		ConnectNode(cAddr, strNode.c_str());
 		return Value::null;
 	}
 
@@ -254,9 +254,9 @@ Value getaddednodeinfo(const Array& params, bool bHelp) {
 
 	list<pair<string, vector<CService> > > laddedAddreses(0);
 	for (auto& strAddNode : laddedNodes) {
-		vector<CService> vservNode(0);
-		if (Lookup(strAddNode.c_str(), vservNode, SysCfg().GetDefaultPort(), g_bNameLookup, 0)) {
-			laddedAddreses.push_back(make_pair(strAddNode, vservNode));
+		vector<CService> vcServNode(0);
+		if (Lookup(strAddNode.c_str(), vcServNode, SysCfg().GetDefaultPort(), g_bNameLookup, 0)) {
+			laddedAddreses.push_back(make_pair(strAddNode, vcServNode));
 		} else {
 			Object obj;
 			obj.push_back(Pair("addednode", strAddNode));
@@ -273,15 +273,15 @@ Value getaddednodeinfo(const Array& params, bool bHelp) {
 
 		Array addresses;
 		bool bConnected = false;
-		for (auto& addrNode : it->second) {
+		for (auto& cAddrNode : it->second) {
 			bool bFound = false;
 			Object cNode;
-			cNode.push_back(Pair("address", addrNode.ToString()));
-			for (auto pnode : g_vNodes)
-				if (pnode->m_cAddress == addrNode) {
+			cNode.push_back(Pair("address", cAddrNode.ToString()));
+			for (auto pNode : g_vNodes)
+				if (pNode->m_cAddress == cAddrNode) {
 					bFound = true;
 					bConnected = true;
-					cNode.push_back(Pair("connected", pnode->m_bInbound ? "inbound" : "outbound"));
+					cNode.push_back(Pair("connected", pNode->m_bInbound ? "inbound" : "outbound"));
 					break;
 				}
 			if (!bFound) {
@@ -370,6 +370,7 @@ Value getnetworkinfo(const Array& params, bool bHelp) {
 	obj.push_back(Pair("localaddresses", localAddresses));
 	return obj;
 }
+
 /*
  *   获取最近 N个块状态信息: getdacrsstate  param
  *

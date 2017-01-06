@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef _DACRSRPC_CLIENT_H_
-#define _DACRSRPC_CLIENT_H_ 1
+#ifndef DACRS_RPC_RPCCLIENT_H_
+#define DACRS_RPC_RPCCLIENT_H_ 1
 
 #include "json/json_spirit_reader_template.h"
 #include "json/json_spirit_utils.h"
@@ -22,6 +22,6 @@ json_spirit::Array RPCConvertValues(const std::string &strMethod, const std::vec
  *
  * @note the argument can be removed once Dacrs-cli functionality is removed from Dacrsd
  */
-std::string HelpMessageCli(bool mainProgram);
+std::string HelpMessageCli(bool bMainProgram);
 
 #endif

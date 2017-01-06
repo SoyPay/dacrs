@@ -13,7 +13,6 @@
 #include "uint256.h"
 #include "../wallet/wallet.h"
 
-
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
@@ -525,7 +524,7 @@ using namespace json_spirit;
 //
 //    return result;
 //}
-extern void SyncWithWallets(const uint256 &hash, const CBaseTransaction *pTx, const CBlock *pblock);
+extern void SyncWithWallets(const uint256 &cHash, const CBaseTransaction *pTx, const CBlock *pblock);
 //Value sendrawtransaction(const Array& params, bool bHelp)
 //{
 //    if (bHelp || params.size() < 1 || params.size() > 2)

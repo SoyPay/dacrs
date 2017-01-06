@@ -5,8 +5,8 @@
  *      Author: leo
  */
 
-#ifndef RPCTX_H_
-#define RPCTX_H_
+#ifndef DACRS_RPC_RPCTX_H_
+#define DACRS_RPC_RPCTX_H_
 
 #include <boost/assign/list_of.hpp>
 #include "json/json_spirit_utils.h"
@@ -64,4 +64,4 @@ extern Value gettotalassets(const Array& params, bool bHelp);
 extern Value gettxhashbyaddress(const Array& params, bool bHelp);
 extern Value getrawtx(const Array& params, bool bHelp);
 extern Value contractreckon(const Array& params, bool bHelp);//π¿À„∫œ‘º
-#endif /* RPCTX_H_ */
+#endif /* DACRS_RPC_RPCTX_H_ */

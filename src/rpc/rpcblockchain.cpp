@@ -28,7 +28,6 @@ double GetDifficulty(const CBlockIndex* pcBlockIndex) {
 	}
 
 	int nShift = (pcBlockIndex->m_unBits >> 24) & 0xff;
-
 	double dDiff = (double) 0x0000ffff / (double) (pcBlockIndex->m_unBits & 0x00ffffff);
 
 	while (nShift < 29) {
@@ -45,9 +44,9 @@ double GetDifficulty(const CBlockIndex* pcBlockIndex) {
 Object blockToJSON(const CBlock& cBlock, const CBlockIndex* cBlockIndex) {
 	Object result;
 	result.push_back(Pair("hash", cBlock.GetHash().GetHex()));
-	CMerkleTx txGen(cBlock.vptx[0]);
-	txGen.SetMerkleBranch(&cBlock);
-	result.push_back(Pair("confirmations", (int) txGen.GetDepthInMainChain()));
+	CMerkleTx cTxGen(cBlock.vptx[0]);
+	cTxGen.SetMerkleBranch(&cBlock);
+	result.push_back(Pair("confirmations", (int) cTxGen.GetDepthInMainChain()));
 	result.push_back(Pair("size", (int) ::GetSerializeSize(cBlock, SER_NETWORK, g_sProtocolVersion)));
 	result.push_back(Pair("height", cBlockIndex->m_nHeight));
 	result.push_back(Pair("version", cBlock.GetVersion()));
@@ -68,9 +67,9 @@ Object blockToJSON(const CBlock& cBlock, const CBlockIndex* cBlockIndex) {
 	if (cBlockIndex->m_pPrevBlockIndex) {
 		result.push_back(Pair("previousblockhash", cBlockIndex->m_pPrevBlockIndex->GetBlockHash().GetHex()));
 	}
-	CBlockIndex *pnext = g_cChainActive.Next(cBlockIndex);
-	if (pnext) {
-		result.push_back(Pair("nextblockhash", pnext->GetBlockHash().GetHex()));
+	CBlockIndex *pNextBlock = g_cChainActive.Next(cBlockIndex);
+	if (pNextBlock) {
+		result.push_back(Pair("nextblockhash", pNextBlock->GetBlockHash().GetHex()));
 	}
 	return result;
 }
@@ -147,38 +146,39 @@ Value getrawmempool(const Array& params, bool bHelp) {
 
 	if (bFVerbose) {
 		LOCK(g_cTxMemPool.m_cs);
-		Object o;
+		Object obj;
 		for (const auto& entry : g_cTxMemPool.m_mapTx) {
-			const uint256& hash = entry.first;
-			const CTxMemPoolEntry& e = entry.second;
+			const uint256& cHash = entry.first;
+			const CTxMemPoolEntry& cTxMemPoolEntry = entry.second;
 			Object info;
-			info.push_back(Pair("size", (int) e.GetTxSize()));
-			info.push_back(Pair("fee", ValueFromAmount(e.GetFee())));
-			info.push_back(Pair("time", e.GetTime()));
-			info.push_back(Pair("height", (int) e.GetHeight()));
-			info.push_back(Pair("startingpriority", e.GetPriority(e.GetHeight())));
-			info.push_back(Pair("currentpriority", e.GetPriority(g_cChainActive.Height())));
-//            const CTransaction& tx = e.GetTx();
+			info.push_back(Pair("size", (int) cTxMemPoolEntry.GetTxSize()));
+			info.push_back(Pair("fee", ValueFromAmount(cTxMemPoolEntry.GetFee())));
+			info.push_back(Pair("time", cTxMemPoolEntry.GetTime()));
+			info.push_back(Pair("height", (int) cTxMemPoolEntry.GetHeight()));
+			info.push_back(Pair("startingpriority", cTxMemPoolEntry.GetPriority(cTxMemPoolEntry.GetHeight())));
+			info.push_back(Pair("currentpriority", cTxMemPoolEntry.GetPriority(g_cChainActive.Height())));
+			// const CTransaction& tx = e.GetTx();
 			set<string> setDepends;
-//            BOOST_FOREACH(const CTxIn& txin, tx.vin)
-//            {
-//                if (g_cTxMemPool.exists(txin.prevout.hash))
-//                    setDepends.insert(txin.prevout.hash.ToString());
-//            }
+			// BOOST_FOREACH(const CTxIn& txin, tx.vin)
+			// {
+			//     if (g_cTxMemPool.exists(txin.prevout.hash))
+			//     setDepends.insert(txin.prevout.hash.ToString());
+			// }
 			Array depends(setDepends.begin(), setDepends.end());
 			info.push_back(Pair("depends", depends));
-			o.push_back(Pair(hash.ToString(), info));
+			obj.push_back(Pair(cHash.ToString(), info));
 		}
-		return o;
+		return obj;
 	} else {
-		vector<uint256> vtxid;
-		g_cTxMemPool.queryHashes(vtxid);
+		vector<uint256> vcTxID;
+		g_cTxMemPool.queryHashes(vcTxID);
 
-		Array a;
-		for (const auto& hash : vtxid)
-			a.push_back(hash.ToString());
+		Array arr;
+		for (const auto& hash : vcTxID) {
+			arr.push_back(hash.ToString());
+		}
 
-		return a;
+		return arr;
 	}
 }
 
@@ -193,12 +193,13 @@ Value getblockhash(const Array& params, bool bHelp) {
 				"\nExamples:\n" + HelpExampleCli("getblockhash", "1000") + HelpExampleRpc("getblockhash", "1000"));
 	}
 	int nHeight = params[0].get_int();
-	if (nHeight < 0 || nHeight > g_cChainActive.Height())
+	if (nHeight < 0 || nHeight > g_cChainActive.Height()) {
 		throw runtime_error("Block number out of range.");
+	}
 
-	CBlockIndex* pblockindex = g_cChainActive[nHeight];
+	CBlockIndex* pBlockIndex = g_cChainActive[nHeight];
 	Object result;
-	result.push_back(Pair("hash", pblockindex->GetBlockHash().GetHex()));
+	result.push_back(Pair("hash", pBlockIndex->GetBlockHash().GetHex()));
 	return result;
 }
 
@@ -241,52 +242,52 @@ Value getblock(const Array& params, bool bHelp) {
 	std::string strHash;
 	if (int_type == params[0].type()) {
 		int nHeight = params[0].get_int();
-		if (nHeight < 0 || nHeight > g_cChainActive.Height()){
-			throw runtime_error("Block number out of range.");}
+		if (nHeight < 0 || nHeight > g_cChainActive.Height()) {
+			throw runtime_error("Block number out of range.");
+		}
 
 		CBlockIndex* pcBlockIndex = g_cChainActive[nHeight];
 		strHash = pcBlockIndex->GetBlockHash().GetHex();
 	} else {
 		strHash = params[0].get_str();
 	}
-	uint256 hash(uint256S(strHash));
+	uint256 cHash(uint256S(strHash));
 
 	bool bFVerbose = true;
-	if (params.size() > 1)
+	if (params.size() > 1) {
 		bFVerbose = params[1].get_bool();
-
-	if (g_mapBlockIndex.count(hash) == 0)
+	}
+	if (g_mapBlockIndex.count(cHash) == 0) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+	}
 
 	CBlock cBlock;
-	CBlockIndex* pcBlockindex = g_mapBlockIndex[hash];
-	ReadBlockFromDisk(cBlock, pcBlockindex);
+	CBlockIndex* pcBlockIndex = g_mapBlockIndex[cHash];
+	ReadBlockFromDisk(cBlock, pcBlockIndex);
 
 	if (!bFVerbose) {
-		CDataStream ssBlock(SER_NETWORK, g_sProtocolVersion);
-		ssBlock << cBlock;
-		std::string strHex = HexStr(ssBlock.begin(), ssBlock.end());
+		CDataStream cBlock(SER_NETWORK, g_sProtocolVersion);
+		cBlock << cBlock;
+		std::string strHex = HexStr(cBlock.begin(), cBlock.end());
 		return strHex;
 	}
 
-	return blockToJSON(cBlock, pcBlockindex);
+	return blockToJSON(cBlock, pcBlockIndex);
 }
 
-Value verifychain(const Array& params, bool bHelp)
-{
-    if (bHelp || params.size() > 2)
-        throw runtime_error(
-            "verifychain ( checklevel numblocks )\n"
-            "\nVerifies blockchain database.\n"
-            "\nArguments:\n"
-            "1. checklevel   (numeric, optional, 0-4, default=3) How thorough the block verification is.\n"
-            "2. numblocks    (numeric, optional, default=288, 0=all) The number of blocks to check.\n"
-            "\nResult:\n"
-            "true|false       (boolean) Verified or not\n"
-            "\nExamples:\n"
-            + HelpExampleCli("verifychain", "( checklevel numblocks )")
-            + HelpExampleRpc("verifychain", "( checklevel numblocks )")
-        );
+Value verifychain(const Array& params, bool bHelp) {
+    if (bHelp || params.size() > 2) {
+		throw runtime_error(
+				"verifychain ( checklevel numblocks )\n"
+						"\nVerifies blockchain database.\n"
+						"\nArguments:\n"
+						"1. checklevel   (numeric, optional, 0-4, default=3) How thorough the block verification is.\n"
+						"2. numblocks    (numeric, optional, default=288, 0=all) The number of blocks to check.\n"
+						"\nResult:\n"
+						"true|false       (boolean) Verified or not\n"
+						"\nExamples:\n" + HelpExampleCli("verifychain", "( checklevel numblocks )")
+						+ HelpExampleRpc("verifychain", "( checklevel numblocks )"));
+    }
 
 	int nCheckLevel = SysCfg().GetArg("-checklevel", 3);
 	int nCheckDepth = SysCfg().GetArg("-checkblocks", 288);
@@ -301,7 +302,7 @@ Value verifychain(const Array& params, bool bHelp)
 }
 
 Value getblockchaininfo(const Array& params, bool bHelp) {
-	if (bHelp || params.size() != 0)
+	if (bHelp || params.size() != 0) {
 		throw runtime_error("getblockchaininfo\n"
 				"Returns an object containing various state info regarding block chain processing.\n"
 				"\nResult:\n"
@@ -314,6 +315,7 @@ Value getblockchaininfo(const Array& params, bool bHelp) {
 				"  \"chainwork\": \"xxxx\"     (string) total amount of work in active chain, in hexadecimal\n"
 				"}\n"
 				"\nExamples:\n" + HelpExampleCli("getblockchaininfo", "") + HelpExampleRpc("getblockchaininfo", ""));
+	}
 
 	proxyType proxy;
 	GetProxy(NET_IPV4, proxy);
@@ -394,15 +396,15 @@ Value listcheckpoint(const Array& params, bool bHelp) {
 		throw runtime_error("listcheckpoint index\n"
 				"\nget the list of checkpoint.\n"
 				"\nResult a object  contain checkpoint\n"
-//				"\nResult:\n"
-//				"\"hash\"         (string) The block hash\n"
+				// "\nResult:\n"
+				// "\"hash\"         (string) The block hash\n"
 				"\nExamples:\n" + HelpExampleCli("listcheckpoint", "") + HelpExampleRpc("listcheckpoint", ""));
 	}
 
 	Object result;
-	std::map<int, uint256> checkpointMap;
-	Checkpoints::GetCheckpointMap(checkpointMap);
-	for (std::map<int, uint256>::iterator iterCheck = checkpointMap.begin(); iterCheck != checkpointMap.end();
+	std::map<int, uint256> mapCheckPoint;
+	Checkpoints::GetCheckpointMap(mapCheckPoint);
+	for (std::map<int, uint256>::iterator iterCheck = mapCheckPoint.begin(); iterCheck != mapCheckPoint.end();
 			++iterCheck) {
 		result.push_back(Pair(tfm::format("%d", iterCheck->first).c_str(), iterCheck->second.GetHex()));
 	}

@@ -21,15 +21,15 @@ using namespace boost;
 using namespace boost::assign;
 using namespace json_spirit;
 
-static  bool GetKeyId(string const &addr,CKeyID &cKeyId) {
-	if (!CRegID::GetKeyID(addr, cKeyId)) {
-		cKeyId=CKeyID(addr);
-		if (cKeyId.IsEmpty()){
-		return false;
+static bool GetKeyId(string const &strAddr, CKeyID &cKeyId) {
+	if (!CRegID::GetKeyID(strAddr, cKeyId)) {
+		cKeyId = CKeyID(strAddr);
+		if (cKeyId.IsEmpty()) {
+			return false;
 		}
 	}
 	return true;
-};
+}
 
 Value getbalance(const Array& params, bool bHelp) {
 	int nSize = params.size();
@@ -107,11 +107,11 @@ Value getbalance(const Array& params, bool bHelp) {
 				return std::move(obj);
 			}
 		} else {
-			CKeyID ckeyid;
-			if (!GetKeyId(strAddr, ckeyid)) {
+			CKeyID cKeyID;
+			if (!GetKeyId(strAddr, cKeyID)) {
 				throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 			}
-			if (g_pwalletMain->HaveKey(ckeyid)) {
+			if (g_pwalletMain->HaveKey(cKeyID)) {
 				if (0 != nConf) {
 					CBlockIndex *pBlockIndex = g_cChainActive.Tip();
 					int64_t llValue(0);
@@ -122,9 +122,9 @@ Value getbalance(const Array& params, bool bHelp) {
 							for (auto &item : mapTx) {
 								if (EM_COMMON_TX == item.second->m_chTxType) {
 									CTransaction *pTx = (CTransaction *) item.second.get();
-									CKeyID srcKeyId, desKeyId;
-									g_pAccountViewTip->GetKeyId(pTx->m_cDesUserId, desKeyId);
-									if (ckeyid == desKeyId) {
+									CKeyID cSrcKeyId, cDesKeyId;
+									g_pAccountViewTip->GetKeyId(pTx->m_cDesUserId, cDesKeyId);
+									if (cKeyID == cDesKeyId) {
 										llValue = pTx->m_ullValues;
 									}
 								}
@@ -133,10 +133,10 @@ Value getbalance(const Array& params, bool bHelp) {
 						pBlockIndex = pBlockIndex->m_pPrevBlockIndex;
 						--nConf;
 					}
-					obj.push_back(Pair("balance", ValueFromAmount(g_pAccountViewTip->GetRawBalance(ckeyid) - llValue)));
+					obj.push_back(Pair("balance", ValueFromAmount(g_pAccountViewTip->GetRawBalance(cKeyID) - llValue)));
 					return std::move(obj);
 				} else {
-					obj.push_back(Pair("balance", ValueFromAmount(g_cTxMemPool.m_pAccountViewCache->GetRawBalance(ckeyid))));
+					obj.push_back(Pair("balance", ValueFromAmount(g_cTxMemPool.m_pAccountViewCache->GetRawBalance(cKeyID))));
 					return std::move(obj);
 				}
 			} else {
@@ -146,11 +146,9 @@ Value getbalance(const Array& params, bool bHelp) {
 	}
 
 	throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
-
 }
 
-Value getinfo(const Array& params, bool bHelp)
-{
+Value getinfo(const Array& params, bool bHelp) {
     if (bHelp || params.size() != 0) {
         throw runtime_error(
             "getinfo\n"
@@ -191,8 +189,8 @@ Value getinfo(const Array& params, bool bHelp)
 
 	Object obj;
 	obj.push_back(Pair("version", (int) g_sClientVersion));
-	string fullersion = strprintf("%s (%s)", FormatFullVersion().c_str(), g_strClientDate.c_str());
-	obj.push_back(Pair("fullversion", fullersion));
+	string strFullVersion = strprintf("%s (%s)", FormatFullVersion().c_str(), g_strClientDate.c_str());
+	obj.push_back(Pair("fullversion", strFullVersion));
 	obj.push_back(Pair("protocolversion", (int) g_sProtocolVersion));
 
 	if (g_pwalletMain) {
@@ -218,34 +216,30 @@ Value getinfo(const Array& params, bool bHelp)
 	obj.push_back(Pair("fuelrate", g_cChainActive.Tip()->m_nFuelRate));
 	obj.push_back(Pair("fuel", g_cChainActive.Tip()->m_llFuel));
 	obj.push_back(Pair("data directory", GetDataDir().string().c_str()));
-//    obj.push_back(Pair("block high",    g_cChainActive.Tip()->nHeight));
+	//    obj.push_back(Pair("block high",    g_cChainActive.Tip()->nHeight));
 	obj.push_back(Pair("tip block hash", g_cChainActive.Tip()->GetBlockHash().ToString()));
 	obj.push_back(Pair("errors", GetWarnings("statusbar")));
 	return obj;
 }
 
-
 class DescribeAddressVisitor: public boost::static_visitor<Object> {
-public:
+ public:
 	Object operator()(const CNoDestination &dest) const {
 		return Object();
 	}
+
 	Object operator()(const CKeyID &keyID) const {
 		Object obj;
-		CPubKey vchPubKey;
-		g_pwalletMain->GetPubKey(keyID, vchPubKey);
+		CPubKey cPubKey;
+		g_pwalletMain->GetPubKey(keyID, cPubKey);
 		obj.push_back(Pair("isscript", false));
-		obj.push_back(Pair("pubkey", HexStr(vchPubKey)));
-		obj.push_back(Pair("iscompressed", vchPubKey.IsCompressed()));
+		obj.push_back(Pair("pubkey", HexStr(cPubKey)));
+		obj.push_back(Pair("iscompressed", cPubKey.IsCompressed()));
 		return obj;
 	}
-
 };
 
-
-
-Value verifymessage(const Array& params, bool bHelp)
-{
+Value verifymessage(const Array& params, bool bHelp) {
     if (bHelp || params.size() != 3) {
         throw runtime_error(
             "verifymessage \"Dacrsaddress\" \"signature\" \"message\"\n"
@@ -272,27 +266,27 @@ Value verifymessage(const Array& params, bool bHelp)
 	string strMessage = params[2].get_str();
 	CKeyID ckeyID;
 	if (strAddress.length() == 66) {   //pubkey
-		vector<unsigned char> vchPubKey = ParseHex(strAddress);
-		CPubKey pubkeyIn(vchPubKey.begin(), vchPubKey.end());
-		ckeyID = pubkeyIn.GetKeyID();
+		vector<unsigned char> vuchPubKey = ParseHex(strAddress);
+		CPubKey cPubkeyIn(vuchPubKey.begin(), vuchPubKey.end());
+		ckeyID = cPubkeyIn.GetKeyID();
 	} else {
 		if (!GetKeyId(strAddress, ckeyID)) {
 			throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
 		}
 	}
 	bool bInvalid = false;
-	vector<unsigned char> vchSig = DecodeBase64(strSign.c_str(), &bInvalid);
+	vector<unsigned char> vuchSig = DecodeBase64(strSign.c_str(), &bInvalid);
 
 	if (bInvalid) {
 		throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
 	}
-	CHashWriter cSs(SER_GETHASH, 0);
-	cSs << g_strMessageMagic;
-	cSs << strMessage;
+	CHashWriter cHashWriter(SER_GETHASH, 0);
+	cHashWriter << g_strMessageMagic;
+	cHashWriter << strMessage;
 
-	CPubKey pubkey;
-	if (!pubkey.RecoverCompact(cSs.GetHash(), vchSig)) {
+	CPubKey cPubkey;
+	if (!cPubkey.RecoverCompact(cHashWriter.GetHash(), vuchSig)) {
 		return false;
 	}
-	return (pubkey.GetKeyID() == ckeyID);
+	return (cPubkey.GetKeyID() == ckeyID);
 }

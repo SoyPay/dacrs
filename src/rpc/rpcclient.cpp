@@ -26,24 +26,24 @@ using namespace boost;
 using namespace boost::asio;
 using namespace json_spirit;
 
-Object CallRPC(const string& strMethod, const Array& params)
-{
-    if (SysCfg().GetArg("-rpcuser", "") == "" && SysCfg().GetArg("-rpcpassword", "") == ""){
-        throw runtime_error(strprintf(
-            _("You must set rpcpassword=<password> in the configuration file:\n%s\n"
-              "If the file does not exist, create it with owner-readable-only file permissions."),
-                GetConfigFile().string().c_str()));
-    }
-    // Connect to localhost
-    bool bFUseSSL = SysCfg().GetBoolArg("-rpcssl", false);
-    asio::io_service io_service;
-    ssl::context context(io_service, ssl::context::sslv23);
-    context.set_options(ssl::context::no_sslv2);
-    asio::ssl::stream<asio::ip::tcp::socket> sslStream(io_service, context);
-    SSLIOStreamDevice<asio::ip::tcp> d(sslStream, bFUseSSL);
-    iostreams::stream< SSLIOStreamDevice<asio::ip::tcp> > stream(d);
+Object CallRPC(const string& strMethod, const Array& params) {
+	if (SysCfg().GetArg("-rpcuser", "") == "" && SysCfg().GetArg("-rpcpassword", "") == "") {
+		throw runtime_error(strprintf(
+		_("You must set rpcpassword=<password> in the configuration file:\n%s\n"
+				"If the file does not exist, create it with owner-readable-only file permissions."),
+		GetConfigFile().string().c_str()));
+	}
 
-    bool bWait = SysCfg().GetBoolArg("-rpcwait", false); // -rpcwait means try until server has started
+	// Connect to localhost
+	bool bFUseSSL = SysCfg().GetBoolArg("-rpcssl", false);
+	asio::io_service io_service;
+	ssl::context context(io_service, ssl::context::sslv23);
+	context.set_options(ssl::context::no_sslv2);
+	asio::ssl::stream<asio::ip::tcp::socket> sslStream(io_service, context);
+	SSLIOStreamDevice<asio::ip::tcp> d(sslStream, bFUseSSL);
+	iostreams::stream< SSLIOStreamDevice<asio::ip::tcp> > stream(d);
+
+	bool bWait = SysCfg().GetBoolArg("-rpcwait", false);// -rpcwait means try until server has started
 	do {
 		bool bConnected = d.connect(SysCfg().GetArg("-rpcconnect", "127.0.0.1"), SysCfg().GetArg("-rpcport", itostr(SysCfg().RPCPort())));
 		if (bConnected) {
@@ -76,11 +76,9 @@ Object CallRPC(const string& strMethod, const Array& params)
 
 	if (nStatus == HTTP_UNAUTHORIZED) {
 		throw runtime_error("incorrect rpcuser or rpcpassword (authorization failed)");
-	}
-	else if (nStatus >= 400 && nStatus != HTTP_BAD_REQUEST && nStatus != HTTP_NOT_FOUND && nStatus != HTTP_INTERNAL_SERVER_ERROR) {
+	} else if (nStatus >= 400 && nStatus != HTTP_BAD_REQUEST && nStatus != HTTP_NOT_FOUND && nStatus != HTTP_INTERNAL_SERVER_ERROR) {
 		throw runtime_error(strprintf("server returned HTTP error %d", nStatus));
-	}
-	else if (strReply.empty()) {
+	} else if (strReply.empty()) {
 		throw runtime_error("no response from server");
 	}
 
@@ -116,8 +114,7 @@ void ConvertTo(Value& value, bool bAllowNull = false) {
 }
 
 // Convert strings to command-specific RPC representation
-Array RPCConvertValues(const string &strMethod, const vector<string> &strParams)
-{
+Array RPCConvertValues(const string &strMethod, const vector<string> &strParams) {
 	Array params;
 	for (const auto &param : strParams) {
 		params.push_back(param);
@@ -273,8 +270,8 @@ int CommandLineRPC(int argc, char *argv[]) {
 		if (error.type() != null_type) {
 			// Error
 			strPrint = "error: " + write_string(error, false);
-			int code = find_value(error.get_obj(), "code").get_int();
-			nRet = abs(code);
+			int nCode = find_value(error.get_obj(), "code").get_int();
+			nRet = abs(nCode);
 		} else {
 			// Result
 			if (result.type() == null_type) {
@@ -301,10 +298,9 @@ int CommandLineRPC(int argc, char *argv[]) {
 	return nRet;
 }
 
-string HelpMessageCli(bool mainProgram)
-{
+string HelpMessageCli(bool bMainProgram) {
     string strUsage;
-	if (mainProgram) {
+	if (bMainProgram) {
 		strUsage += _("Options:") + "\n";
 		strUsage += "  -?                     " + _("This help message") + "\n";
 		strUsage += "  -conf=<file>           " + _("Specify configuration file (default: Dacrs.conf)") + "\n";
@@ -322,7 +318,7 @@ string HelpMessageCli(bool mainProgram)
 			+ "\n";
 	strUsage += "  -rpcwait               " + _("Wait for RPC server to start") + "\n";
 
-	if (mainProgram) {
+	if (bMainProgram) {
 		strUsage += "  -rpcuser=<user>        " + _("Username for JSON-RPC connections") + "\n";
 		strUsage += "  -rpcpassword=<pw>      " + _("Password for JSON-RPC connections") + "\n";
 

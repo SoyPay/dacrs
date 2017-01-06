@@ -45,8 +45,7 @@ void InitRPCMining() {
 	LogPrint("TODO", "InitRPCMining");
 }
 
-void ShutdownRPCMining()
-{
+void ShutdownRPCMining() {
 //    if (!pMiningKey)
 //        return;
 //
@@ -58,40 +57,40 @@ void ShutdownRPCMining()
 // or from the last difficulty change if 'lookup' is nonpositive.
 // If 'height' is nonnegative, compute the estimate at the time when a given block was found.
 Value GetNetworkHashPS(int nLookup, int nHeight) {
-    CBlockIndex *pb = g_cChainActive.Tip();
+    CBlockIndex *pBlockIndex = g_cChainActive.Tip();
 
-    if (nHeight >= 0 && nHeight < g_cChainActive.Height()){
-        pb = g_cChainActive[nHeight];
-    }
-    if (pb == NULL || !pb->m_nHeight){
-        return 0;
-    }
+	if (nHeight >= 0 && nHeight < g_cChainActive.Height()) {
+		pBlockIndex = g_cChainActive[nHeight];
+	}
+	if (pBlockIndex == NULL || !pBlockIndex->m_nHeight) {
+		return 0;
+	}
     // If lookup is -1, then use blocks since last difficulty change.
-    if (nLookup <= 0){
-        nLookup = pb->m_nHeight % 2016 + 1;
-    }
+	if (nLookup <= 0) {
+		nLookup = pBlockIndex->m_nHeight % 2016 + 1;
+	}
     // If lookup is larger than chain, then set it to chain length.
-    if (nLookup > pb->m_nHeight){
-        nLookup = pb->m_nHeight;
-    }
-    CBlockIndex *pcB0 = pb;
-    int64_t llMinTime = pcB0->GetBlockTime();
+	if (nLookup > pBlockIndex->m_nHeight) {
+		nLookup = pBlockIndex->m_nHeight;
+	}
+    CBlockIndex *pcBlockIndex0 = pBlockIndex;
+    int64_t llMinTime = pcBlockIndex0->GetBlockTime();
     int64_t llMaxTime = llMinTime;
     for (int i = 0; i < nLookup; i++) {
-        pcB0 = pcB0->m_pPrevBlockIndex;
-        int64_t time = pcB0->GetBlockTime();
-        llMinTime = min(time, llMinTime);
-        llMaxTime = max(time, llMaxTime);
+        pcBlockIndex0 = pcBlockIndex0->m_pPrevBlockIndex;
+        int64_t llTime = pcBlockIndex0->GetBlockTime();
+        llMinTime = min(llTime, llMinTime);
+        llMaxTime = max(llTime, llMaxTime);
     }
 
     // In case there's a situation where minTime == maxTime, we don't want a divide by zero exception.
-    if (llMinTime == llMaxTime){
-        return 0;
-    }
-    arith_uint256 workDiff = pb->m_cChainWork - pcB0->m_cChainWork;
+	if (llMinTime == llMaxTime) {
+		return 0;
+	}
+    arith_uint256 cWorkDiff = pBlockIndex->m_cChainWork - pcBlockIndex0->m_cChainWork;
     int64_t llTimeDiff = llMaxTime - llMinTime;
 
-    return (int64_t)(workDiff.getdouble() / llTimeDiff);
+    return (int64_t)(cWorkDiff.getdouble() / llTimeDiff);
 }
 
 Value getnetworkhashps(const Array& params, bool bHelp) {
@@ -112,12 +111,14 @@ Value getnetworkhashps(const Array& params, bool bHelp) {
 	return GetNetworkHashPS(params.size() > 0 ? params[0].get_int() : 120, params.size() > 1 ? params[1].get_int() : -1);
 }
 
-static bool IsMining = false;
+static bool g_sIsMining = false;
+
 void SetMinerStatus(bool bstatue) {
-	IsMining = bstatue;
+	g_sIsMining = bstatue;
 }
+
 static bool getMiningInfo() {
-	return IsMining;
+	return g_sIsMining;
 }
 
 Value setgenerate(const Array& params, bool bHelp) {
@@ -137,6 +138,7 @@ Value setgenerate(const Array& params, bool bHelp) {
 						+ HelpExampleCli("setgenerate", "false") + "\nUsing json rpc\n"
 						+ HelpExampleRpc("setgenerate", "true, 1"));
 	}
+
 	static bool bGenerate = false;
 
 	set<CKeyID> setKeyId;
@@ -176,7 +178,6 @@ Value setgenerate(const Array& params, bool bHelp) {
 	GenerateDacrsBlock(true, g_pwalletMain, nGenProcLimit); //跑完之后需要退出
 	obj.push_back(Pair("msg", "in  mining"));
 	return obj;
-
 }
 
 Value getmininginfo(const Array& params, bool bHelp) {
@@ -216,8 +217,6 @@ Value getmininginfo(const Array& params, bool bHelp) {
 	return obj;
 }
 
-
-
 Value submitblock(const Array& params, bool bHelp) {
 	if (bHelp || params.size() < 1 || params.size() > 2) {
 		throw runtime_error(
@@ -236,26 +235,25 @@ Value submitblock(const Array& params, bool bHelp) {
 						"\nExamples:\n" + HelpExampleCli("submitblock", "\"mydata\"")
 						+ HelpExampleRpc("submitblock", "\"mydata\""));
 	}
-	vector<unsigned char> vchBlockData(ParseHex(params[0].get_str()));
-	CDataStream cSsBlock(vchBlockData, SER_NETWORK, g_sProtocolVersion);
-	CBlock pblock;
+	vector<unsigned char> vuchBlockData(ParseHex(params[0].get_str()));
+	CDataStream cDSBlock(vuchBlockData, SER_NETWORK, g_sProtocolVersion);
+	CBlock pBlock;
 	try {
-		cSsBlock >> pblock;
+		cDSBlock >> pBlock;
 	} catch (std::exception &e) {
 		throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
 	}
 
-	CValidationState state;
-	bool fAccepted = ProcessBlock(state, NULL, &pblock);
+	CValidationState cValidationState;
+	bool bAccepted = ProcessBlock(cValidationState, NULL, &pBlock);
 	Object obj;
-	if (!fAccepted) {
+	if (!bAccepted) {
 		obj.push_back(Pair("status", "rejected"));
-		obj.push_back(Pair("reject code", state.GetRejectCode()));
-		obj.push_back(Pair("info", state.GetRejectReason()));
+		obj.push_back(Pair("reject code", cValidationState.GetRejectCode()));
+		obj.push_back(Pair("info", cValidationState.GetRejectReason()));
 	} else {
-
 		obj.push_back(Pair("status", "OK"));
-		obj.push_back(Pair("hash", pblock.GetHash().ToString()));
+		obj.push_back(Pair("hash", pBlock.GetHash().ToString()));
 	}
 	return obj;
 }

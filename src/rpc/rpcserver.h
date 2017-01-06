@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef _DACRSRPC_SERVER_H_
-#define _DACRSRPC_SERVER_H_ 1
+#ifndef DACRS_RPC_RPCSERVER_H_
+#define DACRS_RPC_RPCSERVER_H_ 1
 
 #include "uint256.h"
 #include "rpcprotocol.h"
@@ -35,57 +35,55 @@ void StopRPCThreads();
   the right number of arguments are passed, just that any passed are the correct type.
   Use like:  RPCTypeCheck(params, boost::assign::list_of(str_type)(int_type)(obj_type));
 */
-void RPCTypeCheck(const json_spirit::Array& params,
-                  const list<json_spirit::Value_type>& typesExpected, bool bAllowNull=false);
+void RPCTypeCheck(const json_spirit::Array& params, const list<json_spirit::Value_type>& typesExpected,
+		bool bAllowNull = false);
 /*
   Check for expected keys/value types in an Object.
   Use like: RPCTypeCheck(object, boost::assign::map_list_of("name", str_type)("value", int_type));
 */
-void RPCTypeCheck(const json_spirit::Object& o,
-                  const map<string, json_spirit::Value_type>& typesExpected, bool bAllowNull=false);
+void RPCTypeCheck(const json_spirit::Object& o, const map<string, json_spirit::Value_type>& typesExpected,
+		bool bAllowNull = false);
 
 /*
   Run func nSeconds from now. Uses boost deadline timers.
   Overrides previous timer <name> (if any).
  */
-void RPCRunLater(const string& name, boost::function<void(void)> func, int64_t nSeconds);
+void RPCRunLater(const string& strName, boost::function<void(void)> func, int64_t llSeconds);
 
 typedef json_spirit::Value(*rpcfn_type)(const json_spirit::Array& params, bool bHelp);
 
-class CRPCCommand
-{
-public:
-    string m_strName;
-    rpcfn_type m_Actor;
-    bool m_bOkSafeMode;
-    bool m_bThreadSafe;
-    bool m_bReqWallet;
+class CRPCCommand {
+ public:
+	string m_strName;
+	rpcfn_type m_Actor;
+	bool m_bOkSafeMode;
+	bool m_bThreadSafe;
+	bool m_bReqWallet;
 };
 
 /**
  * DACRS RPC command dispatcher.
  */
-class CRPCTable
-{
+class CRPCTable {
+ public:
+	CRPCTable();
+	const CRPCCommand* operator[](string strName) const;
+	string help(string strCommand) const;
 
-public:
-    CRPCTable();
-    const CRPCCommand* operator[](string name) const;
-    string help(string name) const;
+	/**
+	 * Execute a method.
+	 * @param method   Method to execute
+	 * @param params   Array of arguments (JSON objects)
+	 * @returns Result of the call.
+	 * @throws an exception (json_spirit::Value) when an error happens.
+	 */
+	json_spirit::Value execute(const string &strMethod, const json_spirit::Array &params) const;
 
-    /**
-     * Execute a method.
-     * @param method   Method to execute
-     * @param params   Array of arguments (JSON objects)
-     * @returns Result of the call.
-     * @throws an exception (json_spirit::Value) when an error happens.
-     */
-    json_spirit::Value execute(const string &method, const json_spirit::Array &params) const;
-private:
-	map<string, const CRPCCommand*> mapCommands;
+ private:
+	map<string, const CRPCCommand*> m_mapCommands;
 };
 
-extern const CRPCTable tableRPC;
+extern const CRPCTable g_TableRPC;
 
 //
 // Utilities: convert hex-encoded Values
