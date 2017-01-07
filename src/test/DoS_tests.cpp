@@ -33,8 +33,6 @@ CService ip(uint32_t i) {
 
 BOOST_AUTO_TEST_SUITE(DoS_tests)
 
-
-
 BOOST_AUTO_TEST_CASE(DoS_banning) {
 	CNode::ClearBanned();
 	CAddress cAddr1(ip(0xa0b0c001));
@@ -100,16 +98,16 @@ BOOST_AUTO_TEST_CASE(DoS_bantime) {
 	BOOST_CHECK(!CNode::IsBanned(cAddr));
 }
 
-static bool CheckNBits(unsigned int nbits1, int64_t time1, unsigned int nbits2, int64_t time2) {
-	if (time1 > time2) {
-		return CheckNBits(nbits2, time2, nbits1, time1);
+static bool CheckNBits(unsigned int unbits1, int64_t llTime1, unsigned int unbits2, int64_t llTime2) {
+	if (llTime1 > llTime2) {
+		return CheckNBits(unbits2, llTime2, unbits1, llTime1);
 	}
-	int64_t llDeltaTime = time2 - time1;
+	int64_t llDeltaTime = llTime2 - llTime1;
 
 	CBigNum cRequired;
-	cRequired.SetCompact(ComputeMinWork(nbits1, llDeltaTime));
+	cRequired.SetCompact(ComputeMinWork(unbits1, llDeltaTime));
 	CBigNum cHave;
-	cHave.SetCompact(nbits2);
+	cHave.SetCompact(unbits2);
 	return (cHave <= cRequired);
 }
 
@@ -119,7 +117,7 @@ BOOST_AUTO_TEST_CASE(DoS_checknbits) {
 	// Timestamps,nBits from the Dacrs block chain.
 	// These are the block-chain checkpoint blocks
 	typedef std::map<int64_t, unsigned int> BlockData;
-	BlockData chainData =
+	BlockData cChainData =
 	map_list_of(1239852051,486604799)(1262749024,486594666)
 	(1279305360,469854461)(1280200847,469830746)(1281678674,469809688)
 	(1296207707,453179945)(1302624061,453036989)(1309640330,437004818)
@@ -127,15 +125,15 @@ BOOST_AUTO_TEST_CASE(DoS_checknbits) {
 
 	// Make sure CheckNBits considers every combination of block-chain-lock-in-points
 	// "sane":
-	for (const auto& i : chainData) {
-		for (const auto& j : chainData) {
+	for (const auto& i : cChainData) {
+		for (const auto& j : cChainData) {
 			BOOST_CHECK(CheckNBits(i.second, i.first, j.second, j.first));
 		}
 	}
 
 	// Test a couple of insane combinations:
-	BlockData::value_type firstcheck = *(chainData.begin());
-	BlockData::value_type lastcheck = *(chainData.rbegin());
+	BlockData::value_type firstcheck = *(cChainData.begin());
+	BlockData::value_type lastcheck = *(cChainData.rbegin());
 
 	// First checkpoint difficulty at or a while after the last checkpoint time should fail when
 	// compared to last checkpoint
@@ -242,6 +240,5 @@ CTransaction RandomOrphan() {
 //
 //    LimitOrphanTxSize(0);
 //}
-
 
 BOOST_AUTO_TEST_SUITE_END()

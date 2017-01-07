@@ -1252,7 +1252,7 @@ static RET_DEFINE GetUserAppAccFoudWithTag(unsigned char * ipara,void * pVmScrip
     CAppCFund fund;
 	if(pVmScriptRun->GetAppUserAccout(userfund.GetAppUserV(),sptrAcc))
 	{
-		if(!sptrAcc->GetAppCFund(fund,userfund.GetFundTagV(),userfund.m_nOutHeight))	{
+		if(!sptrAcc->GetAppCFund(fund,userfund.GetFundTagV(),userfund.m_unOutHeight))	{
 			return RetFalse(string(__FUNCTION__)+"tag err !");
 		}
 		CDataStream tep(SER_DISK, g_sClientVersion);

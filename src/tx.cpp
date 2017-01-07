@@ -909,7 +909,7 @@ bool CRegisterAppTx::ExecuteTx(int nIndex, CAccountViewCache &view,CValidationSt
 	if(0 == vmScript.m_nScriptType && nHeight >= g_sLimite8051AppHeight)
 		return state.DoS(100, ERRORMSG("ExecuteTx() : CRegisterAppTx ExecuteTx, 8051 vmScript invalid, nHeight >= 160000"), UPDATE_ACCOUNT_FAIL, "script-check-failed");
 	if(1 == vmScript.getScriptType()) {//ÅÐ¶ÏÎªlua½Å±¾
-		std::tuple<bool, string> result = CVmlua::syntaxcheck(false, (char *)&vmScript.vuchRom[0], vmScript.vuchRom.size());
+		std::tuple<bool, string> result = CVmlua::syntaxcheck(false, (char *)&vmScript.m_vuchRom[0], vmScript.m_vuchRom.size());
 		bool bOK = std::get<0>(result);
 		if(!bOK) {
 			return state.DoS(100, ERRORMSG("ExecuteTx() : CRegisterAppTx ExecuteTx, vmScript invalid:%s", std::get<1>(result)), UPDATE_ACCOUNT_FAIL, "script-check-failed");

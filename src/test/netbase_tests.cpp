@@ -12,8 +12,6 @@ using namespace std;
 
 BOOST_AUTO_TEST_SUITE(netbase_tests)
 
-
-
 BOOST_AUTO_TEST_CASE(netbase_networks) {
 	BOOST_CHECK(CNetAddr("127.0.0.1").GetNetwork() == NET_UNROUTABLE);
 	BOOST_CHECK(CNetAddr("::1").GetNetwork() == NET_UNROUTABLE);
@@ -45,11 +43,11 @@ BOOST_AUTO_TEST_CASE(netbase_properties) {
 	BOOST_CHECK(CNetAddr("127.0.0.1").IsValid());
 }
 
-bool static TestSplitHost(string test, string host, int port) {
+bool static TestSplitHost(string strTest, string strHost, int nPort) {
 	string strHostOut;
 	int nPortOut = -1;
-	SplitHostPort(test, nPortOut, strHostOut);
-	return strHostOut == host && port == nPortOut;
+	SplitHostPort(strTest, nPortOut, strHostOut);
+	return strHostOut == strHost && nPort == nPortOut;
 }
 
 BOOST_AUTO_TEST_CASE(netbase_splithost) {
@@ -70,12 +68,12 @@ BOOST_AUTO_TEST_CASE(netbase_splithost) {
 	BOOST_CHECK(TestSplitHost("", "", -1));
 }
 
-bool static TestParse(string src, string canon) {
+bool static TestParse(string strSrc, string strCanon) {
 	CService cAddr;
-	if (!LookupNumeric(src.c_str(), cAddr, 65535)) {
-		return canon == "";
+	if (!LookupNumeric(strSrc.c_str(), cAddr, 65535)) {
+		return strCanon == "";
 	}
-	return canon == cAddr.ToString();
+	return strCanon == cAddr.ToString();
 }
 
 BOOST_AUTO_TEST_CASE(netbase_lookupnumeric) {
@@ -97,7 +95,5 @@ BOOST_AUTO_TEST_CASE(onioncat_test) {
 	BOOST_CHECK(cAddr1.ToStringIP() == "5wyqrzbvrdsumnok.onion");
 	BOOST_CHECK(cAddr1.IsRoutable());
 }
-
-
 
 BOOST_AUTO_TEST_SUITE_END()

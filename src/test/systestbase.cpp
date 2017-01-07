@@ -7,8 +7,6 @@
 
 #include "systestbase.h"
 
-
-
 void DetectShutdownThread(boost::thread_group* threadGroup) {
 	bool bShutdown = ShutdownRequested();
 	// Tell the main threads to shutdown.
@@ -143,7 +141,6 @@ SysTestBase::~SysTestBase() {
 }
 
 bool SysTestBase::ImportAllPrivateKey() {
-
 	const char* pszKey[] = {
 			        /*for bess test*/
 					"cUa4v77hiXteMFkHoyuPVVbCCULS1CnFBhU1MhgKHEGRTHmd4BC5",// addr:  dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr
@@ -220,7 +217,6 @@ int SysTestBase::GetRandomMoney() {
 
 Value SysTestBase::CreateRegAppTx(const string& strAddress, const string& strScript, bool bRigsterScript, int nFee,
 		int nHeight) {
-
 	string strFilePath = SysCfg().GetDefaultTestDataPath() + strScript;
 	if (!boost::filesystem::exists(strFilePath)) {
 		BOOST_CHECK_MESSAGE(0, strFilePath + " not exist");
@@ -295,16 +291,17 @@ bool SysTestBase::CommandLineRPC_GetValue(int argc, const char *argv[], Value &v
 		if (error.type() != null_type) {
 			// Error
 			strPrint = "error: " + write_string(error, false);
-//			int code = find_value(error.get_obj(), "code").get_int();
+			// int code = find_value(error.get_obj(), "code").get_int();
 		} else {
 			value = result;
 			// Result
-			if (result.type() == null_type)
+			if (result.type() == null_type) {
 				strPrint = "";
-			else if (result.type() == str_type)
+			} else if (result.type() == str_type) {
 				strPrint = result.get_str();
-			else
+			} else {
 				strPrint = write_string(result, true);
+			}
 			bRes = true;
 		}
 	} catch (boost::thread_interrupted) {
@@ -318,9 +315,9 @@ bool SysTestBase::CommandLineRPC_GetValue(int argc, const char *argv[], Value &v
 
 	if (strPrint != "") {
 		if (false == bRes) {
-//			cout<<strPrint<<endl;
+			// cout<<strPrint<<endl;
 		}
-//	    fprintf((nRes == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
+			// fprintf((nRes == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
 	}
 
 	return bRes;
@@ -358,7 +355,6 @@ bool SysTestBase::GetNewAddr(std::string &strAddr, bool bFlag) {
 	int argc = sizeof(argv) / sizeof(char*);
 
 	Value value;
-
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
 		strAddr = "strAddr";
 		return GetStrFromObj(value, strAddr);
@@ -366,13 +362,13 @@ bool SysTestBase::GetNewAddr(std::string &strAddr, bool bFlag) {
 	return false;
 }
 
-bool SysTestBase::GetMemPoolSize(int &size) {
+bool SysTestBase::GetMemPoolSize(int &nSize) {
 	const char *argv[] = { "rpctest", "getrawmempool" };
 	int argc = sizeof(argv) / sizeof(char*);
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
 		Array arry = value.get_array();
-		size = arry.size();
+		nSize = arry.size();
 		return true;
 	}
 	return false;
@@ -414,7 +410,6 @@ Value SysTestBase::CreateNormalTx(const std::string &strSrcAddr, const std::stri
 }
 
 Value SysTestBase::CreateNormalTx(const std::string &strDesAddr, uint64_t ullMoney) {
-
 	char arrchDest[64] = { 0 };
 	strncpy(arrchDest, strDesAddr.c_str(), sizeof(arrchDest) - 1);
 
@@ -455,7 +450,6 @@ Value SysTestBase::RegistAccountTx(const std::string &strAddr, const int nfee) {
 
 Value SysTestBase::CreateContractTx(const std::string &strScriptid, const std::string &strAddrs,
 		const std::string &strContract, int nHeight, int nFee, uint64_t ullMoney) {
-
 	if (0 == nFee) {
 		int nfee = GetRandomFee();
 		m_llCurFee = nfee;
@@ -605,8 +599,8 @@ bool SysTestBase::DisConnectBlock(int nNum) {
 }
 
 void SysTestBase::StartServer(int argc, const char* argv[]) {
-//		int argc = 2;
-//		char* argv[] = {"D:\\cppwork\\Dacrs\\src\\Dacrsd.exe","-datadir=d:\\bitcoin" };
+	// int argc = 2;
+	// char* argv[] = {"D:\\cppwork\\Dacrs\\src\\Dacrsd.exe","-datadir=d:\\bitcoin" };
 	assert(pThreadShutdown == NULL);
 	{
 		std::tuple<bool, boost::thread*> ret = RunDacrs(argc, const_cast<char **>(argv));
@@ -618,6 +612,7 @@ void SysTestBase::StartServer(int argc, const char* argv[]) {
 //{
 //    fRequestShutdown = true;
 //}
+
 void SysTestBase::StopServer() {
 	StartShutdown();
 	assert(pThreadShutdown != NULL);
@@ -719,11 +714,11 @@ bool SysTestBase::GetRegID(string& strAddr, CRegID& cRegID) {
 		return false;
 	}
 
-	CUserID userId = cKeyid;
+	CUserID cUserId = cKeyid;
 
 	LOCK(g_cs_main);
-	CAccountViewCache accView(*g_pAccountViewTip, true);
-	if (!accView.GetAccount(userId, cAccount)) {
+	CAccountViewCache cAccView(*g_pAccountViewTip, true);
+	if (!cAccView.GetAccount(cUserId, cAccount)) {
 		return false;
 	}
 	if ((!cAccount.IsRegister()) || cAccount.m_cRegID.IsEmpty()) {

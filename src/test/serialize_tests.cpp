@@ -14,7 +14,6 @@ BOOST_AUTO_TEST_SUITE(serialize_tests)
 
 BOOST_AUTO_TEST_CASE(varints) {
 	// encode
-
 	CDataStream cSs(SER_DISK, 0);
 	CDataStream::size_type size = 0;
 	for (int i = 0; i < 100000; i++) {

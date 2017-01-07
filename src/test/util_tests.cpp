@@ -111,7 +111,6 @@ BOOST_AUTO_TEST_CASE(util_DateTimeStrFormat) {
     BOOST_CHECK_EQUAL(DateTimeStrFormat("%a, %d %b %Y %H:%M:%S +0000", 1317425777), "Fri, 30 Sep 2011 23:36:17 +0000");
 }
 
-
 BOOST_AUTO_TEST_CASE(util_WildcardMatch) {
     BOOST_CHECK(WildcardMatch("127.0.0.1", "*"));
     BOOST_CHECK(WildcardMatch("127.0.0.1", "127.*"));

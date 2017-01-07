@@ -6,8 +6,6 @@
 // Unit tests for canonical signatures
 //
 
-
-
 //#include "script.h"
 #include "util.h"
 #include "data/sig_noncanonical.json.h"
@@ -21,50 +19,49 @@
 using namespace std;
 using namespace json_spirit;
 
-
 // In script_tests.cpp
 extern Array read_json(const std::string& jsondata);
 
 BOOST_AUTO_TEST_SUITE(canonical_tests)
 
 // OpenSSL-based test for canonical signature (without test for hashtype byte)
-bool static IsCanonicalSignature_OpenSSL_inner(const std::vector<unsigned char>& vchSig) {
-	if (vchSig.size() == 0) {
+bool static IsCanonicalSignature_OpenSSL_inner(const std::vector<unsigned char>& vuchSig) {
+	if (vuchSig.size() == 0) {
 		return false;
 	}
-	const unsigned char *puchInput = &vchSig[0];
-	ECDSA_SIG *psig = NULL;
-	d2i_ECDSA_SIG(&psig, &puchInput, vchSig.size());
-	if (psig == NULL) {
+	const unsigned char *puchInput = &vuchSig[0];
+	ECDSA_SIG *pSig = NULL;
+	d2i_ECDSA_SIG(&pSig, &puchInput, vuchSig.size());
+	if (pSig == NULL) {
 		return false;
 	}
 	unsigned char arruchBuf[256];
 	unsigned char *puchBuf = arruchBuf;
-	unsigned int unLen = i2d_ECDSA_SIG(psig, NULL);
-	if (unLen != vchSig.size()) {
-		ECDSA_SIG_free(psig);
+	unsigned int unLen = i2d_ECDSA_SIG(pSig, NULL);
+	if (unLen != vuchSig.size()) {
+		ECDSA_SIG_free(pSig);
 		return false;
 	}
-	unLen = i2d_ECDSA_SIG(psig, &puchBuf);
-	ECDSA_SIG_free(psig);
-	return (memcmp(&vchSig[0], &arruchBuf[0], unLen) == 0);
+	unLen = i2d_ECDSA_SIG(pSig, &puchBuf);
+	ECDSA_SIG_free(pSig);
+	return (memcmp(&vuchSig[0], &arruchBuf[0], unLen) == 0);
 }
 
 // OpenSSL-based test for canonical signature
-bool static IsCanonicalSignature_OpenSSL(const std::vector<unsigned char> &vchSignature) {
-	if (vchSignature.size() < 1) {
+bool static IsCanonicalSignature_OpenSSL(const std::vector<unsigned char> &vuchSignature) {
+	if (vuchSignature.size() < 1) {
 		return false;
 	}
-	if (vchSignature.size() > 127) {
+	if (vuchSignature.size() > 127) {
 		return false;
 	}
-	if (vchSignature[vchSignature.size() - 1] & 0x7C) {
+	if (vuchSignature[vuchSignature.size() - 1] & 0x7C) {
 		return false;
 	}
 
-	std::vector<unsigned char> vchSig(vchSignature);
-	vchSig.pop_back();
-	if (!IsCanonicalSignature_OpenSSL_inner(vchSig)) {
+	std::vector<unsigned char> vuchSig(vuchSignature);
+	vuchSig.pop_back();
+	if (!IsCanonicalSignature_OpenSSL_inner(vuchSig)) {
 		return false;
 	}
 	return true;

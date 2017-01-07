@@ -22,8 +22,7 @@ using namespace std;
 
 BOOST_AUTO_TEST_SUITE(sigopcount_tests)
 
-BOOST_AUTO_TEST_CASE(GetSigOpCount)
-{
+BOOST_AUTO_TEST_CASE(GetSigOpCount) {
 //    // Test CScript::GetSigOpCount()
 //    CScript s1;
 //    BOOST_CHECK_EQUAL(s1.GetSigOpCount(false), 0U);

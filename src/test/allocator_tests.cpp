@@ -11,16 +11,18 @@ BOOST_AUTO_TEST_SUITE(allocator_tests)
 // Dummy memory page locker for platform independent tests
 static const void *g_psLastLockAddr, *g_psLastUnlockAddr;
 static size_t g_sLastLockLen, g_sLastUnlockLen;
+
 class TestLocker {
  public:
-	bool Lock(const void *addr, size_t len) {
-		g_psLastLockAddr = addr;
-		g_sLastLockLen = len;
+	bool Lock(const void *pAddr, size_t unLen) {
+		g_psLastLockAddr = pAddr;
+		g_sLastLockLen = unLen;
 		return true;
 	}
-	bool Unlock(const void *addr, size_t len) {
-		g_psLastUnlockAddr = addr;
-		g_sLastUnlockLen = len;
+
+	bool Unlock(const void *pAddr, size_t unLen) {
+		g_psLastUnlockAddr = pAddr;
+		g_sLastUnlockLen = unLen;
 		return true;
 	}
 };

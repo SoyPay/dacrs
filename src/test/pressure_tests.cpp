@@ -33,7 +33,7 @@ std::string g_strRegScriptId("");
  * 获取随机账户地址
  */
 map<string, string>::iterator GetRandAddress() {
-//	srand(time(NULL));
+	// srand(time(NULL));
 	unsigned char uchType;
 	RAND_bytes(&uchType, sizeof(uchType));
 	int nIndex = (uchType % 3);
@@ -50,14 +50,13 @@ map<string, string>::iterator GetRandAddress() {
 int GetRandTxType() {
 	unsigned char cType;
 	RAND_bytes(&cType, sizeof(cType));
-	//srand(time(NULL));
+	// srand(time(NULL));
 	int nIndex = cType % 4;
 	return nIndex + 1;
 }
 
-
-class PressureTest: public SysTestBase {
-public:
+class PressureTest : public SysTestBase {
+ public:
 	bool GetContractData(string strRegId, vector<unsigned char> &vuchContract) {
 		for(auto &addr : g_mapAddress) {
 			if (addr.first == strRegId) {
@@ -114,6 +113,7 @@ public:
 		g_vSendFee.push_back(make_pair(strTxHash, nFee));
 		return true;
 	}
+
 	/**
 	 * 创建注册账户交易
 	 * @param addr
@@ -158,9 +158,9 @@ public:
 		map<string, string>::iterator mapIterSrcAddr = GetRandAddress();
 		string strSrcAddr(mapIterSrcAddr->second);
 
-		unsigned char cType;
-		RAND_bytes(&cType, sizeof(cType));
-		int nIndex = cType % 2;
+		unsigned char uchType;
+		RAND_bytes(&uchType, sizeof(uchType));
+		int nIndex = uchType % 2;
 		nIndex += 20;
 		string contact = strprintf("%02x",nIndex);
 
@@ -184,8 +184,8 @@ public:
 			map<string, string>::iterator mapIterSrcAddr = GetRandAddress();
 			strRegAddress = mapIterSrcAddr->second;
 		}
-		uint64_t nFee = GetRandomFee() + 1 * COIN;
-		Value ret = RegisterAppTx(strRegAddress, "unit_test.bin", 100, nFee);
+		uint64_t ullFee = GetRandomFee() + 1 * COIN;
+		Value ret = RegisterAppTx(strRegAddress, "unit_test.bin", 100, ullFee);
 		BOOST_CHECK(GetHashFromCreatedTx(ret, strHash));
 
 		if (bFlag) {
@@ -194,15 +194,15 @@ public:
 				std::shared_ptr<CBaseTransaction> tx = g_cTxMemPool.m_mapTx[uint256(uint256S(strHash))].GetTx();
 				g_vcTransactions.push_back(tx);
 			}
-			g_vSendFee.push_back(make_pair(strHash, nFee));
+			g_vSendFee.push_back(make_pair(strHash, ullFee));
 		}
 
 		return true;
 	}
 
 	//随机创建6000个交易
-	void CreateRandTx(int txCount) {
-		for (int i = 0; i < txCount; ++i) {
+	void CreateRandTx(int nTxCount) {
+		for (int i = 0; i < nTxCount; ++i) {
 			int nTxType = GetRandTxType();
 			switch (nTxType) {
 			case 1: {
@@ -230,12 +230,12 @@ public:
 				assert(0);
 			}
 			if (0 != i) {
-				ShowProgress("create tx progress: ", (int) (((i + 1) / (float) txCount) * 100));
+				ShowProgress("create tx progress: ", (int) (((i + 1) / (float) nTxCount) * 100));
 			}
 		}
 	}
 
-	bool DetectionAccount(uint64_t llFuelValue, uint64_t llFees) {
+	bool DetectionAccount(uint64_t ullFuelValue, uint64_t ullFees) {
 		uint64_t ullFreeValue(0);
 		uint64_t ullTotalValue(0);
 		uint64_t ullScriptaccValue(0);
@@ -244,40 +244,38 @@ public:
 			CUserID userId = cRegId;
 			{
 				LOCK(g_cs_main);
-				CAccount account;
-				CAccountViewCache accView(*g_pAccountViewTip, true);
-				if (!accView.GetAccount(userId, account)) {
+				CAccount cAccount;
+				CAccountViewCache cAccView(*g_pAccountViewTip, true);
+				if (!cAccView.GetAccount(userId, cAccount)) {
 					return false;
 				}
-				ullFreeValue += account.GetRawBalance();
+				ullFreeValue += cAccount.GetRawBalance();
 			}
-
 		}
 
 		if (g_strRegScriptId != "") {
-			CRegID regId(g_strRegScriptId);
-			CUserID userId = regId;
+			CRegID cRegId(g_strRegScriptId);
+			CUserID cUserId = cRegId;
 			{
 				LOCK(g_cs_main);
-				CAccount account;
-				CAccountViewCache accView(*g_pAccountViewTip, true);
-				if (!accView.GetAccount(userId, account)) {
+				CAccount cAccount;
+				CAccountViewCache cAccView(*g_pAccountViewTip, true);
+				if (!cAccView.GetAccount(cUserId, cAccount)) {
 					return false;
 				}
-				ullScriptaccValue += account.GetRawBalance();
+				ullScriptaccValue += cAccount.GetRawBalance();
 			}
-
 		}
 		ullTotalValue += ullFreeValue;
 		ullTotalValue += ullScriptaccValue;
 
-		uint64_t uTotalRewardValue(0);
+		uint64_t ullTotalRewardValue(0);
 		if (g_cChainActive.Tip()->m_nHeight - 1 > COINBASE_MATURITY) {
-			uTotalRewardValue = 10 * COIN * (g_cChainActive.Tip()->m_nHeight - 101);
+			ullTotalRewardValue = 10 * COIN * (g_cChainActive.Tip()->m_nHeight - 101);
 		}
-		g_dFee.push_back(llFees);
-		g_dFuel.push_back(llFuelValue);
-		llTotalFee += llFees;
+		g_dFee.push_back(ullFees);
+		g_dFuel.push_back(ullFuelValue);
+		llTotalFee += ullFees;
 
 		if (g_dFee.size() > 100) {
 			uint64_t ullFeeTemp = g_dFee.front();
@@ -288,12 +286,11 @@ public:
 			g_dFuel.pop_front();
 		}
 		//检查总账平衡
-		BOOST_CHECK(ullTotalValue + llTotalFee == (3000000000 * COIN + uTotalRewardValue));
+		BOOST_CHECK(ullTotalValue + llTotalFee == (3000000000 * COIN + ullTotalRewardValue));
 		return true;
 	}
 
-	bool SetBlockGenerte(const char *addr)
-	{
+	bool SetBlockGenerte(const char *addr) {
 		return SetAddrGenerteBlock(addr);
 
 	}

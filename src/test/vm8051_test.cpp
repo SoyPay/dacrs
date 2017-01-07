@@ -12,7 +12,6 @@
 
 using namespace std;
 
-
 typedef string (CTestMcu::*pfun)(int space);
 
 struct __Map {

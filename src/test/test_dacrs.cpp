@@ -4,13 +4,10 @@
 
 #define BOOST_TEST_MODULE Dacrs Test Suite
 
-
-
 #include "main.h"
 #include "txdb.h"
 #include "ui_interface.h"
 #include "util.h"
-
 
 #include "wallet/wallet.h"
 
@@ -74,7 +71,7 @@ struct TestingSetup {
 		SysTestBase::StopServer();
 	}
 
-//        boost::filesystem::remove_all(pathTemp);
+	// boost::filesystem::remove_all(pathTemp);
 
 };
 

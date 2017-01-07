@@ -18,8 +18,6 @@
 #include "tx.h"
 //#include "Typedef.h"
 
-
-
 #if 0
 typedef struct NumArray{
 	int size;          // 数组大小
@@ -129,9 +127,6 @@ static int luaopen_array(lua_State *L){
 
 #endif
 
-
-
-
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -155,9 +150,7 @@ CVmlua::CVmlua(const vector<unsigned char> & vuchRom, const vector<unsigned char
 }
 
 CVmlua::~CVmlua() {
-
 }
-
 
 #ifdef WIN_DLL
 extern "C" __declspec(dllexport) int luaopen_mylib(lua_State *L);
@@ -165,10 +158,7 @@ extern "C" __declspec(dllexport) int luaopen_mylib(lua_State *L);
 LUAMOD_API int luaopen_mylib(lua_State *L);
 #endif
 
-
-
 void vm_openlibs (lua_State *L) {
-
 	static const luaL_Reg lualibs[] = {
 			{ "base", luaopen_base },
 			{ LUA_LOADLIBNAME, luaopen_package },
@@ -214,7 +204,6 @@ tuple<bool, string> CVmlua::syntaxcheck(bool bFile, const char* pszFilePathOrCon
 
 	return std::make_tuple(true, string("OK"));
 }
-
 
 int64_t CVmlua::run(uint64_t ullMaxStep,CVmRunEvn *pcVmScriptRun) {
 	long long llStep = 0;

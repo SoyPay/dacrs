@@ -378,13 +378,13 @@ Value registerapptx(const Array& params, bool bHelp) {
 		fclose(pFile); //使用完关闭文件
 	}
 
-	cScript.vuchRom.insert(cScript.vuchRom.end(), pchBuffer, pchBuffer + lSize);
+	cScript.m_vuchRom.insert(cScript.m_vuchRom.end(), pchBuffer, pchBuffer + lSize);
 	if (pchBuffer) {
 		free(pchBuffer);
 	}
 	if (params.size() > 4) {
 		string strScriptDesc = params[4].get_str();
-		cScript.vuchScriptExplain.insert(cScript.vuchScriptExplain.end(), strScriptDesc.begin(), strScriptDesc.end());
+		cScript.m_vuchScriptExplain.insert(cScript.m_vuchScriptExplain.end(), strScriptDesc.begin(), strScriptDesc.end());
 	}
 
 	if (1 == cScript.getScriptType()) { //判断为lua脚本
@@ -1006,11 +1006,11 @@ Value listapp(const Array& params, bool bHelp) {
 		CDataStream cDs(vuchScript, SER_DISK, g_sClientVersion);
 		CVmScript cVmScript;
 		cDs >> cVmScript;
-		string strDes(cVmScript.vuchScriptExplain.begin(), cVmScript.vuchScriptExplain.end());
-		script.push_back(Pair("description", HexStr(cVmScript.vuchScriptExplain)));
+		string strDes(cVmScript.m_vuchScriptExplain.begin(), cVmScript.m_vuchScriptExplain.end());
+		script.push_back(Pair("description", HexStr(cVmScript.m_vuchScriptExplain)));
 
 		if (bShowDetail) {
-			script.push_back(Pair("scriptContent", HexStr(cVmScript.vuchRom.begin(), cVmScript.vuchRom.end())));
+			script.push_back(Pair("scriptContent", HexStr(cVmScript.m_vuchRom.begin(), cVmScript.m_vuchRom.end())));
 		}
 		arrayScript.push_back(script);
 		while (g_pScriptDBTip->GetScript(1, cRegID, vuchScript)) {
@@ -1020,10 +1020,10 @@ Value listapp(const Array& params, bool bHelp) {
 			CDataStream cDs(vuchScript, SER_DISK, g_sClientVersion);
 			CVmScript cVmScript;
 			cDs >> cVmScript;
-			string strDes(cVmScript.vuchScriptExplain.begin(), cVmScript.vuchScriptExplain.end());
-			obj.push_back(Pair("description", HexStr(cVmScript.vuchScriptExplain)));
+			string strDes(cVmScript.m_vuchScriptExplain.begin(), cVmScript.m_vuchScriptExplain.end());
+			obj.push_back(Pair("description", HexStr(cVmScript.m_vuchScriptExplain)));
 			if (bShowDetail) {
-				obj.push_back(Pair("scriptContent", HexStr(cVmScript.vuchRom.begin(), cVmScript.vuchRom.end())));
+				obj.push_back(Pair("scriptContent", HexStr(cVmScript.m_vuchRom.begin(), cVmScript.m_vuchRom.end())));
 			}
 			arrayScript.push_back(obj);
 		}
@@ -1064,8 +1064,8 @@ Value getappinfo(const Array& params, bool bHelp) {
 	CDataStream cDs(vuchScript, SER_DISK, g_sClientVersion);
 	CVmScript cVmScript;
 	cDs >> cVmScript;
-	obj.push_back(Pair("description", HexStr(cVmScript.vuchScriptExplain)));
-	obj.push_back(Pair("scriptContent", HexStr(cVmScript.vuchRom.begin(), cVmScript.vuchRom.end())));
+	obj.push_back(Pair("description", HexStr(cVmScript.m_vuchScriptExplain)));
+	obj.push_back(Pair("scriptContent", HexStr(cVmScript.m_vuchRom.begin(), cVmScript.m_vuchRom.end())));
 	return obj;
 }
 
@@ -1616,7 +1616,7 @@ Value registerscripttxraw(const Array& params, bool bHelp) {
 		} else {
 			fclose(pFile);
 		}
-		cVmScript.vuchRom.insert(cVmScript.vuchRom.end(), pchBuffer, pchBuffer + lSize);
+		cVmScript.m_vuchRom.insert(cVmScript.m_vuchRom.end(), pchBuffer, pchBuffer + lSize);
 		if (pchBuffer) {
 			free(pchBuffer);
 		}
@@ -1631,7 +1631,7 @@ Value registerscripttxraw(const Array& params, bool bHelp) {
 
 	if (params.size() > 5) {
 		string strScriptDesc = params[5].get_str();
-		cVmScript.vuchScriptExplain.insert(cVmScript.vuchScriptExplain.end(), strScriptDesc.begin(), strScriptDesc.end());
+		cVmScript.m_vuchScriptExplain.insert(cVmScript.m_vuchScriptExplain.end(), strScriptDesc.begin(), strScriptDesc.end());
 	}
 	if (ullFee > 0 && ullFee < CTransaction::m_sMinTxFee) {
 		throw runtime_error("in registerapptx :ullFee is smaller than nMinTxFee\n");

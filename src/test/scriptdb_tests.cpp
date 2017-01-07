@@ -19,6 +19,7 @@ vector<unsigned char> g_vuchKey6 = {0x01, 0x02, 0x06};
 vector<unsigned char> g_vuchKeyValue = {0x06, 0x07, 0x08};
 
 int nCount = 0;
+
 void init() {
 	 g_pcTestDB = new CScriptDB("testdb",size_t(4<<20), false , true);
 	 g_pcTestView =  new CScriptDBViewCache(*g_pcTestDB, false);
@@ -34,7 +35,6 @@ void init() {
 }
 
 void closedb() {
-
 	if (g_pcTestView != NULL) {
 		delete g_pcTestView;
 		g_pcTestView = NULL;
@@ -45,7 +45,6 @@ void closedb() {
 	}
 	const boost::filesystem::path p = GetDataDir() / "blocks" / "testdb";
 	boost::filesystem::remove_all(p);
-
 }
 
 void testscriptdb() {
@@ -126,15 +125,15 @@ void cleandb(int nType, vector<unsigned char> vuchKey) {
 void traversaldb(CScriptDBViewCache *pScriptDB, bool needEqual) {
 	assert(pScriptDB!=NULL);
 	vector<vector<unsigned char> > vuchTraversalKey;
-//	int nHeight(0);
+	// int nHeight(0);
 	int nCurHeight(0);
 	vector<unsigned char> vuchKey;
 	vector<unsigned char> vuchScript;
-//	int nValidHeight(0);
+	// int nValidHeight(0);
 	vector<unsigned char> vuchScriptId = { 0x01, 0x00, 0x00, 0x00, 0x02, 0x00 };
 	CRegID cRegScriptId(vuchScriptId);
 	bool bRet = pScriptDB->GetScriptData(nCurHeight, cRegScriptId, 0, vuchKey, vuchScript);
-//	int nType(0);
+	// int nType(0);
 	if (bRet) {
 		vuchTraversalKey.push_back(vuchKey);
 		vector<unsigned char> vuchDataKey = { 'd', 'a', 't', 'a' };
@@ -142,43 +141,43 @@ void traversaldb(CScriptDBViewCache *pScriptDB, bool needEqual) {
 		vuchDataKey.push_back('_');
 		vuchDataKey.insert(vuchDataKey.end(), vuchKey.begin(), vuchKey.end());
 		if (g_pcScriptDBView->m_mapDatas.count(vuchDataKey)) {
-//			nType = 0;
+			// nType = 0;
 		} else if (g_pcTestView->m_mapDatas.count(vuchDataKey)) {
-//			nType = 1;
+			// nType = 1;
 		} else {
-//			nType = 2;
+			// nType = 2;
 		}
-//		cout << "script key:" << HexStr(vuchKey) <<" data at level:"<< nType<< endl;
+			// cout << "script key:" << HexStr(vuchKey) <<" data at level:"<< nType<< endl;
 	}
 
 	while (bRet) {
 		bRet = pScriptDB->GetScriptData(nCurHeight, cRegScriptId, 1, vuchKey, vuchScript);
 		if (bRet) {
-			vector<unsigned char> dataKey = { 'd', 'a', 't', 'a' };
-			dataKey.insert(dataKey.end(), cRegScriptId.GetVec6().begin(), cRegScriptId.GetVec6().end());
-			dataKey.push_back('_');
-			dataKey.insert(dataKey.end(), vuchKey.begin(), vuchKey.end());
-			if (g_pcScriptDBView->m_mapDatas.count(dataKey)) {
-//				nType = 0;
-			} else if (g_pcTestView->m_mapDatas.count(dataKey)) {
-//				nType = 1;
+			vector<unsigned char> vuchDataKey = { 'd', 'a', 't', 'a' };
+			vuchDataKey.insert(vuchDataKey.end(), cRegScriptId.GetVec6().begin(), cRegScriptId.GetVec6().end());
+			vuchDataKey.push_back('_');
+			vuchDataKey.insert(vuchDataKey.end(), vuchKey.begin(), vuchKey.end());
+			if (g_pcScriptDBView->m_mapDatas.count(vuchDataKey)) {
+				// nType = 0;
+			} else if (g_pcTestView->m_mapDatas.count(vuchDataKey)) {
+				// nType = 1;
 			} else {
-//				nType = 2;
+				// nType = 2;
 			}
 			vuchTraversalKey.push_back(vuchKey);
-//			cout << "script key:" << HexStr(vuchKey) <<" data at level:"<< nType<< endl;
+				// cout << "script key:" << HexStr(vuchKey) <<" data at level:"<< nType<< endl;
 		}
 	}
 	if (needEqual) {
 		BOOST_CHECK(vuchTraversalKey == g_arrKey);
 	}
-//	cout << "=======================traversaldb end======="<<++nCount<<"==============================="<<endl;
+	// cout << "=======================traversaldb end======="<<++nCount<<"==============================="<<endl;
 }
 
 void testscriptdatadb() {
 	vector<unsigned char> vuchScriptId = {0x01,0x00,0x00,0x00,0x02,0x00};
-//  vector<unsigned char> vuchScriptKey = {0x01,0x00,0x02,0x03,0x04,0x05,0x06,0x07};
-//	vector<unsigned char> vuchScriptKey1 = {0x01,0x00,0x02,0x03,0x04,0x05,0x07,0x06};
+	// vector<unsigned char> vuchScriptKey = {0x01,0x00,0x02,0x03,0x04,0x05,0x06,0x07};
+	// vector<unsigned char> vuchScriptKey1 = {0x01,0x00,0x02,0x03,0x04,0x05,0x07,0x06};
 	vector<unsigned char> vuchScriptKey = {0x01,0x00,0x01};
 	vector<unsigned char> vuchScriptKey1 = {0x01,0x00,0x02};
 	vector<unsigned char> vuchScriptKey2 = {0x01,0x00,0x03};
@@ -265,18 +264,15 @@ void testscriptdatadb() {
 		}
 	}
 
-
-
 	int nHeight(0);
 	int nCurHeight(0);
 	vector<unsigned char> vuchKey;
 	vector<unsigned char> vuchScript;
 	set<CScriptDBOperLog> setOperLog;
 
-
 	BOOST_CHECK(g_pcTestView->SetScriptData(cRegScriptId, vuchScriptKey, vuchScriptData,  cOperlog));
-//	int nHeight = 0;
-//	int nCurHeight = 0;
+	// int nHeight = 0;
+	// int nCurHeight = 0;
 	BOOST_CHECK(g_pcTestView->GetScriptData(nCurHeight,cRegScriptId,vuchScriptKey,vuchScriptData));
 	g_pcTestView->GetScriptCount(nHeight);
 
@@ -325,9 +321,8 @@ void testscriptdatadb() {
 }
 
 BOOST_AUTO_TEST_SUITE(scriptdb_test)
-BOOST_AUTO_TEST_CASE(test)
-{
-//	BOOST_ERROR("THE SUITE NEED TO MODIFY!");
+BOOST_AUTO_TEST_CASE(test) {
+	// BOOST_ERROR("THE SUITE NEED TO MODIFY!");
 	init();
 	testscriptdb();
 	testscriptdatadb();

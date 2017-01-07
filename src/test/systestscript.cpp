@@ -29,8 +29,8 @@ using namespace boost;
 std::string g_strTxHash("");
 const int g_knNewAddrs = 1420;
 
-class CSysScriptTest: public SysTestBase {
-public:
+class CSysScriptTest : public SysTestBase {
+ public:
 	CSysScriptTest() {
 		StartServer();
 	}
@@ -38,13 +38,15 @@ public:
 	~CSysScriptTest() {
 		StopServer();
 	}
-private:
+
+ private:
 	void StartServer() {
 	}
 
 	void StopServer() {
 	}
-public:
+
+ public:
 	uint64_t GetValue(Value val, string strCompare) {
 		if (val.type() != obj_type) {
 			return 0;
@@ -87,9 +89,9 @@ public:
 		Value resut = CreateContractTx("010000000100", "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz", strParam, 10, 10000000);
 		BOOST_CHECK(GetHashFromCreatedTx(resut, g_strTxHash));
 		BOOST_CHECK(GenerateOneBlock());
-		uint256 strHash(uint256S(g_strTxHash.c_str()));
+		uint256 cHash(uint256S(g_strTxHash.c_str()));
 		strParam = "02";
-		strParam += HexStr(strHash);
+		strParam += HexStr(cHash);
 		string strTemp;
 		resut = CreateContractTx("010000000100", "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz", strParam, 10, 10000000);
 		BOOST_CHECK(GetHashFromCreatedTx(resut, strTemp));
@@ -101,7 +103,7 @@ public:
 		BOOST_CHECK(GenerateOneBlock());
 
 		strParam = "05";
-		strParam += HexStr(strHash);
+		strParam += HexStr(cHash);
 
 		resut = CreateContractTx("010000000100", "e21rEzVwkPFQYfgxcg7xLp7DKeYrW4Fpoz", strParam, 10, 10000000);
 		BOOST_CHECK(GetHashFromCreatedTx(resut, strTemp));
@@ -122,32 +124,31 @@ public:
 		char arrchBuffer[3] = { 0 };
 		sprintf(arrchBuffer, "%02x", param);
 		string strTemp;
-		//Value resut =CreateContractTx("010000000100", "5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d", buffer,10);
+		// Value resut =CreateContractTx("010000000100", "5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d", buffer,10);
 		Value resut = CreateContractTx("010000000100", "ddMuEBkAwhcb5K5QJ83MqQHrgHRn4EbRdh", arrchBuffer, 10, 1 * COIN);
 		BOOST_CHECK(GetHashFromCreatedTx(resut, strTemp));
 		BOOST_CHECK(GenerateOneBlock());
 		return strTemp;
 	}
 
-	void CheckRollBack()
-	{
+	void CheckRollBack() {
 		CreateContactTx(6);    //新增脚本数据
 		//cout<<6<<endl;
 		CreateContactTx(7);;   //修改脚本数据
 		//cout<<7<<endl;
 		CreateContactTx(8);    //删除脚本数据
-//		cout<<8<<endl;
-//		DisConnectBlock(1);           //删除1个block
-//		g_cTxMemPool.mapTx.clear();
-//		CreateContactTx(9);    //check删除的脚本是否恢复
-//	//	cout<<9<<endl;
-//		DisConnectBlock(2);
-//		g_cTxMemPool.mapTx.clear();
-//		CreateContactTx(10);    //check修改的脚本数据是否恢复
-////		cout<<10<<endl;
-//		DisConnectBlock(2);
-//		g_cTxMemPool.mapTx.clear();
-//		CreateContactTx(11);   //check新增的脚本数据是否恢复
+		//		cout<<8<<endl;
+		//		DisConnectBlock(1);           //删除1个block
+		//		g_cTxMemPool.mapTx.clear();
+		//		CreateContactTx(9);    //check删除的脚本是否恢复
+		//		cout<<9<<endl;
+		//		DisConnectBlock(2);
+		//		g_cTxMemPool.mapTx.clear();
+		//		CreateContactTx(10);    //check修改的脚本数据是否恢复
+		//		cout<<10<<endl;
+		//		DisConnectBlock(2);
+		//		g_cTxMemPool.mapTx.clear();
+		//		CreateContactTx(11);   //check新增的脚本数据是否恢复
 	}
 
 	bool CheckScriptid(Value val, string strScriptid) {
@@ -232,19 +233,17 @@ public:
 		strTemp += tinyformat::format("%02x%s", nParam, strAccountid);
 		resut = CreateContractTx("010000000100", "dsGb9GyDGYnnHdjSvRfYbj9ox2zPbtgtpo", strTemp, 10);
 		BOOST_CHECK(!GetHashFromCreatedTx(resut, strTemp));
-
 	}
 
 	void GetScriptDataSize() {
 		const char *pParam[] = { "rpctest", "getscriptdbsize", "010000000100" };
-//		CommandLineRPC(3, param);
+		//		CommandLineRPC(3, param);
 		Value dummy;
 		CommandLineRPC_GetValue(3, pParam, dummy);
 	}
 
 	bool CheckScriptDB(int nheigh, string strSrcipt, string strHash, int flag) {
 		int nCurtiph = g_cChainActive.Height();
-
 		string strHash2 = "hash";
 
 		CRegID cRegid(strSrcipt);
@@ -332,9 +331,9 @@ public:
 		if (!g_pScriptDBTip->HaveScript(cRegid)) {
 			return 0;
 		}
-		int dbsize;
-		g_pScriptDBTip->GetScriptDataCount(cRegid, dbsize);
-		return dbsize;
+		int nDBsize;
+		g_pScriptDBTip->GetScriptDataCount(cRegid, nDBsize);
+		return nDBsize;
 	}
 
 	string CreatWriteTx(string &strHash) {
@@ -467,36 +466,30 @@ public:
 		while (!IsMemoryPoolEmpty()) {
 			BOOST_CHECK(GenerateOneBlock());
 		}
-		int totalhigh = 20;
-		while (g_cChainActive.Height() != totalhigh) {
+		int nTotalhigh = 20;
+		while (g_cChainActive.Height() != nTotalhigh) {
 			BOOST_CHECK(GenerateOneBlock());
-			ShowProgress("GenerateOneBlock progress: ", ((float) g_cChainActive.Height() / (float) totalhigh) * 100);
+			ShowProgress("GenerateOneBlock progress: ", ((float) g_cChainActive.Height() / (float) nTotalhigh) * 100);
 			MilliSleep(15);
 		}
 
-//		BOOST_CHECK(DisConnectBlock(g_cChainActive.Height()-1));
-//		BOOST_CHECK(GenerateOneBlock());
-//		BOOST_CHECK(GenerateOneBlock());
+		//		BOOST_CHECK(DisConnectBlock(g_cChainActive.Height()-1));
+		//		BOOST_CHECK(GenerateOneBlock());
+		//		BOOST_CHECK(GenerateOneBlock());
 	}
 };
 
 
 BOOST_FIXTURE_TEST_SUITE(sysScript_test,CSysScriptTest)
 
-BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
-{
+BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest) {
 #if 0
-
 
 	//// pass
 	ResetEnv();
 	BOOST_CHECK(0==g_cChainActive.Height());
 	CreateRegScript("dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem","unit_test.bin");
 	CheckSdk();
-
-
-
-
 
 	ResetEnv();
 	BOOST_CHECK(0==g_cChainActive.Height());
@@ -520,15 +513,12 @@ BOOST_FIXTURE_TEST_CASE(script_test,CSysScriptTest)
 }
 
 // 测试各种地址挖矿
-BOOST_FIXTURE_TEST_CASE(minier,CSysScriptTest)
-{
+BOOST_FIXTURE_TEST_CASE(minier,CSysScriptTest) {
 #if 0
 	ResetEnv();
 	TestMinner();
 #endif //0
 }
-
-
 
 BOOST_FIXTURE_TEST_CASE(appacc,CSysScriptTest){
 #if 0

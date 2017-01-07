@@ -23,21 +23,20 @@ bool read_block(const std::string& filename, CBlock& block) {
 	namespace fs = boost::filesystem;
 	fs::path testFile = fs::current_path() / "data" / filename;
 #ifdef TEST_DATA_DIR
-	if (!fs::exists(testFile))
-	{
+	if (!fs::exists(testFile)) {
 		testFile = fs::path(BOOST_PP_STRINGIZE(TEST_DATA_DIR)) / filename;
 	}
 #endif
-	FILE* fp = fopen(testFile.string().c_str(), "rb");
-	if (!fp) {
+	FILE* pFile = fopen(testFile.string().c_str(), "rb");
+	if (!pFile) {
 		return false;
 	}
-	fseek(fp, 8, SEEK_SET); // skip msgheader/size
-	CAutoFile filein = CAutoFile(fp, SER_DISK, g_sClientVersion);
-	if (!filein) {
+	fseek(pFile, 8, SEEK_SET); // skip msgheader/size
+	CAutoFile cFilein = CAutoFile(pFile, SER_DISK, g_sClientVersion);
+	if (!cFilein) {
 		return false;
 	}
-	filein >> block;
+	cFilein >> block;
 	return true;
 }
 

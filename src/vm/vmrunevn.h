@@ -5,8 +5,8 @@
  *      Author: ranger.shi
  */
 
-#ifndef SCRIPTCHECK_H_
-#define SCRIPTCHECK_H_
+#ifndef DACRS_VM_VMRUNEVN_H_
+#define DACRS_VM_VMRUNEVN_H_
 
 #include "vm8051.h"
 #include "vmlua.h"
@@ -21,51 +21,51 @@
 
 using namespace std;
 class CVmOperate;
+
 class CVmRunEvn {
 	/**
 	 * Run the script object
 	 */
-	shared_ptr<CVm8051> pMcu; //执行8051脚本
-	shared_ptr<CVmlua> pLua;  //执行lua脚本
+	shared_ptr<CVm8051> m_pMcu; 	//执行8051脚本
+	shared_ptr<CVmlua> m_pLua;  	//执行lua脚本
 	/**
 	 * vm before the account state
 	 */
-	vector<shared_ptr<CAccount> > RawAccont;
+	vector<shared_ptr<CAccount> > m_RawAccont;
 	/**
 	 * vm operate the account  state
 	 */
-	vector<shared_ptr<CAccount> > NewAccont;
+	vector<shared_ptr<CAccount> > m_NewAccont;
 	/**
 	 * current run the tx
 	 */
-	shared_ptr<CBaseTransaction> listTx;
+	shared_ptr<CBaseTransaction> m_plistTx;
 	/**
 	 * run the script
 	 */
-	CVmScript vmScript;
+	CVmScript m_cVmScript;
 	/**
 	 * the block height
 	 */
-	unsigned int RunTimeHeight;
+	unsigned int m_unRunTimeHeight;
 	/**
 	 * vm before the app account state
 	 */
-	vector<shared_ptr<CAppUserAccout>> RawAppUserAccout;
+	vector<shared_ptr<CAppUserAccout>> m_RawAppUserAccout;
 	/**
 	 * vm operate the app account  state
 	 */
-	vector<shared_ptr<CAppUserAccout>> NewAppUserAccout;
+	vector<shared_ptr<CAppUserAccout>> m_NewAppUserAccout;
 	CScriptDBViewCache *m_ScriptDBTip;
 	CAccountViewCache *m_view;
-	vector<CVmOperate> m_output;   //保存操作结果
-    bool  m_bIsCheckAccount;  //校验账户平衡开关
-    int  m_nScriptType;       //脚本的类型 0:8051,1:lua
+	vector<CVmOperate> m_output;   	//保存操作结果
+    bool  m_bIsCheckAccount;  		//校验账户平衡开关
+    int  m_nScriptType;       		//脚本的类型 0:8051,1:lua
 
-	map<vector<unsigned char >,vector<CAppFundOperate> > MapAppOperate;  //vector<unsigned char > 存的是accountId
+	map<vector<unsigned char >,vector<CAppFundOperate> > m_MapAppOperate;  //vector<unsigned char > 存的是accountId
 	shared_ptr<vector<CScriptDBOperLog> > m_dblog;
 
-
-private:
+ private:
 	/**
 	 * @brief The initialization function
 	 * @param Tx: run the tx's contact
@@ -73,20 +73,20 @@ private:
 	 *  @param nheight: run the Environment the block's height
 	 * @return : check the the tx and account is Legal true is legal false is unlegal
 	 */
-	bool intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& view, int nheight);
+	bool intial(shared_ptr<CBaseTransaction> & Tx, CAccountViewCache& cView, int nHeight);
 	/**
 	 *@brief check aciton
 	 * @param listoperate: run the script return the code,check the code
 	 * @return : true check success
 	 */
-	bool CheckOperate(const vector<CVmOperate> &listoperate);
+	bool CheckOperate(const vector<CVmOperate> &vcVmOperate);
 	/**
 	 *
 	 * @param listoperate: through the vm return code ,The accounts plus money and less money
 	 * @param view:
 	 * @return true operate account success
 	 */
-	bool OpeatorAccount(const vector<CVmOperate>& listoperate, CAccountViewCache& view, const int nCurHeight);
+	bool OpeatorAccount(const vector<CVmOperate>& vcVmOperate, CAccountViewCache& cView, const int nCurHeight);
 	/**
 	 * @brief find the vOldAccount from NewAccont if find success remove it from NewAccont
 	 * @param vOldAccount: the argument
@@ -104,13 +104,13 @@ private:
 	 * @param value: argument
 	 * @return:Return account id
 	 */
-	vector_unsigned_char GetAccountID(CVmOperate value);
-//	bool IsSignatureAccount(CRegID account);
-	bool OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFundOperate> > opMap, CScriptDBViewCache& view);
+	vector_unsigned_char GetAccountID(CVmOperate cValue);
+	// bool IsSignatureAccount(CRegID account);
+	bool OpeatorAppAccount(const map<vector<unsigned char >,vector<CAppFundOperate> > mapOpMap, CScriptDBViewCache& cView);
 
 	std::shared_ptr<CAppUserAccout> GetAppAccount(shared_ptr<CAppUserAccout>& AppAccount);
 
-public:
+ public:
 	/**
 	 * A constructor.
 	 */
@@ -144,7 +144,7 @@ public:
 	 * @brief just for test
 	 * @return:
 	 */
-//	shared_ptr<vector<CVmOperate> > GetOperate() const;
+	// shared_ptr<vector<CVmOperate> > GetOperate() const;
 	const CRegID& GetScriptRegID();
 	const CRegID &GetTxAccount();
 	uint64_t GetValue() const;
@@ -171,6 +171,7 @@ enum emACCOUNT_TYPE {
 /**
  * @brief after run the script,the script output the code
  */
+
 class CVmOperate{
  public:
 	unsigned char m_uchNaccType;      	//EM_REGID or EM_BASE_58_ADDR
@@ -199,8 +200,7 @@ class CVmOperate{
 		memset(m_arruchMoney, 0, 8);
 	}
 	Object ToJson();
-
 };
 
 //extern CVmRunEvn *pVmRunEvn; //提供给lmylib.cpp库使用
-#endif /* SCRIPTCHECK_H_ */
+#endif /* DACRS_VM_VMRUNEVN_H_ */

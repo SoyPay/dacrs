@@ -74,7 +74,6 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_serialize_with_tweak) {
 }
 
 BOOST_AUTO_TEST_CASE(bloom_create_insert_key) {
-
 	if (SysCfg().emNetWork::EM_TESTNET == SysCfg().NetworkID()
 			|| SysCfg().emNetWork::EM_REGTEST == SysCfg().NetworkID()) {
 		return;
@@ -85,21 +84,21 @@ BOOST_AUTO_TEST_CASE(bloom_create_insert_key) {
 
 	CKey cKey = cVchSecret.GetKey();
 	CPubKey cPubkey = cKey.GetPubKey();
-	vector<unsigned char> vchPubKey(cPubkey.begin(), cPubkey.end());
+	vector<unsigned char> vuchPubKey(cPubkey.begin(), cPubkey.end());
 
 	CBloomFilter cFilter(2, 0.001, 0, EM_BLOOM_UPDATE_ALL);
-	cFilter.insert(vchPubKey);
+	cFilter.insert(vuchPubKey);
 	uint160 cHash = cPubkey.GetKeyID();
 	cFilter.insert(vector<unsigned char>(cHash.begin(), cHash.end()));
 
 	CDataStream cStream(SER_NETWORK, g_sProtocolVersion);
 	cFilter.Serialize(cStream, SER_NETWORK, g_sProtocolVersion);
 
-	vector<unsigned char> vch = ParseHex("038fc16b080000000000000001");
-	vector<char> vchExpected(vch.size());
+	vector<unsigned char> vuch = ParseHex("038fc16b080000000000000001");
+	vector<char> vchExpected(vuch.size());
 
-	for (unsigned int i = 0; i < vch.size(); i++) {
-		vchExpected[i] = (char) vch[i];
+	for (unsigned int i = 0; i < vuch.size(); i++) {
+		vchExpected[i] = (char) vuch[i];
 	}
 	BOOST_CHECK_EQUAL_COLLECTIONS(cStream.begin(), cStream.end(), vchExpected.begin(), vchExpected.end());
 }
@@ -286,12 +285,12 @@ dbea9300876c"), SER_NETWORK, g_sProtocolVersion);//CDataStream cStream(ParseHex(
 	merkleStream << cMerkleBlock;
 //	cout << "cMerkleBlock:" << HexStr(merkleStream) << endl;
 	//Hex: BlockHeader + txnum + txhash + bits
-	vector<unsigned char> vch = ParseHex("0200000060203f9559534438ca3e15b94a9b0d304d3b62ad264adc87ac62a30b8753712a175f70e4113da4ecc3df18f55458acee8c3d4f0acc47a2416ece8189c22d343c9f9d3321322c3a5f275d6532250d494054068fa74eb9fcc6b05696ddb4060000c154325839ec181b2f0200006c0400000000000000000000940000004630440220363ceed0b99a6fd24c80f7d88a5f437a81bc92de454d50e6a8af65984c850de702203693ebc10c3c92d027e7ac79057100ccb3a6b5f30f18a197e4993cd40cd520c80100000001175f70e4113da4ecc3df18f55458acee8c3d4f0acc47a2416ece8189c22d343c0101");//ParseHex("02000000f3e278295c17a6eb153dbde3340ab5dc727f5e23fc9da7c26e5b7c21537a7564c75bbd39d41d1e41ca981b25d980ee45b123e77ff3d462ea8d6c4f8b18c024a96df13055ffff03206b0000000100000000000000000000006400000046304402206771d65c08f3b6ab44bdf3ddda58909ac08272feb85757a65f9185457f919a9f022033c55dc76a43561e25f04ff3cb7a0e086879f6b08e7c44cc82318165aad277090100000001c75bbd39d41d1e41ca981b25d980ee45b123e77ff3d462ea8d6c4f8b18c024a90101");
+	vector<unsigned char> vuch = ParseHex("0200000060203f9559534438ca3e15b94a9b0d304d3b62ad264adc87ac62a30b8753712a175f70e4113da4ecc3df18f55458acee8c3d4f0acc47a2416ece8189c22d343c9f9d3321322c3a5f275d6532250d494054068fa74eb9fcc6b05696ddb4060000c154325839ec181b2f0200006c0400000000000000000000940000004630440220363ceed0b99a6fd24c80f7d88a5f437a81bc92de454d50e6a8af65984c850de702203693ebc10c3c92d027e7ac79057100ccb3a6b5f30f18a197e4993cd40cd520c80100000001175f70e4113da4ecc3df18f55458acee8c3d4f0acc47a2416ece8189c22d343c0101");//ParseHex("02000000f3e278295c17a6eb153dbde3340ab5dc727f5e23fc9da7c26e5b7c21537a7564c75bbd39d41d1e41ca981b25d980ee45b123e77ff3d462ea8d6c4f8b18c024a96df13055ffff03206b0000000100000000000000000000006400000046304402206771d65c08f3b6ab44bdf3ddda58909ac08272feb85757a65f9185457f919a9f022033c55dc76a43561e25f04ff3cb7a0e086879f6b08e7c44cc82318165aad277090100000001c75bbd39d41d1e41ca981b25d980ee45b123e77ff3d462ea8d6c4f8b18c024a90101");
 
-	vector<char> vchExpected(vch.size());
+	vector<char> vchExpected(vuch.size());
 
-	for (unsigned int i = 0; i < vch.size(); i++) {
-		vchExpected[i] = (char) vch[i];
+	for (unsigned int i = 0; i < vuch.size(); i++) {
+		vchExpected[i] = (char) vuch[i];
 	}
 	BOOST_CHECK_EQUAL_COLLECTIONS(vchExpected.begin(), vchExpected.end(), merkleStream.begin(), merkleStream.end());
 }

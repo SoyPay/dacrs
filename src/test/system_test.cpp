@@ -40,8 +40,8 @@ typedef struct {
 } ST_CONTRACT_DATA;
 #pragma pack()
 
-class CSystemTest: public SysTestBase {
-public:
+class CSystemTest : public SysTestBase {
+ public:
 	enum {
 		EM_ID1_FREE_TO_ID2_FREE = 1,
 		EM_ID2_FREE_TO_ID3_FREE,
@@ -50,22 +50,21 @@ public:
 		EM_ID3_FREE_TO_ID2_FREE,
 		EM_UNDEFINED_OPER
 	};
+
 	CSystemTest() {
-		m_nOldBlockHeight = 0;
-		m_nNewBlockHeight = 0;
-		m_nTimeOutHeight = 100;
-		m_ullOldMoney = 0;
-		m_ullNewMoney = 0;
-		m_strFileName = "unit_test.bin";
-		m_strAddr1 = "dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem";
+		m_nOldBlockHeight 	= 0;
+		m_nNewBlockHeight 	= 0;
+		m_nTimeOutHeight 	= 100;
+		m_ullOldMoney 		= 0;
+		m_ullNewMoney 		= 0;
+		m_strFileName 		= "unit_test.bin";
+		m_strAddr1 			= "dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem";
 	}
 
 	~CSystemTest() {
-
 	}
 
-public:
-
+ public:
 	bool IsTxConfirmdInWallet(int nBlockHeight, const uint256& cTxHash) {
 		string strHash = "";
 		if (!SysTestBase::GetBlockHash(nBlockHeight, strHash)) {
@@ -153,44 +152,44 @@ public:
 	}
 
 	bool GetFileData(const string& strFilePath, string& strFileData) {
-		FILE* file = fopen(strFilePath.c_str(), "rb+");
-		if (!file) {
+		FILE* pFile = fopen(strFilePath.c_str(), "rb+");
+		if (!pFile) {
 			return false;
 		}
 
 		unsigned long ulSize;
-		fseek(file, 0, SEEK_END);
-		ulSize = ftell(file);
-		rewind(file);
+		fseek(pFile, 0, SEEK_END);
+		ulSize = ftell(pFile);
+		rewind(pFile);
 
 		// allocate memory to contain the whole file:
-		char *buffer = (char*) malloc(sizeof(char) * ulSize);
-		if (buffer == NULL) {
+		char *pBuffer = (char*) malloc(sizeof(char) * ulSize);
+		if (pBuffer == NULL) {
 			return false;
 		}
 
-		if (fread(buffer, 1, ulSize, file) != ulSize) {
-			if (buffer) {
-				free(buffer);
+		if (fread(pBuffer, 1, ulSize, pFile) != ulSize) {
+			if (pBuffer) {
+				free(pBuffer);
 			}
 			throw runtime_error("read script file error");
 		}
 
 		CVmScript cVmScript;
-		cVmScript.vuchRom.insert(cVmScript.vuchRom.end(), buffer, buffer + ulSize);
-		string desp("this is description");
-		cVmScript.vuchScriptExplain.assign(desp.begin(), desp.end());
+		cVmScript.m_vuchRom.insert(cVmScript.m_vuchRom.end(), pBuffer, pBuffer + ulSize);
+		string strDesp("this is description");
+		cVmScript.m_vuchScriptExplain.assign(strDesp.begin(), strDesp.end());
 		CDataStream cDs(SER_DISK, g_sClientVersion);
 		cDs << cVmScript;
 
 		vector<unsigned char> vuchVscript;
 		vuchVscript.assign(cDs.begin(), cDs.end());
 
-		if (file) {
-			fclose(file);
+		if (pFile) {
+			fclose(pFile);
 		}
-		if (buffer) {
-			free(buffer);
+		if (pBuffer) {
+			free(pBuffer);
 		}
 
 		strFileData = HexStr(vuchVscript);
@@ -203,11 +202,11 @@ public:
 			return false;
 		}
 
-		CRegID regID(nConfirmHeight, nIndex);
-		return IsScriptAccCreated(HexStr(regID.GetVec6()));
+		CRegID cRegID(nConfirmHeight, nIndex);
+		return IsScriptAccCreated(HexStr(cRegID.GetVec6()));
 	}
 
-protected:
+ protected:
 	int m_nOldBlockHeight;
 	int m_nNewBlockHeight;
 	int m_nTimeOutHeight;
@@ -218,6 +217,7 @@ protected:
 	string m_strFileName;
 	string m_strAddr1;
 };
+
 /*
  * 测试脚本账户一切在系统中的流程
  */

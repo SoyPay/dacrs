@@ -10,7 +10,6 @@
 BOOST_AUTO_TEST_SUITE(main_tests)
 
 BOOST_AUTO_TEST_CASE(subsidy_limit_test) {
-
 	uint64_t ullSum = 0;
 	if (CBaseParams::EM_MAIN == SysCfg().NetworkID()) {
 		for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
@@ -21,7 +20,7 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test) {
 		}
 		BOOST_CHECK(ullSum == 2099999997690000ULL);
 	} else {
-//		uint64_t sSum = 0;
+		// uint64_t sSum = 0;
 		for (int nHeight = 0; nHeight < 10000; nHeight += 150) {
 			uint64_t ullSubsidy = GetBlockValue(nHeight, 0);
 			BOOST_CHECK(ullSubsidy <= 50 * COIN);

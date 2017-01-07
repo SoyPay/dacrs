@@ -5,8 +5,8 @@
  *      Author: ranger.shi
  */
 
-#ifndef CRPCREQUEST_H_
-#define CRPCREQUEST_H_
+#ifndef DACRS_TEST_SYSTESTBASE_H_
+#define DACRS_TEST_SYSTESTBASE_H_
 
 #include <stdlib.h>
 #include <time.h>
@@ -34,11 +34,13 @@ struct ST_ACC_STATE {
 	int64_t lldUnmatureMoney;
 	int64_t lldFreeMoney;
 	int64_t lldFrozenMoney;
+
 	ST_ACC_STATE() {
 		lldUnmatureMoney = 0;
 		lldFreeMoney = 0;
 		lldFrozenMoney = 0;
 	}
+
 	ST_ACC_STATE(int64_t a, int64_t b, int64_t c) {
 		lldUnmatureMoney = a;
 		lldFreeMoney = b;
@@ -71,9 +73,11 @@ struct ST_ACC_OPER_LOG {
 	const static int knFrozenHeight = 100;
 	const static int knMatureHeight = 100;
 	std::map<int, ST_ACC_STATE> mapAccState;
+
 	ST_ACC_OPER_LOG() {
 		mapAccState.clear();
 	}
+
 	bool Add(int &nHeight, ST_ACC_STATE &accstate) {
 		mapAccState[nHeight] = accstate;
 		return true;
@@ -95,18 +99,19 @@ struct ST_ACC_OPER_LOG {
 };
 
 class SysTestBase {
-protected:
+ protected:
 	int GetRandomMoney();
 	Value GetAccountInfo(const string& strID);
 
-public:
+ public:
 	SysTestBase();
 	~SysTestBase();
 	static void StartServer(int argc,const char* argv[]);
 	static void StopServer();
 	int GetRandomFee();
-	bool GetMemPoolSize(int &size);
+	bool GetMemPoolSize(int &nSize);
 	bool ImportAllPrivateKey();
+
 	bool GetHashFromCreatedTx(const Value& valueRes, string& strHash) {
 		if (valueRes.type() == null_type) {
 			return false;
@@ -191,11 +196,11 @@ public:
 		return true;
 	}
 
-	bool ShowProgressTotal(string const &msg, int rate) {
+	bool ShowProgressTotal(string const &strMsg, int nRate) {
 		for (int j = 0; j < 100; ++j) {
 			cout << '\b';
 		}
-		cout << msg << " Total: " << rate;
+		cout << strMsg << " Total: " << nRate;
 		return true;
 	}
 
@@ -220,8 +225,9 @@ public:
 	bool IsMemoryPoolEmpty();
 
 	Value GetAppAccountInfo(const string& strScriptId,const string& strAddr);
-protected:
-	static boost::thread* pThreadShutdown ;
+
+ protected:
+	static boost::thread* pThreadShutdown;
 	std::map<string, ST_ACC_STATE> m_mapAccState;
 	std::map<string, ST_ACC_OPER_LOG> m_mapAccOperLog;
 	int m_nCurHeight;
@@ -229,4 +235,4 @@ protected:
 	int64_t m_llCurFee;
 };
 
-#endif /* CRPCREQUEST2_H_ */
+#endif /* DACRS_TEST_SYSTESTBASE_H_ */

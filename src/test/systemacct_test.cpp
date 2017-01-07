@@ -4,9 +4,8 @@
 using namespace std;
 using namespace boost;
 
-class CSysAccountTest: public SysTestBase {
-public:
-
+class CSysAccountTest : public SysTestBase {
+ public:
 	bool RegisterAccount(const string& strAddr, uint64_t ullFee, string& strTxHash, bool bSign = false) {
 		Value value = RegistAccountTx(strAddr, ullFee);
 		return GetHashFromCreatedTx(value, strTxHash);
@@ -17,7 +16,6 @@ public:
 		string strHash = "";
 		return GetHashFromCreatedTx(value, strHash);
 	}
-
 };
 
 BOOST_FIXTURE_TEST_SUITE(sysacct_test, CSysAccountTest)

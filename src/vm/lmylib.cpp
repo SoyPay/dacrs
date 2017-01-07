@@ -1653,7 +1653,7 @@ static bool GetDataTableOutAppOperate(lua_State *L, vector<std::shared_ptr<std::
 		LogPrint("vm", "outheight get fail\n");
 		return false;
 	} else {
-		cTemp.m_nOutHeight = (unsigned int) dValue;
+		cTemp.m_unOutHeight = (unsigned int) dValue;
 	}
 
 	if (!getArrayInTable(L, (char *) "moneyTbl", sizeof(cTemp.m_llMoney), vuchBuf)) {
@@ -1723,7 +1723,7 @@ static int GetUserAppAccFoudWithTag(lua_State *L) {
 	CAppCFund cFund;
 	int nLen = 0;
 	if (pcVmRunEvn->GetAppUserAccout(cUserfund.GetAppUserV(), sptrAcc)) {
-		if (!sptrAcc->GetAppCFund(cFund, cUserfund.GetFundTagV(), cUserfund.m_nOutHeight)) {
+		if (!sptrAcc->GetAppCFund(cFund, cUserfund.GetFundTagV(), cUserfund.m_unOutHeight)) {
 			return RetFalse("GetUserAppAccFoudWithTag get fail");
 		}
 		CDataStream cTep(SER_DISK, g_sClientVersion);
@@ -1903,7 +1903,7 @@ static int ExTransferContactAsset(lua_State *L) {
 
 	if (ullMoney > 0) {
 		cOp.m_llMoney = ullMoney;
-		cOp.m_nOutHeight = 0;
+		cOp.m_unOutHeight = 0;
 		cOp.m_uchOpeatorType = EM_SUB_FREE_OP;
 		cOp.m_uchAppuserIDlen = vuchSendkey.size();
 		for (i = 0; i < cOp.m_uchAppuserIDlen; i++) {
@@ -1923,7 +1923,7 @@ static int ExTransferContactAsset(lua_State *L) {
 	vector<CAppCFund> vcTemp = cTemp.get()->getFreezedFund();
 	for (auto fund : vcTemp) {
 		cOp.m_llMoney = fund.getValue();
-		cOp.m_nOutHeight = fund.getHeight();
+		cOp.m_unOutHeight = fund.getHeight();
 		cOp.m_uchOpeatorType = EM_SUB_TAG_OP;
 		cOp.m_uchAppuserIDlen = vuchSendkey.size();
 		for (i = 0; i < cOp.m_uchAppuserIDlen; i++) {
@@ -2016,7 +2016,7 @@ static int ExTransferSomeAsset(lua_State *L) {
 	}
 
 	cOp.m_llMoney = uTransferMoney;
-	cOp.m_nOutHeight = nHeight;
+	cOp.m_unOutHeight = nHeight;
 	cOp.m_uchAppuserIDlen = vuchSendkey.size();
 
 	for (i = 0; i < cOp.m_uchAppuserIDlen; i++) {
