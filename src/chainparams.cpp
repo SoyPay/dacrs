@@ -88,13 +88,18 @@ map<string, vector<string> > CBaseParams::m_mapMultiArgs;
 //
 // testnet network
 //
-vector<string> intPubKey_mainNet = { "0388a07c89727f9065703100e94c00ce82bda6987215a88abee65db9b37f52f9e0",
-		"03fdfda984690ff2b10f27ccc38b90634ca101a27621c1a9dcec7a2f33fa0282d6" };
+vector<string> g_vstrIntPubKeyMainNet = {
+		"0388a07c89727f9065703100e94c00ce82bda6987215a88abee65db9b37f52f9e0",
+		"03fdfda984690ff2b10f27ccc38b90634ca101a27621c1a9dcec7a2f33fa0282d6"
+};
 
-vector<string> initPubKey_testNet = { "0388a07c89727f9065703100e94c00ce82bda6987215a88abee65db9b37f52f9e0",
-		"0360328964121d4625ca827c3e111f99fb005d5b30455d2609ac0ac3bbe17df601" };
+vector<string> g_vstrInitPubKeyTestNet = {
+		"0388a07c89727f9065703100e94c00ce82bda6987215a88abee65db9b37f52f9e0",
+		"0360328964121d4625ca827c3e111f99fb005d5b30455d2609ac0ac3bbe17df601"
+};
 
-vector<string> initPubkey_regTest = { "03d308757fc1f8efd69f2da329db560cd7d3cba951eb09786c375cf1709f9165ba",
+vector<string> g_vstrInitPubkeyRegTest = {
+		"03d308757fc1f8efd69f2da329db560cd7d3cba951eb09786c375cf1709f9165ba",
 		"024126ccf4b5f6463a3f874f234b77d02e9f5c2057c6c382160dc17c7f9ba2b333",
 		"0221b571330617821e8c508416b90988e81e8dc8623576b8f6e942797e9f381111",
 		"02e5c2fbea1055139e3d46621ef49aede5eb3ca1629fc3520986c5aba203706e74",
@@ -115,10 +120,13 @@ vector<string> initPubkey_regTest = { "03d308757fc1f8efd69f2da329db560cd7d3cba95
 		"025a1c65b72c72569559edf54491dcf45e7ed0299886ee3eaa3cf5d5765b5b606b",
 		"035a998c0adb99003c0552ed44ac3f46e80f542b2d26cb94dd3356027b1c844b99",
 		"03f61c32ccc409ce5b55844f7cd2b62c52a8fe3d790efbc0644140cda33547aa67",
-		"03ae28a4100145a4c354338c727a54800dc540069fa2f5fd5d4a1c80b4a35a1762" };
+		"03ae28a4100145a4c354338c727a54800dc540069fa2f5fd5d4a1c80b4a35a1762"
+};
 
-unsigned int pnSeed[] = { 0xa78a2879, 0xb5af0bc6, 0x2f4f4a70, 0x30e65cb6, 0x7ae82879, 0x680ec48b, 0x7F1E4A70,
-		0x8868D772, 0xCD382879, 0xD239397B, 0x51C41978, 0x73B4C48B, 0x73EF1A78 };
+unsigned int g_unPnSeed[] = {
+		0xa78a2879, 0xb5af0bc6, 0x2f4f4a70, 0x30e65cb6, 0x7ae82879, 0x680ec48b, 0x7F1E4A70,
+		0x8868D772, 0xCD382879, 0xD239397B, 0x51C41978, 0x73B4C48B, 0x73EF1A78
+};
 
 class CMainParams: public CBaseParams {
  public:
@@ -139,7 +147,7 @@ class CMainParams: public CBaseParams {
 		m_bnProofOfStakeLimit = ~arith_uint256(0) >> 10;        //00 3f ff ff
 		m_nSubsidyHalvingInterval = 210000;
 
-		assert(CreateGenesisRewardTx(genesis.vptx, intPubKey_mainNet));
+		assert(CreateGenesisRewardTx(genesis.vptx, g_vstrIntPubKeyMainNet));
 		genesis.SetHashPrevBlock(uint256());
 		genesis.SetHashMerkleRoot(genesis.BuildMerkleTree());
 		genesis.SetHashPos(uint256());
@@ -171,14 +179,14 @@ class CMainParams: public CBaseParams {
 		m_vchBase58Prefixes[EM_EXT_SECRET_KEY] = {0x04,0x88,0xAD,0xE4};
 
 		// Convert the pnSeeds array into usable address objects.
-		for (unsigned int i = 0; i < ARRAYLEN(pnSeed); i++) {
+		for (unsigned int i = 0; i < ARRAYLEN(g_unPnSeed); i++) {
 			// It'll only connect to one or two seed nodes because once it connects,
 			// it'll get a pile of addresses with newer timestamps.
 			// Seed nodes are given a random 'last seen time' of between one and two
 			// weeks ago.
 			const int64_t nOneWeek = 7 * 24 * 60 * 60;
 			struct in_addr ip;
-			memcpy(&ip, &pnSeed[i], sizeof(ip));
+			memcpy(&ip, &g_unPnSeed[i], sizeof(ip));
 			CAddress addr(CService(ip, GetDefaultPort()));
 			addr.m_ullTime = GetTime() - GetRand(nOneWeek) - nOneWeek;
 			vFixedSeeds.push_back(addr);
@@ -234,7 +242,7 @@ public:
 		genesis.SetTime(1436598023);
 		genesis.SetNonce(888);
 		genesis.vptx.clear();
-		assert(CreateGenesisRewardTx(genesis.vptx, initPubKey_testNet));
+		assert(CreateGenesisRewardTx(genesis.vptx, g_vstrInitPubKeyTestNet));
 		genesis.SetHashMerkleRoot(genesis.BuildMerkleTree());
 		m_cHashGenesisBlock = genesis.GetHash();
 		for(auto & item : vFixedSeeds)
@@ -285,7 +293,7 @@ public:
 		genesis.SetBits(0x2003ffff);
 		genesis.SetNonce(888);
 		genesis.vptx.clear();
-		assert(CreateGenesisRewardTx(genesis.vptx, initPubkey_regTest));
+		assert(CreateGenesisRewardTx(genesis.vptx, g_vstrInitPubkeyRegTest));
 		genesis.SetHashMerkleRoot(genesis.BuildMerkleTree());
 		m_cHashGenesisBlock = genesis.GetHash();
 		m_nDefaultPort = 18666;
@@ -372,29 +380,33 @@ int CBaseParams::GetMultiArgsSize() {
 }
 
 string CBaseParams::GetArg(const string& strArg, const string& strDefault) {
-	if (m_mapArgs.count(strArg))
+	if (m_mapArgs.count(strArg)) {
 		return m_mapArgs[strArg];
+	}
 	return strDefault;
 }
 
-int64_t CBaseParams::GetArg(const string& strArg, int64_t nDefault) {
-	if (m_mapArgs.count(strArg))
+int64_t CBaseParams::GetArg(const string& strArg, int64_t llDefault) {
+	if (m_mapArgs.count(strArg)) {
 		return atoi64(m_mapArgs[strArg]);
-	return nDefault;
+	}
+	return llDefault;
 }
 
-bool CBaseParams::GetBoolArg(const string& strArg, bool fDefault) {
+bool CBaseParams::GetBoolArg(const string& strArg, bool bDefault) {
 	if (m_mapArgs.count(strArg)) {
-		if (m_mapArgs[strArg].empty())
+		if (m_mapArgs[strArg].empty()) {
 			return true;
+		}
 		return (atoi(m_mapArgs[strArg]) != 0);
 	}
-	return fDefault;
+	return bDefault;
 }
 
 bool CBaseParams::SoftSetArg(const string& strArg, const string& strValue) {
-	if (m_mapArgs.count(strArg))
+	if (m_mapArgs.count(strArg)) {
 		return false;
+	}
 	m_mapArgs[strArg] = strValue;
 	return true;
 }
@@ -408,11 +420,12 @@ void CBaseParams::EraseArg(const string& strArgKey) {
 	m_mapArgs.erase(strArgKey);
 }
 
-bool CBaseParams::SoftSetBoolArg(const string& strArg, bool fValue) {
-	if (fValue)
+bool CBaseParams::SoftSetBoolArg(const string& strArg, bool bValue) {
+	if (bValue) {
 		return SoftSetArg(strArg, string("1"));
-	else
+	} else {
 		return SoftSetArg(strArg, string("0"));
+	}
 }
 
 bool CBaseParams::IsArgCount(const string& strArg) {
@@ -426,17 +439,17 @@ CBaseParams &SysCfg() {
 	static shared_ptr<CBaseParams> pParams;
 
 	if (pParams.get() == NULL) {
-		bool fRegTest = CBaseParams::GetBoolArg("-regtest", false);
-		bool fTestNet = CBaseParams::GetBoolArg("-testnet", false);
-		if (fTestNet && fRegTest) {
+		bool bRegTest = CBaseParams::GetBoolArg("-regtest", false);
+		bool bTestNet = CBaseParams::GetBoolArg("-testnet", false);
+		if (bTestNet && bRegTest) {
 			fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
 //			assert(0);
 		}
 
-		if (fRegTest) {
+		if (bRegTest) {
 			//LogPrint("spark", "In Reg Test Net\n");
 			pParams = std::make_shared<CRegTestParams>();
-		} else if (fTestNet) {
+		} else if (bTestNet) {
 			//LogPrint("spark", "In Test Net\n");
 			pParams = std::make_shared<CTestNetParams>();
 		} else {
@@ -498,12 +511,13 @@ void CBaseParams::ParseParameters(int argc, const char* const argv[]) {
 		}
 #ifdef WIN32
 		boost::to_lower(str);
-		if (boost::algorithm::starts_with(str, "/"))
+		if (boost::algorithm::starts_with(str, "/")) {
 			str = "-" + str.substr(1);
+		}
 #endif
-		if (str[0] != '-')
+		if (str[0] != '-') {
 			break;
-
+		}
 		m_mapArgs[str] = strValue;
 		m_mapMultiArgs[str].push_back(strValue);
 	}
@@ -516,8 +530,9 @@ void CBaseParams::ParseParameters(int argc, const char* const argv[]) {
 		//  interpret --foo as -foo (as long as both are not set)
 		if (name.find("--") == 0) {
 			string singleDash(name.begin() + 1, name.end());
-			if (m_mapArgs.count(singleDash) == 0)
+			if (m_mapArgs.count(singleDash) == 0) {
 				m_mapArgs[singleDash] = entry.second;
+			}
 			name = singleDash;
 		}
 
@@ -532,8 +547,8 @@ void CBaseParams::ParseParameters(int argc, const char* const argv[]) {
 }
 
 bool CBaseParams::CreateGenesisRewardTx(vector<std::shared_ptr<CBaseTransaction> > &vRewardTx, const vector<string> &vInitPubKey) {
-	int length = vInitPubKey.size();
-	for (int i = 0; i < length; ++i) {
+	int nLength = vInitPubKey.size();
+	for (int i = 0; i < nLength; ++i) {
 		int64_t money(0);
 		if( i > 0) {
 			money = 1000000000 * COIN;
@@ -567,10 +582,10 @@ bool CBaseParams::IntialParams(int argc, const char* const argv[]) {
 int64_t CBaseParams::GetTxFee() const{
      return m_llpaytxfee;
 }
-int64_t CBaseParams::SetDeflautTxFee(int64_t fee)const{
-	m_llpaytxfee = fee;
+int64_t CBaseParams::SetDeflautTxFee(int64_t llFee)const{
+	m_llpaytxfee = llFee;
 
-	return fee;
+	return llFee;
 }
 
 CBaseParams::CBaseParams() {

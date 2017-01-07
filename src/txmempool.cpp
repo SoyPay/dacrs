@@ -62,10 +62,10 @@ void CTxMemPool::ReScanMemPoolTx(CAccountViewCache *pAccountViewCacheIn, CScript
 	m_pScriptDBViewCache.reset(new CScriptDBViewCache(*pScriptDBViewCacheIn, true));
 	{
 		LOCK(m_cs);
-		CValidationState state;
+		CValidationState cState;
 		list<std::shared_ptr<CBaseTransaction> > removed;
 		for (map<uint256, CTxMemPoolEntry>::iterator iterTx = m_mapTx.begin(); iterTx != m_mapTx.end();) {
-			if (!CheckTxInMemPool(iterTx->first, iterTx->second, state, true)) {
+			if (!CheckTxInMemPool(iterTx->first, iterTx->second, cState, true)) {
 				uint256 hash = iterTx->first;
 				iterTx = m_mapTx.erase(iterTx++);
 				g_cUIInterface.RemoveTransaction(hash);
@@ -92,13 +92,13 @@ void CTxMemPool::remove(CBaseTransaction *pBaseTx, list<std::shared_ptr<CBaseTra
 	// Remove transaction from memory pool
 	{
 		LOCK(m_cs);
-		uint256 hash = pBaseTx->GetHash();
+		uint256 cHash = pBaseTx->GetHash();
 
-		if (m_mapTx.count(hash)) {
-			Removed.push_front(std::shared_ptr<CBaseTransaction>(m_mapTx[hash].GetTx()));
-			m_mapTx.erase(hash);
-			g_cUIInterface.RemoveTransaction(hash);
-			EraseTransaction(hash);
+		if (m_mapTx.count(cHash)) {
+			Removed.push_front(std::shared_ptr<CBaseTransaction>(m_mapTx[cHash].GetTx()));
+			m_mapTx.erase(cHash);
+			g_cUIInterface.RemoveTransaction(cHash);
+			EraseTransaction(cHash);
 			m_unTransactionsUpdated++;
 		}
 	}
@@ -114,7 +114,7 @@ bool CTxMemPool::CheckTxInMemPool(const uint256& cHash, const CTxMemPoolEntry &c
 	// is it already confirmed in block
 	if (uint256() != g_pTxCacheTip->IsContainTx(cHash)) {
 		return cValidationState.Invalid(ERRORMSG("CheckTxInMemPool() : tx hash %s has been confirmed", cHash.GetHex()),
-						REJECT_INVALID, "tx-duplicate-confirmed");
+				REJECT_INVALID, "tx-duplicate-confirmed");
 	}
 	// is it in valid height
 	if (!cTxMemPoolEntry.GetTx()->IsValidHeight(g_cChainActive.Tip()->m_nHeight, SysCfg().GetTxCacheHeight())) {

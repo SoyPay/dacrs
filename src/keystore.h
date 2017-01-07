@@ -18,12 +18,6 @@
 using namespace json_spirit;
 
 class CKeyCombi {
-private:
-	CPubKey mMainPKey;
-	CPubKey mMinerPKey;
-	CKey  mMainCkey;
-	CKey  mMinerCkey; //only used for miner
-	int64_t nCreationTime;
 
 public:
 	CKeyCombi();
@@ -49,15 +43,25 @@ public:
 	IMPLEMENT_SERIALIZE
 	(
 		if(0 == nVersion) {
-			READWRITE(mMainPKey);
+			READWRITE(m_cMainPKey);
 		}
-		READWRITE(mMainCkey);
+		READWRITE(m_cMainCkey);
 		if(0 == nVersion) {
-			READWRITE(mMinerPKey);
+			READWRITE(m_cMinerPKey);
 		}
-		READWRITE(mMinerCkey);
-		READWRITE(nCreationTime);
+		READWRITE(m_cMinerCkey);
+		READWRITE(m_llCreationTime);
 	)
+
+private:
+	CPubKey m_cMainPKey;
+	CPubKey m_cMinerPKey;
+	CKey  m_cMainCkey;
+	CKey  m_cMinerCkey; //only used for miner
+	int64_t m_llCreationTime;
+	
+
+
 };
 
 /** A virtual base class for key stores */
@@ -115,10 +119,11 @@ public:
             KeyMap::const_iterator mi = mapKeys.begin();
             while (mi != mapKeys.end())
             {
-            	if(!bFlag)   //return all address in wallet
-            		setAddress.insert((*mi).first);
-            	else if(mi->second.IsContainMinerKey() || mi->second.IsContainMainKey())  //only return satisfied mining address
-            		setAddress.insert((*mi).first);
+				if (!bFlag) {
+					setAddress.insert((*mi).first);
+				} else if (mi->second.IsContainMinerKey() || mi->second.IsContainMainKey()) {
+					setAddress.insert((*mi).first); //only return satisfied mining address
+				}
                 mi++;
             }
         }
@@ -128,18 +133,18 @@ public:
         {
             LOCK(cs_KeyStore);
             KeyMap::const_iterator mi = mapKeys.find(address);
-            if (mi != mapKeys.end())
-            {
-            	return mi->second.GetCKey(keyOut, IsMine);
-            }
+			if (mi != mapKeys.end()) {
+				return mi->second.GetCKey(keyOut, IsMine);
+			}
         }
         return false;
     }
     virtual bool GetKeyCombi(const CKeyID & address, CKeyCombi & keyCombiOut) const;
     bool IsContainMainKey() {
     	for(auto &item : mapKeys) {
-    		if(item.second.IsContainMainKey())
-    			return true;
+			if (item.second.IsContainMainKey()) {
+				return true;
+			}
     	}
     	return false;
     }

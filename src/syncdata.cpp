@@ -27,10 +27,10 @@ bool CSyncData::CheckSignature(const std::string& strPubKey) {
 }
 
 bool CSyncData::Sign(const std::vector<unsigned char>& vchPriKey, const std::vector<unsigned char>& vchSyncData) {
-	CKey key;
+	CKey cKey;
 	m_vchMsg.assign(vchSyncData.begin(), vchSyncData.end());
-	key.Set(vchPriKey.begin(), vchPriKey.end(), true);
-	if (!key.Sign(Hash(m_vchMsg.begin(), m_vchMsg.end()), m_vchSig)) {
+	cKey.Set(vchPriKey.begin(), vchPriKey.end(), true);
+	if (!cKey.Sign(Hash(m_vchMsg.begin(), m_vchMsg.end()), m_vchSig)) {
 		return ERRORMSG("CSyncCheckpoint::Sign: Unable to sign checkpoint, check private key?");
 	}
 	return true;

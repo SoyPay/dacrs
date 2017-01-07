@@ -79,7 +79,7 @@ class CCrypter {
 			const unsigned int unRounds, const unsigned int unDerivationMethod);
 	bool Encrypt(const CKeyingMaterial& vchPlaintext, vector<unsigned char> &vchCiphertext);
 	bool Decrypt(const vector<unsigned char>& vchCiphertext, CKeyingMaterial& vchPlaintext);
-	bool SetKey(const CKeyingMaterial& chNewKey, const vector<unsigned char>& chNewIV);
+	bool SetKey(const CKeyingMaterial& vchNewKey, const vector<unsigned char>& vchNewIV);
 
 	void CleanKey() {
 		OPENSSL_cleanse(m_chKey, sizeof(m_chKey));

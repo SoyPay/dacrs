@@ -43,8 +43,9 @@ int main(int argc, char* argv[]) {
 	SetupEnvironment();
 
 	try {
-		if (!AppInitRPC(argc, argv))
+		if (!AppInitRPC(argc, argv)) {
 			return abs(RPC_MISC_ERROR);
+		}
 	} catch (exception& e) {
 		PrintExceptionContinue(&e, "AppInitRPC()");
 		return abs(RPC_MISC_ERROR);

@@ -203,12 +203,12 @@ bool static InitWarning(const string &str) {
 }
 
 
-bool static Bind(const CService &addr, unsigned int flags) {
-    if (!(flags & BF_EXPLICIT) && IsLimited(addr)) {
+bool static Bind(const CService &cAddr, unsigned int flags) {
+    if (!(flags & BF_EXPLICIT) && IsLimited(cAddr)) {
     	return false;
     }
     string strError;
-    if (!BindListenPort(addr, strError)) {
+    if (!BindListenPort(cAddr, strError)) {
         if (flags & BF_REPORT_ERROR) {
         	return InitError(strError);
         }
@@ -435,13 +435,15 @@ bool AppInit2(boost::thread_group& threadGroup) {
 #endif
     typedef BOOL (WINAPI *PSETPROCDEPPOL)(DWORD);
     PSETPROCDEPPOL setProcDEPPol = (PSETPROCDEPPOL)GetProcAddress(GetModuleHandleA("Kernel32.dll"), "SetProcessDEPPolicy");
-    if (setProcDEPPol != NULL) setProcDEPPol(PROCESS_DEP_ENABLE);
+	if (setProcDEPPol != NULL) {
+		setProcDEPPol(PROCESS_DEP_ENABLE);
+	}
 
     // Initialize Windows Sockets
     WSADATA wsadata;
-    int ret = WSAStartup(MAKEWORD(2,2), &wsadata);
-    if (ret != NO_ERROR || LOBYTE(wsadata.wVersion ) != 2 || HIBYTE(wsadata.wVersion) != 2) {
-        return InitError(strprintf("Error: Winsock library failed to start (WSAStartup returned error %d)", ret));
+    int nRet = WSAStartup(MAKEWORD(2,2), &wsadata);
+    if (nRet != NO_ERROR || LOBYTE(wsadata.wVersion ) != 2 || HIBYTE(wsadata.wVersion) != 2) {
+        return InitError(strprintf("Error: Winsock library failed to start (WSAStartup returned error %d)", nRet));
     }
 #endif
 #ifndef WIN32
@@ -478,43 +480,51 @@ bool AppInit2(boost::thread_group& threadGroup) {
     if (SysCfg().IsArgCount("-bind")) {
         // when specifying an explicit binding address, you want to listen on it
         // even when -connect or -proxy is specified
-        if (SysCfg().SoftSetBoolArg("-listen", true))
-            LogPrint("INFO","AppInit2 : parameter interaction: -bind set -> setting -listen=1\n");
+		if (SysCfg().SoftSetBoolArg("-listen", true)) {
+			LogPrint("INFO", "AppInit2 : parameter interaction: -bind set -> setting -listen=1\n");
+		}
     }
-    if (SysCfg().IsArgCount("-connect") && SysCfg().GetMultiArgs("-connect").size() > 0) {
-        // when only connecting to trusted nodes, do not seed via DNS, or listen by default
-        if (SysCfg().SoftSetBoolArg("-dnsseed", false))
-            LogPrint("INFO","AppInit2 : parameter interaction: -connect set -> setting -dnsseed=0\n");
-        if (SysCfg().SoftSetBoolArg("-listen", false))
-            LogPrint("INFO","AppInit2 : parameter interaction: -connect set -> setting -listen=0\n");
-    }
+	if (SysCfg().IsArgCount("-connect") && SysCfg().GetMultiArgs("-connect").size() > 0) {
+		// when only connecting to trusted nodes, do not seed via DNS, or listen by default
+		if (SysCfg().SoftSetBoolArg("-dnsseed", false)) {
+			LogPrint("INFO", "AppInit2 : parameter interaction: -connect set -> setting -dnsseed=0\n");
+		}
+		if (SysCfg().SoftSetBoolArg("-listen", false)) {
+			LogPrint("INFO", "AppInit2 : parameter interaction: -connect set -> setting -listen=0\n");
+		}
+	}
     if (SysCfg().IsArgCount("-proxy")) {
         // to protect privacy, do not listen by default if a default proxy server is specified
-        if (SysCfg().SoftSetBoolArg("-listen", false))
-            LogPrint("INFO","AppInit2 : parameter interaction: -proxy set -> setting -listen=0\n");
+        if (SysCfg().SoftSetBoolArg("-listen", false)){
+            LogPrint("INFO","AppInit2 : parameter interaction: -proxy set -> setting -listen=0\n");}
     }
-    if (!SysCfg().GetBoolArg("-listen", true)) {
-        // do not map ports or try to retrieve public IP when not listening (pointless)
-        if (SysCfg().SoftSetBoolArg("-upnp", false))
-            LogPrint("INFO","AppInit2 : parameter interaction: -listen=0 -> setting -upnp=0\n");
-        if (SysCfg().SoftSetBoolArg("-discover", false))
-            LogPrint("INFO","AppInit2 : parameter interaction: -listen=0 -> setting -discover=0\n");
-    }
-    if (SysCfg().IsArgCount("-externalip")) {
-        // if an explicit public IP is specified, do not try to find others
-        if (SysCfg().SoftSetBoolArg("-discover", false))
-            LogPrint("INFO","AppInit2 : parameter interaction: -externalip set -> setting -discover=0\n");
-    }
-    if (SysCfg().GetBoolArg("-salvagewallet", false)) {
-        // Rewrite just private keys: rescan to find transactions
-        if (SysCfg().SoftSetBoolArg("-rescan", true))
-            LogPrint("INFO","AppInit2 : parameter interaction: -salvagewallet=1 -> setting -rescan=1\n");
-    }
-    // -zapwallettx implies a rescan
-    if (SysCfg().GetBoolArg("-zapwallettxes", false)) {
-        if (SysCfg().SoftSetBoolArg("-rescan", true))
-            LogPrint("INFO","AppInit2 : parameter interaction: -zapwallettxes=1 -> setting -rescan=1\n");
-    }
+	if (!SysCfg().GetBoolArg("-listen", true)) {
+		// do not map ports or try to retrieve public IP when not listening (pointless)
+		if (SysCfg().SoftSetBoolArg("-upnp", false)) {
+			LogPrint("INFO", "AppInit2 : parameter interaction: -listen=0 -> setting -upnp=0\n");
+		}
+		if (SysCfg().SoftSetBoolArg("-discover", false)) {
+			LogPrint("INFO", "AppInit2 : parameter interaction: -listen=0 -> setting -discover=0\n");
+		}
+	}
+	if (SysCfg().IsArgCount("-externalip")) {
+		// if an explicit public IP is specified, do not try to find others
+		if (SysCfg().SoftSetBoolArg("-discover", false)) {
+			LogPrint("INFO", "AppInit2 : parameter interaction: -externalip set -> setting -discover=0\n");
+		}
+	}
+	if (SysCfg().GetBoolArg("-salvagewallet", false)) {
+		// Rewrite just private keys: rescan to find transactions
+		if (SysCfg().SoftSetBoolArg("-rescan", true)) {
+			LogPrint("INFO", "AppInit2 : parameter interaction: -salvagewallet=1 -> setting -rescan=1\n");
+		}
+	}
+	// -zapwallettx implies a rescan
+	if (SysCfg().GetBoolArg("-zapwallettxes", false)) {
+		if (SysCfg().SoftSetBoolArg("-rescan", true)) {
+			LogPrint("INFO", "AppInit2 : parameter interaction: -zapwallettxes=1 -> setting -rescan=1\n");
+		}
+	}
     // Make sure enough file descriptors are available
     int nBind = max((int)SysCfg().IsArgCount("-bind"), 1);
     g_nMaxConnections = SysCfg().GetArg("-maxconnections", 125);
@@ -540,7 +550,7 @@ bool AppInit2(boost::thread_group& threadGroup) {
 
     SysCfg().SetBenchMark(SysCfg().GetBoolArg("-benchmark", false));
     g_cTxMemPool.setSanityCheck(SysCfg().GetBoolArg("-checkmempool", RegTest()));
-    Checkpoints::bEnabled = SysCfg().GetBoolArg("-checkpoints", true);
+    Checkpoints::g_bEnabled = SysCfg().GetBoolArg("-checkpoints", true);
 
 //    fServer = GetBoolArg("-server", false);
 //    fPrintToConsole = GetBoolArg("-printtoconsole", false);
@@ -637,7 +647,7 @@ bool AppInit2(boost::thread_group& threadGroup) {
     printf("Using at most %i connections (		%i file descriptors available)\n", g_nMaxConnections, nFD);
     ostringstream strErrors;
 
-    int64_t nStart;
+    int64_t llStart;
 
     // ********************************************************* Step 5: verify wallet database integrity
 
@@ -651,8 +661,8 @@ bool AppInit2(boost::thread_group& threadGroup) {
     }
 	if (SysCfg().IsArgCount("-onlynet")) {
 		set<enum Network> nets;
-		vector<string> tmp = SysCfg().GetMultiArgs("-onlynet");
-		for (auto& snet : tmp) {
+		vector<string> vstrTmp = SysCfg().GetMultiArgs("-onlynet");
+		for (auto& snet : vstrTmp) {
 			enum Network net = ParseNetwork(snet);
 			if (net == NET_UNROUTABLE) {
 				return InitError(strprintf(_("Unknown network specified in -onlynet: '%s'"), snet));
@@ -717,8 +727,8 @@ bool AppInit2(boost::thread_group& threadGroup) {
     bool bBound = false;
     if (!g_bNoListen) {
 		if (SysCfg().IsArgCount("-bind")) {
-			vector<string> tmp = SysCfg().GetMultiArgs("-bind");
-			for (const auto& strBind : tmp) {
+			vector<string> vstrTmp = SysCfg().GetMultiArgs("-bind");
+			for (const auto& strBind : vstrTmp) {
 				CService addrBind;
 				if (!Lookup(strBind.c_str(), addrBind, GetListenPort(), false)) {
 					return InitError(strprintf(_("Cannot resolve -bind address: '%s'"), strBind));
@@ -736,8 +746,8 @@ bool AppInit2(boost::thread_group& threadGroup) {
         }
     }
 	if (SysCfg().IsArgCount("-externalip")) {
-		vector<string> tmp = SysCfg().GetMultiArgs("-externalip");
-		for (const auto& strAddr : tmp) {
+		vector<string> vstrTmp = SysCfg().GetMultiArgs("-externalip");
+		for (const auto& strAddr : vstrTmp) {
 			CService addrLocal(strAddr, GetListenPort(), g_bNameLookup);
 			if (!addrLocal.IsValid()) {
 				return InitError(strprintf(_("Cannot resolve -externalip address: '%s'"), strAddr));
@@ -747,8 +757,8 @@ bool AppInit2(boost::thread_group& threadGroup) {
 	}
 
 	{
-		vector<string> tmp = SysCfg().GetMultiArgs("-seednode");
-		for (auto strDest : tmp) {
+		vector<string> vstrTmp = SysCfg().GetMultiArgs("-seednode");
+		for (auto strDest : vstrTmp) {
 			AddOneShot(strDest);
 		}
 	}
@@ -824,7 +834,7 @@ bool AppInit2(boost::thread_group& threadGroup) {
         bool bReset = SysCfg().IsReindex();
         string strLoadError;
         g_cUIInterface.InitMessage(_("Loading block index..."));
-        nStart = GetTimeMillis();
+        llStart = GetTimeMillis();
         do {
             try {
                 UnloadBlockIndex();
@@ -911,7 +921,7 @@ bool AppInit2(boost::thread_group& threadGroup) {
 		LogPrint("INFO", "Shutdown requested. Exiting.\n");
 		return false;
 	}
-    LogPrint("INFO"," block index %15dms\n", GetTimeMillis() - nStart);
+    LogPrint("INFO"," block index %15dms\n", GetTimeMillis() - llStart);
 	if (SysCfg().GetBoolArg("-printblockindex", false) || SysCfg().GetBoolArg("-printblocktree", false)) {
 		PrintBlockTree();
 		return false;
@@ -949,15 +959,15 @@ bool AppInit2(boost::thread_group& threadGroup) {
     }
     vector<boost::filesystem::path> vImportFiles;
 	if (SysCfg().IsArgCount("-loadblock")) {
-		vector<string> tmp = SysCfg().GetMultiArgs("-loadblock");
-		for (auto strFile : tmp)
+		vector<string> vstrTmp = SysCfg().GetMultiArgs("-loadblock");
+		for (auto strFile : vstrTmp)
 			vImportFiles.push_back(strFile);
 	}
     threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));
 
     // ********************************************************* Step 10: load peers
     g_cUIInterface.InitMessage(_("Loading addresses..."));
-    nStart = GetTimeMillis();
+    llStart = GetTimeMillis();
 
     {
         CAddrDB adb;
@@ -966,7 +976,7 @@ bool AppInit2(boost::thread_group& threadGroup) {
     }
 
     LogPrint("INFO","Loaded %i addresses from peers.dat  %dms\n",
-           g_cAddrman.size(), GetTimeMillis() - nStart);
+           g_cAddrman.size(), GetTimeMillis() - llStart);
 
     // ********************************************************* Step 11: start node
 

@@ -66,10 +66,10 @@ inline bool DecodeBase58Check(const string& str, vector<unsigned char>& vchRet);
  */
 class CBase58Data {
  public:
-	bool SetString(const char* psz, unsigned int nVersionBytes = 1);
+	bool SetString(const char* psz, unsigned int unVersionBytes = 1);
 	bool SetString(const string& str);
 	string ToString() const;
-	int CompareTo(const CBase58Data& b58) const;
+	int CompareTo(const CBase58Data& cBase58) const;
 
 	bool operator==(const CBase58Data& b58) const {
 		return CompareTo(b58) == 0;
@@ -108,8 +108,8 @@ class CBase58Data {
  */
 class CDacrsAddress: public CBase58Data {
  public:
-	bool Set(const CKeyID &id);
-	bool Set(const CTxDestination &dest);
+	bool Set(const CKeyID &cId);
+	bool Set(const CTxDestination &cDest);
 	bool IsValid() const;
 
 	CDacrsAddress() {

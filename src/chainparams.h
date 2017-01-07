@@ -111,7 +111,7 @@ class CBaseParams {
 		return 1000;
 	}
     int64_t GetTxFee() const;
-    int64_t SetDeflautTxFee(int64_t fee) const;
+    int64_t SetDeflautTxFee(int64_t llFee) const;
 	virtual string GetDefaultTestDataPath() const {
 		char chFindchar;
 #ifdef WIN32
@@ -304,11 +304,11 @@ class CBaseParams {
 	}
 	/******************************paras**************************************/
 	static bool IntialParams(int argc, const char* const argv[]);
-	static int64_t GetArg(const string& strArg, int64_t nDefault);
+	static int64_t GetArg(const string& strArg, int64_t llDefault);
 	static string GetArg(const string& strArg, const string& strDefault);
-	static bool GetBoolArg(const string& strArg, bool fDefault);
+	static bool GetBoolArg(const string& strArg, bool bDefault);
 	static bool SoftSetArg(const string& strArg, const string& strValue);
-	static bool SoftSetBoolArg(const string& strArg, bool fValue);
+	static bool SoftSetBoolArg(const string& strArg, bool bValue);
 	static bool IsArgCount(const string& strArg);
 	static bool SoftSetArgCover(const string& strArg, const string& strValue);
 	static void EraseArg(const string& strArgKey);

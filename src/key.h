@@ -348,10 +348,10 @@ public:
 	}
 
 	// Initialize from a CPrivKey (serialized OpenSSL private key data).
-	bool SetPrivKey(const CPrivKey &vchPrivKey, bool fCompressed);
+	bool SetPrivKey(const CPrivKey &vchPrivKey, bool bCompressed);
 
 	// Generate a new private key using a cryptographic PRNG.
-	void MakeNewKey(bool fCompressed = true);
+	void MakeNewKey(bool bCompressed = true);
 
 	// Convert the private key to a CPrivKey (serialized OpenSSL private key data).
 	// This is expensive.

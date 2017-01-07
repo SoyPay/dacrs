@@ -94,8 +94,8 @@ double CAddrInfo::GetChance(int64_t nNow) const {
 	return dChance;
 }
 
-CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int *pnId) {
-	map<CNetAddr, int>::iterator iter1 = m_mapAddr.find(addr);
+CAddrInfo* CAddrMan::Find(const CNetAddr& cAddr, int *pnId) {
+	map<CNetAddr, int>::iterator iter1 = m_mapAddr.find(cAddr);
 	if (iter1 == m_mapAddr.end()) {
 		return NULL;
 	}
@@ -111,10 +111,10 @@ CAddrInfo* CAddrMan::Find(const CNetAddr& addr, int *pnId) {
 	return NULL;
 }
 
-CAddrInfo* CAddrMan::Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId) {
+CAddrInfo* CAddrMan::Create(const CAddress &cAddr, const CNetAddr &addrSource, int *pnId) {
 	int nId = m_nIdCount++;
-	m_mapInfo[nId] = CAddrInfo(addr, addrSource);
-	m_mapAddr[addr] = nId;
+	m_mapInfo[nId] = CAddrInfo(cAddr, addrSource);
+	m_mapAddr[cAddr] = nId;
 	m_mapInfo[nId].m_nRandomPos = m_vnRandom.size();
 	m_vnRandom.push_back(nId);
 	if (pnId) {
@@ -124,24 +124,24 @@ CAddrInfo* CAddrMan::Create(const CAddress &addr, const CNetAddr &addrSource, in
 	return &m_mapInfo[nId];
 }
 
-void CAddrMan::SwapRandom(unsigned int nRndPos1, unsigned int nRndPos2) {
-	if (nRndPos1 == nRndPos2) {
+void CAddrMan::SwapRandom(unsigned int unRndPos1, unsigned int unRndPos2) {
+	if (unRndPos1 == unRndPos2) {
 		return;
 	}
 
-	assert(nRndPos1 < m_vnRandom.size() && nRndPos2 < m_vnRandom.size());
+	assert(unRndPos1 < m_vnRandom.size() && unRndPos2 < m_vnRandom.size());
 
-	int nId1 = m_vnRandom[nRndPos1];
-	int nId2 = m_vnRandom[nRndPos2];
+	int nId1 = m_vnRandom[unRndPos1];
+	int nId2 = m_vnRandom[unRndPos2];
 
 	assert(m_mapInfo.count(nId1) == 1);
 	assert(m_mapInfo.count(nId2) == 1);
 
-	m_mapInfo[nId1].m_nRandomPos = nRndPos2;
-	m_mapInfo[nId2].m_nRandomPos = nRndPos1;
+	m_mapInfo[nId1].m_nRandomPos = unRndPos2;
+	m_mapInfo[nId2].m_nRandomPos = unRndPos1;
 
-	m_vnRandom[nRndPos1] = nId2;
-	m_vnRandom[nRndPos2] = nId1;
+	m_vnRandom[unRndPos1] = nId2;
+	m_vnRandom[unRndPos2] = nId1;
 }
 
 int CAddrMan::SelectTried(int nKBucket) {
@@ -173,12 +173,12 @@ int CAddrMan::ShrinkNew(int nUBucket) {
 	// first look for deletable items
 	for (set<int>::iterator it = vNew.begin(); it != vNew.end(); it++) {
 		assert(m_mapInfo.count(*it));
-		CAddrInfo &info = m_mapInfo[*it];
-		if (info.IsTerrible()) {
-			if (--info.m_nRefCount == 0) {
-				SwapRandom(info.m_nRandomPos, m_vnRandom.size() - 1);
+		CAddrInfo &cInfo = m_mapInfo[*it];
+		if (cInfo.IsTerrible()) {
+			if (--cInfo.m_nRefCount == 0) {
+				SwapRandom(cInfo.m_nRandomPos, m_vnRandom.size() - 1);
 				m_vnRandom.pop_back();
-				m_mapAddr.erase(info);
+				m_mapAddr.erase(cInfo);
 				m_mapInfo.erase(*it);
 				m_nNew--;
 			}
@@ -200,11 +200,11 @@ int CAddrMan::ShrinkNew(int nUBucket) {
 		nValue++;
 	}
 	assert(m_mapInfo.count(nOldest) == 1);
-	CAddrInfo &info = m_mapInfo[nOldest];
-	if (--info.m_nRefCount == 0) {
-		SwapRandom(info.m_nRandomPos, m_vnRandom.size() - 1);
+	CAddrInfo &cInfo = m_mapInfo[nOldest];
+	if (--cInfo.m_nRefCount == 0) {
+		SwapRandom(cInfo.m_nRandomPos, m_vnRandom.size() - 1);
 		m_vnRandom.pop_back();
-		m_mapAddr.erase(info);
+		m_mapAddr.erase(cInfo);
 		m_mapInfo.erase(nOldest);
 		m_nNew--;
 	}
@@ -213,27 +213,28 @@ int CAddrMan::ShrinkNew(int nUBucket) {
 	return 1;
 }
 
-void CAddrMan::MakeTried(CAddrInfo& info, int nId, int nOrigin) {
+void CAddrMan::MakeTried(CAddrInfo& cInfo, int nId, int nOrigin) {
 	assert(m_vvnNew[nOrigin].count(nId) == 1);
 
 	// remove the entry from all new buckets
 	for (vector<set<int> >::iterator it = m_vvnNew.begin(); it != m_vvnNew.end(); it++) {
-		if ((*it).erase(nId))
-			info.m_nRefCount--;
+		if ((*it).erase(nId)) {
+			cInfo.m_nRefCount--;
+		}
 	}
 	m_nNew--;
 
-	assert(info.m_nRefCount == 0);
+	assert(cInfo.m_nRefCount == 0);
 
 	// what tried bucket to move the entry to
-	int nKBucket = info.GetTriedBucket(m_vchKey);
+	int nKBucket = cInfo.GetTriedBucket(m_vchKey);
 	vector<int> &vTried = m_vvnTried[nKBucket];
 
 	// first check whether there is place to just add it
 	if (vTried.size() < ADDRMAN_TRIED_BUCKET_SIZE) {
 		vTried.push_back(nId);
 		m_nTried++;
-		info.m_bInTried = true;
+		cInfo.m_bInTried = true;
 		return;
 	}
 
@@ -246,9 +247,9 @@ void CAddrMan::MakeTried(CAddrInfo& info, int nId, int nOrigin) {
 	set<int> &vNew = m_vvnNew[nUBucket];
 
 	// remove the to-be-replaced tried entry from the tried set
-	CAddrInfo& infoOld = m_mapInfo[vTried[nPos]];
-	infoOld.m_bInTried = false;
-	infoOld.m_nRefCount = 1;
+	CAddrInfo& cInfoOld = m_mapInfo[vTried[nPos]];
+	cInfoOld.m_bInTried = false;
+	cInfoOld.m_nRefCount = 1;
 	// do not update nTried, as we are going to move something else there immediately
 
 	// check whether there is place in that one,
@@ -263,14 +264,14 @@ void CAddrMan::MakeTried(CAddrInfo& info, int nId, int nOrigin) {
 
 	vTried[nPos] = nId;
 	// we just overwrote an entry in vTried; no need to update nTried
-	info.m_bInTried = true;
+	cInfo.m_bInTried = true;
 	return;
 }
 
-void CAddrMan::Good_(const CService &addr, int64_t nTime)
+void CAddrMan::Good_(const CService &cAddr, int64_t nTime)
 {
     int nId;
-    CAddrInfo *pAddrInfo = Find(addr, &nId);
+    CAddrInfo *pAddrInfo = Find(cAddr, &nId);
 
     // if not found, bail out
     if (!pAddrInfo) {
@@ -280,7 +281,7 @@ void CAddrMan::Good_(const CService &addr, int64_t nTime)
     CAddrInfo &cAddrInfo = *pAddrInfo;
 
     // check whether we are talking about the exact same CService (including same port)
-    if (cAddrInfo != addr) {
+    if (cAddrInfo != cAddr) {
     	return;
     }
 
@@ -313,34 +314,34 @@ void CAddrMan::Good_(const CService &addr, int64_t nTime)
     	return;
     }
 
-    LogPrint("addrman", "Moving %s to tried\n", addr.ToString());
+    LogPrint("addrman", "Moving %s to tried\n", cAddr.ToString());
 
     // move nId to the tried tables
     MakeTried(cAddrInfo, nId, nUBucket);
 }
 
-bool CAddrMan::Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty) {
-	if (!addr.IsRoutable()) {
+bool CAddrMan::Add_(const CAddress &cAddr, const CNetAddr& source, int64_t nTimePenalty) {
+	if (!cAddr.IsRoutable()) {
 		return false;
 	}
 
 	bool bNew = false;
 	int nId;
-	CAddrInfo *pAddrInfo = Find(addr, &nId);
+	CAddrInfo *pAddrInfo = Find(cAddr, &nId);
 
 	if (pAddrInfo) {
 		// periodically update nTime
-		bool bCurrentlyOnline = (GetAdjustedTime() - addr.m_ullTime < 24 * 60 * 60);
+		bool bCurrentlyOnline = (GetAdjustedTime() - cAddr.m_ullTime < 24 * 60 * 60);
 		int64_t llUpdateInterval = (bCurrentlyOnline ? 60 * 60 : 24 * 60 * 60);
-		if (addr.m_ullTime && (!pAddrInfo->m_ullTime || pAddrInfo->m_ullTime < addr.m_ullTime - llUpdateInterval - nTimePenalty)) {
-			pAddrInfo->m_ullTime = max((int64_t) 0, addr.m_ullTime - nTimePenalty);
+		if (cAddr.m_ullTime && (!pAddrInfo->m_ullTime || pAddrInfo->m_ullTime < cAddr.m_ullTime - llUpdateInterval - nTimePenalty)) {
+			pAddrInfo->m_ullTime = max((int64_t) 0, cAddr.m_ullTime - nTimePenalty);
 		}
 
 		// add services
-		pAddrInfo->m_ullServices |= addr.m_ullServices;
+		pAddrInfo->m_ullServices |= cAddr.m_ullServices;
 
 		// do not update if no new information is present
-		if (!addr.m_ullTime || (pAddrInfo->m_ullTime && addr.m_ullTime <= pAddrInfo->m_ullTime)) {
+		if (!cAddr.m_ullTime || (pAddrInfo->m_ullTime && cAddr.m_ullTime <= pAddrInfo->m_ullTime)) {
 			return false;
 		}
 
@@ -364,7 +365,7 @@ bool CAddrMan::Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimeP
 			return false;
 		}
 	} else {
-		pAddrInfo = Create(addr, source, &nId);
+		pAddrInfo = Create(cAddr, source, &nId);
 		pAddrInfo->m_ullTime = max((int64_t) 0, (int64_t) pAddrInfo->m_ullTime - nTimePenalty);
 		m_nNew++;
 		bNew = true;
@@ -382,8 +383,8 @@ bool CAddrMan::Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimeP
 	return bNew;
 }
 
-void CAddrMan::Attempt_(const CService &addr, int64_t nTime) {
-	CAddrInfo *pAddrInfo = Find(addr);
+void CAddrMan::Attempt_(const CService &cAddr, int64_t nTime) {
+	CAddrInfo *pAddrInfo = Find(cAddr);
 
 	// if not found, bail out
 	if (!pAddrInfo) {
@@ -393,7 +394,7 @@ void CAddrMan::Attempt_(const CService &addr, int64_t nTime) {
 	CAddrInfo &cAddrInfo = *pAddrInfo;
 
 	// check whether we are talking about the exact same CService (including same port)
-	if (cAddrInfo != addr) {
+	if (cAddrInfo != cAddr) {
 		return;
 	}
 
@@ -415,14 +416,14 @@ CAddress CAddrMan::Select_(int nUnkBias) {
 		double dChanceFactor = 1.0;
 		while (1) {
 			int nKBucket = GetRandInt(m_vvnTried.size());
-			vector<int> &vTried = m_vvnTried[nKBucket];
-			if (vTried.size() == 0) {
+			vector<int> &vnTried = m_vvnTried[nKBucket];
+			if (vnTried.size() == 0) {
 				continue;
 			}
 
-			int nPos = GetRandInt(vTried.size());
-			assert(m_mapInfo.count(vTried[nPos]) == 1);
-			CAddrInfo &cAddrInfo = m_mapInfo[vTried[nPos]];
+			int nPos = GetRandInt(vnTried.size());
+			assert(m_mapInfo.count(vnTried[nPos]) == 1);
+			CAddrInfo &cAddrInfo = m_mapInfo[vnTried[nPos]];
 			if (GetRandInt(1 << 30) < dChanceFactor * cAddrInfo.GetChance() * (1 << 30)) {
 				return cAddrInfo;
 			}
@@ -443,9 +444,9 @@ CAddress CAddrMan::Select_(int nUnkBias) {
 				iter++;
 			}
 			assert(m_mapInfo.count(*iter) == 1);
-			CAddrInfo &info = m_mapInfo[*iter];
-			if (GetRandInt(1 << 30) < dChanceFactor * info.GetChance() * (1 << 30)) {
-				return info;
+			CAddrInfo &cInfo = m_mapInfo[*iter];
+			if (GetRandInt(1 << 30) < dChanceFactor * cInfo.GetChance() * (1 << 30)) {
+				return cInfo;
 			}
 			dChanceFactor *= 1.2;
 		}
@@ -463,22 +464,22 @@ int CAddrMan::Check_()
     for (map<int, CAddrInfo>::iterator it = mapInfo.begin(); it != mapInfo.end(); it++)
     {
         int n = (*it).first;
-        CAddrInfo &info = (*it).second;
-        if (info.fInTried)
+        CAddrInfo &cInfo = (*it).second;
+        if (cInfo.fInTried)
         {
 
-            if (!info.nLastSuccess) return -1;
-            if (info.nRefCount) return -2;
+            if (!cInfo.nLastSuccess) return -1;
+            if (cInfo.nRefCount) return -2;
             setTried.insert(n);
         } else {
-            if (info.nRefCount < 0 || info.nRefCount > ADDRMAN_NEW_BUCKETS_PER_ADDRESS) return -3;
-            if (!info.nRefCount) return -4;
-            mapNew[n] = info.nRefCount;
+            if (cInfo.nRefCount < 0 || cInfo.nRefCount > ADDRMAN_NEW_BUCKETS_PER_ADDRESS) return -3;
+            if (!cInfo.nRefCount) return -4;
+            mapNew[n] = cInfo.nRefCount;
         }
-        if (mapAddr[info] != n) return -5;
-        if (info.nRandomPos<0 || info.nRandomPos>=vRandom.size() || vRandom[info.nRandomPos] != n) return -14;
-        if (info.nLastTry < 0) return -6;
-        if (info.nLastSuccess < 0) return -8;
+        if (mapAddr[cInfo] != n) return -5;
+        if (cInfo.nRandomPos<0 || cInfo.nRandomPos>=vRandom.size() || vRandom[cInfo.nRandomPos] != n) return -14;
+        if (cInfo.nLastTry < 0) return -6;
+        if (cInfo.nLastSuccess < 0) return -8;
     }
 
     if (setTried.size() != nTried) return -9;
@@ -512,7 +513,7 @@ int CAddrMan::Check_()
 }
 #endif
 
-void CAddrMan::GetAddr_(vector<CAddress> &vAddr) {
+void CAddrMan::GetAddr_(vector<CAddress> &vcAddr) {
 	int nNodes = ADDRMAN_GETADDR_MAX_PCT * m_vnRandom.size() / 100;
 	if (nNodes > ADDRMAN_GETADDR_MAX) {
 		nNodes = ADDRMAN_GETADDR_MAX;
@@ -523,12 +524,12 @@ void CAddrMan::GetAddr_(vector<CAddress> &vAddr) {
 		int nRndPos = GetRandInt(m_vnRandom.size() - n) + n;
 		SwapRandom(n, nRndPos);
 		assert(m_mapInfo.count(m_vnRandom[n]) == 1);
-		vAddr.push_back(m_mapInfo[m_vnRandom[n]]);
+		vcAddr.push_back(m_mapInfo[m_vnRandom[n]]);
 	}
 }
 
-void CAddrMan::Connected_(const CService &addr, int64_t nTime) {
-	CAddrInfo *pAddrInfo = Find(addr);
+void CAddrMan::Connected_(const CService &cAddr, int64_t nTime) {
+	CAddrInfo *pAddrInfo = Find(cAddr);
 
 	// if not found, bail out
 	if (!pAddrInfo) {
@@ -538,11 +539,11 @@ void CAddrMan::Connected_(const CService &addr, int64_t nTime) {
 	CAddrInfo &cAddrInfo = *pAddrInfo;
 
 	// check whether we are talking about the exact same CService (including same port)
-	if (cAddrInfo != addr) {
+	if (cAddrInfo != cAddr) {
 		return;
 	}
 
-	// update info
+	// update cInfo
 	int64_t llUpdateInterval = 20 * 60;
 	if (nTime - cAddrInfo.m_ullTime > llUpdateInterval) {
 		cAddrInfo.m_ullTime = nTime;

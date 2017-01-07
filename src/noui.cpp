@@ -66,17 +66,21 @@ static bool noui_ThreadSafeMessageBox(const std::string& message, const std::str
 	std::string strCaption;
 	// Check for usage of predefined caption
 	switch (style) {
-	case CClientUIInterface::MSG_ERROR:
+	case CClientUIInterface::MSG_ERROR: {
 		obj.push_back(Pair("BoxType", "Error"));
 		break;
-	case CClientUIInterface::MSG_WARNING:
+	}
+	case CClientUIInterface::MSG_WARNING: {
 		obj.push_back(Pair("BoxType", "Warning"));
 		break;
-	case CClientUIInterface::MSG_INFORMATION:
+	}
+	case CClientUIInterface::MSG_INFORMATION: {
 		obj.push_back(Pair("BoxType", "Information"));
 		break;
-	default:
+	}
+	default: {
 		obj.push_back(Pair("BoxType", "unKown"));
+	}
 	}
 
 	AddMessageToDeque(write_string(Value(std::move(obj)), true));
@@ -104,9 +108,9 @@ static bool noui_SyncTx() {
 	while (pStartBlockIndex != NULL) {
 		if ((g_pwalletMain->m_mapInBlockTx).count(pStartBlockIndex->GetBlockHash()) > 0) {
 			Object objTx;
-			CAccountTx acctTx = g_pwalletMain->m_mapInBlockTx[pStartBlockIndex->GetBlockHash()];
-			map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx = acctTx.m_mapAccountTx.begin();
-			for (; iterTx != acctTx.m_mapAccountTx.end(); ++iterTx) {
+			CAccountTx cAcctTx = g_pwalletMain->m_mapInBlockTx[pStartBlockIndex->GetBlockHash()];
+			map<uint256, std::shared_ptr<CBaseTransaction> >::iterator iterTx = cAcctTx.m_mapAccountTx.begin();
+			for (; iterTx != cAcctTx.m_mapAccountTx.end(); ++iterTx) {
 				objTx = iterTx->second->ToJSON(*g_pAccountViewTip);
 				objTx.push_back(Pair("blockhash", iterTx->first.GetHex()));
 				objTx.push_back(Pair("confirmHeight", pStartBlockIndex->m_nHeight));

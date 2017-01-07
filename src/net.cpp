@@ -1533,9 +1533,9 @@ void static Discover(boost::thread_group& threadGroup) {
     // Get local host IP
     char pszHostName[1000] = "";
 	if (gethostname(pszHostName, sizeof(pszHostName)) != SOCKET_ERROR) {
-		vector<CNetAddr> vaddr;
-		if (LookupHost(pszHostName, vaddr)) {
-			for (const auto &addr : vaddr) {
+		vector<CNetAddr> vAddr;
+		if (LookupHost(pszHostName, vAddr)) {
+			for (const auto &addr : vAddr) {
 				AddLocal(addr, LOCAL_IF);
 			}
 		}
@@ -1637,26 +1637,33 @@ class CNetCleanup {
     }
     ~CNetCleanup()
     {
-        // Close sockets
-        for (auto pnode : g_vNodes)
-            if (pnode->m_hSocket != INVALID_SOCKET)
-                closesocket(pnode->m_hSocket);
-        for (auto hListenSocket : g_shListenSocket)
-            if (hListenSocket != INVALID_SOCKET)
-                if (closesocket(hListenSocket) == SOCKET_ERROR)
-                    LogPrint("INFO","closesocket(hListenSocket) failed with error %s\n", NetworkErrorString(WSAGetLastError()));
-
-        // clean up some globals (to help leak detection)
-        for (auto pnode : g_vNodes)
-            delete pnode;
-        for (auto pnode : g_vNodesDisconnected)
-            delete pnode;
-        g_vNodes.clear();
-        g_vNodesDisconnected.clear();
-        delete g_sSemOutbound;
-        g_sSemOutbound = NULL;
-        delete g_sNodeLocalHost;
-        g_sNodeLocalHost = NULL;
+		// Close sockets
+		for (auto pnode : g_vNodes) {
+			if (pnode->m_hSocket != INVALID_SOCKET) {
+				closesocket(pnode->m_hSocket);
+			}
+		}
+		for (auto hListenSocket : g_shListenSocket) {
+			if (hListenSocket != INVALID_SOCKET) {
+				if (closesocket(hListenSocket) == SOCKET_ERROR) {
+					LogPrint("INFO", "closesocket(hListenSocket) failed with error %s\n",
+							NetworkErrorString(WSAGetLastError()));
+				}
+			}
+		}
+		// clean up some globals (to help leak detection)
+		for (auto pnode : g_vNodes) {
+			delete pnode;
+		}
+		for (auto pnode : g_vNodesDisconnected) {
+			delete pnode;
+		}
+		g_vNodes.clear();
+		g_vNodesDisconnected.clear();
+		delete g_sSemOutbound;
+		g_sSemOutbound = NULL;
+		delete g_sNodeLocalHost;
+		g_sNodeLocalHost = NULL;
 
 #ifdef WIN32
         // Shutdown Windows Sockets
@@ -1695,28 +1702,32 @@ void CNode::Fuzz(int nChance) {
 	}
 
 	switch (GetRand(3)) {
-	case 0:
-		// xor a random byte with a random value:
-		if (!m_cDSSend.empty()) {
-			CDataStream::size_type pos = GetRand(m_cDSSend.size());
-			m_cDSSend[pos] ^= (unsigned char) (GetRand(256));
+		case 0: {
+			// xor a random byte with a random value:
+			if (!m_cDSSend.empty()) {
+				CDataStream::size_type pos = GetRand(m_cDSSend.size());
+				m_cDSSend[pos] ^= (unsigned char) (GetRand(256));
+			}
+			break;
 		}
-		break;
-	case 1:
-		// delete a random byte:
-		if (!m_cDSSend.empty()) {
-			CDataStream::size_type pos = GetRand(m_cDSSend.size());
-			m_cDSSend.erase(m_cDSSend.begin() + pos);
+		case 1: {
+			// delete a random byte:
+			if (!m_cDSSend.empty()) {
+				CDataStream::size_type pos = GetRand(m_cDSSend.size());
+				m_cDSSend.erase(m_cDSSend.begin() + pos);
+			}
+			break;
 		}
-		break;
-	case 2:
-		// insert a random byte at a random position
-	{
-		CDataStream::size_type pos = GetRand(m_cDSSend.size());
-		char ch = (char) GetRand(256);
-		m_cDSSend.insert(m_cDSSend.begin() + pos, ch);
-	}
-		break;
+		case 2: {
+			CDataStream::size_type pos = GetRand(m_cDSSend.size()); // insert a random byte at a random position
+			char ch = (char) GetRand(256);
+			m_cDSSend.insert(m_cDSSend.begin() + pos, ch);
+
+			break;
+		}
+		default: {
+			break;
+		}
 	}
 	// Chance of more than one change half the time:
 	// (more changes exponentially less likely):

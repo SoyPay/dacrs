@@ -136,16 +136,16 @@ std::tuple<bool, boost::thread*> RunDacrs(int argc, char* argv[])
 	detectShutdownThread = new boost::thread(boost::bind(&DetectShutdownThread, &threadGroup));
 
 	if (!fRet) {
-		if (detectShutdownThread)
+		if (detectShutdownThread) {
 			detectShutdownThread->interrupt();
-
+		}
 		threadGroup.interrupt_all();
 
 		// threadGroup.join_all(); was left out intentionally here, because we didn't re-test all of
 		// the startup-failure cases to make sure they don't result in a hang due to some
 		// thread-blocking-waiting-for-another-thread-during-startup case
 	}
-  return std::make_tuple (fRet,detectShutdownThread);
+	return std::make_tuple(fRet, detectShutdownThread);
 }
 
 int main(int argc, char* argv[]) {

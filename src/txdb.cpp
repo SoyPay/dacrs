@@ -150,7 +150,7 @@ CAccountViewDB::CAccountViewDB(size_t unCacheSize, bool bMemory, bool bWipe) :
 		m_cLevelDBWrapper(GetDataDir() / "blocks" / "account", unCacheSize, bMemory, bWipe) {
 }
 
-CAccountViewDB::CAccountViewDB(const string& strName,size_t unCacheSize, bool bMemory, bool bWipe) :
+CAccountViewDB::CAccountViewDB(const string& strName, size_t unCacheSize, bool bMemory, bool bWipe) :
 		m_cLevelDBWrapper(GetDataDir() / "blocks" / strName, unCacheSize, bMemory, bWipe) {
 }
 
@@ -391,14 +391,14 @@ bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vchScriptId,
 	cDSKeySet.insert(cDSKeySet.end(), &strTempPrefix[0], &strTempPrefix[3]);
 
 	int i(0);
-	if(1 == nIndex ) {
-		if(vchScriptId.empty()) {
+	if (1 == nIndex) {
+		if (vchScriptId.empty()) {
 			return ERRORMSG("GetScript() : nIndex is 1, and vScriptId is empty");
 		}
 		vector<char> vchId(vchScriptId.begin(), vchScriptId.end());
 		cDSKeySet.insert(cDSKeySet.end(), vchId.begin(), vchId.end());
 		vector<unsigned char> vchKey(cDSKeySet.begin(), cDSKeySet.end());
-		if(HaveData(vchKey)) {   //判断传过来的key,数据库中是否已经存在
+		if (HaveData(vchKey)) {   //判断传过来的key,数据库中是否已经存在
 			pCursor->Seek(cDSKeySet.str());
 			i = nIndex;
 		} else {
@@ -407,27 +407,27 @@ bool CScriptDB::GetScript(const int &nIndex, vector<unsigned char> &vchScriptId,
 	} else {
 		pCursor->Seek(cDSKeySet.str());
 	}
-	while(pCursor->Valid() && i-->=0) {
+	while (pCursor->Valid() && i-- >= 0) {
 		boost::this_thread::interruption_point();
 		try {
 			leveldb::Slice cSliceKey = pCursor->key();
 			string strScriptKey(cSliceKey.data(), 0, cSliceKey.size());
 //			ssKey >> strScriptKey;
-			string strPrefix = strScriptKey.substr(0,3);
+			string strPrefix = strScriptKey.substr(0, 3);
 			if (strPrefix == "def") {
-				if(-1 == i) {
+				if (-1 == i) {
 					leveldb::Slice slValue = pCursor->value();
 					CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, g_sClientVersion);
 					ssValue >> vchValue;
 					vchScriptId.clear();
-					vchScriptId.insert(vchScriptId.end(), cSliceKey.data()+3, cSliceKey.data()+cSliceKey.size());
+					vchScriptId.insert(vchScriptId.end(), cSliceKey.data() + 3, cSliceKey.data() + cSliceKey.size());
 				}
 				pCursor->Next();
 			} else {
 				delete pCursor;
 				return false;
 			}
-		}catch (std::exception &e) {
+		} catch (std::exception &e) {
 			return ERRORMSG("%s : Deserialize or I/O error - %s", __func__, e.what());
 		}
 	}
@@ -456,13 +456,13 @@ bool CScriptDB::GetScriptData(const int nCurBlockHeight, const vector<unsigned c
 	
 	int i(0);
 	if (1 == nIndex) {
-		if(vchScriptKey.empty()) {
+		if (vchScriptKey.empty()) {
 			return ERRORMSG("GetScriptData() : nIndex is 1, and vScriptKey is empty");
 		}
 		vector<char> vchKey(vchScriptKey.begin(), vchScriptKey.end());
 		cDSKeySet.insert(cDSKeySet.end(), vchKey.begin(), vchKey.end());
 		vector<unsigned char> vKey(cDSKeySet.begin(), cDSKeySet.end());
-		if(HaveData(vKey)) {   					//判断传过来的key,数据库中是否已经存在
+		if (HaveData(vKey)) {   					//判断传过来的key,数据库中是否已经存在
 			pCursor->Seek(cDSKeySet.str());
 			i = nIndex;
 		} else {
@@ -477,10 +477,11 @@ bool CScriptDB::GetScriptData(const int nCurBlockHeight, const vector<unsigned c
 		try {
 			leveldb::Slice cSliceKey = pCursor->key();
 			CDataStream cDSKey(cSliceKey.data(), cSliceKey.data() + cSliceKey.size(), SER_DISK, g_sClientVersion);
-			if (0 == memcmp((char *)&cDSKey[0], (char *)&cDSKeySet[0], 11)) {
+			if (0 == memcmp((char *) &cDSKey[0], (char *) &cDSKeySet[0], 11)) {
 				if (-1 == i) {
 					leveldb::Slice cSliceValue = pCursor->value();
-					CDataStream cDSValue(cSliceValue.data(), cSliceValue.data() + cSliceValue.size(), SER_DISK, g_sClientVersion);
+					CDataStream cDSValue(cSliceValue.data(), cSliceValue.data() + cSliceValue.size(), SER_DISK,
+							g_sClientVersion);
 					cDSValue >> vchScriptData;
 					vchScriptKey.clear();
 					vchScriptKey.insert(vchScriptKey.end(), cSliceKey.data() + nPrefixLen + nScriptIdLen + nSpaceLen,

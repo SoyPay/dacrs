@@ -247,8 +247,9 @@ struct zero_after_free_allocator: public allocator<T> {
 	};
 
 	void deallocate(T* p, size_t n) {
-		if (p != NULL)
+		if (p != NULL) {
 			OPENSSL_cleanse(p, sizeof(T) * n);
+		}
 		allocator<T>::deallocate(p, n);
 	}
 };

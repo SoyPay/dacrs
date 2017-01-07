@@ -30,7 +30,7 @@ struct CCheckPointData {
 	double dTransactionsPerDay;
 };
 
-bool bEnabled = true;
+bool g_bEnabled = true;
 
 // What makes a good checkpoint block?
 // + Is surrounded by blocks with reasonable timestamps
@@ -64,7 +64,7 @@ const CCheckPointData &Checkpoints() {
 }
 
 bool CheckBlock(int nHeight, const uint256& cHash) { //nHeight 找不到或 高度和hash都能找到，则返回true
-	if (!bEnabled) {
+	if (!g_bEnabled) {
 		return true;
 	}
 
@@ -109,7 +109,7 @@ double GuessVerificationProgress(CBlockIndex *pBlockIndex, bool bSigchecks) {
 }
 
 int GetTotalBlocksEstimate() {    // 获取mapCheckpoints 中保存最后一个checkpoint 的高度
-	if (!bEnabled) {
+	if (!g_bEnabled) {
 		return 0;
 	}
 	const MapCheckPoints& mapCheckPoints = *Checkpoints().pmapCheckPoints;
@@ -118,7 +118,7 @@ int GetTotalBlocksEstimate() {    // 获取mapCheckpoints 中保存最后一个checkpoint
 }
 
 CBlockIndex* GetLastCheckpoint(const map<uint256, CBlockIndex*>& mapBlockIndex) {
-	if (!bEnabled) {
+	if (!g_bEnabled) {
 		return NULL;
 	}
 	const MapCheckPoints& mapCheckPoints = *Checkpoints().pmapCheckPoints;

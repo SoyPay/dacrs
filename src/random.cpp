@@ -59,13 +59,14 @@ void RandAddSeedPerfmon() {
     long lRet = 0;
     unsigned long ulSize = 0;
     const size_t unMaxSize = 10000000; // Bail out at more than 10MB of performance data
-    while (true) {
-        ulSize = vchData.size();
-        lRet = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, begin_ptr(vchData), &ulSize);
-        if (lRet != ERROR_MORE_DATA || vchData.size() >= unMaxSize)
-            break;
-        vchData.resize(std::max((vchData.size() * 3) / 2, unMaxSize)); // Grow size of buffer exponentially
-    }
+	while (true) {
+		ulSize = vchData.size();
+		lRet = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", NULL, NULL, begin_ptr(vchData), &ulSize);
+		if (lRet != ERROR_MORE_DATA || vchData.size() >= unMaxSize) {
+			break;
+		}
+		vchData.resize(std::max((vchData.size() * 3) / 2, unMaxSize)); // Grow size of buffer exponentially
+	}
     RegCloseKey(HKEY_PERFORMANCE_DATA);
     if (lRet == ERROR_SUCCESS) {
         RAND_add(begin_ptr(vchData), ulSize, ulSize / 100.0);

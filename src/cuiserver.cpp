@@ -50,10 +50,10 @@ void CUIServer::Send(const string& strData) {
 		return ;
 	}
 //	LogPrint("TOUI","send message: %s\n", strData);
-	string sendData(strData);
-	PackageData(sendData);
-	LogPrint("TOUI","send message: %s\n", sendData);
-	m_sInstance->SendData(sendData);
+	string strSendData(strData);
+	PackageData(strSendData);
+	LogPrint("TOUI","send message: %s\n", strSendData);
+	m_sInstance->SendData(strSendData);
 }
 
 void CUIServer::SendData(const string& strData) {
@@ -114,17 +114,17 @@ void CUIServer::RunServer(){
 }
 
 void CUIServer::PackageData(string &strData) {
-	unsigned char chDataTemp[65536] = {0};
+	unsigned char arruchDataTemp[65536] = {0};
 	unsigned short usDataLen = strData.length();
 	if(0 == usDataLen) {
 		return;
 	}
-	chDataTemp[0] = '<';
-	memcpy(chDataTemp+1, &usDataLen, 2);
-	memcpy(chDataTemp+3, strData.c_str(), usDataLen);
-	chDataTemp[usDataLen+3] = '>';
+	arruchDataTemp[0] = '<';
+	memcpy(arruchDataTemp+1, &usDataLen, 2);
+	memcpy(arruchDataTemp+3, strData.c_str(), usDataLen);
+	arruchDataTemp[usDataLen+3] = '>';
 	LogPrint("TOUI","send message length: %d\n", usDataLen);
-	strData.assign(chDataTemp, chDataTemp+usDataLen+4);
+	strData.assign(arruchDataTemp, arruchDataTemp+usDataLen+4);
 //	cout << "Send Data len " << nDataLen + 4 << ":";
 //	for(int i=0; i< nDataLen+4; ++i)
 //		printf("%02X", cDataTemp[i]);

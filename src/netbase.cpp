@@ -34,11 +34,17 @@ bool g_bNameLookup = false;
 static const unsigned char g_sIPv4[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
 
 enum Network ParseNetwork(string strNet) {
-    boost::to_lower(strNet);
-    if (strNet == "ipv4") return NET_IPV4;
-    if (strNet == "ipv6") return NET_IPV6;
-    if (strNet == "tor")  return NET_TOR;
-    return NET_UNROUTABLE;
+	boost::to_lower(strNet);
+	if (strNet == "ipv4") {
+		return NET_IPV4;
+	}
+	if (strNet == "ipv6") {
+		return NET_IPV6;
+	}
+	if (strNet == "tor") {
+		return NET_TOR;
+	}
+	return NET_UNROUTABLE;
 }
 
 void SplitHostPort(std::string strIn, int &nPortOut, std::string &strHostOut) {
@@ -76,23 +82,24 @@ bool static LookupIntern(const char *pszName, vector<CNetAddr>& vIP, unsigned in
         }
     }
 
-    struct addrinfo aiHint;
-    memset(&aiHint, 0, sizeof(struct addrinfo));
+    struct addrinfo tAiHint;
+    memset(&tAiHint, 0, sizeof(struct addrinfo));
 
-    aiHint.ai_socktype = SOCK_STREAM;
-    aiHint.ai_protocol = IPPROTO_TCP;
-    aiHint.ai_family = AF_UNSPEC;
+    tAiHint.ai_socktype = SOCK_STREAM;
+    tAiHint.ai_protocol = IPPROTO_TCP;
+    tAiHint.ai_family = AF_UNSPEC;
 #ifdef WIN32
-    aiHint.ai_flags = fAllowLookup ? 0 : AI_NUMERICHOST;
+    tAiHint.ai_flags = fAllowLookup ? 0 : AI_NUMERICHOST;
 #else
-    aiHint.ai_flags = fAllowLookup ? AI_ADDRCONFIG : AI_NUMERICHOST;
+    tAiHint.ai_flags = fAllowLookup ? AI_ADDRCONFIG : AI_NUMERICHOST;
 #endif
-    struct addrinfo *aiRes = NULL;
-    int nErr = getaddrinfo(pszName, NULL, &aiHint, &aiRes);
-    if (nErr)
-        return false;
+    struct addrinfo *pAiRes = NULL;
+    int nErr = getaddrinfo(pszName, NULL, &tAiHint, &pAiRes);
+	if (nErr) {
+		return false;
+	}
 
-    struct addrinfo *aiTrav = aiRes;
+    struct addrinfo *aiTrav = pAiRes;
     while (aiTrav != NULL && (nMaxSolutions == 0 || vIP.size() < nMaxSolutions))
     {
         if (aiTrav->ai_family == AF_INET)
@@ -110,7 +117,7 @@ bool static LookupIntern(const char *pszName, vector<CNetAddr>& vIP, unsigned in
         aiTrav = aiTrav->ai_next;
     }
 
-    freeaddrinfo(aiRes);
+    freeaddrinfo(pAiRes);
 
     return (vIP.size() > 0);
 }
@@ -191,15 +198,15 @@ bool static Socks4(const CService &addrDest, SOCKET& hSocket) {
 		closesocket(hSocket);
 		return ERRORMSG("Error sending to proxy");
 	}
-	char pchRet[8];
-	if (recv(hSocket, pchRet, 8, 0) != 8) {
+	char arrchRet[8];
+	if (recv(hSocket, arrchRet, 8, 0) != 8) {
 		closesocket(hSocket);
 		return ERRORMSG("Error reading proxy response");
 	}
-	if (pchRet[1] != 0x5a) {
+	if (arrchRet[1] != 0x5a) {
 		closesocket(hSocket);
-		if (pchRet[1] != 0x5b) {
-			LogPrint("INFO", "ERROR: Proxy returned error %d\n", pchRet[1]);
+		if (arrchRet[1] != 0x5b) {
+			LogPrint("INFO", "ERROR: Proxy returned error %d\n", arrchRet[1]);
 		}
 		return false;
 	}
@@ -222,12 +229,12 @@ bool static Socks5(string strDest, int port, SOCKET& hSocket) {
 		closesocket(hSocket);
 		return ERRORMSG("Error sending to proxy");
 	}
-	char pchRet1[2];
-	if (recv(hSocket, pchRet1, 2, 0) != 2) {
+	char arrchRet1[2];
+	if (recv(hSocket, arrchRet1, 2, 0) != 2) {
 		closesocket(hSocket);
 		return ERRORMSG("Error reading proxy response");
 	}
-	if (pchRet1[0] != 0x05 || pchRet1[1] != 0x00) {
+	if (arrchRet1[0] != 0x05 || arrchRet1[1] != 0x00) {
 		closesocket(hSocket);
 		return ERRORMSG("Proxy failed to initialize");
 	}
@@ -243,69 +250,81 @@ bool static Socks5(string strDest, int port, SOCKET& hSocket) {
 		closesocket(hSocket);
 		return ERRORMSG("Error sending to proxy");
 	}
-	char pchRet2[4];
-	if (recv(hSocket, pchRet2, 4, 0) != 4) {
+	char arrchRet2[4];
+	if (recv(hSocket, arrchRet2, 4, 0) != 4) {
 		closesocket(hSocket);
 		return ERRORMSG("Error reading proxy response");
 	}
-	if (pchRet2[0] != 0x05) {
+	if (arrchRet2[0] != 0x05) {
 		closesocket(hSocket);
 		return ERRORMSG("Proxy failed to accept request");
 	}
-	if (pchRet2[1] != 0x00) {
+	if (arrchRet2[1] != 0x00) {
 		closesocket(hSocket);
-		switch (pchRet2[1]) {
-		case 0x01:
+		switch (arrchRet2[1]) {
+		case 0x01: {
 			return ERRORMSG("Proxy error: general failure");
-		case 0x02:
+		}
+		case 0x02: {
 			return ERRORMSG("Proxy error: connection not allowed");
-		case 0x03:
+		}
+		case 0x03: {
 			return ERRORMSG("Proxy error: network unreachable");
-		case 0x04:
+		}
+		case 0x04: {
 			return ERRORMSG("Proxy error: host unreachable");
-		case 0x05:
+		}
+		case 0x05: {
 			return ERRORMSG("Proxy error: connection refused");
-		case 0x06:
+		}
+		case 0x06: {
 			return ERRORMSG("Proxy error: TTL expired");
-		case 0x07:
+		}
+		case 0x07: {
 			return ERRORMSG("Proxy error: protocol error");
-		case 0x08:
+		}
+		case 0x08: {
 			return ERRORMSG("Proxy error: address type not supported");
-		default:
+		}
+		default: {
 			return ERRORMSG("Proxy error: unknown");
 		}
+		}
 	}
-	if (pchRet2[2] != 0x00) {
+	if (arrchRet2[2] != 0x00) {
 		closesocket(hSocket);
 		return ERRORMSG("Error: malformed proxy response");
 	}
-	char pchRet3[256];
-	switch (pchRet2[3]) {
-	case 0x01:
-		nRet = recv(hSocket, pchRet3, 4, 0) != 4;
+	char arrchRet3[256];
+	switch (arrchRet2[3]) {
+	case 0x01: {
+		nRet = recv(hSocket, arrchRet3, 4, 0) != 4;
 		break;
-	case 0x04:
-		nRet = recv(hSocket, pchRet3, 16, 0) != 16;
+	}
+	case 0x04: {
+		nRet = recv(hSocket, arrchRet3, 16, 0) != 16;
 		break;
+	}
 	case 0x03: {
-		nRet = recv(hSocket, pchRet3, 1, 0) != 1;
+		nRet = recv(hSocket, arrchRet3, 1, 0) != 1;
 		if (nRet) {
 			closesocket(hSocket);
 			return ERRORMSG("Error reading from proxy");
 		}
-		int nRecv = pchRet3[0];
-		nRet = recv(hSocket, pchRet3, nRecv, 0) != nRecv;
+		int nRecv = arrchRet3[0];
+		nRet = recv(hSocket, arrchRet3, nRecv, 0) != nRecv;
 		break;
 	}
-	default:
+	default: {
 		closesocket(hSocket);
 		return ERRORMSG("Error: malformed proxy response");
+	}
 	}
 	if (nRet) {
 		closesocket(hSocket);
 		return ERRORMSG("Error reading from proxy");
 	}
-	if (recv(hSocket, pchRet3, 2, 0) != 2) {
+	if (recv(hSocket, arrchRet3, 2, 0) != 2) {
 		closesocket(hSocket);
 		return ERRORMSG("Error reading from proxy");
 	}
@@ -541,14 +560,16 @@ bool ConnectSocketByName(CService &cAddr, SOCKET& hSocketRet, const char *pszDes
 
 	switch (nameproxy.second) {
 	default:
-	case 4:
+	case 4: {
 		closesocket(hSocket);
 		return false;
-	case 5:
+	}
+	case 5: {
 		if (!Socks5(strDest, nPort, hSocket)) {
 			return false;
 		}
 		break;
+	}
 	}
 
 	hSocketRet = hSocket;
@@ -874,15 +895,15 @@ void CNetAddr::print() const {
 // and only used in GetReachabilityFrom
 static const int NET_UNKNOWN = NET_MAX + 0;
 static const int NET_TEREDO  = NET_MAX + 1;
-int static GetExtNetwork(const CNetAddr *addr) {
-	if (addr == NULL) {
+int static GetExtNetwork(const CNetAddr *pAddr) {
+	if (pAddr == NULL) {
 		return NET_UNKNOWN;
 	}
-	if (addr->IsRFC4380()) {
+	if (pAddr->IsRFC4380()) {
 		return NET_TEREDO;
 	}
 
-	return addr->GetNetwork();
+	return pAddr->GetNetwork();
 }
 
 /** Calculates a metric for how reachable (*this) is from a given partner */
@@ -978,14 +999,17 @@ CService::CService(const struct sockaddr_in6 &tAddr) :
 
 bool CService::SetSockAddr(const struct sockaddr *pAddr) {
 	switch (pAddr->sa_family) {
-	case AF_INET:
+	case AF_INET: {
 		*this = CService(*(const struct sockaddr_in*) pAddr);
 		return true;
-	case AF_INET6:
+	}
+	case AF_INET6: {
 		*this = CService(*(const struct sockaddr_in6*) pAddr);
 		return true;
-	default:
+	}
+	default: {
 		return false;
+	}
 	}
 }
 

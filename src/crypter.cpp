@@ -32,12 +32,12 @@ bool CCrypter::SetKeyFromPassphrase(const SecureString& strKeyData, const vector
 	return true;
 }
 
-bool CCrypter::SetKey(const CKeyingMaterial& chNewKey, const vector<unsigned char>& chNewIV) {
-	if (chNewKey.size() != g_kWalletCryptoKeySize || chNewIV.size() != g_kWalletCryptoKeySize) {
+bool CCrypter::SetKey(const CKeyingMaterial& vchNewKey, const vector<unsigned char>& vchNewIV) {
+	if (vchNewKey.size() != g_kWalletCryptoKeySize || vchNewIV.size() != g_kWalletCryptoKeySize) {
 		return false;
 	}
-	memcpy(&m_chKey[0], &chNewKey[0], sizeof m_chKey);
-	memcpy(&m_chIV[0], &chNewIV[0], sizeof m_chIV);
+	memcpy(&m_chKey[0], &vchNewKey[0], sizeof m_chKey);
+	memcpy(&m_chIV[0], &vchNewIV[0], sizeof m_chIV);
 	m_bKeySet = true;
 
 	return true;
@@ -199,27 +199,28 @@ bool CCryptoKeyStore::AddKeyCombi(const CKeyID & cKeyId, const CKeyCombi &cKeyCo
 	{
 		LOCK(cs_KeyStore);
 
-		if (!IsCrypted())
+		if (!IsCrypted()) {
 			return CBasicKeyStore::AddKeyCombi(cKeyId, cKeyCombi);
-
-		if (IsLocked())
+		}
+		if (IsLocked()) {
 			return false;
-
-		CKey mainKey;
-		cKeyCombi.GetCKey(mainKey, false);
+		}
+		CKey cMainKey;
+		cKeyCombi.GetCKey(cMainKey, false);
 		CKeyCombi newkeyCombi = cKeyCombi;
 		newkeyCombi.CleanMainKey();
 		CBasicKeyStore::AddKeyCombi(cKeyId, cKeyCombi);
 
 		vector<unsigned char> vchCryptedSecret;
-		CKeyingMaterial vchSecret(mainKey.begin(), mainKey.end());
-		CPubKey pubKey;
-		pubKey = mainKey.GetPubKey();
-		if (!EncryptSecret(m_vMasterKey, vchSecret, pubKey.GetHash(), vchCryptedSecret))
+		CKeyingMaterial vchSecret(cMainKey.begin(), cMainKey.end());
+		CPubKey cPubKey;
+		cPubKey = cMainKey.GetPubKey();
+		if (!EncryptSecret(m_vMasterKey, vchSecret, cPubKey.GetHash(), vchCryptedSecret)) {
 			return false;
-
-		if (!AddCryptedKey(pubKey, vchCryptedSecret))
+		}
+		if (!AddCryptedKey(cPubKey, vchCryptedSecret)) {
 			return false;
+		}
 	}
 
 	return true;
@@ -228,8 +229,9 @@ bool CCryptoKeyStore::AddKeyCombi(const CKeyID & cKeyId, const CKeyCombi &cKeyCo
 bool CCryptoKeyStore::AddCryptedKey(const CPubKey &cPubKey, const vector<unsigned char> &vchCryptedSecret) {
 	{
 		LOCK(cs_KeyStore);
-		if (!SetCrypted())
+		if (!SetCrypted()) {
 			return false;
+		}
 		m_mapCryptedKeys[cPubKey.GetKeyID()] = make_pair(cPubKey, vchCryptedSecret);
 	}
 
@@ -287,13 +289,15 @@ bool CCryptoKeyStore::GetPubKey(const CKeyID &cAddress, CPubKey& cPubKeyOut, boo
 
 bool CCryptoKeyStore::GetKeyCombi(const CKeyID & cAddress, CKeyCombi & cKeyCombiOut) const {
 	CBasicKeyStore::GetKeyCombi(cAddress, cKeyCombiOut);
-	if (!IsCrypted())
+	if (!IsCrypted()) {
 		return true;
-	CKey keyOut;
+	}
+	CKey cKeyOut;
 	if (!IsLocked()) {
-		if (!GetKey(cAddress, keyOut))
+		if (!GetKey(cAddress, cKeyOut)) {
 			return false;
-		cKeyCombiOut.SetMainKey(keyOut);
+		}
+		cKeyCombiOut.SetMainKey(cKeyOut);
 	}
 
 	return true;

@@ -573,44 +573,53 @@ vector<unsigned char> DecodeBase64(const char* pszContent, bool* pbInvalid) {
 		}
 		pszContent++;
 		switch (nMode) {
-		case 0: // we have no bits and get 6
+		case 0: { // we have no bits and get 6
 			nLeft = nDec;
 			nMode = 1;
 			break;
-		case 1: // we have 6 bits and keep 4
+		}
+		case 1: { // we have 6 bits and keep 4
 			vchRet.push_back((nLeft << 2) | (nDec >> 4));
 			nLeft = nDec & 15;
 			nMode = 2;
 			break;
-		case 2: // we have 4 bits and get 6, we keep 2
+		}
+		case 2: { // we have 4 bits and get 6, we keep 2
 			vchRet.push_back((nLeft << 4) | (nDec >> 2));
 			nLeft = nDec & 3;
 			nMode = 3;
 			break;
-		case 3: // we have 2 bits and get 6
+		}
+		case 3: { // we have 2 bits and get 6
 			vchRet.push_back((nLeft << 6) | nDec);
 			nMode = 0;
 			break;
+		}
 		}
 	}
 
 	if (pbInvalid)
 		switch (nMode) {
-		case 0: // 4n base64 characters processed: ok
+		case 0: { // 4n base64 characters processed: ok
 			break;
-		case 1: // 4n+1 base64 character processed: impossible
+		}
+		case 1: { // 4n+1 base64 character processed: impossible
 			*pbInvalid = true;
 			break;
-		case 2: // 4n+2 base64 characters processed: require '=='
-			if (nLeft || pszContent[0] != '=' || pszContent[1] != '=' || decode64_table[(unsigned char) pszContent[2]] != -1) {
+		}
+		case 2: { // 4n+2 base64 characters processed: require '=='
+			if (nLeft || pszContent[0] != '=' || pszContent[1] != '='
+					|| decode64_table[(unsigned char) pszContent[2]] != -1) {
 				*pbInvalid = true;
 			}
 			break;
-		case 3: // 4n+3 base64 characters processed: require '='
+		}
+		case 3: { // 4n+3 base64 characters processed: require '='
 			if (nLeft || pszContent[0] != '=' || decode64_table[(unsigned char) pszContent[1]] != -1) {
 				*pbInvalid = true;
 			}
 			break;
+		}
 		}
 	return vchRet;
 }
@@ -632,32 +641,37 @@ string EncodeBase32(const unsigned char* pszContent, size_t unlength) {
 	while (pszContent < pchEnd) {
 		int nEnc = *(pszContent++);
 		switch (nMode) {
-		case 0: // we have no bits
+		case 0: { // we have no bits
 			strRet += pBase32[nEnc >> 3];
 			nLeft = (nEnc & 7) << 2;
 			nMode = 1;
 			break;
-		case 1: // we have three bits
+		}
+		case 1: { // we have three bits
 			strRet += pBase32[nLeft | (nEnc >> 6)];
 			strRet += pBase32[(nEnc >> 1) & 31];
 			nLeft = (nEnc & 1) << 4;
 			nMode = 2;
 			break;
-		case 2: // we have one bit
+		}
+		case 2: { // we have one bit
 			strRet += pBase32[nLeft | (nEnc >> 4)];
 			nLeft = (nEnc & 15) << 1;
 			nMode = 3;
 			break;
-		case 3: // we have four bits
+		}
+		case 3: { // we have four bits
 			strRet += pBase32[nLeft | (nEnc >> 7)];
 			strRet += pBase32[(nEnc >> 2) & 31];
 			nLeft = (nEnc & 3) << 3;
 			nMode = 4;
 			break;
-		case 4: // we have two bits
+		}
+		case 4: { // we have two bits
 			strRet += pBase32[nLeft | (nEnc >> 5)];
 			strRet += pBase32[nEnc & 31];
 			nMode = 0;
+		}
 		}
 	}
 
@@ -704,78 +718,92 @@ vector<unsigned char> DecodeBase32(const char* pszContent, bool* pbInvalid) {
 		}
 		pszContent++;
 		switch (nMode) {
-		case 0: // we have no bits and get 5
+		case 0: { // we have no bits and get 5
 			nLeft = nDec;
 			nMode = 1;
 			break;
-		case 1: // we have 5 bits and keep 2
+		}
+		case 1: { // we have 5 bits and keep 2
 			vchRet.push_back((nLeft << 3) | (nDec >> 2));
 			nLeft = nDec & 3;
 			nMode = 2;
 			break;
-		case 2: // we have 2 bits and keep 7
+		}
+		case 2: { // we have 2 bits and keep 7
 			nLeft = nLeft << 5 | nDec;
 			nMode = 3;
 			break;
-		case 3: // we have 7 bits and keep 4
+		}
+		case 3: { // we have 7 bits and keep 4
 			vchRet.push_back((nLeft << 1) | (nDec >> 4));
 			nLeft = nDec & 15;
 			nMode = 4;
 			break;
-		case 4: // we have 4 bits, and keep 1
+		}
+		case 4: { // we have 4 bits, and keep 1
 			vchRet.push_back((nLeft << 4) | (nDec >> 1));
 			nLeft = nDec & 1;
 			nMode = 5;
 			break;
-		case 5: // we have 1 bit, and keep 6
+		}
+		case 5: { // we have 1 bit, and keep 6
 			nLeft = nLeft << 5 | nDec;
 			nMode = 6;
 			break;
-		case 6: // we have 6 bits, and keep 3
+		}
+		case 6: { // we have 6 bits, and keep 3
 			vchRet.push_back((nLeft << 2) | (nDec >> 3));
 			nLeft = nDec & 7;
 			nMode = 7;
 			break;
-		case 7: // we have 3 bits, and keep 0
+		}
+		case 7: { // we have 3 bits, and keep 0
 			vchRet.push_back((nLeft << 5) | nDec);
 			nMode = 0;
 			break;
+		}
 		}
 	}
 
 	if (pbInvalid)
 		switch (nMode) {
-		case 0: // 8n base32 characters processed: ok
+		case 0: { // 8n base32 characters processed: ok
 			break;
+		}
 		case 1: // 8n+1 base32 characters processed: impossible
 		case 3: //   +3
-		case 6: //   +6
+		case 6: { //   +6
 			*pbInvalid = true;
 			break;
-		case 2: // 8n+2 base32 characters processed: require '======'
+		}
+		case 2: { // 8n+2 base32 characters processed: require '======'
 			if (nLeft || pszContent[0] != '=' || pszContent[1] != '=' || pszContent[2] != '=' || pszContent[3] != '='
 					|| pszContent[4] != '=' || pszContent[5] != '='
 					|| g_nDecode32_table[(unsigned char) pszContent[6]] != -1) {
 				*pbInvalid = true;
 			}
 			break;
-		case 4: // 8n+4 base32 characters processed: require '===='
+		}
+		case 4: { // 8n+4 base32 characters processed: require '===='
 			if (nLeft || pszContent[0] != '=' || pszContent[1] != '=' || pszContent[2] != '=' || pszContent[3] != '='
 					|| g_nDecode32_table[(unsigned char) pszContent[4]] != -1) {
 				*pbInvalid = true;
 			}
 			break;
-		case 5: // 8n+5 base32 characters processed: require '==='
+		}
+		case 5: { // 8n+5 base32 characters processed: require '==='
 			if (nLeft || pszContent[0] != '=' || pszContent[1] != '=' || pszContent[2] != '='
 					|| g_nDecode32_table[(unsigned char) pszContent[3]] != -1) {
 				*pbInvalid = true;
 			}
 			break;
-		case 7: // 8n+7 base32 characters processed: require '='
+		}
+		case 7: { // 8n+7 base32 characters processed: require '='
 			if (nLeft || pszContent[0] != '=' || g_nDecode32_table[(unsigned char) pszContent[1]] != -1) {
 				*pbInvalid = true;
 			}
 			break;
+		}
 		}
 	return vchRet;
 }
@@ -788,18 +816,22 @@ string DecodeBase32(const string& strContent) {
 bool WildcardMatch(const char* pszContent, const char* pszMask) {
 	while (true) {
 		switch (*pszMask) {
-		case '\0':
+		case '\0': {
 			return (*pszContent == '\0');
-		case '*':
+		}
+		case '*': {
 			return WildcardMatch(pszContent, pszMask + 1) || (*pszContent && WildcardMatch(pszContent + 1, pszMask));
-		case '?':
+		}
+		case '?': {
 			if (*pszContent == '\0')
 				return false;
 			break;
-		default:
+		}
+		default: {
 			if (*pszContent != *pszMask)
 				return false;
 			break;
+		}
 		}
 		pszContent++;
 		pszMask++;
@@ -818,13 +850,14 @@ static string FormatException(exception* pExcep, const char* pszThread) {
 #else
 	const char* pszModule = "Dacrs";
 #endif
-	if (pExcep)
+	if (pExcep) {
 		return strprintf(
 		"EXCEPTION: %s       \n%s       \n%s in %s       \n", typeid(*pExcep).name(), pExcep->what(), pszModule, pszThread);
-		else
+	} else {
 		return strprintf(
 		"UNKNOWN EXCEPTION       \n%s in %s       \n", pszModule, pszThread);
 	}
+}
 
 void LogException(exception* pExcep, const char* pszThread) {
 	string message = FormatException(pExcep, pszThread);

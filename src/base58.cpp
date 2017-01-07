@@ -176,19 +176,19 @@ void CBase58Data::SetData(const vector<unsigned char> &vchVersionIn, const unsig
 	SetData(vchVersionIn, (void*) pbegin, pend - pbegin);
 }
 
-bool CBase58Data::SetString(const char* psz, unsigned int nVersionBytes) {
+bool CBase58Data::SetString(const char* psz, unsigned int unVersionBytes) {
 	vector<unsigned char> vchTemp;
 	DecodeBase58Check(psz, vchTemp);
-	if (vchTemp.size() < nVersionBytes) {
+	if (vchTemp.size() < unVersionBytes) {
 		m_vchData.clear();
 		m_vchVersion.clear();
 		return false;
 	}
 
-	m_vchVersion.assign(vchTemp.begin(), vchTemp.begin() + nVersionBytes);
-	m_vchData.resize(vchTemp.size() - nVersionBytes);
+	m_vchVersion.assign(vchTemp.begin(), vchTemp.begin() + unVersionBytes);
+	m_vchData.resize(vchTemp.size() - unVersionBytes);
 	if (!m_vchData.empty()) {
-		memcpy(&m_vchData[0], &vchTemp[nVersionBytes], m_vchData.size());
+		memcpy(&m_vchData[0], &vchTemp[unVersionBytes], m_vchData.size());
 	}
 
 	OPENSSL_cleanse(&vchTemp[0], m_vchData.size());
@@ -205,20 +205,20 @@ string CBase58Data::ToString() const {
 	return EncodeBase58Check(vch);
 }
 
-int CBase58Data::CompareTo(const CBase58Data& b58) const {
-	if (m_vchVersion < b58.m_vchVersion) {
+int CBase58Data::CompareTo(const CBase58Data& cBase58) const {
+	if (m_vchVersion < cBase58.m_vchVersion) {
 		return -1;
 	}
 
-	if (m_vchVersion > b58.m_vchVersion) {
+	if (m_vchVersion > cBase58.m_vchVersion) {
 		return 1;
 	}
 
-	if (m_vchData < b58.m_vchData) {
+	if (m_vchData < cBase58.m_vchData) {
 		return -1;
 	}
 
-	if (m_vchData > b58.m_vchData) {
+	if (m_vchData > cBase58.m_vchData) {
 		return 1;
 	}
 
@@ -245,21 +245,21 @@ class CDacrsAddressVisitor: public boost::static_visitor<bool> {
 };
 };
 
-bool CDacrsAddress::Set(const CKeyID &id) {
-	SetData(SysCfg().Base58Prefix(CBaseParams::EM_PUBKEY_ADDRESS), &id, 20);
+bool CDacrsAddress::Set(const CKeyID &cId) {
+	SetData(SysCfg().Base58Prefix(CBaseParams::EM_PUBKEY_ADDRESS), &cId, 20);
 	return true;
 }
 
-bool CDacrsAddress::Set(const CTxDestination &dest) {
-	return boost::apply_visitor(CDacrsAddressVisitor(this), dest);
+bool CDacrsAddress::Set(const CTxDestination &cDest) {
+	return boost::apply_visitor(CDacrsAddressVisitor(this), cDest);
 }
 
 bool CDacrsAddress::IsValid() const {
 	bool bValid = false;
 	{
-		bool fCorrectSize = m_vchData.size() == 20;
-		bool fKnownVersion = m_vchVersion == SysCfg().Base58Prefix(CBaseParams::EM_PUBKEY_ADDRESS);
-		bValid = fCorrectSize && fKnownVersion;
+		bool bCorrectSize = m_vchData.size() == 20;
+		bool bKnownVersion = m_vchVersion == SysCfg().Base58Prefix(CBaseParams::EM_PUBKEY_ADDRESS);
+		bValid = bCorrectSize && bKnownVersion;
 	}
 
 	if (!bValid) {
@@ -279,11 +279,11 @@ CTxDestination CDacrsAddress::Get() const {
 	}
 
 	if (m_vchData.size() == 20) {
-		uint160 id;
-		memcpy(&id, &m_vchData[0], 20);
+		uint160 cId;
+		memcpy(&cId, &m_vchData[0], 20);
 
 		if (m_vchVersion == SysCfg().Base58Prefix(CBaseParams::EM_PUBKEY_ADDRESS)) {
-			return CKeyID(id);
+			return CKeyID(cId);
 		} else {
 			return CNoDestination();
 		}
@@ -293,17 +293,17 @@ CTxDestination CDacrsAddress::Get() const {
 }
 
 bool CDacrsAddress::GetKeyID(CKeyID &keyID) const {
-	uint160 id;
+	uint160 cId;
 
 	if (m_vchVersion == SysCfg().Base58Prefix(CBaseParams::EM_PUBKEY_ADDRESS) && m_vchData.size() == 20) {
-		memcpy(&id, &m_vchData[0], 20);
-		keyID = CKeyID(id);
+		memcpy(&cId, &m_vchData[0], 20);
+		keyID = CKeyID(cId);
 		return true;
 	}
 
-	vector<unsigned char> vid;
-	vid.push_back(CBaseParams::EM_ACC_ADDRESS);
-	if (m_vchData.size() == 26 && m_vchVersion == vid) {
+	vector<unsigned char> vuchId;
+	vuchId.push_back(CBaseParams::EM_ACC_ADDRESS);
+	if (m_vchData.size() == 26 && m_vchVersion == vuchId) {
 		memcpy(keyID.begin(), &m_vchData[0], 20);
 		return true;
 	}
@@ -335,15 +335,15 @@ void CDacrsSecret::SetKey(const CKey& vchSecret) {
 }
 
 CKey CDacrsSecret::GetKey() {
-	CKey ret;
-	ret.Set(&m_vchData[0], &m_vchData[32], m_vchData.size() > 32 && m_vchData[32] == 1);
-	return ret;
+	CKey cRet;
+	cRet.Set(&m_vchData[0], &m_vchData[32], m_vchData.size() > 32 && m_vchData[32] == 1);
+	return cRet;
 }
 
 bool CDacrsSecret::IsValid() const {
-	bool fExpectedFormat = m_vchData.size() == 32 || (m_vchData.size() == 33 && m_vchData[32] == 1);
-	bool fCorrectVersion = m_vchVersion == SysCfg().Base58Prefix(CBaseParams::EM_SECRET_KEY);
-	return fExpectedFormat && fCorrectVersion;
+	bool bExpectedFormat = m_vchData.size() == 32 || (m_vchData.size() == 33 && m_vchData[32] == 1);
+	bool bCorrectVersion = m_vchVersion == SysCfg().Base58Prefix(CBaseParams::EM_SECRET_KEY);
+	return bExpectedFormat && bCorrectVersion;
 }
 
 bool CDacrsSecret::SetString(const char* pszSecret) {

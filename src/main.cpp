@@ -1591,12 +1591,12 @@ bool ConnectBlock(CBlock& cBlock, CValidationState& cValidationState, CAccountVi
 			pMatureIndex = pMatureIndex->m_pPrevBlockIndex;
 		}
 		if (NULL != pMatureIndex) {
-			CBlock matureBlock;
-			if (!ReadBlockFromDisk(matureBlock, pMatureIndex)) {
+			CBlock cMatureBlock;
+			if (!ReadBlockFromDisk(cMatureBlock, pMatureIndex)) {
 				return cValidationState.DoS(100, ERRORMSG("ConnectBlock() : read mature block error"), REJECT_INVALID,
 						"bad-read-block");
 			}
-			if (!matureBlock.vptx[0]->ExecuteTx(-1, cAccountViewCache, cValidationState, txundo, pBlockIndex->m_nHeight,
+			if (!cMatureBlock.vptx[0]->ExecuteTx(-1, cAccountViewCache, cValidationState, txundo, pBlockIndex->m_nHeight,
 					cTxCache, cScriptCache))
 				return ERRORMSG("ConnectBlock() : execure mature block reward tx error!");
 		}
@@ -4202,12 +4202,12 @@ bool static ProcessMessage(CNode* pFromNode, string strCommand, CDataStream& vRe
 	} else if (strCommand == "reject") {
 		if (SysCfg().IsDebug()) {
 			string strMsg;
-			unsigned char chCode;
+			unsigned char uchCode;
 			string strReason;
-			vRecv >> strMsg >> chCode >> strReason;
+			vRecv >> strMsg >> uchCode >> strReason;
 
 			ostringstream ss;
-			ss << strMsg << " code " << itostr(chCode) << ": " << strReason;
+			ss << strMsg << " code " << itostr(uchCode) << ": " << strReason;
 
 			if (strMsg == "block" || strMsg == "tx") {
 				uint256 hash;
@@ -4623,17 +4623,22 @@ class CMainCleanup {
 std::shared_ptr<CBaseTransaction> CreateNewEmptyTransaction(unsigned char uchType) {
 	switch (uchType) {
 	case EM_COMMON_TX:
-	case EM_CONTRACT_TX:
+	case EM_CONTRACT_TX: {
 		return std::make_shared<CTransaction>();
-	case EM_REG_ACCT_TX:
+	}
+	case EM_REG_ACCT_TX: {
 		return std::make_shared<CRegisterAccountTx>();
-	case EM_REWARD_TX:
+	}
+	case EM_REWARD_TX: {
 		return std::make_shared<CRewardTransaction>();
-	case EM_REG_APP_TX:
+	}
+	case EM_REG_APP_TX: {
 		return std::make_shared<CRegisterAppTx>();
-	default:
+	}
+	default: {
 		ERRORMSG("CreateNewEmptyTransaction type error");
 		break;
+	}
 	}
 	return NULL;
 }

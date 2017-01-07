@@ -24,10 +24,10 @@ void CBlockHeader::SetHeight(unsigned int height) {
 }
 
 uint256 CBlockHeader::SignatureHash() const {
-	CHashWriter ss(SER_GETHASH, g_sClientVersion);
-	ss << m_nVersion << m_cHashPrevBlock << m_cHashMerkleRoot << m_cHashPos << m_unTime << m_unBits << m_unNonce
+	CHashWriter cSs(SER_GETHASH, g_sClientVersion);
+	cSs << m_nVersion << m_cHashPrevBlock << m_cHashMerkleRoot << m_cHashPos << m_unTime << m_unBits << m_unNonce
 			<< m_unHeight << m_llFuel << m_nFuelRate;
-	return ss.GetHash();
+	return cSs.GetHash();
 }
 
 uint256 CBlock::BuildMerkleTree() const {

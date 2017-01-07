@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef DACRS_ADDRMAN_
-#define DACRS_ADDRMAN_ 1
+#define DACRS_ADDRMAN_
 
 #include "netbase.h"
 #include "protocol.h"
@@ -90,8 +90,8 @@ class CAddrInfo : public CAddress {
 // Stochastic address manager
 //
 // Design goals:
-//  * Only keep a limited number of addresses around, so that addr.dat and memory requirements do not grow without bound.
-//  * Keep the address tables in-memory, and asynchronously dump the entire to able in addr.dat.
+//  * Only keep a limited number of addresses around, so that cAddr.dat and memory requirements do not grow without bound.
+//  * Keep the address tables in-memory, and asynchronously dump the entire to able in cAddr.dat.
 //  * Make sure no (localized) attacker can fill the entire table with his nodes/addresses.
 //
 // To that end:
@@ -311,16 +311,16 @@ class CAddrMan {
 	}
 
     // Add a single address.
-	bool Add(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty = 0) {
+	bool Add(const CAddress &cAddr, const CNetAddr& source, int64_t nTimePenalty = 0) {
 		bool fRet = false;
 		{
 			LOCK(m_cs);
 			Check();
-			fRet |= Add_(addr, source, nTimePenalty);
+			fRet |= Add_(cAddr, source, nTimePenalty);
 			Check();
 		}
 		if (fRet) {
-			LogPrint("addrman", "Added %s from %s: %i tried, %i new\n", addr.ToStringIPPort().c_str(),
+			LogPrint("addrman", "Added %s from %s: %i tried, %i new\n", cAddr.ToStringIPPort().c_str(),
 					source.ToString().c_str(), m_nTried, m_nNew);
 		}
 
@@ -348,21 +348,21 @@ class CAddrMan {
 	}
 
     // Mark an entry as accessible.
-	void Good(const CService &addr, int64_t nTime = GetAdjustedTime()) {
+	void Good(const CService &cAddr, int64_t nTime = GetAdjustedTime()) {
 		{
 			LOCK(m_cs);
 			Check();
-			Good_(addr, nTime);
+			Good_(cAddr, nTime);
 			Check();
 		}
 	}
 
     // Mark an entry as connection attempted to.
-	void Attempt(const CService &addr, int64_t nTime = GetAdjustedTime()) {
+	void Attempt(const CService &cAddr, int64_t nTime = GetAdjustedTime()) {
 		{
 			LOCK(m_cs);
 			Check();
-			Attempt_(addr, nTime);
+			Attempt_(cAddr, nTime);
 			Check();
 		}
 	}
@@ -393,11 +393,11 @@ class CAddrMan {
 	}
 
     // Mark an entry as currently-connected-to.
-	void Connected(const CService &addr, int64_t nTime = GetAdjustedTime()) {
+	void Connected(const CService &cAddr, int64_t nTime = GetAdjustedTime()) {
 		{
 			LOCK(m_cs);
 			Check();
-			Connected_(addr, nTime);
+			Connected_(cAddr, nTime);
 			Check();
 		}
 	}
@@ -405,14 +405,14 @@ class CAddrMan {
 protected:
 
     // Find an entry.
-    CAddrInfo* Find(const CNetAddr& addr, int *pnId = NULL);
+    CAddrInfo* Find(const CNetAddr& cAddr, int *pnId = NULL);
 
     // find an entry, creating it if necessary.
     // nTime and nServices of found node is updated, if necessary.
-    CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = NULL);
+    CAddrInfo* Create(const CAddress &cAddr, const CNetAddr &addrSource, int *pnId = NULL);
 
     // Swap two elements in vRandom.
-    void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2);
+    void SwapRandom(unsigned int unRandomPos1, unsigned int unRandomPos2);
 
     // Return position in given bucket to replace.
     int SelectTried(int nKBucket);
@@ -424,16 +424,16 @@ protected:
 
     // Move an entry from the "new" table(s) to the "tried" table
     // @pre vvUnkown[nOrigin].count(nId) != 0
-    void MakeTried(CAddrInfo& info, int nId, int nOrigin);
+    void MakeTried(CAddrInfo& cInfo, int nId, int nOrigin);
 
     // Mark an entry "good", possibly moving it from "new" to "tried".
-    void Good_(const CService &addr, int64_t nTime);
+    void Good_(const CService &cAddr, int64_t nTime);
 
     // Add an entry to the "new" table.
-    bool Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty);
+    bool Add_(const CAddress &cAddr, const CNetAddr& source, int64_t nTimePenalty);
 
     // Mark an entry as attempted to connect.
-    void Attempt_(const CService &addr, int64_t nTime);
+    void Attempt_(const CService &cAddr, int64_t nTime);
 
     // Select an address to connect to.
     // nUnkBias determines how much to favor new addresses over tried ones (min=0, max=100)
@@ -445,10 +445,10 @@ protected:
 #endif
 
     // Select several addresses at once.
-    void GetAddr_(std::vector<CAddress> &vAddr);
+    void GetAddr_(std::vector<CAddress> &vcAddr);
 
     // Mark an entry as currently-connected-to.
-    void Connected_(const CService &addr, int64_t nTime);
+    void Connected_(const CService &cAddr, int64_t nTime);
 
 private:
     // critical section to protect the inner data structures

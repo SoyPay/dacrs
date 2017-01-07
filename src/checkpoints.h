@@ -34,7 +34,7 @@ bool LoadCheckpoint();
 
 void GetCheckpointMap(std::map<int, uint256> &mapCheckPoints);
 
-extern bool bEnabled;
+extern bool g_bEnabled;
 }
 
 #endif

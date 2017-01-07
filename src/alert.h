@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef DACRS_ALERT_H_
-#define DACRS_ALERT_H_ 1
+#define DACRS_ALERT_H_
 
 #include "serialize.h"
 #include "sync.h"
