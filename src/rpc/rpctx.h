@@ -63,5 +63,6 @@ extern Value gettotalcoin(const Array& params, bool bHelp);
 extern Value gettotalassets(const Array& params, bool bHelp);
 extern Value gettxhashbyaddress(const Array& params, bool bHelp);
 extern Value getrawtx(const Array& params, bool bHelp);
+extern Value gettransaction(const Array& params, bool bHelp);
 extern Value contractreckon(const Array& params, bool bHelp);//π¿À„∫œ‘º
 #endif /* DACRS_RPC_RPCTX_H_ */

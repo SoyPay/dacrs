@@ -277,6 +277,7 @@ static const CRPCCommand cRpcCommands[] =
     { "importwallet",           &importwallet,           false,     false,      true },
     { "listaddr",               &listaddr,       	     true,      false,      true },
     { "listtx",                 &listtx,       	         true,      false,      true },
+    { "gettransaction",         &gettransaction,         true,      false,      true },
     { "registaccounttx",        &registaccounttx,      	 true,      false,      true },
 	{ "createcontracttx",       &createcontracttx,       true,      false,      true },
 	{ "registerapptx",       	&registerapptx,          true,      false,      true },

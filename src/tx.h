@@ -401,7 +401,7 @@ class CTransaction : public CBaseTransaction {
 				m_cDesUserId = desId.GetUserId();
 			}
 	)
-	uint64_t GetValue() const {return 0;}
+	uint64_t GetValue() const {return m_ullValues;}
 	uint256 GetHash() const;
 
 	uint64_t GetFee() const {

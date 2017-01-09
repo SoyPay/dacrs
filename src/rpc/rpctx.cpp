@@ -122,6 +122,220 @@ Object GetTxDetailJSON(const uint256& cTxHash) {
 	}
 	return obj;
 }
+
+Array GetTxAddressDetail(std::shared_ptr<CBaseTransaction> pBaseTx)
+{
+	Array arrayDetail;
+	Object obj;
+	std::set<CKeyID> vKeyIdSet;
+	switch (pBaseTx->m_chTxType) {
+	case EM_REWARD_TX: {
+		if (!pBaseTx->GetAddress(vKeyIdSet, *g_pAccountViewTip, *g_pScriptDBTip)) {
+			return arrayDetail;
+		}
+		obj.push_back(Pair("address", vKeyIdSet.begin()->ToAddress()));
+		obj.push_back(Pair("category", "receive"));
+		double dAmount = static_cast<double>(pBaseTx->GetValue()) / COIN;
+		obj.push_back(Pair("amount", dAmount));
+		obj.push_back(Pair("txtype", "REWARD_TX"));
+		arrayDetail.push_back(obj);
+		break;
+	}
+	case EM_REG_ACCT_TX: {
+		if (!pBaseTx->GetAddress(vKeyIdSet, *g_pAccountViewTip, *g_pScriptDBTip)) {
+			return arrayDetail;
+		}
+		obj.push_back(Pair("address", vKeyIdSet.begin()->ToAddress()));
+		obj.push_back(Pair("category", "send"));
+		double dAmount = static_cast<double>(pBaseTx->GetValue()) / COIN;
+		obj.push_back(Pair("amount", -dAmount));
+		obj.push_back(Pair("txtype", "REG_ACCT_TX"));
+		arrayDetail.push_back(obj);
+		break;
+	}
+	case EM_COMMON_TX:
+	case EM_CONTRACT_TX: {
+		/*
+		 if(!pBaseTx->GetAddress(vKeyIdSet, *pAccountViewTip, *pScriptDBTip))
+		 {
+		 return arrayDetail;
+		 }
+		 */
+
+		CTransaction* pTx = (CTransaction*) pBaseTx.get();
+		CKeyID cSendKeyID;
+
+		CRegID cSendRegID = boost::get<CRegID>(pTx->m_cSrcRegId);
+		cSendKeyID = cSendRegID.getKeyID(*g_pAccountViewTip);
+
+		CKeyID cRecvKeyID;
+		if (pTx->m_cDesUserId.type() == typeid(CKeyID)) {
+			cRecvKeyID = boost::get<CKeyID>(pTx->m_cDesUserId);
+		} else if (pTx->m_cDesUserId.type() == typeid(CRegID)) {
+			CRegID cDesRegID = boost::get<CRegID>(pTx->m_cDesUserId);
+			cRecvKeyID = cDesRegID.getKeyID(*g_pAccountViewTip);
+		}
+		if (EM_COMMON_TX == pBaseTx->m_chTxType) {
+			obj.push_back(Pair("txtype", "COMMON_TX"));
+		} else {
+			obj.push_back(Pair("txtype", "CONTRACT_TX"));
+			obj.push_back(Pair("contract", HexStr(pTx->m_vchContract)));
+		}
+
+		obj.push_back(Pair("address", /*vKeyIdSet.begin()->ToAddress()*/cRecvKeyID.ToAddress()));
+		obj.push_back(Pair("category", "send"));
+		double dAmount = static_cast<double>(pBaseTx->GetValue()) / COIN;
+		obj.push_back(Pair("amount", -dAmount));
+		arrayDetail.push_back(obj);
+		Object objRec;
+		if (EM_COMMON_TX == pBaseTx->m_chTxType) {
+			objRec.push_back(Pair("txtype", "COMMON_TX"));
+		} else {
+			objRec.push_back(Pair("txtype", "CONTRACT_TX"));
+			objRec.push_back(Pair("contract", HexStr(pTx->m_vchContract)));
+		}
+		objRec.push_back(Pair("address", /*(++vKeyIdSet.begin())->ToAddress()*/cRecvKeyID.ToAddress()));
+		objRec.push_back(Pair("category", "receive"));
+		objRec.push_back(Pair("amount", dAmount));
+		arrayDetail.push_back(objRec);
+		if (pBaseTx->m_chTxType == EM_CONTRACT_TX) {
+			vector<CVmOperate> vOutput;
+			g_pScriptDBTip->ReadTxOutPut(pBaseTx->GetHash(), vOutput);
+			Array outputArray;
+			for (auto & item : vOutput) {
+				Object objOutPut;
+				string address;
+				if (item.m_uchNaccType == EM_REGID) {
+					vector<unsigned char> vRegId(item.m_arruchAccountId, item.m_arruchAccountId + 6);
+					CRegID regId(vRegId);
+					CUserID userId(regId);
+					address = RegIDToAddress(userId);
+				} else if (item.m_uchNaccType == EM_BASE_58_ADDR) {
+					address.assign(item.m_arruchAccountId[0], sizeof(item.m_arruchAccountId));
+				}
+				objOutPut.push_back(Pair("address", address));
+				uint64_t ullAmount;
+				memcpy(&ullAmount, item.m_arruchMoney, sizeof(item.m_arruchMoney));
+				double dAmount = ullAmount / COIN;
+				if (item.m_uchOpeatorType == EM_ADD_FREE) {
+					objOutPut.push_back(Pair("category", "receive"));
+					objOutPut.push_back(Pair("amount", dAmount));
+				} else if (item.m_uchOpeatorType == EM_MINUS_FREE) {
+					objOutPut.push_back(Pair("category", "send"));
+					objOutPut.push_back(Pair("amount", -dAmount));
+				}
+
+				if (item.m_unOutHeight > 0) {
+					objOutPut.push_back(Pair("freezeheight", (int) item.m_unOutHeight));
+				}
+				arrayDetail.push_back(objOutPut);
+			}
+		}
+		break;
+	}
+	case EM_REG_APP_TX:
+		if (!pBaseTx->GetAddress(vKeyIdSet, *g_pAccountViewTip, *g_pScriptDBTip)) {
+			return arrayDetail;
+		}
+		obj.push_back(Pair("address", vKeyIdSet.begin()->ToAddress()));
+		obj.push_back(Pair("category", "send"));
+		double dAmount = static_cast<double>(pBaseTx->GetValue()) / COIN;
+		obj.push_back(Pair("amount", -dAmount));
+		obj.push_back(Pair("txtype", "REG_APP_TX"));
+		arrayDetail.push_back(obj);
+		break;
+	}
+	return arrayDetail;
+}
+/**
+ * 从交易HASH得到交易细节
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
+Value gettransaction(const Array& params, bool bHelp) {
+	if (bHelp || params.size() != 1) {
+	        throw runtime_error(
+	            "gettransaction \"txhash\"\n"
+				"\nget the transaction detail by given transaction hash.\n"
+	            "\nArguments:\n"
+	            "1.txhash   (string,required) The hast of transaction.\n"
+	        	"\nResult a object about the transaction detail\n"
+	            "\nResult:\n"
+	        	"\n\"txhash\"\n"
+	            "\nExamples:\n"
+	            + HelpExampleCli("gettransaction","c5287324b89793fdf7fa97b6203dfd814b8358cfa31114078ea5981916d7a8ac\n")
+	            + "\nAs json rpc call\n"
+	            + HelpExampleRpc("gettransaction","c5287324b89793fdf7fa97b6203dfd814b8358cfa31114078ea5981916d7a8ac\n"));
+		}
+	uint256 cTxhash(uint256S(params[0].get_str()));
+	std::shared_ptr<CBaseTransaction> pBaseTx;
+	Object obj;
+	LOCK(g_cs_main);
+	CBlock cGenesisblock;
+	CBlockIndex* pgenesisblockindex = g_mapBlockIndex[SysCfg().HashGenesisBlock()];
+	ReadBlockFromDisk(cGenesisblock, pgenesisblockindex);
+	assert(cGenesisblock.GetHashMerkleRoot() == cGenesisblock.BuildMerkleTree());
+	for(unsigned int i=0; i<cGenesisblock.vptx.size(); ++i) {
+		if(cTxhash == cGenesisblock.GetTxHash(i)) {
+			double dAmount = static_cast<double>(cGenesisblock.vptx.at(i)->GetValue()) / COIN;
+			obj.push_back(Pair("amount", dAmount));
+			obj.push_back(Pair("confirmations",g_cChainActive.Tip()->m_nHeight));
+			obj.push_back(Pair("blockhash", cGenesisblock.GetHash().GetHex()));
+			obj.push_back(Pair("blockindex", (int) i));
+			obj.push_back(Pair("blocktime", (int) cGenesisblock.GetTime()));
+			obj.push_back(Pair("txid",cGenesisblock.vptx.at(i)->GetHash().GetHex()));
+			obj.push_back(Pair("details",GetTxAddressDetail(cGenesisblock.vptx.at(i))));
+			CDataStream ds(SER_DISK, g_sClientVersion);
+			ds << cGenesisblock.vptx[i];
+			obj.push_back(Pair("hex", HexStr(ds.begin(), ds.end())));
+			return obj;
+		}
+	}
+	bool bFindTx (false);
+	if (SysCfg().IsTxIndex()) {
+			ST_DiskTxPos postx;
+			if (g_pScriptDBTip->ReadTxIndex(cTxhash, postx)) {
+				bFindTx = true;
+				CAutoFile file(OpenBlockFile(postx, true), SER_DISK, g_sClientVersion);
+				CBlockHeader header;
+				try {
+					file >> header;
+					fseek(file, postx.m_unTxOffset, SEEK_CUR);
+					file >> pBaseTx;
+					double dAmount = static_cast<double>(pBaseTx->GetValue()) / COIN;
+					obj.push_back(Pair("amount", dAmount));
+					obj.push_back(Pair("confirmations",g_cChainActive.Tip()->m_nHeight-(int) header.GetHeight()));
+					obj.push_back(Pair("blockhash", header.GetHash().GetHex()));
+					obj.push_back(Pair("blocktime", (int) header.GetTime()));
+					obj.push_back(Pair("txid",pBaseTx->GetHash().GetHex()));
+					obj.push_back(Pair("details",GetTxAddressDetail(pBaseTx)));
+					CDataStream ds(SER_DISK, g_sClientVersion);
+					ds << pBaseTx;
+					obj.push_back(Pair("hex", HexStr(ds.begin(), ds.end())));
+				} catch (std::exception &e) {
+					throw runtime_error(tfm::format("%s : Deserialize or I/O error - %s", __func__, e.what()).c_str());
+				}
+				return obj;
+			}
+		}
+	if(!bFindTx)
+	{
+		pBaseTx = g_cTxMemPool.lookup(cTxhash);
+		if (NULL == pBaseTx.get()) {
+			throw JSONRPCError(RPC_WALLET_ERROR, "in gettransaction Error: not find tx hash.");
+		}
+		double dAmount = static_cast<double>(pBaseTx->GetValue()) / COIN;
+		obj.push_back(Pair("amount", dAmount));
+		obj.push_back(Pair("confirmations",0));
+		obj.push_back(Pair("txid",pBaseTx->GetHash().GetHex()));
+		obj.push_back(Pair("details",GetTxAddressDetail(pBaseTx)));
+		CDataStream ds(SER_DISK, g_sClientVersion);
+		ds << pBaseTx;
+		obj.push_back(Pair("hex", HexStr(ds.begin(), ds.end())));
+	}
+	return obj;
+}
 /**
  * 获取交易细节
  * @param params 输入参数
