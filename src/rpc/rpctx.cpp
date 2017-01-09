@@ -55,7 +55,6 @@ static bool GetKeyId(string const &strAddr, CKeyID &cKeyId) {
 	}
 	return true;
 }
-
 Object GetTxDetailJSON(const uint256& cTxHash) {
 	Object obj;
 	std::shared_ptr<CBaseTransaction> pBaseTx;
@@ -123,41 +122,52 @@ Object GetTxDetailJSON(const uint256& cTxHash) {
 	}
 	return obj;
 }
-
+/**
+ * 获取交易细节
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value gettxdetail(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
-        throw runtime_error(
-            "gettxdetail \"cTxHash\"\n"
-			"\nget the transaction detail by given transaction hash.\n"
-            "\nArguments:\n"
-            "1.txhash   (string,required) The hast of transaction.\n"
-        	"\nResult a object about the transaction detail\n"
-            "\nResult:\n"
-        	"\n\"txhash\"\n"
-            "\nExamples:\n"
-            + HelpExampleCli("gettxdetail","c5287324b89793fdf7fa97b6203dfd814b8358cfa31114078ea5981916d7a8ac\n")
-            + "\nAs json rpc call\n"
-            + HelpExampleRpc("gettxdetail","c5287324b89793fdf7fa97b6203dfd814b8358cfa31114078ea5981916d7a8ac\n"));
+		throw runtime_error(
+				"gettxdetail \"cTxHash\"\n"
+						"\nget the transaction detail by given transaction hash.\n"
+						"\nArguments:\n"
+						"1.txhash   (string,required) The hast of transaction.\n"
+						"\nResult a object about the transaction detail\n"
+						"\nResult:\n"
+						"\n\"txhash\"\n"
+						"\nExamples:\n"
+						+ HelpExampleCli("gettxdetail",
+								"c5287324b89793fdf7fa97b6203dfd814b8358cfa31114078ea5981916d7a8ac\n")
+						+ "\nAs json rpc call\n"
+						+ HelpExampleRpc("gettxdetail",
+								"c5287324b89793fdf7fa97b6203dfd814b8358cfa31114078ea5981916d7a8ac\n"));
 	}
 	uint256 cTxHash(uint256S(params[0].get_str()));
 	return GetTxDetailJSON(cTxHash);
 }
-
-//create a register cAccount tx
+/**
+ * 创建注册帐户交易
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value registaccounttx(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 2) {
-	       throw runtime_error(
-	            "registaccounttx \"addr\" \"ullFee\"\n"
-				"\nregister secure cAccount\n"
-				"\nArguments:\n"
-				"1.addr: (string, required)\n"
-				"2.ullFee: (numeric, required) pay to miner\n"
-	            "\nResult:\n"
-	    		"\"txhash\": (string)\n"
-	    		"\nExamples:\n"
-	            + HelpExampleCli("registaccounttx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 ")
-	            + "\nAs json rpc call\n"
-	            + HelpExampleRpc("registaccounttx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 "));
+		throw runtime_error(
+				"registaccounttx \"addr\" \"ullFee\"\n"
+						"\nregister secure cAccount\n"
+						"\nArguments:\n"
+						"1.addr: (string, required)\n"
+						"2.ullFee: (numeric, required) pay to miner\n"
+						"\nResult:\n"
+						"\"txhash\": (string)\n"
+						"\nExamples:\n"
+						+ HelpExampleCli("registaccounttx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 ")
+						+ "\nAs json rpc call\n"
+						+ HelpExampleRpc("registaccounttx", "n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj 100000 "));
 
 	}
 
@@ -224,35 +234,41 @@ Value registaccounttx(const Array& params, bool bHelp) {
 	return obj;
 
 }
-
-//create a contract tx
+/**
+ * 创建合约交易
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value createcontracttx(const Array& params, bool bHelp) {
 	if (bHelp || params.size() < 5 || params.size() > 6) {
-	   throw runtime_error(
-			"createcontracttx \"userregid[\"addr\"]\" \"cAppId\" \"llAmount\" \"contract\" \"ullFee\" (\"height\")\n"
-			"\ncreate contract transaction\n"
-			"\nArguments:\n"
-			"1.\"userregid\": (string, required)\n the address for send"
-			"2.\"cAppId\":(string, required) the appID (for example: Ipo.bin)\n"
-			"3.\"llAmount\":(numeric, required)\n"
-			"4.\"contract\": (string, required)\n"
-			"5.\"ullFee\": (numeric, required) pay to miner\n"
-			"6.\"height\": (numeric, optional)create height,If not provide use the tip block hegiht in g_cChainActive\n"
-			"\nResult:\n"
-			"\"contract tx str\": (string)\n"
-			"\nExamples:\n"
-			+ HelpExampleCli("createcontracttx", "000000000100 [\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"] "
-					"\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\""
-					"100000 "
-					"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\" "
-					"01020304 "
-					"1") + "\nAs json rpc call\n"
-			+ HelpExampleRpc("createcontracttx", "000000000100 [\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"] "
-					"\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\""
-					"100000 "
-					"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\" "
-					"01020304 "
-					"1"));
+		throw runtime_error(
+				"createcontracttx \"userregid[\"addr\"]\" \"cAppId\" \"llAmount\" \"contract\" \"ullFee\" (\"height\")\n"
+						"\ncreate contract transaction\n"
+						"\nArguments:\n"
+						"1.\"userregid\": (string, required)\n the address for send"
+						"2.\"cAppId\":(string, required) the appID (for example: Ipo.bin)\n"
+						"3.\"llAmount\":(numeric, required)\n"
+						"4.\"contract\": (string, required)\n"
+						"5.\"ullFee\": (numeric, required) pay to miner\n"
+						"6.\"height\": (numeric, optional)create height,If not provide use the tip block hegiht in g_cChainActive\n"
+						"\nResult:\n"
+						"\"contract tx str\": (string)\n"
+						"\nExamples:\n"
+						+ HelpExampleCli("createcontracttx",
+								"000000000100 [\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"] "
+										"\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\""
+										"100000 "
+										"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\" "
+										"01020304 "
+										"1") + "\nAs json rpc call\n"
+						+ HelpExampleRpc("createcontracttx",
+								"000000000100 [\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"] "
+										"\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\""
+										"100000 "
+										"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\" "
+										"01020304 "
+										"1"));
 	}
 
 	RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(str_type)(int_type)(int_type));
@@ -329,25 +345,31 @@ Value createcontracttx(const Array& params, bool bHelp) {
 	obj.push_back(Pair("hash", std::get<1>(ret)));
 	return obj;
 }
-
-//create a register script tx
+/**
+ * 注册脚本
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value registerapptx(const Array& params, bool bHelp) {
 	if (bHelp || params.size() < 3 || params.size() > 5) {
-		throw runtime_error("registerapptx \"addr\" \"filepath\"\"ullFee\" (\"height\") (\"scriptdescription\")\n"
-				"\ncreate a register script transaction\n"
-				"\nArguments:\n"
-				"1.\"addr\": (string required)\n"
-				"2.\"filepath\": (string required),app's file path\n"
-				"3.\"ullFee\": (numeric required) pay to miner\n"
-				"4.\"height\": (numeric optional)valid height,If not provide, use the tip block hegiht in g_cChainActive\n"
-				"5.\"scriptdescription\":(string optional) new script description\n"
-				"\nResult:\n"
-				"\"txhash\": (string)\n"
-				"\nExamples:\n"
-				+ HelpExampleCli("registerapptx",
-						"\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" \"run.exe\" \"010203040506\" \"100000\" (\"scriptdescription\")") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("registerapptx",
-						"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG \"run.exe\" \"010203040506\" \"100000\" (\"scriptdescription\")"));
+		throw runtime_error(
+				"registerapptx \"addr\" \"filepath\"\"ullFee\" (\"height\") (\"scriptdescription\")\n"
+						"\ncreate a register script transaction\n"
+						"\nArguments:\n"
+						"1.\"addr\": (string required)\n"
+						"2.\"filepath\": (string required),app's file path\n"
+						"3.\"ullFee\": (numeric required) pay to miner\n"
+						"4.\"height\": (numeric optional)valid height,If not provide, use the tip block hegiht in g_cChainActive\n"
+						"5.\"scriptdescription\":(string optional) new script description\n"
+						"\nResult:\n"
+						"\"txhash\": (string)\n"
+						"\nExamples:\n"
+						+ HelpExampleCli("registerapptx",
+								"\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" \"run.exe\" \"010203040506\" \"100000\" (\"scriptdescription\")")
+						+ "\nAs json rpc call\n"
+						+ HelpExampleRpc("registerapptx",
+								"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG \"run.exe\" \"010203040506\" \"100000\" (\"scriptdescription\")"));
 	}
 
 	RPCTypeCheck(params, list_of(str_type)(str_type)(int_type)(int_type)(str_type));
@@ -384,7 +406,8 @@ Value registerapptx(const Array& params, bool bHelp) {
 	}
 	if (params.size() > 4) {
 		string strScriptDesc = params[4].get_str();
-		cScript.m_vuchScriptExplain.insert(cScript.m_vuchScriptExplain.end(), strScriptDesc.begin(), strScriptDesc.end());
+		cScript.m_vuchScriptExplain.insert(cScript.m_vuchScriptExplain.end(), strScriptDesc.begin(),
+				strScriptDesc.end());
 	}
 
 	if (1 == cScript.getScriptType()) { //判断为lua脚本
@@ -469,29 +492,34 @@ Value registerapptx(const Array& params, bool bHelp) {
 	return obj;
 
 }
-
-//估算合约的
+/**
+ * 估算合约交易资源
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value contractreckon(const Array& params, bool bHelp) {
 	if (bHelp || params.size() < 3 || params.size() > 3) {
-		throw runtime_error("contractreckon \"contract\" \"userregid\"\"cAppId\" )\n"
-				"\ncreate a register script transaction\n"
-				"\nArguments:\n"
-				"1.\"contract\": (string, required)\n"
-				"2.\"userregid\": (string, required)\n the address for send"
-				"3.\"cAppId\":(string, required) the appID (for example: Ipo.bin)\n"
-				"\nResult:\n"
-				"\"step\": \n"
-				"\"fuelrate\": \n"
-				"\"fuel\": \n"
-				"\nExamples:\n"
-				+ HelpExampleCli("contractreckon",
-						"\"0405000000704548747658377956744634767745645a5941446a637043556433514c783978594600 \" "
-						"\"pHoFvGYVtyLm5Zb3TwNPsjxqXy6ncs4A7m \" "
-						"\"173883-1\" ") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("contractreckon",
-						"\"0405000000704548747658377956744634767745645a5941446a637043556433514c783978594600 \" "
-						"\"pHoFvGYVtyLm5Zb3TwNPsjxqXy6ncs4A7m \" "
-						"\"173883-1\" "));
+		throw runtime_error(
+				"contractreckon \"contract\" \"userregid\"\"cAppId\" )\n"
+						"\ncreate a register script transaction\n"
+						"\nArguments:\n"
+						"1.\"contract\": (string, required)\n"
+						"2.\"userregid\": (string, required)\n the address for send"
+						"3.\"cAppId\":(string, required) the appID (for example: Ipo.bin)\n"
+						"\nResult:\n"
+						"\"step\": \n"
+						"\"fuelrate\": \n"
+						"\"fuel\": \n"
+						"\nExamples:\n"
+						+ HelpExampleCli("contractreckon",
+								"\"0405000000704548747658377956744634767745645a5941446a637043556433514c783978594600 \" "
+										"\"pHoFvGYVtyLm5Zb3TwNPsjxqXy6ncs4A7m \" "
+										"\"173883-1\" ") + "\nAs json rpc call\n"
+						+ HelpExampleRpc("contractreckon",
+								"\"0405000000704548747658377956744634767745645a5941446a637043556433514c783978594600 \" "
+										"\"pHoFvGYVtyLm5Zb3TwNPsjxqXy6ncs4A7m \" "
+										"\"173883-1\" "));
 	}
 
 	RPCTypeCheck(params, list_of(str_type)(str_type)(str_type));
@@ -542,13 +570,13 @@ Value contractreckon(const Array& params, bool bHelp) {
 	CVmRunEvn cVmRunEvn;
 	std::shared_ptr<CBaseTransaction> pTx = tx;
 	uint64_t ullEl = GetElementForBurn(g_cChainActive.Tip());
-	uint64_t ullRunStep =MAX_BLOCK_RUN_STEP;
-
+	uint64_t ullRunStep = MAX_BLOCK_RUN_STEP;
 
 	CAccountViewCache cpAccountViewTipTemp(*g_pAccountViewTip, true);
 	CScriptDBViewCache cpScriptDBTipTemp(*g_pScriptDBTip, true);
 
-	std::tuple<bool, uint64_t, string> ret = cVmRunEvn.run(pTx, cpAccountViewTipTemp, cpScriptDBTipTemp,g_cChainActive.Tip()->m_nHeight, ullEl, ullRunStep);
+	std::tuple<bool, uint64_t, string> ret = cVmRunEvn.run(pTx, cpAccountViewTipTemp, cpScriptDBTipTemp,
+			g_cChainActive.Tip()->m_nHeight, ullEl, ullRunStep);
 	if (!std::get<0>(ret)) {
 		throw runtime_error("vmRunEvn.run() error\n");
 	}
@@ -561,18 +589,21 @@ Value contractreckon(const Array& params, bool bHelp) {
 	obj.push_back(Pair("fuel", ValueFromAmount(llFee)));
 	return obj;
 }
-
+/**
+ * 列出地址
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value listaddr(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
 		throw runtime_error(
-				 "listaddr\n"
-				 "\nreturn Array containing address,balance,haveminerkey,cRegId information.\n"
-				 "\nArguments:\n"
-				 "\nResult:\n"
-				 "\nExamples:\n"
-				 + HelpExampleCli("listaddr", "")
-				 + "\nAs json rpc call\n"
-                 + HelpExampleRpc("listaddr", ""));
+				"listaddr\n"
+						"\nreturn Array containing address,balance,haveminerkey,cRegId information.\n"
+						"\nArguments:\n"
+						"\nResult:\n"
+						"\nExamples:\n" + HelpExampleCli("listaddr", "") + "\nAs json rpc call\n"
+						+ HelpExampleRpc("listaddr", ""));
 	}
 	Array retArry;
 	assert(g_pwalletMain != NULL);
@@ -602,17 +633,19 @@ Value listaddr(const Array& params, bool bHelp) {
 
 	return retArry;
 }
-
+/**
+ * 从钱包获取所有确认与不确认交易
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value listtx(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
-		throw runtime_error(
-				 "listtx\n"
-				 "\nget all confirm transactions and all unconfirm transactions from wallet.\n"
-				 "\nArguments:\n"
-				 "\nResult:\n"
-				 "\nExamples:\n"
-				 + HelpExampleCli("listtx", "")
-                 + HelpExampleRpc("listtx", ""));
+		throw runtime_error("listtx\n"
+				"\nget all confirm transactions and all unconfirm transactions from wallet.\n"
+				"\nArguments:\n"
+				"\nResult:\n"
+				"\nExamples:\n" + HelpExampleCli("listtx", "") + HelpExampleRpc("listtx", ""));
 	}
 
 	Object retObj;
@@ -635,21 +668,23 @@ Value listtx(const Array& params, bool bHelp) {
 	}
 	return retObj;
 }
-
+/**
+ * 返回给定地址的帐户信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getaccountinfo(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
-		  throw runtime_error(
+		throw runtime_error(
 				"getaccountinfo \"addr\"\n"
-				"\nget cAccount information\n"
-				"\nArguments:\n"
-				"1.\"addr\": (string, required)"
-				"Returns an object containing various cAccount info.\n"
-				"\nResult:\n"
-				"\nExamples:\n"
-				+ HelpExampleCli("getaccountinfo", "000000000500\n")
-				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("getaccountinfo", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n")
-		   );
+						"\nget cAccount information\n"
+						"\nArguments:\n"
+						"1.\"addr\": (string, required)"
+						"Returns an object containing various cAccount info.\n"
+						"\nResult:\n"
+						"\nExamples:\n" + HelpExampleCli("getaccountinfo", "000000000500\n") + "\nAs json rpc call\n"
+						+ HelpExampleRpc("getaccountinfo", "5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\n"));
 	}
 	RPCTypeCheck(params, list_of(str_type));
 	CKeyID cKeyID;
@@ -697,20 +732,22 @@ Value getaccountinfo(const Array& params, bool bHelp) {
 	}
 	return obj;
 }
-
-//list unconfirmed transaction of mine
+/**
+ * 列出末确认交易
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value listunconfirmedtx(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
-		 throw runtime_error(
-		            "listunconfirmedtx \n"
-					"\nget the list  of unconfirmedtx.\n"
-		            "\nArguments:\n"
-		        	"\nResult a object about the unconfirm transaction\n"
-		            "\nResult:\n"
-		            "\nExamples:\n"
-		            + HelpExampleCli("listunconfirmedtx", "")
-		            + "\nAs json rpc call\n"
-		            + HelpExampleRpc("listunconfirmedtx", ""));
+		throw runtime_error(
+				"listunconfirmedtx \n"
+						"\nget the list  of unconfirmedtx.\n"
+						"\nArguments:\n"
+						"\nResult a object about the unconfirm transaction\n"
+						"\nResult:\n"
+						"\nExamples:\n" + HelpExampleCli("listunconfirmedtx", "") + "\nAs json rpc call\n"
+						+ HelpExampleRpc("listunconfirmedtx", ""));
 	}
 
 	Object retObj;
@@ -723,8 +760,12 @@ Value listunconfirmedtx(const Array& params, bool bHelp) {
 
 	return retObj;
 }
-
-//sign
+/**
+ * 签名信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value sign(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 2) {
 		string msg = "sign nrequired \"str\"\n"
@@ -830,7 +871,6 @@ Value sign(const Array& params, bool bHelp) {
 //	obj.push_back(Pair("detailinfo:", array));
 //	return obj;
 //}
-
 static Value AccountLogToJson(const CAccountLog &accoutLog) {
 	Object obj;
 	obj.push_back(Pair("cKeyId", accoutLog.m_cKeyID.ToString()));
@@ -840,22 +880,28 @@ static Value AccountLogToJson(const CAccountLog &accoutLog) {
 
 	return obj;
 }
-
+/**
+ * 得到交易的记录
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value gettxoperationlog(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
-		throw runtime_error("gettxoperationlog \"txhash\"\n"
-					"\nget transaction operation log\n"
-					"\nArguments:\n"
-					"1.\"txhash\": (string required) \n"
-					"\nResult:\n"
-					"\"vOperFund\": (string)\n"
-					"\"authorLog\": (string)\n"
-					"\nExamples:\n"
-					+ HelpExampleCli("gettxoperationlog",
-							"\"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000\"")
-					+ "\nAs json rpc call\n"
-					+ HelpExampleRpc("gettxoperationlog",
-							"\"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000\""));
+		throw runtime_error(
+				"gettxoperationlog \"txhash\"\n"
+						"\nget transaction operation log\n"
+						"\nArguments:\n"
+						"1.\"txhash\": (string required) \n"
+						"\nResult:\n"
+						"\"vOperFund\": (string)\n"
+						"\"authorLog\": (string)\n"
+						"\nExamples:\n"
+						+ HelpExampleCli("gettxoperationlog",
+								"\"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000\"")
+						+ "\nAs json rpc call\n"
+						+ HelpExampleRpc("gettxoperationlog",
+								"\"0001a87352387b5b4d6d01299c0dc178ff044f42e016970b0dc7ea9c72c08e2e494a01020304100000\""));
 	}
 	RPCTypeCheck(params, list_of(str_type));
 	uint256 cTxHash(uint256S(params[0].get_str()));
@@ -879,7 +925,6 @@ Value gettxoperationlog(const Array& params, bool bHelp) {
 	}
 	return retobj;
 }
-
 static Value TestDisconnectBlock(int number) {
 	CBlock cBlock;
 	Object obj;
@@ -911,35 +956,44 @@ static Value TestDisconnectBlock(int number) {
 	obj.push_back(Pair("tip", strprintf("hash:%s hight:%s",g_cChainActive.Tip()->GetBlockHash().ToString(),g_cChainActive.Tip()->m_nHeight)));
 	return obj;
 }
-
+/**
+ * 断开某一块的连接
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value disconnectblock(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
-		throw runtime_error("disconnectblock \"numbers\" \n"
-				"\ndisconnect block\n"
-				"\nArguments:\n"
-				"1. \"numbers \"  (numeric, required) the block numbers.\n"
-				"\nResult:\n"
-				"\"disconnect result\"  (bool) \n"
-				"\nExamples:\n"
-				+ HelpExampleCli("disconnectblock", "\"1\"")
-				+ HelpExampleRpc("gettxoperationlog","\"1\""));
+		throw runtime_error(
+				"disconnectblock \"numbers\" \n"
+						"\ndisconnect block\n"
+						"\nArguments:\n"
+						"1. \"numbers \"  (numeric, required) the block numbers.\n"
+						"\nResult:\n"
+						"\"disconnect result\"  (bool) \n"
+						"\nExamples:\n"
+						+ HelpExampleCli("disconnectblock", "\"1\"")
+						+ HelpExampleRpc("disconnectblock", "\"1\""));
 	}
 	int nNumber = params[0].get_int();
 
 	Value te = TestDisconnectBlock(nNumber);
 	return te;
 }
-
+/**
+ * 重启动客户端
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value resetclient(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
 		throw runtime_error("resetclient \n"
-						"\nreset client\n"
-						"\nArguments:\n"
-						"\nResult:\n"
-						"\nExamples:\n"
-						+ HelpExampleCli("resetclient", "")
-						+ HelpExampleRpc("resetclient",""));
-		}
+				"\nreset client\n"
+				"\nArguments:\n"
+				"\nResult:\n"
+				"\nExamples:\n" + HelpExampleCli("resetclient", "") + HelpExampleRpc("resetclient", ""));
+	}
 	Value te = TestDisconnectBlock(g_cChainActive.Tip()->m_nHeight);
 
 	if (g_cChainActive.Tip()->m_nHeight == 0) {
@@ -973,13 +1027,18 @@ Value resetclient(const Array& params, bool bHelp) {
 	}
 	return te;
 }
-
+/**
+ * 列出注册app
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value listapp(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
 		throw runtime_error("listapp \"showDetail\" \n"
 				"\nget the list register script\n"
 				"\nArguments:\n"
-	            "1. showDetail  (boolean, required)true to show scriptContent,otherwise to not show it.\n"
+				"1. showDetail  (boolean, required)true to show scriptContent,otherwise to not show it.\n"
 				"\nResult an object contain many script data\n"
 				"\nResult:\n"
 				"\nExamples:\n" + HelpExampleCli("listapp", "true") + HelpExampleRpc("listapp", "true"));
@@ -1032,15 +1091,19 @@ Value listapp(const Array& params, bool bHelp) {
 	obj.push_back(Pair("listregedscript", arrayScript));
 	return obj;
 }
-
+/**
+ * 获取注册app的信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getappinfo(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1)
-	        throw runtime_error(
-	            "getappinfo ( \"scriptid\" )\n"
-	            "\nget app information.\n"
-	            "\nArguments:\n"
-	            "1. \"scriptid\"    (string). The script ID. \n"
-	            "\nget app information in the systems\n"
+		throw runtime_error("getappinfo ( \"scriptid\" )\n"
+				"\nget app information.\n"
+				"\nArguments:\n"
+				"1. \"scriptid\"    (string). The script ID. \n"
+				"\nget app information in the systems\n"
 				"\nExamples:\n" + HelpExampleCli("getappinfo", "123-1") + HelpExampleRpc("getappinfo", "123-1"));
 
 	string strRegId = params[0].get_str();
@@ -1068,13 +1131,20 @@ Value getappinfo(const Array& params, bool bHelp) {
 	obj.push_back(Pair("scriptContent", HexStr(cVmScript.m_vuchRom.begin(), cVmScript.m_vuchRom.end())));
 	return obj;
 }
-
+/**
+ * 获得某地址的余额
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getaddrbalance(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
 		string msg = "getaddrbalance nrequired [\"key\",...] ( \"cAccount\" )\n"
 				"\nAdd a nrequired-to-sign multisignature address to the wallet.\n"
-				"Each key is a  address or hex-encoded public key.\n" + HelpExampleCli("getaddrbalance", "")
-				+ "\nAs json rpc call\n" + HelpExampleRpc("getaddrbalance", "");
+				"Each key is a  address or hex-encoded public key.\n"
+				+ HelpExampleCli("getaddrbalance", "")
+				+ "\nAs json rpc call\n"
+				+ HelpExampleRpc("getaddrbalance", "");
 		throw runtime_error(msg);
 	}
 
@@ -1096,19 +1166,25 @@ Value getaddrbalance(const Array& params, bool bHelp) {
 	}
 	return dbalance;
 }
-
+/**
+ * 打包区块
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value generateblock(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
-		throw runtime_error("generateblock \"addr\"\n"
-				"\ncteate a block with the appointed address\n"
-				"\nArguments:\n"
-				"1.\"addr\": (string, required)\n"
-				"\nResult:\n"
-				"\nblockhash\n"
-				"\nExamples:\n" +
-				HelpExampleCli("generateblock", "\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"")
-				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("generateblock", "\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\""));
+		throw runtime_error(
+				"generateblock \"addr\"\n"
+						"\ncteate a block with the appointed address\n"
+						"\nArguments:\n"
+						"1.\"addr\": (string, required)\n"
+						"\nResult:\n"
+						"\nblockhash\n"
+						"\nExamples:\n"
+						+ HelpExampleCli("generateblock", "\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"")
+						+ "\nAs json rpc call\n"
+						+ HelpExampleRpc("generateblock", "\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\""));
 	}
 	//get cKeyId
 	CKeyID cKeyId;
@@ -1125,7 +1201,12 @@ Value generateblock(const Array& params, bool bHelp) {
 	obj.push_back(Pair("blockhash", cHash.GetHex()));
 	return obj;
 }
-
+/**
+ * 列出缓存交易
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value listtxcache(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
 		throw runtime_error("listtxcache\n"
@@ -1133,7 +1214,7 @@ Value listtxcache(const Array& params, bool bHelp) {
 				"\nArguments:\n"
 				"\nResult:\n"
 				"\"txcache\"  (string) \n"
-				"\nExamples:\n" + HelpExampleCli("listtxcache", "")+ HelpExampleRpc("listtxcache", ""));
+				"\nExamples:\n" + HelpExampleCli("listtxcache", "") + HelpExampleRpc("listtxcache", ""));
 	}
 	const map<uint256, vector<uint256> > &mapTxHashByBlockHash = g_pTxCacheTip->GetTxHashCache();
 
@@ -1151,7 +1232,12 @@ Value listtxcache(const Array& params, bool bHelp) {
 
 	return retTxHashArray;
 }
-
+/**
+ * 重载交易缓存数据
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value reloadtxcache(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
 		throw runtime_error("reloadtxcache \n"
@@ -1182,7 +1268,6 @@ Value reloadtxcache(const Array& params, bool bHelp) {
 	obj.push_back(Pair("info", "reload tx cache succeed"));
 	return obj;
 }
-
 static int getDataFromSriptData(CScriptDBViewCache &cache, const CRegID &cRegId, int pagesize, int index,
 		vector<std::tuple<vector<unsigned char>, vector<unsigned char> > >&ret) {
 	int nDbsize;
@@ -1214,19 +1299,24 @@ static int getDataFromSriptData(CScriptDBViewCache &cache, const CRegID &cRegId,
 	}
 	return ret.size();
 }
-
+/**
+ * 获取给定脚本的数据
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getscriptdata(const Array& params, bool bHelp) {
 	if (bHelp || params.size() < 2 || params.size() > 3) {
-		throw runtime_error("getscriptdata \"scriptid\" \"[pagesize or key]\" (\"index\")\n"
-				"\nget the script data by given scriptID\n"
-				"\nArguments:\n"
-				"1.\"scriptid\": (string, required)\n"
-				"2.[pagesize or key]: (pagesize int, required),if only two param,it is key,otherwise it is pagesize\n"
-				"3.\"index\": (int optional)\n"
-				"\nResult:\n"
-				"\nExamples:\n"
-				+ HelpExampleCli("getscriptdata", "\"123456789012\"")
-				+ HelpExampleRpc("getscriptdata", "\"123456789012\""));
+		throw runtime_error(
+				"getscriptdata \"scriptid\" \"[pagesize or key]\" (\"index\")\n"
+						"\nget the script data by given scriptID\n"
+						"\nArguments:\n"
+						"1.\"scriptid\": (string, required)\n"
+						"2.[pagesize or key]: (pagesize int, required),if only two param,it is key,otherwise it is pagesize\n"
+						"3.\"index\": (int optional)\n"
+						"\nResult:\n"
+						"\nExamples:\n" + HelpExampleCli("getscriptdata", "\"123456789012\"")
+						+ HelpExampleRpc("getscriptdata", "\"123456789012\""));
 	}
 	int nHeight = g_cChainActive.Height();
 	//	//RPCTypeCheck(params, list_of(str_type)(int_type)(int_type));
@@ -1278,20 +1368,25 @@ Value getscriptdata(const Array& params, bool bHelp) {
 
 	return script;
 }
-
+/**
+ * 获取脚本有效的数据
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getscriptvalidedata(const Array& params, bool bHelp) {
-	if (bHelp || (params.size() != 3 && params.size() !=4)) {
-		throw runtime_error("getscriptvalidedata \"scriptid\" \"pagesize\" \"index\"\n"
-					"\nget script valide data\n"
-					"\nArguments:\n"
-					"1.\"scriptid\": (string, required)\n"
-					"2.\"pagesize\": (int, required)\n"
-					"3.\"index\": (int, required )\n"
-					"4.\"minconf\":  (numeric, optional, default=1) Only include contract transactions confirmed \n"
-				    "\nResult:\n"
-				    "\nExamples:\n"
-				    + HelpExampleCli("getscriptvalidedata", "\"123456789012\" \"1\"  \"1\"")
-				    + HelpExampleRpc("getscriptvalidedata", "\"123456789012\" \"1\"  \"1\""));
+	if (bHelp || (params.size() != 3 && params.size() != 4)) {
+		throw runtime_error(
+				"getscriptvalidedata \"scriptid\" \"pagesize\" \"index\"\n"
+						"\nget script valide data\n"
+						"\nArguments:\n"
+						"1.\"scriptid\": (string, required)\n"
+						"2.\"pagesize\": (int, required)\n"
+						"3.\"index\": (int, required )\n"
+						"4.\"minconf\":  (numeric, optional, default=1) Only include contract transactions confirmed \n"
+						"\nResult:\n"
+						"\nExamples:\n" + HelpExampleCli("getscriptvalidedata", "\"123456789012\" \"1\"  \"1\"")
+						+ HelpExampleRpc("getscriptvalidedata", "\"123456789012\" \"1\"  \"1\""));
 	}
 	std::shared_ptr<CScriptDBViewCache> pAccountViewCache;
 	if (4 == params.size() && 0 == params[3].get_int()) {
@@ -1333,18 +1428,24 @@ Value getscriptvalidedata(const Array& params, bool bHelp) {
 	}
 	return retArray;
 }
-
+/**
+ * 保存区块到文件
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value saveblocktofile(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 2) {
-		throw runtime_error("saveblocktofile \"blockhash\" \"filepath\"\n"
-				"\n save the given block info to the given file\n"
-				"\nArguments:\n"
-				"1.\"blockhash\": (string, required)\n"
-				"2.\"filepath\": (string, required)\n"
-				"\nResult:\n"
-		        "\nExamples:\n"
-				+ HelpExampleCli("saveblocktofile", "\"12345678901211111\" \"block.log\"")
-				+ HelpExampleRpc("saveblocktofile", "\"12345678901211111\" \"block.log\""));
+		throw runtime_error(
+				"saveblocktofile \"blockhash\" \"filepath\"\n"
+						"\n save the given block info to the given file\n"
+						"\nArguments:\n"
+						"1.\"blockhash\": (string, required)\n"
+						"2.\"filepath\": (string, required)\n"
+						"\nResult:\n"
+						"\nExamples:\n"
+						+ HelpExampleCli("saveblocktofile", "\"12345678901211111\" \"block.log\"")
+						+ HelpExampleRpc("saveblocktofile", "\"12345678901211111\" \"block.log\""));
 	}
 	string strBlockHash = params[0].get_str();
 	uint256 cBlockHash(uint256S(params[0].get_str()));
@@ -1380,17 +1481,22 @@ Value saveblocktofile(const Array& params, bool bHelp) {
 	}
 	return "save succeed";
 }
-
+/**
+ * 获得脚数据库的大小
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getscriptdbsize(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
-		throw runtime_error("getscriptdbsize \"scriptid\"\n"
-							"\nget script data count\n"
-							"\nArguments:\n"
-							"1.\"scriptid\": (string, required)\n"
-							"\nResult:\n"
-							"\nExamples:\n"
-							+ HelpExampleCli("getscriptdbsize", "\"123456789012\"")
-							+ HelpExampleRpc("getscriptdbsize","\"123456789012\""));
+		throw runtime_error(
+				"getscriptdbsize \"scriptid\"\n"
+						"\nget script data count\n"
+						"\nArguments:\n"
+						"1.\"scriptid\": (string, required)\n"
+						"\nResult:\n"
+						"\nExamples:\n" + HelpExampleCli("getscriptdbsize", "\"123456789012\"")
+						+ HelpExampleRpc("getscriptdbsize", "\"123456789012\""));
 	}
 	CRegID cRegId(params[0].get_str());
 	if (cRegId.IsEmpty() == true) {
@@ -1406,22 +1512,30 @@ Value getscriptdbsize(const Array& params, bool bHelp) {
 	}
 	return nDataCount;
 }
-
+/**
+ * 创建一个注册脚本交易
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value registaccounttxraw(const Array& params, bool bHelp) {
-	if (bHelp || (params.size() < 2  || params.size() > 4)) {
-		throw runtime_error("registaccounttxraw \"ullFee\" \"publickey\" (\"minerpublickey\") (\"height\")\n"
-				"\ncreate a register cAccount transaction\n"
-				"\nArguments:\n"
-				"1.ullFee: (numeric, required) pay to miner\n"
-				"2.publickey: (string, required)\n"
-				"3.minerpublickey: (string,optional)\n"
-				"4.height: (numeric, optional) pay to miner\n"
-				"\nResult:\n"
-				"\"txhash\": (string)\n"
-				"\nExamples:\n"
-				+ HelpExampleCli("registaccounttxraw",  "10000 \"038f679e8b63d6f9935e8ca6b7ce1de5257373ac5461874fc794004a8a00a370ae\" \"026bc0668c767ab38a937cb33151bcf76eeb4034bcb75e1632fd1249d1d0b32aa9\" 10 ")
-				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("registaccounttxraw", " 10000 \"038f679e8b63d6f9935e8ca6b7ce1de5257373ac5461874fc794004a8a00a370ae\" \"026bc0668c767ab38a937cb33151bcf76eeb4034bcb75e1632fd1249d1d0b32aa9\" 10"));
+	if (bHelp || (params.size() < 2 || params.size() > 4)) {
+		throw runtime_error(
+				"registaccounttxraw \"ullFee\" \"publickey\" (\"minerpublickey\") (\"height\")\n"
+						"\ncreate a register cAccount transaction\n"
+						"\nArguments:\n"
+						"1.ullFee: (numeric, required) pay to miner\n"
+						"2.publickey: (string, required)\n"
+						"3.minerpublickey: (string,optional)\n"
+						"4.height: (numeric, optional) pay to miner\n"
+						"\nResult:\n"
+						"\"txhash\": (string)\n"
+						"\nExamples:\n"
+						+ HelpExampleCli("registaccounttxraw",
+								"10000 \"038f679e8b63d6f9935e8ca6b7ce1de5257373ac5461874fc794004a8a00a370ae\" \"026bc0668c767ab38a937cb33151bcf76eeb4034bcb75e1632fd1249d1d0b32aa9\" 10 ")
+						+ "\nAs json rpc call\n"
+						+ HelpExampleRpc("registaccounttxraw",
+								" 10000 \"038f679e8b63d6f9935e8ca6b7ce1de5257373ac5461874fc794004a8a00a370ae\" \"026bc0668c767ab38a937cb33151bcf76eeb4034bcb75e1632fd1249d1d0b32aa9\" 10"));
 	}
 	CUserID cUserkey;
 	CUserID cUserMinerkey = CNullID();
@@ -1449,7 +1563,8 @@ Value registaccounttxraw(const Array& params, bool bHelp) {
 		nHight = params[3].get_int();
 	}
 
-	std::shared_ptr<CRegisterAccountTx> tx = std::make_shared<CRegisterAccountTx>(cUserkey, cUserMinerkey, ullFee, nHight);
+	std::shared_ptr<CRegisterAccountTx> tx = std::make_shared<CRegisterAccountTx>(cUserkey, cUserMinerkey, ullFee,
+			nHight);
 	CDataStream cDs(SER_DISK, g_sClientVersion);
 	std::shared_ptr<CBaseTransaction> pBaseTx = tx->GetNewInstance();
 	cDs << pBaseTx;
@@ -1458,17 +1573,22 @@ Value registaccounttxraw(const Array& params, bool bHelp) {
 	obj.push_back(Pair("signhash", pBaseTx->SignatureHash().GetHex()));
 	return obj;
 }
-
+/**
+ * 提交交易
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value submittx(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
-		throw runtime_error("submittx \"transaction\" \n"
-				"\nsubmit transaction\n"
-				"\nArguments:\n"
-				"1.\"transaction\": (string, required)\n"
-				"\nExamples:\n"
-				+ HelpExampleCli("submittx", "\"n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj\"")
-				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("submittx", "\"n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj\""));
+		throw runtime_error(
+				"submittx \"transaction\" \n"
+						"\nsubmit transaction\n"
+						"\nArguments:\n"
+						"1.\"transaction\": (string, required)\n"
+						"\nExamples:\n" + HelpExampleCli("submittx", "\"n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj\"")
+						+ "\nAs json rpc call\n"
+						+ HelpExampleRpc("submittx", "\"n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj\""));
 	}
 	EnsureWalletIsUnlocked();
 	vector<unsigned char> vuch(ParseHex(params[0].get_str()));
@@ -1489,33 +1609,38 @@ Value submittx(const Array& params, bool bHelp) {
 	obj.push_back(Pair("hash", std::get<1>(ret)));
 	return obj;
 }
-
+/**
+ * 创建合约交易的序列化HEX
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value createcontracttxraw(const Array& params, bool bHelp) {
 	if (bHelp || params.size() < 5 || params.size() > 6) {
-		throw runtime_error("createcontracttxraw \"height\" \"ullFee\" \"llAmount\" \"addr\" \"contract\" \n"
-				"\ncreate contract\n"
-				"\nArguments:\n"
-				"1.\"ullFee\": (numeric, required) pay to miner\n"
-				"2.\"llAmount\": (numeric, required)\n"
-				"3.\"addr\": (string, required)\n"
-				"4.\"cAppId\": (string required)"
-				"5.\"contract\": (string, required)\n"
-				"6.\"height\": (int, optional)create height\n"
-				"\nResult:\n"
-				"\"contract tx str\": (string)\n"
-				"\nExamples:\n"
-				+ HelpExampleCli("createcontracttxraw",
-						"1000 01020304 000000000100 [\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"] "
-								"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\","
-								"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"] 10") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("createcontracttxraw",
-						"1000 01020304 000000000100 000000000100 [\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"] "
-								"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\","
-								"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"] 10"));
+		throw runtime_error(
+				"createcontracttxraw \"height\" \"ullFee\" \"llAmount\" \"addr\" \"contract\" \n"
+						"\ncreate contract\n"
+						"\nArguments:\n"
+						"1.\"ullFee\": (numeric, required) pay to miner\n"
+						"2.\"llAmount\": (numeric, required)\n"
+						"3.\"addr\": (string, required)\n"
+						"4.\"cAppId\": (string required)"
+						"5.\"contract\": (string, required)\n"
+						"6.\"height\": (int, optional)create height\n"
+						"\nResult:\n"
+						"\"contract tx str\": (string)\n"
+						"\nExamples:\n"
+						+ HelpExampleCli("createcontracttxraw",
+								"1000 01020304 000000000100 [\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"] "
+										"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\","
+										"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"] 10") + "\nAs json rpc call\n"
+						+ HelpExampleRpc("createcontracttxraw",
+								"1000 01020304 000000000100 000000000100 [\"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"] "
+										"[\"5yNhSL7746VV5qWHHDNLkSQ1RYeiheryk9uzQG6C5d\","
+										"\"5Vp1xpLT8D2FQg3kaaCcjqxfdFNRhxm4oy7GXyBga9\"] 10"));
 	}
 
 	RPCTypeCheck(params, list_of(int_type)(real_type)(real_type)(str_type)(str_type)(str_type));
-
 
 	uint64_t ullFee = AmountToRawValue(params[0]);
 	uint64_t ullAmount = AmountToRawValue(params[1]);
@@ -1562,10 +1687,16 @@ Value createcontracttxraw(const Array& params, bool bHelp) {
 	obj.push_back(Pair("rawtx", HexStr(cDs.begin(), cDs.end())));
 	return obj;
 }
-
+/**
+ * 注册脚本
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value registerscripttxraw(const Array& params, bool bHelp) {
 	if (bHelp || params.size() < 4) {
-		throw runtime_error("registerscripttxraw \"height\" \"ullFee\" \"addr\" \"flag\" \"script or scriptid\" (\"script description\")\n"
+		throw runtime_error(
+				"registerscripttxraw \"height\" \"ullFee\" \"addr\" \"flag\" \"script or scriptid\" (\"script description\")\n"
 						"\nregister script\n"
 						"\nArguments:\n"
 						"1.\"ullFee\": (numeric required) pay to miner\n"
@@ -1631,7 +1762,8 @@ Value registerscripttxraw(const Array& params, bool bHelp) {
 
 	if (params.size() > 5) {
 		string strScriptDesc = params[5].get_str();
-		cVmScript.m_vuchScriptExplain.insert(cVmScript.m_vuchScriptExplain.end(), strScriptDesc.begin(), strScriptDesc.end());
+		cVmScript.m_vuchScriptExplain.insert(cVmScript.m_vuchScriptExplain.end(), strScriptDesc.begin(),
+				strScriptDesc.end());
 	}
 	if (ullFee > 0 && ullFee < CTransaction::m_sMinTxFee) {
 		throw runtime_error("in registerapptx :ullFee is smaller than nMinTxFee\n");
@@ -1687,18 +1819,26 @@ Value registerscripttxraw(const Array& params, bool bHelp) {
 	obj.push_back(Pair("rawtx", HexStr(cDs.begin(), cDs.end())));
 	return obj;
 }
-
+/**
+ * 签名交易
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value sigstr(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 2) {
-		throw runtime_error("sigstr \"str\" \"addr\"\n"
-				"\nsignature transaction\n"
-				"\nArguments:\n"
-				"1.\"str\": (string, required) sig str\n"
-				"2.\"addr\": (string, required)\n"
-				"\nExamples:\n"
-				+ HelpExampleCli("sigstr", "\"1010000010203040506\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" ")
-				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("sigstr", "\"1010000010203040506\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 010203040506\" "));
+		throw runtime_error(
+				"sigstr \"str\" \"addr\"\n"
+						"\nsignature transaction\n"
+						"\nArguments:\n"
+						"1.\"str\": (string, required) sig str\n"
+						"2.\"addr\": (string, required)\n"
+						"\nExamples:\n"
+						+ HelpExampleCli("sigstr",
+								"\"1010000010203040506\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\" ")
+						+ "\nAs json rpc call\n"
+						+ HelpExampleRpc("sigstr",
+								"\"1010000010203040506\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG 010203040506\" "));
 	}
 	vector<unsigned char> vuch(ParseHex(params[0].get_str()));
 	string strAddr = params[1].get_str();
@@ -1769,16 +1909,22 @@ Value sigstr(const Array& params, bool bHelp) {
 	}
 	return obj;
 }
-
+/**
+ * 获取所有交易的信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getalltxinfo(const Array& params, bool bHelp) {
 	if (bHelp || (params.size() != 0 && params.size() != 1)) {
-		throw runtime_error("getalltxinfo \n"
-				"\nget all transaction info\n"
-				"\nArguments:\n"
-				"1.\"nlimitCount\": (numeric, optional, default=0) 0 return all tx, else return number of nlimitCount txs \n"
-				"\nResult:\n"
-				"\nExamples:\n" + HelpExampleCli("getalltxinfo", "") + "\nAs json rpc call\n"
-				+ HelpExampleRpc("getalltxinfo", ""));
+		throw runtime_error(
+				"getalltxinfo \n"
+						"\nget all transaction info\n"
+						"\nArguments:\n"
+						"1.\"nlimitCount\": (numeric, optional, default=0) 0 return all tx, else return number of nlimitCount txs \n"
+						"\nResult:\n"
+						"\nExamples:\n" + HelpExampleCli("getalltxinfo", "") + "\nAs json rpc call\n"
+						+ HelpExampleRpc("getalltxinfo", ""));
 	}
 
 	Object retObj;
@@ -1825,14 +1971,18 @@ Value getalltxinfo(const Array& params, bool bHelp) {
 
 	return retObj;
 }
-
+/**
+ * 打印区块数据信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value printblokdbinfo(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
 		throw runtime_error("printblokdbinfo \n"
 				"\nprint block log\n"
 				"\nArguments:\n"
-				"\nExamples:\n" + HelpExampleCli("printblokdbinfo", "")
-				+ HelpExampleRpc("printblokdbinfo", ""));
+				"\nExamples:\n" + HelpExampleCli("printblokdbinfo", "") + HelpExampleRpc("printblokdbinfo", ""));
 	}
 
 	if (!g_pAccountViewTip->Flush()) {
@@ -1844,21 +1994,28 @@ Value printblokdbinfo(const Array& params, bool bHelp) {
 	WriteBlockLog(false, "");
 	return Value::null;
 }
-
+/**
+ * 获取APP帐户信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getappaccinfo(const Array& params, bool bHelp) {
 	if (bHelp || (params.size() != 2 && params.size() != 3)) {
-		throw runtime_error("getappaccinfo  \"scriptid\" \"address\""
-				"\nget appaccount info\n"
-				"\nArguments:\n"
-				"1.\"scriptid\":(string, required) \n"
-				"2.\"address\": (string, required) \n"
-				"3.\"minconf\"  (numeric, optional, default=1) Only include contract transactions confirmed \n"
-				"\nExamples:\n"
-				+ HelpExampleCli("getappaccinfo", "\"000000100000\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"")
-				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("getappaccinfo", "\"000000100000\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\""));
+		throw runtime_error(
+				"getappaccinfo  \"scriptid\" \"address\""
+						"\nget appaccount info\n"
+						"\nArguments:\n"
+						"1.\"scriptid\":(string, required) \n"
+						"2.\"address\": (string, required) \n"
+						"3.\"minconf\"  (numeric, optional, default=1) Only include contract transactions confirmed \n"
+						"\nExamples:\n"
+						+ HelpExampleCli("getappaccinfo",
+								"\"000000100000\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"")
+						+ "\nAs json rpc call\n"
+						+ HelpExampleRpc("getappaccinfo",
+								"\"000000100000\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\""));
 	}
-
 
 	CRegID cScript(params[0].get_str());
 	vector<unsigned char> vuchkey;
@@ -1886,18 +2043,24 @@ Value getappaccinfo(const Array& params, bool bHelp) {
 	tem.get()->AutoMergeFreezeToFree(cScript.getHight(), g_cChainActive.Tip()->m_nHeight);
 	return Value(tem.get()->toJSON());
 }
-
+/**
+ * 获得输入字符的HASH
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value gethash(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
-		throw runtime_error("gethash  \"str\"\n"
-					"\nget the hash of given str\n"
-					"\nArguments:\n"
-					"1.\"str\": (string, required) \n"
-				    "\nresult an object \n"
-					"\nExamples:\n"
-					+ HelpExampleCli("gethash", "\"0000001000005zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"")
-					+ "\nAs json rpc call\n"
-					+ HelpExampleRpc("gethash", "\"0000001000005zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\""));
+		throw runtime_error(
+				"gethash  \"str\"\n"
+						"\nget the hash of given str\n"
+						"\nArguments:\n"
+						"1.\"str\": (string, required) \n"
+						"\nresult an object \n"
+						"\nExamples:\n"
+						+ HelpExampleCli("gethash", "\"0000001000005zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"")
+						+ "\nAs json rpc call\n"
+						+ HelpExampleRpc("gethash", "\"0000001000005zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\""));
 	}
 
 	string str = params[0].get_str();
@@ -1908,18 +2071,26 @@ Value gethash(const Array& params, bool bHelp) {
 	obj.push_back(Pair("hash", cHash.ToString()));
 	return obj;
 }
-
+/**
+ * 获取APP的key值
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getappkeyvalue(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 2) {
-		throw runtime_error("getappkeyvalue  \"scriptid\" \"array\""
+		throw runtime_error(
+				"getappkeyvalue  \"scriptid\" \"array\""
 						"\nget application key value\n"
 						"\nArguments:\n"
 						"1.\"scriptid\": (string, required) \n"
 						"2.\"array\": (string, required) \n"
 						"\nExamples:\n"
-						+ HelpExampleCli("getappkeyvalue", "\"000000100000\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"")
+						+ HelpExampleCli("getappkeyvalue",
+								"\"000000100000\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\"")
 						+ "\nAs json rpc call\n"
-						+ HelpExampleRpc("getappkeyvalue", "\"000000100000\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\""));
+						+ HelpExampleRpc("getappkeyvalue",
+								"\"000000100000\" \"5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG\""));
 	}
 
 	CRegID cScriptid(params[0].get_str());
@@ -1977,19 +2148,24 @@ Value getappkeyvalue(const Array& params, bool bHelp) {
 
 	return retArry;
 }
-
+/**
+ * 用私钥和签名产生一个检查点
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value gencheckpoint(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 2) {
 		throw runtime_error(
-				 "gencheckpoint \"privatekey\" \"filepath\"\n"
-				 "\ngenerate checkpoint by Private key signature block.\n"
-				 "\nArguments:\n"
-				 "1. \"privatekey\"  (string, required) the private key\n"
-				 "2. \"filepath\"  (string, required) check point block path\n"
-				"\nResult:\n"
-				"\nExamples:\n"
-				 + HelpExampleCli("gencheckpoint", "\"privatekey\" \"filepath\"")
-                 + HelpExampleRpc("gencheckpoint", "\"privatekey\" \"filepath\""));
+				"gencheckpoint \"privatekey\" \"filepath\"\n"
+						"\ngenerate checkpoint by Private key signature block.\n"
+						"\nArguments:\n"
+						"1. \"privatekey\"  (string, required) the private key\n"
+						"2. \"filepath\"  (string, required) check point block path\n"
+						"\nResult:\n"
+						"\nExamples:\n"
+						+ HelpExampleCli("gencheckpoint", "\"privatekey\" \"filepath\"")
+						+ HelpExampleRpc("gencheckpoint", "\"privatekey\" \"filepath\""));
 	}
 	std::string strSecret = params[0].get_str();
 	CDacrsSecret cSecret;
@@ -2035,18 +2211,23 @@ Value gencheckpoint(const Array& params, bool bHelp) {
 	}
 	return obj;
 }
-
+/**
+ * 添加新的检查点
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value setcheckpoint(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
 		throw runtime_error(
-				 "setcheckpoint \"filepath\"\n"
-				 "\nadd new checkpoint and send it out.\n"
-				 "\nArguments:\n"
-				 "1. \"filepath\"  (string, required) check point block path\n"
-				 "\nResult:\n"
-				 "\nExamples:\n"
-		         + HelpExampleCli("setcheckpoint", "\"filepath\"")
-		         + HelpExampleRpc("setcheckpoint", "\"filepath\""));
+				"setcheckpoint \"filepath\"\n"
+						"\nadd new checkpoint and send it out.\n"
+						"\nArguments:\n"
+						"1. \"filepath\"  (string, required) check point block path\n"
+						"\nResult:\n"
+						"\nExamples:\n"
+						+ HelpExampleCli("setcheckpoint", "\"filepath\"")
+						+ HelpExampleRpc("setcheckpoint", "\"filepath\""));
 	}
 	SyncData::CSyncData cData;
 	ifstream file;
@@ -2055,25 +2236,25 @@ Value setcheckpoint(const Array& params, bool bHelp) {
 		throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open check point dump file");
 	}
 	file.seekg(0, file.beg);
-    if (file.good()){
-    	Value reply;
-    	json_spirit::read(file,reply);
-    	const Value & checkpoint = find_value(reply.get_obj(),"chenkpoint");
-    	if(checkpoint.type() ==  json_spirit::null_type) {
-    		throw JSONRPCError(RPC_INVALID_PARAMETER, "read check point failed");
-    	}
-    	const Value & msg = find_value(checkpoint.get_obj(), "msg");
-    	const Value & sig = find_value(checkpoint.get_obj(), "sig");
-    	if(msg.type() == json_spirit::null_type || sig.type() == json_spirit::null_type) {
-    		throw JSONRPCError(RPC_INVALID_PARAMETER, "read msg or sig failed");
-    	}
-    	cData.m_vchMsg = ParseHex(msg.get_str());
-    	cData.m_vchSig = ParseHex(sig.get_str());
-    }
-    file.close();
-    if(!cData.CheckSignature(SysCfg().GetPublicKey())) {
-    	throw JSONRPCError(RPC_INVALID_PARAMETER, "check signature failed");
-    }
+	if (file.good()) {
+		Value reply;
+		json_spirit::read(file, reply);
+		const Value & checkpoint = find_value(reply.get_obj(), "chenkpoint");
+		if (checkpoint.type() == json_spirit::null_type) {
+			throw JSONRPCError(RPC_INVALID_PARAMETER, "read check point failed");
+		}
+		const Value & msg = find_value(checkpoint.get_obj(), "msg");
+		const Value & sig = find_value(checkpoint.get_obj(), "sig");
+		if (msg.type() == json_spirit::null_type || sig.type() == json_spirit::null_type) {
+			throw JSONRPCError(RPC_INVALID_PARAMETER, "read msg or sig failed");
+		}
+		cData.m_vchMsg = ParseHex(msg.get_str());
+		cData.m_vchSig = ParseHex(sig.get_str());
+	}
+	file.close();
+	if (!cData.CheckSignature(SysCfg().GetPublicKey())) {
+		throw JSONRPCError(RPC_INVALID_PARAMETER, "check signature failed");
+	}
 	SyncData::CSyncDataDb cSyncDataDb;
 	std::vector<SyncData::CSyncData> vcData;
 	SyncData::CSyncCheckPoint cSyncCheckPoint;
@@ -2084,16 +2265,20 @@ Value setcheckpoint(const Array& params, bool bHelp) {
 	CheckActiveChain(cSyncCheckPoint.m_height, cSyncCheckPoint.m_hashCheckpoint);
 	vcData.push_back(cData);
 	LOCK(g_cs_vNodes);
-	BOOST_FOREACH(CNode* pNode, g_vNodes)
-	{
-		if (pNode->m_setcheckPointKnown.count(cSyncCheckPoint.m_height) == 0) {
-			pNode->m_setcheckPointKnown.insert(cSyncCheckPoint.m_height);
-			pNode->PushMessage("checkpoint", vcData);
-		}
+	BOOST_FOREACH(CNode* pNode, g_vNodes){
+	if (pNode->m_setcheckPointKnown.count(cSyncCheckPoint.m_height) == 0) {
+		pNode->m_setcheckPointKnown.insert(cSyncCheckPoint.m_height);
+		pNode->PushMessage("checkpoint", vcData);
 	}
+}
 	return tfm::format("sendcheckpoint :%d\n", cSyncCheckPoint.m_height);
 }
-
+/**
+ * 检查地址有效性
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value validateaddress(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
 		throw runtime_error(
@@ -2117,7 +2302,12 @@ Value validateaddress(const Array& params, bool bHelp) {
 		return obj;
 	}
 }
-
+/**
+ * 获得币的总量
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value gettotalcoin(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
 		throw runtime_error("gettotalcoin \n"
@@ -2134,7 +2324,12 @@ Value gettotalcoin(const Array& params, bool bHelp) {
 	}
 	return obj;
 }
-
+/**
+ * 获取应用的总资产
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value gettotalassets(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
 		throw runtime_error("gettotalassets \n"
@@ -2181,7 +2376,12 @@ Value gettotalassets(const Array& params, bool bHelp) {
 	}
 	return obj;
 }
-
+/**
+ * 通过地址获取所有的交易HASH
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value gettxhashbyaddress(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 2) {
 		throw runtime_error(
@@ -2224,17 +2424,23 @@ Value gettxhashbyaddress(const Array& params, bool bHelp) {
 	}
 	return obj;
 }
-
+/**
+ * 获得原始交易
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getrawtx(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
-		throw runtime_error("submittx \"transaction\" \n"
-				"\nsubmit transaction\n"
-				"\nArguments:\n"
-				"1.\"transaction\": (string, required)\n"
-				"\nExamples:\n"
-				+ HelpExampleCli("submittx", "\"n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj\"")
-				+ "\nAs json rpc call\n"
-				+ HelpExampleRpc("submittx", "\"n2dha9w3bz2HPVQzoGKda3Cgt5p5Tgv6oj\""));
+		throw runtime_error(
+				"getrawtx \"transaction\" \n"
+						"\nsubmit transaction\n"
+						"\nArguments:\n"
+						"1.\"transaction\": (string, required)\n"
+						"\nExamples:\n"
+						+ HelpExampleCli("getrawtx", "\"\"")
+						+ "\nAs json rpc call\n"
+						+ HelpExampleRpc("getrawtx", "\"\""));
 	}
 	EnsureWalletIsUnlocked();
 	vector<unsigned char> vuch(ParseHex(params[0].get_str()));
@@ -2266,7 +2472,7 @@ Value getrawtx(const Array& params, bool bHelp) {
 		cDataStreamRawTx << pTx->m_ullValues;
 		cDataStreamRawTx << pTx->m_vchContract;
 		cDataStreamRawTx << pTx->m_vchSignature;
-	}  else if (pa->m_chTxType == EM_REWARD_TX) {
+	} else if (pa->m_chTxType == EM_REWARD_TX) {
 		CRewardTransaction * pRewardTx = (CRewardTransaction *) pa.get();
 		cDataStreamRawTx << pRewardTx->m_nVersion;
 		CID acctId(pRewardTx->m_cAccount);
@@ -2278,13 +2484,13 @@ Value getrawtx(const Array& params, bool bHelp) {
 		cDataStreamRawTx << pRegAppTx->m_nVersion;
 		cDataStreamRawTx << pRegAppTx->m_nValidHeight;
 		CID regId(pRegAppTx->m_cRegAcctId);
-		cDataStreamRawTx	<< regId;
+		cDataStreamRawTx << regId;
 		cDataStreamRawTx << pRegAppTx->m_vchScript;
 		cDataStreamRawTx << pRegAppTx->m_ullFees;
 		cDataStreamRawTx << pRegAppTx->m_vchSignature;
 
 	} else {
-		 throw runtime_error("seiralize tx type value error, must be ranger(1...5)\n");
+		throw runtime_error("seiralize tx type value error, must be ranger(1...5)\n");
 	}
 	vector<unsigned char> vuchRetCh(cDataStreamRawTx.begin(), cDataStreamRawTx.end());
 	Object obj;

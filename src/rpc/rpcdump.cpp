@@ -45,6 +45,12 @@ string DecodeDumpString(const string &str) {
 	return ret.str();
 }
 
+/**
+ * 从钱包丢弃私钥
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value dropprivkey(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
 		throw runtime_error("dropprivkey \n"
@@ -63,7 +69,12 @@ Value dropprivkey(const Array& params, bool bHelp) {
 	reply2.push_back(Pair("info", "wallet is ready for cool miner"));
 	return reply2;
 }
-
+/**
+ * 导入私钥
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value importprivkey(const Array& params, bool bHelp) {
 	if (bHelp || params.size() < 1 || params.size() > 3) {
 		throw runtime_error(
@@ -123,7 +134,12 @@ Value importprivkey(const Array& params, bool bHelp) {
 	reply2.push_back(Pair("imorpt key address", cPubkey.GetKeyID().ToAddress()));
 	return reply2;
 }
-
+/**
+ * 导入钱包
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value importwallet(const Array& params, bool bHelp) {
     if (bHelp || params.size() != 1) {
 		throw runtime_error(
@@ -184,7 +200,12 @@ Value importwallet(const Array& params, bool bHelp) {
     reply2.push_back(Pair("imorpt key size",nPort));
     return reply2;
 }
-
+/**
+ * 显示对应的私钥
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value dumpprivkey(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
 		throw runtime_error(
@@ -229,7 +250,12 @@ Value dumpprivkey(const Array& params, bool bHelp) {
 	}
 	return reply;
 }
-
+/**
+ * 以可读格式转储钱包钥匙
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value dumpwallet(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
 		throw runtime_error("dumpwallet \"filename\"\n"

@@ -31,6 +31,12 @@ static bool GetKeyId(string const &strAddr, CKeyID &cKeyId) {
 	return true;
 }
 
+/**
+ * 获取余额
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getbalance(const Array& params, bool bHelp) {
 	int nSize = params.size();
 	if (bHelp || params.size() > 2) {
@@ -147,7 +153,12 @@ Value getbalance(const Array& params, bool bHelp) {
 
 	throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid  address");
 }
-
+/**
+ * 获取当前信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getinfo(const Array& params, bool bHelp) {
     if (bHelp || params.size() != 0) {
         throw runtime_error(
@@ -238,7 +249,12 @@ class DescribeAddressVisitor: public boost::static_visitor<Object> {
 		return obj;
 	}
 };
-
+/**
+ * 校验信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value verifymessage(const Array& params, bool bHelp) {
     if (bHelp || params.size() != 3) {
         throw runtime_error(

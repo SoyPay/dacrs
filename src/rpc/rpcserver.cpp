@@ -165,7 +165,12 @@ string CRPCTable::help(string strCommand) const {
 	strRet = strRet.substr(0, strRet.size() - 1);
 	return strRet;
 }
-
+/**
+ * 帮助信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value help(const Array& params, bool bHelp) {
     if (bHelp || params.size() > 1) {
         throw runtime_error(
@@ -184,7 +189,12 @@ Value help(const Array& params, bool bHelp) {
     }
     return g_TableRPC.help(strCommand);
 }
-
+/**
+ * 停止服务
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value stop(const Array& params, bool bHelp) {
 	// Accept the deprecated and ignored 'detach' boolean argument
 	if (bHelp || params.size() > 1) {

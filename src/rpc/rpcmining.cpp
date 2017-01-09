@@ -92,7 +92,12 @@ Value GetNetworkHashPS(int nLookup, int nHeight) {
 
     return (int64_t)(cWorkDiff.getdouble() / llTimeDiff);
 }
-
+/**
+ * 获得网络HASH
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getnetworkhashps(const Array& params, bool bHelp) {
 	if (bHelp || params.size() > 2) {
 		throw runtime_error(
@@ -120,7 +125,12 @@ void SetMinerStatus(bool bstatue) {
 static bool getMiningInfo() {
 	return g_sIsMining;
 }
-
+/**
+ * 手工挖矿
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value setgenerate(const Array& params, bool bHelp) {
 	if (bHelp || (params.size() != 1 && params.size() != 2)) {
 		throw runtime_error(
@@ -179,7 +189,12 @@ Value setgenerate(const Array& params, bool bHelp) {
 	obj.push_back(Pair("msg", "in  mining"));
 	return obj;
 }
-
+/**
+ * 获取挖矿信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getmininginfo(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
 		throw runtime_error(
@@ -216,7 +231,12 @@ Value getmininginfo(const Array& params, bool bHelp) {
 	obj.push_back(Pair("generate", getMiningInfo()));
 	return obj;
 }
-
+/**
+ * 提交新区块到网络
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value submitblock(const Array& params, bool bHelp) {
 	if (bHelp || params.size() < 1 || params.size() > 2) {
 		throw runtime_error(

@@ -73,7 +73,12 @@ Object blockToJSON(const CBlock& cBlock, const CBlockIndex* cBlockIndex) {
 	}
 	return result;
 }
-
+/**
+ * 获取区块总数
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getblockcount(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
 		throw runtime_error("getblockcount\n"
@@ -85,7 +90,12 @@ Value getblockcount(const Array& params, bool bHelp) {
 
 	return g_cChainActive.Height();
 }
-
+/**
+ * 获取最近的区块HASH
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getbestblockhash(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
 		throw runtime_error("getbestblockhash\n"
@@ -96,7 +106,12 @@ Value getbestblockhash(const Array& params, bool bHelp) {
 	}
 	return g_cChainActive.Tip()->GetBlockHash().GetHex();
 }
-
+/**
+ * 获取当前难度值
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getdifficulty(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
 		throw runtime_error("getdifficulty\n"
@@ -108,7 +123,12 @@ Value getdifficulty(const Array& params, bool bHelp) {
 
 	return GetDifficulty();
 }
-
+/**
+ * 获得内存池交易标识
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getrawmempool(const Array& params, bool bHelp) {
 	if (bHelp || params.size() > 1) {
 		throw runtime_error(
@@ -181,7 +201,12 @@ Value getrawmempool(const Array& params, bool bHelp) {
 		return arr;
 	}
 }
-
+/**
+ * 获取某一个区块的HASH
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getblockhash(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
 		throw runtime_error("getblockhash index\n"
@@ -202,7 +227,12 @@ Value getblockhash(const Array& params, bool bHelp) {
 	result.push_back(Pair("hash", pBlockIndex->GetBlockHash().GetHex()));
 	return result;
 }
-
+/**
+ * 获取区块的信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getblock(const Array& params, bool bHelp) {
 	if (bHelp || params.size() < 1 || params.size() > 2)
 		throw runtime_error(
@@ -274,9 +304,14 @@ Value getblock(const Array& params, bool bHelp) {
 
 	return blockToJSON(cBlock, pcBlockIndex);
 }
-
+/**
+ * 验证区块数据库
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value verifychain(const Array& params, bool bHelp) {
-    if (bHelp || params.size() > 2) {
+	if (bHelp || params.size() > 2) {
 		throw runtime_error(
 				"verifychain ( checklevel numblocks )\n"
 						"\nVerifies blockchain database.\n"
@@ -287,7 +322,7 @@ Value verifychain(const Array& params, bool bHelp) {
 						"true|false       (boolean) Verified or not\n"
 						"\nExamples:\n" + HelpExampleCli("verifychain", "( checklevel numblocks )")
 						+ HelpExampleRpc("verifychain", "( checklevel numblocks )"));
-    }
+	}
 
 	int nCheckLevel = SysCfg().GetArg("-checklevel", 3);
 	int nCheckDepth = SysCfg().GetArg("-checkblocks", 288);
@@ -300,7 +335,12 @@ Value verifychain(const Array& params, bool bHelp) {
 
 	return VerifyDB(nCheckLevel, nCheckDepth);
 }
-
+/**
+ * 获取最近一个区块信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getblockchaininfo(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
 		throw runtime_error("getblockchaininfo\n"
@@ -333,7 +373,12 @@ Value getblockchaininfo(const Array& params, bool bHelp) {
 	obj.push_back(Pair("chainwork", g_cChainActive.Tip()->m_cChainWork.GetHex()));
 	return obj;
 }
-
+/**
+ * 测试用
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value listsetblockindexvalid(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
 		throw runtime_error(
@@ -347,7 +392,12 @@ Value listsetblockindexvalid(const Array& params, bool bHelp) {
 	}
 	return ListSetBlockIndexValid();
 }
-
+/**
+ * 获得脚本ID
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getscriptid(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
 		throw runtime_error(
@@ -356,7 +406,8 @@ Value getscriptid(const Array& params, bool bHelp) {
 						"\nArguments:\n"
 						"1. txhash   (string, required) the transaction hash.\n"
 						"\nResult:\n"
-						"\nExamples:\n" + HelpExampleCli("getscriptid", "5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG")
+						"\nExamples:\n"
+						+ HelpExampleCli("getscriptid", "5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG")
 						+ HelpExampleRpc("getscriptid", "5zQPcC1YpFMtwxiH787pSXanUECoGsxUq3KZieJxVG"));
 	}
 
@@ -390,7 +441,12 @@ Value getscriptid(const Array& params, bool bHelp) {
 	result.push_back(Pair("script", HexStr(cStriptID.GetVec6())));
 	return result;
 }
-
+/**
+ * 列出检查点
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value listcheckpoint(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
 		throw runtime_error("listcheckpoint index\n"

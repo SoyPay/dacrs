@@ -38,7 +38,12 @@ void EnsureWalletIsUnlocked() {
 				"Error: Please enter the wallet passphrase with walletpassphrase first.");
 	}
 }
-
+/**
+ * 钱包是否被锁定
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value islocked(const Array& params, bool bHelp) {
 	if (bHelp) {
 		return true;
@@ -53,7 +58,12 @@ Value islocked(const Array& params, bool bHelp) {
 	}
 	return obj;
 }
-
+/**
+ * 生成新地址
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getnewaddress(const Array& params, bool bHelp)
 {
     if (bHelp || params.size() > 1) {
@@ -96,7 +106,12 @@ Value getnewaddress(const Array& params, bool bHelp)
 	obj.push_back(Pair("minerpubkey", bIsForMiner ? cMinter.GetPubKey().ToString() : "no"));
 	return obj;
 }
-
+/**
+ * 签名一段信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value signmessage(const Array& params, bool bHelp) {
     if (bHelp || params.size() != 2) {
         throw runtime_error(
@@ -142,7 +157,12 @@ Value signmessage(const Array& params, bool bHelp) {
 	}
 	return EncodeBase64(&vuchSig[0], vuchSig.size());
 }
-
+/**
+ * 指定小费发送总额到指定地址
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value sendtoaddresswithfee(const Array& params, bool bHelp) {
 	int nSize = params.size();
 	if (bHelp || (!(nSize == 3 || nSize == 4))) {
@@ -267,7 +287,12 @@ Value sendtoaddresswithfee(const Array& params, bool bHelp) {
 	obj.push_back(Pair(std::get<0>(ret) ? "hash" : "error code", std::get<1>(ret)));
 	return obj;
 }
-
+/**
+ * 由输入信息创建发送交易
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value sendtoaddressraw(const Array& params, bool bHelp) {
 	int nSize = params.size();
 	if (bHelp || nSize < 5 || nSize > 6 ) {
@@ -365,7 +390,12 @@ Value sendtoaddressraw(const Array& params, bool bHelp) {
 	obj.push_back(Pair("signhash", tx->SignatureHash().GetHex()));
 	return obj;
 }
-
+/**
+ * 归集余额
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value notionalpoolingbalance(const Array& params, bool bHelp) {
 	int nSize = params.size();
 	if (bHelp || (nSize != 2)) {
@@ -469,7 +499,12 @@ Value notionalpoolingbalance(const Array& params, bool bHelp) {
 	retObj.push_back(Pair("Tx", arrayTxIds));
 	return retObj;
 }
-
+/**
+ * 分散余额
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value dispersebalance(const Array& params, bool bHelp) {
 	int nSize = params.size();
 	if (bHelp || (nSize != 2)) {
@@ -582,7 +617,12 @@ typedef struct {
 	)
 } ST_TRAN_USER;
 #pragma pack()
-
+/**
+ * 归集资产
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value notionalpoolingasset(const Array& params, bool bHelp) {
 	if(bHelp || params.size() < 2) {
 		throw runtime_error(
@@ -701,7 +741,12 @@ Value notionalpoolingasset(const Array& params, bool bHelp) {
 	retObj.push_back(Pair("Tx", arrayTxIds));
 	return retObj;
 }
-
+/**
+ * 所有资产的集合
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getassets(const Array& params, bool bHelp) {
 	if (bHelp || params.size() < 1) {
 		throw runtime_error(
@@ -770,7 +815,12 @@ Value getassets(const Array& params, bool bHelp) {
 
 	return retObj;
 }
-
+/**
+ * 发送到指定地址
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value sendtoaddress(const Array& params, bool bHelp) {
 	int nSize = params.size();
 	if (bHelp || (!(nSize == 2 || nSize == 3))) {
@@ -873,7 +923,12 @@ Value sendtoaddress(const Array& params, bool bHelp) {
 	obj.push_back(Pair("hash", std::get<1>(ret)));
 	return obj;
 }
-
+/**
+ * 备份钱包
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value backupwallet(const Array& params, bool bHelp) {
     if (bHelp || params.size() != 1) {
         throw runtime_error(
@@ -898,7 +953,12 @@ static void LockWallet(CWallet* pWallet) {
 	g_llWalletUnlockTime = 0;
 	pWallet->Lock();
 }
-
+/**
+ * 定时解锁钱包
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value walletpassphrase(const Array& params, bool bHelp) {
     if (g_pwalletMain->IsCrypted() && (bHelp || params.size() != 2)) {
         throw runtime_error(
@@ -952,7 +1012,12 @@ Value walletpassphrase(const Array& params, bool bHelp) {
     retObj.push_back(Pair("passphrase", true));
     return retObj;
 }
-
+/**
+ * 修改钱包密码
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value walletpassphrasechange(const Array& params, bool bHelp) {
     if (g_pwalletMain->IsCrypted() && (bHelp || params.size() != 2)) {
         throw runtime_error(
@@ -994,7 +1059,12 @@ Value walletpassphrasechange(const Array& params, bool bHelp) {
 	retObj.push_back(Pair("chgpwd", true));
 	return retObj;
 }
-
+/**
+ * 锁钱包
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value walletlock(const Array& params, bool bHelp) {
     if (g_pwalletMain->IsCrypted() && (bHelp || params.size() != 0)) {
         throw runtime_error(
@@ -1029,7 +1099,12 @@ Value walletlock(const Array& params, bool bHelp) {
     retObj.push_back(Pair("walletlock", true));
     return retObj;
 }
-
+/**
+ * 加密钱包
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value encryptwallet(const Array& params, bool bHelp) {
     if (!g_pwalletMain->IsCrypted() && (bHelp || params.size() != 1)) {
         throw runtime_error(
@@ -1085,7 +1160,12 @@ Value encryptwallet(const Array& params, bool bHelp) {
     return retObj;
     //return "wallet encrypted; Dacrs server stopping, restart to run with encrypted wallet. The keypool has been flushed, you need to make a new backup.";
 }
-
+/**
+ * 设置交易小费
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value settxfee(const Array& params, bool bHelp) {
     if (bHelp || params.size() < 1 || params.size() > 1) {
         throw runtime_error(
@@ -1109,7 +1189,12 @@ Value settxfee(const Array& params, bool bHelp) {
 
 	return true;
 }
-
+/**
+ * 获取钱包信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getwalletinfo(const Array& params, bool bHelp) {
     if (bHelp || params.size() != 0) {
         throw runtime_error(

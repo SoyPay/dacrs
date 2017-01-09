@@ -16,7 +16,12 @@
 
 using namespace json_spirit;
 using namespace std;
-
+/**
+ * 获取网络连接数
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getconnectioncount(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
         throw runtime_error(
@@ -32,7 +37,12 @@ Value getconnectioncount(const Array& params, bool bHelp) {
     LOCK(g_cs_vNodes);
     return (int)g_vNodes.size();
 }
-
+/**
+ * ping一下所有节点
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value ping(const Array& params, bool bHelp) {
     if (bHelp || params.size() != 0) {
         throw runtime_error(
@@ -63,7 +73,12 @@ static void CopyNodeStats(vector<CNodeStats>& vcNodeStats) {
 		vcNodeStats.push_back(cNodeStats);
 	}
 }
-
+/**
+ * 获得每个连接节点的信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getpeerinfo(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
         throw runtime_error(
@@ -137,7 +152,12 @@ Value getpeerinfo(const Array& params, bool bHelp) {
 
 	return ret;
 }
-
+/**
+ * 添加节点
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value addnode(const Array& params, bool bHelp) {
 	string strCommand;
 	if (params.size() == 2) {
@@ -187,7 +207,12 @@ Value addnode(const Array& params, bool bHelp) {
 
 	return Value::null;
 }
-
+/**
+ * 返回添加节点的信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getaddednodeinfo(const Array& params, bool bHelp) {
 	if (bHelp || params.size() < 1 || params.size() > 2) {
         throw runtime_error(
@@ -296,7 +321,12 @@ Value getaddednodeinfo(const Array& params, bool bHelp) {
 
     return ret;
 }
-
+/**
+ * 获取网络参数（发送、接收，时长）
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getnettotals(const Array& params, bool bHelp) {
 	if (bHelp || params.size() > 0) {
         throw runtime_error(
@@ -321,6 +351,12 @@ Value getnettotals(const Array& params, bool bHelp) {
 	return obj;
 }
 
+/**
+ * 获得P2P网络的状态信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getnetworkinfo(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 0) {
 		throw runtime_error(
@@ -371,10 +407,12 @@ Value getnetworkinfo(const Array& params, bool bHelp) {
 	return obj;
 }
 
-/*
- *   获取最近 N个块状态信息: getdacrsstate  param
- *
- * */
+/**
+ * 获取最近 N个块状态信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
 Value getdacrsstate(const Array& params, bool bHelp) {
 	if (bHelp || params.size() != 1) {
         throw runtime_error(
