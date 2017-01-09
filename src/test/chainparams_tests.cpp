@@ -18,17 +18,17 @@
 BOOST_AUTO_TEST_SUITE(chainparam_tests)
 
 static void ResetArgs(const std::string& strArg) {
-	std::vector<std::string> vecArg;
-	boost::split(vecArg, strArg, boost::is_space(), boost::token_compress_on);
+	std::vector<std::string> vstrArg;
+	boost::split(vstrArg, strArg, boost::is_space(), boost::token_compress_on);
 
 	// Insert dummy executable name:
-	vecArg.insert(vecArg.begin(), "testbitcoin");
+	vstrArg.insert(vstrArg.begin(), "testbitcoin");
 
 	// Convert to char*:
 	std::vector<const char*> vecChar;
-	for (auto& s : vecArg)
+	for (auto& s : vstrArg) {
 		vecChar.push_back(s.c_str());
-
+	}
 	CBaseParams::IntialParams(vecChar.size(), &vecChar[0]);
 }
 
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(chain_main) {
 //	BOOST_CHECK(SysParamsMain().ProofOfWorkLimit() == (~arith_uint256(0) >> 10));
 	BOOST_CHECK(SysParamsMain().RequireRPCPassword() == true);
 	BOOST_CHECK(SysParamsMain().DataDir() == "main");
-	BOOST_CHECK(SysParamsMain().NetworkID() == CBaseParams::MAIN);
+	BOOST_CHECK(SysParamsMain().NetworkID() == CBaseParams::EM_MAIN);
 	BOOST_CHECK(SysParamsMain().RPCPort() == 18332);
 }
 
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(chain_test) {
 
 	BOOST_CHECK(SysParamsTest().RequireRPCPassword() == true);
 	BOOST_CHECK(SysParamsTest().DataDir() == "testnet");
-	BOOST_CHECK(SysParamsTest().NetworkID() == CBaseParams::TESTNET);
+	BOOST_CHECK(SysParamsTest().NetworkID() == CBaseParams::EM_TESTNET);
 	BOOST_CHECK(SysParamsTest().RPCPort() == 18383);
 }
 
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(chain_regtest) {
 	BOOST_CHECK(SysParamsReg().SubsidyHalvingInterval() == 150);
 	BOOST_CHECK(SysParamsReg().RequireRPCPassword() == false);
 	BOOST_CHECK(SysParamsReg().DataDir() == "regtest");
-	BOOST_CHECK(SysParamsReg().NetworkID() == CBaseParams::REGTEST);
+	BOOST_CHECK(SysParamsReg().NetworkID() == CBaseParams::EM_REGTEST);
 	BOOST_CHECK(SysParamsReg().RPCPort() == 18383);
 }
 

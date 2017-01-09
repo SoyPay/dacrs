@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DACRS_THREADSAFETY_H
-#define DACRS_THREADSAFETY_H
+#ifndef DACRS_THREADSAFETY_H_
+#define DACRS_THREADSAFETY_H_
 
 #ifdef __clang__
 // TL;DR Add GUARDED_BY(mutex) to member variables. The others are
@@ -51,4 +51,4 @@
 #define SHARED_LOCKS_REQUIRED(...)
 #define NO_THREAD_SAFETY_ANALYSIS
 #endif  // __GNUC__
-#endif  // DACRS_THREADSAFETY_H
+#endif  // DACRS_THREADSAFETY_H_

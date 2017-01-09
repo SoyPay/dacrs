@@ -1,14 +1,14 @@
 /*
- * CBlackHalo_tests.h
+ * ipo_tests.h
  *
  *  Created on: 2015-04-24
  *      Author: frank.shi
  */
 
-#ifndef CANONY_TESTS_H
-#define CANONY_TESTS_H
+#ifndef DACRS_PTEST_IPO_TESTS_H_
+#define DACRS_PTEST_IPO_TESTS_H_
 
-#include "CycleTestBase.h"
+#include "cycle_test_base.h"
 #include "../test/systestbase.h"
 #include "../rpc/rpcclient.h"
 #include "tx.h"
@@ -22,20 +22,21 @@ using namespace json_spirit;
 //#define SEND_A    "dtKsuK9HUvLLHtBQL8Psk5fUnTLTFC83GS"  // 0-20
 
 class CIpoTest: public CycleTestBase {
-	int nNum;
-	int nStep;
-	string strTxHash;
-	string strAppRegId;//注册应用后的Id
-public:
+ public:
 	CIpoTest();
 	~CIpoTest(){};
-	virtual TEST_STATE Run() ;
+	virtual emTEST_STATE Run() ;
 	bool RegistScript();
-	bool CreateIpoTx(string contact,int64_t llSendTotal);
-	bool SendIpoTx(unsigned char type);
-	void RunIpo(unsigned char type);
+	bool CreateIpoTx(string strContact,int64_t llSendTotal);
+	bool SendIpoTx(unsigned char uchType);
+	void RunIpo(unsigned char uchType);
 	void SendErrorIopTx();
 
+ private:
+	int m_nNum;
+	int m_nStep;
+	string m_strTxHash;
+	string m_strAppRegId;	//注册应用后的Id
 };
 
-#endif /* CANONY_TESTS_H */
+#endif /* DACRS_PTEST_IPO_TESTS_H_ */

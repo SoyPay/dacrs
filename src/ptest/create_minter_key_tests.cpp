@@ -1,9 +1,10 @@
 /*
- * createminterkey.cpp
+ * create_minter_key_tests.cpp
  *
  *  Created on: 2015Äê4ÔÂ13ÈÕ
  *      Author: ranger.shi
  */
+
 #include <stdlib.h>
 #include <time.h>
 #include "main.h"
@@ -38,26 +39,26 @@ using namespace boost::unit_test;
 using namespace std;
 using namespace boost;
 
+#include "create_minter_key_tests.h"
 
-#include "CreateMinterKey_tests.h"
+const uint64_t g_ullSendMoney = 10000 * COIN;
 
-
-const uint64_t sendMoney = 10000 * COIN;
 bool CCreateMinerkey::SelectAccounts() {
-	const char *argv[] = { "rpctest", "listaddr"};
-	int argc = sizeof(argv) / sizeof(char*);
+	const char *kszArgv[] = { "rpctest", "listaddr" };
+	int nArgc = sizeof(kszArgv) / sizeof(char*);
 
 	Value value;
-	if (CommandLineRPC_GetValue(argc, argv, value)) {
+	if (CommandLineRPC_GetValue(nArgc, kszArgv, value)) {
 		if (value.type() == null_type) {
 			return false;
 		}
-		for(auto & item : value.get_array()) {
+		for (auto & item : value.get_array()) {
 			const Value& balance = find_value(item.get_obj(), "balance");
-			if(balance.get_real() > 1000000.0) {
+			if (balance.get_real() > 1000000.0) {
 				const Value& regId = find_value(item.get_obj(), "regid");
-				if("" != regId.get_str() && " "!=regId.get_str())
-					vAccount.push_back(regId.get_str());
+				if ("" != regId.get_str() && " " != regId.get_str()) {
+					m_vstrAccount.push_back(regId.get_str());
+				}
 			}
 		}
 	}
@@ -65,11 +66,12 @@ bool CCreateMinerkey::SelectAccounts() {
 }
 
 string CCreateMinerkey::GetOneAccount() {
-	for(auto &item : vAccount) {
-		if(GetBalance(item) > 1000000 * COIN) {
-			mapSendValue[item] += sendMoney;
-			if(mapSendValue[item] > 8000000 * COIN)
+	for (auto &item : m_vstrAccount) {
+		if (GetBalance(item) > 1000000 * COIN) {
+			m_mapSendValue[item] += g_ullSendMoney;
+			if (m_mapSendValue[item] > 8000000 * COIN) {
 				continue;
+			}
 			return item;
 		}
 	}
@@ -77,40 +79,41 @@ string CCreateMinerkey::GetOneAccount() {
 }
 
 void CCreateMinerkey::CreateAccount() {
-//	if(2 == argc){
-//		const char* newArgv[] = {argv[0], argv[2] };
-//		CBaseParams::IntialParams(2, newArgv);
-//	}
-	if(!SelectAccounts())
+	//	if(2 == argc){
+	//		const char* newArgv[] = {argv[0], argv[2] };
+	//		CBaseParams::IntialParams(2, newArgv);
+	//	}
+	if (!SelectAccounts()) {
 		return;
-	std::string TxHash("");
-	const int nNewAddrs = 1540;
-	string hash = "";
-	vector<string> vNewAddress;
-//	string strAddress[] = {"0-1","0-2","0-3","0-4","0-5"};
+	}
+	string strTxHash("");
+	const int knNewAddrs = 1540;
+	string strHash = "";
+	vector<string> vstrNewAddress;
+	//	string strAddress[] = {"0-1","0-2","0-3","0-4","0-5"};
 
-	for (int i = 0; i < nNewAddrs; i++) {
-		string newaddr;
-		BOOST_CHECK(GetNewAddr(newaddr, true));
-		vNewAddress.push_back(newaddr);
-		string srcAcct = GetOneAccount();
-		if("" == srcAcct) {
+	for (int i = 0; i < knNewAddrs; i++) {
+		string strNewaddr;
+		BOOST_CHECK(GetNewAddr(strNewaddr, true));
+		vstrNewAddress.push_back(strNewaddr);
+		string strSrcAcct = GetOneAccount();
+		if ("" == strSrcAcct) {
 			cout << "Get source acct failed" << endl;
 			return;
 		}
-		Value value = CreateNormalTx( srcAcct, newaddr, sendMoney);
-		BOOST_CHECK(GetHashFromCreatedTx(value, hash));
+		Value value = CreateNormalTx(strSrcAcct, strNewaddr, g_ullSendMoney);
+		BOOST_CHECK(GetHashFromCreatedTx(value, strHash));
 	}
-	int size = 0 ;
+	int nSize = 0;
 	GenerateOneBlock();
 
 	while (1) {
-		if (!GetMemPoolSize(size)) {
+		if (!GetMemPoolSize(nSize)) {
 			cout << "GetMemPoolSize error" << endl;
 			return;
 		}
-		if (size > 0) {
-			cout << "GetMemPoolSize size :" << size << endl;
+		if (nSize > 0) {
+			cout << "GetMemPoolSize size :" << nSize << endl;
 			MilliSleep(100);
 		} else {
 			break;
@@ -118,20 +121,20 @@ void CCreateMinerkey::CreateAccount() {
 
 	}
 
-	for(size_t i=0; i < vNewAddress.size(); i++) {
-		int nfee = GetRandomFee();
-		Value value1 = RegistAccountTx(vNewAddress[i], nfee);
-		BOOST_CHECK(GetHashFromCreatedTx(value1,hash));
+	for (size_t i = 0; i < vstrNewAddress.size(); i++) {
+		int nFee = GetRandomFee();
+		Value value1 = RegistAccountTx(vstrNewAddress[i], nFee);
+		BOOST_CHECK(GetHashFromCreatedTx(value1, strHash));
 	}
 
 	GenerateOneBlock();
 	while (1) {
-		if (!GetMemPoolSize(size)) {
+		if (!GetMemPoolSize(nSize)) {
 			cout << "GetMemPoolSize error" << endl;
 			return;
 		}
-		if (size > 0) {
-			cout << "GetMemPoolSize size :" << size << endl;
+		if (nSize > 0) {
+			cout << "GetMemPoolSize size :" << nSize << endl;
 			MilliSleep(100);
 		} else {
 			break;
@@ -139,21 +142,16 @@ void CCreateMinerkey::CreateAccount() {
 
 	}
 
-	  cout << "all ok  "  <<  endl;
+	cout << "all ok  " << endl;
 }
 
 CCreateMinerkey::~CCreateMinerkey() {
 	// LEARN Auto-generated destructor stub
 }
 
-
-
-
-
 BOOST_FIXTURE_TEST_SUITE(CreateAccount, CCreateMinerkey)
 
-BOOST_FIXTURE_TEST_CASE(create, CCreateMinerkey)
-{
+BOOST_FIXTURE_TEST_CASE(create, CCreateMinerkey){
 	CreateAccount();
 }
 

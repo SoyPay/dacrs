@@ -30,20 +30,20 @@
  * Use the buttons <code>Namespaces</code>, <code>Classes</code> or <code>Files</code> at the top of the page to start navigating the code.
  */
 
-static bool fDaemon =false;
+static bool g_sfDaemon = false;
 
 void DetectShutdownThread(boost::thread_group* threadGroup) {
-	bool fShutdown = ShutdownRequested();
+	bool bShutdown = ShutdownRequested();
 	// Tell the main threads to shutdown.
-	while (!fShutdown) {
+	while (!bShutdown) {
 		MilliSleep(200);
-		fShutdown = ShutdownRequested();
+		bShutdown = ShutdownRequested();
 	}
 	if (threadGroup) {
 		threadGroup->interrupt_all();
 		threadGroup->join_all();
 	}
-	uiInterface.NotifyMessage("server closed");
+	g_cUIInterface.NotifyMessage("server closed");
 	CUIServer::StopServer();
 }
 
@@ -53,8 +53,7 @@ void DetectShutdownThread(boost::thread_group* threadGroup) {
 //
 bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {
 //	boost::thread* detectShutdownThread = NULL;
-
-	bool fRet = false;
+	bool bRet = false;
 	try {
 		//
 		// Parameters
@@ -72,7 +71,7 @@ bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {
 					+ "  Dacrsd [options] help                " + _("List commands") + "\n"
 					+ "  Dacrsd [options] help <command>      " + _("Get help for a command") + "\n";
 
-			strUsage += "\n" + HelpMessage(HMM_BITCOIND);
+			strUsage += "\n" + HelpMessage(EM_HMM_COIND);
 			strUsage += "\n" + HelpMessageCli(false);
 
 			fprintf(stdout, "%s", strUsage.c_str());
@@ -80,53 +79,46 @@ bool AppInit(int argc, char* argv[],boost::thread_group &threadGroup) {
 		}
 
 		// Command-line RPC
-		bool fCommandLine = false;
-		for (int i = 1; i < argc; i++)
-			if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "Dacrs:"))
-				fCommandLine = true;
-
-		if (fCommandLine) {
+		bool bCommandLine = false;
+		for (int i = 1; i < argc; i++) {
+			if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "Dacrs:")) {
+				bCommandLine = true;
+			}
+		}
+		if (bCommandLine) {
 			int ret = CommandLineRPC(argc, argv);
 			exit(ret);
 		}
 #ifndef WIN32
-		fDaemon = SysCfg().GetBoolArg("-daemon", false);
-		if (fDaemon)
-		{
+		g_sfDaemon = SysCfg().GetBoolArg("-daemon", false);
+		if (g_sfDaemon) {
 			fprintf(stdout, "Dacrs server starting\n");
-
 			// Daemonize
 			pid_t pid = fork();
-			if (pid < 0)
-			{
+			if (pid < 0) {
 				fprintf(stderr, "Error: fork() returned %d errno %d\n", pid, errno);
 				return false;
 			}
-			if (pid > 0) // Parent process, pid is child process id
-			{
+			if (pid > 0) {	// Parent process, pid is child process id
 				CreatePidFile(GetPidFile(), pid);
 				return true;
 			}
 			// Child process falls through to rest of initialization
-
 			pid_t sid = setsid();
-			if (sid < 0)
-			fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
+			if (sid < 0) {
+				fprintf(stderr, "Error: setsid() returned %d errno %d\n", sid, errno);
+			}
 		}
 #endif
 		SysCfg().SoftSetBoolArg("-server", true);
-
-
-		fRet = AppInit2(threadGroup);
+		bRet = AppInit2(threadGroup);
 	} catch (std::exception& e) {
 		PrintExceptionContinue(&e, "AppInit()");
 	} catch (...) {
 		PrintExceptionContinue(NULL, "AppInit()");
 	}
 
-
-
-	return fRet;
+	return bRet;
 }
 std::tuple<bool, boost::thread*> RunDacrs(int argc, char* argv[])
 {
@@ -144,40 +136,36 @@ std::tuple<bool, boost::thread*> RunDacrs(int argc, char* argv[])
 	detectShutdownThread = new boost::thread(boost::bind(&DetectShutdownThread, &threadGroup));
 
 	if (!fRet) {
-		if (detectShutdownThread)
+		if (detectShutdownThread) {
 			detectShutdownThread->interrupt();
-
+		}
 		threadGroup.interrupt_all();
 
 		// threadGroup.join_all(); was left out intentionally here, because we didn't re-test all of
 		// the startup-failure cases to make sure they don't result in a hang due to some
 		// thread-blocking-waiting-for-another-thread-during-startup case
 	}
-  return std::make_tuple (fRet,detectShutdownThread);
+	return std::make_tuple(fRet, detectShutdownThread);
 }
 
 int main(int argc, char* argv[]) {
-
 	std::tuple<bool, boost::thread*> ret = RunDacrs(argc,argv);
-
 	boost::thread* detectShutdownThread  = std::get<1>(ret);
-
-	bool fRet = std::get<0>(ret);
-
+	bool bRet = std::get<0>(ret);
 	if (detectShutdownThread) {
 		detectShutdownThread->join();
 		delete detectShutdownThread;
 		detectShutdownThread = NULL;
 	}
-
 	Shutdown();
 
 #ifndef WIN32
-		fDaemon = SysCfg().GetBoolArg("-daemon", false);
+	g_sfDaemon = SysCfg().GetBoolArg("-daemon", false);
 #endif
 
-	if (fRet && fDaemon)
+	if (bRet && g_sfDaemon) {
 		return 0;
+	}
 
-	return (fRet ? 0 : 1);
+	return (bRet ? 0 : 1);
 }

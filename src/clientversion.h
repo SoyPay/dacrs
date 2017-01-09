@@ -1,5 +1,5 @@
-#ifndef CLIENTVERSION_H
-#define CLIENTVERSION_H
+#ifndef DACRS_CLIENTVERSION_H_
+#define DACRS_CLIENTVERSION_H_
 
 #if defined(HAVE_CONFIG_H)
 #include "dacrs-config.h"
@@ -28,4 +28,4 @@
 #define STRINGIZE(X) DO_STRINGIZE(X)
 #define DO_STRINGIZE(X) #X
 
-#endif // CLIENTVERSION_H
+#endif // DACRS_CLIENTVERSION_H_

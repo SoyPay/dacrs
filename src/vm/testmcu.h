@@ -5,8 +5,8 @@
  *      Author: ranger.shi
  */
 
-#ifndef TESTMCU_H_
-#define TESTMCU_H_
+#ifndef DACRS_VM_TESTMCU_H_
+#define DACRS_VM_TESTMCU_H_
 #include <boost/format.hpp>
 
 #include "vm8051.h"
@@ -16,9 +16,7 @@
 using namespace boost;
 
 class CTestMcu {
-	CVm8051 *pCVir8051;
-
-public:
+ public:
 	static bool IsOdd(unsigned char un);
 	string AJMPTest(int space);
 	string NOPTest(int space);
@@ -141,6 +139,9 @@ public:
 	CTestMcu(CVm8051 *pCVir8051);
 
 	virtual ~CTestMcu();
+
+ private:
+	CVm8051 *m_pCVir8051;
 };
 
-#endif /* TESTMCU_H_ */
+#endif /* DACRS_VM_TESTMCU_H_ */

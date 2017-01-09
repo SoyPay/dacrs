@@ -16,10 +16,14 @@
 
 using namespace json_spirit;
 using namespace std;
-
-Value getconnectioncount(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 0)
+/**
+ * 获取网络连接数
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
+Value getconnectioncount(const Array& params, bool bHelp) {
+	if (bHelp || params.size() != 0) {
         throw runtime_error(
             "getconnectioncount\n"
             "\nReturns the number of connections to other nodes.\n"
@@ -29,14 +33,18 @@ Value getconnectioncount(const Array& params, bool fHelp)
             + HelpExampleCli("getconnectioncount", "")
             + HelpExampleRpc("getconnectioncount", "")
         );
-
-    LOCK(cs_vNodes);
-    return (int)vNodes.size();
+    }
+    LOCK(g_cs_vNodes);
+    return (int)g_vNodes.size();
 }
-
-Value ping(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 0)
+/**
+ * ping一下所有节点
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
+Value ping(const Array& params, bool bHelp) {
+    if (bHelp || params.size() != 0) {
         throw runtime_error(
             "ping\n"
             "\nRequests that a ping be sent to all other nodes, to measure ping time.\n"
@@ -46,32 +54,33 @@ Value ping(const Array& params, bool fHelp)
             + HelpExampleCli("ping", "")
             + HelpExampleRpc("ping", "")
         );
-
-    // Request that each node send a ping during next message processing pass
-    LOCK(cs_vNodes);
-    for (auto pNode : vNodes) {
-        pNode->fPingQueued = true;
     }
-
-    return Value::null;
+	// Request that each node send a ping during next message processing pass
+    LOCK(g_cs_vNodes);
+    for (auto pNode : g_vNodes) {
+        pNode->m_bPingQueued = true;
+	}
+	return Value::null;
 }
 
-static void CopyNodeStats(vector<CNodeStats>& vstats)
-{
-    vstats.clear();
-
-    LOCK(cs_vNodes);
-    vstats.reserve(vNodes.size());
-    for(auto pnode : vNodes) {
-        CNodeStats stats;
-        pnode->copyStats(stats);
-        vstats.push_back(stats);
-    }
+static void CopyNodeStats(vector<CNodeStats>& vcNodeStats) {
+	vcNodeStats.clear();
+    LOCK(g_cs_vNodes);
+    vcNodeStats.reserve(g_vNodes.size());
+    for(auto pNode : g_vNodes) {
+		CNodeStats cNodeStats;
+		pNode->copyStats(cNodeStats);
+		vcNodeStats.push_back(cNodeStats);
+	}
 }
-
-Value getpeerinfo(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 0)
+/**
+ * 获得每个连接节点的信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
+Value getpeerinfo(const Array& params, bool bHelp) {
+	if (bHelp || params.size() != 0) {
         throw runtime_error(
             "getpeerinfo\n"
             "\nReturns data about each connected network node as a json array of objects.\n"
@@ -102,53 +111,60 @@ Value getpeerinfo(const Array& params, bool fHelp)
             + HelpExampleCli("getpeerinfo", "")
             + HelpExampleRpc("getpeerinfo", "")
         );
-
-    vector<CNodeStats> vstats;
-    CopyNodeStats(vstats);
-
-    Array ret;
-
-    for(const CNodeStats& stats: vstats) {
-        Object obj;
-        CNodeStateStats statestats;
-        bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
-        obj.push_back(Pair("addr", stats.addrName));
-        if (!(stats.addrLocal.empty()))
-            obj.push_back(Pair("addrlocal", stats.addrLocal));
-        obj.push_back(Pair("services", strprintf("%08x", stats.nServices)));
-        obj.push_back(Pair("lastsend", stats.nLastSend));
-        obj.push_back(Pair("lastrecv", stats.nLastRecv));
-        obj.push_back(Pair("bytessent", stats.nSendBytes));
-        obj.push_back(Pair("bytesrecv", stats.nRecvBytes));
-        obj.push_back(Pair("conntime", stats.nTimeConnected));
-        obj.push_back(Pair("pingtime", stats.dPingTime));
-        if (stats.dPingWait > 0.0)
-            obj.push_back(Pair("pingwait", stats.dPingWait));
-        obj.push_back(Pair("version", stats.nVersion));
-        // Use the sanitized form of subver here, to avoid tricksy remote peers from
-        // corrupting or modifiying the JSON output by putting special characters in
-        // their ver message.
-        obj.push_back(Pair("subver", stats.cleanSubVer));
-        obj.push_back(Pair("inbound", stats.fInbound));
-        obj.push_back(Pair("startingheight", stats.nStartingHeight));
-        if (fStateStats) {
-            obj.push_back(Pair("banscore", statestats.nMisbehavior));
-        }
-        obj.push_back(Pair("syncnode", stats.fSyncNode));
-
-        ret.push_back(obj);
     }
+    vector<CNodeStats> vcStats;
+    CopyNodeStats(vcStats);
 
-    return ret;
+	Array ret;
+
+	for (const CNodeStats& stats : vcStats) {
+		Object obj;
+		ST_NodeStateStats tStatestats;
+		bool bStateStats = GetNodeStateStats(stats.m_nNodeId, tStatestats);
+		obj.push_back(Pair("addr", stats.m_strAddrName));
+		if (!(stats.m_strAddrLocal.empty())) {
+			obj.push_back(Pair("addrlocal", stats.m_strAddrLocal));
+		}
+		obj.push_back(Pair("services", strprintf("%08x", stats.m_ullServices)));
+		obj.push_back(Pair("lastsend", stats.m_llLastSend));
+		obj.push_back(Pair("lastrecv", stats.m_llLastRecv));
+		obj.push_back(Pair("bytessent", stats.m_ullSendBytes));
+		obj.push_back(Pair("bytesrecv", stats.m_ullRecvBytes));
+		obj.push_back(Pair("conntime", stats.m_llTimeConnected));
+		obj.push_back(Pair("pingtime", stats.m_dPingTime));
+		if (stats.m_dPingWait > 0.0) {
+			obj.push_back(Pair("pingwait", stats.m_dPingWait));
+		}
+		obj.push_back(Pair("version", stats.m_nVersion));
+		// Use the sanitized form of subver here, to avoid tricksy remote peers from
+		// corrupting or modifiying the JSON output by putting special characters in
+		// their ver message.
+		obj.push_back(Pair("subver", stats.m_strCleanSubVer));
+		obj.push_back(Pair("inbound", stats.m_bInbound));
+		obj.push_back(Pair("startingheight", stats.m_nStartingHeight));
+		if (bStateStats) {
+			obj.push_back(Pair("banscore", tStatestats.nMisbehavior));
+		}
+		obj.push_back(Pair("syncnode", stats.m_bSyncNode));
+
+		ret.push_back(obj);
+	}
+
+	return ret;
 }
-
-Value addnode(const Array& params, bool fHelp)
-{
-    string strCommand;
-    if (params.size() == 2)
-        strCommand = params[1].get_str();
-    if (fHelp || params.size() != 2 ||
-        (strCommand != "onetry" && strCommand != "add" && strCommand != "remove"))
+/**
+ * 添加节点
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
+Value addnode(const Array& params, bool bHelp) {
+	string strCommand;
+	if (params.size() == 2) {
+		strCommand = params[1].get_str();
+	}
+    if (bHelp || params.size() != 2 ||
+        (strCommand != "onetry" && strCommand != "add" && strCommand != "remove")) {
         throw runtime_error(
             "addnode \"node\" \"add|remove|onetry\"\n"
             "\nAttempts add or remove a node from the addnode list.\n"
@@ -161,41 +177,44 @@ Value addnode(const Array& params, bool fHelp)
             + HelpExampleCli("addnode", "\"192.168.0.6:8333\" \"onetry\"")
             + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\"")
         );
-
-    string strNode = params[0].get_str();
-
-    if (strCommand == "onetry")
-    {
-        CAddress addr;
-        ConnectNode(addr, strNode.c_str());
-        return Value::null;
     }
+	string strNode = params[0].get_str();
 
-    LOCK(cs_vAddedNodes);
-    vector<string>::iterator it = vAddedNodes.begin();
-    for(; it != vAddedNodes.end(); it++)
-        if (strNode == *it)
-            break;
+	if (strCommand == "onetry") {
+		CAddress cAddr;
+		ConnectNode(cAddr, strNode.c_str());
+		return Value::null;
+	}
 
-    if (strCommand == "add")
-    {
-        if (it != vAddedNodes.end())
-            throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Node already added");
-        vAddedNodes.push_back(strNode);
-    }
-    else if(strCommand == "remove")
-    {
-        if (it == vAddedNodes.end())
-            throw JSONRPCError(RPC_CLIENT_NODE_NOT_ADDED, "Error: Node has not been added.");
-        vAddedNodes.erase(it);
-    }
+    LOCK(g_cs_vAddedNodes);
+    vector<string>::iterator it = g_vAddedNodes.begin();
+	for (; it != g_vAddedNodes.end(); it++) {
+		if (strNode == *it) {
+			break;
+		}
+	}
+	if (strCommand == "add") {
+		if (it != g_vAddedNodes.end()) {
+			throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Node already added");
+		}
+		g_vAddedNodes.push_back(strNode);
+	} else if (strCommand == "remove") {
+		if (it == g_vAddedNodes.end()) {
+			throw JSONRPCError(RPC_CLIENT_NODE_NOT_ADDED, "Error: Node has not been added.");
+		}
+		g_vAddedNodes.erase(it);
+	}
 
-    return Value::null;
+	return Value::null;
 }
-
-Value getaddednodeinfo(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() < 1 || params.size() > 2)
+/**
+ * 返回添加节点的信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
+Value getaddednodeinfo(const Array& params, bool bHelp) {
+	if (bHelp || params.size() < 1 || params.size() > 2) {
         throw runtime_error(
             "getaddednodeinfo dns ( \"node\" )\n"
             "\nReturns information about the given added node, or all added nodes\n"
@@ -225,94 +244,91 @@ Value getaddednodeinfo(const Array& params, bool fHelp)
             + HelpExampleCli("getaddednodeinfo", "true \"192.168.0.201\"")
             + HelpExampleRpc("getaddednodeinfo", "true, \"192.168.0.201\"")
         );
-
-    bool fDns = params[0].get_bool();
-
-    list<string> laddedNodes(0);
-    if (params.size() == 1)
-    {
-        LOCK(cs_vAddedNodes);
-        for (auto& strAddNode : vAddedNodes)
-            laddedNodes.push_back(strAddNode);
     }
-    else
-    {
-        string strNode = params[1].get_str();
-        LOCK(cs_vAddedNodes);
-        for (auto & strAddNode : vAddedNodes)
-            if (strAddNode == strNode)
-            {
-                laddedNodes.push_back(strAddNode);
-                break;
-            }
-        if (laddedNodes.size() == 0)
-            throw JSONRPCError(RPC_CLIENT_NODE_NOT_ADDED, "Error: Node has not been added.");
-    }
+	bool bDns = params[0].get_bool();
 
-    Array ret;
-    if (!fDns)
-    {
-        for (auto & strAddNode : laddedNodes)
-        {
-            Object obj;
-            obj.push_back(Pair("addednode", strAddNode));
-            ret.push_back(obj);
-        }
-        return ret;
-    }
+	list<string> laddedNodes(0);
+	if (params.size() == 1) {
+		LOCK(g_cs_vAddedNodes);
+		for (auto& strAddNode : g_vAddedNodes) {
+			laddedNodes.push_back(strAddNode);
+		}
+	} else {
+		string strNode = params[1].get_str();
+		LOCK(g_cs_vAddedNodes);
+		for (auto & strAddNode : g_vAddedNodes) {
+			if (strAddNode == strNode) {
+				laddedNodes.push_back(strAddNode);
+				break;
+			}
+		}
+		if (laddedNodes.size() == 0) {
+			throw JSONRPCError(RPC_CLIENT_NODE_NOT_ADDED, "Error: Node has not been added.");
+		}
+	}
 
-    list<pair<string, vector<CService> > > laddedAddreses(0);
-    for (auto& strAddNode : laddedNodes)
-    {
-        vector<CService> vservNode(0);
-        if(Lookup(strAddNode.c_str(), vservNode, SysCfg().GetDefaultPort(), fNameLookup, 0))
-            laddedAddreses.push_back(make_pair(strAddNode, vservNode));
-        else
-        {
-            Object obj;
-            obj.push_back(Pair("addednode", strAddNode));
-            obj.push_back(Pair("connected", false));
-            Array addresses;
-            obj.push_back(Pair("addresses", addresses));
-        }
-    }
+	Array ret;
+	if (!bDns) {
+		for (auto & strAddNode : laddedNodes) {
+			Object obj;
+			obj.push_back(Pair("addednode", strAddNode));
+			ret.push_back(obj);
+		}
+		return ret;
+	}
 
-    LOCK(cs_vNodes);
-    for (list<pair<string, vector<CService> > >::iterator it = laddedAddreses.begin(); it != laddedAddreses.end(); it++)
-    {
-        Object obj;
-        obj.push_back(Pair("addednode", it->first));
+	list<pair<string, vector<CService> > > laddedAddreses(0);
+	for (auto& strAddNode : laddedNodes) {
+		vector<CService> vcServNode(0);
+		if (Lookup(strAddNode.c_str(), vcServNode, SysCfg().GetDefaultPort(), g_bNameLookup, 0)) {
+			laddedAddreses.push_back(make_pair(strAddNode, vcServNode));
+		} else {
+			Object obj;
+			obj.push_back(Pair("addednode", strAddNode));
+			obj.push_back(Pair("connected", false));
+			Array addresses;
+			obj.push_back(Pair("addresses", addresses));
+		}
+	}
 
-        Array addresses;
-        bool fConnected = false;
-        for (auto& addrNode : it->second)
-        {
-            bool fFound = false;
-            Object node;
-            node.push_back(Pair("address", addrNode.ToString()));
-            for (auto pnode : vNodes)
-                if (pnode->addr == addrNode)
-                {
-                    fFound = true;
-                    fConnected = true;
-                    node.push_back(Pair("connected", pnode->fInbound ? "inbound" : "outbound"));
-                    break;
-                }
-            if (!fFound)
-                node.push_back(Pair("connected", "false"));
-            addresses.push_back(node);
-        }
-        obj.push_back(Pair("connected", fConnected));
-        obj.push_back(Pair("addresses", addresses));
-        ret.push_back(obj);
-    }
+	LOCK(g_cs_vNodes);
+	for (list<pair<string, vector<CService> > >::iterator it = laddedAddreses.begin(); it != laddedAddreses.end();it++) {
+		Object obj;
+		obj.push_back(Pair("addednode", it->first));
+
+		Array addresses;
+		bool bConnected = false;
+		for (auto& cAddrNode : it->second) {
+			bool bFound = false;
+			Object cNode;
+			cNode.push_back(Pair("address", cAddrNode.ToString()));
+			for (auto pNode : g_vNodes)
+				if (pNode->m_cAddress == cAddrNode) {
+					bFound = true;
+					bConnected = true;
+					cNode.push_back(Pair("connected", pNode->m_bInbound ? "inbound" : "outbound"));
+					break;
+				}
+			if (!bFound) {
+				cNode.push_back(Pair("connected", "false"));
+			}
+			addresses.push_back(cNode);
+		}
+		obj.push_back(Pair("connected", bConnected));
+		obj.push_back(Pair("addresses", addresses));
+		ret.push_back(obj);
+	}
 
     return ret;
 }
-
-Value getnettotals(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() > 0)
+/**
+ * 获取网络参数（发送、接收，时长）
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
+Value getnettotals(const Array& params, bool bHelp) {
+	if (bHelp || params.size() > 0) {
         throw runtime_error(
             "getnettotals\n"
             "\nReturns information about network traffic, including bytes in, bytes out,\n"
@@ -327,17 +343,23 @@ Value getnettotals(const Array& params, bool fHelp)
             + HelpExampleCli("getnettotals", "")
             + HelpExampleRpc("getnettotals", "")
        );
-
-    Object obj;
-    obj.push_back(Pair("totalbytesrecv", CNode::GetTotalBytesRecv()));
-    obj.push_back(Pair("totalbytessent", CNode::GetTotalBytesSent()));
-    obj.push_back(Pair("timemillis", GetTimeMillis()));
-    return obj;
+    }
+	Object obj;
+	obj.push_back(Pair("totalbytesrecv", CNode::GetTotalBytesRecv()));
+	obj.push_back(Pair("totalbytessent", CNode::GetTotalBytesSent()));
+	obj.push_back(Pair("timemillis", GetTimeMillis()));
+	return obj;
 }
-Value getnetworkinfo(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 0)
-        throw runtime_error(
+
+/**
+ * 获得P2P网络的状态信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
+Value getnetworkinfo(const Array& params, bool bHelp) {
+	if (bHelp || params.size() != 0) {
+		throw runtime_error(
             "getnetworkinfo\n"
 			"\nget various information about network.\n"
             "Returns an object containing various state info regarding P2P networking.\n"
@@ -359,39 +381,40 @@ Value getnetworkinfo(const Array& params, bool fHelp)
             + HelpExampleCli("getnetworkinfo", "")
             + HelpExampleRpc("getnetworkinfo", "")
         );
-
-    proxyType proxy;
-    GetProxy(NET_IPV4, proxy);
-
-    Object obj;
-    obj.push_back(Pair("version",       (int)CLIENT_VERSION));
-    obj.push_back(Pair("protocolversion",(int)PROTOCOL_VERSION));
-    obj.push_back(Pair("timeoffset",    GetTimeOffset()));
-    obj.push_back(Pair("connections",   (int)vNodes.size()));
-    obj.push_back(Pair("proxy",         (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
-    obj.push_back(Pair("relayfee",      ValueFromAmount(CTransaction::nMinRelayTxFee)));
-    Array localAddresses;
-    {
-        LOCK(cs_mapLocalHost);
-        for(const auto &item: mapLocalHost)
-        {
-            Object rec;
-            rec.push_back(Pair("address", item.first.ToString()));
-            rec.push_back(Pair("port", item.second.nPort));
-            rec.push_back(Pair("score", item.second.nScore));
-            localAddresses.push_back(rec);
-        }
     }
-    obj.push_back(Pair("localaddresses", localAddresses));
-    return obj;
+	proxyType proxy;
+	GetProxy(NET_IPV4, proxy);
+
+	Object obj;
+	obj.push_back(Pair("version", (int) g_sClientVersion));
+	obj.push_back(Pair("protocolversion", (int) g_sProtocolVersion));
+	obj.push_back(Pair("timeoffset", GetTimeOffset()));
+	obj.push_back(Pair("connections", (int) g_vNodes.size()));
+	obj.push_back(Pair("proxy", (proxy.first.IsValid() ? proxy.first.ToStringIPPort() : string())));
+	obj.push_back(Pair("relayfee", ValueFromAmount(CTransaction::m_sMinRelayTxFee)));
+	Array localAddresses;
+	{
+		LOCK(g_cs_mapLocalHost);
+		for (const auto &item : g_mapLocalHost) {
+			Object rec;
+			rec.push_back(Pair("address", item.first.ToString()));
+			rec.push_back(Pair("port", item.second.nPort));
+			rec.push_back(Pair("score", item.second.nScore));
+			localAddresses.push_back(rec);
+		}
+	}
+	obj.push_back(Pair("localaddresses", localAddresses));
+	return obj;
 }
-/*
- *   获取最近 N个块状态信息: getdacrsstate  param
- *
- * */
-Value getdacrsstate(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 1)
+
+/**
+ * 获取最近 N个块状态信息
+ * @param params 输入参数
+ * @param bHelp 输出帮助信息。
+ * @return
+ */
+Value getdacrsstate(const Array& params, bool bHelp) {
+	if (bHelp || params.size() != 1) {
         throw runtime_error(
             "getdacrsstate \"num\"\n"
 			"\nget state data about the recently blocks.\n"
@@ -409,37 +432,36 @@ Value getdacrsstate(const Array& params, bool fHelp)
             + HelpExampleCli("getdacrsstate", "\"5\"")
             + HelpExampleRpc("getdacrsstate", "\"5\"")
        );
-
-	int i = 0,nHeight = 0;
+    }
+	int i = 0, nHeight = 0;
 	if (int_type == params[0].type()) {
 		nHeight = params[0].get_int();
-		if(nHeight < 1)
+		if (nHeight < 1) {
 			throw runtime_error("Block number out of range.");
-	    if(nHeight > chainActive.Height())
-	    {   //防止超过最大高度
-	    	nHeight = chainActive.Height();
-	    }
+		}
+		if (nHeight > g_cChainActive.Height()) {   //防止超过最大高度
+			nHeight = g_cChainActive.Height();
+		}
 	}
-	CBlockIndex * pBlockIndex = chainActive.Tip();
-	CBlock block;
+	CBlockIndex * pcBlockIndex = g_cChainActive.Tip();
+	CBlock cBlock;
 	Array blocktime;
 	Array difficulty;
 	Array transactions;
 	Array fuel;
 	Array blockminer;
 
-	for (i = 0; (i < nHeight) && (pBlockIndex != NULL); i++) {
-		blocktime.push_back(pBlockIndex->GetBlockTime());
-		difficulty.push_back(GetDifficulty(pBlockIndex));
-		transactions.push_back((int)pBlockIndex->nTx);
-		fuel.push_back(pBlockIndex->nFuel);
-		block.SetNull();
-		if(ReadBlockFromDisk(block, pBlockIndex))
-		{
-			string miner(boost::get<CRegID>(dynamic_pointer_cast<CRewardTransaction>(block.vptx[0])->account).ToString());
+	for (i = 0; (i < nHeight) && (pcBlockIndex != NULL); i++) {
+		blocktime.push_back(pcBlockIndex->GetBlockTime());
+		difficulty.push_back(GetDifficulty(pcBlockIndex));
+		transactions.push_back((int) pcBlockIndex->m_unTx);
+		fuel.push_back(pcBlockIndex->m_llFuel);
+		cBlock.SetNull();
+		if (ReadBlockFromDisk(cBlock, pcBlockIndex)) {
+			string miner(boost::get<CRegID>(dynamic_pointer_cast<CRewardTransaction>(cBlock.vptx[0])->m_cAccount).ToString());
 			blockminer.push_back(move(miner));
 		}
-		pBlockIndex = pBlockIndex->pprev;
+		pcBlockIndex = pcBlockIndex->m_pPrevBlockIndex;
 	}
 	Object obj;
 	obj.push_back(Pair("blocktime", blocktime));

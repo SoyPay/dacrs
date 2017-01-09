@@ -16,57 +16,53 @@
 //
 // Start
 //
-static bool AppInitRPC(int argc, char* argv[])
-{
-    //
-    // Parameters
-    //
+static bool AppInitRPC(int argc, char* argv[]) {
+	//
+	// Parameters
+	//
 	CBaseParams::IntialParams(argc, argv);
 	SysCfg().InitalConfig();
 
-    if (argc<2 || SysCfg().IsArgCount("-?") || SysCfg().IsArgCount("--help"))
-    {
-        // First part of help message is specific to RPC client
-        string strUsage = _("Dacrs Core RPC client version") + " " + FormatFullVersion() + "\n\n" +
-            _("Usage:") + "\n" +
-              "  Dacrs-cli [options] <command> [params]  " + _("Send command to Dacrs Core") + "\n" +
-              "  Dacrs-cli [options] help                " + _("List commands") + "\n" +
-              "  Dacrs-cli [options] help <command>      " + _("Get help for a command") + "\n";
+	if (argc < 2 || SysCfg().IsArgCount("-?") || SysCfg().IsArgCount("--help")) {
+		// First part of help message is specific to RPC client
+		string strUsage = _("Dacrs Core RPC client version") + " " + FormatFullVersion() + "\n\n" + _("Usage:") + "\n"
+				+ "  Dacrs-cli [options] <command> [params]  " + _("Send command to Dacrs Core") + "\n"
+				+ "  Dacrs-cli [options] help                " + _("List commands") + "\n"
+				+ "  Dacrs-cli [options] help <command>      " + _("Get help for a command") + "\n";
 
-        strUsage += "\n" + HelpMessageCli(true);
+		strUsage += "\n" + HelpMessageCli(true);
 
-        fprintf(stdout, "%s", strUsage.c_str());
-        return false;
-    }
-    return true;
+		fprintf(stdout, "%s", strUsage.c_str());
+		return false;
+	}
+
+	return true;
 }
 
-int main(int argc, char* argv[])
-{
-    SetupEnvironment();
+int main(int argc, char* argv[]) {
+	SetupEnvironment();
 
-    try
-    {
-        if(!AppInitRPC(argc, argv))
-            return abs(RPC_MISC_ERROR);
-    }
-    catch (exception& e) {
-        PrintExceptionContinue(&e, "AppInitRPC()");
-        return abs(RPC_MISC_ERROR);
-    } catch (...) {
-        PrintExceptionContinue(NULL, "AppInitRPC()");
-        return abs(RPC_MISC_ERROR);
-    }
+	try {
+		if (!AppInitRPC(argc, argv)) {
+			return abs(RPC_MISC_ERROR);
+		}
+	} catch (exception& e) {
+		PrintExceptionContinue(&e, "AppInitRPC()");
+		return abs(RPC_MISC_ERROR);
+	} catch (...) {
+		PrintExceptionContinue(NULL, "AppInitRPC()");
+		return abs(RPC_MISC_ERROR);
+	}
 
-    int ret = abs(RPC_MISC_ERROR);
-    try
-    {
-        ret = CommandLineRPC(argc, argv);
-    }
-    catch (exception& e) {
-        PrintExceptionContinue(&e, "CommandLineRPC()");
-    } catch (...) {
-        PrintExceptionContinue(NULL, "CommandLineRPC()");
-    }
-    return ret;
+	int nRet = abs(RPC_MISC_ERROR);
+
+	try {
+		nRet = CommandLineRPC(argc, argv);
+	} catch (exception& e) {
+		PrintExceptionContinue(&e, "CommandLineRPC()");
+	} catch (...) {
+		PrintExceptionContinue(NULL, "CommandLineRPC()");
+	}
+
+	return nRet;
 }

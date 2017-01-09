@@ -9,7 +9,6 @@
 
 CVmScript::CVmScript() {
 	// LEARN Auto-generated constructor stub
-
 }
 
 CVmScript::~CVmScript() {

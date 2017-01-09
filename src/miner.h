@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DACRS_MINER_H
-#define DACRS_MINER_H
+#ifndef DACRS_MINER_H_
+#define DACRS_MINER_H_
 
 #include <stdint.h>
 #include <vector>
@@ -18,9 +18,7 @@
 
 class CBlock;
 class CBlockIndex;
-struct CBlockTemplate;
-//class CReserveKey;
-//class CScript;
+struct ST_BlockTemplate;
 class CWallet;
 class CBaseTransaction;
 class COrphan;
@@ -29,54 +27,61 @@ class CTransactionDBCache;
 class CScriptDBViewCache;
 
 typedef boost::tuple<double, double, std::shared_ptr<CBaseTransaction> > TxPriority;
-class TxPriorityCompare
-{
-    bool byFee;
-public:
-    TxPriorityCompare(bool _byFee) : byFee(_byFee) { }
-    bool operator()(const TxPriority& a, const TxPriority& b)
-    {
-        if (byFee)
-        {
-            if (a.get<1>() == b.get<1>())
-                return a.get<0>() < b.get<0>();
-            return a.get<1>() < b.get<1>();
-        }
-        else
-        {
-            if (a.get<0>() == b.get<0>())
-                return a.get<1>() < b.get<1>();
-            return a.get<0>() < b.get<0>();
-        }
-    }
+class TxPriorityCompare {
+ public:
+	TxPriorityCompare(bool bByFee) :
+			m_bByFee(bByFee) {
+	}
+
+	bool operator()(const TxPriority& TxPriorityA, const TxPriority& TxPriorityB) {
+		if (m_bByFee) {
+			if (TxPriorityA.get<1>() == TxPriorityB.get<1>()) {
+				return TxPriorityA.get<0>() < TxPriorityB.get<0>();
+			}
+			return TxPriorityA.get<1>() < TxPriorityB.get<1>();
+		} else {
+			if (TxPriorityA.get<0>() == TxPriorityB.get<0>()) {
+				return TxPriorityA.get<1>() < TxPriorityB.get<1>();
+			}
+			return TxPriorityA.get<0>() < TxPriorityB.get<0>();
+		}
+	}
+
+ private:
+	bool m_bByFee;
 };
 
 /** Run the miner threads */
-void GenerateDacrsBlock(bool fGenerate, CWallet* pwallet, int nThreads);
+void GenerateDacrsBlock(bool bGenerate, CWallet* pWallet, int nThreads);
+
 /** Generate a new block, without valid proof-of-work */
 //CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn);
 //CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey);
+ST_BlockTemplate* CreateNewBlock(CAccountViewCache &cAccViewCache, CTransactionDBCache &cTxCache, CScriptDBViewCache &cScriptCache);
 
-CBlockTemplate* CreateNewBlock(CAccountViewCache &view, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
 /** Modify the extranonce in a block */
-void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
+void IncrementExtraNonce(CBlock* pBlock, CBlockIndex* pBlockIndexPrev, unsigned int& unExtraNonce);
+
 /** Do mining precalculation */
-void FormatHashBuffers(CBlock* pblock, char* pmidstate, char* pdata, char* phash1);
+void FormatHashBuffers(CBlock* pBlock, char* pMidstate, char* pData, char* pHash1);
 
-bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setCreateKey, CAccountViewCache &view, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache);
+bool CreatePosTx(const CBlockIndex *pPrevIndex, CBlock *pBlock, set<CKeyID>&setCreateKey, CAccountViewCache &cAccountViewCache,
+		CTransactionDBCache &cTxCache, CScriptDBViewCache &cScriptCache);
 
-bool VerifyPosTx(CAccountViewCache &accView, const CBlock *pBlock, CTransactionDBCache &txCache, CScriptDBViewCache &scriptCache, bool bNeedRunTx = false);
+bool VerifyPosTx(CAccountViewCache &cAccountViewCache, const CBlock *pBlock, CTransactionDBCache &cTxDBCache,
+		CScriptDBViewCache &cScriptDBViewCache, bool bNeedRunTx = false);
+
 /** Check mined block */
-bool CheckWork(CBlock* pblock, CWallet& wallet);
+bool CheckWork(CBlock* pBlock, CWallet& cWallet);
+
 /** Base sha256 mining transform */
-void SHA256Transform(void* pstate, void* pinput, const void* pinit);
+void SHA256Transform(void* pState, void* pInput, const void* pInit);
+
 /** Get burn element */
-int GetElementForBurn(CBlockIndex *pindex);
+int GetElementForBurn(CBlockIndex *pBlockIndex);
 
-void GetPriorityTx(vector<TxPriority> &vecPriority, int nFuelRate);
-//extern double dHashesPerSec;
-//extern int64_t nHPSTimerStart;
+void GetPriorityTx(vector<TxPriority> &vPriority, int nFuelRate);
 
-extern uint256 CreateBlockWithAppointedAddr(CKeyID const &keyID);
+extern uint256 CreateBlockWithAppointedAddr(CKeyID const &cKeyID);
 
-#endif // DACRS_MINER_H
+#endif // DACRS_MINER_H_

@@ -12,19 +12,22 @@ using boost::asio::ip::tcp;
 using boost::system::error_code;
 
 class CUIServer {
-public:
+ public:
 	typedef boost::shared_ptr<tcp::socket> sock_pt;
 
-public:
+ public:
 	static void StartServer();
 	static void Send(const string& strData);
 	static bool HasConnection();
 	static void StopServer();
-	static bool IsInitalEnd;
 	static void PackageData(string &strData);
 
-private:
-	CUIServer() :m_acceptor(m_iosev, tcp::endpoint(tcp::v4(), SysCfg().GetArg("-uiport", SysCfg().GetUIPort()))) {
+ public:
+	static bool m_bIsInitalEnd;
+
+ private:
+	CUIServer() :
+		m_Acceptor(m_IoSev, tcp::endpoint(tcp::v4(), SysCfg().GetArg("-uiport", SysCfg().GetUIPort()))) {
 		m_bConnect = false;
 		m_bRunFlag = true;
 	}
@@ -34,19 +37,21 @@ private:
 	void Accept();
 	void Accept_handler(sock_pt sock);
 	void read_handler(const system::error_code& ec, char* pstr, sock_pt sock);
-	void write_handler() {/*std::cout << "send msg complete." << std::endl;*/}
+	void write_handler() {/*std::cout << "send msg complete." << std::endl;*/
+	}
 	void RunServer();
 
-private:
-	static const int PORT=18999;
-	static boost::thread_group m_threadGroup;
-	static CUIServer* instance;
-	asio::io_service m_iosev;
-	tcp::acceptor m_acceptor;
-	sock_pt m_socket;
+ private:
+	static const int m_sPort = 18999;
+	static boost::thread_group m_sThreadGroup;
+	static CUIServer* m_sInstance;
+	asio::io_service m_IoSev;
+	tcp::acceptor m_Acceptor;
+	sock_pt m_Socket;
 	bool m_bConnect;
-	enum { max_length = 1024 };
-	char data_[max_length];
+	enum {
+		EM_MAX_LENGTH = 1024
+	};
+	char m_chData_[EM_MAX_LENGTH];
 	bool m_bRunFlag;
-
 };

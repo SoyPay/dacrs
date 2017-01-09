@@ -20,114 +20,104 @@
 
 using namespace json_spirit;
 //extern Array read_json(const std::string& jsondata);
-Array
-read_json(const std::string& jsondata)
-{
-    Value v;
-
-    if (!read_string(jsondata, v) || v.type() != array_type)
-    {
-        BOOST_ERROR("Parse error.");
-        return Array();
-    }
-    return v.get_array();
+Array read_json(const std::string& jsondata) {
+	Value v;
+	if (!read_string(jsondata, v) || v.type() != array_type) {
+		BOOST_ERROR("Parse error.");
+		return Array();
+	}
+	return v.get_array();
 }
 
 BOOST_AUTO_TEST_SUITE(base58_tests)
 
 // Goal: test low-level base58 encoding functionality
-BOOST_AUTO_TEST_CASE(base58_EncodeBase58)
-{
-    Array tests = read_json(std::string(json_tests::base58_encode_decode, json_tests::base58_encode_decode + sizeof(json_tests::base58_encode_decode)));
-    for (auto& tv : tests)
-    {
-        Array test = tv.get_array();
-        std::string strTest = write_string(tv, false);
-        if (test.size() < 2) // Allow for extra stuff (useful for comments)
-        {
-            BOOST_ERROR("Bad test: " << strTest);
-            continue;
-        }
-        std::vector<unsigned char> sourcedata = ParseHex(test[0].get_str());
-        std::string base58string = test[1].get_str();
-        BOOST_CHECK_MESSAGE(
-                    EncodeBase58(&sourcedata[0], &sourcedata[sourcedata.size()]) == base58string,
-                    strTest);
-    }
+BOOST_AUTO_TEST_CASE(base58_EncodeBase58) {
+	Array tests = read_json(std::string(json_tests::base58_encode_decode,json_tests::base58_encode_decode + sizeof(json_tests::base58_encode_decode)));
+	for (auto& tv : tests) {
+		Array test = tv.get_array();
+		std::string strTest = write_string(tv, false);
+		if (test.size() < 2) {		// Allow for extra stuff (useful for comments)
+			BOOST_ERROR("Bad test: " << strTest);
+			continue;
+		}
+		std::vector<unsigned char> vuchSourcedata = ParseHex(test[0].get_str());
+		std::string strBase58string = test[1].get_str();
+		BOOST_CHECK_MESSAGE(EncodeBase58(&vuchSourcedata[0], &vuchSourcedata[vuchSourcedata.size()]) == strBase58string, strTest);
+	}
 }
 
 // Goal: test low-level base58 decoding functionality
-BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
-{
-    Array tests = read_json(std::string(json_tests::base58_encode_decode, json_tests::base58_encode_decode + sizeof(json_tests::base58_encode_decode)));
-    std::vector<unsigned char> result;
+BOOST_AUTO_TEST_CASE(base58_DecodeBase58) {
+	Array tests = read_json(std::string(json_tests::base58_encode_decode,json_tests::base58_encode_decode + sizeof(json_tests::base58_encode_decode)));
+	std::vector<unsigned char> vuchResult;
 
-    for (auto& tv : tests)
-    {
-        Array test = tv.get_array();
-        std::string strTest = write_string(tv, false);
-        if (test.size() < 2) // Allow for extra stuff (useful for comments)
-        {
-            BOOST_ERROR("Bad test: " << strTest);
-            continue;
-        }
-        std::vector<unsigned char> expected = ParseHex(test[0].get_str());
-        std::string base58string = test[1].get_str();
-        BOOST_CHECK_MESSAGE(DecodeBase58(base58string, result), strTest);
-        BOOST_CHECK_MESSAGE(result.size() == expected.size() && std::equal(result.begin(), result.end(), expected.begin()), strTest);
-    }
+	for (auto& tv : tests) {
+		Array test = tv.get_array();
+		std::string strTest = write_string(tv, false);
+		if (test.size() < 2) {
+			BOOST_ERROR("Bad test: " << strTest);
+			continue;
+		}
+		std::vector<unsigned char> vuchExpected = ParseHex(test[0].get_str());
+		std::string strBase58string = test[1].get_str();
+		BOOST_CHECK_MESSAGE(DecodeBase58(strBase58string, vuchResult), strTest);
+		BOOST_CHECK_MESSAGE(vuchResult.size() == vuchExpected.size()&& std::equal(vuchResult.begin(), vuchResult.end(), vuchExpected.begin()), strTest);
+	}
 
-    BOOST_CHECK(!DecodeBase58("invalid", result));
+	BOOST_CHECK(!DecodeBase58("invalid", vuchResult));
 
-    // check that DecodeBase58 skips whitespace, but still fails with unexpected non-whitespace at the end.
-    BOOST_CHECK(!DecodeBase58(" \t\n\v\f\r skip \r\f\v\n\t a", result));
-    BOOST_CHECK( DecodeBase58(" \t\n\v\f\r skip \r\f\v\n\t ", result));
-    std::vector<unsigned char> expected = ParseHex("971a55");
-    BOOST_CHECK_EQUAL_COLLECTIONS(result.begin(), result.end(), expected.begin(), expected.end());
+	// check that DecodeBase58 skips whitespace, but still fails with unexpected non-whitespace at the end.
+	BOOST_CHECK(!DecodeBase58(" \t\n\v\f\r skip \r\f\v\n\t a", vuchResult));
+	BOOST_CHECK(DecodeBase58(" \t\n\v\f\r skip \r\f\v\n\t ", vuchResult));
+	std::vector<unsigned char> vuchExpected = ParseHex("971a55");
+	BOOST_CHECK_EQUAL_COLLECTIONS(vuchResult.begin(), vuchResult.end(), vuchExpected.begin(), vuchExpected.end());
 }
 
 // Visitor to check address type
-class TestAddrTypeVisitor : public boost::static_visitor<bool>
-{
-private:
-    std::string exp_addrType;
-public:
-//    TestAddrTypeVisitor(const std::string &exp_addrType) : exp_addrType(exp_addrType) { }
-//    bool operator()(const CKeyID &id) const
-//    {
-//        return (exp_addrType == "pubkey");
-//    }
-//    bool operator()(const CScriptID &id) const
-//    {
-//        return (exp_addrType == "script");
-//    }
-//    bool operator()(const CNoDestination &no) const
-//    {
-//        return (exp_addrType == "none");
-//    }
+class TestAddrTypeVisitor: public boost::static_visitor<bool> {
+ public:
+	//    TestAddrTypeVisitor(const std::string &exp_addrType) : exp_addrType(exp_addrType) { }
+	//    bool operator()(const CKeyID &id) const
+	//    {
+	//        return (exp_addrType == "pubkey");
+	//    }
+	//    bool operator()(const CScriptID &id) const
+	//    {
+	//        return (exp_addrType == "script");
+	//    }
+	//    bool operator()(const CNoDestination &no) const
+	//    {
+	//        return (exp_addrType == "none");
+	//    }
+
+ private:
+ 	std::string m_strExpAddrType;
 };
 
 // Visitor to check address payload
-class TestPayloadVisitor : public boost::static_visitor<bool>
-{
-private:
-    std::vector<unsigned char> exp_payload;
-public:
-    TestPayloadVisitor(std::vector<unsigned char> &exp_payload) : exp_payload(exp_payload) { }
-    bool operator()(const CKeyID &id) const
-    {
-        uint160 exp_key(exp_payload);
-        return exp_key == id;
-    }
-    bool operator()(const CScriptID &id) const
-    {
-        uint160 exp_key(exp_payload);
-        return exp_key == id;
-    }
-    bool operator()(const CNoDestination &no) const
-    {
-        return exp_payload.size() == 0;
-    }
+class TestPayloadVisitor: public boost::static_visitor<bool> {
+ public:
+	TestPayloadVisitor(std::vector<unsigned char> &vuchExpPayLoad) :
+			m_uchExpPayload(vuchExpPayLoad) {
+	}
+
+	bool operator()(const CKeyID &cKeyID) const {
+		uint160 cExpKey(m_uchExpPayload);
+		return cExpKey == cKeyID;
+	}
+
+	bool operator()(const CScriptID &cScriptID) const {
+		uint160 cExpKey(m_uchExpPayload);
+		return cExpKey == cScriptID;
+	}
+
+	bool operator()(const CNoDestination &cNoDestination) const {
+		return m_uchExpPayload.size() == 0;
+	}
+
+ private:
+	std::vector<unsigned char> m_uchExpPayload;
 };
 
 // Goal: check that parsed keys match test payload
@@ -259,32 +249,30 @@ public:
 //}
 
 // Goal: check that base58 parsing code is robust against a variety of corrupted data
-BOOST_AUTO_TEST_CASE(base58_keys_invalid)
-{
-    Array tests = read_json(std::string(json_tests::base58_keys_invalid, json_tests::base58_keys_invalid + sizeof(json_tests::base58_keys_invalid))); // Negative testcases
-    std::vector<unsigned char> result;
-    CDacrsSecret secret;
-    CDacrsAddress addr;
+BOOST_AUTO_TEST_CASE(base58_keys_invalid) {
+	Array tests = read_json(
+			std::string(json_tests::base58_keys_invalid,
+					json_tests::base58_keys_invalid + sizeof(json_tests::base58_keys_invalid))); // Negative testcases
+	std::vector<unsigned char> vuchResult;
+	CDacrsSecret cSecret;
+	CDacrsAddress cAddr;
 
-    for (auto& tv : tests)
-    {
-        Array test = tv.get_array();
-        std::string strTest = write_string(tv, false);
-        if (test.size() < 1) // Allow for extra stuff (useful for comments)
-        {
-            BOOST_ERROR("Bad test: " << strTest);
-            continue;
-        }
-        std::string exp_base58string = test[0].get_str();
+	for (auto& tv : tests) {
+		Array test = tv.get_array();
+		std::string strTest = write_string(tv, false);
+		if (test.size() < 1) {
+			BOOST_ERROR("Bad test: " << strTest);
+			continue;
+		}
+		std::string strExp_base58string = test[0].get_str();
 
-        // must be invalid as public and as private key
-        addr.SetString(exp_base58string);
-        BOOST_CHECK_MESSAGE(!addr.IsValid(), "IsValid pubkey:" + strTest);
-        secret.SetString(exp_base58string);
-        BOOST_CHECK_MESSAGE(!secret.IsValid(), "IsValid privkey:" + strTest);
-    }
+		// must be invalid as public and as private key
+		cAddr.SetString(strExp_base58string);
+		BOOST_CHECK_MESSAGE(!cAddr.IsValid(), "IsValid pubkey:" + strTest);
+		cSecret.SetString(strExp_base58string);
+		BOOST_CHECK_MESSAGE(!cSecret.IsValid(), "IsValid privkey:" + strTest);
+	}
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 

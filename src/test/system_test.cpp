@@ -26,75 +26,72 @@ using namespace boost;
 #pragma pack(1)
 typedef struct tag_INT64 {
 	unsigned char data[8];
-} Int64;
-typedef struct tagACCOUNT_ID
-{
+} ST_INT64;
+
+typedef struct tagACCOUNT_ID {
 	char accounid[MAX_ACCOUNT_LEN];
-}ACCOUNT_ID;
+} ST_ACCOUNT_ID;
+
 typedef struct {
-	unsigned char nType;
-	ACCOUNT_ID vregID[3];
-	long nHeight;
-	Int64 nPay;
-} CONTRACT_DATA;
+	unsigned char uchType;
+	ST_ACCOUNT_ID arrtVregID[3];
+	long lHeight;
+	ST_INT64 tPay;
+} ST_CONTRACT_DATA;
 #pragma pack()
 
-class CSystemTest:public SysTestBase
-{
-public:
-	enum
-	{
-		ID1_FREE_TO_ID2_FREE = 1,
-		ID2_FREE_TO_ID3_FREE,
-		ID3_FREE_TO_ID3_SELF,
-		ID3_SELF_TO_ID2_FREE,
-		ID3_FREE_TO_ID2_FREE,
-		UNDEFINED_OPER
+class CSystemTest : public SysTestBase {
+ public:
+	enum {
+		EM_ID1_FREE_TO_ID2_FREE = 1,
+		EM_ID2_FREE_TO_ID3_FREE,
+		EM_ID3_FREE_TO_ID3_SELF,
+		EM_ID3_SELF_TO_ID2_FREE,
+		EM_ID3_FREE_TO_ID2_FREE,
+		EM_UNDEFINED_OPER
 	};
+
 	CSystemTest() {
-		nOldBlockHeight = 0;
-		nNewBlockHeight = 0;
-		nTimeOutHeight = 100;
-		nOldMoney = 0;
-		nNewMoney = 0;
-		strFileName = "unit_test.bin";
-		strAddr1 = "dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem";
+		m_nOldBlockHeight 	= 0;
+		m_nNewBlockHeight 	= 0;
+		m_nTimeOutHeight 	= 100;
+		m_ullOldMoney 		= 0;
+		m_ullNewMoney 		= 0;
+		m_strFileName 		= "unit_test.bin";
+		m_strAddr1 			= "dsjkLDFfhenmx2JkFMdtJ22TYDvSGgmJem";
 	}
 
-	~CSystemTest(){
-
+	~CSystemTest() {
 	}
 
-public:
-
-	bool IsTxConfirmdInWallet(int nBlockHeight,const uint256& txHash)
-	{
-		string hash ="";
-		if (!SysTestBase::GetBlockHash(nBlockHeight, hash)) {
+ public:
+	bool IsTxConfirmdInWallet(int nBlockHeight, const uint256& cTxHash) {
+		string strHash = "";
+		if (!SysTestBase::GetBlockHash(nBlockHeight, strHash)) {
 			return false;
 		}
 
-		uint256 blockHash(uint256S(hash));
-		auto itAccountTx = pwalletMain->mapInBlockTx.find(blockHash);
-		if (pwalletMain->mapInBlockTx.end() == itAccountTx)
+		uint256 cBlockHash(uint256S(strHash));
+		auto itAccountTx = g_pwalletMain->m_mapInBlockTx.find(cBlockHash);
+		if (g_pwalletMain->m_mapInBlockTx.end() == itAccountTx) {
 			return false;
-
-		for (const auto &item :itAccountTx->second.mapAccountTx) {
-			if (txHash == item.first) {
+		}
+		for (const auto &item : itAccountTx->second.m_mapAccountTx) {
+			if (cTxHash == item.first) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	bool GetTxIndexInBlock(const uint256& txHash, int& nIndex) {
-		CBlockIndex* pindex = chainActive.Tip();
-		CBlock block;
-		if (!ReadBlockFromDisk(block, pindex))
+	bool GetTxIndexInBlock(const uint256& cTxHash, int& nIndex) {
+		CBlockIndex* pcIndex = g_cChainActive.Tip();
+		CBlock cBlock;
+		if (!ReadBlockFromDisk(cBlock, pcIndex)){
 			return false;
-
-		block.BuildMerkleTree();
-		std::tuple<bool,int> ret = block.GetTxIndex(txHash);
+		}
+		cBlock.BuildMerkleTree();
+		std::tuple<bool, int> ret = cBlock.GetTxIndex(cTxHash);
 		if (!std::get<0>(ret)) {
 			return false;
 		}
@@ -104,46 +101,46 @@ public:
 	}
 
 	bool GetRegScript(map<string, string>& mapRegScript) {
-		CRegID regId;
-		vector<unsigned char> vScript;
+		CRegID cRegId;
+		vector<unsigned char> vuchScript;
 
-		if (pScriptDBTip == nullptr)
+		if (g_pScriptDBTip == nullptr) {
 			return false;
-
-		assert(pScriptDBTip->Flush());
+		}
+		assert(g_pScriptDBTip->Flush());
 
 		int nCount(0);
-		if (!pScriptDBTip->GetScriptCount(nCount))
+		if (!g_pScriptDBTip->GetScriptCount(nCount)) {
 			return false;
-
-		if (!pScriptDBTip->GetScript(0, regId, vScript))
+		}
+		if (!g_pScriptDBTip->GetScript(0, cRegId, vuchScript)) {
 			return false;
-
-		string strRegID = HexStr(regId.GetVec6());
-		string strScript = HexStr(vScript.begin(), vScript.end());
+		}
+		string strRegID = HexStr(cRegId.GetVec6());
+		string strScript = HexStr(vuchScript.begin(), vuchScript.end());
 		mapRegScript.insert(make_pair(strRegID, strScript));
 
-		while (pScriptDBTip->GetScript(1, regId, vScript)) {
-			strRegID = HexStr(regId.GetVec6());
-			strScript = HexStr(vScript.begin(), vScript.end());
+		while (g_pScriptDBTip->GetScript(1, cRegId, vuchScript)) {
+			strRegID = HexStr(cRegId.GetVec6());
+			strScript = HexStr(vuchScript.begin(), vuchScript.end());
 			mapRegScript.insert(make_pair(strRegID, strScript));
 		}
 
 		return true;
 	}
 
-	bool CheckRegScript(const string& strRegID,const string& strPath) {
+	bool CheckRegScript(const string& strRegID, const string& strPath) {
 		map<string, string> mapRegScript;
 		if (!GetRegScript(mapRegScript)) {
 			return false;
 		}
 
 		string strFileData;
-		if (!GetFileData(strPath,strFileData)) {
+		if (!GetFileData(strPath, strFileData)) {
 			return false;
 		}
 
-		for (const auto& item:mapRegScript) {
+		for (const auto& item : mapRegScript) {
 			if (strRegID == item.first) {
 				if (strFileData == item.second) {
 					return true;
@@ -155,68 +152,72 @@ public:
 	}
 
 	bool GetFileData(const string& strFilePath, string& strFileData) {
-		FILE* file = fopen(strFilePath.c_str(), "rb+");
-		if (!file) {
+		FILE* pFile = fopen(strFilePath.c_str(), "rb+");
+		if (!pFile) {
 			return false;
 		}
 
-		unsigned long lSize;
-		fseek(file, 0, SEEK_END);
-		lSize = ftell(file);
-		rewind(file);
+		unsigned long ulSize;
+		fseek(pFile, 0, SEEK_END);
+		ulSize = ftell(pFile);
+		rewind(pFile);
 
 		// allocate memory to contain the whole file:
-		char *buffer = (char*) malloc(sizeof(char) * lSize);
-		if (buffer == NULL) {
+		char *pBuffer = (char*) malloc(sizeof(char) * ulSize);
+		if (pBuffer == NULL) {
 			return false;
 		}
 
-		if (fread(buffer, 1, lSize, file) != lSize) {
-			if (buffer)
-				free(buffer);
+		if (fread(pBuffer, 1, ulSize, pFile) != ulSize) {
+			if (pBuffer) {
+				free(pBuffer);
+			}
 			throw runtime_error("read script file error");
 		}
 
-		CVmScript vmScript;
-		vmScript.Rom.insert(vmScript.Rom.end(), buffer, buffer + lSize);
-		string desp("this is description");
-		vmScript.ScriptExplain.assign(desp.begin(), desp.end());
-		CDataStream ds(SER_DISK, CLIENT_VERSION);
-		ds << vmScript;
+		CVmScript cVmScript;
+		cVmScript.m_vuchRom.insert(cVmScript.m_vuchRom.end(), pBuffer, pBuffer + ulSize);
+		string strDesp("this is description");
+		cVmScript.m_vuchScriptExplain.assign(strDesp.begin(), strDesp.end());
+		CDataStream cDs(SER_DISK, g_sClientVersion);
+		cDs << cVmScript;
 
-		vector<unsigned char> vscript;
-		vscript.assign(ds.begin(), ds.end());
+		vector<unsigned char> vuchVscript;
+		vuchVscript.assign(cDs.begin(), cDs.end());
 
-		if (file)
-			fclose(file);
-		if (buffer)
-			free(buffer);
+		if (pFile) {
+			fclose(pFile);
+		}
+		if (pBuffer) {
+			free(pBuffer);
+		}
 
-		strFileData = HexStr(vscript);
+		strFileData = HexStr(vuchVscript);
 		return true;
 	}
 
-	bool IsScriptAccCreatedEx(const uint256& txHash,int nConfirmHeight) {
+	bool IsScriptAccCreatedEx(const uint256& cTxHash, int nConfirmHeight) {
 		int nIndex = 0;
-		if (!GetTxIndexInBlock(uint256(uint256S(strTxHash)), nIndex)) {
+		if (!GetTxIndexInBlock(uint256(uint256S(m_strTxHash)), nIndex)) {
 			return false;
 		}
 
-		CRegID regID(nConfirmHeight, nIndex);
-		return IsScriptAccCreated(HexStr(regID.GetVec6()));
+		CRegID cRegID(nConfirmHeight, nIndex);
+		return IsScriptAccCreated(HexStr(cRegID.GetVec6()));
 	}
 
-protected:
-	int nOldBlockHeight;
-	int nNewBlockHeight;
-	int nTimeOutHeight;
-	static const int nFee = 1*COIN + 100000;
-	uint64_t nOldMoney;
-	uint64_t nNewMoney;
-	string strTxHash;
-	string strFileName;
-	string strAddr1;
+ protected:
+	int m_nOldBlockHeight;
+	int m_nNewBlockHeight;
+	int m_nTimeOutHeight;
+	static const int m_nFee = 1*COIN + 100000;
+	uint64_t m_ullOldMoney;
+	uint64_t m_ullNewMoney;
+	string m_strTxHash;
+	string m_strFileName;
+	string m_strAddr1;
 };
+
 /*
  * 测试脚本账户一切在系统中的流程
  */
@@ -227,15 +228,15 @@ BOOST_FIXTURE_TEST_CASE(acct_process,CSystemTest)
 	ResetEnv();
 	vector<map<int,string> >vDataInfo;
 	vector<CAccountLog> vLog;
-	for (int i = 0; i < nTimeOutHeight; i++) {
+	for (int i = 0; i < m_nTimeOutHeight; i++) {
 		//0:产生注册脚本交易
-		Value valueRes = RegisterAppTx(strAddr1,strFileName , nTimeOutHeight, nFee);
+		Value valueRes = RegisterAppTx(strAddr1,strFileName , m_nTimeOutHeight, nFee);
 		BOOST_CHECK(GetHashFromCreatedTx(valueRes,strTxHash));
 
 		//1:挖矿
 		nOldMoney = GetBalance(strAddr1);
 		BOOST_CHECK(GenerateOneBlock());
-		SysTestBase::GetBlockHeight(nNewBlockHeight);
+		SysTestBase::GetBlockHeight(m_nNewBlockHeight);
 
 		//2:确认钱已经扣除
 		nNewMoney = GetBalance(strAddr1);
@@ -244,11 +245,11 @@ BOOST_FIXTURE_TEST_CASE(acct_process,CSystemTest)
 		//3:确认脚本账号已经生成
 		int nIndex = 0;
 		BOOST_CHECK(GetTxIndexInBlock(uint256(uint256S(strTxHash)), nIndex));
-		CRegID regID(nNewBlockHeight, nIndex);
+		CRegID regID(m_nNewBlockHeight, nIndex);
 		BOOST_CHECK(IsScriptAccCreated(HexStr(regID.GetVec6())));
 
 		//4:检查钱包里的已确认交易里是否有此笔交易
-		BOOST_CHECK(IsTxConfirmdInWallet(nNewBlockHeight, uint256(uint256S(strTxHash))));
+		BOOST_CHECK(IsTxConfirmdInWallet(m_nNewBlockHeight, uint256(uint256S(strTxHash))));
 
 		//5:通过listregscript 获取相关信息，一一核对，看是否和输入的一致
 		string strPath = SysCfg().GetDefaultTestDataPath() + strFileName;
@@ -275,7 +276,7 @@ BOOST_FIXTURE_TEST_CASE(acct_process,CSystemTest)
 		string strTxHash = mapData.begin()->second;
 		uint256 txHash(uint256S(strTxHash));
 
-		SysTestBase::GetBlockHeight(nOldBlockHeight);
+		SysTestBase::GetBlockHeight(m_nOldBlockHeight);
 		nOldMoney = GetBalance(strAddr1);
 
 		//8:回滚
@@ -283,12 +284,12 @@ BOOST_FIXTURE_TEST_CASE(acct_process,CSystemTest)
 
 		//9.1:检查账户手续费是否回退
 		nNewMoney = GetBalance(strAddr1);
-		SysTestBase::GetBlockHeight(nNewBlockHeight);
-		BOOST_CHECK(nOldBlockHeight - 1 == nNewBlockHeight);
+		SysTestBase::GetBlockHeight(m_nNewBlockHeight);
+		BOOST_CHECK(m_nOldBlockHeight - 1 == m_nNewBlockHeight);
 		BOOST_CHECK(nNewMoney-nFee == nOldMoney);
 
 		//9.2:检测脚本账户是否删除
-		CRegID regID(nOldBlockHeight, mapData.begin()->first);
+		CRegID regID(m_nOldBlockHeight, mapData.begin()->first);
 		BOOST_CHECK(!IsScriptAccCreated(HexStr(regID.GetVec6())));
 
 		//9.3:交易是否已经已经放到钱包的未确认交易里
@@ -303,8 +304,8 @@ BOOST_FIXTURE_TEST_CASE(acct_process,CSystemTest)
 
 	//清空环境
 	ResetEnv();
-	SysTestBase::GetBlockHeight(nNewBlockHeight);
-	BOOST_CHECK(0 == nNewBlockHeight);
+	SysTestBase::GetBlockHeight(m_nNewBlockHeight);
+	BOOST_CHECK(0 == m_nNewBlockHeight);
 #endif // 0
 }
 
