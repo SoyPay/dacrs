@@ -102,7 +102,7 @@ Value getnewaddress(const Array& params, bool bHelp)
 		throw runtime_error("add key failed ");
 	}
 	Object obj;
-	obj.push_back(Pair("Addr", keyID.ToAddress()));
+	obj.push_back(Pair("addr", keyID.ToAddress()));
 	obj.push_back(Pair("minerpubkey", bIsForMiner ? cMinter.GetPubKey().ToString() : "no"));
 	return obj;
 }
@@ -804,13 +804,13 @@ Value getassets(const Array& params, bool bHelp) {
 
 		Object result;
 		result.push_back(Pair("Address", strAddr));
-		result.push_back(Pair("ullFreeValues", ullFreeValues));
+		result.push_back(Pair("FreeValues", ullFreeValues));
 		result.push_back(Pair("FreezedFund", ullFreezeValues));
 
 		arrayAssetIds.push_back(result);
 	}
 
-	retObj.push_back(Pair("ullTotalAssets", ullTotalAssets));
+	retObj.push_back(Pair("TotalAssets", ullTotalAssets));
 	retObj.push_back(Pair("Lists", arrayAssetIds));
 
 	return retObj;

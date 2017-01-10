@@ -840,7 +840,7 @@ Value listaddr(const Array& params, bool bHelp) {
 			obj.push_back(Pair("addr", keyId.ToAddress()));
 			obj.push_back(Pair("balance", (double) cAcctInfo.GetRawBalance() / (double) COIN));
 			obj.push_back(Pair("haveminerkey", cKeyCombi.IsContainMinerKey()));
-			obj.push_back(Pair("RegId", cAcctInfo.m_cRegID.ToString()));
+			obj.push_back(Pair("regid", cAcctInfo.m_cRegID.ToString()));
 			retArry.push_back(obj);
 		}
 	}
@@ -970,7 +970,7 @@ Value listunconfirmedtx(const Array& params, bool bHelp) {
 	for (auto const &wtx : g_pwalletMain->m_mapUnConfirmTx) {
 		UnConfirmTxArry.push_back(wtx.second.get()->ToString(cView));
 	}
-	retObj.push_back(Pair("m_mapUnConfirmTx", UnConfirmTxArry));
+	retObj.push_back(Pair("UnConfirmTx", UnConfirmTxArry));
 
 	return retObj;
 }
@@ -1087,7 +1087,7 @@ Value sign(const Array& params, bool bHelp) {
 //}
 static Value AccountLogToJson(const CAccountLog &accoutLog) {
 	Object obj;
-	obj.push_back(Pair("cKeyId", accoutLog.m_cKeyID.ToString()));
+	obj.push_back(Pair("keyid", accoutLog.m_cKeyID.ToString()));
 	obj.push_back(Pair("llValues", accoutLog.m_ullValues));
 	obj.push_back(Pair("nHeight", accoutLog.m_nHeight));
 	obj.push_back(Pair("nCoinDay", accoutLog.m_ullCoinDay));
@@ -2629,7 +2629,7 @@ Value gettxhashbyaddress(const Array& params, bool bHelp) {
 			;
 		}
 		obj.push_back(Pair("address", strAddress));
-		obj.push_back(Pair("nHeight", nHeight));
+		obj.push_back(Pair("height", nHeight));
 		Array arrayObj;
 		for (auto item : mapTxHash) {
 			arrayObj.push_back(string(item.second.begin(), item.second.end()));
