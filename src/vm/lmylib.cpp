@@ -139,7 +139,7 @@ static bool GetArray(lua_State *L, vector<std::shared_ptr<std::vector<unsigned c
 		return false;
 	}
 
-	printf("nLen = %d", nTotalLen);
+	//printf("nLen = %d", nTotalLen);
 	vector<unsigned char> vuchBuf;
 	vuchBuf.clear();
 	for (int i = 0; i < nTotalLen; i++) {
