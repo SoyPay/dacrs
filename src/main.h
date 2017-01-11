@@ -102,7 +102,7 @@ extern const string g_strMessageMagic;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64_t g_sMinDiskSpace 			= 52428800;
-static const int g_sRegAppFuel2FeeForkHeight 	= 200000; 		// 改注册app燃料费为小费高度[Lockie]
+static const int g_sRegAppFuel2FeeForkHeight 	= 717000; 		// 改注册app燃料费为小费高度[Lockie]
 static const int g_sBurnRateForkHeight 			= 45000;    	//修改燃烧费率算法
 static const int g_sTwelveForwardLimits 		= 28000;   		//修改限制block时间不能超过本地时间12分钟
 static const int g_sFixedDifficulty 			= 35001;    	//此高度前的block不检查难度，通过checkpoint保证
@@ -113,7 +113,7 @@ static const int g_sUpdateTxVersion2Height 		= 196000;  		//主链在此高度后不再接
 static const int g_sUpdateBlockVersionHeight 	= 209000;   	//主链在此高度后，block版本升级
 static const int g_sLimite8051AppHeight 		= 160000;    	//在此高度后，不能注册8051脚本
 static const int g_sBlockTime4AppAccountHeight 	= 600000;  		//在此高度后，改用block时间取代高度操作脚本应用账户
-static const int g_sBlockRemainCoinDayHeight 	= 900000;  		//此高度之后，用新的剩余币龄算法
+static const int g_sBlockRemainCoinDayHeight 	= 731400;  		//此高度之后，用新的剩余币龄算法
 
 class CCoinsDB;
 class CBlockTreeDB;
