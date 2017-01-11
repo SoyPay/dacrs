@@ -1206,7 +1206,9 @@ Value resetclient(const Array& params, bool bHelp) {
 				"\nreset client\n"
 				"\nArguments:\n"
 				"\nResult:\n"
-				"\nExamples:\n" + HelpExampleCli("resetclient", "") + HelpExampleRpc("resetclient", ""));
+				"\nExamples:\n"
+				+ HelpExampleCli("resetclient", "")
+				+ HelpExampleRpc("resetclient", ""));
 	}
 	Value te = TestDisconnectBlock(g_cChainActive.Tip()->m_nHeight);
 

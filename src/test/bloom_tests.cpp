@@ -140,6 +140,8 @@ c38bd52715bd94bc7505c28ffdb4b0d0"), SER_NETWORK, g_sProtocolVersion);
 	BOOST_CHECK(cMerkleBlock.m_vMatchedTxn[0].first == 1);
 
 	vector<uint256> vcMatched;
+//	cout<<"cBlock.GetHashMerkleRoot()="<<cBlock.GetHashMerkleRoot().ToString()<<endl;
+//	cout<<"cMerkleBlock.m_cTxNum.ExtractMatches(vcMatched)="<<cMerkleBlock.m_cTxNum.ExtractMatches(vcMatched).ToString()<<endl;
 	BOOST_CHECK(cMerkleBlock.m_cTxNum.ExtractMatches(vcMatched) == cBlock.GetHashMerkleRoot());
 	BOOST_CHECK(vcMatched.size() == cMerkleBlock.m_vMatchedTxn.size());
 	for (unsigned int i = 0; i < vcMatched.size(); i++)

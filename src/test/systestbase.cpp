@@ -356,7 +356,7 @@ bool SysTestBase::GetNewAddr(std::string &strAddr, bool bFlag) {
 
 	Value value;
 	if (CommandLineRPC_GetValue(argc, argv, value)) {
-		strAddr = "strAddr";
+		strAddr = "addr";
 		return GetStrFromObj(value, strAddr);
 	}
 	return false;

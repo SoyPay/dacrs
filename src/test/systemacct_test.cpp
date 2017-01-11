@@ -21,7 +21,7 @@ class CSysAccountTest : public SysTestBase {
 BOOST_FIXTURE_TEST_SUITE(sysacct_test, CSysAccountTest)
 BOOST_FIXTURE_TEST_CASE(transfer_test, CSysAccountTest) {
 	ResetEnv();
-	BOOST_CHECK(0 == g_cChainActive.Height());
+	BOOST_CHECK(0 == g_cChainActive.Height());//如果有挖矿就是1
 	//转账
 	string strRegAddr = "dkJwhBs2P2SjbQWt5Bz6vzjqUhXTymvsGr";
 	string strSrcRegID = "000000000400";

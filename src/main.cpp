@@ -2947,12 +2947,12 @@ uint256 CPartialMerkleTree::TraverseAndExtract(int nHeight, unsigned int nPos, u
 	bool bParentOfMatch = m_vbBits[unBitsUsed++];
 	if (nHeight == 0 || !bParentOfMatch) {
 		// if at height 0, or nothing interesting below, use stored hash and do not descend
-		if (unBitsUsed >= m_vcHash.size()) {
+		if (unHashUsed >= m_vcHash.size()) {
 			// overflowed the hash array - failure
 			m_bBad = true;
 			return uint256();
 		}
-		const uint256 &hash = m_vcHash[unBitsUsed++];
+		const uint256 &hash = m_vcHash[unHashUsed++];
 		if (nHeight == 0 && bParentOfMatch) {	// in case of height 0, we have a matched txid
 			vcMatch.push_back(hash);
 		}
