@@ -2149,6 +2149,61 @@
 	</tr>
 	<tr>
 		<td width="132" bgcolor="#f9f9f9" style="border: 1px solid #aaaaaa; padding: 0.03in">
+			<p class="western"><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt">contractreckon</font></font></font></p>
+		</td>
+		<td width="196" bgcolor="#f9f9f9" style="border: 1px solid #aaaaaa; padding: 0.03in">
+			<p class="western"><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt">&lt;contract&gt;&lt;userregid&gt;&lt;appid&gt;</font></font></font></p>
+		</td>
+		<td width="234" bgcolor="#f9f9f9" style="border: 1px solid #aaaaaa; padding: 0.03in">
+			<p class="western" style="margin-bottom: 0in"><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt">Estimating
+			the resources required for ah contract transaction</font></font></font></p>
+			<p class="western" style="margin-bottom: 0in"><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt"><b>Eg.</b></font></font></font></p>
+			<p class="western" style="margin-bottom: 0in"><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt"><b>1</b></font></font><font face="&#24494;&#36719;&#38597;&#40657;"><span lang="zh-CN"><font face="&#23435;&#20307;"><font size="2" style="font-size: 10pt"><b>&#12289;</b></font></font></font></span></font><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt"><b>contract
+			:</b></font></font></font></p>
+			<p class="western" style="margin-bottom: 0in"><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt">0405000000704548747658377956744634767745645a5941446a637043556433514c783978594600
+			</font></font></font>
+			</p>
+			<p class="western" style="margin-bottom: 0in"><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt"><b>2</b></font></font><font face="&#24494;&#36719;&#38597;&#40657;"><span lang="zh-CN"><font face="&#23435;&#20307;"><font size="2" style="font-size: 10pt"><b>&#12289;</b></font></font></font></span></font><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt"><b>userregid
+			</b></font></font><font face="&#24494;&#36719;&#38597;&#40657;"><span lang="zh-CN"><font face="&#23435;&#20307;"><font size="2" style="font-size: 10pt"><b>&#65306;</b></font></font></font></span></font></p>
+			<p class="western" style="margin-bottom: 0in"><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt">pHoFvGYVtyLm5Zb3TwNPsjxqXy6ncs4A7m
+			</font></font></font>
+			</p>
+			<p class="western" style="margin-bottom: 0in"><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt"><b>3</b></font></font><font face="&#24494;&#36719;&#38597;&#40657;"><span lang="zh-CN"><font face="&#23435;&#20307;"><font size="2" style="font-size: 10pt"><b>&#12289;</b></font></font></font></span></font><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt"><b>appid
+			</b></font></font><font face="&#24494;&#36719;&#38597;&#40657;"><span lang="zh-CN"><font face="&#23435;&#20307;"><font size="2" style="font-size: 10pt"><b>&#65306;</b></font></font></font></span></font></p>
+			<p class="western"><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt">173883-1</font></font></font></p>
+		</td>
+		<td width="55" bgcolor="#f9f9f9" style="border: 1px solid #aaaaaa; padding: 0.03in">
+			<p class="western"><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt">N</font></font></font></p>
+		</td>
+		<td width="229" bgcolor="#f9f9f9" style="border: 1px solid #aaaaaa; padding-top: 0.01in; padding-bottom: 0.01in; padding-left: 0.02in; padding-right: 0.01in">
+			<p class="western" style="margin-bottom: 0in"><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt">Result:</font></font></font></p>
+			<p class="western" style="margin-bottom: 0in"><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt">{</font></font></font></p>
+			<p class="western" style="margin-bottom: 0in"><font color="#000000">
+			   <font face="Arial, serif"><font size="2" style="font-size: 10pt">&quot;step&quot;
+			: xxxx,</font></font></font></p>
+			<p class="western" style="margin-bottom: 0in"><font color="#000000">
+			   <font face="Arial, serif"><font size="2" style="font-size: 10pt">&quot;fuelrate&quot;
+			: xx,</font></font></font></p>
+			<p class="western" style="margin-bottom: 0in"><font color="#000000">
+			   <font face="Arial, serif"><font size="2" style="font-size: 10pt">&quot;fuel&quot;
+			: x.xxxxxxxx</font></font></font></p>
+			<p class="western" style="margin-bottom: 0in"><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt">}</font></font></font></p>
+			<p class="western" style="margin-bottom: 0in"><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt">Eg.</font></font></font></p>
+			<p class="western" style="margin-bottom: 0in"><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt">{</font></font></font></p>
+			<p class="western" style="margin-bottom: 0in"><font color="#000000">
+			   <font face="Arial, serif"><font size="2" style="font-size: 10pt">&quot;step&quot;
+			: 1485,</font></font></font></p>
+			<p class="western" style="margin-bottom: 0in"><font color="#000000">
+			   <font face="Arial, serif"><font size="2" style="font-size: 10pt">&quot;fuelrate&quot;
+			: 1,</font></font></font></p>
+			<p class="western" style="margin-bottom: 0in"><font color="#000000">
+			   <font face="Arial, serif"><font size="2" style="font-size: 10pt">&quot;fuel&quot;
+			: 0.00010015</font></font></font></p>
+			<p class="western"><font color="#000000"><font face="Arial, serif"><font size="2" style="font-size: 10pt">}</font></font></font></p>
+		</td>
+	</tr>
+	<tr>
+		<td width="132" bgcolor="#f9f9f9" style="border: 1px solid #aaaaaa; padding: 0.03in">
 			<p class="western"><br/>
 
 			</p>
