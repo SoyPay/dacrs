@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef _DACRSRPC_SERVER_H_
-#define _DACRSRPC_SERVER_H_ 1
+#ifndef DACRS_RPC_RPCSERVER_H_
+#define DACRS_RPC_RPCSERVER_H_ 1
 
 #include "uint256.h"
 #include "rpcprotocol.h"
@@ -35,56 +35,55 @@ void StopRPCThreads();
   the right number of arguments are passed, just that any passed are the correct type.
   Use like:  RPCTypeCheck(params, boost::assign::list_of(str_type)(int_type)(obj_type));
 */
-void RPCTypeCheck(const json_spirit::Array& params,
-                  const list<json_spirit::Value_type>& typesExpected, bool fAllowNull=false);
+void RPCTypeCheck(const json_spirit::Array& params, const list<json_spirit::Value_type>& typesExpected,
+		bool bAllowNull = false);
 /*
   Check for expected keys/value types in an Object.
   Use like: RPCTypeCheck(object, boost::assign::map_list_of("name", str_type)("value", int_type));
 */
-void RPCTypeCheck(const json_spirit::Object& o,
-                  const map<string, json_spirit::Value_type>& typesExpected, bool fAllowNull=false);
+void RPCTypeCheck(const json_spirit::Object& o, const map<string, json_spirit::Value_type>& typesExpected,
+		bool bAllowNull = false);
 
 /*
   Run func nSeconds from now. Uses boost deadline timers.
   Overrides previous timer <name> (if any).
  */
-void RPCRunLater(const string& name, boost::function<void(void)> func, int64_t nSeconds);
+void RPCRunLater(const string& strName, boost::function<void(void)> func, int64_t llSeconds);
 
-typedef json_spirit::Value(*rpcfn_type)(const json_spirit::Array& params, bool fHelp);
+typedef json_spirit::Value(*rpcfn_type)(const json_spirit::Array& params, bool bHelp);
 
-class CRPCCommand
-{
-public:
-    string name;
-    rpcfn_type actor;
-    bool okSafeMode;
-    bool threadSafe;
-    bool reqWallet;
+class CRPCCommand {
+ public:
+	string m_strName;
+	rpcfn_type m_Actor;
+	bool m_bOkSafeMode;
+	bool m_bThreadSafe;
+	bool m_bReqWallet;
 };
 
 /**
  * DACRS RPC command dispatcher.
  */
-class CRPCTable
-{
-private:
-    map<string, const CRPCCommand*> mapCommands;
-public:
-    CRPCTable();
-    const CRPCCommand* operator[](string name) const;
-    string help(string name) const;
+class CRPCTable {
+ public:
+	CRPCTable();
+	const CRPCCommand* operator[](string strName) const;
+	string help(string strCommand) const;
 
-    /**
-     * Execute a method.
-     * @param method   Method to execute
-     * @param params   Array of arguments (JSON objects)
-     * @returns Result of the call.
-     * @throws an exception (json_spirit::Value) when an error happens.
-     */
-    json_spirit::Value execute(const string &method, const json_spirit::Array &params) const;
+	/**
+	 * Execute a method.
+	 * @param method   Method to execute
+	 * @param params   Array of arguments (JSON objects)
+	 * @returns Result of the call.
+	 * @throws an exception (json_spirit::Value) when an error happens.
+	 */
+	json_spirit::Value execute(const string &strMethod, const json_spirit::Array &params) const;
+
+ private:
+	map<string, const CRPCCommand*> m_mapCommands;
 };
 
-extern const CRPCTable tableRPC;
+extern const CRPCTable g_TableRPC;
 
 //
 // Utilities: convert hex-encoded Values
@@ -98,89 +97,89 @@ extern vector<unsigned char> ParseHexO(const json_spirit::Object& o, string strK
 extern void InitRPCMining();
 extern void ShutdownRPCMining();
 
-extern int64_t nWalletUnlockTime;
+extern int64_t g_llWalletUnlockTime;
 extern int64_t AmountToRawValue(const json_spirit::Value& value);
-extern json_spirit::Value ValueFromAmount(int64_t amount);
-extern double GetDifficulty(const CBlockIndex* blockindex = NULL);
+extern json_spirit::Value ValueFromAmount(int64_t llAmount);
+extern double GetDifficulty(const CBlockIndex* pcBlockIndex = NULL);
 extern string HexBits(unsigned int nBits);
 extern string HelpRequiringPassphrase();
-extern string HelpExampleCli(string methodname, string args);
-extern string HelpExampleRpc(string methodname, string args);
+extern string HelpExampleCli(string strMethodName, string args);
+extern string HelpExampleRpc(string strMethodName, string args);
 
 extern void EnsureWalletIsUnlocked();
 
-extern json_spirit::Value getconnectioncount(const json_spirit::Array& params, bool fHelp); // in rpcnet.cpp
-extern json_spirit::Value getpeerinfo(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value ping(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value addnode(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getaddednodeinfo(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getnettotals(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getdacrsstate(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value getconnectioncount(const json_spirit::Array& params, bool bHelp); // in rpcnet.cpp
+extern json_spirit::Value getpeerinfo(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value ping(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value addnode(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value getaddednodeinfo(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value getnettotals(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value getdacrsstate(const json_spirit::Array& params, bool bHelp);
 
-extern json_spirit::Value dumpprivkey(const json_spirit::Array& params, bool fHelp); // in rpcdump.cpp
-extern json_spirit::Value importprivkey(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value dumpwallet(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value importwallet(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value dropprivkey(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value dumpprivkey(const json_spirit::Array& params, bool bHelp); // in rpcdump.cpp
+extern json_spirit::Value importprivkey(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value dumpwallet(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value importwallet(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value dropprivkey(const json_spirit::Array& params, bool bHelp);
 
-//extern json_spirit::Value getgenerate(const json_spirit::Array& params, bool fHelp); // in rpcmining.cpp
-extern json_spirit::Value setgenerate(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getnetworkhashps(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value gethashespersec(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getmininginfo(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getwork(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getblocktemplate(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value submitblock(const json_spirit::Array& params, bool fHelp);
+//extern json_spirit::Value getgenerate(const json_spirit::Array& params, bool bHelp); // in rpcmining.cpp
+extern json_spirit::Value setgenerate(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value getnetworkhashps(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value gethashespersec(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value getmininginfo(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value getwork(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value getblocktemplate(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value submitblock(const json_spirit::Array& params, bool bHelp);
 
-extern json_spirit::Value getnewaddress(const json_spirit::Array& params, bool fHelp); // in rpcwallet.cpp
-extern json_spirit::Value getaccount(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value verifymessage(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getbalance(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value addmultisigaddress(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value islocked(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value getnewaddress(const json_spirit::Array& params, bool bHelp); // in rpcwallet.cpp
+extern json_spirit::Value getaccount(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value verifymessage(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value getbalance(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value addmultisigaddress(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value islocked(const json_spirit::Array& params, bool bHelp);
 
-extern json_spirit::Value backupwallet(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value walletpassphrase(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value walletpassphrasechange(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value walletlock(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value encryptwallet(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getinfo(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getwalletinfo(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getblockchaininfo(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getnetworkinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value backupwallet(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value walletpassphrase(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value walletpassphrasechange(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value walletlock(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value encryptwallet(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value getinfo(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value getwalletinfo(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value getblockchaininfo(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value getnetworkinfo(const json_spirit::Array& params, bool bHelp);
 
-extern json_spirit::Value getrawtransaction(const json_spirit::Array& params, bool fHelp); // in rcprawtransaction.cpp
-extern json_spirit::Value createrawtransaction(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value decoderawtransaction(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value signrawtransaction(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendrawtransaction(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value signmessage(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value notionalpoolingbalance(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value dispersebalance(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value notionalpoolingasset(const json_spirit:: Array& params, bool fHelp);
-extern json_spirit::Value getassets(const json_spirit:: Array& params, bool fHelp);
-extern json_spirit::Value sendtoaddress(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendtoaddresswithfee(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sendtoaddressraw(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value registaccounttxraw(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value submittx(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value createcontracttxraw(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value createfreezetxraw(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value registerscripttxraw(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value sigstr(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value printblokdbinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value getrawtransaction(const json_spirit::Array& params, bool bHelp); // in rcprawtransaction.cpp
+extern json_spirit::Value createrawtransaction(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value decoderawtransaction(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value signrawtransaction(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value sendrawtransaction(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value signmessage(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value notionalpoolingbalance(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value dispersebalance(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value notionalpoolingasset(const json_spirit:: Array& params, bool bHelp);
+extern json_spirit::Value getassets(const json_spirit:: Array& params, bool bHelp);
+extern json_spirit::Value sendtoaddress(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value sendtoaddresswithfee(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value sendtoaddressraw(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value registaccounttxraw(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value submittx(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value createcontracttxraw(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value createfreezetxraw(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value registerscripttxraw(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value sigstr(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value printblokdbinfo(const json_spirit::Array& params, bool bHelp);
 
 
-extern json_spirit::Value getblockcount(const json_spirit::Array& params, bool fHelp); // in rpcblockchain.cpp
-extern json_spirit::Value getbestblockhash(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getdifficulty(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value settxfee(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getrawmempool(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getblockhash(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getblock(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value gettxoutsetinfo(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value verifychain(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value listsetblockindexvalid(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value getscriptid(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value listcheckpoint(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value getblockcount(const json_spirit::Array& params, bool bHelp); // in rpcblockchain.cpp
+extern json_spirit::Value getbestblockhash(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value getdifficulty(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value settxfee(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value getrawmempool(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value getblockhash(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value getblock(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value gettxoutsetinfo(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value verifychain(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value listsetblockindexvalid(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value getscriptid(const json_spirit::Array& params, bool bHelp);
+extern json_spirit::Value listcheckpoint(const json_spirit::Array& params, bool bHelp);
 #endif

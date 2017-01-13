@@ -1214,7 +1214,12 @@ void luaV_execute (lua_State *L,LUA_INTEGER *pllStep) {
         {
         	LUA_INTEGER remainStep =  *pllStep - step; //剩余的总step
         	Protect(luaD_call(L, cb, GETARG_C(i), 1,&remainStep));
-        	step += remainStep;  //累加调用call实际运行的step
+        	if(remainStep >= 0) {
+        		step += remainStep;  //累加调用call实际运行的step
+        	}else {
+            	*pllStep = -1;//force return
+            	return ;
+        	}
         }else{
         	Protect(luaD_call(L, cb, GETARG_C(i), 1,NULL));
         }

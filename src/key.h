@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DACRS_KEY_H
-#define DACRS_KEY_H
+#ifndef DACRS_KEY_H_
+#define DACRS_KEY_H_
 
 #define WRITEDATA(s, obj)   s.write((char*)&(obj), sizeof(obj))
 #define READDATA(s, obj)    s.read((char*)&(obj), sizeof(obj))
@@ -20,26 +20,24 @@
 
 /** A reference to a CKey: the Hash160 of its serialized public key */
 class CKeyID: public uint160 {
-public:
+ public:
 	CKeyID() : uint160() {}
 	CKeyID(const uint160 &in) : uint160(in) {}
 	CKeyID(const string &strAddress);
-	bool IsEmpty()const
-	{
+	bool IsEmpty() const {
 		return IsNull();
 	}
 
-	string ToString() const
-	{
-		return HexStr(begin(),end());
+	string ToString() const {
+		return HexStr(begin(), end());
 	}
-	string ToAddress() const;
 
+	string ToAddress() const;
 };
 
 /** A reference to a CScript: the Hash160 of its serialization (see script.h) */
 class CScriptID: public uint160 {
-public:
+ public:
 	CScriptID() : uint160() {}
 	CScriptID(const uint160 &in) :
 			uint160(in) {
@@ -72,7 +70,6 @@ private:
 
 public:
 	string ToString() const;
-
 
 	// Construct an invalid public key.
 	CPubKey() {
@@ -351,10 +348,10 @@ public:
 	}
 
 	// Initialize from a CPrivKey (serialized OpenSSL private key data).
-	bool SetPrivKey(const CPrivKey &vchPrivKey, bool fCompressed);
+	bool SetPrivKey(const CPrivKey &vchPrivKey, bool bCompressed);
 
 	// Generate a new private key using a cryptographic PRNG.
-	void MakeNewKey(bool fCompressed = true);
+	void MakeNewKey(bool bCompressed = true);
 
 	// Convert the private key to a CPrivKey (serialized OpenSSL private key data).
 	// This is expensive.

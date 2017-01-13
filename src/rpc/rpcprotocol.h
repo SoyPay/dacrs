@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef _DACRSRPC_PROTOCOL_H_
-#define _DACRSRPC_PROTOCOL_H_ 1
+#ifndef DACRS_RPC_RPCPROTOCOL_H_
+#define DACRS_RPC_RPCPROTOCOL_H_ 1
 
 #include <list>
 #include <map>
@@ -20,8 +20,7 @@
 #include "json/json_spirit_writer_template.h"
 using namespace std;
 // HTTP status codes
-enum HTTPStatusCode
-{
+enum HTTPStatusCode {
     HTTP_OK                    = 200,
     HTTP_BAD_REQUEST           = 400,
     HTTP_UNAUTHORIZED          = 401,
@@ -31,8 +30,7 @@ enum HTTPStatusCode
 };
 
 // Dacrs RPC error codes
-enum RPCErrorCode
-{
+enum RPCErrorCode {
     // Standard JSON-RPC 2.0 errors
     RPC_INVALID_REQUEST  = -32600,
     RPC_METHOD_NOT_FOUND = -32601,
@@ -76,65 +74,68 @@ enum RPCErrorCode
 //
 template <typename Protocol>
 class SSLIOStreamDevice : public boost::iostreams::device<boost::iostreams::bidirectional> {
-public:
-    SSLIOStreamDevice(boost::asio::ssl::stream<typename Protocol::socket> &streamIn, bool fUseSSLIn) : stream(streamIn)
-    {
-        fUseSSL = fUseSSLIn;
-        fNeedHandshake = fUseSSLIn;
+ public:
+    SSLIOStreamDevice(boost::asio::ssl::stream<typename Protocol::socket> &streamIn, bool bUseSSLIn) : m_stream(streamIn) {
+        m_bUseSSL = bUseSSLIn;
+        m_bNeedHandshake = bUseSSLIn;
     }
 
-    void handshake(boost::asio::ssl::stream_base::handshake_type role)
-    {
-        if (!fNeedHandshake) return;
-        fNeedHandshake = false;
-        stream.handshake(role);
-    }
-    streamsize read(char* s, streamsize n)
-    {
-        handshake(boost::asio::ssl::stream_base::server); // HTTPS servers read first
-        if (fUseSSL) return stream.read_some(boost::asio::buffer(s, n));
-        return stream.next_layer().read_some(boost::asio::buffer(s, n));
-    }
-    streamsize write(const char* s, streamsize n)
-    {
-        handshake(boost::asio::ssl::stream_base::client); // HTTPS clients write first
-        if (fUseSSL) return boost::asio::write(stream, boost::asio::buffer(s, n));
-        return boost::asio::write(stream.next_layer(), boost::asio::buffer(s, n));
-    }
-    bool connect(const string& server, const string& port)
-    {
-        boost::asio::ip::tcp::resolver resolver(stream.get_io_service());
-        boost::asio::ip::tcp::resolver::query query(server.c_str(), port.c_str());
-        boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
-        boost::asio::ip::tcp::resolver::iterator end;
-        boost::system::error_code error = boost::asio::error::host_not_found;
-        while (error && endpoint_iterator != end)
-        {
-            stream.lowest_layer().close();
-            stream.lowest_layer().connect(*endpoint_iterator++, error);
-        }
-        if (error)
-            return false;
-        return true;
-    }
+	void handshake(boost::asio::ssl::stream_base::handshake_type role) {
+		if (!m_bNeedHandshake) {
+			return;
+		}
+		m_bNeedHandshake = false;
+		m_stream.handshake(role);
+	}
 
-private:
-    bool fNeedHandshake;
-    bool fUseSSL;
-    boost::asio::ssl::stream<typename Protocol::socket>& stream;
+	streamsize read(char* s, streamsize n) {
+		handshake(boost::asio::ssl::stream_base::server); // HTTPS servers read first
+		if (m_bUseSSL) {
+			return m_stream.read_some(boost::asio::buffer(s, n));
+		}
+		return m_stream.next_layer().read_some(boost::asio::buffer(s, n));
+
+	}
+
+	streamsize write(const char* s, streamsize n) {
+		handshake(boost::asio::ssl::stream_base::client); // HTTPS clients write first
+		if (m_bUseSSL) {
+			return boost::asio::write(m_stream, boost::asio::buffer(s, n));
+		}
+		return boost::asio::write(m_stream.next_layer(), boost::asio::buffer(s, n));
+	}
+
+	bool connect(const string& strServer, const string& strPort) {
+		boost::asio::ip::tcp::resolver resolver(m_stream.get_io_service());
+		boost::asio::ip::tcp::resolver::query query(strServer.c_str(), strPort.c_str());
+		boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+		boost::asio::ip::tcp::resolver::iterator end;
+		boost::system::error_code error = boost::asio::error::host_not_found;
+		while (error && endpoint_iterator != end) {
+			m_stream.lowest_layer().close();
+			m_stream.lowest_layer().connect(*endpoint_iterator++, error);
+		}
+		if (error) {
+			return false;
+		}
+		return true;
+	}
+
+ private:
+    bool m_bNeedHandshake;
+    bool m_bUseSSL;
+    boost::asio::ssl::stream<typename Protocol::socket>& m_stream;
 };
 
 string HTTPPost(const string& strMsg, const map<string,string>& mapRequestHeaders);
-string HTTPReply(int nStatus, const string& strMsg, bool keepalive);
-bool ReadHTTPRequestLine(basic_istream<char>& stream, int &proto,
-                         string& http_method, string& http_uri);
-int ReadHTTPStatus(basic_istream<char>& stream, int &proto);
+string HTTPReply(int nStatus, const string& strMsg, bool bKeepalive);
+bool ReadHTTPRequestLine(basic_istream<char>& stream, int &nProto,string& strHttpMethod, string& strHttpUri);
+int ReadHTTPStatus(basic_istream<char>& stream, int &nProto);
 int ReadHTTPHeaders(basic_istream<char>& stream, map<string, string>& mapHeadersRet);
-int ReadHTTPMessage(basic_istream<char>& stream, map<string, string>& mapHeadersRet,
-                    string& strMessageRet, int nProto);
+int ReadHTTPMessage(basic_istream<char>& stream, map<string, string>& mapHeadersRet,string& strMessageRet, int nProto);
 string JSONRPCRequest(const string& strMethod, const json_spirit::Array& params, const json_spirit::Value& id);
 json_spirit::Object JSONRPCReplyObj(const json_spirit::Value& result, const json_spirit::Value& error, const json_spirit::Value& id);
 string JSONRPCReply(const json_spirit::Value& result, const json_spirit::Value& error, const json_spirit::Value& id);
-json_spirit::Object JSONRPCError(int code, const string& message);
+json_spirit::Object JSONRPCError(int nCode, const string& strMessage);
 
 #endif

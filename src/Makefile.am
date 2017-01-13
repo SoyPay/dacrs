@@ -236,8 +236,44 @@ dacrs_d_LDADD += $(BOOST_LIBS) $(BDB_LIBS)
 dacrs_cli_LDADD = \
   libdacrs_cli.a \
   libdacrs_common.a \
+  liblua53.a \
+  $(LIBLEVELDB) \
+  $(LIBMEMENV) \
+  $(BDB_LIBS) \
   $(BOOST_LIBS)
-dacrs_cli_SOURCES = dacrsd-cli.cpp
+dacrs_cli_SOURCES = dacrs-cli.cpp \
+	tx.cpp \
+	key.cpp \
+	main.cpp \
+	database.cpp \
+	miner.cpp \
+	$(VM_CPP) \
+	txmempool.cpp \
+	checkpoints.cpp \
+	txdb.cpp \
+	net.cpp \
+	bloom.cpp \
+	init.cpp \
+	alert.cpp \
+	addrman.cpp \
+	leveldbwrapper.cpp \
+	wallet/wallet.cpp \
+	rpc/rpcmining.cpp \
+	rpc/rpcserver.cpp \
+	wallet/db.cpp \
+	cuiserver.cpp \
+	noui.cpp \
+	wallet/walletdb.cpp \
+	crypter.cpp \
+	keystore.cpp \
+	rpc/rpcblockchain.cpp \
+	rpc/rpcmisc.cpp \
+	rpc/rpcnet.cpp \
+	rpc/rpcrawtransaction.cpp \
+	rpc/rpctx.cpp \
+	rpc/rpcdump.cpp \
+	rpc/rpcwallet.cpp
+	
 #
 
 if TARGET_WINDOWS

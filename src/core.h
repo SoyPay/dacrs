@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DACRS_CORE_H
-#define DACRS_CORE_H
+#ifndef DACRS_CORE_H_
+#define DACRS_CORE_H_
 
 #include "key.h"
 #include "serialize.h"
@@ -15,22 +15,23 @@
 #include <memory>
 
 /** No amount larger than this (in satoshi) is valid */
-static const int64_t MAX_MONEY = 1000000000 * COIN;
-static const int64_t MAX_MONEY_REG_NET = 20 * MAX_MONEY;
+static const int64_t g_sMaxMoney 		= 1000000000 * COIN;
+static const int64_t g_sMaxMoneyRegNet 	= 20 * g_sMaxMoney;
 
-static const int g_BlockVersion2 = 2;
-static const int g_BlockVersion3 = 3;
+static const int g_sBlockVersion2 	= 2;
+static const int g_sBlockVersion3 	= 3;
 
-inline int64_t GetMaxMoney()
-{
-	if(SysCfg().NetworkID() == CBaseParams::REGTEST) {
-		return MAX_MONEY_REG_NET;
-	}
-	else {
-		return MAX_MONEY;
+inline int64_t GetMaxMoney() {
+	if (SysCfg().NetworkID() == CBaseParams::EM_REGTEST) {
+		return g_sMaxMoneyRegNet;
+	} else {
+		return g_sMaxMoney;
 	}
 }
-inline bool MoneyRange(int64_t nValue) { return (nValue >= 0 && nValue <= GetMaxMoney()); }
+
+inline bool MoneyRange(int64_t llValue) {
+	return (llValue >= 0 && llValue <= GetMaxMoney());
+}
 
 class CAccountViewCache;
 
@@ -41,212 +42,218 @@ class CAccountViewCache;
  * in the block is a special one that creates a new coin owned by the creator
  * of the block.
  */
-class CBlockHeader
-{
-public:
-    // header
-    static const int CURRENT_VERSION=g_BlockVersion3;
-protected:
-    int nVersion;
-    uint256 hashPrevBlock;
-    uint256 hashMerkleRoot;
-    uint256 hashPos;   //nVersion;hashPrevBlock;hashMerkleRoot;nValues(余额);nTime;nNonce;nHeight;nFuel;nFuelRate; 计算的hash
-    unsigned int nTime;
-    unsigned int nBits;
-    unsigned int nNonce;
-    unsigned int nHeight;
-    int64_t    nFuel;
-    int nFuelRate;
-    vector<unsigned char> vSignature;
+class CBlockHeader {
+ public:
+	// header
+	static const int m_sCurrentVersion = g_sBlockVersion3;
 
-public:
-    CBlockHeader()
-    {
-        SetNull();
-    }
+ public:
+	CBlockHeader() {
+		SetNull();
+	}
 
-    IMPLEMENT_SERIALIZE
-    (
-        READWRITE(this->nVersion);
-        nVersion = this->nVersion;
-        READWRITE(hashPrevBlock);
-        READWRITE(hashMerkleRoot);
-        READWRITE(hashPos);
-        READWRITE(nTime);
-        READWRITE(nBits);
-        READWRITE(nNonce);
-        READWRITE(nHeight);
-        READWRITE(nFuel);
-        READWRITE(nFuelRate);
-        READWRITE(vSignature);
-    )
+	IMPLEMENT_SERIALIZE
+	(
+			READWRITE(this->m_nVersion);
+			nVersion = this->m_nVersion;
+			READWRITE(m_cHashPrevBlock);
+			READWRITE(m_cHashMerkleRoot);
+			READWRITE(m_cHashPos);
+			READWRITE(m_unTime);
+			READWRITE(m_unBits);
+			READWRITE(m_unNonce);
+			READWRITE(m_unHeight);
+			READWRITE(m_llFuel);
+			READWRITE(m_nFuelRate);
+			READWRITE(m_vchSignature);
+	)
 
-    void SetNull()
-    {
-        nVersion = CBlockHeader::CURRENT_VERSION;
-        hashPrevBlock = uint256();
-        hashMerkleRoot = uint256();
-        hashPos = uint256();
-        nTime = 0;
-        nBits = 0;
-        nNonce = 0;
-        nHeight = 0;
-        nFuel = 0;
-        nFuelRate = 100;
-        vSignature.clear();
-    }
+	void SetNull() {
+		m_nVersion 			= CBlockHeader::m_sCurrentVersion;
+		m_cHashPrevBlock 	= uint256();
+		m_cHashMerkleRoot 	= uint256();
+		m_cHashPos 			= uint256();
+		m_unTime 			= 0;
+		m_unBits 			= 0;
+		m_unNonce 			= 0;
+		m_unHeight 			= 0;
+		m_llFuel 			= 0;
+		m_nFuelRate 		= 100;
+		m_vchSignature.clear();
+	}
 
-    bool IsNull() const
-    {
-        return (nBits == 0);
-    }
+	bool IsNull() const {
+		return (m_unBits == 0);
+	}
 
-    uint256 GetHash() const;
+	uint256 GetHash() const;
+	uint256 SignatureHash() const;
 
-    uint256 SignatureHash() const;
+	int64_t GetBlockTime() const {
+		return (int64_t) m_unTime;
+	}
 
-    int64_t GetBlockTime() const
-    {
-        return (int64_t)nTime;
-    }
+	int GetVersion() const {
+		return m_nVersion;
+	}
 
-    int GetVersion() const  {
-    	return  nVersion;
-    }
-    void SetVersion(int nVersion) {
-    	this->nVersion = nVersion;
-    }
-    uint256 GetHashPrevBlock() const  {
-    	return hashPrevBlock;
-    }
-    void SetHashPrevBlock(uint256 prevBlockHash) {
-    	this->hashPrevBlock = prevBlockHash;
-    }
-    uint256 GetHashMerkleRoot() const{
-    	return hashMerkleRoot;
-    }
-    void SetHashMerkleRoot(uint256 merkleRootHash) {
-    	this->hashMerkleRoot = merkleRootHash;
-    }
-    uint256 GetHashPos() const{
-    	return hashPos;
-    }
-    void SetHashPos(uint256 posHash) {
-    	this->hashPos = posHash;
-    }
-    unsigned int GetTime() const{
-    	return nTime;
-    }
-    void SetTime(unsigned int time) {
-    	this->nTime = time;
-    }
-    unsigned int GetBits() const{
-    	return nBits;
-    }
-    void SetBits(unsigned int bits) {
-    	this->nBits = bits;
-    }
-    unsigned int GetNonce() const{
-    	return nNonce;
-    }
-    void SetNonce(unsigned int nonce) {
-    	this->nNonce = nonce;
-    }
-    unsigned int GetHeight() const{
-    	return nHeight;
-    }
-    void SetHeight(unsigned int height);
+	void SetVersion(int nVersion) {
+		this->m_nVersion = nVersion;
+	}
 
-    unsigned int GetFuel() const{
-    	return nFuel;
-    }
-    void SetFuel(int64_t fuel) {
-    	this->nFuel = fuel;
-    }
-    int GetFuelRate() const{
-    	return nFuelRate;
-    }
-    void SetFuelRate(int fuelRalte) {
-    	this->nFuelRate = fuelRalte;
-    }
-    const vector<unsigned char> &GetSignature() const{
-    	return vSignature;
-    }
-    void SetSignature(const vector<unsigned char> &signature) {
-    	this->vSignature = signature;
-    }
-    void ClearSignature() {
-    	this->vSignature.clear();
-    }
+	uint256 GetHashPrevBlock() const {
+		return m_cHashPrevBlock;
+	}
+
+	void SetHashPrevBlock(uint256 prevBlockHash) {
+		this->m_cHashPrevBlock = prevBlockHash;
+	}
+
+	uint256 GetHashMerkleRoot() const {
+		return m_cHashMerkleRoot;
+	}
+
+	void SetHashMerkleRoot(uint256 merkleRootHash) {
+		this->m_cHashMerkleRoot = merkleRootHash;
+	}
+
+	uint256 GetHashPos() const {
+		return m_cHashPos;
+	}
+
+	void SetHashPos(uint256 posHash) {
+		this->m_cHashPos = posHash;
+	}
+
+	unsigned int GetTime() const {
+		return m_unTime;
+	}
+
+	void SetTime(unsigned int time) {
+		this->m_unTime = time;
+	}
+
+	unsigned int GetBits() const {
+		return m_unBits;
+	}
+
+	void SetBits(unsigned int bits) {
+		this->m_unBits = bits;
+	}
+
+	unsigned int GetNonce() const {
+		return m_unNonce;
+	}
+
+	void SetNonce(unsigned int nonce) {
+		this->m_unNonce = nonce;
+	}
+
+	unsigned int GetHeight() const {
+		return m_unHeight;
+	}
+
+	void SetHeight(unsigned int height);
+
+	unsigned int GetFuel() const {
+		return m_llFuel;
+	}
+
+	void SetFuel(int64_t fuel) {
+		this->m_llFuel = fuel;
+	}
+
+	int GetFuelRate() const {
+		return m_nFuelRate;
+	}
+
+	void SetFuelRate(int fuelRalte) {
+		this->m_nFuelRate = fuelRalte;
+	}
+
+	const vector<unsigned char> &GetSignature() const {
+		return m_vchSignature;
+	}
+
+	void SetSignature(const vector<unsigned char> &signature) {
+		this->m_vchSignature = signature;
+	}
+
+	void ClearSignature() {
+		this->m_vchSignature.clear();
+	}
+
+ protected:
+	int m_nVersion;
+	uint256 m_cHashPrevBlock;
+	uint256 m_cHashMerkleRoot;
+	uint256 m_cHashPos;   		//nVersion;hashPrevBlock;hashMerkleRoot;nValues(余额);nTime;nNonce;nHeight;nFuel;nFuelRate; 计算的hash
+	unsigned int m_unTime;
+	unsigned int m_unBits;
+	unsigned int m_unNonce;
+	unsigned int m_unHeight;
+	int64_t m_llFuel;
+	int m_nFuelRate;
+	vector<unsigned char> m_vchSignature;
 };
 
+class CBlock: public CBlockHeader {
+ public:
+	// network and disk
+	vector<std::shared_ptr<CBaseTransaction> > vptx;
+	// memory only
+	mutable vector<uint256> vMerkleTree;  //块中所有交易的交易hash集合
 
-class CBlock : public CBlockHeader
-{
-public:
-    // network and disk
-    vector<std::shared_ptr<CBaseTransaction> > vptx;
+	CBlock() {
+		SetNull();
+	}
 
-    // memory only
-    mutable vector<uint256> vMerkleTree;  //块中所有交易的交易hash集合
+	CBlock(const CBlockHeader &cBlockHeader) {
+		SetNull();
+		*((CBlockHeader*)this) = cBlockHeader;
+	}
 
-    CBlock()
-    {
-        SetNull();
-    }
+	IMPLEMENT_SERIALIZE
+	(
+			READWRITE(*(CBlockHeader*)this);
+			READWRITE(vptx);
+	)
 
-    CBlock(const CBlockHeader &header)
-    {
-        SetNull();
-        *((CBlockHeader*)this) = header;
-    }
+	void SetNull() {
+		CBlockHeader::SetNull();
+		vptx.clear();
+		vMerkleTree.clear();
+	}
 
-    IMPLEMENT_SERIALIZE
-    (
-        READWRITE(*(CBlockHeader*)this);
-        READWRITE(vptx);
-    )
+	CBlockHeader GetBlockHeader() const {
+		CBlockHeader cBlockHeader;
+		cBlockHeader.SetVersion(m_nVersion);
+		cBlockHeader.SetHashPrevBlock(m_cHashPrevBlock);
+		cBlockHeader.SetHashMerkleRoot(m_cHashMerkleRoot);
+		cBlockHeader.SetHashPos(m_cHashPos);
+		cBlockHeader.SetTime(m_unTime);
+		cBlockHeader.SetBits(m_unBits);
+		cBlockHeader.SetNonce(m_unNonce);
+		cBlockHeader.SetHeight(m_unHeight);
+		cBlockHeader.SetFuel(m_llFuel);
+		cBlockHeader.SetFuelRate(m_nFuelRate);
+		cBlockHeader.SetSignature(m_vchSignature);
+		return cBlockHeader;
+	}
 
-    void SetNull()
-    {
-        CBlockHeader::SetNull();
-        vptx.clear();
-        vMerkleTree.clear();
-    }
+	uint256 BuildMerkleTree() const;
+	std::tuple<bool, int> GetTxIndex(const uint256& cTxHash) const;
 
-    CBlockHeader GetBlockHeader() const
-    {
-        CBlockHeader block;
-        block.SetVersion(nVersion);
-        block.SetHashPrevBlock(hashPrevBlock);
-        block.SetHashMerkleRoot(hashMerkleRoot);
-        block.SetHashPos(hashPos);
-        block.SetTime(nTime);
-        block.SetBits(nBits);
-        block.SetNonce(nNonce);
-        block.SetHeight(nHeight);
-        block.SetFuel(nFuel);
-        block.SetFuelRate(nFuelRate);
-        block.SetSignature(vSignature);
-        return block;
-    }
+	const uint256 &GetTxHash(unsigned int unIndex) const {
+		assert(vMerkleTree.size() > 0); // BuildMerkleTree must have been called first
+		assert(unIndex < vptx.size());
+		return vMerkleTree[unIndex];
+	}
 
-    uint256 BuildMerkleTree() const;
-
-    std::tuple<bool, int> GetTxIndex(const uint256& txHash) const;
-
-    const uint256 &GetTxHash(unsigned int nIndex) const {
-        assert(vMerkleTree.size() > 0); // BuildMerkleTree must have been called first
-        assert(nIndex < vptx.size());
-        return vMerkleTree[nIndex];
-    }
-
-    vector<uint256> GetMerkleBranch(int nIndex) const;
-    static uint256 CheckMerkleBranch(uint256 hash, const vector<uint256>& vMerkleBranch, int nIndex);
-
-    int64_t GetFee() const;
-
-    void print(CAccountViewCache &view) const;
+	vector<uint256> GetMerkleBranch(int nIndex) const;
+	static uint256 CheckMerkleBranch(uint256 cHash, const vector<uint256>& vcMerkleBranch, int nIndex);
+	int64_t GetFee() const;
+	void print(CAccountViewCache &cView) const;
 };
 
 
@@ -254,33 +261,30 @@ public:
  * other node doesn't have the same branch, it can find a recent common trunk.
  * The further back it is, the further before the fork it may be.
  */
-struct CBlockLocator
-{
-    vector<uint256> vHave;
+struct ST_BlockLocator {
+	ST_BlockLocator() {
+	}
 
-    CBlockLocator() {}
+	ST_BlockLocator(const vector<uint256>& vHaveIn) {
+		vcHave = vHaveIn;
+	}
 
-    CBlockLocator(const vector<uint256>& vHaveIn)
-    {
-        vHave = vHaveIn;
-    }
+	IMPLEMENT_SERIALIZE
+	(
+			if (!(nType & SER_GETHASH))
+			READWRITE(nVersion);
+			READWRITE(vcHave);
+	)
 
-    IMPLEMENT_SERIALIZE
-    (
-        if (!(nType & SER_GETHASH))
-            READWRITE(nVersion);
-        READWRITE(vHave);
-    )
+	void SetNull() {
+		vcHave.clear();
+	}
 
-    void SetNull()
-    {
-        vHave.clear();
-    }
+	bool IsNull() {
+		return vcHave.empty();
+	}
 
-    bool IsNull()
-    {
-        return vHave.empty();
-    }
+	vector<uint256> vcHave;
 };
 
 #endif

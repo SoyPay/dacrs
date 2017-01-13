@@ -1,14 +1,14 @@
 /*
- * CBlackHalo_tests.h
+ * Black_Halo_tests.h
  *
  *  Created on: 2014年12月30日
  *      Author: ranger.shi
  */
 
-#ifndef CBLACKHALO_TESTS_H_
-#define CBLACKHALO_TESTS_H_
+#ifndef DACRS_PTEST_BLACK_HALO_TEST_H_
+#define DACRS_PTEST_BLACK_HALO_TEST_H_
 
-#include "CycleTestBase.h"
+#include "cycle_test_base.h"
 #include <stdlib.h>
 #include <time.h>
 #include "main.h"
@@ -31,69 +31,62 @@ using namespace std;
 using namespace boost;
 using namespace json_spirit;
 
-
-typedef struct  {
-	unsigned char dnType;					//!<类型
-	unsigned char seller[6];			    //!<卖家ID（采用6字节的账户ID）
+typedef struct {
+	unsigned char uchDnType;					//!<类型
+	unsigned char arruchSeller[6];			    //!<卖家ID（采用6字节的账户ID）
 	IMPLEMENT_SERIALIZE
 	(
-			READWRITE(dnType);
-			for(int i = 0;i < 6;i++)
-			READWRITE(seller[i]);
+			READWRITE(uchDnType);
+			for (int i = 0;i < 6;i++) {
+				READWRITE(arruchSeller[i]);
+			}
 	)
-} FIRST_CONTRACT;
+} ST_FIRST_CONTRACT;
 
 typedef struct {
-	unsigned char dnType;				//!<交易类型
-	unsigned char hash[32];		        //!<上一个交易包的哈希
+	unsigned char uchDnType;				//!<交易类型
+	unsigned char arruchHash[32];		        //!<上一个交易包的哈希
 	IMPLEMENT_SERIALIZE
 	(
-		READWRITE(dnType);
-		for(int i = 0;i < 32;i++)
-		READWRITE(hash[i]);
+			READWRITE(uchDnType);
+			for(int i = 0;i < 32;i++) {
+				READWRITE(arruchHash[i]);
+			}
 	)
-} NEXT_CONTRACT;
+} ST_NEXT_CONTRACT;
 
-enum TXTYPE{
-	TX_BUYTRADE = 0x01,
-	TX_SELLERTRADE = 0x02,
-	TX_BUYERCONFIM = 0x03,
-	TX_BUYERCANCEL = 0x04,
-};
-#define BUYER_A    "dk2NNjraSvquD9b4SQbysVRQeFikA55HLi"
+//enum emTX_TYPE{
+//	TX_BUYTRADE = 0x01,
+//	TX_SELLERTRADE = 0x02,
+//	TX_BUYERCONFIM = 0x03,
+//	TX_BUYERCANCEL = 0x04,
+//};
+#define BUYER_A    	"dk2NNjraSvquD9b4SQbysVRQeFikA55HLi"
 #define SELLER_B    "dggsWmQ7jH46dgtA5dEZ9bhFSAK1LASALw"
 
-
 class CBlackHalo: public CycleTestBase {
-  int step;
-	string sritpthash;
-	string buyerhash;
-	string sellerhash;
-	string buyerconfiredhash;
-	string buyercancelhash;
-	string scriptid ;
-	uint64_t sendmonye;
-public:
+ public:
 	CBlackHalo();
 	virtual ~CBlackHalo();
 	int GetRandomFee() {
 		srand(time(NULL));
-		int r = (rand() % 1000000) + 100000000;
-		return r;
+		int nR = (rand() % 1000000) + 100000000;
+		return nR;
 	}
-	virtual TEST_STATE Run() ;
-	uint64_t GetPayMoney() {
-		uint64_t r = 0;
-		while(true)
-		{
-			srand(time(NULL));
-			r = (rand() % 1000002) + 100000000;
-			if(r%2 == 0 && r != 0)
-				break;
-		}
+	virtual emTEST_STATE Run();
 
-		return r;
+	uint64_t GetPayMoney() {
+		uint64_t ullR = 0;
+		while (true) {
+			srand(time(NULL));
+			ullR = (rand() % 1000002) + 100000000;
+			if (ullR % 2 == 0 && ullR != 0) {
+				break;
+			}
+		}
+		return ullR;
 	}
+
 	bool RegistScript();
 	bool SendBuyerPackage();
 	bool SendSellerPackage();
@@ -104,6 +97,15 @@ public:
 	bool WaitSendSellerPackage();
 	bool WaitSendBuyerConfirmedPackage();
 	bool WaitSendBuyerCancelPackage();
+ private:
+	int m_nStep;
+	string m_strSritpthash;
+	string m_strBuyerhash;
+	string m_strSellerhash;
+	string m_strBuyerconfiredhash;
+	string m_strBuyercancelhash;
+	string m_strScriptid;
+	uint64_t m_ullSendMonye;
 };
 
-#endif /* CBLACKHALO_TESTS_H_ */
+#endif /* DACRS_PTEST_BLACK_HALO_TEST_H_ */

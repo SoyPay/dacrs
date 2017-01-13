@@ -18,8 +18,6 @@
 #include "tx.h"
 //#include "Typedef.h"
 
-
-
 #if 0
 typedef struct NumArray{
 	int size;          // 数组大小
@@ -129,35 +127,30 @@ static int luaopen_array(lua_State *L){
 
 #endif
 
-
-
-
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
-CVmlua::CVmlua(const vector<unsigned char> & vRom, const vector<unsigned char> &InputData){
-	unsigned long len = 0;
+CVmlua::CVmlua(const vector<unsigned char> & vuchRom, const vector<unsigned char> &vuchInputData) {
+	unsigned long ulLen = 0;
 	/*vRom 输入的是script,InputData 输入的是contract*/
-    memset(m_ExRam,0,sizeof(m_ExRam));
-    memset(m_ExeFile,0,sizeof(m_ExeFile));
+	memset(m_arruchExRam, 0, sizeof(m_arruchExRam));
+	memset(m_arruchExeFile, 0, sizeof(m_arruchExeFile));
 
-    len = vRom.size();
-    if(len >= sizeof(m_ExeFile)){
-    	throw runtime_error("CVmlua::CVmlua() length of vRom exceptions");
-    }
-	memcpy(m_ExeFile, &vRom[0], len);
-	unsigned short count = InputData.size();//外面已限制小于4096字节
-	if(count > sizeof(m_ExRam) - 2){
+	ulLen = vuchRom.size();
+	if (ulLen >= sizeof(m_arruchExeFile)) {
+		throw runtime_error("CVmlua::CVmlua() length of vRom exceptions");
+	}
+	memcpy(m_arruchExeFile, &vuchRom[0], ulLen);
+	unsigned short usCount = vuchInputData.size();   //外面已限制小于4096字节
+	if (usCount > sizeof(m_arruchExRam) - 2) {
 		throw runtime_error("CVmlua::CVmlua() length of contract > 4094");
 	}
-	memcpy(m_ExRam, &count, 2);
-	memcpy(&m_ExRam[2], &InputData[0],count);
+	memcpy(m_arruchExRam, &usCount, 2);
+	memcpy(&m_arruchExRam[2], &vuchInputData[0], usCount);
 }
 
 CVmlua::~CVmlua() {
-
 }
-
 
 #ifdef WIN_DLL
 extern "C" __declspec(dllexport) int luaopen_mylib(lua_State *L);
@@ -165,10 +158,7 @@ extern "C" __declspec(dllexport) int luaopen_mylib(lua_State *L);
 LUAMOD_API int luaopen_mylib(lua_State *L);
 #endif
 
-
-
 void vm_openlibs (lua_State *L) {
-
 	static const luaL_Reg lualibs[] = {
 			{ "base", luaopen_base },
 			{ LUA_LOADLIBNAME, luaopen_package },
@@ -186,104 +176,101 @@ void vm_openlibs (lua_State *L) {
 	}
 }
 
+tuple<bool, string> CVmlua::syntaxcheck(bool bFile, const char* pszFilePathOrContent, int nLen) {
+	//1.创建Lua运行环境
+	lua_State *lua_state = luaL_newstate();
+	if (NULL == lua_state) {
+		LogPrint("vm", "luaL_newstate error\n");
+		return std::make_tuple(false, string("luaL_newstate error\n"));
+	}
 
-int64_t CVmlua::run(uint64_t maxstep,CVmRunEvn *pVmScriptRun) {
-	 long long step = 0;
-	 unsigned short count = 0;
+	vm_openlibs(lua_state);
+	//3.注册自定义模块
+	luaL_requiref(lua_state, "mylib", luaopen_mylib, 1);
 
-	if((maxstep == 0) || (NULL == pVmScriptRun)){
+	int nRet = 0;
+	if (bFile) {
+		nRet = luaL_loadfile(lua_state, pszFilePathOrContent);
+	} else {
+		nRet = luaL_loadbuffer(lua_state, (char * )pszFilePathOrContent, nLen, "line");
+	}
+	if (nRet) {
+		const char* errStr = lua_tostring(lua_state, -1);
+		lua_close(lua_state);
+		return std::make_tuple(false, string(errStr));
+	}
+
+	lua_close(lua_state);
+
+	return std::make_tuple(true, string("OK"));
+}
+
+int64_t CVmlua::run(uint64_t ullMaxStep,CVmRunEvn *pcVmScriptRun) {
+	long long llStep = 0;
+	unsigned short usCount = 0;
+
+	if ((ullMaxStep == 0) || (NULL == pcVmScriptRun)) {
 		return -1;
 	}
 
 	//1.创建Lua运行环境
-   lua_State *lua_state = luaL_newstate();
-   if(NULL == lua_state){
-	   LogPrint("vm", "luaL_newstate error\n");
-	   return -1;
-   }
-/*
-   //2.设置待注册的Lua标准库
-   static const luaL_Reg lualibs[] =
-   {
-	   {"base",luaopen_base},
-	   {LUA_LOADLIBNAME, luaopen_package},
-//	   {LUA_COLIBNAME, luaopen_coroutine},
-	   {LUA_TABLIBNAME, luaopen_table},
-//	   {LUA_IOLIBNAME, luaopen_io},
-//	   {LUA_OSLIBNAME, luaopen_os},
-//	   {LUA_STRLIBNAME, luaopen_string},
-//	   {LUA_MATHLIBNAME, luaopen_math},
-//	   {LUA_UTF8LIBNAME, luaopen_utf8},
-//	   {LUA_DBLIBNAME, luaopen_debug},
-	   {NULL,NULL}
-   };
-   //3.注册Lua标准库并清空栈
+	lua_State *lua_state = luaL_newstate();
+	if (NULL == lua_state) {
+		LogPrint("vm", "luaL_newstate error\n");
+		return -1;
+	}
 
-   const luaL_Reg *lib = lualibs;
-   for(;lib->func != NULL;lib++)
-   {
-	   lib->func(lua_state);
-	   lua_settop(lua_state,0);
-   }
+	vm_openlibs(lua_state);
+	//3.注册自定义模块
+	luaL_requiref(lua_state, "mylib", luaopen_mylib, 1);
 
-   //打开需要的库
-   //luaL_openlibs(lua_state);
-*/
-   vm_openlibs(lua_state);
-   //3.注册自定义模块
-   luaL_requiref(lua_state,"mylib",luaopen_mylib,1);
-
-   //4.往lua脚本传递合约内容
+	//4.往lua脚本传递合约内容
 	lua_newtable(lua_state);    //新建一个表,压入栈顶
-	lua_pushnumber(lua_state,-1);
-	lua_rawseti(lua_state,-2,0);
-	memcpy(&count,m_ExRam,  2);//外面已限制，合约内容小于4096字节
-    for(unsigned short n = 0;n < count;n++)
-    {
-        lua_pushinteger(lua_state,m_ExRam[2 + n]);// value值放入
-        lua_rawseti(lua_state,-2,n+1);  //set table at key 'n + 1'
-    }
-    lua_setglobal(lua_state,"contract");
+	lua_pushnumber(lua_state, -1);
+	lua_rawseti(lua_state, -2, 0);
+	memcpy(&usCount, m_arruchExRam, 2);    //外面已限制，合约内容小于4096字节
+	for (unsigned short n = 0; n < usCount; n++) {
+		lua_pushinteger(lua_state, m_arruchExRam[2 + n]);    // value值放入
+		lua_rawseti(lua_state, -2, n + 1);  //set table at key 'n + 1'
+	}
+	lua_setglobal(lua_state, "contract");
 
-    //传递pVmScriptRun指针，以便后面代码引用，去掉了使用全局变量保存该指针
-    lua_pushlightuserdata(lua_state, pVmScriptRun);
-    lua_setglobal(lua_state,"VmScriptRun");
+	//传递pVmScriptRun指针，以便后面代码引用，去掉了使用全局变量保存该指针
+	lua_pushlightuserdata(lua_state, pcVmScriptRun);
+	lua_setglobal(lua_state, "VmScriptRun");
 
-    LogPrint("vm", "pVmScriptRun=%p\n",pVmScriptRun);
+	LogPrint("vm", "pVmScriptRun=%p\n", pcVmScriptRun);
 
-   //5.加载脚本
-    step = maxstep;
+	//5.加载脚本
+	llStep = ullMaxStep;
 
-    if(luaL_loadbuffer(lua_state,(char *)m_ExeFile,strlen((char *)m_ExeFile),"line") || lua_pcallk(lua_state,0,0,0,0,NULL,&step))
-    {
-	   LogPrint("vm", "luaL_loadbuffer fail:%s\n", lua_tostring(lua_state,-1));
-	   step = -1;
-	   lua_close(lua_state);
-	   LogPrint("vm", "run step=%ld\n",step);
-	   return step;
-    }
+	if (luaL_loadbuffer(lua_state, (char * )m_arruchExeFile, strlen((char * )m_arruchExeFile), "line")
+			|| lua_pcallk(lua_state, 0, 0, 0, 0, NULL, &llStep)) {
+		LogPrint("vm", "luaL_loadbuffer fail:%s\n", lua_tostring(lua_state,-1));
+		llStep = -1;
+		lua_close(lua_state);
+		LogPrint("vm", "run step=%ld\n", llStep);
+		return llStep;
+	}
 
-    //6.平衡检查设置，默认关闭，如果脚本没设置该变量
-	pVmScriptRun->SetCheckAccount(false);
-	int res = lua_getglobal(lua_state, "gCheckAccount");
-	LogPrint("vm", "lua_getglobal:%d\n", res);
+	//6.平衡检查设置，默认关闭，如果脚本没设置该变量
+	pcVmScriptRun->SetCheckAccount(false);
+	int nRes = lua_getglobal(lua_state, "gCheckAccount");
+	LogPrint("vm", "lua_getglobal:%d\n", nRes);
 
-    if(LUA_TBOOLEAN == res)
-    {
-    	if(lua_isboolean(lua_state,-1))
-    	{
-    		bool bCheck = lua_toboolean(lua_state,-1);
-    		LogPrint("vm", "lua_toboolean:%d\n", bCheck);
-    		pVmScriptRun->SetCheckAccount(bCheck);
-    	}
-    }
-    lua_pop(lua_state, 1);
+	if (LUA_TBOOLEAN == nRes) {
+		if (lua_isboolean(lua_state, -1)) {
+			bool bCheck = lua_toboolean(lua_state, -1);
+			LogPrint("vm", "lua_toboolean:%d\n", bCheck);
+			pcVmScriptRun->SetCheckAccount(bCheck);
+		}
+	}
+	lua_pop(lua_state, 1);
 
-
-    //7.关闭Lua虚拟机
+	//7.关闭Lua虚拟机
 	lua_close(lua_state);
-	LogPrint("vm", "run step=%ld\n",step);
-	return step;
+	LogPrint("vm", "run step=%ld\n", llStep);
+	return llStep;
 }
 
 

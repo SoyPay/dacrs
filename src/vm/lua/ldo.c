@@ -418,10 +418,15 @@ void luaD_call (lua_State *L, StkId func, int nResults, int allowyield,LUA_INTEG
       luaD_throw(L, LUA_ERRERR);  /* error while handing stack error */
   }
   if (!allowyield) L->nny++;
+  int nChanged = 0;
   if (!luaD_precall(L, func, nResults))  /* is a Lua function? */
+  {
     luaV_execute(L,pllStep);  /* call it */
+	nChanged = 1;
+  }
   if (!allowyield) L->nny--;
   L->nCcalls--;
+  if(!nChanged && pllStep) *pllStep = 0;
 }
 
 

@@ -21,7 +21,7 @@ string CTestMcu::MOV_Direct_DirectTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->GetRamData(daddr) != expect) || (pCVir8051->Sys.PC != (PC + 3)))
+		if ((m_pCVir8051->GetRamData(daddr) != expect) || (m_pCVir8051->Sys.PC != (PC + 3)))
 		return false;
 		return true;
 	};
@@ -29,17 +29,17 @@ string CTestMcu::MOV_Direct_DirectTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x result:%x\r\n", PC, expect, (byte) (saddr + 1));
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData((byte)saddr, expect);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = (byte)saddr;
-		pCVir8051->m_ExeFile[PC + 2] = (byte)daddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData((byte)saddr, expect);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = (byte)saddr;
+		m_pCVir8051->m_ExeFile[PC + 2] = (byte)daddr;
 	};
 
 	for (PC = 0; PC < CVm8051::MAX_ROM - 2; PC = PC + space) {
@@ -66,20 +66,20 @@ string CTestMcu::DIV_ABTest(int space) {
 	auto checkresult = [&]()
 	{
 		if(b == 0) {
-			if (pCVir8051->Sys.psw().ov != 1) {
+			if (m_pCVir8051->Sys.psw().ov != 1) {
 				return false;
 			}
 		}
 		else {
-			if(pCVir8051->Sys.PC != (PC +1))
+			if(m_pCVir8051->Sys.PC != (PC +1))
 			return false;
-			if(((pCVir8051->Sys.a() != (byte)a/(byte)b)))
+			if(((m_pCVir8051->Sys.a() != (byte)a/(byte)b)))
 			return false;
-			if((pCVir8051->Sys.b() != (byte)a%(byte)b))
+			if((m_pCVir8051->Sys.b() != (byte)a%(byte)b))
 			return false;
-			if(pCVir8051->Sys.psw().ov != 0)
+			if(m_pCVir8051->Sys.psw().ov != 0)
 			return false;
-			if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+			if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 			return false;
 		}
 		return true;
@@ -88,16 +88,16 @@ string CTestMcu::DIV_ABTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x a:%x b:%x\r\n", PC, (byte)a, (byte)b);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		memcpy(&pCVir8051->m_ExeFile[PC], &code, sizeof(code));
-		pCVir8051->Sys.a = (byte) a;
-		pCVir8051->Sys.b = (byte) b;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		memcpy(&m_pCVir8051->m_ExeFile[PC], &code, sizeof(code));
+		m_pCVir8051->Sys.a = (byte) a;
+		m_pCVir8051->Sys.b = (byte) b;
 	};
 
 	for (PC = 0; PC < CVm8051::MAX_ROM; PC = PC + space) {
@@ -125,11 +125,11 @@ string CTestMcu::MOVC_A_PCTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 1))
+		if(m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
-		if(pCVir8051->Sys.a() != expect)
+		if(m_pCVir8051->Sys.a() != expect)
 		return false;
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
 		return true;
 	};
@@ -137,16 +137,16 @@ string CTestMcu::MOVC_A_PCTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x a:%x expect:%x data:%x\r\n", PC, (byte)a, expect, data);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = (byte)a;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1 + a] = data;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = (byte)a;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1 + a] = data;
 	};
 
 	for (PC = 0; PC < CVm8051::MAX_ROM; PC = PC + space) {
@@ -172,12 +172,12 @@ string CTestMcu::ANL_C_BitTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 2))
+		if(m_pCVir8051->Sys.PC != (PC + 2))
 		return false;
-		if(pCVir8051->Sys.psw().cy != expect)
+		if(m_pCVir8051->Sys.psw().cy != expect)
 		return false;
 		if(addr>= 0xe0 &&addr <= 0xe7) {
-			if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+			if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 			return false;
 		}
 		return true;
@@ -186,20 +186,20 @@ string CTestMcu::ANL_C_BitTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x cflag:%x bflag:%x expect:%x\r\n", PC, cflag, bflag, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = (byte)addr;
-		pCVir8051->Sys.psw().cy = cflag;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = (byte)addr;
+		m_pCVir8051->Sys.psw().cy = cflag;
 		if (bflag) {
-			pCVir8051->SetBitFlag((byte)addr);
+			m_pCVir8051->SetBitFlag((byte)addr);
 		} else {
-			pCVir8051->ClrBitFlag((byte)addr);
+			m_pCVir8051->ClrBitFlag((byte)addr);
 		}
 	};
 
@@ -227,7 +227,7 @@ string CTestMcu::SJMP_RelTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != expect)
+		if(m_pCVir8051->Sys.PC != expect)
 		return false;
 		return true;
 	};
@@ -235,15 +235,15 @@ string CTestMcu::SJMP_RelTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x raddr:%x expect:%x\r\n", PC, raddr, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = (byte)raddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = (byte)raddr;
 	};
 
 	for (PC = 0; PC < CVm8051::MAX_ROM - 2; PC = PC + space) {
@@ -270,10 +270,10 @@ string CTestMcu::MOV_Ri_DataTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->GetRamDataAt(ri) != idata) {
+		if(m_pCVir8051->GetRamDataAt(ri) != idata) {
 			return false;
 		}
-		if(pCVir8051->Sys.PC != PC + 2)
+		if(m_pCVir8051->Sys.PC != PC + 2)
 		return false;
 		return true;
 	};
@@ -281,23 +281,23 @@ string CTestMcu::MOV_Ri_DataTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x idata:%x ri:%x\r\n", PC, idata, ri);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		if(code == 0x76)
 		{
-			pCVir8051->Rges.R0 = ri;
+			m_pCVir8051->Rges.R0 = ri;
 		}
 		else if(code == 0x77)
 		{
-			pCVir8051->Rges.R1 = ri;
+			m_pCVir8051->Rges.R1 = ri;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = idata;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = idata;
 	};
 
 	for (code = 0x76; code <= 0x77; code++) {
@@ -328,28 +328,28 @@ string CTestMcu::MOV_Rn_DataTest(int space) {
 		byte ret = 0;
 		switch (code) {
 			case 0x78:
-			ret = pCVir8051->Rges.R0();
+			ret = m_pCVir8051->Rges.R0();
 			break;
 			case 0x79:
-			ret = pCVir8051->Rges.R1();
+			ret = m_pCVir8051->Rges.R1();
 			break;
 			case 0x7a:
-			ret = pCVir8051->Rges.R2();
+			ret = m_pCVir8051->Rges.R2();
 			break;
 			case 0x7b:
-			ret = pCVir8051->Rges.R3();
+			ret = m_pCVir8051->Rges.R3();
 			break;
 			case 0x7c:
-			ret = pCVir8051->Rges.R4();
+			ret = m_pCVir8051->Rges.R4();
 			break;
 			case 0x7d:
-			ret = pCVir8051->Rges.R5();
+			ret = m_pCVir8051->Rges.R5();
 			break;
 			case 0x7e:
-			ret = pCVir8051->Rges.R6();
+			ret = m_pCVir8051->Rges.R6();
 			break;
 			case 0x7f:
-			ret = pCVir8051->Rges.R7();
+			ret = m_pCVir8051->Rges.R7();
 			break;
 			default:
 			ret = 0;
@@ -357,7 +357,7 @@ string CTestMcu::MOV_Rn_DataTest(int space) {
 		}
 		if(ret != idata)
 		return false;
-		if(pCVir8051->Sys.PC != PC + 2)
+		if(m_pCVir8051->Sys.PC != PC + 2)
 		return false;
 		return true;
 	};
@@ -365,15 +365,15 @@ string CTestMcu::MOV_Rn_DataTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x idata:%x\r\n", PC, idata);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = idata;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = idata;
 	};
 
 	for (code = 0x78; code <= 0x7f; code++) {
@@ -400,9 +400,9 @@ string CTestMcu::MOV_Direct_DataTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 3))
+		if(m_pCVir8051->Sys.PC != (PC + 3))
 		return false;
-		if(pCVir8051->GetRamData(daddr) != idata)
+		if(m_pCVir8051->GetRamData(daddr) != idata)
 		return false;
 		return true;
 	};
@@ -410,16 +410,16 @@ string CTestMcu::MOV_Direct_DataTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x daddr:%x idata:%x\r\n", PC, daddr, idata);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = daddr;
-		pCVir8051->m_ExeFile[PC + 2] = idata;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = daddr;
+		m_pCVir8051->m_ExeFile[PC + 2] = idata;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
@@ -445,11 +445,11 @@ string CTestMcu::MOV_A_DataTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 2))
+		if(m_pCVir8051->Sys.PC != (PC + 2))
 		return false;
-		if(pCVir8051->Sys.a() != idata)
+		if(m_pCVir8051->Sys.a() != idata)
 		return false;
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
 		return true;
 	};
@@ -457,15 +457,15 @@ string CTestMcu::MOV_A_DataTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x idata:%x\r\n", PC, idata);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = idata;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = idata;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
@@ -488,9 +488,9 @@ string CTestMcu::JMP_A_DPTRTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != expect)
+		if(m_pCVir8051->Sys.PC != expect)
 		return false;
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
 		return true;
 	};
@@ -498,16 +498,16 @@ string CTestMcu::JMP_A_DPTRTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
 //		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.dptr = dptr;
-		pCVir8051->Sys.a = a;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.dptr = dptr;
+		m_pCVir8051->Sys.a = a;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
@@ -538,12 +538,12 @@ string CTestMcu::ORL_C_DirectTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 2))
+		if(m_pCVir8051->Sys.PC != (PC + 2))
 		return false;
-		if(pCVir8051->Sys.psw().cy != expect)
+		if(m_pCVir8051->Sys.psw().cy != expect)
 		return false;
 		if(baddr>= 0xe0 && baddr <= 0xe7) {
-			if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+			if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 			return false;
 		}
 		return true;
@@ -552,21 +552,21 @@ string CTestMcu::ORL_C_DirectTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x bflag:%x cflag:%x baddr:%x\r\n", PC, expect, bflag, cflag, baddr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.psw().cy = cflag;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.psw().cy = cflag;
 		if (bflag) {
-			pCVir8051->SetBitFlag(baddr);
+			m_pCVir8051->SetBitFlag(baddr);
 		} else {
-			pCVir8051->ClrBitFlag(baddr);
+			m_pCVir8051->ClrBitFlag(baddr);
 		}
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = baddr;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = baddr;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
@@ -596,7 +596,7 @@ string CTestMcu::JNZ_RelTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != expect)
+		if(m_pCVir8051->Sys.PC != expect)
 		return false;
 		return true;
 	};
@@ -604,16 +604,16 @@ string CTestMcu::JNZ_RelTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x a:%x raddr:%x\r\n", PC, expect, a, raddr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = a;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = raddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = a;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = raddr;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
@@ -643,9 +643,9 @@ string CTestMcu::XRL_A_Rn_1Test(int space) {
 	byte expect = 0;
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if ((pCVir8051->Sys.a() != expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -653,43 +653,43 @@ string CTestMcu::XRL_A_Rn_1Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x rr:%x\r\n", PC, expect, aa, rr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x68:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x69:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			case 0x6a:
-			pCVir8051->Rges.R2 = rr;
+			m_pCVir8051->Rges.R2 = rr;
 			break;
 			case 0x6b:
-			pCVir8051->Rges.R3 = rr;
+			m_pCVir8051->Rges.R3 = rr;
 			break;
 			case 0x6c:
-			pCVir8051->Rges.R4 = rr;
+			m_pCVir8051->Rges.R4 = rr;
 			break;
 			case 0x6d:
-			pCVir8051->Rges.R5 = rr;
+			m_pCVir8051->Rges.R5 = rr;
 			break;
 			case 0x6e:
-			pCVir8051->Rges.R6 = rr;
+			m_pCVir8051->Rges.R6 = rr;
 			break;
 			case 0x6f:
-			pCVir8051->Rges.R7 = rr;
+			m_pCVir8051->Rges.R7 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0x68; code <= 0x6f; code++) {
@@ -718,28 +718,28 @@ string CTestMcu::XRL_A_Ri_1Test(int space) {
 	byte expect = 0;
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x66:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x67:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->SetRamDataAt(rr, data);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->SetRamDataAt(rr, data);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if ((pCVir8051->Sys.a() != expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -747,7 +747,7 @@ string CTestMcu::XRL_A_Ri_1Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x rr:%x aa:%x data:%x\r\n", PC, expect, rr, aa, data);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	for (code = 0x66; code <= 0x67; code++) {
@@ -776,28 +776,28 @@ string CTestMcu::XRL_A_Data_And_DirectTest(int space) {
 	byte expect = 0, ddata = 0, idata = 0;
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x64:
-			pCVir8051->m_ExeFile[PC + 1] = idata;
+			m_pCVir8051->m_ExeFile[PC + 1] = idata;
 			break;
 			case 0x65:
-			pCVir8051->SetRamData(daddr, ddata);
-			pCVir8051->m_ExeFile[PC + 1] = daddr;
+			m_pCVir8051->SetRamData(daddr, ddata);
+			m_pCVir8051->m_ExeFile[PC + 1] = daddr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if ((pCVir8051->Sys.a() != expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->Sys.a() != expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		return false;
 		return true;
 	};
@@ -806,7 +806,7 @@ string CTestMcu::XRL_A_Data_And_DirectTest(int space) {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x ddata:%x idata:%x daddr:%x\r\n",
 				PC, expect, aa, ddata, idata, daddr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	code = 0x65;
@@ -855,7 +855,7 @@ string CTestMcu::XRL_Direct_DataTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->GetRamData(daddr) != expect) || (pCVir8051->Sys.PC != (PC + 3)))
+		if ((m_pCVir8051->GetRamData(daddr) != expect) || (m_pCVir8051->Sys.PC != (PC + 3)))
 		return false;
 		return true;
 	};
@@ -863,16 +863,16 @@ string CTestMcu::XRL_Direct_DataTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x daddr:%x idata:%x ddata:%x\r\n", PC, expect, daddr, idata, ddata);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData(daddr, ddata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = daddr;
-		pCVir8051->m_ExeFile[PC + 2] = idata;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData(daddr, ddata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = daddr;
+		m_pCVir8051->m_ExeFile[PC + 2] = idata;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
@@ -901,9 +901,9 @@ string CTestMcu::XRL_Direct_ATest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if ((pCVir8051->GetRamData(daddr) != expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->GetRamData(daddr) != expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		return false;
 		return true;
 	};
@@ -911,16 +911,16 @@ string CTestMcu::XRL_Direct_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData(daddr, ddata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = daddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData(daddr, ddata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = daddr;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
@@ -952,9 +952,9 @@ string CTestMcu::JZ_RelTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if (pCVir8051->Sys.PC != expect)
+		if (m_pCVir8051->Sys.PC != expect)
 		return false;
 		return true;
 	};
@@ -962,15 +962,15 @@ string CTestMcu::JZ_RelTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = raddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = raddr;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
@@ -999,9 +999,9 @@ string CTestMcu::ANL_A_Rn_1Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if ((pCVir8051->Sys.a() != expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -1009,42 +1009,42 @@ string CTestMcu::ANL_A_Rn_1Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x rr:%x\r\n", PC, expect, aa, rr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x58:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x59:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			case 0x5a:
-			pCVir8051->Rges.R2 = rr;
+			m_pCVir8051->Rges.R2 = rr;
 			break;
 			case 0x5b:
-			pCVir8051->Rges.R3 = rr;
+			m_pCVir8051->Rges.R3 = rr;
 			break;
 			case 0x5c:
-			pCVir8051->Rges.R4 = rr;
+			m_pCVir8051->Rges.R4 = rr;
 			break;
 			case 0x5d:
-			pCVir8051->Rges.R5 = rr;
+			m_pCVir8051->Rges.R5 = rr;
 			break;
 			case 0x5e:
-			pCVir8051->Rges.R6 = rr;
+			m_pCVir8051->Rges.R6 = rr;
 			break;
 			case 0x5f:
-			pCVir8051->Rges.R7 = rr;
+			m_pCVir8051->Rges.R7 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0x58; code <= 0x5f; code++) {
@@ -1075,9 +1075,9 @@ string CTestMcu::ANL_A_Ri_1Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if ((pCVir8051->Sys.a() != expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -1085,25 +1085,25 @@ string CTestMcu::ANL_A_Ri_1Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x rr:%x ridata:%x\r\n", PC, expect, aa, rr, ridata);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x56:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x57:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->SetRamDataAt(rr, ridata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->SetRamDataAt(rr, ridata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0x56; code <= 0x57; code++) {
@@ -1133,9 +1133,9 @@ string CTestMcu::ANL_A_Data_And_DirectTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if ((pCVir8051->Sys.a() != expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->Sys.a() != expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		return false;
 		return true;
 	};
@@ -1143,25 +1143,25 @@ string CTestMcu::ANL_A_Data_And_DirectTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x54:
-			pCVir8051->m_ExeFile[PC + 1] = idata;
+			m_pCVir8051->m_ExeFile[PC + 1] = idata;
 			break;
 			case 0x55:
-			pCVir8051->SetRamData(daddr, ddata);
-			pCVir8051->m_ExeFile[PC + 1] = daddr;
+			m_pCVir8051->SetRamData(daddr, ddata);
+			m_pCVir8051->m_ExeFile[PC + 1] = daddr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	code = 0x55;
@@ -1211,7 +1211,7 @@ string CTestMcu::ANL_Direct_DataTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->GetRamData(daddr) != expect) || (pCVir8051->Sys.PC != (PC + 3)))
+		if ((m_pCVir8051->GetRamData(daddr) != expect) || (m_pCVir8051->Sys.PC != (PC + 3)))
 		return false;
 		return true;
 	};
@@ -1219,16 +1219,16 @@ string CTestMcu::ANL_Direct_DataTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData(daddr, ddata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = daddr;
-		pCVir8051->m_ExeFile[PC + 2] = idata;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData(daddr, ddata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = daddr;
+		m_pCVir8051->m_ExeFile[PC + 2] = idata;
 	};
 
 	code = 0x53;
@@ -1258,7 +1258,7 @@ string CTestMcu::ANL_Direct_ATest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->GetRamData(daddr) != expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->GetRamData(daddr) != expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		return false;
 		return true;
 	};
@@ -1266,16 +1266,16 @@ string CTestMcu::ANL_Direct_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x daddr:%x\r\n", PC, expect, daddr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData(daddr, ddata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = daddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData(daddr, ddata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = daddr;
 	};
 
 	code = 0x52;
@@ -1308,9 +1308,9 @@ string CTestMcu::ORL_A_Rn_1Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if ((pCVir8051->Sys.a() != expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -1318,42 +1318,42 @@ string CTestMcu::ORL_A_Rn_1Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x48:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x49:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			case 0x4a:
-			pCVir8051->Rges.R2 = rr;
+			m_pCVir8051->Rges.R2 = rr;
 			break;
 			case 0x4b:
-			pCVir8051->Rges.R3 = rr;
+			m_pCVir8051->Rges.R3 = rr;
 			break;
 			case 0x4c:
-			pCVir8051->Rges.R4 = rr;
+			m_pCVir8051->Rges.R4 = rr;
 			break;
 			case 0x4d:
-			pCVir8051->Rges.R5 = rr;
+			m_pCVir8051->Rges.R5 = rr;
 			break;
 			case 0x4e:
-			pCVir8051->Rges.R6 = rr;
+			m_pCVir8051->Rges.R6 = rr;
 			break;
 			case 0x4f:
-			pCVir8051->Rges.R7 = rr;
+			m_pCVir8051->Rges.R7 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0x48; code <= 0x4f; code++) {
@@ -1383,9 +1383,9 @@ string CTestMcu::ORL_A_Ri_1Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if ((pCVir8051->Sys.a() != expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -1393,25 +1393,25 @@ string CTestMcu::ORL_A_Ri_1Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x46:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x47:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->SetRamDataAt(rr, ridata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->SetRamDataAt(rr, ridata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0x46; code <= 0x47; code++) {
@@ -1441,9 +1441,9 @@ string CTestMcu::ORL_A_Data_And_DirectTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if ((pCVir8051->Sys.a() != expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->Sys.a() != expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		return false;
 		return true;
 	};
@@ -1451,25 +1451,25 @@ string CTestMcu::ORL_A_Data_And_DirectTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x daddr:%x\r\n", PC, expect, daddr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x44:
-			pCVir8051->m_ExeFile[PC + 1] = idata;
+			m_pCVir8051->m_ExeFile[PC + 1] = idata;
 			break;
 			case 0x45:
-			pCVir8051->SetRamData(daddr, ddata);
-			pCVir8051->m_ExeFile[PC + 1] = daddr;
+			m_pCVir8051->SetRamData(daddr, ddata);
+			m_pCVir8051->m_ExeFile[PC + 1] = daddr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	code = 0x45;
@@ -1519,7 +1519,7 @@ string CTestMcu::ORL_Direct_DataTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->GetRamData(daddr) != expect) || (pCVir8051->Sys.PC != (PC + 3)))
+		if ((m_pCVir8051->GetRamData(daddr) != expect) || (m_pCVir8051->Sys.PC != (PC + 3)))
 		return false;
 		return true;
 	};
@@ -1527,16 +1527,16 @@ string CTestMcu::ORL_Direct_DataTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData(daddr, ddata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = daddr;
-		pCVir8051->m_ExeFile[PC + 2] = idata;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData(daddr, ddata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = daddr;
+		m_pCVir8051->m_ExeFile[PC + 2] = idata;
 	};
 
 	code = 0x43;
@@ -1566,7 +1566,7 @@ string CTestMcu::ORL_Direct_ATest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->GetRamData(daddr) != expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->GetRamData(daddr) != expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		return false;
 		return true;
 	};
@@ -1574,16 +1574,16 @@ string CTestMcu::ORL_Direct_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x daddr:%x aa:%x\r\n", PC, expect, daddr, aa);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData(daddr, ddata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = daddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData(daddr, ddata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = daddr;
 	};
 
 	code = 0x42;
@@ -1615,7 +1615,7 @@ string CTestMcu::JC_RelTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if (pCVir8051->Sys.PC != expect)
+		if (m_pCVir8051->Sys.PC != expect)
 		return false;
 		return true;
 	};
@@ -1623,15 +1623,15 @@ string CTestMcu::JC_RelTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.psw().cy = cc;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = raddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.psw().cy = cc;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = raddr;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
@@ -1663,15 +1663,15 @@ string CTestMcu::ADDC_A_RnTest(int space) {
 	{
 		byte xx6 = (((aa & 0x7f) + (rr & 0x7f) + cc) > 0x7f) ? (1) : (0);
 		byte xx7 = (expect > 0xff)?(1):(0);
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if(pCVir8051->Sys.psw().cy != ((expect > 0xff)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().cy != ((expect > 0xff)?(1):(0)))
 		return false;
-		if(pCVir8051->Sys.psw().ac != ((((aa&0x0f) + (rr&0x0f) + cc) > 0x0f)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ac != ((((aa&0x0f) + (rr&0x0f) + cc) > 0x0f)?(1):(0)))
 		return false;
-		if(pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
 		return false;
-		if ((pCVir8051->Sys.a() != (byte)expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != (byte)expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -1682,43 +1682,43 @@ string CTestMcu::ADDC_A_RnTest(int space) {
 		byte xx7 = (expect > 0xff)?(1):(0);
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x rr:%x cc:%x xx6:%x xx7:%x\r\n", PC, expect, aa, rr, cc,
 				xx6, xx7);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x38:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x39:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			case 0x3a:
-			pCVir8051->Rges.R2 = rr;
+			m_pCVir8051->Rges.R2 = rr;
 			break;
 			case 0x3b:
-			pCVir8051->Rges.R3 = rr;
+			m_pCVir8051->Rges.R3 = rr;
 			break;
 			case 0x3c:
-			pCVir8051->Rges.R4 = rr;
+			m_pCVir8051->Rges.R4 = rr;
 			break;
 			case 0x3d:
-			pCVir8051->Rges.R5 = rr;
+			m_pCVir8051->Rges.R5 = rr;
 			break;
 			case 0x3e:
-			pCVir8051->Rges.R6 = rr;
+			m_pCVir8051->Rges.R6 = rr;
 			break;
 			case 0x3f:
-			pCVir8051->Rges.R7 = rr;
+			m_pCVir8051->Rges.R7 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->Sys.psw().cy = cc;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->Sys.psw().cy = cc;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0x38; code <= 0x3f; code++) {
@@ -1752,28 +1752,28 @@ string CTestMcu::ADDC_A_RiTest(int space) {
 	{
 		byte xx6 = (((aa & 0x7f) + (ridata & 0x7f) + cc) > 0x7f) ? (1) : (0);
 		byte xx7 = (expect > 0xff)?(1):(0);
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		{
 			LogPrint("mcutest","1\n");
 			return false;
 		}
 
-		if(pCVir8051->Sys.psw().cy != ((expect > 0xff)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().cy != ((expect > 0xff)?(1):(0)))
 		{
 			LogPrint("mcutest","2\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().ac != ((((aa&0x0f) + (ridata&0x0f) + cc) > 0x0f)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ac != ((((aa&0x0f) + (ridata&0x0f) + cc) > 0x0f)?(1):(0)))
 		{
 			LogPrint("mcutest","3\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
 		{
 			LogPrint("mcutest","4\n");
 			return false;
 		}
-		if ((pCVir8051->Sys.a() != (byte)expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != (byte)expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		{
 			LogPrint("mcutest","5\n");
 			return false;
@@ -1786,27 +1786,27 @@ string CTestMcu::ADDC_A_RiTest(int space) {
 		byte xx6 = (((aa & 0x7f) + (ridata & 0x7f) + cc) > 0x7f) ? (1) : (0);
 		byte xx7 = (expect > 0xff)?(1):(0);
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x rr:%x cc:%x xx6:%x xx7:%x 00:%x\r\n", PC, expect, aa, rr, cc,
-				xx6, xx7, pCVir8051->GetRamDataAt(0));
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+				xx6, xx7, m_pCVir8051->GetRamDataAt(0));
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x36:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x37:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->SetRamDataAt(rr, ridata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->Sys.psw().cy = cc;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->SetRamDataAt(rr, ridata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->Sys.psw().cy = cc;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0x36; code <= 0x37; code++) {
@@ -1841,27 +1841,27 @@ string CTestMcu::ADDC_A_DirectTest(int space) {
 	{
 		byte xx6 = (((aa & 0x7f) + (data & 0x7f) + cc) > 0x7f) ? (1) : (0);
 		byte xx7 = (expect > 0xff)?(1):(0);
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		{
 			LogPrint("mcutest","1\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().cy != ((expect > 0xff)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().cy != ((expect > 0xff)?(1):(0)))
 		{
 			LogPrint("mcutest","2\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().ac != ((((aa&0x0f) + (data&0x0f) + cc) > 0x0f)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ac != ((((aa&0x0f) + (data&0x0f) + cc) > 0x0f)?(1):(0)))
 		{
 			LogPrint("mcutest","3\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
 		{
 			LogPrint("mcutest","4\n");
 			return false;
 		}
-		if ((pCVir8051->Sys.a() != (byte)expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->Sys.a() != (byte)expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		{
 			LogPrint("mcutest","5\n");
 			return false;
@@ -1875,17 +1875,17 @@ string CTestMcu::ADDC_A_DirectTest(int space) {
 		byte xx7 = (expect > 0xff)?(1):(0);
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x data:%x cc:%x xx6:%x xx7:%x addr:%x\r\n",
 				PC, expect, aa, data, cc, xx6, xx7, addr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData(addr, data);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->Sys.psw().cy = cc;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = addr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData(addr, data);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->Sys.psw().cy = cc;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = addr;
 	};
 
 	code = 0x35;
@@ -1921,15 +1921,15 @@ string CTestMcu::ADDC_A_DataTest(int space) {
 	{
 		byte xx6 = (((aa & 0x7f) + (data & 0x7f) + cc) > 0x7f) ? (1) : (0);
 		byte xx7 = (expect > 0xff)?(1):(0);
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if(pCVir8051->Sys.psw().cy != ((expect > 0xff)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().cy != ((expect > 0xff)?(1):(0)))
 		return false;
-		if(pCVir8051->Sys.psw().ac != ((((aa&0x0f) + (data&0x0f) + cc) > 0x0f)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ac != ((((aa&0x0f) + (data&0x0f) + cc) > 0x0f)?(1):(0)))
 		return false;
-		if(pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
 		return false;
-		if ((pCVir8051->Sys.a() != (byte)expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->Sys.a() != (byte)expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		return false;
 		return true;
 	};
@@ -1940,16 +1940,16 @@ string CTestMcu::ADDC_A_DataTest(int space) {
 		byte xx7 = (expect > 0xff)?(1):(0);
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x data:%x cc:%x xx6:%x xx7:%x\r\n", PC, expect, aa, data, cc,
 				xx6, xx7);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = data;
-		pCVir8051->Sys.psw().cy = cc;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = data;
+		m_pCVir8051->Sys.psw().cy = cc;
 	};
 
 	code = 0x34;
@@ -1979,13 +1979,13 @@ string CTestMcu::RLC_ATest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if(pCVir8051->Sys.a() != (byte)((aa << 1)|cc))
+		if(m_pCVir8051->Sys.a() != (byte)((aa << 1)|cc))
 		return false;
-		if(pCVir8051->Sys.psw().cy != aa >> 7)
+		if(m_pCVir8051->Sys.psw().cy != aa >> 7)
 		return false;
-		if (pCVir8051->Sys.PC != (PC + 1))
+		if (m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
 		return true;
 	};
@@ -1993,15 +1993,15 @@ string CTestMcu::RLC_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x aa:%x cc:%x\r\n", PC, aa, cc);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->Sys.psw().cy = cc;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->Sys.psw().cy = cc;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	code = 0x33;
@@ -2030,7 +2030,7 @@ string CTestMcu::JNB_Bit_RelTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != expect)
+		if(m_pCVir8051->Sys.PC != expect)
 		return false;
 		return true;
 	};
@@ -2038,20 +2038,20 @@ string CTestMcu::JNB_Bit_RelTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x bb:%x baddr:%x raddr:%x\r\n", PC, expect, bb, baddr, raddr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		if (bb) {
-			pCVir8051->SetBitFlag(baddr);
+			m_pCVir8051->SetBitFlag(baddr);
 		} else {
-			pCVir8051->ClrBitFlag(baddr);
+			m_pCVir8051->ClrBitFlag(baddr);
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = baddr;
-		pCVir8051->m_ExeFile[PC + 2] = raddr;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = baddr;
+		m_pCVir8051->m_ExeFile[PC + 2] = raddr;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
@@ -2084,15 +2084,15 @@ string CTestMcu::ADD_A_RnTest(int space) {
 	{
 		byte xx6 = (((aa & 0x7f) + (rr & 0x7f)) > 0x7f) ? (1) : (0);
 		byte xx7 = (expect > 0xff)?(1):(0);
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if(pCVir8051->Sys.psw().cy != ((expect > 0xff)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().cy != ((expect > 0xff)?(1):(0)))
 		return false;
-		if(pCVir8051->Sys.psw().ac != ((((aa&0x0f) + (rr&0x0f)) > 0x0f)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ac != ((((aa&0x0f) + (rr&0x0f)) > 0x0f)?(1):(0)))
 		return false;
-		if(pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
 		return false;
-		if ((pCVir8051->Sys.a() != (byte)expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != (byte)expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -2103,42 +2103,42 @@ string CTestMcu::ADD_A_RnTest(int space) {
 		byte xx7 = (expect > 0xff)?(1):(0);
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x rr:%x xx6:%x xx7:%x\r\n", PC, expect, aa, rr,
 				xx6, xx7);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x28:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x29:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			case 0x2a:
-			pCVir8051->Rges.R2 = rr;
+			m_pCVir8051->Rges.R2 = rr;
 			break;
 			case 0x2b:
-			pCVir8051->Rges.R3 = rr;
+			m_pCVir8051->Rges.R3 = rr;
 			break;
 			case 0x2c:
-			pCVir8051->Rges.R4 = rr;
+			m_pCVir8051->Rges.R4 = rr;
 			break;
 			case 0x2d:
-			pCVir8051->Rges.R5 = rr;
+			m_pCVir8051->Rges.R5 = rr;
 			break;
 			case 0x2e:
-			pCVir8051->Rges.R6 = rr;
+			m_pCVir8051->Rges.R6 = rr;
 			break;
 			case 0x2f:
-			pCVir8051->Rges.R7 = rr;
+			m_pCVir8051->Rges.R7 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0x28; code <= 0x2f; code++) {
@@ -2170,28 +2170,28 @@ string CTestMcu::ADD_A_Ri_1Test(int space) {
 	{
 		byte xx6 = (((aa & 0x7f) + (data & 0x7f)) > 0x7f) ? (1) : (0);
 		byte xx7 = (expect > 0xff)?(1):(0);
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		{
 			LogPrint("mcutest","1\n");
 			return false;
 		}
 
-		if(pCVir8051->Sys.psw().cy != ((expect > 0xff)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().cy != ((expect > 0xff)?(1):(0)))
 		{
 			LogPrint("mcutest","2\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().ac != ((((aa&0x0f) + (data&0x0f)) > 0x0f)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ac != ((((aa&0x0f) + (data&0x0f)) > 0x0f)?(1):(0)))
 		{
 			LogPrint("mcutest","3\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
 		{
 			LogPrint("mcutest","4\n");
 			return false;
 		}
-		if ((pCVir8051->Sys.a() != (byte)expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != (byte)expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		{
 			LogPrint("mcutest","5\n");
 			return false;
@@ -2205,25 +2205,25 @@ string CTestMcu::ADD_A_Ri_1Test(int space) {
 		byte xx7 = (expect > 0xff)?(1):(0);
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x rr:%x xx6:%x xx7:%x data:%x\r\n", PC, expect, aa, rr,
 				xx6, xx7, data);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x26:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x27:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->SetRamDataAt(rr, data);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->SetRamDataAt(rr, data);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0x26; code <= 0x27; code++) {
@@ -2256,15 +2256,15 @@ string CTestMcu::ADD_A_DirectTest(int space) {
 	{
 		byte xx6 = (((aa & 0x7f) + (data & 0x7f)) > 0x7f) ? (1) : (0);
 		byte xx7 = (expect > 0xff)?(1):(0);
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if(pCVir8051->Sys.psw().cy != ((expect > 0xff)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().cy != ((expect > 0xff)?(1):(0)))
 		return false;
-		if(pCVir8051->Sys.psw().ac != ((((aa&0x0f) + (data&0x0f)) > 0x0f)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ac != ((((aa&0x0f) + (data&0x0f)) > 0x0f)?(1):(0)))
 		return false;
-		if(pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
 		return false;
-		if ((pCVir8051->Sys.a() != (byte)expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->Sys.a() != (byte)expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		return false;
 		return true;
 	};
@@ -2275,16 +2275,16 @@ string CTestMcu::ADD_A_DirectTest(int space) {
 		byte xx7 = (expect > 0xff)?(1):(0);
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x data:%x xx6:%x xx7:%x\r\n", PC, expect, aa, data,
 				xx6, xx7);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData(addr, data);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = addr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData(addr, data);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = addr;
 	};
 
 	code = 0x25;
@@ -2318,15 +2318,15 @@ string CTestMcu::ADD_A_DataTest(int space) {
 	{
 		byte xx6 = (((aa & 0x7f) + (data & 0x7f)) > 0x7f) ? (1) : (0);
 		byte xx7 = (expect > 0xff)?(1):(0);
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if(pCVir8051->Sys.psw().cy != ((expect > 0xff)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().cy != ((expect > 0xff)?(1):(0)))
 		return false;
-		if(pCVir8051->Sys.psw().ac != ((((aa&0x0f) + (data&0x0f)) > 0x0f)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ac != ((((aa&0x0f) + (data&0x0f)) > 0x0f)?(1):(0)))
 		return false;
-		if(pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
 		return false;
-		if ((pCVir8051->Sys.a() != (byte)expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->Sys.a() != (byte)expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		return false;
 		return true;
 	};
@@ -2337,15 +2337,15 @@ string CTestMcu::ADD_A_DataTest(int space) {
 		byte xx7 = (expect > 0xff)?(1):(0);
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x data:%x xx6:%x xx7:%x\r\n", PC, expect, aa, data,
 				xx6, xx7);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = data;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = data;
 	};
 
 	code = 0x24;
@@ -2372,9 +2372,9 @@ string CTestMcu::RL_ATest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if ((pCVir8051->Sys.a() != (byte)expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != (byte)expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -2382,14 +2382,14 @@ string CTestMcu::RL_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x aa:%x expect:%x\r\n", PC, aa, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
@@ -2417,23 +2417,23 @@ string CTestMcu::RETTest(int space) {
 		char temp[1024];
 		sprintf(temp,"runtime info: expect-pc:%x expect-sp:%x Value1:%x Value2:%x\r\n",
 				expectPC, expectSP, Value1, Value2);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto checkresult = [&]()
 	{
-		if (pCVir8051->Sys.PC != expectPC || pCVir8051->Sys.sp() != expectSP)
+		if (m_pCVir8051->Sys.PC != expectPC || m_pCVir8051->Sys.sp() != expectSP)
 		return false;
 		return true;
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.sp = address;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->SetRamDataAt(address, Value1);
-		pCVir8051->SetRamDataAt(address - 1, Value2);
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.sp = address;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->SetRamDataAt(address, Value1);
+		m_pCVir8051->SetRamDataAt(address - 1, Value2);
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM; PC = PC + space) {
@@ -2467,27 +2467,27 @@ string CTestMcu::JB_Bit_RelTest(int space) {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x bb:%x baddr:%x raddr:%x expect:%x\r\n",
 				PC, bb, baddr, raddr, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto checkresult = [&]()
 	{
-		if (pCVir8051->Sys.PC != expect)
+		if (m_pCVir8051->Sys.PC != expect)
 		return false;
 		return true;
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		if (bb) {
-			pCVir8051->SetBitFlag(baddr);
+			m_pCVir8051->SetBitFlag(baddr);
 		} else {
-			pCVir8051->ClrBitFlag(baddr);
+			m_pCVir8051->ClrBitFlag(baddr);
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = baddr;
-		pCVir8051->m_ExeFile[PC + 2] = raddr;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = baddr;
+		m_pCVir8051->m_ExeFile[PC + 2] = raddr;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
@@ -2520,7 +2520,7 @@ string CTestMcu::DEC_RnTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto checkresult = [&]()
@@ -2528,28 +2528,28 @@ string CTestMcu::DEC_RnTest(int space) {
 		byte ret = 0;
 		switch (code) {
 			case 0x18:
-			ret = pCVir8051->Rges.R0();
+			ret = m_pCVir8051->Rges.R0();
 			break;
 			case 0x19:
-			ret = pCVir8051->Rges.R1();
+			ret = m_pCVir8051->Rges.R1();
 			break;
 			case 0x1a:
-			ret = pCVir8051->Rges.R2();
+			ret = m_pCVir8051->Rges.R2();
 			break;
 			case 0x1b:
-			ret = pCVir8051->Rges.R3();
+			ret = m_pCVir8051->Rges.R3();
 			break;
 			case 0x1c:
-			ret = pCVir8051->Rges.R4();
+			ret = m_pCVir8051->Rges.R4();
 			break;
 			case 0x1d:
-			ret = pCVir8051->Rges.R5();
+			ret = m_pCVir8051->Rges.R5();
 			break;
 			case 0x1e:
-			ret = pCVir8051->Rges.R6();
+			ret = m_pCVir8051->Rges.R6();
 			break;
 			case 0x1f:
-			ret = pCVir8051->Rges.R7();
+			ret = m_pCVir8051->Rges.R7();
 			break;
 			default:
 			ret = 0;
@@ -2557,43 +2557,43 @@ string CTestMcu::DEC_RnTest(int space) {
 		}
 		if(ret != expect)
 		return false;
-		if (pCVir8051->Sys.PC != PC + 1)
+		if (m_pCVir8051->Sys.PC != PC + 1)
 		return false;
 		return true;
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x18:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x19:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			case 0x1a:
-			pCVir8051->Rges.R2 = rr;
+			m_pCVir8051->Rges.R2 = rr;
 			break;
 			case 0x1b:
-			pCVir8051->Rges.R3 = rr;
+			m_pCVir8051->Rges.R3 = rr;
 			break;
 			case 0x1c:
-			pCVir8051->Rges.R4 = rr;
+			m_pCVir8051->Rges.R4 = rr;
 			break;
 			case 0x1d:
-			pCVir8051->Rges.R5 = rr;
+			m_pCVir8051->Rges.R5 = rr;
 			break;
 			case 0x1e:
-			pCVir8051->Rges.R6 = rr;
+			m_pCVir8051->Rges.R6 = rr;
 			break;
 			case 0x1f:
-			pCVir8051->Rges.R7 = rr;
+			m_pCVir8051->Rges.R7 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0x18; code <= 0x1f; code++) {
@@ -2622,30 +2622,30 @@ string CTestMcu::DEC_Ri_1Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] ()
 	{
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x16:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x17:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->SetRamDataAt(rr, ridata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->SetRamDataAt(rr, ridata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->GetRamDataAt(rr) != expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->GetRamDataAt(rr) != expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -2675,9 +2675,9 @@ string CTestMcu::DEC_DirectTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->GetRamData(daddr) != expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->GetRamData(daddr) != expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		{
-			LogPrint("mcutest","addr.data = %x\n", pCVir8051->GetRamData(daddr));
+			LogPrint("mcutest","addr.data = %x\n", m_pCVir8051->GetRamData(daddr));
 			return false;
 		}
 
@@ -2687,15 +2687,15 @@ string CTestMcu::DEC_DirectTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData(daddr, ddata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = daddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData(daddr, ddata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = daddr;
 	};
 
 	code = 0x15;
@@ -2722,9 +2722,9 @@ string CTestMcu::DEC_ATest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if ((pCVir8051->Sys.a() != expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -2732,14 +2732,14 @@ string CTestMcu::DEC_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	code = 0x14;
@@ -2764,11 +2764,11 @@ string CTestMcu::RRC_ATest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if ((pCVir8051->Sys.a() != expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
-		if(pCVir8051->Sys.psw().cy != expectcc)
+		if(m_pCVir8051->Sys.psw().cy != expectcc)
 		return false;
 		return true;
 	};
@@ -2776,15 +2776,15 @@ string CTestMcu::RRC_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x aa:%x expect:%x expectcc:%x\r\n", PC, aa, expect, expectcc);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->Sys.psw().cy = cc;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->Sys.psw().cy = cc;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
@@ -2810,13 +2810,13 @@ string CTestMcu::LCALL_Addr16Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.sp() != expectSP)
+		if(m_pCVir8051->Sys.sp() != expectSP)
 		return false;
-		if(pCVir8051->Sys.PC != expectPC)
+		if(m_pCVir8051->Sys.PC != expectPC)
 		return false;
-		if(pCVir8051->GetRamDataAt(expectSP - 1) != spdata1)
+		if(m_pCVir8051->GetRamDataAt(expectSP - 1) != spdata1)
 		return false;
-		if(pCVir8051->GetRamDataAt(expectSP) != spdata2)
+		if(m_pCVir8051->GetRamDataAt(expectSP) != spdata2)
 		return false;
 		return true;
 	};
@@ -2825,16 +2825,16 @@ string CTestMcu::LCALL_Addr16Test(int space) {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expectPC:%x expectSP:%x addr:%x SP:%x spdata1:%x spdata2:%x\r\n",
 				PC, expectPC, expectSP, addr, SP, spdata1, spdata2);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
 //		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.sp = SP;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = (byte)(addr >> 8);
-		pCVir8051->m_ExeFile[PC + 2] = (byte)(addr & 0xff);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.sp = SP;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = (byte)(addr >> 8);
+		m_pCVir8051->m_ExeFile[PC + 2] = (byte)(addr & 0xff);
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
@@ -2842,7 +2842,7 @@ string CTestMcu::LCALL_Addr16Test(int space) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
 		for (addr = 0; addr <= 0xffff; addr++) {
-			for (SP = 8; SP <= pCVir8051->MAX_IN_RAM - 2; SP++) {
+			for (SP = 8; SP <= m_pCVir8051->MAX_IN_RAM - 2; SP++) {
 				expectPC = PC + 3;
 				expectSP = SP + 1;
 				spdata1 = (byte) (expectPC & 0xff);
@@ -2865,13 +2865,13 @@ string CTestMcu::ACALL_Addr11Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.sp() != expectSP)
+		if(m_pCVir8051->Sys.sp() != expectSP)
 		return false;
-		if(pCVir8051->Sys.PC != expectPC)
+		if(m_pCVir8051->Sys.PC != expectPC)
 		return false;
-		if(pCVir8051->GetRamDataAt(expectSP - 1) != spdata1)
+		if(m_pCVir8051->GetRamDataAt(expectSP - 1) != spdata1)
 		return false;
-		if(pCVir8051->GetRamDataAt(expectSP) != spdata2)
+		if(m_pCVir8051->GetRamDataAt(expectSP) != spdata2)
 		return false;
 		return true;
 	};
@@ -2880,15 +2880,15 @@ string CTestMcu::ACALL_Addr11Test(int space) {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expectPC:%x expectSP:%x addr:%x SP:%x spdata1:%x spdata2:%x\r\n",
 				PC, expectPC, expectSP, addr, SP, spdata1, spdata2);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.sp = SP;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = (byte)(addr & 0xff);
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.sp = SP;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = (byte)(addr & 0xff);
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
@@ -2896,7 +2896,7 @@ string CTestMcu::ACALL_Addr11Test(int space) {
 			LogPrint("mcutest", "code = %x PC = %d\n", code, PC);
 		}
 		for (addr = 0; addr <= 0x07ff; addr++) {
-			for (SP = 8; SP <= pCVir8051->MAX_IN_RAM - 2; SP++) {
+			for (SP = 8; SP <= m_pCVir8051->MAX_IN_RAM - 2; SP++) {
 				code = (byte) (0x11 | ((addr >> 8) << 5));
 				expectPC = PC + 2;
 				expectSP = SP + 1;
@@ -2923,17 +2923,17 @@ string CTestMcu::JBC_Bit_RelTest(int space) {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x bb:%x baddr:%x raddr:%x expect:%x\r\n",
 				PC, bb, baddr, raddr, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto checkresult = [&]()
 	{
-		if (pCVir8051->Sys.PC != expect)
+		if (m_pCVir8051->Sys.PC != expect)
 		{
 			LogPrint("mcutest","1\n");
 			return false;
 		}
-		if(pCVir8051->GetBitFlag(baddr) != 0)
+		if(m_pCVir8051->GetBitFlag(baddr) != 0)
 		{
 			LogPrint("mcutest","2\n");
 			return false;
@@ -2942,16 +2942,16 @@ string CTestMcu::JBC_Bit_RelTest(int space) {
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		if (bb) {
-			pCVir8051->SetBitFlag(baddr);
+			m_pCVir8051->SetBitFlag(baddr);
 		} else {
-			pCVir8051->ClrBitFlag(baddr);
+			m_pCVir8051->ClrBitFlag(baddr);
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = baddr;
-		pCVir8051->m_ExeFile[PC + 2] = raddr;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = baddr;
+		m_pCVir8051->m_ExeFile[PC + 2] = raddr;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
@@ -2984,7 +2984,7 @@ string CTestMcu::INC_RnTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto checkresult = [&]()
@@ -2992,28 +2992,28 @@ string CTestMcu::INC_RnTest(int space) {
 		byte ret = 0;
 		switch (code) {
 			case 0x08:
-			ret = pCVir8051->Rges.R0();
+			ret = m_pCVir8051->Rges.R0();
 			break;
 			case 0x09:
-			ret = pCVir8051->Rges.R1();
+			ret = m_pCVir8051->Rges.R1();
 			break;
 			case 0x0a:
-			ret = pCVir8051->Rges.R2();
+			ret = m_pCVir8051->Rges.R2();
 			break;
 			case 0x0b:
-			ret = pCVir8051->Rges.R3();
+			ret = m_pCVir8051->Rges.R3();
 			break;
 			case 0x0c:
-			ret = pCVir8051->Rges.R4();
+			ret = m_pCVir8051->Rges.R4();
 			break;
 			case 0x0d:
-			ret = pCVir8051->Rges.R5();
+			ret = m_pCVir8051->Rges.R5();
 			break;
 			case 0x0e:
-			ret = pCVir8051->Rges.R6();
+			ret = m_pCVir8051->Rges.R6();
 			break;
 			case 0x0f:
-			ret = pCVir8051->Rges.R7();
+			ret = m_pCVir8051->Rges.R7();
 			break;
 			default:
 			ret = 0;
@@ -3021,43 +3021,43 @@ string CTestMcu::INC_RnTest(int space) {
 		}
 		if(ret != expect)
 		return false;
-		if (pCVir8051->Sys.PC != PC + 1)
+		if (m_pCVir8051->Sys.PC != PC + 1)
 		return false;
 		return true;
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x08:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x09:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			case 0x0a:
-			pCVir8051->Rges.R2 = rr;
+			m_pCVir8051->Rges.R2 = rr;
 			break;
 			case 0x0b:
-			pCVir8051->Rges.R3 = rr;
+			m_pCVir8051->Rges.R3 = rr;
 			break;
 			case 0x0c:
-			pCVir8051->Rges.R4 = rr;
+			m_pCVir8051->Rges.R4 = rr;
 			break;
 			case 0x0d:
-			pCVir8051->Rges.R5 = rr;
+			m_pCVir8051->Rges.R5 = rr;
 			break;
 			case 0x0e:
-			pCVir8051->Rges.R6 = rr;
+			m_pCVir8051->Rges.R6 = rr;
 			break;
 			case 0x0f:
-			pCVir8051->Rges.R7 = rr;
+			m_pCVir8051->Rges.R7 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0x08; code <= 0x0f; code++) {
@@ -3086,30 +3086,30 @@ string CTestMcu::INC_Ri_1Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] ()
 	{
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x06:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x07:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->SetRamDataAt(rr, ridata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->SetRamDataAt(rr, ridata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->GetRamDataAt(rr) != expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->GetRamDataAt(rr) != expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -3139,9 +3139,9 @@ string CTestMcu::INC_DirectTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->GetRamData(daddr) != expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->GetRamData(daddr) != expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		{
-			LogPrint("mcutest","addr.data = %x\n", pCVir8051->GetRamData(daddr));
+			LogPrint("mcutest","addr.data = %x\n", m_pCVir8051->GetRamData(daddr));
 			return false;
 		}
 
@@ -3151,15 +3151,15 @@ string CTestMcu::INC_DirectTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData(daddr, ddata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = daddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData(daddr, ddata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = daddr;
 	};
 
 	code = 0x05;
@@ -3186,9 +3186,9 @@ string CTestMcu::INC_ATest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if ((pCVir8051->Sys.a() != expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -3196,14 +3196,14 @@ string CTestMcu::INC_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	code = 0x04;
@@ -3228,9 +3228,9 @@ string CTestMcu::RR_ATest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if ((pCVir8051->Sys.a() != expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -3238,14 +3238,14 @@ string CTestMcu::RR_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x aa:%x expect:%x\r\n", PC, aa, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
@@ -3269,7 +3269,7 @@ string CTestMcu::LJMPTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if (pCVir8051->Sys.PC != addr)
+		if (m_pCVir8051->Sys.PC != addr)
 		return false;
 		return true;
 	};
@@ -3277,15 +3277,15 @@ string CTestMcu::LJMPTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x addr:%x\r\n", PC, addr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = (byte)(addr>>8);
-		pCVir8051->m_ExeFile[PC + 2] = (byte)(addr&0xff);
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = (byte)(addr>>8);
+		m_pCVir8051->m_ExeFile[PC + 2] = (byte)(addr&0xff);
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
@@ -3308,7 +3308,7 @@ string CTestMcu::NOPTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if (pCVir8051->Sys.PC != (PC + 1))
+		if (m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
 		return true;
 	};
@@ -3316,13 +3316,13 @@ string CTestMcu::NOPTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x\r\n", PC);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
@@ -3344,7 +3344,7 @@ string CTestMcu::AJMPTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if (pCVir8051->Sys.PC != expectPC)
+		if (m_pCVir8051->Sys.PC != expectPC)
 		return false;
 		return true;
 	};
@@ -3352,14 +3352,14 @@ string CTestMcu::AJMPTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expectPC:%x\r\n", PC, expectPC);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = (byte)(addr & 0xff);
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = (byte)(addr & 0xff);
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
@@ -3387,34 +3387,34 @@ string CTestMcu::MOV_Rn_ATest(int space) {
 		byte ret = 0;
 		switch (code) {
 			case 0xf8:
-			ret = pCVir8051->Rges.R0();
+			ret = m_pCVir8051->Rges.R0();
 			break;
 			case 0xf9:
-			ret = pCVir8051->Rges.R1();
+			ret = m_pCVir8051->Rges.R1();
 			break;
 			case 0xfa:
-			ret = pCVir8051->Rges.R2();
+			ret = m_pCVir8051->Rges.R2();
 			break;
 			case 0xfb:
-			ret = pCVir8051->Rges.R3();
+			ret = m_pCVir8051->Rges.R3();
 			break;
 			case 0xfc:
-			ret = pCVir8051->Rges.R4();
+			ret = m_pCVir8051->Rges.R4();
 			break;
 			case 0xfd:
-			ret = pCVir8051->Rges.R5();
+			ret = m_pCVir8051->Rges.R5();
 			break;
 			case 0xfe:
-			ret = pCVir8051->Rges.R6();
+			ret = m_pCVir8051->Rges.R6();
 			break;
 			case 0xff:
-			ret = pCVir8051->Rges.R7();
+			ret = m_pCVir8051->Rges.R7();
 			break;
 			default:
 			ret = 0;
 			break;
 		}
-		if ((ret != expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((ret != expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -3422,14 +3422,14 @@ string CTestMcu::MOV_Rn_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x code:%x\r\n", PC, expect, code);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0xf8; code <= 0xff; code++) {
@@ -3455,9 +3455,9 @@ string CTestMcu::MOV_Direct_ATest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 2))
+		if(m_pCVir8051->Sys.PC != (PC + 2))
 		return false;
-		if(pCVir8051->GetRamData(daddr) != aa)
+		if(m_pCVir8051->GetRamData(daddr) != aa)
 		return false;
 		return true;
 	};
@@ -3465,16 +3465,16 @@ string CTestMcu::MOV_Direct_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x daddr:%x\r\n", PC, daddr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = daddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = daddr;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
@@ -3499,11 +3499,11 @@ string CTestMcu::CPL_ATest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 1))
+		if(m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
-		if(pCVir8051->Sys.a() != expect)
+		if(m_pCVir8051->Sys.a() != expect)
 		return false;
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
 		return true;
 	};
@@ -3511,15 +3511,15 @@ string CTestMcu::CPL_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x daddr:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
@@ -3543,11 +3543,11 @@ string CTestMcu::MOVX_Ri_1_ATest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 1))
+		if(m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
-		if(pCVir8051->m_ExRam[ri] != expect)
+		if(m_pCVir8051->m_ExRam[ri] != expect)
 		return false;
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
 		return true;
 	};
@@ -3555,21 +3555,21 @@ string CTestMcu::MOVX_Ri_1_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x daddr:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		if(code == 0xf2) {
-			pCVir8051->Rges.R0 = ri;
+			m_pCVir8051->Rges.R0 = ri;
 		}
 		else if(code == 0xf3) {
-			pCVir8051->Rges.R1 = ri;
+			m_pCVir8051->Rges.R1 = ri;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0xf2; code <= 0xf3; code++) {
@@ -3597,11 +3597,11 @@ string CTestMcu::MOVX_DPTR_ATest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 1))
+		if(m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
-		if(pCVir8051->m_ExRam[dptr] != expect)
+		if(m_pCVir8051->m_ExRam[dptr] != expect)
 		return false;
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
 		return true;
 	};
@@ -3609,16 +3609,16 @@ string CTestMcu::MOVX_DPTR_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x daddr:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.dptr = dptr;
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.dptr = dptr;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
@@ -3644,11 +3644,11 @@ string CTestMcu::MOV_A_Rn_1Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if (pCVir8051->Sys.PC != (PC + 1))
+		if (m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
-		if(pCVir8051->Sys.a() != expect)
+		if(m_pCVir8051->Sys.a() != expect)
 		return false;
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
 		return true;
 	};
@@ -3656,41 +3656,41 @@ string CTestMcu::MOV_A_Rn_1Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0xe8:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0xe9:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			case 0xea:
-			pCVir8051->Rges.R2 = rr;
+			m_pCVir8051->Rges.R2 = rr;
 			break;
 			case 0xeb:
-			pCVir8051->Rges.R3 = rr;
+			m_pCVir8051->Rges.R3 = rr;
 			break;
 			case 0xec:
-			pCVir8051->Rges.R4 = rr;
+			m_pCVir8051->Rges.R4 = rr;
 			break;
 			case 0xed:
-			pCVir8051->Rges.R5 = rr;
+			m_pCVir8051->Rges.R5 = rr;
 			break;
 			case 0xee:
-			pCVir8051->Rges.R6 = rr;
+			m_pCVir8051->Rges.R6 = rr;
 			break;
 			case 0xef:
-			pCVir8051->Rges.R7 = rr;;
+			m_pCVir8051->Rges.R7 = rr;;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0xe8; code <= 0xef; code++) {
@@ -3717,11 +3717,11 @@ string CTestMcu::MOV_A_Ri_1Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if (pCVir8051->Sys.PC != (PC + 1))
+		if (m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
-		if(pCVir8051->Sys.a() != expect)
+		if(m_pCVir8051->Sys.a() != expect)
 		return false;
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
 		return true;
 	};
@@ -3729,24 +3729,24 @@ string CTestMcu::MOV_A_Ri_1Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0xe6:
-			pCVir8051->Rges.R0 = ri;
+			m_pCVir8051->Rges.R0 = ri;
 			break;
 			case 0xe7:
-			pCVir8051->Rges.R1 = ri;
+			m_pCVir8051->Rges.R1 = ri;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->SetRamDataAt(ri, ridata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->SetRamDataAt(ri, ridata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0xe6; code <= 0xe7; code++) {
@@ -3774,11 +3774,11 @@ string CTestMcu::MOV_A_DirectTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if (pCVir8051->Sys.PC != (PC + 2))
+		if (m_pCVir8051->Sys.PC != (PC + 2))
 		return false;
-		if(pCVir8051->Sys.a() != expect)
+		if(m_pCVir8051->Sys.a() != expect)
 		return false;
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
 		return true;
 	};
@@ -3786,15 +3786,15 @@ string CTestMcu::MOV_A_DirectTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData(daddr, ddata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = daddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData(daddr, ddata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = daddr;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
@@ -3819,11 +3819,11 @@ string CTestMcu::CLR_ATest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 1))
+		if(m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
-		if(pCVir8051->Sys.a() != expect)
+		if(m_pCVir8051->Sys.a() != expect)
 		return false;
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
 		return true;
 	};
@@ -3831,15 +3831,15 @@ string CTestMcu::CLR_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x daddr:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
@@ -3863,11 +3863,11 @@ string CTestMcu::MOVX_A_Ri_1Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 1))
+		if(m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
-		if(pCVir8051->Sys.a() != expect)
+		if(m_pCVir8051->Sys.a() != expect)
 		return false;
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
 		return true;
 	};
@@ -3875,21 +3875,21 @@ string CTestMcu::MOVX_A_Ri_1Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		if(code == 0xe2) {
-			pCVir8051->Rges.R0 = ri;
+			m_pCVir8051->Rges.R0 = ri;
 		}
 		else if(code == 0xe3) {
-			pCVir8051->Rges.R1 = ri;
+			m_pCVir8051->Rges.R1 = ri;
 		}
-		pCVir8051->m_ExRam[ri] = ridata;
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExRam[ri] = ridata;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0xe2; code <= 0xe3; code++) {
@@ -3916,11 +3916,11 @@ string CTestMcu::MOVX_A_DPTRTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 1))
+		if(m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
-		if(pCVir8051->Sys.a() != expect)
+		if(m_pCVir8051->Sys.a() != expect)
 		return false;
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
 		return true;
 	};
@@ -3928,16 +3928,16 @@ string CTestMcu::MOVX_A_DPTRTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->m_ExRam[dptr] = dptrdata;
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.dptr = dptr;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->m_ExRam[dptr] = dptrdata;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.dptr = dptr;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
@@ -3965,7 +3965,7 @@ string CTestMcu::DJNZ_Rn_RelRTest(int space) {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expectPC:%x rn:%x raddr:%x expectRn:%x\r\n",
 				PC, expectPC, rn, raddr, expectRn);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto checkresult = [&]()
@@ -3973,28 +3973,28 @@ string CTestMcu::DJNZ_Rn_RelRTest(int space) {
 		byte ret = 0;
 		switch (code) {
 			case 0xd8:
-			ret = pCVir8051->Rges.R0();
+			ret = m_pCVir8051->Rges.R0();
 			break;
 			case 0xd9:
-			ret = pCVir8051->Rges.R1();
+			ret = m_pCVir8051->Rges.R1();
 			break;
 			case 0xda:
-			ret = pCVir8051->Rges.R2();
+			ret = m_pCVir8051->Rges.R2();
 			break;
 			case 0xdb:
-			ret = pCVir8051->Rges.R3();
+			ret = m_pCVir8051->Rges.R3();
 			break;
 			case 0xdc:
-			ret = pCVir8051->Rges.R4();
+			ret = m_pCVir8051->Rges.R4();
 			break;
 			case 0xdd:
-			ret = pCVir8051->Rges.R5();
+			ret = m_pCVir8051->Rges.R5();
 			break;
 			case 0xde:
-			ret = pCVir8051->Rges.R6();
+			ret = m_pCVir8051->Rges.R6();
 			break;
 			case 0xdf:
-			ret = pCVir8051->Rges.R7();
+			ret = m_pCVir8051->Rges.R7();
 			break;
 			default:
 			ret = 0;
@@ -4002,44 +4002,44 @@ string CTestMcu::DJNZ_Rn_RelRTest(int space) {
 		}
 		if(ret != expectRn)
 		return false;
-		if (pCVir8051->Sys.PC != expectPC)
+		if (m_pCVir8051->Sys.PC != expectPC)
 		return false;
 		return true;
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0xd8:
-			pCVir8051->Rges.R0 = rn;
+			m_pCVir8051->Rges.R0 = rn;
 			break;
 			case 0xd9:
-			pCVir8051->Rges.R1 = rn;
+			m_pCVir8051->Rges.R1 = rn;
 			break;
 			case 0xda:
-			pCVir8051->Rges.R2 = rn;
+			m_pCVir8051->Rges.R2 = rn;
 			break;
 			case 0xdb:
-			pCVir8051->Rges.R3 = rn;
+			m_pCVir8051->Rges.R3 = rn;
 			break;
 			case 0xdc:
-			pCVir8051->Rges.R4 = rn;
+			m_pCVir8051->Rges.R4 = rn;
 			break;
 			case 0xdd:
-			pCVir8051->Rges.R5 = rn;
+			m_pCVir8051->Rges.R5 = rn;
 			break;
 			case 0xde:
-			pCVir8051->Rges.R6 = rn;
+			m_pCVir8051->Rges.R6 = rn;
 			break;
 			case 0xdf:
-			pCVir8051->Rges.R7 = rn;
+			m_pCVir8051->Rges.R7 = rn;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = raddr;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = raddr;
 	};
 
 	for (code = 0xd8; code <= 0xdf; code++) {
@@ -4073,13 +4073,13 @@ string CTestMcu::XCHD_A_Ri_1Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->GetRamDataAt(rr) != expectri)
+		if(m_pCVir8051->GetRamDataAt(rr) != expectri)
 		return false;
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if (pCVir8051->Sys.a() != expectaa)
+		if (m_pCVir8051->Sys.a() != expectaa)
 		return false;
-		if(pCVir8051->Sys.PC != (PC + 1))
+		if(m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
 		return true;
 	};
@@ -4088,25 +4088,25 @@ string CTestMcu::XCHD_A_Ri_1Test(int space) {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expectaa:%x aa:%x rr:%x expectri:%x ridata:%x\r\n",
 				PC, expectaa, aa, rr, expectri, ridata);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0xd6:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0xd7:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->SetRamDataAt(rr, ridata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->SetRamDataAt(rr, ridata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0xd6; code <= 0xd7; code++) {
@@ -4139,25 +4139,25 @@ string CTestMcu::DJNZ_Direct_RelTest(int space) {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expectPC:%x expectdata:%x raddr:%x daddr:%x\r\n",
 				PC, expectPC, expectdata, raddr, daddr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto checkresult = [&]()
 	{
-		if (pCVir8051->Sys.PC != expectPC)
+		if (m_pCVir8051->Sys.PC != expectPC)
 		return false;
-		if(pCVir8051->GetRamData(daddr) != expectdata)
+		if(m_pCVir8051->GetRamData(daddr) != expectdata)
 		return false;
 		return true;
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData(daddr, ddata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = daddr;
-		pCVir8051->m_ExeFile[PC + 2] = raddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData(daddr, ddata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = daddr;
+		m_pCVir8051->m_ExeFile[PC + 2] = raddr;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 3; PC = PC + space) {
@@ -4188,11 +4188,11 @@ string CTestMcu::DA_ATest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 1))
+		if(m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
-		if(pCVir8051->Sys.a() != expect)
+		if(m_pCVir8051->Sys.a() != expect)
 		return false;
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
 		return true;
 	};
@@ -4200,17 +4200,17 @@ string CTestMcu::DA_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x daddr:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->Sys.psw().cy = c;
-		pCVir8051->Sys.psw().ac = ac;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->Sys.psw().cy = c;
+		m_pCVir8051->Sys.psw().ac = ac;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
@@ -4247,9 +4247,9 @@ string CTestMcu::SETB_CTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 1))
+		if(m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
-		if(pCVir8051->Sys.psw().cy != expect)
+		if(m_pCVir8051->Sys.psw().cy != expect)
 		return false;
 		return true;
 	};
@@ -4257,15 +4257,15 @@ string CTestMcu::SETB_CTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x daddr:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.psw().cy = cc;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.psw().cy = cc;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
@@ -4289,9 +4289,9 @@ string CTestMcu::SETB_BitTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 2))
+		if(m_pCVir8051->Sys.PC != (PC + 2))
 		return false;
-		if(pCVir8051->GetBitFlag(baddr) != expect)
+		if(m_pCVir8051->GetBitFlag(baddr) != expect)
 		return false;
 		return true;
 	};
@@ -4299,21 +4299,21 @@ string CTestMcu::SETB_BitTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x daddr:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		if(bb) {
-			pCVir8051->SetBitFlag(baddr);
+			m_pCVir8051->SetBitFlag(baddr);
 		}
 		else {
-			pCVir8051->ClrBitFlag(baddr);
+			m_pCVir8051->ClrBitFlag(baddr);
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = baddr;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = baddr;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
@@ -4338,11 +4338,11 @@ string CTestMcu::POP_DirectTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 2))
+		if(m_pCVir8051->Sys.PC != (PC + 2))
 		return false;
-		if(pCVir8051->Sys.sp() != (byte)(SP - 1))
+		if(m_pCVir8051->Sys.sp() != (byte)(SP - 1))
 		return false;
-		if(pCVir8051->GetRamData(daddr) != expect)
+		if(m_pCVir8051->GetRamData(daddr) != expect)
 		return false;
 		return true;
 	};
@@ -4350,18 +4350,18 @@ string CTestMcu::POP_DirectTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x SP:%x daddr-data:%x daddr:%x\r\n",
-				PC, expect, SP, pCVir8051->GetRamData(daddr), daddr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+				PC, expect, SP, m_pCVir8051->GetRamData(daddr), daddr);
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamDataAt(SP, spdata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.sp = SP;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = daddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamDataAt(SP, spdata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.sp = SP;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = daddr;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
@@ -4394,39 +4394,39 @@ string CTestMcu::XCH_A_RnTest(int space) {
 		byte ret = 0;
 		switch (code) {
 			case 0xc8:
-			ret = pCVir8051->Rges.R0();
+			ret = m_pCVir8051->Rges.R0();
 			break;
 			case 0xc9:
-			ret = pCVir8051->Rges.R1();
+			ret = m_pCVir8051->Rges.R1();
 			break;
 			case 0xca:
-			ret = pCVir8051->Rges.R2();
+			ret = m_pCVir8051->Rges.R2();
 			break;
 			case 0xcb:
-			ret = pCVir8051->Rges.R3();
+			ret = m_pCVir8051->Rges.R3();
 			break;
 			case 0xcc:
-			ret = pCVir8051->Rges.R4();
+			ret = m_pCVir8051->Rges.R4();
 			break;
 			case 0xcd:
-			ret = pCVir8051->Rges.R5();
+			ret = m_pCVir8051->Rges.R5();
 			break;
 			case 0xce:
-			ret = pCVir8051->Rges.R6();
+			ret = m_pCVir8051->Rges.R6();
 			break;
 			case 0xcf:
-			ret = pCVir8051->Rges.R7();
+			ret = m_pCVir8051->Rges.R7();
 			break;
 			default:
 			break;
 		}
 		if(ret != expectrr)
 		return false;
-		if (pCVir8051->Sys.PC != (PC + 1))
+		if (m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
-		if(pCVir8051->Sys.a() != expectaa)
+		if(m_pCVir8051->Sys.a() != expectaa)
 		return false;
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
 		return true;
 	};
@@ -4434,42 +4434,42 @@ string CTestMcu::XCH_A_RnTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expectaa:%x expectrr:%x\r\n", PC, expectaa, expectrr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0xc8:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0xc9:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			case 0xca:
-			pCVir8051->Rges.R2 = rr;
+			m_pCVir8051->Rges.R2 = rr;
 			break;
 			case 0xcb:
-			pCVir8051->Rges.R3 = rr;
+			m_pCVir8051->Rges.R3 = rr;
 			break;
 			case 0xcc:
-			pCVir8051->Rges.R4 = rr;
+			m_pCVir8051->Rges.R4 = rr;
 			break;
 			case 0xcd:
-			pCVir8051->Rges.R5 = rr;
+			m_pCVir8051->Rges.R5 = rr;
 			break;
 			case 0xce:
-			pCVir8051->Rges.R6 = rr;
+			m_pCVir8051->Rges.R6 = rr;
 			break;
 			case 0xcf:
-			pCVir8051->Rges.R7 = rr;;
+			m_pCVir8051->Rges.R7 = rr;;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->Sys.a = aa;
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0xc8; code <= 0xcf; code++) {
@@ -4499,22 +4499,22 @@ string CTestMcu::XCH_A_DirectTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 2))
+		if(m_pCVir8051->Sys.PC != (PC + 2))
 		{
 			LogPrint("mcutest", "1\n");
 			return false;
 		}
-		if(pCVir8051->Sys.a() != expectaa)
+		if(m_pCVir8051->Sys.a() != expectaa)
 		{
 			LogPrint("mcutest", "2\n");
 			return false;
 		}
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		{
 			LogPrint("mcutest", "3\n");
 			return false;
 		}
-		if(pCVir8051->GetRamData((byte)daddr) != expectd)
+		if(m_pCVir8051->GetRamData((byte)daddr) != expectd)
 		{
 			LogPrint("mcutest", "4\n");
 			return false;
@@ -4525,17 +4525,17 @@ string CTestMcu::XCH_A_DirectTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expectaa:%x expectd:%x daddr:%x\r\n", PC, expectaa, expectd, daddr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData((byte)daddr, ddata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = (byte)aa;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = (byte)daddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData((byte)daddr, ddata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = (byte)aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = (byte)daddr;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
@@ -4566,9 +4566,9 @@ string CTestMcu::SWAP_ATest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 1))
+		if(m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
-		if(pCVir8051->Sys.a() != expect)
+		if(m_pCVir8051->Sys.a() != expect)
 		return false;
 		return true;
 	};
@@ -4576,15 +4576,15 @@ string CTestMcu::SWAP_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x\r\n", PC, expect, aa);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
@@ -4608,9 +4608,9 @@ string CTestMcu::CLR_CTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 1))
+		if(m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
-		if(pCVir8051->Sys.psw().cy != expect)
+		if(m_pCVir8051->Sys.psw().cy != expect)
 		return false;
 		return true;
 	};
@@ -4618,15 +4618,15 @@ string CTestMcu::CLR_CTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x daddr:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.psw().cy = cc;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.psw().cy = cc;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
@@ -4650,9 +4650,9 @@ string CTestMcu::CLR_BitTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 2))
+		if(m_pCVir8051->Sys.PC != (PC + 2))
 		return false;
-		if(pCVir8051->GetBitFlag(baddr) != expect)
+		if(m_pCVir8051->GetBitFlag(baddr) != expect)
 		return false;
 		return true;
 	};
@@ -4660,21 +4660,21 @@ string CTestMcu::CLR_BitTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x daddr:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		if(bb) {
-			pCVir8051->SetBitFlag(baddr);
+			m_pCVir8051->SetBitFlag(baddr);
 		}
 		else {
-			pCVir8051->ClrBitFlag(baddr);
+			m_pCVir8051->ClrBitFlag(baddr);
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = baddr;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = baddr;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 1; PC = PC + space) {
@@ -4699,19 +4699,19 @@ string CTestMcu::PUSH_DirectTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 2))
+		if(m_pCVir8051->Sys.PC != (PC + 2))
 		{
 			LogPrint("mcutest", "1\n");
 			return false;
 		}
-		if(pCVir8051->Sys.sp() != (byte)(SP + 1))
+		if(m_pCVir8051->Sys.sp() != (byte)(SP + 1))
 		{
 			LogPrint("mcutest", "2\n");
 			return false;
 		}
-		if(pCVir8051->GetRamDataAt((byte)(SP + 1)) != expect)
+		if(m_pCVir8051->GetRamDataAt((byte)(SP + 1)) != expect)
 		{
-			LogPrint("mcutest", "3:%x %x\n", pCVir8051->GetRamDataAt((byte)(SP + 1)), pCVir8051->GetRamDataAt((byte)(SP)));
+			LogPrint("mcutest", "3:%x %x\n", m_pCVir8051->GetRamDataAt((byte)(SP + 1)), m_pCVir8051->GetRamDataAt((byte)(SP)));
 			return false;
 		}
 		return true;
@@ -4720,17 +4720,17 @@ string CTestMcu::PUSH_DirectTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData(daddr, ddata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.sp = SP;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = daddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData(daddr, ddata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.sp = SP;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = daddr;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
@@ -4763,7 +4763,7 @@ string CTestMcu::MOV_Direct_Rn_Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->GetRamData(addr) != expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->GetRamData(addr) != expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		return false;
 		return true;
 	};
@@ -4771,42 +4771,42 @@ string CTestMcu::MOV_Direct_Rn_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x addr:%x\r\n", PC, expect, addr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x88:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x89:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			case 0x8a:
-			pCVir8051->Rges.R2 = rr;
+			m_pCVir8051->Rges.R2 = rr;
 			break;
 			case 0x8b:
-			pCVir8051->Rges.R3 = rr;
+			m_pCVir8051->Rges.R3 = rr;
 			break;
 			case 0x8c:
-			pCVir8051->Rges.R4 = rr;
+			m_pCVir8051->Rges.R4 = rr;
 			break;
 			case 0x8d:
-			pCVir8051->Rges.R5 = rr;
+			m_pCVir8051->Rges.R5 = rr;
 			break;
 			case 0x8e:
-			pCVir8051->Rges.R6 = rr;
+			m_pCVir8051->Rges.R6 = rr;
 			break;
 			case 0x8f:
-			pCVir8051->Rges.R7 = rr;
+			m_pCVir8051->Rges.R7 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = addr;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = addr;
 	};
 
 	for (code = 0x88; code <= 0x8f; code++) {
@@ -4836,7 +4836,7 @@ string CTestMcu::MOV_Direct_Ri_Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->GetRamData(addr) != expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->GetRamData(addr) != expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		return false;
 		return true;
 	};
@@ -4844,25 +4844,25 @@ string CTestMcu::MOV_Direct_Ri_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x rr:%x data:%x addr:%x\r\n", PC, expect, rr, data, addr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x86:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x87:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->SetRamDataAt(rr, data);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = addr;
+		m_pCVir8051->SetRamDataAt(rr, data);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = addr;
 	};
 
 	for (code = 0x86; code <= 0x87; code++) {
@@ -4896,7 +4896,7 @@ string CTestMcu::MOV_DPTR_Data_Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->Sys.dptr() != (unsigned short)expect) || (pCVir8051->Sys.PC != (PC + 3)))
+		if ((m_pCVir8051->Sys.dptr() != (unsigned short)expect) || (m_pCVir8051->Sys.PC != (PC + 3)))
 		return false;
 		return true;
 	};
@@ -4904,15 +4904,15 @@ string CTestMcu::MOV_DPTR_Data_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = datah;
-		pCVir8051->m_ExeFile[PC + 2] = datal;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = datah;
+		m_pCVir8051->m_ExeFile[PC + 2] = datal;
 	};
 
 	code = 0x90;
@@ -4941,7 +4941,7 @@ string CTestMcu::MOV_Bit_C_Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->GetBitFlag(addr) != expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->GetBitFlag(addr) != expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		return false;
 		return true;
 	};
@@ -4949,15 +4949,15 @@ string CTestMcu::MOV_Bit_C_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x addr:%x\r\n", PC, expect, addr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.psw().cy = cc;
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = addr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.psw().cy = cc;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = addr;
 	};
 
 	code = 0x92;
@@ -4985,7 +4985,7 @@ string CTestMcu::MOV_C_Bit_Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->Sys.psw().cy != expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->Sys.psw().cy != expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		return false;
 		return true;
 	};
@@ -4993,19 +4993,19 @@ string CTestMcu::MOV_C_Bit_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x addr:%x\r\n", PC, expect, addr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		if (bb) {
-			pCVir8051->SetBitFlag(addr);
+			m_pCVir8051->SetBitFlag(addr);
 		} else {
-			pCVir8051->ClrBitFlag(addr);
+			m_pCVir8051->ClrBitFlag(addr);
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = addr;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = addr;
 	};
 
 	code = 0xa2;
@@ -5035,9 +5035,9 @@ string CTestMcu::MOVC_A_DPTR_Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if ((pCVir8051->Sys.a() != expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -5045,17 +5045,17 @@ string CTestMcu::MOVC_A_DPTR_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x dptr:%x mfile:%x\r\n",
-				PC, expect, aa, dptr, pCVir8051->m_ExeFile[aa + dptr]);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+				PC, expect, aa, dptr, m_pCVir8051->m_ExeFile[aa + dptr]);
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->m_ExeFile[aa + dptr] = data;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->Sys.dptr = dptr;
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->m_ExeFile[aa + dptr] = data;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->Sys.dptr = dptr;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	code = 0x93;
@@ -5089,27 +5089,27 @@ string CTestMcu::SUBB_A_RnTest(int space) {
 	{
 		byte xx6 = (((aa & 0x7f) < ((rr & 0x7f) + cc))) ? (1) : (0);
 		byte xx7 = (aa < (rr + cc))?(1):(0);
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		{
 			LogPrint("mcutest", "1.....\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().cy != ((aa < (rr + cc))?(1):(0)))
+		if(m_pCVir8051->Sys.psw().cy != ((aa < (rr + cc))?(1):(0)))
 		{
 			LogPrint("mcutest", "2.....\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().ac != ((((aa&0x0f) < ((rr&0x0f) + cc)))?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ac != ((((aa&0x0f) < ((rr&0x0f) + cc)))?(1):(0)))
 		{
 			LogPrint("mcutest", "3.....\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
 		{
 			LogPrint("mcutest", "4.....\n");
 			return false;
 		}
-		if ((pCVir8051->Sys.a() != (byte)expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != (byte)expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		{
 			LogPrint("mcutest", "5.....\n");
 			return false;
@@ -5123,43 +5123,43 @@ string CTestMcu::SUBB_A_RnTest(int space) {
 		byte xx7 = (expect > 0xff)?(1):(0);
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x rr:%x cc:%x xx6:%x xx7:%x\r\n", PC, expect, aa, rr, cc,
 				xx6, xx7);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x98:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x99:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			case 0x9a:
-			pCVir8051->Rges.R2 = rr;
+			m_pCVir8051->Rges.R2 = rr;
 			break;
 			case 0x9b:
-			pCVir8051->Rges.R3 = rr;
+			m_pCVir8051->Rges.R3 = rr;
 			break;
 			case 0x9c:
-			pCVir8051->Rges.R4 = rr;
+			m_pCVir8051->Rges.R4 = rr;
 			break;
 			case 0x9d:
-			pCVir8051->Rges.R5 = rr;
+			m_pCVir8051->Rges.R5 = rr;
 			break;
 			case 0x9e:
-			pCVir8051->Rges.R6 = rr;
+			m_pCVir8051->Rges.R6 = rr;
 			break;
 			case 0x9f:
-			pCVir8051->Rges.R7 = rr;
+			m_pCVir8051->Rges.R7 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->Sys.psw().cy = cc;
-		memcpy(&pCVir8051->m_ExeFile[PC], &code, sizeof(code));
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->Sys.psw().cy = cc;
+		memcpy(&m_pCVir8051->m_ExeFile[PC], &code, sizeof(code));
 	};
 
 	for (code = 0x98; code <= 0x9f; code++) {
@@ -5193,28 +5193,28 @@ string CTestMcu::SUBB_A_RiTest(int space) {
 	{
 		byte xx6 = (((aa & 0x7f) < (data & 0x7f) + cc)) ? (1) : (0);
 		byte xx7 = (aa < (data + cc))?(1):(0);
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		{
 			LogPrint("mcutest", "1\n");
 			return false;
 		}
 
-		if(pCVir8051->Sys.psw().cy != ((aa < (data + cc))?(1):(0)))
+		if(m_pCVir8051->Sys.psw().cy != ((aa < (data + cc))?(1):(0)))
 		{
 			LogPrint("mcutest", "2\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().ac != ((((aa&0x0f) < (data&0x0f) + cc))?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ac != ((((aa&0x0f) < (data&0x0f) + cc))?(1):(0)))
 		{
 			LogPrint("mcutest", "3\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
 		{
 			LogPrint("mcutest", "4\n");
 			return false;
 		}
-		if ((pCVir8051->Sys.a() != (byte)expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.a() != (byte)expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		{
 			LogPrint("mcutest", "5\n");
 			return false;
@@ -5228,26 +5228,26 @@ string CTestMcu::SUBB_A_RiTest(int space) {
 		byte xx7 = (aa < (data + cc))?(1):(0);
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x data:%x cc:%x xx6:%x xx7:%x\r\n", PC, expect, aa, data, cc,
 				xx6, xx7);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0x96:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0x97:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->SetRamDataAt(rr, data);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->Sys.psw().cy = cc;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->SetRamDataAt(rr, data);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->Sys.psw().cy = cc;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0x96; code <= 0x97; code++) {
@@ -5281,27 +5281,27 @@ string CTestMcu::SUBB_A_DirectTest(int space) {
 	{
 		byte xx6 = (((aa & 0x7f) < (data & 0x7f) + cc)) ? (1) : (0);
 		byte xx7 = (aa < (data + cc))?(1):(0);
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		{
 			LogPrint("mcutest", "1\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().cy != ((aa < (data + cc))?(1):(0)))
+		if(m_pCVir8051->Sys.psw().cy != ((aa < (data + cc))?(1):(0)))
 		{
 			LogPrint("mcutest", "2\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().ac != ((((aa&0x0f) < (data&0x0f) + cc))?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ac != ((((aa&0x0f) < (data&0x0f) + cc))?(1):(0)))
 		{
 			LogPrint("mcutest", "3\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
 		{
 			LogPrint("mcutest", "4\n");
 			return false;
 		}
-		if ((pCVir8051->Sys.a() != (byte)expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->Sys.a() != (byte)expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		{
 			LogPrint("mcutest", "5\n");
 			return false;
@@ -5315,17 +5315,17 @@ string CTestMcu::SUBB_A_DirectTest(int space) {
 		byte xx7 = (aa < (data + cc))?(1):(0);
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x data:%x cc:%x xx6:%x xx7:%x addr:%x\r\n",
 				PC, expect, aa, data, cc, xx6, xx7, addr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData(addr, data);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->Sys.psw().cy = cc;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = addr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData(addr, data);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->Sys.psw().cy = cc;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = addr;
 	};
 
 	code = 0x95;
@@ -5361,27 +5361,27 @@ string CTestMcu::SUBB_A_Data_Test(int space) {
 	{
 		byte xx6 = (((aa & 0x7f) < (data & 0x7f) + cc)) ? (1) : (0);
 		byte xx7 = (aa < (data + cc))?(1):(0);
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		{
 			LogPrint("mcutest", "1\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().cy != ((aa < (data + cc))?(1):(0)))
+		if(m_pCVir8051->Sys.psw().cy != ((aa < (data + cc))?(1):(0)))
 		{
 			LogPrint("mcutest", "2\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().ac != ((((aa&0x0f) < (data&0x0f) + cc))?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ac != ((((aa&0x0f) < (data&0x0f) + cc))?(1):(0)))
 		{
 			LogPrint("mcutest", "3\n");
 			return false;
 		}
-		if(pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ov != ((xx7 ^ xx6)?(1):(0)))
 		{
 			LogPrint("mcutest", "4\n");
 			return false;
 		}
-		if ((pCVir8051->Sys.a() != (byte)expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->Sys.a() != (byte)expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		{
 			LogPrint("mcutest", "5\n");
 			return false;
@@ -5395,16 +5395,16 @@ string CTestMcu::SUBB_A_Data_Test(int space) {
 		byte xx7 = (aa < (data + cc))?(1):(0);
 		sprintf(temp,"runtime info: PC:%x expect:%x aa:%x data:%x cc:%x xx6:%x xx7:%x\r\n", PC, expect, aa, data, cc,
 				xx6, xx7);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->Sys.psw().cy = cc;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = data;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->Sys.psw().cy = cc;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = data;
 	};
 
 	code = 0x94;
@@ -5438,44 +5438,44 @@ string CTestMcu::MOV_Rn_Direct_Test(int space) {
 		byte ret;
 		switch (code) {
 			case 0xa8:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			TestRun();
-			ret = pCVir8051->Rges.R0();
+			ret = m_pCVir8051->Rges.R0();
 			break;
 			case 0xa9:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			TestRun();
-			ret = pCVir8051->Rges.R1();
+			ret = m_pCVir8051->Rges.R1();
 			break;
 			case 0xaa:
-			pCVir8051->Rges.R2 = rr;
+			m_pCVir8051->Rges.R2 = rr;
 			TestRun();
-			ret = pCVir8051->Rges.R2();
+			ret = m_pCVir8051->Rges.R2();
 			break;
 			case 0xab:
-			pCVir8051->Rges.R3 = rr;
+			m_pCVir8051->Rges.R3 = rr;
 			TestRun();
-			ret = pCVir8051->Rges.R3();
+			ret = m_pCVir8051->Rges.R3();
 			break;
 			case 0xac:
-			pCVir8051->Rges.R4 = rr;
+			m_pCVir8051->Rges.R4 = rr;
 			TestRun();
-			ret = pCVir8051->Rges.R4();
+			ret = m_pCVir8051->Rges.R4();
 			break;
 			case 0xad:
-			pCVir8051->Rges.R5 = rr;
+			m_pCVir8051->Rges.R5 = rr;
 			TestRun();
-			ret = pCVir8051->Rges.R5();
+			ret = m_pCVir8051->Rges.R5();
 			break;
 			case 0xae:
-			pCVir8051->Rges.R6 = rr;
+			m_pCVir8051->Rges.R6 = rr;
 			TestRun();
-			ret = pCVir8051->Rges.R6();
+			ret = m_pCVir8051->Rges.R6();
 			break;
 			case 0xaf:
-			pCVir8051->Rges.R7 = rr;
+			m_pCVir8051->Rges.R7 = rr;
 			TestRun();
-			ret = pCVir8051->Rges.R7();
+			ret = m_pCVir8051->Rges.R7();
 			break;
 			default:
 			ret = 0;
@@ -5487,15 +5487,15 @@ string CTestMcu::MOV_Rn_Direct_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData(addr, data);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = addr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData(addr, data);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = addr;
 	};
 
 	for (code = 0xa8; code <= 0xaf; code++) {
@@ -5508,7 +5508,7 @@ string CTestMcu::MOV_Rn_Direct_Test(int space) {
 					data = rand() % 256;
 					expect = data;
 					updatecpu();
-					if ((run_code() != expect) || (pCVir8051->Sys.PC != (PC + 2))) {
+					if ((run_code() != expect) || (m_pCVir8051->Sys.PC != (PC + 2))) {
 						return errstring();
 					}
 				}
@@ -5525,7 +5525,7 @@ string CTestMcu::MOV_Ri_Direct_Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->GetRamDataAt(rr) != expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->GetRamDataAt(rr) != expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		return false;
 		return true;
 	};
@@ -5533,25 +5533,25 @@ string CTestMcu::MOV_Ri_Direct_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x addr:%x\r\n", PC, expect, addr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0xa6:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0xa7:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->SetRamData(addr, data);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = addr;
+		m_pCVir8051->SetRamData(addr, data);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = addr;
 	};
 
 	for (code = 0xa6; code <= 0xa7; code++) {
@@ -5585,9 +5585,9 @@ string CTestMcu::CJNE_Rn_Data_Rel_Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if (pCVir8051->Sys.PC != expect)
+		if (m_pCVir8051->Sys.PC != expect)
 		return false;
-		if(pCVir8051->Sys.psw().cy != ((rr < data)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().cy != ((rr < data)?(1):(0)))
 		return false;
 		return true;
 	};
@@ -5595,43 +5595,43 @@ string CTestMcu::CJNE_Rn_Data_Rel_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x addr:%x rr:%x data:%x\r\n", PC, expect, addr, rr, data);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0xB8:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0xB9:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			case 0xBa:
-			pCVir8051->Rges.R2 = rr;
+			m_pCVir8051->Rges.R2 = rr;
 			break;
 			case 0xbb:
-			pCVir8051->Rges.R3 = rr;
+			m_pCVir8051->Rges.R3 = rr;
 			break;
 			case 0xbc:
-			pCVir8051->Rges.R4 = rr;
+			m_pCVir8051->Rges.R4 = rr;
 			break;
 			case 0xbd:
-			pCVir8051->Rges.R5 = rr;
+			m_pCVir8051->Rges.R5 = rr;
 			break;
 			case 0xbe:
-			pCVir8051->Rges.R6 = rr;
+			m_pCVir8051->Rges.R6 = rr;
 			break;
 			case 0xbf:
-			pCVir8051->Rges.R7 = rr;
+			m_pCVir8051->Rges.R7 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = data;
-		pCVir8051->m_ExeFile[PC + 2] = addr;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = data;
+		m_pCVir8051->m_ExeFile[PC + 2] = addr;
 	};
 
 	for (code = 0xb8; code <= 0xbf; code++) {
@@ -5667,9 +5667,9 @@ string CTestMcu::CJNE_Ri_Data_Rel_Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if (pCVir8051->Sys.PC != expect)
+		if (m_pCVir8051->Sys.PC != expect)
 		return false;
-		if(pCVir8051->Sys.psw().cy != ((rdata < data)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().cy != ((rdata < data)?(1):(0)))
 		return false;
 		return true;
 	};
@@ -5677,26 +5677,26 @@ string CTestMcu::CJNE_Ri_Data_Rel_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x addr:%x rr:%x data:%x\r\n", PC, expect, addr, rr, data);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0xB6:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0xB7:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->SetRamDataAt(rr, rdata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = data;
-		pCVir8051->m_ExeFile[PC + 2] = addr;
+		m_pCVir8051->SetRamDataAt(rr, rdata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = data;
+		m_pCVir8051->m_ExeFile[PC + 2] = addr;
 	};
 
 	for (code = 0xb6; code <= 0xb7; code++) {
@@ -5732,9 +5732,9 @@ string CTestMcu::CJNE_A_Direct_Rel_Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if (pCVir8051->Sys.PC != expect)
+		if (m_pCVir8051->Sys.PC != expect)
 		return false;
-		if(pCVir8051->Sys.psw().cy != ((aa < pCVir8051->GetRamData(addr))?(1):(0)))
+		if(m_pCVir8051->Sys.psw().cy != ((aa < m_pCVir8051->GetRamData(addr))?(1):(0)))
 		return false;
 		return true;
 	};
@@ -5742,17 +5742,17 @@ string CTestMcu::CJNE_A_Direct_Rel_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x addr:%x\r\n", PC, expect, addr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->SetRamData(addr, data);
-		pCVir8051->Sys.a = aa;
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = addr;
-		pCVir8051->m_ExeFile[PC + 2] = raddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->SetRamData(addr, data);
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = addr;
+		m_pCVir8051->m_ExeFile[PC + 2] = raddr;
 	};
 
 	code = 0xb5;
@@ -5791,9 +5791,9 @@ string CTestMcu::CJNE_A_Data_Rel_Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if (pCVir8051->Sys.PC != expect)
+		if (m_pCVir8051->Sys.PC != expect)
 		return false;
-		if(pCVir8051->Sys.psw().cy != ((aa < data)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().cy != ((aa < data)?(1):(0)))
 		return false;
 		return true;
 	};
@@ -5801,16 +5801,16 @@ string CTestMcu::CJNE_A_Data_Rel_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x addr:%x\r\n", PC, expect, addr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.a = aa;
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = data;
-		pCVir8051->m_ExeFile[PC + 2] = raddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = data;
+		m_pCVir8051->m_ExeFile[PC + 2] = raddr;
 	};
 
 	code = 0xb4;
@@ -5842,7 +5842,7 @@ string CTestMcu::CPL_C_Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->Sys.psw().cy != expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.psw().cy != expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -5850,14 +5850,14 @@ string CTestMcu::CPL_C_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.psw().cy = cc;
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.psw().cy = cc;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	code = 0xb3;
@@ -5884,7 +5884,7 @@ string CTestMcu::CPL_Bit_Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->GetBitFlag(addr) != expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->GetBitFlag(addr) != expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		return false;
 		return true;
 	};
@@ -5892,19 +5892,19 @@ string CTestMcu::CPL_Bit_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		if (bb) {
-			pCVir8051->SetBitFlag(addr);
+			m_pCVir8051->SetBitFlag(addr);
 		} else {
-			pCVir8051->ClrBitFlag(addr);
+			m_pCVir8051->ClrBitFlag(addr);
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = addr;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = addr;
 	};
 
 	code = 0xb2;
@@ -5937,11 +5937,11 @@ string CTestMcu::ANL_C_Bit_1_Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->Sys.psw().cy != expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->Sys.psw().cy != expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		return false;
 		if(addr>= 0xe0 &&addr <= 0xe7)
 		{
-			if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+			if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 			return false;
 		}
 		return true;
@@ -5950,20 +5950,20 @@ string CTestMcu::ANL_C_Bit_1_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x addr:%x\r\n", PC, expect, addr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.psw().cy = cc;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.psw().cy = cc;
 		if (bb) {
-			pCVir8051->SetBitFlag(addr);
+			m_pCVir8051->SetBitFlag(addr);
 		} else {
-			pCVir8051->ClrBitFlag(addr);
+			m_pCVir8051->ClrBitFlag(addr);
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = addr;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = addr;
 	};
 
 	code = 0xb0;
@@ -5994,15 +5994,15 @@ string CTestMcu::MUL_AB_Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if (pCVir8051->Sys.a() != (byte)(expect&0xff))
+		if (m_pCVir8051->Sys.a() != (byte)(expect&0xff))
 		return false;
-		if (pCVir8051->Sys.b() != (byte)(expect >> 8))
+		if (m_pCVir8051->Sys.b() != (byte)(expect >> 8))
 		return false;
-		if(pCVir8051->Sys.psw().ov != ((expect > 255)?(1):(0)))
+		if(m_pCVir8051->Sys.psw().ov != ((expect > 255)?(1):(0)))
 		return false;
-		if(pCVir8051->Sys.psw().cy != 0)
+		if(m_pCVir8051->Sys.psw().cy != 0)
 		return false;
-		if (pCVir8051->Sys.PC != (PC + 1))
+		if (m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
 		return true;
 	};
@@ -6010,16 +6010,16 @@ string CTestMcu::MUL_AB_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.psw = 0; //clear first
-			pCVir8051->Sys.a = aa;
-			pCVir8051->Sys.b = bb;
-			pCVir8051->Sys.PC = PC;
-			pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.psw = 0; //clear first
+			m_pCVir8051->Sys.a = aa;
+			m_pCVir8051->Sys.b = bb;
+			m_pCVir8051->Sys.PC = PC;
+			m_pCVir8051->m_ExeFile[PC] = code;
 		};
 
 	code = 0xa4;
@@ -6048,7 +6048,7 @@ string CTestMcu::INC_DPTR_Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->Sys.dptr() != (unsigned short)expect) || (pCVir8051->Sys.PC != (PC + 1)))
+		if ((m_pCVir8051->Sys.dptr() != (unsigned short)expect) || (m_pCVir8051->Sys.PC != (PC + 1)))
 		return false;
 		return true;
 	};
@@ -6056,14 +6056,14 @@ string CTestMcu::INC_DPTR_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.dptr = dptr;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.dptr = dptr;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	code = 0xa3;
@@ -6083,7 +6083,7 @@ string CTestMcu::INC_DPTR_Test(int space) {
 	return "OK";
 }
 string CTestMcu::AJMP_Addr11_Test(int space) {
-	pCVir8051->Opcode_A1_AJMP_Addr11();
+	m_pCVir8051->Opcode_A1_AJMP_Addr11();
 	return "OK";
 }
 string CTestMcu::ORL_C_Bit_Test(int space) {
@@ -6095,11 +6095,11 @@ string CTestMcu::ORL_C_Bit_Test(int space) {
 
 	auto checkresult = [&]()
 	{
-		if ((pCVir8051->Sys.psw().cy != expect) || (pCVir8051->Sys.PC != (PC + 2)))
+		if ((m_pCVir8051->Sys.psw().cy != expect) || (m_pCVir8051->Sys.PC != (PC + 2)))
 		return false;
 		if(addr>= 0xe0 &&addr <= 0xe7)
 		{
-			if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+			if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 			return false;
 		}
 		return true;
@@ -6108,20 +6108,20 @@ string CTestMcu::ORL_C_Bit_Test(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x addr:%x\r\n", PC, expect, addr);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&] () {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.psw().cy = cc;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.psw().cy = cc;
 		if (bb) {
-			pCVir8051->SetBitFlag(addr);
+			m_pCVir8051->SetBitFlag(addr);
 		} else {
-			pCVir8051->ClrBitFlag(addr);
+			m_pCVir8051->ClrBitFlag(addr);
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = addr;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = addr;
 	};
 
 	code = 0xa0;
@@ -6152,9 +6152,9 @@ string CTestMcu::MOV_Ri_ATest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->Sys.PC != (PC + 1))
+		if(m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
-		if(pCVir8051->GetRamDataAt(ri) != expect)
+		if(m_pCVir8051->GetRamDataAt(ri) != expect)
 		return false;
 		return true;
 	};
@@ -6162,21 +6162,21 @@ string CTestMcu::MOV_Ri_ATest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x daddr:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]()
 	{
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		if(code == 0xf6) {
-			pCVir8051->Rges.R0 = ri;
+			m_pCVir8051->Rges.R0 = ri;
 		}
 		else if(code == 0xf7) {
-			pCVir8051->Rges.R1 = ri;
+			m_pCVir8051->Rges.R1 = ri;
 		}
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0xf6; code <= 0xf7; code++) {
@@ -6206,13 +6206,13 @@ string CTestMcu::XCH_A_RiTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if(pCVir8051->GetRamDataAt(rr) != expectri)
+		if(m_pCVir8051->GetRamDataAt(rr) != expectri)
 		return false;
-		if(IsOdd(pCVir8051->Sys.a()) != pCVir8051->Sys.psw().p)
+		if(IsOdd(m_pCVir8051->Sys.a()) != m_pCVir8051->Sys.psw().p)
 		return false;
-		if (pCVir8051->Sys.a() != expectaa)
+		if (m_pCVir8051->Sys.a() != expectaa)
 		return false;
-		if(pCVir8051->Sys.PC != (PC + 1))
+		if(m_pCVir8051->Sys.PC != (PC + 1))
 		return false;
 		return true;
 	};
@@ -6221,25 +6221,25 @@ string CTestMcu::XCH_A_RiTest(int space) {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expectaa:%x aa:%x rr:%x expectri:%x ridata:%x\r\n",
 				PC, expectaa, aa, rr, expectri, ridata);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
+		m_pCVir8051->InitalReg();
 		switch (code) {
 			case 0xc6:
-			pCVir8051->Rges.R0 = rr;
+			m_pCVir8051->Rges.R0 = rr;
 			break;
 			case 0xc7:
-			pCVir8051->Rges.R1 = rr;
+			m_pCVir8051->Rges.R1 = rr;
 			break;
 			default:
 			break;
 		}
-		pCVir8051->SetRamDataAt(rr, ridata);
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.a = aa;
-		pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->SetRamDataAt(rr, ridata);
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.a = aa;
+		m_pCVir8051->m_ExeFile[PC] = code;
 	};
 
 	for (code = 0xc6; code <= 0xc7; code++) {
@@ -6270,7 +6270,7 @@ string CTestMcu::JNC_RelTest(int space) {
 
 	auto checkresult = [&]()
 	{
-		if (pCVir8051->Sys.PC != expect)
+		if (m_pCVir8051->Sys.PC != expect)
 		return false;
 		return true;
 	};
@@ -6278,15 +6278,15 @@ string CTestMcu::JNC_RelTest(int space) {
 	auto errstring = [&] () {
 		char temp[1024];
 		sprintf(temp,"runtime info: PC:%x expect:%x\r\n", PC, expect);
-		return "error :" + string(temp)+ pCVir8051->ToStr();
+		return "error :" + string(temp)+ m_pCVir8051->ToStr();
 	};
 
 	auto updatecpu = [&]() {
-		pCVir8051->InitalReg();
-		pCVir8051->Sys.PC = PC;
-		pCVir8051->Sys.psw().cy = cc;
-		pCVir8051->m_ExeFile[PC] = code;
-		pCVir8051->m_ExeFile[PC + 1] = raddr;
+		m_pCVir8051->InitalReg();
+		m_pCVir8051->Sys.PC = PC;
+		m_pCVir8051->Sys.psw().cy = cc;
+		m_pCVir8051->m_ExeFile[PC] = code;
+		m_pCVir8051->m_ExeFile[PC + 1] = raddr;
 	};
 
 	for (PC = 0; PC <= CVm8051::MAX_ROM - 2; PC = PC + space) {
@@ -6326,10 +6326,10 @@ bool CTestMcu::IsOdd(unsigned char un) {
 
 
 void CTestMcu::TestRun() {
-	pCVir8051->StepRun(pCVir8051->GetOpcode());
+	m_pCVir8051->StepRun(m_pCVir8051->GetOpcode());
 }
 CTestMcu::CTestMcu(CVm8051 *pCVir8051) :
-		pCVir8051(pCVir8051) {
+		m_pCVir8051(pCVir8051) {
 }
 
 CTestMcu::~CTestMcu() {

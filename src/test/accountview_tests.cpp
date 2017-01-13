@@ -8,27 +8,29 @@
 using namespace std;
 
 #define VECTOR_SIZE 1000
+
 class CAccountViewTest {
-public:
+ public:
 	CAccountViewTest() {
-//		pAccountViewDB = new CAccountViewDB("test",500, false, false);
-		pViewTip1 = new CAccountViewCache(*pAccountViewTip,true);
-		pViewTip2 = new CAccountViewCache(*pViewTip1,true);
+		// pAccountViewDB = new CAccountViewDB("test",500, false, false);
+		m_pcViewTip1 = new CAccountViewCache(*g_pAccountViewTip, true);
+		m_pcViewTip2 = new CAccountViewCache(*m_pcViewTip1, true);
 		Init();
 	}
+
 	~CAccountViewTest() {
-//		if(pAccountViewDB != NULL) {
-//			delete pAccountViewDB;
-//		}
-		if(pViewTip2 != NULL) {
-			delete pViewTip2;
+		// if(pAccountViewDB != NULL) {
+		// delete pAccountViewDB;
+		// }
+		if (m_pcViewTip2 != NULL) {
+			delete m_pcViewTip2;
 		}
-		if(pViewTip1 != NULL) {
-				delete pViewTip1;
-			}
-//		const boost::filesystem::path p=GetDataDir() / "blocks" / "test";
-//		boost::filesystem::remove_all(p);
-//		boost::filesystem::remove_all(GetDataDir() / "blocks" / "test");
+		if (m_pcViewTip1 != NULL) {
+			delete m_pcViewTip1;
+		}
+		// const boost::filesystem::path p=GetDataDir() / "blocks" / "test";
+		// boost::filesystem::remove_all(p);
+		// boost::filesystem::remove_all(GetDataDir() / "blocks" / "test");
 	}
 	bool EraseAccount();
 	bool EraseKeyID();
@@ -38,43 +40,40 @@ public:
 	bool TestGetAccount(bool bCheckExist);
 	void Init();
 
-public:
-	vector<CKeyID> vRandomKeyID;
-	vector<CRegID> vRandomRegID;
-	vector<CAccount> vAccount;
-	CAccountViewCache* pViewTip1;
-	CAccountViewCache* pViewTip2;
+ public:
+	vector<CKeyID> m_vcRandomKeyID;
+	vector<CRegID> m_vcRandomRegID;
+	vector<CAccount> m_vcAccount;
+	CAccountViewCache* m_pcViewTip1;
+	CAccountViewCache* m_pcViewTip2;
 };
 
 bool CAccountViewTest::EraseKeyID() {
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		pViewTip2->EraseId(vRandomRegID.at(i));
+		m_pcViewTip2->EraseId(m_vcRandomRegID.at(i));
 	}
-
 	return true;
 }
 
 bool CAccountViewTest::EraseAccount() {
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		CUserID userId = vRandomKeyID.at(i);
-		pViewTip2->EraseAccount(userId);
+		CUserID cUserId = m_vcRandomKeyID.at(i);
+		m_pcViewTip2->EraseAccount(cUserId);
 	}
-
 	return true;
 }
 
 bool CAccountViewTest::TestGetAccount(bool bCheckExist) {
-	CAccount account;
-
+	CAccount cAccount;
 	//get account by keyID
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		CUserID userId = vRandomKeyID.at(i);
+		CUserID cUserId = m_vcRandomKeyID.at(i);
 		if (bCheckExist) {
-			if (!pViewTip2->GetAccount(userId, account)) {
+			if (!m_pcViewTip2->GetAccount(cUserId, cAccount)) {
 				return false;
 			}
 		} else {
-			if (pViewTip2->GetAccount(userId, account)) {
+			if (m_pcViewTip2->GetAccount(cUserId, cAccount)) {
 				return false;
 			}
 		}
@@ -82,13 +81,13 @@ bool CAccountViewTest::TestGetAccount(bool bCheckExist) {
 
 	//get account by accountID
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		CUserID userId = vRandomKeyID.at(i);
+		CUserID cUserId = m_vcRandomKeyID.at(i);
 		if (bCheckExist) {
-			if (!pViewTip2->GetAccount(userId, account)) {
+			if (!m_pcViewTip2->GetAccount(cUserId, cAccount)) {
 				return false;
 			}
 		} else {
-			if (pViewTip2->GetAccount(userId, account)) {
+			if (m_pcViewTip2->GetAccount(cUserId, cAccount)) {
 				return false;
 			}
 		}
@@ -99,134 +98,126 @@ bool CAccountViewTest::TestGetAccount(bool bCheckExist) {
 
 bool CAccountViewTest::SetKeyID() {
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		pViewTip2->SetKeyId(vRandomRegID.at(i), vRandomKeyID.at(i));
+		m_pcViewTip2->SetKeyId(m_vcRandomRegID.at(i), m_vcRandomKeyID.at(i));
 	}
-
 	return true;
 }
 
 void CAccountViewTest::Init() {
-	vRandomKeyID.reserve(VECTOR_SIZE);
-	vRandomRegID.reserve(VECTOR_SIZE);
-	vAccount.reserve(VECTOR_SIZE);
+	m_vcRandomKeyID.reserve(VECTOR_SIZE);
+	m_vcRandomRegID.reserve(VECTOR_SIZE);
+	m_vcAccount.reserve(VECTOR_SIZE);
 
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		CKey key;
-		key.MakeNewKey();
-		CPubKey pubkey = key.GetPubKey();
-		CKeyID keyID = pubkey.GetKeyID();
-		vRandomKeyID.push_back(keyID);
+		CKey cKey;
+		cKey.MakeNewKey();
+		CPubKey cPubkey = cKey.GetPubKey();
+		CKeyID cKeyID = cPubkey.GetKeyID();
+		m_vcRandomKeyID.push_back(cKeyID);
 	}
 
 	for (int j = 0; j < VECTOR_SIZE; j++) {
-		CRegID accountId(10000 + j, j);
-		vRandomRegID.push_back(accountId);
+		CRegID cAccountId(10000 + j, j);
+		m_vcRandomRegID.push_back(cAccountId);
 	}
 
 	for (int k = 0; k < VECTOR_SIZE; k++) {
-		CAccount account;
-		account.llValues = k + 1;
-		account.keyID = vRandomKeyID.at(k);
-		vAccount.push_back(account);
+		CAccount cAccount;
+		cAccount.m_ullValues = k + 1;
+		cAccount.m_cKeyID = m_vcRandomKeyID.at(k);
+		m_vcAccount.push_back(cAccount);
 	}
 }
 
 bool CAccountViewTest::CheckKeyMap(bool bCheckExist) {
-	CKeyID keyID;
+	CKeyID cKeyID;
 	for (int i = 0; i < VECTOR_SIZE; i++) {
 		if (bCheckExist) {
-			if (!pViewTip2->GetKeyId(vRandomRegID.at(i), keyID)) {
+			if (!m_pcViewTip2->GetKeyId(m_vcRandomRegID.at(i), cKeyID)) {
 				return false;
 			}
 		} else {
-			if (pViewTip2->GetKeyId(vRandomRegID.at(i), keyID)) {
+			if (m_pcViewTip2->GetKeyId(m_vcRandomRegID.at(i), cKeyID)) {
 				return false;
 			}
 		}
 	}
-
 	return true;
 }
 
 bool CAccountViewTest::HaveAccount() {
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		CUserID userId = vRandomKeyID.at(i);
-		if (pViewTip2->HaveAccount(userId))
+		CUserID cUserId = m_vcRandomKeyID.at(i);
+		if (m_pcViewTip2->HaveAccount(cUserId)) {
 			return false;
+		}
 	}
-
 	return true;
 }
+
 BOOST_FIXTURE_TEST_SUITE(accountview_tests,CAccountViewTest)
 
+BOOST_FIXTURE_TEST_CASE(regid_test,CAccountViewTest) {
+	BOOST_CHECK(m_pcViewTip2);
+	BOOST_CHECK(CheckKeyMap(false));
+	BOOST_CHECK(SetKeyID());
+	BOOST_CHECK(HaveAccount());
 
-
-BOOST_FIXTURE_TEST_CASE(regid_test,CAccountViewTest)
-{
-	BOOST_CHECK(pViewTip2);
-	BOOST_CHECK(CheckKeyMap(false) );
-	BOOST_CHECK(SetKeyID() );
-	BOOST_CHECK(HaveAccount() );
-
-	BOOST_CHECK(CheckKeyMap(true) );
-	BOOST_CHECK(pViewTip2->Flush() );
-	BOOST_CHECK(CheckKeyMap(true) );
+	BOOST_CHECK(CheckKeyMap(true));
+	BOOST_CHECK(m_pcViewTip2->Flush());
+	BOOST_CHECK(CheckKeyMap(true));
 
 	EraseKeyID();
-	BOOST_CHECK(pViewTip2->Flush() );
-	BOOST_CHECK(CheckKeyMap(false) );
+	BOOST_CHECK(m_pcViewTip2->Flush());
+	BOOST_CHECK(CheckKeyMap(false));
 }
 
-BOOST_FIXTURE_TEST_CASE(setaccount_test1,CAccountViewTest)
-{
-	BOOST_CHECK(SetKeyID() );
-	for (int i = 0; i < VECTOR_SIZE; i++) {
-		CUserID userId = vRandomKeyID.at(i);
-		BOOST_CHECK(pViewTip2->SetAccount(userId, vAccount.at(i)) );
-	}
-
-	BOOST_CHECK(TestGetAccount(true) );
-	BOOST_CHECK(pViewTip2->Flush() );
-	BOOST_CHECK(TestGetAccount(true) );
-
-	EraseAccount();
-	EraseKeyID();
-	BOOST_CHECK(pViewTip2->Flush() );
-	BOOST_CHECK(TestGetAccount(false) );
-}
-
-BOOST_FIXTURE_TEST_CASE(setaccount_test2,CAccountViewTest)
-{
+BOOST_FIXTURE_TEST_CASE(setaccount_test1,CAccountViewTest) {
 	BOOST_CHECK(SetKeyID());
 	for (int i = 0; i < VECTOR_SIZE; i++) {
-		CUserID userId = vRandomRegID.at(i);
-		BOOST_CHECK(pViewTip2->SetAccount(userId, vAccount.at(i)));
+		CUserID cUserId = m_vcRandomKeyID.at(i);
+		BOOST_CHECK(m_pcViewTip2->SetAccount(cUserId, m_vcAccount.at(i)));
 	}
 
 	BOOST_CHECK(TestGetAccount(true));
-	BOOST_CHECK(pViewTip2->Flush());
+	BOOST_CHECK(m_pcViewTip2->Flush());
 	BOOST_CHECK(TestGetAccount(true));
 
 	EraseAccount();
 	EraseKeyID();
-	BOOST_CHECK(pViewTip2->Flush());
+	BOOST_CHECK(m_pcViewTip2->Flush());
 	BOOST_CHECK(TestGetAccount(false));
 }
 
-BOOST_FIXTURE_TEST_CASE(BatchWrite_test,CAccountViewTest)
-{
-	BOOST_CHECK(SetKeyID() );
-	pViewTip2->BatchWrite(vAccount);
+BOOST_FIXTURE_TEST_CASE(setaccount_test2,CAccountViewTest) {
+	BOOST_CHECK(SetKeyID());
+	for (int i = 0; i < VECTOR_SIZE; i++) {
+		CUserID cUserId = m_vcRandomRegID.at(i);
+		BOOST_CHECK(m_pcViewTip2->SetAccount(cUserId, m_vcAccount.at(i)));
+	}
 
 	BOOST_CHECK(TestGetAccount(true));
-	BOOST_CHECK(pViewTip2->Flush());
+	BOOST_CHECK(m_pcViewTip2->Flush());
 	BOOST_CHECK(TestGetAccount(true));
 
 	EraseAccount();
 	EraseKeyID();
-	BOOST_CHECK(pViewTip2->Flush());
+	BOOST_CHECK(m_pcViewTip2->Flush());
 	BOOST_CHECK(TestGetAccount(false));
 }
 
+BOOST_FIXTURE_TEST_CASE(BatchWrite_test,CAccountViewTest) {
+	BOOST_CHECK(SetKeyID());
+	m_pcViewTip2->BatchWrite(m_vcAccount);
+
+	BOOST_CHECK(TestGetAccount(true));
+	BOOST_CHECK(m_pcViewTip2->Flush());
+	BOOST_CHECK(TestGetAccount(true));
+
+	EraseAccount();
+	EraseKeyID();
+	BOOST_CHECK(m_pcViewTip2->Flush());
+	BOOST_CHECK(TestGetAccount(false));
+}
 
 BOOST_AUTO_TEST_SUITE_END()

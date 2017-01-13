@@ -1,5 +1,5 @@
-#ifndef CLIENTVERSION_H
-#define CLIENTVERSION_H
+#ifndef DACRS_CLIENTVERSION_H_
+#define DACRS_CLIENTVERSION_H_
 
 #if defined(HAVE_CONFIG_H)
 #include "dacrs-config.h"
@@ -12,7 +12,7 @@
 #define CLIENT_VERSION_MAJOR       1
 #define CLIENT_VERSION_MINOR       1
 #define CLIENT_VERSION_REVISION    2
-#define CLIENT_VERSION_BUILD       6
+#define CLIENT_VERSION_BUILD       7
 
 // Set to true for release, false for prerelease or test build
 #define CLIENT_VERSION_IS_RELEASE  true
@@ -28,4 +28,4 @@
 #define STRINGIZE(X) DO_STRINGIZE(X)
 #define DO_STRINGIZE(X) #X
 
-#endif // CLIENTVERSION_H
+#endif // DACRS_CLIENTVERSION_H_

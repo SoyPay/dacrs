@@ -21,7 +21,7 @@
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT
 // SHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE
-// FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,
+// FOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN ST_CONTRACT, TORT OR OTHERWISE,
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
@@ -183,14 +183,12 @@ struct is_convertible
 #       endif
 };
 
-
 // Detect when a type is not a wchar_t string
 template<typename T> struct is_wchar { typedef int tinyformat_wchar_is_not_supported; };
 template<> struct is_wchar<wchar_t*> {};
 template<> struct is_wchar<const wchar_t*> {};
 template<int n> struct is_wchar<const wchar_t[n]> {};
 template<int n> struct is_wchar<wchar_t[n]> {};
-
 
 // Format the value by casting to type fmtT.  This default implementation
 // should never be called.
@@ -250,11 +248,9 @@ struct convertToInt<T,true>
 
 } // namespace detail
 
-
 //------------------------------------------------------------------------------
 // Variable formatting functions.  May be overridden for user-defined types if
 // desired.
-
 
 // Format a value into a stream. Called from format() for all types by default.
 //
@@ -293,7 +289,6 @@ inline void formatValue(std::ostream& out, const char* /*fmtBegin*/,
         out << value;
 }
 
-
 // Overloaded version for char types to support printing as an integer
 #define TINYFORMAT_DEFINE_FORMATVALUE_CHAR(charType)                  \
 inline void formatValue(std::ostream& out, const char* /*fmtBegin*/,  \
@@ -312,7 +307,6 @@ TINYFORMAT_DEFINE_FORMATVALUE_CHAR(char)
 TINYFORMAT_DEFINE_FORMATVALUE_CHAR(signed char)
 TINYFORMAT_DEFINE_FORMATVALUE_CHAR(unsigned char)
 #undef TINYFORMAT_DEFINE_FORMATVALUE_CHAR
-
 
 //------------------------------------------------------------------------------
 // Tools for emulating variadic templates in C++98.  The basic idea here is
@@ -432,82 +426,63 @@ cog.outl('#define TINYFORMAT_FOREACH_ARGNUM(m) \\\n    ' +
     m(1) m(2) m(3) m(4) m(5) m(6) m(7) m(8) m(9) m(10) m(11) m(12) m(13) m(14) m(15) m(16)
 //[[[end]]]
 
-
-
 namespace detail {
-
 // Class holding current position in format string and an output stream into
 // which arguments are formatted.
-class FormatIterator
-{
-    public:
-        // Flags for features not representable with standard stream state
-        enum ExtraFormatFlags
-        {
-            Flag_None                = 0,
-            Flag_TruncateToPrecision = 1<<0, // truncate length to stream precision()
-            Flag_SpacePadPositive    = 1<<1, // pad positive values with spaces
-            Flag_VariableWidth       = 1<<2, // variable field width in arg list
-            Flag_VariablePrecision   = 1<<3  // variable field precision in arg list
-        };
+class FormatIterator {
+ public:
+	// Flags for features not representable with standard stream state
+	enum ExtraFormatFlags {
+		Flag_None = 0, Flag_TruncateToPrecision = 1 << 0, // truncate length to stream precision()
+		Flag_SpacePadPositive = 1 << 1, // pad positive values with spaces
+		Flag_VariableWidth = 1 << 2, // variable field width in arg list
+		Flag_VariablePrecision = 1 << 3  // variable field precision in arg list
+	};
 
-        // out is the output stream, fmt is the full format string
-        FormatIterator(std::ostream& out, const char* fmt)
-            : m_out(out),
-            m_fmt(fmt),
-            m_extraFlags(Flag_None),
-            m_wantWidth(false),
-            m_wantPrecision(false),
-            m_variableWidth(0),
-            m_variablePrecision(0),
-            m_origWidth(out.width()),
-            m_origPrecision(out.precision()),
-            m_origFlags(out.flags()),
-            m_origFill(out.fill())
-        { }
+	// out is the output stream, fmt is the full format string
+	FormatIterator(std::ostream& out, const char* fmt) :
+			m_out(out), m_fmt(fmt), m_extraFlags(Flag_None), m_wantWidth(false), m_wantPrecision(false), m_variableWidth(
+					0), m_variablePrecision(0), m_origWidth(out.width()), m_origPrecision(out.precision()), m_origFlags(
+					out.flags()), m_origFill(out.fill()) {
+	}
 
-        // Print remaining part of format string.
-        void finish()
-        {
-            // It would be nice if we could do this from the destructor, but we
-            // can't if TINFORMAT_ERROR is used to throw an exception!
-            m_fmt = printFormatStringLiteral(m_out, m_fmt);
-            if(*m_fmt != '\0')
-                TINYFORMAT_Error("tinyformat: Too many conversion specifiers in format string");
-        }
+	// Print remaining part of format string.
+	void finish() {
+		// It would be nice if we could do this from the destructor, but we
+		// can't if TINFORMAT_ERROR is used to throw an exception!
+		m_fmt = printFormatStringLiteral(m_out, m_fmt);
+		if (*m_fmt != '\0')
+			TINYFORMAT_Error("tinyformat: Too many conversion specifiers in format string");
+	}
 
-        ~FormatIterator()
-        {
-            // Restore stream state
-            m_out.width(m_origWidth);
-            m_out.precision(m_origPrecision);
-            m_out.flags(m_origFlags);
-            m_out.fill(m_origFill);
-        }
+	~FormatIterator() {
+		// Restore stream state
+		m_out.width(m_origWidth);
+		m_out.precision(m_origPrecision);
+		m_out.flags(m_origFlags);
+		m_out.fill(m_origFill);
+	}
 
-        template<typename T>
-        void accept(const T& value);
+	template<typename T>
+	void accept(const T& value);
 
-    private:
-        // Parse and return an integer from the string c, as atoi()
-        // On return, c is set to one past the end of the integer.
-        static int parseIntAndAdvance(const char*& c)
-        {
-            int i = 0;
-            for(;*c >= '0' && *c <= '9'; ++c)
-                i = 10*i + (*c - '0');
-            return i;
-        }
+ private:
+	// Parse and return an integer from the string c, as atoi()
+	// On return, c is set to one past the end of the integer.
+	static int parseIntAndAdvance(const char*& c) {
+		int i = 0;
+		for (; *c >= '0' && *c <= '9'; ++c)
+			i = 10 * i + (*c - '0');
+		return i;
+	}
 
-        // Format at most truncLen characters of a C string to the given
-        // stream.  Return true if formatting proceeded (generic version always
-        // returns false)
-        template<typename T>
-        static bool formatCStringTruncate(std::ostream& /*out*/, const T& /*value*/,
-                                        std::streamsize /*truncLen*/)
-        {
-            return false;
-        }
+	// Format at most truncLen characters of a C string to the given
+	// stream.  Return true if formatting proceeded (generic version always
+	// returns false)
+	template<typename T>
+	static bool formatCStringTruncate(std::ostream& /*out*/, const T& /*value*/, std::streamsize /*truncLen*/) {
+		return false;
+	}
 #       define TINYFORMAT_DEFINE_FORMAT_C_STRING_TRUNCATE(type)            \
         static bool formatCStringTruncate(std::ostream& out, type* value,  \
                                         std::streamsize truncLen)          \
@@ -518,67 +493,59 @@ class FormatIterator
             out.write(value, len);                                         \
             return true;                                                   \
         }
-        // Overload for const char* and char*.  Could overload for signed &
-        // unsigned char too, but these are technically unneeded for printf
-        // compatibility.
-        TINYFORMAT_DEFINE_FORMAT_C_STRING_TRUNCATE(const char)
-        TINYFORMAT_DEFINE_FORMAT_C_STRING_TRUNCATE(char)
+	// Overload for const char* and char*.  Could overload for signed &
+	// unsigned char too, but these are technically unneeded for printf
+	// compatibility.
+	TINYFORMAT_DEFINE_FORMAT_C_STRING_TRUNCATE(const char)
+	TINYFORMAT_DEFINE_FORMAT_C_STRING_TRUNCATE(char)
 #       undef TINYFORMAT_DEFINE_FORMAT_C_STRING_TRUNCATE
 
-        // Print literal part of format string and return next format spec
-        // position.
-        //
-        // Skips over any occurrences of '%%', printing a literal '%' to the
-        // output.  The position of the first % character of the next
-        // nontrivial format spec is returned, or the end of string.
-        static const char* printFormatStringLiteral(std::ostream& out,
-                                                    const char* fmt)
-        {
-            const char* c = fmt;
-            for(; true; ++c)
-            {
-                switch(*c)
-                {
-                    case '\0':
-                        out.write(fmt, static_cast<std::streamsize>(c - fmt));
-                        return c;
-                    case '%':
-                        out.write(fmt, static_cast<std::streamsize>(c - fmt));
-                        if(*(c+1) != '%')
-                            return c;
-                        // for "%%", tack trailing % onto next literal section.
-                        fmt = ++c;
-                        break;
-                }
-            }
-        }
+	// Print literal part of format string and return next format spec
+	// position.
+	//
+	// Skips over any occurrences of '%%', printing a literal '%' to the
+	// output.  The position of the first % character of the next
+	// nontrivial format spec is returned, or the end of string.
+	static const char* printFormatStringLiteral(std::ostream& out, const char* fmt) {
+		const char* c = fmt;
+		for (; true; ++c) {
+			switch (*c) {
+			case '\0':
+				out.write(fmt, static_cast<std::streamsize>(c - fmt));
+				return c;
+			case '%':
+				out.write(fmt, static_cast<std::streamsize>(c - fmt));
+				if (*(c + 1) != '%')
+					return c;
+				// for "%%", tack trailing % onto next literal section.
+				fmt = ++c;
+				break;
+			}
+		}
+	}
 
-        static const char* streamStateFromFormat(std::ostream& out,
-                                                 unsigned int& extraFlags,
-                                                 const char* fmtStart,
-                                                 int variableWidth,
-                                                 int variablePrecision);
+	static const char* streamStateFromFormat(std::ostream& out, unsigned int& extraFlags, const char* fmtStart,
+			int variableWidth, int variablePrecision);
 
-        // Private copy & assign: Kill gcc warnings with -Weffc++
-        FormatIterator(const FormatIterator&);
-        FormatIterator& operator=(const FormatIterator&);
+	// Private copy & assign: Kill gcc warnings with -Weffc++
+	FormatIterator(const FormatIterator&);
+	FormatIterator& operator=(const FormatIterator&);
 
-        // Stream, current format string & state
-        std::ostream& m_out;
-        const char* m_fmt;
-        unsigned int m_extraFlags;
-        // State machine info for handling of variable width & precision
-        bool m_wantWidth;
-        bool m_wantPrecision;
-        int m_variableWidth;
-        int m_variablePrecision;
-        // Saved stream state
-        std::streamsize m_origWidth;
-        std::streamsize m_origPrecision;
-        std::ios::fmtflags m_origFlags;
-        char m_origFill;
+	// Stream, current format string & state
+	std::ostream& m_out;
+	const char* m_fmt;
+	unsigned int m_extraFlags;
+	// State machine info for handling of variable width & precision
+	bool m_wantWidth;
+	bool m_wantPrecision;
+	int m_variableWidth;
+	int m_variablePrecision;
+	// Saved stream state
+	std::streamsize m_origWidth;
+	std::streamsize m_origPrecision;
+	std::ios::fmtflags m_origFlags;
+	char m_origFill;
 };
-
 
 // Accept a value for formatting into the internal stream.
 template<typename T>
@@ -656,7 +623,6 @@ void FormatIterator::accept(const T& value)
     m_extraFlags = Flag_None;
     m_fmt = fmtEnd;
 }
-
 
 // Parse a format string and set the stream state accordingly.
 //
@@ -888,7 +854,6 @@ TINYFORMAT_FOREACH_ARGNUM(TINYFORMAT_MAKE_FORMAT_DETAIL)
 #endif // End C++98 variadic template emulation for format()
 
 } // namespace detail
-
 
 //------------------------------------------------------------------------------
 // Implement all the main interface functions here in terms of detail::format()

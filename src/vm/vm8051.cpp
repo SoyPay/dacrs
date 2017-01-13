@@ -79,17 +79,17 @@ struct __MapExterFun {
 };
 
 static bool GetKeyId(const CAccountViewCache &view, vector<unsigned char> &ret,
-		CKeyID &KeyId) {
+		CKeyID &cKeyId) {
 	if (ret.size() == 6) {
 		CRegID reg(ret);
-		KeyId = reg.getKeyID(view);
+		cKeyId = reg.getKeyID(view);
 	} else if (ret.size() == 34) {
 		string addr(ret.begin(), ret.end());
-		KeyId = CKeyID(addr);
+		cKeyId = CKeyID(addr);
 	}else{
 		return false;
 	}
-	if (KeyId.IsEmpty())
+	if (cKeyId.IsEmpty())
 		return false;
 
 	return true;
@@ -137,7 +137,7 @@ static bool GetData(unsigned char * ipara, vector<std::shared_ptr < std::vector<
 	return true;
 }
 /**
- *COMP_RET Int64Compare(const Int64* const pM1, const Int64* const pM2)
+ *COMP_RET Int64Compare(const ST_INT64* const pM1, const ST_INT64* const pM2)
  * 这个函数式从中间层传了两个参数过来:
  * 1.第一个是int64_t类型的数据
  * 2.第一个是int64_t类型的数据
@@ -165,7 +165,7 @@ static RET_DEFINE ExInt64CompFunc(unsigned char *ipara,void * pVmScriptRun) {
 	}
 
 	auto tem =  std::make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << rslt;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
@@ -173,7 +173,7 @@ static RET_DEFINE ExInt64CompFunc(unsigned char *ipara,void * pVmScriptRun) {
 	return std::make_tuple (true,0, tem);
 }
 /**
- *bool Int64Mul(const Int64* const pM1, const Int64* const pM2, Int64* const pOutM)
+ *bool Int64Mul(const ST_INT64* const pM1, const ST_INT64* const pM2, ST_INT64* const pOutM)
  * 这个函数式从中间层传了两个参数过来:
  * 1.第一个是int64_t类型的数据
  * 2.第一个是int64_t类型的数据
@@ -193,7 +193,7 @@ static RET_DEFINE ExInt64MullFunc(unsigned char *ipara,void * pVmScriptRun) {
 	m3 = m1 * m2;
 
 	auto tem =  std::make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << m3;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
@@ -201,7 +201,7 @@ static RET_DEFINE ExInt64MullFunc(unsigned char *ipara,void * pVmScriptRun) {
 	return std::make_tuple (true,0, tem);
 }
 /**
- *bool Int64Add(const Int64* const pM1, const Int64* const pM2, Int64* const pOutM)
+ *bool Int64Add(const ST_INT64* const pM1, const ST_INT64* const pM2, ST_INT64* const pOutM)
  * 这个函数式从中间层传了两个参数过来:
  * 1.第一个是int64_t类型的数据
  * 2.第一个是int64_t类型的数据
@@ -221,7 +221,7 @@ static RET_DEFINE ExInt64AddFunc(unsigned char *ipara,void * pVmScriptRun) {
 	m3 = m1 + m2;
 
 	auto tem =  std::make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << m3;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
@@ -229,7 +229,7 @@ static RET_DEFINE ExInt64AddFunc(unsigned char *ipara,void * pVmScriptRun) {
 	return std::make_tuple (true,0, tem);
 }
 /**
- *bool Int64Sub(const Int64* const pM1, const Int64* const pM2, Int64* const pOutM)
+ *bool Int64Sub(const ST_INT64* const pM1, const ST_INT64* const pM2, ST_INT64* const pOutM)
  * 这个函数式从中间层传了两个参数过来:
  * 1.第一个是int64_t类型的数据
  * 2.第一个是int64_t类型的数据
@@ -248,7 +248,7 @@ static RET_DEFINE ExInt64SubFunc(unsigned char *ipara,void * pVmScriptRun) {
 	m3 = m1 - m2;
 
 	auto tem =  std::make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << m3;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
@@ -256,7 +256,7 @@ static RET_DEFINE ExInt64SubFunc(unsigned char *ipara,void * pVmScriptRun) {
 	return std::make_tuple (true,0, tem);
 }
 /**
- *bool Int64Div(const Int64* const pM1, const Int64* const pM2, Int64* const pOutM)
+ *bool Int64Div(const ST_INT64* const pM1, const ST_INT64* const pM2, ST_INT64* const pOutM)
  * 这个函数式从中间层传了两个参数过来:
  * 1.第一个是int64_t类型的数据
  * 2.第一个是int64_t类型的数据
@@ -278,7 +278,7 @@ static RET_DEFINE ExInt64DivFunc(unsigned char *ipara,void * pVmScriptRun) {
 		return std::make_tuple (false,0, tem);
 	}
 	m3 = m1 / m2;
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << m3;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
@@ -301,7 +301,7 @@ static RET_DEFINE ExSha256Func(unsigned char *ipara,void * pVmScriptRun) {
 	uint256 rslt = Hash(&retdata.at(0).get()->at(0), &retdata.at(0).get()->at(0) + retdata.at(0).get()->size());
 
 	auto tem =  std::make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << rslt;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
@@ -440,7 +440,7 @@ static RET_DEFINE ExVerifySignatureFunc(unsigned char *ipara,void * pVmScriptRun
 		LogPrint("INFO", "ExVerifySignatureFunc call CheckSignScript verify signature failed!\n");
 		return std::make_tuple(false, 0, tem);
 	}
-	CDataStream tep(SER_DISK, CLIENT_VERSION);
+	CDataStream tep(SER_DISK, g_sClientVersion);
 	tep << rlt;
 	vector<unsigned char> tep1(tep.begin(), tep.end());
 	(*tem.get()).push_back(tep1);
@@ -464,7 +464,7 @@ static RET_DEFINE ExLogPrintFunc(unsigned char *ipara,void * pVmScriptRun) {
     {
     	return RetFalse(string(__FUNCTION__)+"para  err !");
     }
-	CDataStream tep1(*retdata.at(0), SER_DISK, CLIENT_VERSION);
+	CDataStream tep1(*retdata.at(0), SER_DISK, g_sClientVersion);
 	bool flag ;
 	tep1 >> flag;
 	string pdata((*retdata[1]).begin(), (*retdata[1]).end());
@@ -509,7 +509,7 @@ static RET_DEFINE ExGetTxContractsFunc(unsigned char * ipara,void * pVmScriptRun
 
 	if (GetTransaction(pBaseTx, hash1, *pVmScript->GetScriptDB(), false)) {
 		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
-		 (*tem.get()).push_back(tx->vContract);
+		 (*tem.get()).push_back(tx->m_vchContract);
 		 flag = true;
 	}
 	return std::make_tuple (flag, 0,tem);
@@ -526,7 +526,7 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
     {
     	return RetFalse(string(__FUNCTION__)+"para  err !");
     }
-	CDataStream tep1(*retdata.at(0), SER_DISK, CLIENT_VERSION);
+	CDataStream tep1(*retdata.at(0), SER_DISK, g_sClientVersion);
 	uint256 hash1;
 	tep1 >>hash1;
 //	LogPrint("vm","ExGetTxAccountsFunc:%s",hash1.GetHex().c_str());
@@ -537,7 +537,7 @@ static RET_DEFINE ExGetTxAccountsFunc(unsigned char * ipara, void * pVmScriptRun
 
 	if (GetTransaction(pBaseTx, hash1, *pVmScript->GetScriptDB(), false)) {
 		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
-		vector<unsigned char> item = boost::get<CRegID>(tx->srcRegId).GetVec6();
+		vector<unsigned char> item = boost::get<CRegID>(tx->m_cSrcRegId).GetVec6();
 		(*tem.get()).push_back(item);
 		flag = true;
 	}
@@ -570,10 +570,10 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 	}
 
 	auto tem =  std::make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     vector<char> te;
-    tep << aAccount.PublicKey;
-    assert(aAccount.PublicKey.IsFullyValid());
+    tep << aAccount.m_cPublicKey;
+    assert(aAccount.m_cPublicKey.IsFullyValid());
     tep >>te;
     vector<unsigned char> tep1(te.begin(),te.end());
     (*tem.get()).push_back(tep1);
@@ -581,7 +581,7 @@ static RET_DEFINE ExGetAccountPublickeyFunc(unsigned char * ipara,void * pVmScri
 	return std::make_tuple (true,0, tem);
 }
 /**
- *bool QueryAccountBalance(const unsigned char* const account,Int64* const pBalance)
+ *bool QueryAccountBalance(const unsigned char* const account,ST_INT64* const pBalance)
  * 这个函数式从中间层传了一个参数过来:
  * 1.第一个是 账户id,六个字节
  */
@@ -609,7 +609,7 @@ static RET_DEFINE ExQueryAccountBalanceFunc(unsigned char * ipara,void * pVmScri
 	else
 	{
 		uint64_t nbalance = aAccount.GetRawBalance();
-		CDataStream tep(SER_DISK, CLIENT_VERSION);
+		CDataStream tep(SER_DISK, g_sClientVersion);
 		tep << nbalance;
 		vector<unsigned char> tep1(tep.begin(),tep.end());
 		(*tem.get()).push_back(tep1);
@@ -639,7 +639,7 @@ static RET_DEFINE ExGetTxConFirmHeightFunc(unsigned char * ipara,void * pVmScrip
 		return std::make_tuple (false,0, tem);
 	}
 
-   CDataStream tep(SER_DISK, CLIENT_VERSION);
+   CDataStream tep(SER_DISK, g_sClientVersion);
 	tep << nHeight;
 	vector<unsigned char> tep1(tep.begin(),tep.end());
 	(*tem.get()).push_back(tep1);
@@ -667,15 +667,15 @@ static RET_DEFINE ExGetBlockHashFunc(unsigned char * ipara,void * pVmScriptRun) 
 		return std::make_tuple (false,0, tem);
 	}
 
-	if(chainActive.Height() < height){	         //获取比当前高度高的数据是不可以的
+	if(g_cChainActive.Height() < height){	         //获取比当前高度高的数据是不可以的
 		return std::make_tuple (false, 0,tem);
 	}
-	CBlockIndex *pindex = chainActive[height];
+	CBlockIndex *pindex = g_cChainActive[height];
 	uint256 blockHash = pindex->GetBlockHash();
 
 
 //	LogPrint("vm","ExGetBlockHashFunc:%s",HexStr(blockHash).c_str());
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << blockHash;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
@@ -689,7 +689,7 @@ static RET_DEFINE ExGetCurRunEnvHeightFunc(unsigned char * ipara,void * pVmEvn) 
 	int height = pVmRunEvn->GetComfirHeight();
 
 	auto tem =  std::make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << height;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
@@ -724,7 +724,7 @@ static RET_DEFINE ExWriteDataDBFunc(unsigned char * ipara,void * pVmEvn) {
 		(*m_dblog.get()).push_back(operlog);
 	}
 	auto tem =  std::make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << flag;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
@@ -763,7 +763,7 @@ static RET_DEFINE ExDeleteDataDBFunc(unsigned char * ipara,void * pVmEvn) {
 		m_dblog.get()->push_back(operlog);
 	}
 	auto tem =  std::make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << flag;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
@@ -816,7 +816,7 @@ static RET_DEFINE ExGetDBSizeFunc(unsigned char * ipara,void * pVmEvn) {
 	}
 	else
 	{
-		CDataStream tep(SER_DISK, CLIENT_VERSION);
+		CDataStream tep(SER_DISK, g_sClientVersion);
 		tep << count;
 		vector<unsigned char> tep1(tep.begin(),tep.end());
 		(*tem.get()).push_back(tep1);
@@ -877,7 +877,7 @@ static RET_DEFINE ExGetCurTxHash(unsigned char * ipara,void * pVmEvn) {
 	CVmRunEvn *pVmRunEvn = (CVmRunEvn *)pVmEvn;
 	uint256 hash = pVmRunEvn->GetCurTxHash();
 	auto tem =  std::make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << hash;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
@@ -921,7 +921,7 @@ static RET_DEFINE ExModifyDataDBVavleFunc(unsigned char * ipara,void * pVmEvn)
 
 	step =(((int64_t)(*retdata.at(1)).size())- (int64_t)(vTemp.size()) -1);
 	auto tem =  std::make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
     tep << flag;
     vector<unsigned char> tep1(tep.begin(),tep.end());
     (*tem.get()).push_back(tep1);
@@ -944,7 +944,7 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmEvn)
   	 }
 	vector<CVmOperate> source;
 	CVmOperate temp;
-	int Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
+	int Size = ::GetSerializeSize(temp, SER_NETWORK, g_sProtocolVersion);
 	int datadsize = retdata.at(0)->size();
 	int count = datadsize/Size;
 	if(datadsize%Size != 0)
@@ -952,7 +952,7 @@ static RET_DEFINE ExWriteOutputFunc(unsigned char * ipara,void * pVmEvn)
 //	  assert(0);
 	 return RetFalse("para err");
 	}
-	CDataStream ss(*retdata.at(0),SER_DISK, CLIENT_VERSION);
+	CDataStream ss(*retdata.at(0),SER_DISK, g_sClientVersion);
 
 	while(count--)
 	{
@@ -1054,8 +1054,8 @@ enum COMPRESS_TYPE {
 static bool Decompress(vector<unsigned char>& format,vector<unsigned char> &contact,std::vector<unsigned char> &ret){
 
 	try {
-		CDataStream ds(contact,SER_DISK, CLIENT_VERSION);
-		CDataStream retdata(SER_DISK, CLIENT_VERSION);
+		CDataStream ds(contact,SER_DISK, g_sClientVersion);
+		CDataStream retdata(SER_DISK, g_sClientVersion);
 		for (auto item = format.begin(); item != format.end();item++) {
 			switch(*item) {
 				case U16_TYPE: {
@@ -1161,7 +1161,7 @@ static RET_DEFINE ExDeCompressContactFunc(unsigned char *ipara,void *pVmEvn){
 	if (GetTransaction(pBaseTx, hash1, *pVmScript->GetScriptDB(), false)) {
 		CTransaction *tx = static_cast<CTransaction*>(pBaseTx.get());
 		 std::vector<unsigned char> outContact;
-		if (!Decompress(*retdata.at(0), tx->vContract, outContact)) {
+		if (!Decompress(*retdata.at(0), tx->m_vchContract, outContact)) {
 			return RetFalse(string(__FUNCTION__) + "para  err !");
 		}
 		 (*tem.get()).push_back(outContact);
@@ -1176,21 +1176,21 @@ static RET_DEFINE GetCurTxPayAmountFunc(unsigned char *ipara,void *pVmEvn){
 	uint64_t lvalue =pVmRunEvn->GetValue();
 
 	auto tem =  std::make_shared<std::vector< vector<unsigned char> > >();
-    CDataStream tep(SER_DISK, CLIENT_VERSION);
+    CDataStream tep(SER_DISK, g_sClientVersion);
 
     tep << lvalue;
     vector<unsigned char> tep1(tep.begin(),tep.end());
 	(*tem.get()).push_back(tep1);
 	return std::make_tuple (true,0, tem);
 }
-struct S_APP_ID
+struct ST_APP_ID
 {
-	unsigned char idlen;                    //!the len of the tag
-	unsigned char ID[CAppCFund::MAX_TAG_SIZE];     //! the ID for the
+	unsigned char uchIdLen;                    //!the len of the tag
+	unsigned char arruchID[CAppCFund::MAX_TAG_SIZE];     //! the ID for the
 
 	const vector<unsigned char> GetIdV() const {
-		assert(sizeof(ID) >= idlen);
-		vector<unsigned char> Id(&ID[0], &ID[idlen]);
+		assert(sizeof(arruchID) >= uchIdLen);
+		vector<unsigned char> Id(&arruchID[0], &arruchID[uchIdLen]);
 		return (Id);
 	}
 }__attribute((aligned (1)));
@@ -1201,13 +1201,13 @@ static RET_DEFINE GetUserAppAccValue(unsigned char * ipara,void * pVmScript){
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
     if(!GetData(ipara,retdata) ||retdata.size() != 1
-    	|| retdata.at(0).get()->size() != sizeof(S_APP_ID))
+    	|| retdata.at(0).get()->size() != sizeof(ST_APP_ID))
     {
     	return RetFalse(string(__FUNCTION__)+"para  err !");
     }
 
-    S_APP_ID accid;
-    memcpy(&accid, &retdata.at(0).get()->at(0), sizeof(S_APP_ID));
+    ST_APP_ID accid;
+    memcpy(&accid, &retdata.at(0).get()->at(0), sizeof(ST_APP_ID));
 
     bool flag = false;
    	shared_ptr<CAppUserAccout> sptrAcc;
@@ -1218,7 +1218,7 @@ static RET_DEFINE GetUserAppAccValue(unsigned char * ipara,void * pVmScript){
 		value = sptrAcc->getllValues();
 //	 	cout<<"read:"<<endl;
 //	 	cout<<sptrAcc->toString()<<endl;
-		CDataStream tep(SER_DISK, CLIENT_VERSION);
+		CDataStream tep(SER_DISK, g_sClientVersion);
 		tep << value;
 		vector<unsigned char> tep1(tep.begin(),tep.end());
 		(*tem.get()).push_back(tep1);
@@ -1234,7 +1234,7 @@ static RET_DEFINE GetUserAppAccFoudWithTag(unsigned char * ipara,void * pVmScrip
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 	unsigned int Size(0);
 	CAppFundOperate temp;
-	Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
+	Size = ::GetSerializeSize(temp, SER_NETWORK, g_sProtocolVersion);
 
     if(!GetData(ipara,retdata) ||retdata.size() != 1
     	|| retdata.at(0).get()->size() !=Size)
@@ -1242,7 +1242,7 @@ static RET_DEFINE GetUserAppAccFoudWithTag(unsigned char * ipara,void * pVmScrip
 			return RetFalse(string(__FUNCTION__)+"para err !");
     }
 
-    CDataStream ss(*retdata.at(0),SER_DISK, CLIENT_VERSION);
+    CDataStream ss(*retdata.at(0),SER_DISK, g_sClientVersion);
     CAppFundOperate userfund;
     ss>>userfund;
 
@@ -1252,11 +1252,11 @@ static RET_DEFINE GetUserAppAccFoudWithTag(unsigned char * ipara,void * pVmScrip
     CAppCFund fund;
 	if(pVmScriptRun->GetAppUserAccout(userfund.GetAppUserV(),sptrAcc))
 	{
-		if(!sptrAcc->GetAppCFund(fund,userfund.GetFundTagV(),userfund.outheight))	{
+		if(!sptrAcc->GetAppCFund(fund,userfund.GetFundTagV(),userfund.m_unOutHeight))	{
 			return RetFalse(string(__FUNCTION__)+"tag err !");
 		}
-		CDataStream tep(SER_DISK, CLIENT_VERSION);
-		tep << fund.getvalue() ;
+		CDataStream tep(SER_DISK, g_sClientVersion);
+		tep << fund.getValue() ;
 		vector<unsigned char> tep1(tep.begin(),tep.end());
 		(*tem.get()).push_back(tep1);
 		flag = true;
@@ -1275,7 +1275,7 @@ static RET_DEFINE ExWriteOutAppOperateFunc(unsigned char * ipara,void * pVmEvn)
 	vector<std::shared_ptr < vector<unsigned char> > > retdata;
 
 	CAppFundOperate temp;
-	unsigned int Size = ::GetSerializeSize(temp, SER_NETWORK, PROTOCOL_VERSION);
+	unsigned int Size = ::GetSerializeSize(temp, SER_NETWORK, g_sProtocolVersion);
 
     if(!GetData(ipara,retdata) ||retdata.size() != 1 || (retdata.at(0).get()->size()%Size) != 0 )
     {
@@ -1283,13 +1283,13 @@ static RET_DEFINE ExWriteOutAppOperateFunc(unsigned char * ipara,void * pVmEvn)
   	 }
 
 	int count = retdata.at(0).get()->size()/Size;
-	CDataStream ss(*retdata.at(0),SER_DISK, CLIENT_VERSION);
+	CDataStream ss(*retdata.at(0),SER_DISK, g_sClientVersion);
 
 	int64_t step =-1;
 	while(count--)
 	{
 		ss >> temp;
-		if(pVmRunEvn->GetComfirHeight() > nFreezeBlackAcctHeight && temp.mMoney < 0) //不能小于0,防止 上层传错金额小于20150904
+		if(pVmRunEvn->GetComfirHeight() > g_sFreezeBlackAcctHeight && temp.m_llMoney < 0) //不能小于0,防止 上层传错金额小于20150904
 		{
 			return RetFalse("para err");
 		}
@@ -1490,7 +1490,7 @@ int64_t CVm8051::run(uint64_t maxstep, CVmRunEvn *pVmEvn) {
 			}
 			else if(std::get<0>(retdata) == -1){
                 //!<SDK 层直接退出
-				LogPrint("CONTRACT_TX", "call method id:%d methodName:%s\n", methodID, API_METOHD[methodID]);
+				LogPrint("EM_CONTRACT_TX", "call method id:%d methodName:%s\n", methodID, API_METOHD[methodID]);
 				return -1;
 			}
 			else
@@ -1505,7 +1505,7 @@ int64_t CVm8051::run(uint64_t maxstep, CVmRunEvn *pVmEvn) {
 			return 0;
 		}
 		if (step >= (int64_t)MAX_BLOCK_RUN_STEP || step >= (int64_t)maxstep){
-			LogPrint("CONTRACT_TX", "failed step:%ld\n", step);
+			LogPrint("EM_CONTRACT_TX", "failed step:%ld\n", step);
 			return -1;		//force return
 		}
 	}

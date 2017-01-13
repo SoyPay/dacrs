@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DACRS_UTIL_H
-#define DACRS_UTIL_H
+#ifndef DACRS_UTIL_H_
+#define DACRS_UTIL_H_
 
 #if defined(HAVE_CONFIG_H)
 #include "dacrs-config.h"
@@ -89,11 +89,10 @@ inline void MilliSleep(int64_t n) {
 #endif
 }
 
-
-extern string strMiscWarning;
-extern bool fNoListen;
-extern volatile bool fReopenDebugLog;
-extern CClientUIInterface * pUIInterface;
+extern string g_strMiscWarning;
+extern bool g_bNoListen;
+extern volatile bool g_bReopenDebugLog;
+extern CClientUIInterface * g_pUIInterface;
 
 void RandAddSeed();
 void RandAddSeedPerfmon();
@@ -102,19 +101,16 @@ void SetupEnvironment();
 //bool GetBoolArg(const string& strArg, bool fDefault);
 
 /* Return true if log accepts specified category */
-bool LogAcceptCategory(const char* category);
+bool LogAcceptCategory(const char* pszCategory);
 /* Send a string to the log output */
-int LogPrintStr(const string &str);
-extern string GetLogHead(int line, const char* file, const char* category);
-int LogPrintStr(const char* category, const string &str);
-
+int LogPrintStr(const string &strLog);
+extern string GetLogHead(int nLine, const char* pszFile, const char* pszCategory);
+int LogPrintStr(const char* pszCategory, const string &strLog);
 
 #define strprintf tfm::format
 
 #define ERRORMSG(...)  error2(__LINE__, __FILE__, __VA_ARGS__)
 #define LogPrint(tag, ...) LogTrace(tag, __LINE__, __FILE__, __VA_ARGS__)
-
-
 
 #define MAKE_ERROR_AND_TRACE_FUNC(n)                                        \
     /*   Print to debug.log if -debug=category switch is given OR category is NULL. */ \
@@ -132,129 +128,124 @@ int LogPrintStr(const char* category, const string &str);
     }
 
 
-
 TINYFORMAT_FOREACH_ARGNUM(MAKE_ERROR_AND_TRACE_FUNC)
 
-
-static inline bool error2(int line, const char* file,const char* format) {
-//	LogPrintStr(tfm::format("[%s:%d]: ", file, line)+string("ERROR: ") + format + "\n");
-	LogPrintStr("ERROR",  GetLogHead(line,file,"ERROR") + format + "\n");
+static inline bool error2(int nLine, const char* pszFile,const char* pszFormat) {
+	LogPrintStr("ERROR",  GetLogHead(nLine, pszFile,"ERROR") + pszFormat + "\n");
 	return false;
 }
 
-extern string GetLogHead(int line, const char* file,const char* category);
+extern string GetLogHead(int nLine, const char* pszFile, const char* pszCategory);
 
-static inline int LogTrace(const char* category, int line, const char* file, const char* format) {
-
-	return LogPrintStr(category,  GetLogHead(line,file,category) + format);
+static inline int LogTrace(const char* pszCategory, int nLine, const char* pszFile, const char* pszFormat) {
+	return LogPrintStr(pszCategory,  GetLogHead(nLine, pszFile, pszCategory) + pszFormat);
 }
 
-//static inline bool errorTrace(const char* format) {
-//	LogPrintStr(string("ERROR: ") + format + "\n");
-//	return false;
-//}
-
-void LogException(std::exception* pex, const char* pszThread);
-void PrintExceptionContinue(std::exception* pex, const char* pszThread);
-string FormatMoney(int64_t n, bool fPlus = false);
-bool ParseMoney(const string& str, int64_t& nRet);
-bool ParseMoney(const char* pszIn, int64_t& nRet);
-string SanitizeString(const string& str);
-vector<unsigned char> ParseHex(const char* psz);
-vector<unsigned char> ParseHex(const string& str);
-bool IsHex(const string& str);
-vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid = NULL);
-string DecodeBase64(const string& str);
-string EncodeBase64(const unsigned char* pch, size_t len);
-string EncodeBase64(const string& str);
-vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid = NULL);
-string DecodeBase32(const string& str);
-string EncodeBase32(const unsigned char* pch, size_t len);
-string EncodeBase32(const string& str);
-bool WildcardMatch(const char* psz, const char* mask);
-bool WildcardMatch(const string& str, const string& mask);
-void FileCommit(FILE *fileout);
-bool TruncateFile(FILE *file, unsigned int length);
+void LogException(std::exception* pExcep, const char* pszThread);
+void PrintExceptionContinue(std::exception* pExcep, const char* pszThread);
+string FormatMoney(int64_t llFormat, bool bPlus = false);
+bool ParseMoney(const string& strContent, int64_t& llRet);
+bool ParseMoney(const char* pszIn, int64_t& llRet);
+string SanitizeString(const string& strContent);
+vector<unsigned char> ParseHex(const char* pszContent);
+vector<unsigned char> ParseHex(const string& strContent);
+bool IsHex(const string& strContent);
+vector<unsigned char> DecodeBase64(const char* pszContent, bool* pbInvalid = NULL);
+string DecodeBase64(const string& strContent);
+string EncodeBase64(const unsigned char* pszContent, size_t unLength);
+string EncodeBase64(const string& strContent);
+vector<unsigned char> DecodeBase32(const char* pszContent, bool* pbInvalid = NULL);
+string DecodeBase32(const string& strContent);
+string EncodeBase32(const unsigned char* pszContent, size_t unlength);
+string EncodeBase32(const string& strContent);
+bool WildcardMatch(const char* pszContent, const char* pszMask);
+bool WildcardMatch(const string& strContent, const string& strMask);
+void FileCommit(FILE *pFileout);
+bool TruncateFile(FILE *pFile, unsigned int unLength);
 int RaiseFileDescriptorLimit(int nMinFD);
-void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
-bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest);
-bool TryCreateDirectory(const boost::filesystem::path& p);
+void AllocateFileRange(FILE *pFile, unsigned int unOffset, unsigned int unLength);
+bool RenameOver(boost::filesystem::path cSrc, boost::filesystem::path cDest);
+bool TryCreateDirectory(const boost::filesystem::path& cPath);
 boost::filesystem::path GetDefaultDataDir();
-const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
+const boost::filesystem::path &GetDataDir(bool bNetSpecific = true);
 boost::filesystem::path GetConfigFile();
 boost::filesystem::path GetPidFile();
+
 #ifndef WIN32
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
 #endif
-void ReadConfigFile(map<string, string>& mapSettingsRet,
-		map<string, vector<string> >& mapMultiSettingsRet);
+
+void ReadConfigFile(map<string, string>& mapSettingsRet, map<string, vector<string> >& mapMultiSettingsRet);
+
 #ifdef WIN32
-boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
+boost::filesystem::path GetSpecialFolderPath(int nFolder, bool bCreate = true);
 #endif
+
 boost::filesystem::path GetTempPath();
 void ShrinkDebugFile();
 int GetRandInt(int nMax);
-uint64_t GetRand(uint64_t nMax);
+uint64_t GetRand(uint64_t ullMax);
 uint256 GetRandHash();
 int64_t GetTime();
-void SetMockTime(int64_t nMockTimeIn);
+void SetMockTime(int64_t llMockTimeIn);
 int64_t GetAdjustedTime();
 int64_t GetTimeOffset();
 string FormatFullVersion();
-string FormatSubVersion(const string& name, int nClientVersion, const vector<string>& comments);
+string FormatSubVersion(const string& strName, int nClientVersion, const vector<string>& vstrComments);
 void StringReplace(string &strBase, string strSrc, string strDes);
-void AddTimeData(const CNetAddr& ip, int64_t nTime);
+void AddTimeData(const CNetAddr& cIp, int64_t llTime);
 void runCommand(string strCommand);
 
-inline string i64tostr(int64_t n) {
-	return strprintf("%d", n);
+inline string i64tostr(int64_t llNum) {
+	return strprintf("%d", llNum);
 }
 
-inline string itostr(int n) {
-	return strprintf("%d", n);
+inline string itostr(int nNum) {
+	return strprintf("%d", nNum);
 }
 
-inline int64_t atoi64(const char* psz) {
+inline int64_t atoi64(const char* pszString) {
 #ifdef _MSC_VER
-	return _atoi64(psz);
+	return _atoi64(pszString);
 #else
-	return strtoll(psz, NULL, 10);
+	return strtoll(pszString, NULL, 10);
 #endif
 }
 
-inline int64_t atoi64(const string& str) {
+inline int64_t atoi64(const string& strString) {
 #ifdef _MSC_VER
-	return _atoi64(str.c_str());
+	return _atoi64(strString.c_str());
 #else
-	return strtoll(str.c_str(), NULL, 10);
+	return strtoll(strString.c_str(), NULL, 10);
 #endif
 }
 
-inline int atoi(const string& str) {
-	return atoi(str.c_str());
+inline int atoi(const string& strString) {
+	return atoi(strString.c_str());
 }
 
-inline int roundint(double d) {
-	return (int) (d > 0 ? d + 0.5 : d - 0.5);
+inline int roundint(double dNum) {
+	return (int) (dNum > 0 ? dNum + 0.5 : dNum - 0.5);
 }
 
-inline int64_t roundint64(double d) {
-	return (int64_t) (d > 0 ? d + 0.5 : d - 0.5);
+inline int64_t roundint64(double dNum) {
+	return (int64_t) (dNum > 0 ? dNum + 0.5 : dNum - 0.5);
 }
 
-inline int64_t abs64(int64_t n) {
-	return (n >= 0 ? n : -n);
+inline int64_t abs64(int64_t llNum) {
+	return (llNum >= 0 ? llNum : -llNum);
 }
 
 template<typename T>
-string HexStr(const T itbegin, const T itend, bool fSpaces = false) {
+string HexStr(const T itbegin, const T itend, bool bSpaces = false) {
 	string rv;
 	static const char hexmap[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 	rv.reserve((itend - itbegin) * 3);
 	for (T it = itbegin; it < itend; ++it) {
 		unsigned char val = (unsigned char) (*it);
-		if (fSpaces && it != itbegin)
+		if (bSpaces && it != itbegin) {
 			rv.push_back(' ');
+		}
 		rv.push_back(hexmap[val >> 4]);
 		rv.push_back(hexmap[val & 15]);
 	}
@@ -263,30 +254,18 @@ string HexStr(const T itbegin, const T itend, bool fSpaces = false) {
 }
 
 template<typename T>
-inline string HexStr(const T& vch, bool fSpaces = false) {
-	return HexStr(vch.begin(), vch.end(), fSpaces);
+inline string HexStr(const T& vch, bool bSpaces = false) {
+	return HexStr(vch.begin(), vch.end(), bSpaces);
 }
 
 template<typename T>
-void PrintHex(const T pbegin, const T pend, const char* pszFormat = "%s", bool fSpaces = true) {
-	LogPrint("INFO",pszFormat, HexStr(pbegin, pend, fSpaces).c_str());
+void PrintHex(const T pbegin, const T pend, const char* pszFormat = "%s", bool bSpaces = true) {
+	LogPrint("INFO",pszFormat, HexStr(pbegin, pend, bSpaces).c_str());
 }
 
-inline void PrintHex(const vector<unsigned char>& vch, const char* pszFormat = "%s", bool fSpaces = true) {
-	LogPrint("INFO",pszFormat, HexStr(vch, fSpaces).c_str());
+inline void PrintHex(const vector<unsigned char>& vchContent, const char* pszFormat = "%s", bool bSpaces = true) {
+	LogPrint("INFO",pszFormat, HexStr(vchContent, bSpaces).c_str());
 }
-
-//inline int64_t GetPerformanceCounter() {
-//	int64_t nCounter = 0;
-//#ifdef WIN32
-//	QueryPerformanceCounter((LARGE_INTEGER*) &nCounter);
-//#else
-//	timeval t;
-//	gettimeofday(&t, NULL);
-//	nCounter = (int64_t) t.tv_sec * 1000000 + t.tv_usec;
-//#endif
-//	return nCounter;
-//}
 
 inline int64_t GetTimeMillis() {
 	return (boost::posix_time::ptime(boost::posix_time::microsec_clock::universal_time())
@@ -298,12 +277,13 @@ inline int64_t GetTimeMicros() {
 			- boost::posix_time::ptime(boost::gregorian::date(1970, 1, 1))).total_microseconds();
 }
 
-string DateTimeStrFormat(const char* pszFormat, int64_t nTime);
+string DateTimeStrFormat(const char* pszFormat, int64_t llTime);
 
 template<typename T>
 void skipspaces(T& it) {
-	while (isspace(*it))
+	while (isspace(*it)) {
 		++it;
+	}
 }
 
 inline bool IsSwitchChar(char c) {
@@ -342,60 +322,60 @@ inline bool IsSwitchChar(char c) {
  */
 template<typename T>
 bool TimingResistantEqual(const T& a, const T& b) {
-	if (b.size() == 0)
+	if (b.size() == 0) {
 		return a.size() == 0;
-	size_t accumulator = a.size() ^ b.size();
-	for (size_t i = 0; i < a.size(); i++)
-		accumulator |= a[i] ^ b[i % b.size()];
-	return accumulator == 0;
+	}
+	size_t unAccumulator = a.size() ^ b.size();
+	for (size_t i = 0; i < a.size(); i++) {
+		unAccumulator |= a[i] ^ b[i % b.size()];
+	}
+	return unAccumulator == 0;
 }
 
 /** Median filter over a stream of values.
  * Returns the median of the last N numbers
  */
 template<typename T> class CMedianFilter {
-private:
-	vector<T> vValues;
-	vector<T> vSorted;
-	unsigned int nSize;
-public:
+ public:
 	CMedianFilter(unsigned int size, T initial_value) :
-			nSize(size) {
-		vValues.reserve(size);
-		vValues.push_back(initial_value);
-		vSorted = vValues;
+			m_unSize(size) {
+		m_vValues.reserve(size);
+		m_vValues.push_back(initial_value);
+		m_vSorted = m_vValues;
 	}
 
 	void input(T value) {
-		if (vValues.size() == nSize) {
-			vValues.erase(vValues.begin());
+		if (m_vValues.size() == m_unSize) {
+			m_vValues.erase(m_vValues.begin());
 		}
-		vValues.push_back(value);
-
-		vSorted.resize(vValues.size());
-		copy(vValues.begin(), vValues.end(), vSorted.begin());
-		sort(vSorted.begin(), vSorted.end());
+		m_vValues.push_back(value);
+		m_vSorted.resize(m_vValues.size());
+		copy(m_vValues.begin(), m_vValues.end(), m_vSorted.begin());
+		sort(m_vSorted.begin(), m_vSorted.end());
 	}
 
 	T median() const {
-		int size = vSorted.size();
-		assert(size > 0);
-		if (size & 1) // Odd number of elements
-				{
-			return vSorted[size / 2];
-		} else // Even number of elements
-		{
-			return (vSorted[size / 2 - 1] + vSorted[size / 2]) / 2;
+		int nSize = m_vSorted.size();
+		assert(nSize > 0);
+		if (nSize & 1) {		// Odd number of elements
+			return m_vSorted[nSize / 2];
+		} else { 				// Even number of elements
+			return (m_vSorted[nSize / 2 - 1] + m_vSorted[nSize / 2]) / 2;
 		}
 	}
 
 	int size() const {
-		return vValues.size();
+		return m_vValues.size();
 	}
 
 	vector<T> sorted() const {
-		return vSorted;
+		return m_vSorted;
 	}
+
+ private:
+ 	vector<T> m_vValues;
+ 	vector<T> m_vSorted;
+ 	unsigned int m_unSize;
 };
 
 #ifdef WIN32
@@ -425,11 +405,11 @@ inline void SetThreadPriority(int nPriority)
 }
 #endif
 
-void RenameThread(const char* name);
+void RenameThread(const char* pszName);
 
-inline uint32_t ByteReverse(uint32_t value) {
-	value = ((value & 0xFF00FF00) >> 8) | ((value & 0x00FF00FF) << 8);
-	return (value << 16) | (value >> 16);
+inline uint32_t ByteReverse(uint32_t uValue) {
+	uValue = ((uValue & 0xFF00FF00) >> 8) | ((uValue & 0x00FF00FF) << 8);
+	return (uValue << 16) | (uValue >> 16);
 }
 
 // Standard wrapper for do-something-forever thread functions.
@@ -439,53 +419,43 @@ inline uint32_t ByteReverse(uint32_t value) {
 // or maybe:
 //    boost::function<void()> f = boost::bind(&FunctionWithArg, argument);
 //    threadGroup.create_thread(boost::bind(&LoopForever<boost::function<void()> >, "nothing", f, milliseconds));
-template<typename Callable> void LoopForever(const char* name, Callable func, int64_t msecs) {
-	string s = strprintf("bitcoin-%s", name);
-	RenameThread(s.c_str());
-	LogPrint("INFO","%s thread start\n", name);
-	try
-	{
-		while (1)
-		{
-			MilliSleep(msecs);
-			func();
+template<typename Callable> void LoopForever(const char* pszName, Callable callFunc, int64_t llMsecs) {
+	string strContent = strprintf("bitcoin-%s", pszName);
+	RenameThread(strContent.c_str());
+	LogPrint("INFO","%s thread start\n", pszName);
+	try {
+		while (1) {
+			MilliSleep(llMsecs);
+			callFunc();
 		}
-	}
-	catch (boost::thread_interrupted)
-	{
-		LogPrint("INFO","%s thread stop\n", name);
+	} catch (boost::thread_interrupted) {
+		LogPrint("INFO","%s thread stop\n", pszName);
 		throw;
-	}
-	catch (std::exception& e) {
-		PrintExceptionContinue(&e, name);
+	} catch (std::exception& e) {
+		PrintExceptionContinue(&e, pszName);
 		throw;
-	}
-	catch (...) {
-		PrintExceptionContinue(NULL, name);
+	} catch (...) {
+		PrintExceptionContinue(NULL, pszName);
 		throw;
 	}
 }
+
 // .. and a wrapper that just calls func once
-template<typename Callable> void TraceThread(const char* name, Callable func) {
-	string s = strprintf("bitcoin-%s", name);
-	RenameThread(s.c_str());
-	try
-	{
-		LogPrint("INFO","%s thread start\n", name);
-		func();
-		LogPrint("INFO","%s thread exit\n", name);
-	}
-	catch (boost::thread_interrupted)
-	{
-		LogPrint("INFO","%s thread interrupt\n", name);
+template<typename Callable> void TraceThread(const char* strName, Callable callFunc) {
+	string strContent = strprintf("bitcoin-%s", strName);
+	RenameThread(strContent.c_str());
+	try {
+		LogPrint("INFO","%s thread start\n", strName);
+		callFunc();
+		LogPrint("INFO","%s thread exit\n", strName);
+	} catch (boost::thread_interrupted) {
+		LogPrint("INFO","%s thread interrupt\n", strName);
 		throw;
-	}
-	catch (std::exception& e) {
-		PrintExceptionContinue(&e, name);
+	} catch (std::exception& e) {
+		PrintExceptionContinue(&e, strName);
 		throw;
-	}
-	catch (...) {
-		PrintExceptionContinue(NULL, name);
+	} catch (...) {
+		PrintExceptionContinue(NULL, strName);
 		throw;
 	}
 }

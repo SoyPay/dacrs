@@ -16,7 +16,6 @@ using namespace boost::assign;
 
 typedef vector<unsigned char> valtype;
 
-
 BOOST_AUTO_TEST_SUITE(multisig_tests)
 
 //CScript
@@ -123,8 +122,7 @@ BOOST_AUTO_TEST_SUITE(multisig_tests)
 //        }
 //}
 
-BOOST_AUTO_TEST_CASE(multisig_IsStandard)
-{
+BOOST_AUTO_TEST_CASE(multisig_IsStandard) {
 //    CKey key[4];
 //    for (int i = 0; i < 4; i++)
 //        key[i].MakeNewKey(true);
@@ -159,18 +157,17 @@ BOOST_AUTO_TEST_CASE(multisig_IsStandard)
 //        BOOST_CHECK(!::IsStandard(malformed[i], whichType));
 }
 
-BOOST_AUTO_TEST_CASE(multisig_Solver1)
-{
-    // Tests Solver() that returns lists of keys that are
-    // required to satisfy a ScriptPubKey
-    //
-    // Also tests IsMine() and ExtractAddress()
-    //
-    // Note: ExtractAddress for the multisignature transactions
-    // always returns false for this release, even if you have
-    // one key that would satisfy an (a|b) or 2-of-3 keys needed
-    // to spend an escrow transaction.
-    //
+BOOST_AUTO_TEST_CASE(multisig_Solver1) {
+	// Tests Solver() that returns lists of keys that are
+	// required to satisfy a ScriptPubKey
+	//
+	// Also tests IsMine() and ExtractAddress()
+	//
+	// Note: ExtractAddress for the multisignature transactions
+	// always returns false for this release, even if you have
+	// one key that would satisfy an (a|b) or 2-of-3 keys needed
+	// to spend an escrow transaction.
+	//
 //    CBasicKeyStore keystore, emptykeystore, partialkeystore;
 //    CKey key[3];
 //    CTxDestination keyaddr[3];
